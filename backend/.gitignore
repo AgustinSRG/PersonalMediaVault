@@ -7,6 +7,10 @@ personal-media-vault
 
 temp
 
+# Ignore data folders
+
+vault
+
 # Ignore .env
 
 .env

@@ -19,6 +19,9 @@ type BackendOptions struct {
 
 	// Vault
 	vaultPath string
+
+	// Temp path
+	tempPath string
 }
 
 // Program entry point
@@ -27,9 +30,10 @@ func main() {
 	args := os.Args
 
 	options := BackendOptions{
-		debug:       false,
 		ffmpegPath:  os.Getenv("FFMPEG_PATH"),
 		ffprobePath: os.Getenv("FFPROBE_PATH"),
+		vaultPath:   "./vault",
+		tempPath:    os.Getenv("TEMP_PATH"),
 	}
 
 	if options.ffmpegPath == "" {
@@ -40,7 +44,11 @@ func main() {
 		options.ffprobePath = "/usr/bin/ffprobe"
 	}
 
-	for i := 1; i < (len(args) - 2); i++ {
+	if options.tempPath == "" {
+		options.tempPath = "./temp"
+	}
+
+	for i := 1; i < len(args); i++ {
 		arg := args[i]
 
 		if arg == "--debug" {
@@ -54,7 +62,11 @@ func main() {
 		} else if arg == "--daemon" || arg == "-d" {
 			options.daemon = true
 		} else if arg == "--vault-path" || arg == "-vp" {
-			options.daemon = true
+			if i == len(args)-1 {
+				fmt.Println("The option '--vault-path' requires a value")
+				options.vaultPath = args[i+1]
+				i++
+			}
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
