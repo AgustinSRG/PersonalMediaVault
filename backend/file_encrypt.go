@@ -10,7 +10,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
-	"io"
+	"io/ioutil"
 )
 
 type FileEncryptionMethod uint16
@@ -96,15 +96,18 @@ func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 
 		// Decompress the data
 		bSource := bytes.NewReader(plaintext)
-		var bDest bytes.Buffer
 		r, err := zlib.NewReader(bSource)
 		if err != nil {
 			return nil, err
 		}
-		io.Copy(&bDest, bSource)
+		result, err := ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 		r.Close()
 
-		return bDest.Bytes(), nil
+		return result, nil
+		//return plaintext, nil
 	} else {
 		return nil, errors.New("Invalid method")
 	}
