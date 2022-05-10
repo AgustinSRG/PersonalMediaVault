@@ -42,12 +42,12 @@ func TestReadWriteLock(t *testing.T) {
 
 	wg.Add(5)
 
-	go threadReader(t, &wg, lock, 100, 500)
-	go threadReader(t, &wg, lock, 100, 500)
-	go threadReader(t, &wg, lock, 100, 500)
+	go threadReader(t, &wg, lock, 10, 50)
+	go threadReader(t, &wg, lock, 10, 50)
+	go threadReader(t, &wg, lock, 10, 50)
 
-	go threadWriter(t, &wg, lock, 200, 200, 500)
-	go threadWriter(t, &wg, lock, 200, 200, 500)
+	go threadWriter(t, &wg, lock, 20, 20, 50)
+	go threadWriter(t, &wg, lock, 20, 20, 50)
 
 	wg.Wait()
 }
