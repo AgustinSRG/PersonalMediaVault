@@ -21,6 +21,10 @@ const (
 
 // Encrypts file contents
 func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return make([]byte, 0), nil
+	}
+
 	result := make([]byte, 2)
 
 	binary.BigEndian.PutUint16(result, uint16(method)) // Include method
@@ -70,9 +74,21 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 
 // Decripts file contents
 func decryptFileContents(data []byte, key []byte) ([]byte, error) {
+	if len(data) < 2 {
+		if len(data) == 0 {
+			return make([]byte, 0), nil
+		} else {
+			return nil, errors.New("Invalid data provided")
+		}
+	}
+
 	method := FileEncryptionMethod(binary.BigEndian.Uint16(data[:2]))
 
 	if method == AES256_ZIP {
+		if len(data) < 23 {
+			return nil, errors.New("Invalid data provided")
+		}
+
 		// Read params
 		preEncDataLength := int(binary.BigEndian.Uint32(data[2:6]))
 		iv := data[6:22]
@@ -107,7 +123,6 @@ func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 		r.Close()
 
 		return result, nil
-		//return plaintext, nil
 	} else {
 		return nil, errors.New("Invalid method")
 	}
