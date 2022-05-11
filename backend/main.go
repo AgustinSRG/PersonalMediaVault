@@ -84,6 +84,8 @@ func main() {
 			os.Exit(1)
 		}
 
+		SetDebugLogEnabled(options.debug) // Log debug mode
+
 		SetTempFilesPath(options.tempPath) // Set temporal files path
 	} else {
 		printHelp()
