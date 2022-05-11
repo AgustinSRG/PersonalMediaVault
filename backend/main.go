@@ -83,6 +83,8 @@ func main() {
 			fmt.Println("Error: Could not find 'ffprobe' at specified location: " + options.ffprobePath)
 			os.Exit(1)
 		}
+
+		SetTempFilesPath(options.tempPath) // Set temporal files path
 	} else {
 		printHelp()
 	}
