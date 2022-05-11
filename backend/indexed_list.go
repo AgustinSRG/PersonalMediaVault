@@ -47,7 +47,7 @@ func (file *IndexedListFile) Close() {
 }
 
 // Returns the number of items in the index
-func (file *IndexedListFile) Count() (uint64, error) {
+func (file *IndexedListFile) Count() (int64, error) {
 	// Rewind to the start of the file
 	_, err := file.f.Seek(0, 0)
 
@@ -63,7 +63,7 @@ func (file *IndexedListFile) Count() (uint64, error) {
 		return 0, err
 	}
 
-	return binary.BigEndian.Uint64(b), nil
+	return int64(binary.BigEndian.Uint64(b)), nil
 }
 
 // Initalizes the index. Call once when the index file does not exists
@@ -94,8 +94,8 @@ func (file *IndexedListFile) Initialize() error {
 }
 
 // Reads a value given an index
-func (file *IndexedListFile) ReadValue(index uint64) (uint64, error) {
-	_, err := file.f.Seek(int64(8+(index*8)), 0)
+func (file *IndexedListFile) ReadValue(index int64) (uint64, error) {
+	_, err := file.f.Seek(8+(index*8), 0)
 
 	if err != nil {
 		return 0, err
@@ -113,8 +113,8 @@ func (file *IndexedListFile) ReadValue(index uint64) (uint64, error) {
 }
 
 // Writes a value
-func (file *IndexedListFile) WriteValue(index uint64, value uint64) error {
-	_, err := file.f.Seek(int64(8+(index*8)), 0)
+func (file *IndexedListFile) WriteValue(index int64, value uint64) error {
+	_, err := file.f.Seek(8+(index*8), 0)
 
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (file *IndexedListFile) WriteValue(index uint64, value uint64) error {
 // Searchs in the file for a value
 // Returns a boolean value = true if the exact value was found
 // The seconds returned value is the closest index to that value
-func (file *IndexedListFile) BinarySearch(val uint64) (bool, uint64, error) {
+func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
 	if err != nil {
@@ -147,9 +147,42 @@ func (file *IndexedListFile) BinarySearch(val uint64) (bool, uint64, error) {
 		return false, 0, nil
 	}
 
-	var low uint64
-	var high uint64
+	var low int64
+	var high int64
 	var mVal uint64
+
+	low = 0
+	high = int64(count - 1)
+
+	for low <= high {
+		m := (low + high) / 2
+
+		mVal, err = file.ReadValue(m)
+
+		if err != nil {
+			return false, 0, err
+		}
+
+		if mVal < val {
+			low = m + 1
+		} else {
+			high = m - 1
+		}
+	}
+
+	return mVal == val, low, nil
+}
+
+// Same as BinarySearch, but you provide the count value
+func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int64) (bool, int64, error) {
+	if count == 0 {
+		return false, 0, nil
+	}
+
+	var low int64
+	var high int64
+	var mVal uint64
+	var err error
 
 	low = 0
 	high = count - 1
@@ -173,43 +206,11 @@ func (file *IndexedListFile) BinarySearch(val uint64) (bool, uint64, error) {
 	return mVal == val, low, nil
 }
 
-// Same as BinarySearch, but you provide the count value
-func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count uint64) (bool, uint64, error) {
-	if count == 0 {
-		return false, 0, nil
-	}
-
-	var low uint64
-	var high uint64
-	var mVal uint64
-
-	low = 0
-	high = count - 1
-
-	for low <= high {
-		m := (low + high) / 2
-
-		mVal, err := file.ReadValue(m)
-
-		if err != nil {
-			return false, 0, err
-		}
-
-		if mVal < val {
-			low = m + 1
-		} else {
-			high = m - 1
-		}
-	}
-
-	return mVal == val, low, nil
-}
-
 // Adds a value
 // Returns
 //  - true if it was added, false if it was already in the file
 //  - the index where the value was added
-func (file *IndexedListFile) AddValue(val uint64) (bool, uint64, error) {
+func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
 	if err != nil {
@@ -227,14 +228,14 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, uint64, error) {
 	}
 
 	// Resize file to make space for the new value
-	err = file.f.Truncate(int64(8 + 8*(count+1)))
+	err = file.f.Truncate(8 + 8*(count+1))
 	if err != nil {
 		return false, 0, err
 	}
 
 	// Move down 1 all items below
 	tempVal := val
-	for i := index; i < (count + 1); i++ {
+	for i := index; i < count+1; i++ {
 		rVal, err := file.ReadValue(i)
 		if err != nil {
 			return false, 0, err
@@ -259,7 +260,7 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, uint64, error) {
 
 	// Write size
 	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, count+1)
+	binary.BigEndian.PutUint64(b, uint64(count+1))
 	_, err = file.f.Write(b)
 
 	if err != nil {
@@ -273,7 +274,7 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, uint64, error) {
 // Returns
 //   - true if it was removed, false if it was not present in the index
 //   - The new count value
-func (file *IndexedListFile) RemoveValue(val uint64) (bool, uint64, error) {
+func (file *IndexedListFile) RemoveValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
 	if err != nil {
@@ -301,9 +302,10 @@ func (file *IndexedListFile) RemoveValue(val uint64) (bool, uint64, error) {
 
 // Removes a value given the index and the count
 // Returns the new count value
-func (file *IndexedListFile) RemoveIndex(index uint64, count uint64) (uint64, error) {
+func (file *IndexedListFile) RemoveIndex(index int64, count int64) (int64, error) {
 	// Move instances 1 above
-	for i := index; i < count-1; i++ {
+	lastIndex := int64(count - 1)
+	for i := index; i < lastIndex; i++ {
 		val, err := file.ReadValue(i + 1)
 		if err != nil {
 			return 0, err
@@ -333,7 +335,7 @@ func (file *IndexedListFile) RemoveIndex(index uint64, count uint64) (uint64, er
 
 	// Write size
 	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, count-1)
+	binary.BigEndian.PutUint64(b, uint64(count-1))
 	_, err = file.f.Write(b)
 
 	if err != nil {
@@ -344,7 +346,7 @@ func (file *IndexedListFile) RemoveIndex(index uint64, count uint64) (uint64, er
 }
 
 // List values inside the index in order
-func (file *IndexedListFile) ListValues(skip uint64, limit int) ([]uint64, error) {
+func (file *IndexedListFile) ListValues(skip int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
 
 	if err != nil {
@@ -357,13 +359,13 @@ func (file *IndexedListFile) ListValues(skip uint64, limit int) ([]uint64, error
 
 	resultSize := count - skip
 
-	if resultSize > uint64(limit) {
-		resultSize = uint64(limit)
+	if resultSize > limit {
+		resultSize = limit
 	}
 
 	result := make([]uint64, resultSize)
 
-	for i := uint64(0); i < resultSize; i++ {
+	for i := int64(0); i < resultSize; i++ {
 		val, err := file.ReadValue(skip + i)
 		if err != nil {
 			return nil, err
@@ -376,7 +378,7 @@ func (file *IndexedListFile) ListValues(skip uint64, limit int) ([]uint64, error
 }
 
 // List values inside the index in reverse order
-func (file *IndexedListFile) ListValuesReverse(skip uint64, limit int) ([]uint64, error) {
+func (file *IndexedListFile) ListValuesReverse(skip int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
 
 	if err != nil {
@@ -389,13 +391,13 @@ func (file *IndexedListFile) ListValuesReverse(skip uint64, limit int) ([]uint64
 
 	resultSize := count - skip
 
-	if resultSize > uint64(limit) {
-		resultSize = uint64(limit)
+	if resultSize > limit {
+		resultSize = limit
 	}
 
 	result := make([]uint64, resultSize)
 
-	for i := uint64(0); i < resultSize; i++ {
+	for i := int64(0); i < resultSize; i++ {
 		val, err := file.ReadValue((count - 1) - skip - i)
 		if err != nil {
 			return nil, err
