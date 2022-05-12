@@ -16,7 +16,8 @@ import (
 type FileEncryptionMethod uint16
 
 const (
-	AES256_ZIP FileEncryptionMethod = 1
+	AES256_ZIP  FileEncryptionMethod = 1
+	AES256_FLAT FileEncryptionMethod = 2
 )
 
 // Encrypts file contents
@@ -43,6 +44,35 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 
 		// Pad data
 		finalData = PKCS5Padding(finalData, 16)
+
+		// Generate IV
+		iv := make([]byte, 16)
+		rand.Read(iv)
+
+		// Include IV into the header
+		copy(header[4:20], iv)
+
+		// Encrypt
+		block, err := aes.NewCipher(key)
+		if err != nil {
+			return nil, err
+		}
+		ciphertext := make([]byte, len(finalData))
+		mode := cipher.NewCBCEncrypter(block, iv)
+		mode.CryptBlocks(ciphertext, finalData)
+
+		// Include in result
+
+		result = append(result, header...)
+		result = append(result, ciphertext...)
+
+	} else if method == AES256_FLAT {
+		// Include pre-encryption size to the header
+		header := make([]byte, 20)
+		binary.BigEndian.PutUint32(header[:4], uint32(len(data)))
+
+		// Pad data
+		finalData := PKCS5Padding(data, 16)
 
 		// Generate IV
 		iv := make([]byte, 16)
@@ -123,6 +153,33 @@ func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 		r.Close()
 
 		return result, nil
+	} else if method == AES256_FLAT {
+		if len(data) < 23 {
+			return nil, errors.New("Invalid data provided")
+		}
+
+		// Read params
+		preEncDataLength := int(binary.BigEndian.Uint32(data[2:6]))
+		iv := data[6:22]
+		ciphertext := data[22:]
+
+		if preEncDataLength < 0 || preEncDataLength > len(ciphertext) {
+			return nil, errors.New("Invalid method")
+		}
+
+		// Decrypt
+		block, err := aes.NewCipher(key)
+		if err != nil {
+			return nil, err
+		}
+		mode := cipher.NewCBCDecrypter(block, iv)
+		plaintext := make([]byte, len(ciphertext))
+		mode.CryptBlocks(plaintext, ciphertext)
+
+		// Remove padding
+		plaintext = plaintext[:preEncDataLength]
+
+		return plaintext, nil
 	} else {
 		return nil, errors.New("Invalid method")
 	}
