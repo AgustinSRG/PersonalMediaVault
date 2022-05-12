@@ -24,7 +24,7 @@ type FileBlockEncryptWriteStream struct {
 	buf                 []byte
 }
 
-func CreateFileBlockEncryptWriteStream(file string, size int64) (*FileBlockEncryptWriteStream, error) {
+func CreateFileBlockEncryptWriteStream(file string) (*FileBlockEncryptWriteStream, error) {
 	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 
 	if err != nil {
@@ -373,9 +373,16 @@ func (file *FileBlockEncryptReadStream) Read(buf []byte) (int, error) {
 
 		blockLen := len(file.cur_block_data)
 		bytesToCopy := blockLen - blockOffset
+		bytesCanFit := len(buf) - filedLength
+
+		if bytesToCopy > bytesCanFit {
+			bytesToCopy = bytesCanFit
+		}
 
 		// Copy data into the buffer
-		copy(buf[filedLength:filedLength+bytesToCopy], file.cur_block_data[blockOffset:])
+		copy(buf[filedLength:filedLength+bytesToCopy], file.cur_block_data[blockOffset:blockOffset+bytesToCopy])
+
+		filedLength += bytesToCopy
 
 		// Seek
 		file.cur_pos += int64(bytesToCopy)
@@ -399,4 +406,8 @@ func (file *FileBlockEncryptReadStream) Seek(pos int64, whence int) (int64, erro
 	file.cur_pos = pos
 
 	return file.cur_pos, nil
+}
+
+func (file *FileBlockEncryptReadStream) Close() {
+	file.f.Close()
 }
