@@ -70,3 +70,45 @@ func GetTemporalFolder() (string, error) {
 
 	return folderPath, nil
 }
+
+// Wipes file to prevent recovery (secure delete)
+func WipeTemporalFile(file string) {
+	f, err := os.OpenFile(file, os.O_RDWR, 0666)
+
+	if err != nil {
+		LogError(err)
+		os.Remove(file)
+		return
+	}
+
+	defer f.Close()
+	defer os.Remove(file)
+
+	fileInfo, err := f.Stat()
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	fileSize := fileInfo.Size()
+	fileChunk := make([]byte, 1024*1024)
+
+	// Fill chunk with 0
+	for i := 0; i < len(fileChunk); i++ {
+		fileChunk[i] = 0
+	}
+
+	// Number of chunks
+
+	chunkCount := fileSize / int64(len(fileChunk))
+
+	if fileSize%int64(len(fileChunk)) != 0 {
+		chunkCount++
+	}
+
+	// Overwrite file
+
+	for i := int64(0); i < chunkCount; i++ {
+		f.Write(fileChunk)
+	}
+}
