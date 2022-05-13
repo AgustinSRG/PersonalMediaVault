@@ -78,6 +78,34 @@ func (manager *VaultCredentialsManager) Initialize(file string) error {
 	return nil
 }
 
+// Creates new credentials file using provided credentials
+func (manager *VaultCredentialsManager) Create(file string, user string, password string) error {
+	manager.file = file
+	manager.locked = true
+	manager.key = nil
+
+	manager.lock = &sync.Mutex{}
+
+	if _, err := os.Stat(file); err == nil {
+		// exists
+		return errors.New("There is already an existing vault in the provided path.")
+	} else if errors.Is(err, os.ErrNotExist) {
+		// does *not* exist
+
+		// Create a random key
+		key := make([]byte, 32)
+		rand.Read(key)
+
+		// Set default credentials
+		manager.SetCredentials(user, password, key)
+		manager.SaveCredentials()
+	} else {
+		return err
+	}
+
+	return nil
+}
+
 func (manager *VaultCredentialsManager) SetCredentials(user string, password string, key []byte) error {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
