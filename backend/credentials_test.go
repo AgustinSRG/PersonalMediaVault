@@ -14,7 +14,7 @@ func TestCreadentialsManager(t *testing.T) {
 
 	SetTempFilesPath(test_path_base)
 
-	err := os.MkdirAll(test_path_base, 0755)
+	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
 
 	if err != nil {
 		t.Error(err)

@@ -13,7 +13,7 @@ type IndexedListFile struct {
 
 // Opens index file for writing
 func OpenIndexedListForWriting(file string) (*IndexedListFile, error) {
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, 0666)
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func OpenIndexedListForWriting(file string) (*IndexedListFile, error) {
 
 // Opens index file for reading
 func OpenIndexedListForReading(file string) (*IndexedListFile, error) {
-	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
+	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err

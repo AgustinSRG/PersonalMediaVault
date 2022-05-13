@@ -20,7 +20,7 @@ type MultiFilePackWriteStream struct {
 }
 
 func CreateMultiFilePackWriteStream(file string) (*MultiFilePackWriteStream, error) {
-	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ type MultiFilePackReadStream struct {
 }
 
 func CreateMultiFilePackReadStream(file string) (*MultiFilePackReadStream, error) {
-	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
+	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err

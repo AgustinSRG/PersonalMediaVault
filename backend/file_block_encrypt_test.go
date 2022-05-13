@@ -12,7 +12,7 @@ import (
 func TestFileBlockEncrypt(t *testing.T) {
 	test_path_base := "./temp"
 
-	err := os.MkdirAll(test_path_base, 0755)
+	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
 
 	if err != nil {
 		t.Error(err)

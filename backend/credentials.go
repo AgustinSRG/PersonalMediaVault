@@ -158,7 +158,7 @@ func (manager *VaultCredentialsManager) SaveCredentials() error {
 	tFile := GetTemporalFileName("json")
 
 	// Write file
-	err = ioutil.WriteFile(tFile, jsonData, 0666)
+	err = ioutil.WriteFile(tFile, jsonData, FILE_PERMISSION)
 	if err != nil {
 		return err
 	}

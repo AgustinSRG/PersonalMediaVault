@@ -22,7 +22,7 @@ func SetTempFilesPath(path string) {
 	temp_files_path = path
 
 	// Create path if not exists
-	os.MkdirAll(temp_files_path, 0755)
+	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
 
 	// Create unique prefix for each execution
 	timeNow := time.Now().UTC().UnixMilli()
@@ -32,7 +32,7 @@ func SetTempFilesPath(path string) {
 // Clears temp path on application exit
 func ClearTemporalFilesPath() {
 	os.RemoveAll(temp_files_path)
-	os.MkdirAll(temp_files_path, 0755)
+	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
 }
 
 // Gets a name for a temporal file
@@ -62,7 +62,7 @@ func GetTemporalFolder() (string, error) {
 
 	folderPath := path.Join(temp_files_path, folderName)
 
-	err := os.MkdirAll(folderPath, 0755)
+	err := os.MkdirAll(folderPath, FOLDER_PERMISSION)
 
 	if err != nil {
 		return "", err
@@ -73,7 +73,7 @@ func GetTemporalFolder() (string, error) {
 
 // Wipes file to prevent recovery (secure delete)
 func WipeTemporalFile(file string) {
-	f, err := os.OpenFile(file, os.O_RDWR, 0666)
+	f, err := os.OpenFile(file, os.O_RDWR, FILE_PERMISSION)
 
 	if err != nil {
 		LogError(err)

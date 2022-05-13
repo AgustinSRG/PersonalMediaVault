@@ -25,7 +25,7 @@ type FileBlockEncryptWriteStream struct {
 }
 
 func CreateFileBlockEncryptWriteStream(file string) (*FileBlockEncryptWriteStream, error) {
-	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ type FileBlockEncryptReadStream struct {
 }
 
 func CreateFileBlockEncryptReadStream(file string, key []byte) (*FileBlockEncryptReadStream, error) {
-	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
+	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 
 	if err != nil {
 		return nil, err
