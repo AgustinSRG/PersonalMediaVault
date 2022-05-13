@@ -84,8 +84,6 @@ func (lock *ReadWriteLock) StartWrite() {
 }
 
 func (lock *ReadWriteLock) EndWrite() {
-	lock.write_sem.Unlock()
-
 	lock.lock.Lock()
 
 	lock.writing = false
@@ -104,6 +102,8 @@ func (lock *ReadWriteLock) EndWrite() {
 	}
 
 	lock.lock.Unlock()
+
+	lock.write_sem.Unlock()
 }
 
 func (lock *ReadWriteLock) StartRead() {
