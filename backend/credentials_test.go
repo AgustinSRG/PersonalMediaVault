@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestCreadentialsManager(t *testing.T) {
+func TestCredentialsManager(t *testing.T) {
 	test_path_base := "./temp"
 
 	SetTempFilesPath(test_path_base)
