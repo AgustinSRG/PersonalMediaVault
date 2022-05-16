@@ -32,9 +32,6 @@ type VaultCredentialsManager struct {
 	file        string
 	credentials VaultCredentials
 
-	locked bool
-	key    []byte
-
 	lock *sync.Mutex
 }
 
@@ -42,8 +39,6 @@ type VaultCredentialsManager struct {
 // there is not one
 func (manager *VaultCredentialsManager) Initialize(file string) error {
 	manager.file = file
-	manager.locked = true
-	manager.key = nil
 
 	manager.lock = &sync.Mutex{}
 
@@ -81,8 +76,6 @@ func (manager *VaultCredentialsManager) Initialize(file string) error {
 // Creates new credentials file using provided credentials
 func (manager *VaultCredentialsManager) Create(file string, user string, password string) error {
 	manager.file = file
-	manager.locked = true
-	manager.key = nil
 
 	manager.lock = &sync.Mutex{}
 
@@ -195,24 +188,13 @@ func (manager *VaultCredentialsManager) CheckCredentials(user string, password s
 	}
 }
 
-func (manager *VaultCredentialsManager) LockVault() {
+// Unlocks vaults and gets decryption key
+func (manager *VaultCredentialsManager) UnlockVault(user string, password string) ([]byte, error) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
-
-	manager.key = nil
-	manager.locked = true
-}
-
-func (manager *VaultCredentialsManager) UnlockVault(user string, password string) error {
-	manager.lock.Lock()
-	defer manager.lock.Unlock()
-
-	if !manager.locked {
-		return nil // Already unlocked
-	}
 
 	if manager.credentials.User != user {
-		return errors.New("Unknown user")
+		return nil, errors.New("Unknown user")
 	}
 
 	if manager.credentials.Method == VAULT_CRED_METHOD_AES_SHA256 {
@@ -225,32 +207,18 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		pwDoubleHash := sha256.Sum256(pwHash[:])
 
 		if subtle.ConstantTimeCompare(pwDoubleHash[:], manager.credentials.PasswordHash) != 1 {
-			return errors.New("Invalid credentials")
+			return nil, errors.New("Invalid credentials")
 		}
 
 		// Decrypt key
 		key, err := decryptFileContents(manager.credentials.EncryptedKey, pwHash[:])
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		manager.key = key
-		manager.locked = false
-		return nil
+		return key, nil
 	} else {
-		return errors.New("Unknown credentials method")
+		return nil, errors.New("Unknown credentials method")
 	}
-}
-
-// Gets key, returns nil if the vault is locked
-func (manager *VaultCredentialsManager) GetKey() []byte {
-	manager.lock.Lock()
-	defer manager.lock.Unlock()
-
-	if manager.locked {
-		return nil
-	}
-
-	return manager.key
 }

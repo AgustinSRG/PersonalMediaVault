@@ -36,16 +36,12 @@ func TestCreadentialsManager(t *testing.T) {
 
 	// Unlock
 
-	err = cred.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
+	key, err := cred.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
 
 	if err != nil {
 		t.Error(err)
 		panic(err)
 	}
-
-	// Get key
-
-	key := cred.GetKey()
 
 	if key == nil {
 		t.Errorf("Invalid key received")
@@ -84,14 +80,12 @@ func TestCreadentialsManager(t *testing.T) {
 		t.Errorf("Valid password, but the password was invalid")
 	}
 
-	err = cred.UnlockVault("user", "password")
+	otherKey, err := cred.UnlockVault("user", "password")
 
 	if err != nil {
 		t.Error(err)
 		panic(err)
 	}
-
-	otherKey := cred.GetKey()
 
 	if otherKey == nil {
 		t.Errorf("Invalid key received")
