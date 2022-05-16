@@ -25,8 +25,9 @@ type VaultTagManager struct {
 }
 
 type VaultTagIndexEntry struct {
-	count int64
-	index *VaultMainIndex
+	count        int64
+	index        *VaultMainIndex
+	check_delete bool
 }
 
 type VaultTagListData struct {
@@ -181,22 +182,67 @@ func (tm *VaultTagManager) AcquireIndexFile(tag_id uint64) (*VaultMainIndex, err
 	}
 
 	tm.indexes[tag_id] = &VaultTagIndexEntry{
-		count: 1,
-		index: &newIndex,
+		count:        1,
+		index:        &newIndex,
+		check_delete: false,
 	}
 
 	return &newIndex, nil
 }
 
-func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64) {
+func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, key []byte) {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
 
 	if tm.indexes[tag_id] != nil {
 		tm.indexes[tag_id].count--
 
+		if check_delete {
+			tm.indexes[tag_id].check_delete = true
+		}
+
 		if tm.indexes[tag_id].count <= 0 {
+			if tm.indexes[tag_id].check_delete {
+				tm.checkTagIndexToRemove(tag_id, tm.indexes[tag_id].index, key)
+			}
+
 			delete(tm.indexes, tag_id)
+		}
+	}
+}
+
+func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMainIndex, key []byte) {
+	r, err := index.StartRead()
+
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	c, err := r.Count()
+
+	if err != nil {
+		index.EndRead(r)
+		LogError(err)
+		return
+	}
+
+	index.EndRead(r)
+
+	if c == 0 {
+		// Is empty, remove tag
+		err = tm.RemoveTagFromList(tag_id, key)
+
+		if err != nil {
+			LogError(err)
+			return
+		}
+
+		// Remove file
+		err = index.Delete()
+
+		if err != nil {
+			LogError(err)
 		}
 	}
 }
@@ -242,6 +288,78 @@ func (tm *VaultTagManager) RemoveTagFromList(tag_id uint64, key []byte) error {
 	delete(data.Tags, tag_id)
 
 	err = tm.EndWrite(data, key)
+
+	return err
+}
+
+func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte) error {
+	tag_id, err := tm.AddTagToList(tag_name, key)
+
+	if err != nil {
+		return err
+	}
+
+	indexFile, err := tm.AcquireIndexFile(tag_id)
+
+	if err != nil {
+		return err
+	}
+
+	defer tm.ReleaseIndexFile(tag_id, false, key)
+
+	r, err := indexFile.StartWrite()
+
+	if err != nil {
+		return err
+	}
+
+	added, _, err := r.file.AddValue(media_id)
+
+	if err != nil {
+		indexFile.CancelWrite(r)
+		return err
+	}
+
+	if !added {
+		// Already tagged
+		indexFile.CancelWrite(r)
+		return nil
+	}
+
+	err = indexFile.EndWrite(r)
+
+	return err
+}
+
+func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte) error {
+	indexFile, err := tm.AcquireIndexFile(tag_id)
+
+	if err != nil {
+		return err
+	}
+
+	defer tm.ReleaseIndexFile(tag_id, true, key)
+
+	r, err := indexFile.StartWrite()
+
+	if err != nil {
+		return err
+	}
+
+	removed, _, err := r.file.RemoveValue(media_id)
+
+	if err != nil {
+		indexFile.CancelWrite(r)
+		return err
+	}
+
+	if !removed {
+		// Was not tagged, no change
+		indexFile.CancelWrite(r)
+		return nil
+	}
+
+	err = indexFile.EndWrite(r)
 
 	return err
 }

@@ -91,6 +91,19 @@ func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 	return err
 }
 
+// Deletes index
+func (vmi *VaultMainIndex) Delete() error {
+	vmi.lock.RequestWrite()
+	vmi.lock.StartWrite()
+
+	// Remove index
+	err := os.Remove(vmi.file)
+
+	vmi.lock.EndWrite()
+
+	return err
+}
+
 // Cancels write operation
 func (vmi *VaultMainIndex) CancelWrite(res *VaultIndexWriteResource) {
 	res.file.Close()
