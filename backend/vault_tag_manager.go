@@ -259,6 +259,7 @@ func (tm *VaultTagManager) AddTagToList(tag_name string, key []byte) (uint64, er
 	found, tag_id := data.FindTag(parsedTagName)
 
 	if found {
+		tm.CancelWrite()
 		return tag_id, nil // Already exists
 	}
 

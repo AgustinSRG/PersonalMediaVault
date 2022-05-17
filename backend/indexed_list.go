@@ -165,7 +165,10 @@ func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 
 		if mVal < val {
 			low = m + 1
+		} else if mVal > val {
+			high = m - 1
 		} else {
+			low = m
 			high = m - 1
 		}
 	}
@@ -198,7 +201,10 @@ func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int6
 
 		if mVal < val {
 			low = m + 1
+		} else if mVal > val {
+			high = m - 1
 		} else {
+			low = m
 			high = m - 1
 		}
 	}
