@@ -179,7 +179,7 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	return true, err
 }
 
-func (am *VaultAlbumsManager) RemoveMediaToAlbum(album_id uint64, media_id uint64, key []byte) (bool, error) {
+func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uint64, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
 	if err != nil {
@@ -196,7 +196,7 @@ func (am *VaultAlbumsManager) RemoveMediaToAlbum(album_id uint64, media_id uint6
 
 	for i := 0; i < len(old_list); i++ {
 		if old_list[i] != media_id {
-			new_list = append(new_list, media_id)
+			new_list = append(new_list, old_list[i])
 		}
 	}
 
