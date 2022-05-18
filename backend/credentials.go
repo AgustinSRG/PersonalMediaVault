@@ -50,7 +50,7 @@ func (manager *VaultCredentialsManager) Initialize(file string) error {
 			return err
 		}
 
-		// Decrypt
+		// Parse
 		err = json.Unmarshal(b, &manager.credentials)
 
 		if err != nil {

@@ -19,11 +19,13 @@ type ActiveSession struct {
 }
 
 type SessionManager struct {
+	vault    *Vault
 	lock     *sync.Mutex
 	sessions map[string]*ActiveSession
 }
 
-func (sm *SessionManager) Initialize() {
+func (sm *SessionManager) Initialize(vault *Vault) {
+	sm.vault = vault
 	sm.lock = &sync.Mutex{}
 	sm.sessions = make(map[string]*ActiveSession)
 
@@ -37,15 +39,18 @@ func (sm *SessionManager) CreateSession(user string, key []byte) string {
 
 	sm.lock.Lock()
 
-	sm.sessions[sessionId] = &ActiveSession{
+	newSession := ActiveSession{
 		user:      user,
 		key:       key,
 		not_after: time.Now().UnixMilli() + SESSION_EXPIRATION_TIME,
 	}
 
+	sm.sessions[sessionId] = &newSession
+
 	sm.lock.Unlock()
 
-	// TODO: Call task manager to start pending tasks
+	// Call task manager to start pending tasks
+	sm.vault.tasks.OnNewSession(&newSession)
 
 	return sessionId
 }

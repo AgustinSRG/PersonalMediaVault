@@ -17,6 +17,7 @@ type UserConfigResolution struct {
 }
 
 type UserConfig struct {
+	MaxTasks        int32                  `json:"max_tasks"`
 	EncodingThreads int32                  `json:"encoding_threads"`
 	Resolutions     []UserConfigResolution `json:"resolutions"`
 }
