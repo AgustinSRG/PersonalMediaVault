@@ -10,6 +10,8 @@ type Vault struct {
 	credentials *VaultCredentialsManager // Manages vault credentials
 	sessions    *SessionManager          // Manages active user sessiions
 
+	media *MediaAssetsManager // Media assets
+
 	tasks *TaskManager // Manages media encoding tasks
 
 	index  *VaultMainIndex     // Main index with all media assets
@@ -31,6 +33,9 @@ func (vault *Vault) Initialize(base_path string) error {
 
 	vault.sessions = &SessionManager{}
 	vault.sessions.Initialize(vault)
+
+	vault.media = &MediaAssetsManager{}
+	vault.media.Initialize(base_path)
 
 	vault.tasks = &TaskManager{}
 	err = vault.tasks.Initialize(base_path, vault)

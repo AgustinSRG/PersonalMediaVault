@@ -13,7 +13,7 @@ go get github.com/AgustinSRG/PersonalMediaVault/backend
 To compile the code type:
 
 ```
-go build -o 
+go build -o personal-media-vault
 ```
 
 The build command will create a binary in the currenct directory, called `personal-media-vault`, or `personal-media-vault.exe` if you are using Windows.
