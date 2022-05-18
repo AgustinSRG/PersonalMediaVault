@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"sync"
+	"time"
 )
 
 type TaskManager struct {
@@ -39,6 +40,31 @@ type TaskStatus struct {
 	Stage      string  `json:"stage"`
 	StageStart int64   `json:"stage_start"`
 	Progress   float64 `json:"stage_progress"`
+
+	lock *sync.Mutex
+}
+
+func (s *TaskStatus) Get() (string, int64, float64) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.Stage, s.StageStart, s.Progress
+}
+
+func (s *TaskStatus) SetStage(stage string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.Stage = stage
+	s.StageStart = time.Now().UnixMilli()
+	s.Progress = 0
+}
+
+func (s *TaskStatus) SetProgress(p float64) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.Progress = p
 }
 
 type TaskDefinition struct {
@@ -98,6 +124,7 @@ func (tm *TaskManager) Initialize(base_path string, vault *Vault) error {
 					Stage:      "",
 					StageStart: 0,
 					Progress:   0,
+					lock:       &sync.Mutex{},
 				},
 				running:         false,
 				waiting_session: true,
@@ -180,5 +207,52 @@ func (tm *TaskManager) OnNewSession(session *ActiveSession) error {
 
 	err := tm.LoadUserConfigParams(session.key)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	tm.RunPendingTasks()
+
+	return nil
+}
+
+func (tm *TaskManager) RunTask(task *ActiveTask) {
+	task.Run(tm.vault) // Run task
+
+	// After task has ended, remove it
+
+	tm.lock.Lock()
+
+	delete(tm.tasks, task.definition.Id)
+	delete(tm.pending_tasks.Pending, task.definition.Id)
+
+	tm.lock.Unlock()
+
+	// Save
+	err := tm.SavePendingTasks()
+
+	if err != nil {
+		LogError(err)
+	}
+
+	// Run other tasks
+	tm.RunPendingTasks()
+}
+
+func (tm *TaskManager) RunPendingTasks() {
+	tm.lock.Lock()
+	defer tm.lock.Unlock()
+
+	for len(tm.queue) > 0 && (tm.max_tasks <= 0 || tm.running_count < tm.max_tasks) {
+		// Spawn next task
+
+		nextTask := tm.queue[0]
+
+		nextTask.running = true
+		tm.queue = tm.queue[1:] // Remove from queue
+
+		go tm.RunTask(nextTask) // Run
+
+		tm.running_count++
+	}
 }
