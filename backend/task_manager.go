@@ -31,6 +31,7 @@ type ActiveTask struct {
 	definition      *TaskDefinition
 	running         bool
 	waiting_session bool // True if the task needs credentials
+	killed          bool
 
 	session *ActiveSession
 	status  *TaskStatus
@@ -129,6 +130,7 @@ func (tm *TaskManager) Initialize(base_path string, vault *Vault) error {
 				running:         false,
 				waiting_session: true,
 				session:         nil,
+				killed:          false,
 			}
 
 			tm.tasks[task_id] = &task
@@ -255,4 +257,87 @@ func (tm *TaskManager) RunPendingTasks() {
 
 		tm.running_count++
 	}
+}
+
+func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, original bool, resolution UserConfigResolution) uint64 {
+	tm.lock.Lock()
+
+	task_id := tm.pending_tasks.NextId
+	tm.pending_tasks.NextId++
+
+	task_definition := TaskDefinition{
+		Id:                    task_id,
+		MediaId:               media_id,
+		UseOriginalResolution: original,
+		Width:                 resolution.Width,
+		Height:                resolution.Height,
+		Fps:                   resolution.Fps,
+	}
+
+	task := ActiveTask{
+		definition: &task_definition,
+		status: &TaskStatus{
+			Stage:      "",
+			StageStart: 0,
+			Progress:   0,
+			lock:       &sync.Mutex{},
+		},
+		running:         false,
+		waiting_session: false,
+		session:         session,
+		killed:          false,
+	}
+
+	tm.tasks[task_id] = &task
+
+	tm.queue = append(tm.queue, &task) // Enqueue
+
+	tm.lock.Unlock()
+
+	// Save
+	err := tm.SavePendingTasks()
+
+	if err != nil {
+		LogError(err)
+	}
+
+	// Run other tasks
+	tm.RunPendingTasks()
+
+	return task_id
+}
+
+func (tm *TaskManager) KillTask(task_id uint64) {
+	tm.lock.Lock()
+
+	if tm.tasks[task_id] == nil {
+		tm.lock.Unlock()
+		return
+	}
+
+	tm.tasks[task_id].killed = true
+	delete(tm.pending_tasks.Pending, task_id) // Remove from pending tasks list
+
+	tm.lock.Unlock()
+
+	// Save
+	err := tm.SavePendingTasks()
+
+	if err != nil {
+		LogError(err)
+	}
+
+	// Run other tasks
+	tm.RunPendingTasks()
+}
+
+func (tm *TaskManager) GetTaskStatus(task_id uint64) *TaskStatus {
+	tm.lock.Lock()
+	defer tm.lock.Unlock()
+
+	if tm.tasks[task_id] == nil {
+		return nil
+	}
+
+	return tm.tasks[task_id].status
 }
