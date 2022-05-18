@@ -73,7 +73,7 @@ func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 
 		return &mp, nil
 	} else if errors.Is(err, os.ErrNotExist) {
-		// No tags
+		// No albums yet
 
 		mp := VaultAlbumsData{
 			NextId: 0,
