@@ -84,9 +84,23 @@ func main() {
 			os.Exit(1)
 		}
 
+		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath) // Set FFMPEG paths
+
 		SetDebugLogEnabled(options.debug) // Log debug mode
 
 		SetTempFilesPath(options.tempPath) // Set temporal files path
+
+		// Create and initialize vault
+
+		vault := Vault{}
+		err := vault.Initialize(options.vaultPath)
+
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		// TODO: Create and run HTTP server
 	} else {
 		printHelp()
 	}
