@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -28,6 +29,16 @@ func LogInfo(line string) {
 
 func LogError(err error) {
 	LogLine("[ERROR] " + err.Error())
+}
+
+func LogTaskError(task_id uint64, err string) {
+	LogLine("[TASK #" + fmt.Sprint(task_id) + "] [ERROR] " + err)
+}
+
+func LogTaskDebug(task_id uint64, err string) {
+	if log_debug_enabled {
+		LogLine("[TASK #" + fmt.Sprint(task_id) + "] [DEBUG] " + err)
+	}
 }
 
 func LogDebug(line string) {

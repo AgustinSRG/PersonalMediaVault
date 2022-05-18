@@ -39,6 +39,7 @@ type MediaResolution struct {
 
 	TaskCreated bool   `json:"task_created"`
 	TaskId      uint64 `json:"task_id"`
+	TaskError   string `json:"task_error"`
 }
 
 type MediaMetadata struct {
@@ -66,6 +67,7 @@ type MediaMetadata struct {
 
 	PreviewsReady    bool    `json:"previews_ready"`
 	PreviewsInterval float64 `json:"previews_interval"`
+	PreviewsError    string  `json:"previews_error"`
 }
 
 func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64) error {
@@ -87,6 +89,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		Resolutions:      make([]MediaResolution, 0),
 		PreviewsReady:    false,
 		PreviewsInterval: 0,
+		PreviewsError:    "",
 	}
 
 	media.lock.RequestWrite() // Request write
