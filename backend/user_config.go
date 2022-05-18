@@ -59,6 +59,7 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 		// Default config
 
 		mp := UserConfig{
+			MaxTasks:        1,
 			EncodingThreads: 0,
 			Resolutions:     make([]UserConfigResolution, 0),
 		}
