@@ -5,7 +5,6 @@ package main
 import (
 	"crypto/subtle"
 	"os"
-	"path"
 	"testing"
 )
 
@@ -21,13 +20,11 @@ func TestCredentialsManager(t *testing.T) {
 		panic(err)
 	}
 
-	test_file := path.Join(test_path_base, "credentials.json")
-
 	// Initalize credentials
 
 	var cred VaultCredentialsManager
 
-	err = cred.Initialize(test_file)
+	err = cred.Initialize(test_path_base)
 
 	if err != nil {
 		t.Error(err)
@@ -64,7 +61,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	var cred2 VaultCredentialsManager
 
-	cred2.Initialize(test_file)
+	cred2.Initialize(test_path_base)
 
 	// Check password
 
@@ -95,5 +92,5 @@ func TestCredentialsManager(t *testing.T) {
 		t.Errorf("Keys are different")
 	}
 
-	os.Remove(test_file)
+	ClearTemporalFilesPath()
 }

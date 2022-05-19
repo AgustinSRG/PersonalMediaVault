@@ -11,7 +11,8 @@ type BackendOptions struct {
 	debug bool // Debug mode
 
 	// Run modes
-	daemon bool
+	daemon     bool
+	initialize bool
 
 	// FFmpeg
 	ffmpegPath  string
@@ -61,16 +62,23 @@ func main() {
 			return
 		} else if arg == "--daemon" || arg == "-d" {
 			options.daemon = true
+		} else if arg == "--init" || arg == "-i" {
+			options.initialize = true
 		} else if arg == "--vault-path" || arg == "-vp" {
 			if i == len(args)-1 {
 				fmt.Println("The option '--vault-path' requires a value")
-				options.vaultPath = args[i+1]
-				i++
+				os.Exit(1)
 			}
+			options.vaultPath = args[i+1]
+			i++
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
 		}
+	}
+
+	if options.initialize {
+		InitializeCredentialsPath(options.vaultPath)
 	}
 
 	if options.daemon {
@@ -101,6 +109,8 @@ func main() {
 		}
 
 		// TODO: Create and run HTTP server
+	} else if options.initialize {
+		return
 	} else {
 		printHelp()
 	}
@@ -112,6 +122,7 @@ func printHelp() {
 	fmt.Println("        --help, -h                 Prints command line options.")
 	fmt.Println("        --version, -v              Prints version.")
 	fmt.Println("        --daemon, -d               Runs backend daemon.")
+	fmt.Println("        --init, -i                 Initializes the vault. Asks for username and password.")
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
 	fmt.Println("    ENVIRONMENT VARIABLES:")

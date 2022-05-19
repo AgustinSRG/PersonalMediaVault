@@ -3,14 +3,21 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 	"sync"
+	"syscall"
+
+	"golang.org/x/term"
 )
 
 const (
@@ -35,16 +42,95 @@ type VaultCredentialsManager struct {
 	lock *sync.Mutex
 }
 
+func InitializeCredentialsPath(base_path string) {
+	err := os.MkdirAll(base_path, FOLDER_PERMISSION)
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	file := path.Join(base_path, "credentials.json")
+
+	if _, err := os.Stat(file); err == nil {
+		fmt.Println("Vault already exists. Skipping initializing process.")
+		return
+	} else if errors.Is(err, os.ErrNotExist) {
+		reader := bufio.NewReader(os.Stdin)
+
+		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
+
+		fmt.Print("Enter Username: ")
+		username, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		username = strings.TrimSpace(username)
+
+		var password string
+		var password_repeat string
+
+		for password == "" || password != password_repeat {
+			fmt.Print("Enter Password: ")
+			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			password = strings.TrimSpace(string(bytePassword))
+
+			if password == "" {
+				fmt.Println("Password cannot be blank.")
+				continue
+			}
+
+			fmt.Print("\n")
+
+			fmt.Print("Repeat Password: ")
+			bytePassword, err = term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			fmt.Print("\n")
+
+			password_repeat = strings.TrimSpace(string(bytePassword))
+
+			if password != password_repeat {
+				fmt.Println("Passwords do not match.")
+			}
+		}
+
+		cm := VaultCredentialsManager{}
+
+		err = cm.Create(file, username, password)
+
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		fmt.Println("Vault initialized successfully!")
+	} else {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+}
+
 // Loads the creadentials file or creates a new one if
 // there is not one
-func (manager *VaultCredentialsManager) Initialize(file string) error {
-	manager.file = file
+func (manager *VaultCredentialsManager) Initialize(base_path string) error {
+	manager.file = path.Join(base_path, "credentials.json")
 
 	manager.lock = &sync.Mutex{}
 
-	if _, err := os.Stat(file); err == nil {
+	if _, err := os.Stat(manager.file); err == nil {
 		// exists
-		b, err := ioutil.ReadFile(file)
+		b, err := ioutil.ReadFile(manager.file)
 
 		if err != nil {
 			return err
