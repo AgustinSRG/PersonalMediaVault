@@ -35,7 +35,8 @@ type MediaResolution struct {
 	Height int32 `json:"height"`
 	Fps    int32 `json:"fps"`
 
-	Ready bool `json:"ready"`
+	Ready bool   `json:"ready"`
+	Asset uint64 `json:"asset"`
 
 	TaskCreated bool   `json:"task_created"`
 	TaskId      uint64 `json:"task_id"`
@@ -60,16 +61,17 @@ type MediaMetadata struct {
 	NextAssetID uint64 `json:"next_asset_id"`
 
 	OriginalReady bool   `json:"original_ready"`
-	OriginalAsset string `json:"original_asset"`
+	OriginalAsset uint64 `json:"original_asset"`
 
 	ThumbnailReady bool   `json:"thumb_ready"`
-	ThumbnailAsset string `json:"thumb_asset"`
+	ThumbnailAsset uint64 `json:"thumb_asset"`
 
 	Resolutions []MediaResolution `json:"resolutions"`
 
 	PreviewsReady    bool    `json:"previews_ready"`
 	PreviewsInterval float64 `json:"previews_interval"`
 	PreviewsError    string  `json:"previews_error"`
+	PreviewsAsset    uint64  `json:"previews_asset"`
 }
 
 func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64, width int32, height int32) error {
@@ -87,13 +89,14 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		UploadTimestamp:  now,
 		NextAssetID:      0,
 		OriginalReady:    false,
-		OriginalAsset:    "",
+		OriginalAsset:    0,
 		ThumbnailReady:   false,
-		ThumbnailAsset:   "",
+		ThumbnailAsset:   0,
 		Resolutions:      make([]MediaResolution, 0),
 		PreviewsReady:    false,
 		PreviewsInterval: 0,
 		PreviewsError:    "",
+		PreviewsAsset:    0,
 	}
 
 	media.lock.RequestWrite() // Request write

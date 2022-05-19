@@ -16,6 +16,65 @@ func RunHTTPServer() {
 
 	// API routes
 
+	// Auth API
+	router.HandleFunc("/api/auth/login", api_handleAuthLogin).Methods("POST")
+	router.HandleFunc("/api/auth/logout", api_handleAuthLogout).Methods("POST")
+
+	// Account API (changing credentials)
+	router.HandleFunc("/api/account/username", api_changeUsername).Methods("POST")
+	router.HandleFunc("/api/account/password", api_changePassword).Methods("POST")
+
+	// Assets API (get encrypted media files)
+	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
+	router.HandleFunc("/assets/hls/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoHLS).Methods("GET")
+
+	// Media API
+	router.HandleFunc("/api/media/{mid:[0-9]+}", api_getMedia).Methods("GET")
+
+	router.HandleFunc("/api/upload", api_uploadMedia).Methods("POST")
+
+	router.HandleFunc("/api/media/{mid:[0-9]+}/edit", api_editMedia).Methods("POST")
+
+	router.HandleFunc("/api/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
+
+	router.HandleFunc("/api/media/{mid:[0-9]+}/encode", api_mediaRequestEncode).Methods("POST")
+
+	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/add", api_mediaAddResolution).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/remove", api_mediaRemoveResolution).Methods("POST")
+
+	// Search API
+	router.HandleFunc("/api/search", api_searchMedia).Methods("GET")
+
+	// Tags API
+	router.HandleFunc("/api/tags", api_getTags).Methods("GET")
+
+	router.HandleFunc("/api/tags/add", api_tagMedia).Methods("POST")
+	router.HandleFunc("/api/tags/remove", api_untagMedia).Methods("POST")
+
+	// Albums API
+	router.HandleFunc("/api/albums", api_getAlbums).Methods("GET")
+	router.HandleFunc("/api/albums/{id:[0-9]+}", api_getAlbum).Methods("GET")
+
+	router.HandleFunc("/api/albums", api_createAlbum).Methods("POST")
+
+	router.HandleFunc("/api/albums/{id:[0-9]+}/delete", api_deleteAlbum).Methods("POST")
+
+	router.HandleFunc("/api/albums/{id:[0-9]+}/rename", api_renameAlbum).Methods("POST")
+
+	router.HandleFunc("/api/albums/{id:[0-9]+}/set", api_setAlbumList).Methods("POST")
+
+	router.HandleFunc("/api/albums/{id:[0-9]+}/add", api_albumAddMedia).Methods("POST")
+	router.HandleFunc("/api/albums/{id:[0-9]+}/remove", api_albumRemoveMedia).Methods("POST")
+
+	// Config API
+	router.HandleFunc("/api/config", api_getConfig).Methods("GET")
+	router.HandleFunc("/api/config", api_setConfig).Methods("POST")
+
+	// Tasks API
+	router.HandleFunc("/api/tasks", api_getTasks).Methods("GET")
+	router.HandleFunc("/api/tasks/{id:[0-9]+}", api_getTask).Methods("GET")
+	router.HandleFunc("/api/tasks/{id:[0-9]+}/kill", api_killTask).Methods("POST")
+
 	// Static frontend
 
 	frontend_path := os.Getenv("FRONTEND_PATH")
