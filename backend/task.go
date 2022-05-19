@@ -22,14 +22,14 @@ func (task *ActiveTask) Run(vault *Vault) {
 	}()
 
 	switch task.definition.Type {
-	case TASK_HLS:
-		task.RunEncodeToHLS(vault)
+	case TASK_ENCODE:
+		task.RunEncodeMediaTask(vault)
 	case TASK_IMAGE_PREVIEWS:
 		task.RunGeneratePreviews(vault)
 	}
 }
 
-func (task *ActiveTask) RunEncodeToHLS(vault *Vault) {
+func (task *ActiveTask) RunEncodeMediaTask(vault *Vault) {
 }
 
 func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {

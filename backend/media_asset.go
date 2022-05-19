@@ -52,6 +52,8 @@ type MediaMetadata struct {
 	Tags        []uint64 `json:"tags"`
 
 	MediaDuration float64 `json:"duration"`
+	Width         int32   `json:"width"`
+	Height        int32   `json:"height"`
 
 	UploadTimestamp int64 `json:"upload_time"`
 
@@ -70,13 +72,15 @@ type MediaMetadata struct {
 	PreviewsError    string  `json:"previews_error"`
 }
 
-func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64) error {
+func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64, width int32, height int32) error {
 	now := time.Now().UnixMilli()
 
 	meta := MediaMetadata{
 		Id:               media.id,
 		Type:             media_type,
 		MediaDuration:    duration,
+		Width:            width,
+		Height:           height,
 		Title:            title,
 		Description:      desc,
 		Tags:             make([]uint64, 0),

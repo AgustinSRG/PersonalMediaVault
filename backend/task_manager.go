@@ -71,7 +71,7 @@ func (s *TaskStatus) SetProgress(p float64) {
 type TaskDefinitionType uint16
 
 const (
-	TASK_HLS            TaskDefinitionType = 1
+	TASK_ENCODE         TaskDefinitionType = 1
 	TASK_IMAGE_PREVIEWS TaskDefinitionType = 2
 )
 
