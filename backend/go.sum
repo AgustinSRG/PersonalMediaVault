@@ -1,3 +1,5 @@
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/vansante/go-ffprobe v1.1.0 h1:Tz5X+38tF8YYEFVz+PUTrtvlED35IorB7XI0USOqZWU=
 github.com/vansante/go-ffprobe v1.1.0/go.mod h1:AEIxsTWYTTeXpel90yu5J/QxuDWNaKCO50xRBN4rdac=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 h1:SrN+KX8Art/Sf4HNj6Zcz06G7VEz+7w9tdXTPOZ7+l4=

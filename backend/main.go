@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
 type BackendOptions struct {
@@ -25,6 +26,14 @@ type BackendOptions struct {
 	tempPath string
 }
 
+var (
+	GLOBAL_VAULT *Vault = nil
+)
+
+func GetVault() *Vault {
+	return GLOBAL_VAULT
+}
+
 // Program entry point
 func main() {
 	// Read arguments
@@ -38,11 +47,19 @@ func main() {
 	}
 
 	if options.ffmpegPath == "" {
-		options.ffmpegPath = "/usr/bin/ffmpeg"
+		if runtime.GOOS == "windows" {
+			options.ffmpegPath = "/ffmpeg/bin/ffmpeg.exe"
+		} else {
+			options.ffmpegPath = "/usr/bin/ffmpeg"
+		}
 	}
 
 	if options.ffprobePath == "" {
-		options.ffprobePath = "/usr/bin/ffprobe"
+		if runtime.GOOS == "windows" {
+			options.ffprobePath = "/ffmpeg/bin/ffprobe.exe"
+		} else {
+			options.ffprobePath = "/usr/bin/ffprobe"
+		}
 	}
 
 	if options.tempPath == "" {
@@ -108,7 +125,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		// TODO: Create and run HTTP server
+		GLOBAL_VAULT = &vault
+
+		// Create and run HTTP server
+		RunHTTPServer()
 	} else if options.initialize {
 		return
 	} else {
@@ -128,7 +148,12 @@ func printHelp() {
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
-	fmt.Println("        TEMP_PATH                  Path to a folder where temporally store files.")
+	fmt.Println("        BIND_ADDRESS               Bind address for listening HTTP and HTTPS.")
+	fmt.Println("        HTTP_PORT                  HTTP listening port, 80 by default.")
+	fmt.Println("        SSL_PORT                   HTTPS listening port, 443 by default.")
+	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
+	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
+	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
 }
 
 func printVersion() {
