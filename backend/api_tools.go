@@ -19,7 +19,7 @@ const (
 func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
 
-	if sessionToken == "" && request.Method == "GET" {
+	if sessionToken == "" && (request.Method == "GET" || request.Method == "HEAD") {
 		c, err := request.Cookie("x-session-token")
 
 		if err == nil || c != nil {
