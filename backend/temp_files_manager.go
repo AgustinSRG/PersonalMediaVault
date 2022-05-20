@@ -31,8 +31,22 @@ func SetTempFilesPath(path string) {
 
 // Clears temp path on application exit
 func ClearTemporalFilesPath() {
-	os.RemoveAll(temp_files_path)
 	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+
+	entries, err := os.ReadDir(temp_files_path)
+
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	for i := 0; i < len(entries); i++ {
+		if entries[i].Type().IsRegular() {
+			WipeTemporalFile(path.Join(temp_files_path, entries[i].Name()))
+		} else if entries[i].Type().IsDir() {
+			WipeTemporalPath(path.Join(temp_files_path, entries[i].Name()))
+		}
+	}
 }
 
 // Gets a name for a temporal file
@@ -81,8 +95,10 @@ func WipeTemporalFile(file string) {
 		return
 	}
 
-	defer f.Close()
-	defer os.Remove(file)
+	defer func() {
+		f.Close()
+		os.Remove(file)
+	}()
 
 	fileInfo, err := f.Stat()
 	if err != nil {
@@ -111,4 +127,21 @@ func WipeTemporalFile(file string) {
 	for i := int64(0); i < chunkCount; i++ {
 		f.Write(fileChunk)
 	}
+}
+
+func WipeTemporalPath(p string) {
+	entries, err := os.ReadDir(p)
+
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	for i := 0; i < len(entries); i++ {
+		if entries[i].Type().IsRegular() {
+			WipeTemporalFile(path.Join(p, entries[i].Name()))
+		}
+	}
+
+	os.Remove(p)
 }

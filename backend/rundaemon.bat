@@ -1,6 +1,6 @@
 @echo off
 
-SET FFMPEG_PATH=/ffmpeg/bin/ffmpeg
-SET FFPROBE_PATH=/ffmpeg/bin/ffprobe
+SET FFMPEG_PATH=/ffmpeg/bin/ffmpeg.exe
+SET FFPROBE_PATH=/ffmpeg/bin/ffprobe.exe
 
-call personal-media-vault.exe --daemon --debug
+call personal-media-vault.exe --clean --daemon --debug

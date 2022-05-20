@@ -14,6 +14,7 @@ type BackendOptions struct {
 	// Run modes
 	daemon     bool
 	initialize bool
+	clean      bool
 
 	// FFmpeg
 	ffmpegPath  string
@@ -79,6 +80,8 @@ func main() {
 			return
 		} else if arg == "--daemon" || arg == "-d" {
 			options.daemon = true
+		} else if arg == "--clean" || arg == "-c" {
+			options.clean = true
 		} else if arg == "--init" || arg == "-i" {
 			options.initialize = true
 		} else if arg == "--vault-path" || arg == "-vp" {
@@ -92,6 +95,13 @@ func main() {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
 		}
+	}
+
+	SetTempFilesPath(options.tempPath) // Set temporal files path
+
+	if options.clean {
+		LogInfo("Cleaning temporal files...")
+		ClearTemporalFilesPath()
 	}
 
 	if options.initialize {
@@ -113,8 +123,6 @@ func main() {
 
 		SetDebugLogEnabled(options.debug) // Log debug mode
 
-		SetTempFilesPath(options.tempPath) // Set temporal files path
-
 		// Create and initialize vault
 
 		vault := Vault{}
@@ -129,7 +137,7 @@ func main() {
 
 		// Create and run HTTP server
 		RunHTTPServer()
-	} else if options.initialize {
+	} else if options.initialize || options.clean {
 		return
 	} else {
 		printHelp()
@@ -145,15 +153,17 @@ func printHelp() {
 	fmt.Println("        --init, -i                 Initializes the vault. Asks for username and password.")
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
+	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
+	fmt.Println("        TEMP_PATH                  Temporal path to store thing like uploaded files.")
+	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
 	fmt.Println("        BIND_ADDRESS               Bind address for listening HTTP and HTTPS.")
 	fmt.Println("        HTTP_PORT                  HTTP listening port, 80 by default.")
 	fmt.Println("        SSL_PORT                   HTTPS listening port, 443 by default.")
 	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
-	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 }
 
