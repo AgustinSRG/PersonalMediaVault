@@ -241,13 +241,28 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 			args = append(args, "-ss", fmt.Sprint(midPoint))
 		}
 
+		// Crop image
+		x := int32(0)
+		y := int32(0)
+		w := probedata.Width
+		h := probedata.Height
+
+		if w > h {
+			x = int32(math.Floor(float64(w-h) / 2))
+			w = h
+		} else if h > w {
+			y = int32(math.Floor(float64(h-w) / 2))
+			h = w
+		}
+
 		// Video filter
-		videoFilter := "scale=" + fmt.Sprint(THUMBNAIL_SIZE) + ":" + fmt.Sprint(THUMBNAIL_SIZE) +
+		videoFilter := "crop=" + fmt.Sprint(w) + ":" + fmt.Sprint(h) + ":" + fmt.Sprint(x) + ":" + fmt.Sprint(y) +
+			",scale=" + fmt.Sprint(THUMBNAIL_SIZE) + ":" + fmt.Sprint(THUMBNAIL_SIZE) +
 			":force_original_aspect_ratio=decrease,format=rgba,pad=" + fmt.Sprint(THUMBNAIL_SIZE) + ":" + fmt.Sprint(THUMBNAIL_SIZE) +
 			":(ow-iw)/2:(oh-ih)/2:color=#00000000"
 		args = append(args, "-vf", videoFilter)
 
-		// Playlist name
+		// Outout
 		args = append(args, tmpFile)
 
 		err := cmd.Run()
@@ -293,7 +308,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 			":(ow-iw)/2:(oh-ih)/2:color=#00000000"
 		args = append(args, "-vf", videoFilter)
 
-		// Playlist name
+		// Output
 		args = append(args, tmpFile)
 
 		err := cmd.Run()
