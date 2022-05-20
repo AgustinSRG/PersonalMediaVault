@@ -26,6 +26,13 @@ func api_getConfig(response http.ResponseWriter, request *http.Request) {
 
 	jsonResult, err := json.Marshal(config)
 
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
 	response.Header().Add("Content-Type", "application/json")
 	response.WriteHeader(200)
 

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -63,4 +64,28 @@ func ParseRangeHeader(request *http.Request) (int64, int64) {
 	}
 
 	return start, end
+}
+
+type APIErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+func ReturnAPIError(response http.ResponseWriter, status int, code string, message string) {
+	var m APIErrorResponse
+
+	m.Code = code
+	m.Message = message
+
+	jsonRes, err := json.Marshal(m)
+
+	if err != nil {
+		LogError(err)
+		response.WriteHeader(500)
+		return
+	}
+
+	response.Header().Add("Content-Type", "application/json")
+	response.WriteHeader(status)
+	response.Write(jsonRes)
 }

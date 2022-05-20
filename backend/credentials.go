@@ -60,14 +60,29 @@ func InitializeCredentialsPath(base_path string) {
 
 		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
 
-		fmt.Print("Enter Username: ")
-		username, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Error: " + err.Error())
-			os.Exit(1)
-		}
+		var username string = ""
 
-		username = strings.TrimSpace(username)
+		for username == "" {
+			fmt.Print("Enter Username: ")
+			username, err = reader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			username = strings.TrimSpace(username)
+
+			if username == "" {
+				fmt.Println("Username cannot be blank.")
+				continue
+			}
+
+			if len(username) > 255 {
+				fmt.Println("Username cannot be longer than 255 characters.")
+				username = ""
+				continue
+			}
+		}
 
 		var password string
 		var password_repeat string
@@ -84,6 +99,12 @@ func InitializeCredentialsPath(base_path string) {
 
 			if password == "" {
 				fmt.Println("Password cannot be blank.")
+				continue
+			}
+
+			if len(password) > 255 {
+				fmt.Println("Password cannot be longer than 255 characters.")
+				password = ""
 				continue
 			}
 

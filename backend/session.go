@@ -13,6 +13,7 @@ import (
 const SESSION_EXPIRATION_TIME = 24 * 60 * 60 * 1000
 
 type ActiveSession struct {
+	id        string
 	user      string
 	key       []byte
 	not_after int64
@@ -40,6 +41,7 @@ func (sm *SessionManager) CreateSession(user string, key []byte) string {
 	sm.lock.Lock()
 
 	newSession := ActiveSession{
+		id:        sessionId,
 		user:      user,
 		key:       key,
 		not_after: time.Now().UnixMilli() + SESSION_EXPIRATION_TIME,
