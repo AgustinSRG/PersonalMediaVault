@@ -61,8 +61,9 @@ type MediaMetadata struct {
 
 	NextAssetID uint64 `json:"next_asset_id"`
 
-	OriginalReady bool   `json:"original_ready"`
-	OriginalAsset uint64 `json:"original_asset"`
+	OriginalReady     bool   `json:"original_ready"`
+	OriginalAsset     uint64 `json:"original_asset"`
+	OriginalExtension string `json:"original_ext"`
 
 	ThumbnailReady bool   `json:"thumb_ready"`
 	ThumbnailAsset uint64 `json:"thumb_asset"`
