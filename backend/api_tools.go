@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+const (
+	JSON_BODY_MAX_LENGTH     = 5 * 1024 * 1024
+	AUTH_API_BODY_MAX_LENGTH = 16 * 1024
+)
+
 func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
 
