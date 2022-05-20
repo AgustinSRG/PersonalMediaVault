@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -214,4 +215,23 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte) error {
 
 func (media *MediaAsset) CancelWrite() {
 	media.lock.EndWrite()
+}
+
+const (
+	ASSET_MUTI_FILE   = "m"
+	ASSET_SINGLE_FILE = "s"
+)
+
+func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string {
+	return path.Join(media.path, asset_type+"_"+fmt.Sprint(asset_id)+".pma")
+}
+
+func (media *MediaAsset) StartReadAsset(asset_id uint64, asset_type string) string {
+	media.lock.StartRead()
+
+	return media.GetAssetPath(asset_id, asset_type)
+}
+
+func (media *MediaAsset) EndReadAsset(asset_id uint64) {
+	media.lock.EndRead()
 }
