@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 )
 
 var (
@@ -44,5 +45,11 @@ func LogTaskDebug(task_id uint64, err string) {
 func LogDebug(line string) {
 	if log_debug_enabled {
 		LogLine("[DEBUG] " + line)
+	}
+}
+
+func LogRequest(r *http.Request) {
+	if log_debug_enabled {
+		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path)
 	}
 }
