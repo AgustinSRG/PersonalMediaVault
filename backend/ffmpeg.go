@@ -34,7 +34,7 @@ type FFprobeMediaResult struct {
 	Fps      int32
 }
 
-func ProbeMediaFileWithFFMprobe(file string) (*FFprobeMediaResult, error) {
+func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	data, err := ffprobe.GetProbeData(file, 5*time.Second)
 
 	if err != nil {
@@ -147,7 +147,8 @@ func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat st
 	// HLS playlist options
 	args = append(args, "-hls_time", "6")
 	args = append(args, "-hls_list_size", "0")
-	args = append(args, "-hls_segment_filename", "f%d.ts")
+	args = append(args, "-hls_playlist_type", "vod")
+	args = append(args, "-hls_segment_filename", "f_%d.ts")
 
 	// Playlist name
 	args = append(args, "video.m3u8")
