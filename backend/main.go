@@ -154,6 +154,7 @@ func printHelp() {
 	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
 	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
+	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 }
 
 func printVersion() {

@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -88,4 +89,18 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 	response.Header().Add("Content-Type", "application/json")
 	response.WriteHeader(status)
 	response.Write(jsonRes)
+}
+
+func GetClientIP(request *http.Request) string {
+	if os.Getenv("USING_PROXY") == "YES" {
+		forwardedFor := request.Header.Get("X-Forwarded-For")
+
+		if forwardedFor != "" {
+			return forwardedFor
+		} else {
+			return request.RemoteAddr
+		}
+	} else {
+		return request.RemoteAddr
+	}
 }

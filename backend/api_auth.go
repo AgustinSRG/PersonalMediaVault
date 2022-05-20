@@ -28,6 +28,8 @@ var (
 )
 
 func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
+	clientIP := GetClientIP(request)
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
 	var p LoginAPIBody
@@ -51,7 +53,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 	// Check last failure
 	LAST_INVALID_PASSWORD_MU.Lock()
 	now := time.Now().UnixMilli()
-	lastFailure := LAST_INVALID_PASSWORD_MAP[request.RemoteAddr]
+	lastFailure := LAST_INVALID_PASSWORD_MAP[clientIP]
 
 	if now-lastFailure < AUTH_FAIL_COOLDOWN {
 		LAST_INVALID_PASSWORD_MU.Unlock()
@@ -63,7 +65,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 	valid := GetVault().credentials.CheckCredentials(p.Username, p.Password)
 
 	if !valid {
-		LAST_INVALID_PASSWORD_MAP[request.RemoteAddr] = now
+		LAST_INVALID_PASSWORD_MAP[clientIP] = now
 		LAST_INVALID_PASSWORD_MU.Unlock()
 		ReturnAPIError(response, 403, "INVALID_CREDENTIALS", "Invalid credentials provided.")
 		return
