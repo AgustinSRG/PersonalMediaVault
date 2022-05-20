@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -92,15 +93,17 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 }
 
 func GetClientIP(request *http.Request) string {
+	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
+
 	if os.Getenv("USING_PROXY") == "YES" {
 		forwardedFor := request.Header.Get("X-Forwarded-For")
 
 		if forwardedFor != "" {
 			return forwardedFor
 		} else {
-			return request.RemoteAddr
+			return ip
 		}
 	} else {
-		return request.RemoteAddr
+		return ip
 	}
 }
