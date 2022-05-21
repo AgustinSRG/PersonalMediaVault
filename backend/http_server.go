@@ -38,8 +38,7 @@ func RunHTTPServer() {
 
 	// Assets API (get encrypted media files)
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
-	router.HandleFunc("/assets/hls/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoHLS).Methods("GET")
-	router.HandleFunc("/assets/pv/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
+	router.HandleFunc("/assets/p/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
 
 	// Media API
 	router.HandleFunc("/api/media/{mid:[0-9]+}", api_getMedia).Methods("GET")

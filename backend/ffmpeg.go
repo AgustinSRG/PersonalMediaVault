@@ -101,7 +101,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	}
 }
 
-func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
@@ -117,8 +117,6 @@ func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat st
 	}
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
-
-	args = append(args, "-f", "hls") // Output format
 
 	// Video filter
 	videoFilter := ""
@@ -133,28 +131,13 @@ func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat st
 
 	args = append(args, "-vf", videoFilter)
 
-	// HLS encoder hidden options
-	args = append(args, "-profile:v", "baseline")
-	args = append(args, "-level", "3.0")
-	args = append(args, "-pix_fmt", "yuv420p")
-	args = append(args, "-strict", "-2")
-
-	// Force key frames every 3 seconds
-	args = append(args, "-force_key_frames", "expr:gte(t,n_forced*3)")
-
-	// HLS playlist options
-	args = append(args, "-hls_time", "6")
-	args = append(args, "-hls_list_size", "0")
-	args = append(args, "-hls_playlist_type", "vod")
-	args = append(args, "-hls_segment_filename", "f_%d.ts")
-
-	// Playlist name
-	args = append(args, "video.m3u8")
+	// MP4
+	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
 
 	return cmd
 }
 
-func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
@@ -171,10 +154,8 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
-	args = append(args, "-f", "hls") // Output format
-
-	// Playlist name
-	args = append(args, "video.mp4")
+	// MP4
+	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
 
 	return cmd
 }
