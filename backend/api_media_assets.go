@@ -207,9 +207,15 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		bytesRead += int64(c)
+		bytesToRead := int64(c)
 
-		_, err = response.Write(buf[:c])
+		if bytesToRead > (contentLength - bytesRead) {
+			bytesToRead = contentLength - bytesRead
+		}
+
+		bytesRead += bytesToRead
+
+		_, err = response.Write(buf[:bytesToRead])
 
 		if err != nil {
 			s.Close()
