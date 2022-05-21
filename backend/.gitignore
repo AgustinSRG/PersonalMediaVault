@@ -16,3 +16,7 @@ vault
 # Ignore .env
 
 .env
+
+# Others
+
+TODO.txt

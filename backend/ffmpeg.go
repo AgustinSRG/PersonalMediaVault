@@ -101,7 +101,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	}
 }
 
-func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat string, tempPath string, definition *TaskDefinition, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
@@ -121,19 +121,17 @@ func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat st
 	args = append(args, "-f", "hls") // Output format
 
 	// Video filter
-	if !definition.UseOriginalResolution {
-		videoFilter := ""
+	videoFilter := ""
 
-		if definition.Fps > 0 {
-			videoFilter += "fps=" + fmt.Sprint(definition.Fps) + ","
-		}
-
-		videoFilter += "scale=" + fmt.Sprint(definition.Width) + ":" + fmt.Sprint(definition.Height) +
-			":force_original_aspect_ratio=decrease,pad=" + fmt.Sprint(definition.Width) + ":" + fmt.Sprint(definition.Height) +
-			":(ow-iw)/2:(oh-ih)/2"
-
-		args = append(args, "-vf", videoFilter)
+	if resolution.Fps > 0 {
+		videoFilter += "fps=" + fmt.Sprint(resolution.Fps) + ","
 	}
+
+	videoFilter += "scale=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
+		":force_original_aspect_ratio=decrease,pad=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
+		":(ow-iw)/2:(oh-ih)/2"
+
+	args = append(args, "-vf", videoFilter)
 
 	// HLS encoder hidden options
 	args = append(args, "-profile:v", "baseline")
@@ -152,6 +150,31 @@ func MakeFFMpegEncodeToHLSCommand(originalFilePath string, originalFileFormat st
 
 	// Playlist name
 	args = append(args, "video.m3u8")
+
+	return cmd
+}
+
+func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
+	cmd := exec.Command(FFMPEG_BINARY_PATH)
+
+	cmd.Dir = tempPath
+
+	args := make([]string, 1)
+
+	args[0] = FFMPEG_BINARY_PATH
+
+	args = append(args, "-y") // Overwrite
+
+	if config.EncodingThreads > 0 {
+		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
+	}
+
+	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
+
+	args = append(args, "-f", "hls") // Output format
+
+	// Playlist name
+	args = append(args, "video.mp4")
 
 	return cmd
 }
@@ -181,7 +204,7 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 	return cmd
 }
 
-func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, definition *TaskDefinition, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
@@ -199,12 +222,33 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
 	// Video filter
-	if !definition.UseOriginalResolution {
-		videoFilter := "scale=" + fmt.Sprint(definition.Width) + ":" + fmt.Sprint(definition.Height) +
-			":force_original_aspect_ratio=decrease,format=rgba,pad=" + fmt.Sprint(definition.Width) + ":" + fmt.Sprint(definition.Height) +
-			":(ow-iw)/2:(oh-ih)/2:color=#00000000"
-		args = append(args, "-vf", videoFilter)
+	videoFilter := "scale=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
+		":force_original_aspect_ratio=decrease,format=rgba,pad=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
+		":(ow-iw)/2:(oh-ih)/2:color=#00000000"
+	args = append(args, "-vf", videoFilter)
+
+	// Playlist name
+	args = append(args, "image.png")
+
+	return cmd
+}
+
+func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
+	cmd := exec.Command(FFMPEG_BINARY_PATH)
+
+	cmd.Dir = tempPath
+
+	args := make([]string, 1)
+
+	args[0] = FFMPEG_BINARY_PATH
+
+	args = append(args, "-y") // Overwrite
+
+	if config.EncodingThreads > 0 {
+		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
 	}
+
+	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
 	// Playlist name
 	args = append(args, "image.png")

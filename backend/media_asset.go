@@ -64,6 +64,7 @@ type MediaMetadata struct {
 	OriginalReady     bool   `json:"original_ready"`
 	OriginalAsset     uint64 `json:"original_asset"`
 	OriginalExtension string `json:"original_ext"`
+	OriginalTask      uint64 `json:"original_task"`
 
 	ThumbnailReady bool   `json:"thumb_ready"`
 	ThumbnailAsset uint64 `json:"thumb_asset"`
@@ -71,6 +72,7 @@ type MediaMetadata struct {
 	Resolutions []MediaResolution `json:"resolutions"`
 
 	PreviewsReady    bool    `json:"previews_ready"`
+	PreviewsTask     uint64  `json:"previews_task"`
 	PreviewsInterval float64 `json:"previews_interval"`
 	PreviewsError    string  `json:"previews_error"`
 	PreviewsAsset    uint64  `json:"previews_asset"`

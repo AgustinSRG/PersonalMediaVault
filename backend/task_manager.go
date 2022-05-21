@@ -71,18 +71,16 @@ func (s *TaskStatus) SetProgress(p float64) {
 type TaskDefinitionType uint16
 
 const (
-	TASK_ENCODE         TaskDefinitionType = 1
-	TASK_IMAGE_PREVIEWS TaskDefinitionType = 2
+	TASK_ENCODE_ORIGINAL   TaskDefinitionType = 0
+	TASK_ENCODE_RESOLUTION TaskDefinitionType = 1
+	TASK_IMAGE_PREVIEWS    TaskDefinitionType = 2
 )
 
 type TaskDefinition struct {
-	Id                    uint64             `json:"id"`
-	MediaId               uint64             `json:"media_id"`
-	Type                  TaskDefinitionType `json:"type"`
-	UseOriginalResolution bool               `json:"original_resolution"`
-	Width                 int32              `json:"width"`
-	Height                int32              `json:"height"`
-	Fps                   int32              `json:"fps"`
+	Id         uint64                `json:"id"`
+	MediaId    uint64                `json:"media_id"`
+	Type       TaskDefinitionType    `json:"type"`
+	Resolution *UserConfigResolution `json:"resolution"`
 }
 
 type PendingTasksData struct {
@@ -267,20 +265,17 @@ func (tm *TaskManager) RunPendingTasks() {
 	}
 }
 
-func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_type TaskDefinitionType, original bool, resolution UserConfigResolution) uint64 {
+func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_type TaskDefinitionType, resolution *UserConfigResolution) uint64 {
 	tm.lock.Lock()
 
 	task_id := tm.pending_tasks.NextId
 	tm.pending_tasks.NextId++
 
 	task_definition := TaskDefinition{
-		Id:                    task_id,
-		MediaId:               media_id,
-		Type:                  task_type,
-		UseOriginalResolution: original,
-		Width:                 resolution.Width,
-		Height:                resolution.Height,
-		Fps:                   resolution.Fps,
+		Id:         task_id,
+		MediaId:    media_id,
+		Type:       task_type,
+		Resolution: resolution,
 	}
 
 	task := ActiveTask{

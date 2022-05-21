@@ -22,14 +22,19 @@ func (task *ActiveTask) Run(vault *Vault) {
 	}()
 
 	switch task.definition.Type {
-	case TASK_ENCODE:
-		task.RunEncodeMediaTask(vault)
+	case TASK_ENCODE_ORIGINAL:
+		task.RunEncodeOriginalMediaTask(vault)
+	case TASK_ENCODE_RESOLUTION:
+		task.RunEncodeResolutionMediaTask(vault)
 	case TASK_IMAGE_PREVIEWS:
 		task.RunGeneratePreviews(vault)
 	}
 }
 
-func (task *ActiveTask) RunEncodeMediaTask(vault *Vault) {
+func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
+}
+
+func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 }
 
 func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
