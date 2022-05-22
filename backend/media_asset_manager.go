@@ -136,6 +136,9 @@ func (mm *MediaAssetsManager) AcquireMediaResource(media_id uint64) *MediaAsset 
 		path:      mm.ResolveMediaPath(media_id),
 		lock:      CreateReadWriteLock(),
 		use_count: 1,
+		mu:        &sync.Mutex{},
+		files:     make(map[uint64]*MediaAssetFile),
+		deleting:  false,
 	}
 
 	mm.assets[media_id] = &newAsset

@@ -68,6 +68,7 @@ func (lock *ReadWriteLock) StartWrite() {
 	if lock.read_count > 0 {
 		lock.write_wait = true
 		mustWait = true
+		lock.write_wait_sem.Lock()
 	} else {
 		lock.writing = true
 	}
@@ -76,7 +77,6 @@ func (lock *ReadWriteLock) StartWrite() {
 
 	if mustWait {
 		// Lock 2 times, so it's always blocking until other thread unlocks it
-		lock.write_wait_sem.Lock()
 		lock.write_wait_sem.Lock()
 
 		lock.write_wait_sem.Unlock()
@@ -117,6 +117,7 @@ func (lock *ReadWriteLock) StartRead() {
 		mustWait = true
 		// Create a mutex and append it to the waiter list
 		readLock = &sync.Mutex{}
+		readLock.Lock()
 		lock.read_wait_locks = append(lock.read_wait_locks, readLock)
 	} else {
 		lock.read_count++
@@ -125,8 +126,7 @@ func (lock *ReadWriteLock) StartRead() {
 	lock.lock.Unlock()
 
 	if mustWait {
-		// Locck 2 times to ensure blocking until the write thread releases it
-		readLock.Lock()
+		// Lock 2 times to ensure blocking until the write thread releases it
 		readLock.Lock()
 
 		readLock.Unlock()

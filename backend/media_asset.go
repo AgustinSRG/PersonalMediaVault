@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
 
@@ -27,6 +28,23 @@ type MediaAsset struct {
 	lock *ReadWriteLock
 
 	use_count int32
+
+	deleting bool
+
+	mu *sync.Mutex
+
+	files map[uint64]*MediaAssetFile
+}
+
+type MediaAssetFile struct {
+	id uint64
+
+	lock *ReadWriteLock
+
+	use_count int32
+
+	waiting bool
+	wait_mu *sync.Mutex
 }
 
 type MediaResolution struct {
@@ -229,12 +247,93 @@ func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string
 	return path.Join(media.path, asset_type+"_"+fmt.Sprint(asset_id)+".pma")
 }
 
-func (media *MediaAsset) StartReadAsset(asset_id uint64, asset_type string) string {
-	media.lock.StartRead()
+func (media *MediaAsset) AcquireAsset(asset_id uint64, asset_type string) (bool, string, *ReadWriteLock) {
+	media.mu.Lock()
+	defer media.mu.Unlock()
 
-	return media.GetAssetPath(asset_id, asset_type)
+	if media.deleting {
+		return false, "", nil
+	}
+
+	p := media.GetAssetPath(asset_id, asset_type)
+
+	if media.files[asset_id] != nil {
+		media.files[asset_id].use_count++
+		return true, p, media.files[asset_id].lock
+	}
+
+	f := MediaAssetFile{
+		id:        asset_id,
+		lock:      CreateReadWriteLock(),
+		use_count: 1,
+		waiting:   false,
+		wait_mu:   &sync.Mutex{},
+	}
+
+	media.files[asset_id] = &f
+
+	return true, p, f.lock
 }
 
-func (media *MediaAsset) EndReadAsset(asset_id uint64) {
-	media.lock.EndRead()
+func (media *MediaAsset) ReleaseAsset(asset_id uint64) {
+	media.mu.Lock()
+	defer media.mu.Unlock()
+
+	if media.files[asset_id] != nil {
+		media.files[asset_id].use_count--
+
+		if media.files[asset_id].use_count <= 0 {
+
+			if media.files[asset_id].waiting {
+				media.files[asset_id].wait_mu.Unlock()
+			}
+
+			delete(media.files, asset_id)
+		}
+	}
+}
+
+func (media *MediaAsset) DeleteAll() {
+	// Delete metadata file
+
+	media.lock.RequestWrite()
+	media.lock.StartWrite()
+
+	os.Remove(path.Join(media.path, "meta.pmv"))
+
+	media.lock.EndWrite()
+
+	// Set deleting and wait for assets to be released
+
+	locks := make([]*sync.Mutex, 0)
+
+	media.mu.Lock()
+
+	if media.deleting {
+		return
+	}
+
+	media.deleting = true
+
+	for _, a := range media.files {
+		a.waiting = true
+		a.wait_mu.Lock()
+		locks = append(locks, a.wait_mu)
+	}
+
+	media.mu.Unlock()
+
+	for i := 0; i < len(locks); i++ {
+		locks[i].Lock()
+		locks[i].Unlock()
+	}
+
+	// Now, delete evrything
+
+	media.lock.RequestWrite()
+	media.lock.StartWrite()
+
+	os.RemoveAll(media.path)
+
+	media.lock.EndWrite()
 }

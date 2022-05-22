@@ -104,12 +104,21 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
-	asset_path := media.StartReadAsset(asset_id, ASSET_MUTI_FILE)
+	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_MUTI_FILE)
+
+	if !found {
+		GetVault().media.ReleaseMediaResource(media_id)
+		response.WriteHeader(404)
+		return
+	}
+
+	asset_lock.StartRead() // Start reading the asset
 
 	s, err := CreateFileBlockEncryptReadStream(asset_path, session.key)
 
 	if err != nil {
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		response.WriteHeader(404)
@@ -120,7 +129,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		// Invalid range
 		s.Close()
 
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.file_size))
@@ -172,7 +182,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	if onlyHeader {
 		s.Close()
 
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return
@@ -192,7 +203,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 			s.Close()
 
-			media.EndReadAsset(asset_id)
+			asset_lock.EndRead()
+			media.ReleaseAsset(asset_id)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return
@@ -201,7 +213,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		if c <= 0 {
 			s.Close()
 
-			media.EndReadAsset(asset_id)
+			asset_lock.EndRead()
+			media.ReleaseAsset(asset_id)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return
@@ -220,7 +233,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			s.Close()
 
-			media.EndReadAsset(asset_id)
+			asset_lock.EndRead()
+			media.ReleaseAsset(asset_id)
 			GetVault().media.ReleaseMediaResource(media_id)
 
 			return
@@ -229,7 +243,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 	s.Close()
 
-	media.EndReadAsset(asset_id)
+	asset_lock.EndRead()
+	media.ReleaseAsset(asset_id)
 	GetVault().media.ReleaseMediaResource(media_id)
 }
 
@@ -274,12 +289,22 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
-	asset_path := media.StartReadAsset(asset_id, ASSET_MUTI_FILE)
+	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_MUTI_FILE)
+
+	if !found {
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(404)
+		return
+	}
+
+	asset_lock.StartRead()
 
 	s, err := CreateMultiFilePackReadStream(asset_path)
 
 	if err != nil {
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		response.WriteHeader(404)
@@ -289,7 +314,8 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 	if preview_img_index < 0 || preview_img_index >= s.file_count {
 		s.Close()
 
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		response.WriteHeader(404)
@@ -305,7 +331,8 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 		s.Close()
 
-		media.EndReadAsset(asset_id)
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		response.WriteHeader(500)
@@ -314,7 +341,8 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	s.Close()
 
-	media.EndReadAsset(asset_id)
+	asset_lock.EndRead()
+	media.ReleaseAsset(asset_id)
 	GetVault().media.ReleaseMediaResource(media_id)
 
 	// Decrypt the data
