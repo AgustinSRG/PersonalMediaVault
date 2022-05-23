@@ -16,9 +16,10 @@ import (
 type MediaType uint16
 
 const (
-	MediaTypeImage MediaType = 1
-	MediaTypeVideo MediaType = 2
-	MediaTypeAudio MediaType = 3
+	MediaTypeDeleted MediaType = 0
+	MediaTypeImage   MediaType = 1
+	MediaTypeVideo   MediaType = 2
+	MediaTypeAudio   MediaType = 3
 )
 
 type MediaAsset struct {
@@ -187,7 +188,7 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 	}
 }
 
-func (media *MediaAsset) ReadMeatadata(key []byte) (*MediaMetadata, error) {
+func (media *MediaAsset) ReadMetadata(key []byte) (*MediaMetadata, error) {
 	media.lock.StartRead() // Request read
 	defer media.lock.EndRead()
 

@@ -71,6 +71,10 @@ func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 			return nil, err
 		}
 
+		if mp.Albums == nil {
+			mp.Albums = make(map[uint64]*VaultAlbumData)
+		}
+
 		return &mp, nil
 	} else if errors.Is(err, os.ErrNotExist) {
 		// No albums yet

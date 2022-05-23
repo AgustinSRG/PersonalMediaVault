@@ -31,10 +31,18 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 	media := GetVault().media.AcquireMediaResource(task.definition.MediaId)
 
-	meta, err := media.ReadMeatadata(task.session.key)
+	meta, err := media.ReadMetadata(task.session.key)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	if meta == nil {
+		LogTaskError(task.definition.Id, "Error: Media not found")
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
