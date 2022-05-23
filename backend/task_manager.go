@@ -345,3 +345,72 @@ func (tm *TaskManager) GetTaskStatus(task_id uint64) *TaskStatus {
 
 	return tm.tasks[task_id].status
 }
+
+type TaskListInfoEntry struct {
+	Id      uint64 `json:"id"`
+	Running bool   `json:"running"`
+
+	MediaId    uint64                `json:"media_id"`
+	Type       TaskDefinitionType    `json:"type"`
+	Resolution *UserConfigResolution `json:"resolution"`
+
+	Stage      string  `json:"stage"`
+	StageStart int64   `json:"stage_start"`
+	Progress   float64 `json:"stage_progress"`
+}
+
+func (tm *TaskManager) GetTaskInfo(task_id uint64) *TaskListInfoEntry {
+	tm.lock.Lock()
+	defer tm.lock.Unlock()
+
+	if tm.tasks[task_id] == nil {
+		return nil
+	}
+
+	task := tm.tasks[task_id]
+
+	var info TaskListInfoEntry
+
+	info.Id = task.definition.Id
+	info.Running = task.running
+
+	info.MediaId = task.definition.MediaId
+	info.Type = task.definition.Type
+	info.Resolution = task.definition.Resolution
+
+	stage, stage_start, stage_p := task.status.Get()
+
+	info.Stage = stage
+	info.StageStart = stage_start
+	info.Progress = stage_p
+
+	return &info
+}
+
+func (tm *TaskManager) GetAllTasks() []*TaskListInfoEntry {
+	tm.lock.Lock()
+	defer tm.lock.Unlock()
+
+	result := make([]*TaskListInfoEntry, 0)
+
+	for _, task := range tm.tasks {
+		var info TaskListInfoEntry
+
+		info.Id = task.definition.Id
+		info.Running = task.running
+
+		info.MediaId = task.definition.MediaId
+		info.Type = task.definition.Type
+		info.Resolution = task.definition.Resolution
+
+		stage, stage_start, stage_p := task.status.Get()
+
+		info.Stage = stage
+		info.StageStart = stage_start
+		info.Progress = stage_p
+
+		result = append(result, &info)
+	}
+
+	return result
+}
