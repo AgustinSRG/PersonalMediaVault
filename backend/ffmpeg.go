@@ -3,11 +3,13 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"math"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/vansante/go-ffprobe"
@@ -134,6 +136,8 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	// MP4
 	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
 
+	cmd.Args = args
+
 	return cmd
 }
 
@@ -156,6 +160,8 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 
 	// MP4
 	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
+
+	cmd.Args = args
 
 	return cmd
 }
@@ -181,6 +187,8 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 
 	// Playlist name
 	args = append(args, "audio.mp3")
+
+	cmd.Args = args
 
 	return cmd
 }
@@ -211,6 +219,8 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 	// Playlist name
 	args = append(args, "image.png")
 
+	cmd.Args = args
+
 	return cmd
 }
 
@@ -233,6 +243,8 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 
 	// Playlist name
 	args = append(args, "image.png")
+
+	cmd.Args = args
 
 	return cmd
 }
@@ -290,6 +302,8 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 		// Outout
 		args = append(args, tmpFile)
 
+		cmd.Args = args
+
 		err := cmd.Run()
 
 		if err != nil {
@@ -335,6 +349,8 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		// Output
 		args = append(args, tmpFile)
+
+		cmd.Args = args
 
 		err := cmd.Run()
 
@@ -382,5 +398,83 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	// Playlist name
 	args = append(args, "thumb_%d.jpg")
 
+	cmd.Args = args
+
 	return cmd
+}
+
+func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64)) error {
+	// Create a pipe to read StdErr
+	pipe, err := cmd.StderrPipe()
+
+	if err != nil {
+		return err
+	}
+
+	// Start the command
+
+	err = cmd.Start()
+
+	if err != nil {
+		return err
+	}
+
+	// Read stderr line by line
+
+	reader := bufio.NewReader(pipe)
+
+	var finished bool = false
+
+	for !finished {
+		line, err := reader.ReadString('\r')
+
+		if err != nil {
+			finished = true
+			continue
+		}
+
+		line = strings.ReplaceAll(line, "\r", "")
+
+		if !strings.HasPrefix(line, "frame=") {
+			continue // Not a progress line
+		}
+
+		parts := strings.Split(line, "time=")
+
+		if len(parts) < 2 {
+			continue
+		}
+
+		parts = strings.Split(strings.Trim(parts[1], " "), " ")
+
+		if len(parts) < 1 {
+			continue
+		}
+
+		parts = strings.Split(parts[0], ":")
+
+		if len(parts) != 3 {
+			continue
+		}
+
+		hours, _ := strconv.Atoi(parts[0])
+		minutes, _ := strconv.Atoi(parts[1])
+		seconds, _ := strconv.ParseFloat(parts[2], 64)
+
+		out_duration := float64(hours)*3600 + float64(minutes)*60 + seconds
+
+		if out_duration > 0 && out_duration < input_duration {
+			progress_reporter(out_duration * 100 / input_duration)
+		}
+	}
+
+	// Wait for ending
+
+	err = cmd.Wait()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
