@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/vansante/go-ffprobe"
@@ -166,7 +167,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	return cmd
 }
 
-func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat string, tempPath string, definition *TaskDefinition, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
@@ -403,7 +404,7 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	return cmd
 }
 
-func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64)) error {
+func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) error {
 	// Create a pipe to read StdErr
 	pipe, err := cmd.StderrPipe()
 
@@ -464,7 +465,11 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 		out_duration := float64(hours)*3600 + float64(minutes)*60 + seconds
 
 		if out_duration > 0 && out_duration < input_duration {
-			progress_reporter(out_duration * 100 / input_duration)
+			shouldKill := progress_reporter(out_duration * 100 / input_duration)
+
+			if shouldKill {
+				cmd.Process.Signal(syscall.SIGINT)
+			}
 		}
 	}
 
