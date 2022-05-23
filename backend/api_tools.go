@@ -88,6 +88,7 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 	}
 
 	response.Header().Add("Content-Type", "application/json")
+	response.Header().Add("Cache-Control", "no-cache")
 	response.WriteHeader(status)
 	response.Write(jsonRes)
 }

@@ -243,6 +243,16 @@ func (manager *VaultCredentialsManager) SetCredentials(user string, password str
 	return nil
 }
 
+func (manager *VaultCredentialsManager) ChangeUsername(user string, new_user string) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	// Set user
+	manager.credentials.User = new_user
+
+	return nil
+}
+
 func (manager *VaultCredentialsManager) SaveCredentials() error {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()

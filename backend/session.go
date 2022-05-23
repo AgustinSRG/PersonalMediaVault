@@ -107,3 +107,14 @@ func (sm *SessionManager) FindSession(session_id string) *ActiveSession {
 
 	return nil
 }
+
+func (sm *SessionManager) ChangeUsername(user string, new_user string) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for _, session := range sm.sessions {
+		if session.user == user {
+			session.user = new_user
+		}
+	}
+}
