@@ -168,9 +168,13 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 		return false, err
 	}
 
-	if data.Albums[album_id] == nil || data.Albums[album_id].HasMedia(media_id) {
+	if data.Albums[album_id] == nil {
 		am.CancelWrite()
 		return false, nil // Not found
+	}
+
+	if data.Albums[album_id].HasMedia(media_id) {
+		return true, nil
 	}
 
 	old_list := data.Albums[album_id].List
@@ -190,9 +194,13 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 		return false, err
 	}
 
-	if data.Albums[album_id] == nil || !data.Albums[album_id].HasMedia(media_id) {
+	if data.Albums[album_id] == nil {
 		am.CancelWrite()
 		return false, nil // Not found
+	}
+
+	if !data.Albums[album_id].HasMedia(media_id) {
+		return true, nil
 	}
 
 	old_list := data.Albums[album_id].List
