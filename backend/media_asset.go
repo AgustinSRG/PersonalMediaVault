@@ -83,6 +83,7 @@ type MediaMetadata struct {
 	OriginalAsset     uint64 `json:"original_asset"`
 	OriginalExtension string `json:"original_ext"`
 	OriginalTask      uint64 `json:"original_task"`
+	OriginalEncoded   bool   `json:"original_encoded"`
 
 	ThumbnailReady bool   `json:"thumb_ready"`
 	ThumbnailAsset uint64 `json:"thumb_asset"`
@@ -100,25 +101,28 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 	now := time.Now().UnixMilli()
 
 	meta := MediaMetadata{
-		Id:               media.id,
-		Type:             media_type,
-		MediaDuration:    duration,
-		Width:            width,
-		Height:           height,
-		Title:            title,
-		Description:      desc,
-		Tags:             make([]uint64, 0),
-		UploadTimestamp:  now,
-		NextAssetID:      0,
-		OriginalReady:    false,
-		OriginalAsset:    0,
-		ThumbnailReady:   false,
-		ThumbnailAsset:   0,
-		Resolutions:      make([]MediaResolution, 0),
-		PreviewsReady:    false,
-		PreviewsInterval: 0,
-		PreviewsError:    "",
-		PreviewsAsset:    0,
+		Id:                media.id,
+		Type:              media_type,
+		MediaDuration:     duration,
+		Width:             width,
+		Height:            height,
+		Title:             title,
+		Description:       desc,
+		Tags:              make([]uint64, 0),
+		UploadTimestamp:   now,
+		NextAssetID:       0,
+		OriginalReady:     false,
+		OriginalAsset:     0,
+		OriginalTask:      0,
+		OriginalEncoded:   false,
+		OriginalExtension: "",
+		ThumbnailReady:    false,
+		ThumbnailAsset:    0,
+		Resolutions:       make([]MediaResolution, 0),
+		PreviewsReady:     false,
+		PreviewsInterval:  0,
+		PreviewsError:     "",
+		PreviewsAsset:     0,
 	}
 
 	media.lock.RequestWrite() // Request write
@@ -293,7 +297,7 @@ func (media *MediaAsset) ReleaseAsset(asset_id uint64) {
 	}
 }
 
-func (media *MediaAsset) DeleteAll() {
+func (media *MediaAsset) Delete() {
 	// Delete metadata file
 
 	media.lock.RequestWrite()
@@ -303,6 +307,10 @@ func (media *MediaAsset) DeleteAll() {
 
 	media.lock.EndWrite()
 
+	go media.deleteAll()
+}
+
+func (media *MediaAsset) deleteAll() {
 	// Set deleting and wait for assets to be released
 
 	locks := make([]*sync.Mutex, 0)
