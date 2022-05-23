@@ -372,7 +372,7 @@ const (
 	PREVIEWS_IMAGE_HEIGHT     = 144
 )
 
-func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, tempPath string, definition *TaskDefinition, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	cmd.Dir = tempPath
