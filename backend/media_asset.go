@@ -48,18 +48,15 @@ type MediaAssetFile struct {
 }
 
 type MediaResolution struct {
-	Original bool `json:"original"`
-
 	Width  int32 `json:"width"`
 	Height int32 `json:"height"`
 	Fps    int32 `json:"fps"`
 
-	Ready bool   `json:"ready"`
-	Asset uint64 `json:"asset"`
+	Ready     bool   `json:"ready"`
+	Asset     uint64 `json:"asset"`
+	Extension string `json:"ext"`
 
-	TaskCreated bool   `json:"task_created"`
-	TaskId      uint64 `json:"task_id"`
-	TaskError   string `json:"task_error"`
+	TaskId uint64 `json:"task_id"`
 }
 
 type MediaMetadata struct {
@@ -93,7 +90,6 @@ type MediaMetadata struct {
 	PreviewsReady    bool    `json:"previews_ready"`
 	PreviewsTask     uint64  `json:"previews_task"`
 	PreviewsInterval float64 `json:"previews_interval"`
-	PreviewsError    string  `json:"previews_error"`
 	PreviewsAsset    uint64  `json:"previews_asset"`
 }
 
@@ -121,7 +117,6 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		Resolutions:       make([]MediaResolution, 0),
 		PreviewsReady:     false,
 		PreviewsInterval:  0,
-		PreviewsError:     "",
 		PreviewsAsset:     0,
 	}
 
