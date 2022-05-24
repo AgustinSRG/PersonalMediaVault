@@ -39,21 +39,21 @@ func TestVaultTagManager(t *testing.T) {
 	// Tests start here
 	//////////////////////////
 
-	err = tm.TagMedia(1, "tag_example", key)
+	_, err = tm.TagMedia(1, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
 		panic(err)
 	}
 
-	err = tm.TagMedia(2, "tag_example", key)
+	_, err = tm.TagMedia(2, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
 		panic(err)
 	}
 
-	err = tm.TagMedia(3, "tag_example", key)
+	_, err = tm.TagMedia(3, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
@@ -115,14 +115,14 @@ func TestVaultTagManager(t *testing.T) {
 		t.Errorf("Expected untagged media, but it was tagged")
 	}
 
-	err = tm.TagMedia(6, "tag_example", key)
+	_, err = tm.TagMedia(6, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
 		panic(err)
 	}
 
-	err = tm.TagMedia(6, "tag_2", key)
+	_, err = tm.TagMedia(6, "tag_2", key)
 
 	if err != nil {
 		t.Error(err)

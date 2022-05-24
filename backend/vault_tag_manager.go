@@ -36,9 +36,9 @@ type VaultTagListData struct {
 }
 
 func (data *VaultTagListData) FindTag(tag_name string) (bool, uint64) {
-	parsedName := strings.ToLower(ParseTagName(tag_name))
+	parsedName := ParseTagName(tag_name)
 	for key, val := range data.Tags {
-		if strings.ToLower(val) == parsedName {
+		if val == parsedName {
 			return true, key
 		}
 	}
@@ -46,13 +46,19 @@ func (data *VaultTagListData) FindTag(tag_name string) (bool, uint64) {
 }
 
 func ParseTagName(name string) string {
-	return strings.Trim(
+	return strings.ToLower(
 		strings.ReplaceAll(
-			strings.ReplaceAll(name, "\n", " "),
-			"\r",
-			"",
+			strings.Trim(
+				strings.ReplaceAll(
+					strings.ReplaceAll(name, "\n", " "),
+					"\r",
+					"",
+				),
+				" ",
+			),
+			" ",
+			"_",
 		),
-		" ",
 	)
 }
 
@@ -293,17 +299,17 @@ func (tm *VaultTagManager) RemoveTagFromList(tag_id uint64, key []byte) error {
 	return err
 }
 
-func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte) error {
+func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte) (uint64, error) {
 	tag_id, err := tm.AddTagToList(tag_name, key)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	indexFile, err := tm.AcquireIndexFile(tag_id)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer tm.ReleaseIndexFile(tag_id, false, key)
@@ -311,25 +317,25 @@ func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte
 	r, err := indexFile.StartWrite()
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	added, _, err := r.file.AddValue(media_id)
 
 	if err != nil {
 		indexFile.CancelWrite(r)
-		return err
+		return 0, err
 	}
 
 	if !added {
 		// Already tagged
 		indexFile.CancelWrite(r)
-		return nil
+		return tag_id, nil
 	}
 
 	err = indexFile.EndWrite(r)
 
-	return err
+	return tag_id, err
 }
 
 func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte) error {
