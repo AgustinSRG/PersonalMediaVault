@@ -122,7 +122,7 @@ func WipeTemporalFile(file string) {
 		bytesToWrite := int64(len(fileChunk))
 
 		if bytesToWrite > (fileSize - bytesWritten) {
-			bytesToWrite = bytesWritten
+			bytesToWrite = fileSize - bytesWritten
 		}
 
 		f.Write(fileChunk[:bytesToWrite])
