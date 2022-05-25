@@ -21,11 +21,17 @@ type UserConfigImageResolution struct {
 	Height int32 `json:"height"`
 }
 
+type UserConfigPinnedTag struct {
+	Tag   string `json:"tag"`
+	Title string `json:"title"`
+}
+
 type UserConfig struct {
 	MaxTasks         int32                       `json:"max_tasks"`
 	EncodingThreads  int32                       `json:"encoding_threads"`
 	Resolutions      []UserConfigResolution      `json:"resolutions"`
 	ImageResolutions []UserConfigImageResolution `json:"image_resolutions"`
+	PinnedTags       []UserConfigPinnedTag       `json:"pinned_tags"`
 }
 
 type UserConfigManager struct {
@@ -69,6 +75,7 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 			EncodingThreads:  0,
 			Resolutions:      make([]UserConfigResolution, 0),
 			ImageResolutions: make([]UserConfigImageResolution, 0),
+			PinnedTags:       make([]UserConfigPinnedTag, 0),
 		}
 
 		return &mp, nil
