@@ -45,7 +45,9 @@ func RunHTTPServer() {
 
 	router.HandleFunc("/api/upload", api_uploadMedia).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit", api_editMedia).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/title", api_editMediaTitle).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/description", api_editMediaTitle).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/thumbnail", api_editMediaThumbnail).Methods("POST")
 
 	router.HandleFunc("/api/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
 

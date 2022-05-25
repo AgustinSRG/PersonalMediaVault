@@ -94,7 +94,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 	album := albums.Albums[album_id]
 
 	if album == nil {
-		response.WriteHeader(404)
+		ReturnAPIError(response, 400, "NOT_FOUND", "Album not found")
 		return
 	}
 
