@@ -58,6 +58,7 @@ func RunHTTPServer() {
 
 	// Search API
 	router.HandleFunc("/api/search", api_searchMedia).Methods("GET")
+	router.HandleFunc("/api/random", api_randomMedia).Methods("GET")
 
 	// Tags API
 	router.HandleFunc("/api/tags", api_getTags).Methods("GET")

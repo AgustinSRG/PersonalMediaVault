@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/binary"
+	"math/rand"
 	"os"
 )
 
@@ -405,6 +406,41 @@ func (file *IndexedListFile) ListValuesReverse(skip int64, limit int64) ([]uint6
 
 	for i := int64(0); i < resultSize; i++ {
 		val, err := file.ReadValue((count - 1) - skip - i)
+		if err != nil {
+			return nil, err
+		}
+
+		result[i] = val
+	}
+
+	return result, nil
+}
+
+func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, error) {
+	count, err := file.Count()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if count <= 0 || limit <= 0 {
+		return make([]uint64, 0), nil
+	}
+
+	prng := rand.New(rand.NewSource(seed))
+
+	result := make([]uint64, limit)
+
+	for i := int64(0); i < limit; i++ {
+		index := prng.Int63()
+
+		if index < 0 {
+			index = 0
+		}
+
+		index = index % count
+
+		val, err := file.ReadValue(index)
 		if err != nil {
 			return nil, err
 		}
