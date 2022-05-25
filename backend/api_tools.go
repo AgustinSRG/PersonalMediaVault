@@ -108,3 +108,23 @@ func GetClientIP(request *http.Request) string {
 		return ip
 	}
 }
+
+func GetExtensionFromFileName(fileName string) string {
+	parts := strings.Split(fileName, ".")
+
+	if len(parts) > 1 {
+		ext := strings.ToLower(parts[len(parts)-1])
+
+		r := regexp.MustCompile("[^a-z0-9]+")
+
+		ext = r.ReplaceAllString(ext, "")
+
+		if ext != "" {
+			return ext
+		} else {
+			return "bin"
+		}
+	} else {
+		return "bin"
+	}
+}

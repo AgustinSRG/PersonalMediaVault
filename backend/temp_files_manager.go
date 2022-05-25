@@ -87,7 +87,7 @@ func GetTemporalFolder() (string, error) {
 
 // Wipes file to prevent recovery (secure delete)
 func WipeTemporalFile(file string) {
-	f, err := os.OpenFile(file, os.O_RDWR, FILE_PERMISSION)
+	f, err := os.OpenFile(file, os.O_WRONLY, FILE_PERMISSION)
 
 	if err != nil {
 		LogError(err)
@@ -114,18 +114,20 @@ func WipeTemporalFile(file string) {
 		fileChunk[i] = 0
 	}
 
-	// Number of chunks
+	// Overwrite
 
-	chunkCount := fileSize / int64(len(fileChunk))
+	bytesWritten := int64(0)
 
-	if fileSize%int64(len(fileChunk)) != 0 {
-		chunkCount++
-	}
+	for bytesWritten < fileSize {
+		bytesToWrite := int64(len(fileChunk))
 
-	// Overwrite file
+		if bytesToWrite > (fileSize - bytesWritten) {
+			bytesToWrite = bytesWritten
+		}
 
-	for i := int64(0); i < chunkCount; i++ {
-		f.Write(fileChunk)
+		f.Write(fileChunk[:bytesToWrite])
+
+		bytesWritten += bytesToWrite
 	}
 }
 

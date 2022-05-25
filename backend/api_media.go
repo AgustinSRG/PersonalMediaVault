@@ -224,6 +224,10 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	response.Write(jsonResult)
 }
 
+type MediaAPIEditTitleBody struct {
+	Title string `json:"title"`
+}
+
 func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
@@ -231,6 +235,76 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(401)
 		return
 	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p MediaAPIEditTitleBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	if len(p.Title) == 0 || len(p.Title) > 255 {
+		ReturnAPIError(response, 400, "INVALID_TITLE", "Invalid title provided")
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta.Title = p.Title
+
+	err = media.EndWrite(meta, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
+}
+
+type MediaAPIEditDescriptionBody struct {
+	Description string `json:"description"`
 }
 
 func api_editMediaDescription(response http.ResponseWriter, request *http.Request) {
@@ -240,15 +314,67 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 		response.WriteHeader(401)
 		return
 	}
-}
 
-func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request) {
-	session := GetSessionFromRequest(request)
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
-	if session == nil {
-		response.WriteHeader(401)
+	var p MediaAPIEditDescriptionBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
 		return
 	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta.Description = p.Description
+
+	err = media.EndWrite(meta, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
 }
 
 func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request) {
