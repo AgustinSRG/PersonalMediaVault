@@ -141,97 +141,16 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	// Encrypt the thumbnail
 
-	thumb_encrypted_file := GetTemporalFileName("pma")
+	thumb_encrypted_file, err := EncryptAssetFile(thumbnail, session.key)
 
-	f, err = os.OpenFile(thumbnail, os.O_RDONLY, FILE_PERMISSION)
-
-	if err != nil {
-		LogError(err)
-
-		WipeTemporalFile(thumbnail)
-
-		response.WriteHeader(500)
-		return
-	}
-
-	f_info, err := f.Stat()
-
-	if err != nil {
-		LogError(err)
-
-		f.Close()
-		WipeTemporalFile(thumbnail)
-
-		response.WriteHeader(500)
-		return
-	}
-
-	ws, err := CreateFileBlockEncryptWriteStream(thumb_encrypted_file)
-
-	if err != nil {
-		LogError(err)
-
-		f.Close()
-		WipeTemporalFile(thumbnail)
-
-		response.WriteHeader(500)
-		return
-	}
-
-	err = ws.Initialize(f_info.Size(), session.key)
-
-	if err != nil {
-		LogError(err)
-
-		ws.Close()
-		f.Close()
-		WipeTemporalFile(thumbnail)
-		os.Remove(thumb_encrypted_file)
-
-		response.WriteHeader(500)
-		return
-	}
-
-	finished = false
-
-	for !finished {
-		c, err := f.Read(buf)
-
-		if err != nil && err != io.EOF {
-			LogError(err)
-
-			ws.Close()
-			f.Close()
-			WipeTemporalFile(thumbnail)
-			os.Remove(thumb_encrypted_file)
-
-			response.WriteHeader(500)
-			return
-		}
-
-		if c == 0 {
-			finished = true
-			continue
-		}
-
-		err = ws.Write(buf[:c])
-
-		if err != nil {
-			LogError(err)
-
-			ws.Close()
-			f.Close()
-			WipeTemporalFile(thumbnail)
-			os.Remove(thumb_encrypted_file)
-
-			response.WriteHeader(500)
-			return
-		}
-	}
-
-	ws.Close()
-	f.Close()
 	WipeTemporalFile(thumbnail)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
 
 	// Put the thumbnail into the media assets
 

@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -127,4 +128,90 @@ func GetExtensionFromFileName(fileName string) string {
 	} else {
 		return "bin"
 	}
+}
+
+func GetNameFromFileName(fileName string) string {
+	parts := strings.Split(fileName, ".")
+
+	if len(parts) > 1 {
+		return strings.Join(parts[:len(parts)-1], ".")
+	} else {
+		return fileName
+	}
+}
+
+func EncryptAssetFile(file string, key []byte) (string, error) {
+	encrypted_file := GetTemporalFileName("pma")
+
+	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
+
+	if err != nil {
+		return "", err
+	}
+
+	f_info, err := f.Stat()
+
+	if err != nil {
+		f.Close()
+
+		return "", err
+	}
+
+	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+
+	if err != nil {
+		f.Close()
+
+		return "", err
+	}
+
+	err = ws.Initialize(f_info.Size(), key)
+
+	if err != nil {
+		ws.Close()
+		f.Close()
+
+		os.Remove(encrypted_file)
+
+		return "", err
+	}
+
+	finished := false
+	buf := make([]byte, 1024*1024)
+
+	for !finished {
+		c, err := f.Read(buf)
+
+		if err != nil && err != io.EOF {
+			ws.Close()
+			f.Close()
+
+			os.Remove(encrypted_file)
+
+			return "", err
+		}
+
+		if c == 0 {
+			finished = true
+			continue
+		}
+
+		err = ws.Write(buf[:c])
+
+		if err != nil {
+			LogError(err)
+
+			ws.Close()
+			f.Close()
+
+			os.Remove(encrypted_file)
+
+			return "", err
+		}
+	}
+
+	ws.Close()
+	f.Close()
+
+	return encrypted_file, nil
 }

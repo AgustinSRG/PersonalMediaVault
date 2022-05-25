@@ -16,10 +16,16 @@ type UserConfigResolution struct {
 	Fps    int32 `json:"fps"`
 }
 
+type UserConfigImageResolution struct {
+	Width  int32 `json:"width"`
+	Height int32 `json:"height"`
+}
+
 type UserConfig struct {
-	MaxTasks        int32                  `json:"max_tasks"`
-	EncodingThreads int32                  `json:"encoding_threads"`
-	Resolutions     []UserConfigResolution `json:"resolutions"`
+	MaxTasks         int32                       `json:"max_tasks"`
+	EncodingThreads  int32                       `json:"encoding_threads"`
+	Resolutions      []UserConfigResolution      `json:"resolutions"`
+	ImageResolutions []UserConfigImageResolution `json:"image_resolutions"`
 }
 
 type UserConfigManager struct {
@@ -59,9 +65,10 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 		// Default config
 
 		mp := UserConfig{
-			MaxTasks:        1,
-			EncodingThreads: 0,
-			Resolutions:     make([]UserConfigResolution, 0),
+			MaxTasks:         1,
+			EncodingThreads:  0,
+			Resolutions:      make([]UserConfigResolution, 0),
+			ImageResolutions: make([]UserConfigImageResolution, 0),
 		}
 
 		return &mp, nil
@@ -102,4 +109,12 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 	err = os.Rename(tmpFile, uc.file)
 
 	return err
+}
+
+func (res UserConfigResolution) Fits(width int32, height int32, fps int32) bool {
+	return (res.Width < width) && (res.Height < height) && (res.Fps < fps)
+}
+
+func (res UserConfigImageResolution) Fits(width int32, height int32) bool {
+	return (res.Width < width) && (res.Height < height)
 }
