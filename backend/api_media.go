@@ -384,6 +384,105 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		response.WriteHeader(401)
 		return
 	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	// Check for unnatended encoded assets
+
+	// Check original
+
+	if meta.OriginalReady && !meta.OriginalEncoded {
+		// Check task
+
+		task_info := GetVault().tasks.GetTaskInfo(meta.OriginalTask)
+
+		if task_info == nil {
+			// Task crashed or was never spawned, meka a new one
+
+			meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+		}
+	}
+
+	// Check previews
+
+	if meta.Type == MediaTypeVideo && !meta.PreviewsReady {
+		// Check task
+
+		task_info := GetVault().tasks.GetTaskInfo(meta.PreviewsTask)
+
+		if task_info == nil {
+			// Task crashed or was never spawned, meka a new one
+
+			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil)
+		}
+	}
+
+	// Check resolutions
+
+	if meta.Resolutions != nil {
+		for i := 0; i < len(meta.Resolutions); i++ {
+			if !meta.Resolutions[i].Ready {
+				task_info := GetVault().tasks.GetTaskInfo(meta.Resolutions[i].TaskId)
+
+				if task_info == nil {
+					// Task crashed or was never spawned, meka a new one
+
+					meta.Resolutions[i].TaskId = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_RESOLUTION, &UserConfigResolution{
+						Width:  meta.Resolutions[i].Width,
+						Height: meta.Resolutions[i].Height,
+						Fps:    meta.Resolutions[i].Fps,
+					})
+				}
+			}
+		}
+	}
+
+	err = media.EndWrite(meta, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
 }
 
 func api_mediaAddResolution(response http.ResponseWriter, request *http.Request) {
