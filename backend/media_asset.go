@@ -341,3 +341,30 @@ func (media *MediaAsset) deleteAll() {
 
 	media.lock.EndWrite()
 }
+
+func (meta *MediaMetadata) AddTag(tag uint64) {
+	found := false
+
+	for i := 0; i < len(meta.Tags); i++ {
+		if meta.Tags[i] == tag {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		meta.Tags = append(meta.Tags, tag)
+	}
+}
+
+func (meta *MediaMetadata) RemoveTag(tag uint64) {
+	newTags := make([]uint64, 0)
+
+	for i := 0; i < len(meta.Tags); i++ {
+		if meta.Tags[i] != tag {
+			newTags = append(newTags, meta.Tags[i])
+		}
+	}
+
+	meta.Tags = newTags
+}

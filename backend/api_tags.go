@@ -83,6 +83,8 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Add to index
+
 	tagName := ParseTagName(p.Tag)
 
 	tag_id, err := GetVault().tags.TagMedia(p.Media, tagName, session.key)
@@ -92,6 +94,41 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 
 		response.WriteHeader(500)
 		return
+	}
+
+	// Add to media metadata
+
+	media := GetVault().media.AcquireMediaResource(p.Media)
+
+	if media != nil {
+		meta, err := media.StartWrite(session.key)
+
+		if err != nil {
+			LogError(err)
+
+			GetVault().media.ReleaseMediaResource(p.Media)
+
+			response.WriteHeader(500)
+			return
+		}
+
+		if meta != nil {
+			meta.AddTag(tag_id)
+
+			err = media.EndWrite(meta, session.key)
+
+			GetVault().media.ReleaseMediaResource(p.Media)
+
+			if err != nil {
+				LogError(err)
+
+				response.WriteHeader(500)
+				return
+			}
+		} else {
+			media.CancelWrite()
+			GetVault().media.ReleaseMediaResource(p.Media)
+		}
 	}
 
 	var result TagListAPIItem
@@ -146,6 +183,41 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 
 		response.WriteHeader(500)
 		return
+	}
+
+	// Remove from media metadata
+
+	media := GetVault().media.AcquireMediaResource(p.Media)
+
+	if media != nil {
+		meta, err := media.StartWrite(session.key)
+
+		if err != nil {
+			LogError(err)
+
+			GetVault().media.ReleaseMediaResource(p.Media)
+
+			response.WriteHeader(500)
+			return
+		}
+
+		if meta != nil {
+			meta.RemoveTag(p.Tag)
+
+			err = media.EndWrite(meta, session.key)
+
+			GetVault().media.ReleaseMediaResource(p.Media)
+
+			if err != nil {
+				LogError(err)
+
+				response.WriteHeader(500)
+				return
+			}
+		} else {
+			media.CancelWrite()
+			GetVault().media.ReleaseMediaResource(p.Media)
+		}
 	}
 
 	response.WriteHeader(200)
