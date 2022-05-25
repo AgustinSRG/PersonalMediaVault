@@ -368,3 +368,25 @@ func (meta *MediaMetadata) RemoveTag(tag uint64) {
 
 	meta.Tags = newTags
 }
+
+func (meta *MediaMetadata) FindResolution(width int32, height int32, fps int32) int {
+	for i := 0; i < len(meta.Resolutions); i++ {
+		if meta.Resolutions[i].Width == width && meta.Resolutions[i].Height == height && meta.Resolutions[i].Fps == fps {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (meta *MediaMetadata) RemoveResolution(index int) {
+	newResolutions := make([]MediaResolution, 0)
+
+	for i := 0; i < len(meta.Resolutions); i++ {
+		if i != index {
+			newResolutions = append(newResolutions, meta.Resolutions[i])
+		}
+	}
+
+	meta.Resolutions = newResolutions
+}

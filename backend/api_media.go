@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -114,7 +115,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -130,7 +131,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if meta == nil {
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -263,7 +264,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -281,7 +282,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 	if meta == nil {
 		media.CancelWrite()
 		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -337,7 +338,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -355,7 +356,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 	if meta == nil {
 		media.CancelWrite()
 		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -397,7 +398,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -415,7 +416,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 	if meta == nil {
 		media.CancelWrite()
 		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -485,6 +486,12 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 	response.WriteHeader(200)
 }
 
+type ApiMediaResolutionBody struct {
+	Width  int32 `json:"width"`
+	Height int32 `json:"height"`
+	Fps    int32 `json:"fps"`
+}
+
 func api_mediaAddResolution(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
@@ -492,6 +499,143 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		response.WriteHeader(401)
 		return
 	}
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p ApiMediaResolutionBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	if p.Width <= 0 || p.Height <= 0 {
+		response.WriteHeader(400)
+		return
+	}
+
+	if p.Fps <= 0 {
+		p.Fps = 1
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	if meta.Type != MediaTypeVideo && meta.Type != MediaTypeImage {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "NOT_SUPPORTED", "This feature is not supported for the media type. Only for videos and images.")
+		return
+	}
+
+	if meta.Type == MediaTypeImage {
+		p.Fps = 1
+	}
+
+	if meta.Resolutions == nil {
+		meta.Resolutions = make([]MediaResolution, 0)
+	}
+
+	if meta.FindResolution(p.Width, p.Height, p.Fps) != -1 {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "DUPLICATED_RESOLUTION", "Duplicated resolution.")
+		return
+	}
+
+	// Spawn task
+
+	task_id := GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_RESOLUTION, &UserConfigResolution{
+		Width:  p.Width,
+		Height: p.Height,
+		Fps:    p.Fps,
+	})
+
+	// Save resolution
+
+	resolution := MediaResolution{
+		Width:     p.Width,
+		Height:    p.Height,
+		Fps:       p.Fps,
+		Ready:     false,
+		Asset:     0,
+		Extension: "",
+		TaskId:    task_id,
+	}
+
+	meta.Resolutions = append(meta.Resolutions, resolution)
+
+	err = media.EndWrite(meta, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	var result MediaAPIMetaResolution
+
+	result.Width = p.Width
+	result.Height = p.Height
+	result.Fps = p.Fps
+	result.Ready = false
+	result.Task = task_id
+	result.Url = ""
+
+	// Response
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	response.Header().Add("Content-Type", "application/json")
+	response.Header().Add("Cache-Control", "no-cache")
+	response.WriteHeader(200)
+
+	response.Write(jsonResult)
+
+	response.WriteHeader(200)
 }
 
 func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Request) {
@@ -501,6 +645,97 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 		response.WriteHeader(401)
 		return
 	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p ApiMediaResolutionBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	if meta.Resolutions == nil {
+		meta.Resolutions = make([]MediaResolution, 0)
+	}
+
+	res_index := meta.FindResolution(p.Width, p.Height, p.Fps)
+
+	if res_index >= 0 {
+		r := meta.Resolutions[res_index]
+
+		if r.Ready {
+			// Remove asset
+			success, asset_path, asset_lock := media.AcquireAsset(r.Asset, ASSET_SINGLE_FILE)
+
+			if success {
+				asset_lock.RequestWrite()
+				asset_lock.StartWrite()
+
+				os.Remove(asset_path)
+
+				asset_lock.EndWrite()
+
+				media.ReleaseAsset(r.Asset)
+			}
+		} else {
+			// Kill Task
+			GetVault().tasks.KillTask(r.TaskId)
+		}
+
+		// Remove resolution from metadata
+		meta.RemoveResolution(res_index)
+	}
+
+	err = media.EndWrite(meta, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
 }
 
 func api_deleteMedia(response http.ResponseWriter, request *http.Request) {

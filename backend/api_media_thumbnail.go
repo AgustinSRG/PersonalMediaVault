@@ -239,7 +239,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	if media == nil {
 		os.Remove(thumb_encrypted_file)
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -260,7 +260,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 		media.CancelWrite()
 		os.Remove(thumb_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
@@ -274,7 +274,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 		os.Remove(thumb_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		ReturnAPIError(response, 400, "NOT_FOUND", "Media not found")
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
