@@ -745,4 +745,65 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(401)
 		return
 	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.ReadMetadata(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	// Untag
+
+	if meta.Tags != nil {
+		for i := 0; i < len(meta.Tags); i++ {
+			err = GetVault().tags.UnTagMedia(media_id, meta.Tags[i], session.key)
+
+			if err != nil {
+				LogError(err)
+
+				GetVault().media.ReleaseMediaResource(media_id)
+
+				response.WriteHeader(500)
+				return
+			}
+		}
+	}
+
+	// Delete
+	media.Delete()
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	// Kill any task pending for that media
+	GetVault().tasks.KillTaskByMedia(media_id)
+
+	response.WriteHeader(200)
 }

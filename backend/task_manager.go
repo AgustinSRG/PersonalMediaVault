@@ -335,6 +335,29 @@ func (tm *TaskManager) KillTask(task_id uint64) {
 	tm.RunPendingTasks()
 }
 
+func (tm *TaskManager) KillTaskByMedia(media_id uint64) {
+	tm.lock.Lock()
+
+	for task_id, task := range tm.tasks {
+		if task.definition.MediaId == media_id {
+			tm.tasks[task_id].killed = true
+			delete(tm.pending_tasks.Pending, task_id)
+		}
+	}
+
+	tm.lock.Unlock()
+
+	// Save
+	err := tm.SavePendingTasks()
+
+	if err != nil {
+		LogError(err)
+	}
+
+	// Run other tasks
+	tm.RunPendingTasks()
+}
+
 func (tm *TaskManager) GetTaskStatus(task_id uint64) *TaskStatus {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
