@@ -213,28 +213,45 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	// Default search, use main index
-	main_index, err := GetVault().index.StartRead()
+	tagToSearch := ParseTagName(request.URL.Query().Get("tag"))
 
-	if err != nil {
-		LogError(err)
+	var page_items []uint64
 
-		response.WriteHeader(500)
-		return
-	}
+	if tagToSearch == "" {
+		// Default search, use main index
+		main_index, err := GetVault().index.StartRead()
 
-	page_items, err := main_index.RandomValues(seed, pageSize)
+		if err != nil {
+			LogError(err)
 
-	if err != nil {
-		LogError(err)
+			response.WriteHeader(500)
+			return
+		}
+
+		page_items, err = main_index.RandomValues(seed, pageSize)
+
+		if err != nil {
+			LogError(err)
+
+			GetVault().index.EndRead(main_index)
+
+			response.WriteHeader(500)
+			return
+		}
 
 		GetVault().index.EndRead(main_index)
+	} else {
+		// Search by tag
 
-		response.WriteHeader(500)
-		return
+		page_items, err = GetVault().tags.RandomTaggedMedia(tagToSearch, session.key, seed, pageSize)
+
+		if err != nil {
+			LogError(err)
+
+			response.WriteHeader(500)
+			return
+		}
 	}
-
-	GetVault().index.EndRead(main_index)
 
 	// Read meta of media items
 

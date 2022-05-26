@@ -467,3 +467,44 @@ func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int
 
 	return values, count, nil
 }
+
+func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed int64, limit int64) ([]uint64, error) {
+	tagList, err := tm.ReadList(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	found, tag_id := tagList.FindTag(tag_name)
+
+	if !found {
+		return make([]uint64, 0), nil
+	}
+
+	indexFile, err := tm.AcquireIndexFile(tag_id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer tm.ReleaseIndexFile(tag_id, false, key)
+
+	f, err := indexFile.StartRead()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var values []uint64
+
+	values, err = f.RandomValues(seed, limit)
+
+	if err != nil {
+		indexFile.EndRead(f)
+		return nil, err
+	}
+
+	indexFile.EndRead(f)
+
+	return values, nil
+}
