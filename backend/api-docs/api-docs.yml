@@ -1,0 +1,183 @@
+swagger: "2.0"
+info:
+  title: PersonalMediaVault Backend API
+  description: API to access PersonalMediaVault from a web client.
+  version: 1.0.0
+
+schemes:
+  - http
+  - https
+  
+tags:
+  - name: auth
+    description: Authentication API (Login / Logout API)
+  - name: account
+    description: Account management API
+  - name: media
+    description: Media API. Allows user to upload media assets, get them, modify them or delete them.
+  - name: tags
+    description: Tags API. Allows user to organize media using tags.
+  - name: albums
+    description: Ambums API. Allows user to create sorted collections of media assets.
+  - name: search
+    description: Search API. Allows user to search for media assets.
+  - name: config
+    description: Server-side user configuration management
+  - name: tasks
+    description: Tasks API. Allows user to check the progress of running tasks
+  
+
+paths:
+  "/api/auth/login":
+    post:
+      summary: Login API
+      description: Creates an active session from a set of credentials (user + password)
+      tags:
+        - auth
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: credentials
+          schema:
+            properties:
+              username:
+                type: string
+                description: Media vault username (can't be blank, max 255 chars)
+                example: admin
+              password:
+                type: string
+                description: Media vault password (can't be blank, max 255 chars)
+                example: password
+      responses:
+        400:
+          description: Bad request (if the password given is blank, for example)
+        403:
+          description: Login request denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_CREDENTIALS - Invalid user or password
+                    * COOLDOWN - When you fail a login request, there is a cooldown of 5 seconds.
+                enum:
+                  - INVALID_CREDENTIALS
+                  - COOLDOWN
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Login request accepted
+          schema:
+            properties:
+              session_id:
+                type: string
+                description: "Session ID. Set a cookie named 'x-session-token' with that value. Sessions expire when you log out or after 24 hours."
+                
+  "/api/auth/logout":
+    post:
+      summary: Logout API
+      description: Deletes the current active session
+      tags:
+        - auth
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Success
+          
+  "/api/account/username":
+    post:
+      summary: Change username
+      description: Changes the username for the vault credentials
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: credentials
+          schema:
+            properties:
+              username:
+                type: string
+                description: Media vault NEW username (can't be blank, max 255 chars)
+                example: admin
+              password:
+                type: string
+                description: Media vault password (can't be blank, max 255 chars)
+                example: password
+      responses:
+        400:
+          description: Bad request. (Invalid username)
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Invalid password.
+        200:
+          description: Success   
+          
+  "/api/account/password":
+    post:
+      summary: Change password
+      description: Changes the password for the vault credentials
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: credentials
+          schema:
+            properties:
+              old_password:
+                type: string
+                description: Media vault password (can't be blank, max 255 chars)
+                example: password-old
+              password:
+                type: string
+                description: Media vault NEW password (can't be blank, max 255 chars)
+                example: password
+      responses:
+        400:
+          description: Bad request. (Invalid new password)
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Invalid password.
+        200:
+          description: Success
+          
+        
+  
+          
+  

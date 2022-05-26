@@ -49,7 +49,7 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	valid := GetVault().credentials.CheckCredentials(session.user, p.Password)
 
 	if !valid {
-		ReturnAPIError(response, 400, "INVALID_PASSWORD", "Invalid password.")
+		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
 		return
 	}
 
@@ -110,7 +110,7 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 	valid := GetVault().credentials.CheckCredentials(session.user, p.OldPassword)
 
 	if !valid {
-		ReturnAPIError(response, 400, "INVALID_PASSWORD", "Invalid password.")
+		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
 		return
 	}
 
