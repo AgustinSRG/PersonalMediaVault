@@ -326,6 +326,11 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
+	if len(p.Description) > (5 * 1024 * 1024) {
+		ReturnAPIError(response, 400, "INVALID_DESCRIPTION", "Invalid description provided")
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)

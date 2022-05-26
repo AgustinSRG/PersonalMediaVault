@@ -30,6 +30,8 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	givenTitle := request.URL.Query().Get("title")
+
 	_, p, err := mime.ParseMediaType(request.Header.Get("Content-Type"))
 
 	if err != nil {
@@ -56,6 +58,14 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 	if mediaTitle == "" {
 		mediaTitle = "Untitled"
+	}
+
+	if givenTitle != "" {
+		mediaTitle = givenTitle
+	}
+
+	if len(mediaTitle) > 255 {
+		mediaTitle = mediaTitle[:255]
 	}
 
 	tempFile := GetTemporalFileName(ext)
