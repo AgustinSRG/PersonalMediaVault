@@ -17,10 +17,10 @@ tags:
     description: Media API. Allows user to upload media assets, get them, modify them or delete them.
   - name: tags
     description: Tags API. Allows user to organize media using tags.
-  - name: albums
-    description: Albums API. Allows user to create sorted collections of media assets.
   - name: search
     description: Search API. Allows user to search for media assets.
+  - name: albums
+    description: Albums API. Allows user to create sorted collections of media assets.
   - name: config
     description: Server-side user configuration management
   - name: tasks
@@ -720,5 +720,322 @@ paths:
         200:
           description: Success
   
+  "/api/tags":
+    get:
+      summary: Get tags
+      description: Get full tag list 
+      tags:
+        - tags
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Tag list
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: number
+                  format: int64
+                  description: Tag ID
+                name:
+                  type: string
+                  description: Tag name
+                  
+  "/api/tags/add":
+    post:
+      summary: Adds tag
+      description: Adds tag to media
+      tags:
+        - tags
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: tag
+          schema:
+            properties:
+              media_id:
+                type: number
+                format: int64
+                description: Media asset ID
+              tag_name:
+                type: string
+                description: Name of the tag (can't be blank, max 255 chars)
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid tag name
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Success. Tag ID is returned.
+          schema:
+            properties:
+              id:
+                type: number
+                format: int64
+                description: Tag ID
+              name:
+                type: string
+                description: Tag name
+                
+                
+  "/api/tags/remove":
+    post:
+      summary: Removes tag
+      description: Removes tag from media
+      tags:
+        - tags
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: tag
+          schema:
+            properties:
+              media_id:
+                type: number
+                format: int64
+                description: Media asset ID
+              tag_id:
+                type: number
+                format: int64
+                description: Tag ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Success.
+          
+  "/api/search":
+    get:
+      summary: Search
+      description: Simple search. Can filter by 1 tag. Fully paginated.
+      tags:
+        - search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: query
+          name: "tag"
+          type: string
+          description: Name of the tag to filter for
+        - in: query
+          name: "order"
+          type: string
+          enum:
+            - asc
+            - desc
+          description: "Order. Can be 'asc' or 'desc'. Descendant by default."
+        - in: query
+          name: "page_index"
+          type: number
+          format: int32
+          description: Page index, staring at 0
+        - in: query
+          name: "page_size"
+          type: number
+          format: int32
+          description: Page size. Max is 256.
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Search results
+          schema:
+            properties:
+              total_count:
+                type: number
+                format: int64
+                description: "Total number of available results"
+              page_index:
+                type: number
+                format: int32
+                description: Index of the current page
+              page_count:
+                type: number
+                format: int32
+                description: Total number of pages
+              page_size:
+                type: number
+                format: int32
+                description: Page size. Results per page
+              page_items:
+                type: array
+                description: Search results for this page
+                items:
+                  properties:
+                    id:
+                      type: number
+                      format: int64
+                      description: "Media ID"
+                    type:
+                      type: number
+                      format: int32
+                      description: >
+                       Media Type:
+                         * 0 - Deleted media
+                         * 1 - Image
+                         * 2 - Video
+                         * 3 - Audio
+                      enum:
+                        - 0
+                        - 1
+                        - 2
+                        - 3
+                    title:
+                      type: string
+                      description: "Media title"
+                      example: "Media title"
+                    thumbnail:
+                      type: string
+                      description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
+                      example: "/assets/b/0/0/thumbnail.jpg"
+                    duration:
+                      type: number
+                      format: double
+                      description: Duration of the media in seconds (videos and audios)
+                    width:
+                      type: number
+                      format: int32
+                      description: Image/Video width
+                    height:
+                      type: number
+                      format: int32
+                      description: Image/Video height
+          
+  "/api/random":
+    get:
+      summary: Random results
+      description: Gets random results
+      tags:
+        - search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: query
+          name: "tag"
+          type: string
+          description: Name of the tag to filter for
+        - in: query
+          name: "seed"
+          type: number
+          format: int64
+          description: PRNG seed
+        - in: query
+          name: "page_size"
+          type: number
+          format: int32
+          description: Page size. Max is 256.
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Random results
+          schema:
+            properties:
+              seed:
+                type: number
+                format: int64
+                description: PRNG seed
+              page_size:
+                type: number
+                format: int32
+                description: Page size. Results per page
+              page_items:
+                type: array
+                description: Search results for this page
+                items:
+                  properties:
+                    id:
+                      type: number
+                      format: int64
+                      description: "Media ID"
+                    type:
+                      type: number
+                      format: int32
+                      description: >
+                       Media Type:
+                         * 0 - Deleted media
+                         * 1 - Image
+                         * 2 - Video
+                         * 3 - Audio
+                      enum:
+                        - 0
+                        - 1
+                        - 2
+                        - 3
+                    title:
+                      type: string
+                      description: "Media title"
+                      example: "Media title"
+                    thumbnail:
+                      type: string
+                      description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
+                      example: "/assets/b/0/0/thumbnail.jpg"
+                    duration:
+                      type: number
+                      format: double
+                      description: Duration of the media in seconds (videos and audios)
+                    width:
+                      type: number
+                      format: int32
+                      description: Image/Video width
+                    height:
+                      type: number
+                      format: int32
+                      description: Image/Video height
   
   
