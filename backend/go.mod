@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/gorilla/mux v1.8.0
+	github.com/nightlyone/lockfile v1.0.0
 	github.com/vansante/go-ffprobe v1.1.0
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171
 )

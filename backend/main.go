@@ -97,6 +97,14 @@ func main() {
 		}
 	}
 
+	if options.daemon || options.clean || options.initialize {
+		// Setup lockfile
+		if !TryLockVault(options.vaultPath) {
+			fmt.Println("Error: The vault is already in use.")
+			os.Exit(1)
+		}
+	}
+
 	SetTempFilesPath(options.tempPath) // Set temporal files path
 
 	if options.clean {
