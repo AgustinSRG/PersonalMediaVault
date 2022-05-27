@@ -167,6 +167,19 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 	GetVault().media.ReleaseMediaResource(media_id)
 
+	// Add to main index
+
+	err = AddMediaToMainIndex(media_id)
+
+	if err != nil {
+		LogError(err)
+
+		WipeTemporalFile(tempFile)
+
+		response.WriteHeader(500)
+		return
+	}
+
 	// Background tasks
 
 	go func() {
@@ -454,4 +467,24 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)
+}
+
+func AddMediaToMainIndex(media_id uint64) error {
+	main_index, err := GetVault().index.StartWrite()
+
+	if err != nil {
+		return err
+	}
+
+	_, _, err = main_index.file.AddValue(media_id)
+
+	if err != nil {
+		GetVault().index.CancelWrite(main_index)
+
+		return err
+	}
+
+	err = GetVault().index.EndWrite(main_index)
+
+	return err
 }

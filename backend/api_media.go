@@ -802,6 +802,42 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	// Remove from main index
+	main_index, err := GetVault().index.StartWrite()
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	_, _, err = main_index.file.RemoveValue(media_id)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().index.CancelWrite(main_index)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	err = GetVault().index.EndWrite(main_index)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
 	// Delete
 	media.Delete()
 
