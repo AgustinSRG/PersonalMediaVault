@@ -909,45 +909,7 @@ paths:
                 type: array
                 description: Search results for this page
                 items:
-                  properties:
-                    id:
-                      type: number
-                      format: int64
-                      description: "Media ID"
-                    type:
-                      type: number
-                      format: int32
-                      description: >
-                       Media Type:
-                         * 0 - Deleted media
-                         * 1 - Image
-                         * 2 - Video
-                         * 3 - Audio
-                      enum:
-                        - 0
-                        - 1
-                        - 2
-                        - 3
-                    title:
-                      type: string
-                      description: "Media title"
-                      example: "Media title"
-                    thumbnail:
-                      type: string
-                      description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
-                      example: "/assets/b/0/0/thumbnail.jpg"
-                    duration:
-                      type: number
-                      format: double
-                      description: Duration of the media in seconds (videos and audios)
-                    width:
-                      type: number
-                      format: int32
-                      description: Image/Video width
-                    height:
-                      type: number
-                      format: int32
-                      description: Image/Video height
+                  $ref: '#/definitions/MediaListItem'
           
   "/api/random":
     get:
@@ -998,44 +960,660 @@ paths:
                 type: array
                 description: Search results for this page
                 items:
-                  properties:
-                    id:
-                      type: number
-                      format: int64
-                      description: "Media ID"
-                    type:
-                      type: number
-                      format: int32
-                      description: >
-                       Media Type:
-                         * 0 - Deleted media
-                         * 1 - Image
-                         * 2 - Video
-                         * 3 - Audio
-                      enum:
-                        - 0
-                        - 1
-                        - 2
-                        - 3
-                    title:
-                      type: string
-                      description: "Media title"
-                      example: "Media title"
-                    thumbnail:
-                      type: string
-                      description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
-                      example: "/assets/b/0/0/thumbnail.jpg"
-                    duration:
-                      type: number
-                      format: double
-                      description: Duration of the media in seconds (videos and audios)
-                    width:
-                      type: number
-                      format: int32
-                      description: Image/Video width
-                    height:
-                      type: number
-                      format: int32
-                      description: Image/Video height
+                  $ref: '#/definitions/MediaListItem'
   
+  "/api/albums":
+    get:
+      summary: Get albums
+      description: Gets albums stored in the vault
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Albums
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: number
+                  format: int64
+                  description: Album ID
+                name:
+                  type: string
+                  description: "Album name"
+                  example: "Album name"
+                list:
+                  type: array
+                  description: List of media assets of the album, in order.
+                  items:
+                    type: number
+                    format: int64
+                    description: Media ID
+                    
+    post:
+      summary: Create album
+      description: Gets albums stored in the vault
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: Album name
+          schema:
+            properties:
+              name:
+                type: string
+                description: Album name. Can't be blank. Max 255 chars.
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid album name
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Album created
+          schema:
+            properties:
+              album_id:
+                type: number
+                format: int64
+                description: Album ID
   
+  "/api/albums/{id}":
+    get:
+      summary: Get album
+      description: Gets album information
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Album information
+          schema:
+            properties:
+              id:
+                type: number
+                format: int64
+                description: Album ID
+              name:
+                type: string
+                description: "Album name"
+                example: "Album name"
+              list:
+                type: array
+                description: List of media assets of the album, in order.
+                items:
+                  $ref: '#/definitions/MediaListItem'
+                    
+  "/api/albums/{id}/delete":
+    post:
+      summary: Delete album
+      description: Deletes album
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/albums/{id}/rename":
+    post:
+      summary: Rename album
+      description: Renames album
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album ID
+        - in: body
+          name: Album name
+          schema:
+            properties:
+              name:
+                type: string
+                description: Album name. Can't be blank. Max 255 chars.
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid album name
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/albums/{id}/set":
+    post:
+      summary: Set album list
+      description: Sets album media list
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album list
+        - in: body
+          name: Album name
+          schema:
+            properties:
+              list:
+                type: array
+                description: List of media Ids, in order
+                items:
+                  type: number
+                  format: int64
+                  description: Media ID
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_LIST - Invalid album list
+                enum:
+                  - INVALID_LIST
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/albums/{id}/add":
+    post:
+      summary: Adds media to album
+      description: Adds media to album
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album ID
+        - in: body
+          name: Media ID
+          schema:
+            properties:
+              media_id:
+                type: number
+                format: int64
+                description: Media ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          
+  "/api/albums/{id}/remove":
+    post:
+      summary: Removes media from album
+      description: Removes media from album
+      tags:
+        - albums
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Album ID
+        - in: body
+          name: Media ID
+          schema:
+            properties:
+              media_id:
+                type: number
+                format: int64
+                description: Media ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/config":
+    get:
+      summary: Get config
+      description: Gets user configuration
+      tags:
+        - config
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: User configuration
+          schema:
+            $ref: '#/definitions/UserConfig'
+    post:
+      summary: Set config
+      description: Sets user configuration
+      tags:
+        - config
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: body
+          name: User config
+          schema:
+            $ref: '#/definitions/UserConfig'
+      responses:
+        400:
+          description: Invalid config
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Success
+  
+  "/api/tasks":
+    get:
+      summary: Get active tasks
+      description: Get active tasks
+      tags:
+        - tasks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Task list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TaskInfo'
+              
+  "/api/tasks/{id}":
+    get:
+      summary: Get task
+      description: Get active task
+      tags:
+        - tasks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Task ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Task info
+          schema:
+            $ref: '#/definitions/TaskInfo'
+            
+  "/api/tasks/{id}/kill":
+    post:
+      summary: Kill task
+      description: Kills active task
+      tags:
+        - tasks
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          required: true
+          type: number
+          format: int64
+          name: id
+          description: Task ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+                
+                  
+definitions:
+    MediaListItem:
+      description: Media asset info to show in lists
+      properties:
+        id:
+          type: number
+          format: int64
+          description: "Media ID"
+        type:
+          type: number
+          format: int32
+          description: >
+            Media Type:
+              * 0 - Deleted media
+              * 1 - Image
+              * 2 - Video
+              * 3 - Audio
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        title:
+          type: string
+          description: "Media title"
+          example: "Media title"
+        thumbnail:
+          type: string
+          description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
+          example: "/assets/b/0/0/thumbnail.jpg"
+        duration:
+          type: number
+          format: double
+          description: Duration of the media in seconds (videos and audios)
+        width:
+          type: number
+          format: int32
+          description: Image/Video width
+        height:
+          type: number
+          format: int32
+          description: Image/Video height      
+    
+    UserConfig:
+      description: User configuration
+      properties:
+        max_tasks:
+          type: number
+          format: int32
+          description: Max number of tasks in parallel. Set to 0 for no limit.
+        encoding_threads:
+          type: number
+          format: int32
+          description: Max number of threads to use for FFmpeg tasks.
+        resolutions:
+          type: array
+          description: Extra resolutions to encode videos
+          items:
+            properties:
+              width:
+                type: number
+                format: int32
+                description: Width (px)
+              height:
+                type: number
+                format: int32
+                description: Height (px)
+              fps:
+                type: number
+                format: int32
+                description: Frames per second
+        image_resolutions:
+          type: array
+          description: Extra resolutions to encode images
+          items:
+            properties:
+              width:
+                type: number
+                format: int32
+                description: Width (px)
+              height:
+                type: number
+                format: int32
+                description: Height (px)
+        pinned_tags:
+          type: array
+          description: Pinned tags by the user
+          items:
+            properties:
+              tag:
+                type: string
+                description: Tag name
+              title:
+                type: string
+                description: Title to show to the user
+                
+    TaskInfo:
+      description: Task status info
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Task ID
+        running:
+          type: boolean
+          description: "True if the task is running"
+        media_id:
+          type: number
+          format: int64
+          description: Media ID
+        type:
+          type: number
+          format: int32
+          description: >
+            Task Type:
+              * 0 - Encode original
+              * 1 - Encode extra resolution
+              * 2 - Generate video previews
+          enum:
+            - 0
+            - 1
+            - 2
+        resolution:
+          description: "Resolution info"
+          properties:
+            width:
+              type: number
+              format: int32
+              description: Width (px)
+            height:
+              type: number
+              format: int32
+              description: Height (px)
+            fps:
+              type: number
+              format: int32
+              description: Frames per second
+        stage:
+          type: string
+          description: >
+            Task Stage:
+              * PREPARE - Preparing task resources
+              * COPY - Decrypting and copying media assets
+              * PROBE - Extracting metadata from media assets
+              * ENCODE - Encoding
+              * ENCRYPT - Encrypting new assets
+              * UPDATE - Updating vault
+              * FINISH - Finishing (clearing temp files, etc)
+          enum:
+            - PREPARE
+            - COPY
+            - PROBE
+            - ENCODE
+            - ENCRYPT
+            - UPDATE
+            - FINISH
+        stage_start:
+          type: number
+          format: int64
+          description: Stage start timestamp (Unix millis)
+        stage_progress:
+          type: number
+          format: double
+          description: "Stage progress: A number from 0 to 100"
+          
+          
+    
