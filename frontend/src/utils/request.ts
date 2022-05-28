@@ -2,8 +2,16 @@
 
 "use strict";
 
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosError } from "axios";
 import { getCookie } from "./cookie";
+
+
+export interface RequestParams {
+    method: "GET" | "POST";
+    url: string;
+    json?: any;
+    form?: FormData;
+}
 
 export class Request {
 
@@ -13,13 +21,39 @@ export class Request {
         return new RequestErrorHandler();
     }
 
+    public static Do(params: RequestParams): Request {
+        if (params.method == "POST") {
+            if (params.form) {
+                return Request.PostFormData(null, params.url, params.form);
+            } else {
+                return Request.PostJSON(null, params.url, params.json || {});
+            }
+        } else {
+            return Request.Get(null, params.url);
+        }
+    }
+
+    public static Pending(key: string, params: RequestParams): Request {
+        if (params.method == "POST") {
+            if (params.form) {
+                return Request.PostFormData(key, params.url, params.form);
+            } else {
+                return Request.PostJSON(key, params.url, params.json || {});
+            }
+        } else {
+            return Request.Get(key, params.url);
+        }
+    }
+
     public static Get(key: string, url: string): Request {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
         const r = new Request(url, controller);
 
-        Request.pending[key] = r;
+        if (key) {
+            Request.pending[key] = r;
+        }
 
         const authToken = getCookie("x-session-token")
 
@@ -29,16 +63,23 @@ export class Request {
                 "x-session-token": authToken,
             },
         }).then(response => {
-            delete Request.pending[key];
+            if (key) {
+                delete Request.pending[key];
+            }
+
             r._onSuccess(response.data)
         }).catch(thrown => {
             if (axios.isCancel(thrown)) {
                 r._onCancel();
             } else if (axios.isAxiosError(thrown)) {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onRequestError(thrown);
             } else {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onUnexpectedError(thrown);
             }
         })
@@ -52,7 +93,9 @@ export class Request {
 
         const r = new Request(url, controller);
 
-        Request.pending[key] = r;
+        if (key) {
+            Request.pending[key] = r;
+        }
 
         const authToken = getCookie("x-session-token")
 
@@ -63,16 +106,23 @@ export class Request {
                 "x-session-token": authToken,
             },
         }).then(response => {
-            delete Request.pending[key];
+            if (key) {
+                delete Request.pending[key];
+            }
+
             r._onSuccess(response.data)
         }).catch(thrown => {
             if (axios.isCancel(thrown)) {
                 r._onCancel();
             } else if (axios.isAxiosError(thrown)) {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onRequestError(thrown);
             } else {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onUnexpectedError(thrown);
             }
         })
@@ -86,7 +136,9 @@ export class Request {
 
         const r = new Request(url, controller);
 
-        Request.pending[key] = r;
+        if (key) {
+            Request.pending[key] = r;
+        }
 
         const authToken = getCookie("x-session-token")
 
@@ -100,16 +152,23 @@ export class Request {
                 r._onUploadProgress(progressEvent.loaded || 0, progressEvent.total || 0);
             }
         }).then(response => {
-            delete Request.pending[key];
+            if (key) {
+                delete Request.pending[key];
+            }
+
             r._onSuccess(response.data)
         }).catch(thrown => {
             if (axios.isCancel(thrown)) {
                 r._onCancel();
             } else if (axios.isAxiosError(thrown)) {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onRequestError(thrown);
             } else {
-                delete Request.pending[key];
+                if (key) {
+                    delete Request.pending[key];
+                }
                 r._onUnexpectedError(thrown);
             }
         })
@@ -118,6 +177,9 @@ export class Request {
     }
 
     public static Abort(key: string) {
+        if (!key) {
+            return;
+        }
         if (Request.pending[key]) {
             Request.pending[key].abortController.abort();
             delete Request.pending[key];
