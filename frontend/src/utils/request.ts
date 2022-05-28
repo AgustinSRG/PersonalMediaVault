@@ -281,7 +281,7 @@ export class RequestErrorHandler {
             }
         }
 
-        for (let callback of this.callbacks) {
+        for (const callback of this.callbacks) {
             if (callback.status === "*" || callback.status === error.response.status) {
                 if (callback.code === "*" || errorCode === callback.code) {
                     callback.callback();

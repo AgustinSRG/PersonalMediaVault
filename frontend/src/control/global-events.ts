@@ -1,9 +1,11 @@
 // Global events manager
 
-export class GlobalEvents {
-    public static events: {[key: string]: Function[]} = {};
+type CallbackFunctionVariadic = (...args: any[]) => void;
 
-    public static AddEventListener(eventName: string, handler: Function) {
+export class GlobalEvents {
+    public static events: {[key: string]: CallbackFunctionVariadic[]} = {};
+
+    public static AddEventListener(eventName: string, handler: CallbackFunctionVariadic) {
         if (!this.events[eventName]) {
             this.events[eventName] = [];
         }
@@ -12,7 +14,7 @@ export class GlobalEvents {
 
     public static Emit(eventName: string, ...args: string[]) {
         if (this.events[eventName]) {
-            for (let handler of this.events[eventName]) {
+            for (const handler of this.events[eventName]) {
                 try {
                     handler(...args);
                 } catch (ex) {
@@ -22,11 +24,11 @@ export class GlobalEvents {
         }
     }
 
-    public static RemoveEventListener(eventName: string, handler: Function) {
+    public static RemoveEventListener(eventName: string, handler: CallbackFunctionVariadic) {
         if (!this.events[eventName]) {
             return;
         }
-        let i = this.events[eventName].indexOf(handler);
+        const i = this.events[eventName].indexOf(handler);
         if (i >= 0) {
             this.events[eventName].splice(i, 1);
             if (this.events[eventName].length === 0) {
