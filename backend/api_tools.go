@@ -21,6 +21,10 @@ const (
 func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
 
+	if CORS_INSECURE_MODE_ENABLED && sessionToken == "" && (request.Method == "GET" || request.Method == "HEAD") {
+		sessionToken = request.URL.Query().Get("x-session-token")
+	}
+
 	if sessionToken == "" && (request.Method == "GET" || request.Method == "HEAD") {
 		c, err := request.Cookie("x-session-token")
 

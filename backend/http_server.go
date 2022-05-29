@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var (
+	CORS_INSECURE_MODE_ENABLED = false
+)
+
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Log request
@@ -20,11 +24,56 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// CORS
+		corsOrigin := r.Header.Get("origin")
+
+		if corsOrigin == "" {
+			corsOrigin = "*"
+		}
+
+		w.Header().Set("Access-Control-Allow-Origin", corsOrigin)
+
+		allowMethods := r.Header.Get("access-control-request-method")
+
+		if allowMethods != "" {
+			w.Header().Set("Access-Control-Allow-Methods", allowMethods)
+		}
+
+		allowHeaders := r.Header.Get("access-control-request-headers")
+
+		if allowHeaders != "" {
+			w.Header().Set("Access-Control-Allow-Headers", allowHeaders)
+		}
+
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
+}
+
+func corsHeadInsecure() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "HEAD" {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(404)
+		}
+	})
+}
+
 func RunHTTPServer() {
 	router := mux.NewRouter()
 
 	// Logging middleware
 	router.Use(loggingMiddleware)
+
+	if CORS_INSECURE_MODE_ENABLED {
+		LogWarning("CORS insecure mode enabled. Use this only for development")
+		router.Use(corsMiddleware)
+	}
 
 	// API routes
 
@@ -98,7 +147,11 @@ func RunHTTPServer() {
 		frontend_path = "../frontend/dist/"
 	}
 
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
+	if CORS_INSECURE_MODE_ENABLED {
+		router.PathPrefix("/").Handler(corsHeadInsecure())
+	} else {
+		router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
+	}
 
 	// Run server
 

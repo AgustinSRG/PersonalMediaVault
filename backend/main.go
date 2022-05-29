@@ -82,6 +82,8 @@ func main() {
 			options.daemon = true
 		} else if arg == "--clean" || arg == "-c" {
 			options.clean = true
+		} else if arg == "--cors-insecure" {
+			CORS_INSECURE_MODE_ENABLED = true
 		} else if arg == "--init" || arg == "-i" {
 			options.initialize = true
 		} else if arg == "--vault-path" || arg == "-vp" {
@@ -160,6 +162,7 @@ func printHelp() {
 	fmt.Println("        --daemon, -d               Runs backend daemon.")
 	fmt.Println("        --init, -i                 Initializes the vault. Asks for username and password.")
 	fmt.Println("        --debug                    Enables debug mode.")
+	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
 	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
