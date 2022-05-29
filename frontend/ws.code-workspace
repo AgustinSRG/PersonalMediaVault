@@ -5,6 +5,8 @@
 		}
 	],
 	"settings": {
-		"files.exclude": {},
+		"files.exclude": {
+			"node_modules": true
+		},
 	}
 }
