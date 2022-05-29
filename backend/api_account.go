@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+type UsernameInfoAPIResponse struct {
+	Username string `json:"username"`
+}
+
 type ChangeUsernameBody struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -15,6 +19,34 @@ type ChangeUsernameBody struct {
 type ChangePasswordBody struct {
 	Password    string `json:"password"`
 	OldPassword string `json:"old_password"`
+}
+
+func api_getUsername(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		response.WriteHeader(401)
+		return
+	}
+
+	var result UsernameInfoAPIResponse
+
+	result.Username = session.user
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	response.Header().Add("Content-Type", "application/json")
+	response.Header().Add("Cache-Control", "no-cache")
+	response.WriteHeader(200)
+
+	response.Write(jsonResult)
 }
 
 func api_changeUsername(response http.ResponseWriter, request *http.Request) {

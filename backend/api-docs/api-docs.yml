@@ -102,6 +102,32 @@ paths:
           description: Success
           
   "/api/account/username":
+    get:
+      summary: Get username
+      description: Gets the username of the current session
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Username
+          schema:
+            properties:
+              username:
+                type: string
+                description: Username
+                example: "admin"
     post:
       summary: Change username
       description: Changes the username for the vault credentials

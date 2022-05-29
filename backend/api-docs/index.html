@@ -197,6 +197,7 @@ font-style: italic;
   <h4><a href="#Account">Account</a></h4>
   <ul>
   <li><a href="#apiAccountPasswordPost"><code><span class="http-method">post</span> /api/account/password</code></a></li>
+  <li><a href="#apiAccountUsernameGet"><code><span class="http-method">get</span> /api/account/username</code></a></li>
   <li><a href="#apiAccountUsernamePost"><code><span class="http-method">post</span> /api/account/username</code></a></li>
   </ul>
   <h4><a href="#Albums">Albums</a></h4>
@@ -305,6 +306,61 @@ font-style: italic;
         <a href="#"></a>
     <h4 class="field-label">403</h4>
     Invalid password.
+        <a href="#"></a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="apiAccountUsernameGet"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/account/username</code></pre></div>
+    <div class="method-summary">Get username (<span class="nickname">apiAccountUsernameGet</span>)</div>
+    <div class="method-notes">Gets the username of the current session</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+
+    <h3 class="field-label">Request headers</h3>
+    <div class="field-items">
+      <div class="param">x-session-token (required)</div>
+
+      <div class="param-desc"><span class="param-type">Header Parameter</span> &mdash; Current session ID </div>
+    </div>  <!-- field-items -->
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      
+      Object
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "bytes": [],
+  "empty": true
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Username
+        <a href="#Object">Object</a>
+    <h4 class="field-label">401</h4>
+    Unauthorized (No valid session)
         <a href="#"></a>
   </div> <!-- method -->
   <hr/>
