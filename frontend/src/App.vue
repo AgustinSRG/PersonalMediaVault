@@ -1,12 +1,6 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <div style="display: flex; background: black">
-    <VolumeControl
-      :width="60"
-      :min="false"
-      v-model:muted="muted"
-      v-model:volume="volume"
-    ></VolumeControl>
+  <div class="main-container">
+    <VideoPlayer :mid="0" :metadata="{width: 1080, height: 720, fps: 30, url: '/testvid/video.mp4', resolutions: [{width: 480, height: 360, fps: 30, url: '/testvid/video-480.mp4', ready: true}]}" :rtick="0"></VideoPlayer>
   </div>
 
   <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
@@ -14,12 +8,15 @@
 
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
-import HelloWorld from "./components/HelloWorld.vue";
+
+// Player components
 import VolumeControl from "./components/player/VolumeControl.vue";
+import VideoPlayer from "./components/player/VideoPlayer.vue"
 
 @Options({
   components: {
-    HelloWorld,
+
+    VideoPlayer,
     VolumeControl,
   },
   data: function () {
@@ -46,5 +43,14 @@ export default class App extends Vue {}
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.main-container {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 </style>

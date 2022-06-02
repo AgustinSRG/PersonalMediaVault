@@ -45,25 +45,27 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({
   name: "VolumeControl",
-  emits: ["update:volume", "update:muted"],
+  emits: ["update:volume", "update:muted", "update:expanded"],
   props: {
     width: Number,
     volume: Number,
     min: Boolean,
     muted: Boolean,
+    expanded: Boolean,
   },
   setup(props) {
     return {
       volumeState: useVModel(props, "volume"),
       mutedState: useVModel(props, "muted"),
+      expandedState: useVModel(props, "expanded"),
     };
   },
   data: function () {
     return {
-      expanded: false,
       volumeGrabbed: false,
     };
   },
@@ -112,10 +114,13 @@ export default defineComponent({
       return this.getVolumeBarCurrentWidth(width, volume, muted);
     },
     showVolumeBar: function () {
-      this.expanded = true;
+      this.expandedState = true;
     },
     hideVolumeBar: function () {
-      this.expanded = false;
+      if (isTouchDevice()) {
+        return;
+      }
+      this.expandedState = false;
     },
     grabVolume(e) {
       this.volumeGrabbed = true;
@@ -173,6 +178,10 @@ export default defineComponent({
     },
   },
   mounted: function () {
+    if (isTouchDevice()) {
+      this.expandedState = true;
+    }
+
     this.$options.dropVolumeHandler = this.dropVolume.bind(this);
     document.addEventListener("mouseup", this.$options.dropVolumeHandler);
     document.addEventListener("touchend", this.$options.dropVolumeHandler);
@@ -191,14 +200,6 @@ export default defineComponent({
   },
 });
 </script>
-
-<i18n>
-{
-  "en": {
-    "hello": "Hello i18n in SFC!"
-  }
-}
-</i18n>
 
 <style>
 .player-volume-control {
