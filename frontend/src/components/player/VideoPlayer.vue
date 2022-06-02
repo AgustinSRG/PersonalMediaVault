@@ -10,7 +10,7 @@
     @mouseup="playerMouseUp"
     @touchmove="playerMouseMove"
     @touchend="playerMouseUp"
-    @keydown="onPlayerKeyPress"
+    @keydown="onKeyPress"
   >
     <video
       v-if="videoURL"
@@ -96,6 +96,15 @@
           @update:volume="onUserVolumeUpdated"
           @update:muted="onUserMutedUpdated"
         ></VolumeControl>
+
+        <div
+          class="player-time-label-container"
+          v-if="!minPlayer"
+        >
+          <span
+            >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
+          >
+        </div>
       </div>
     </div>
 
@@ -185,8 +194,18 @@ export default defineComponent({
       PlayerPreferences.SetVolume(this.volume);
     },
 
+    changeVolume: function (v: number) {
+      this.volume = v;
+      this.onUserVolumeUpdated();
+    },
+
     onUserMutedUpdated() {
       PlayerPreferences.SetMuted(this.muted);
+    },
+
+    toggleMuted: function () {
+      this.muted = !this.muted;
+      this.onUserMutedUpdated();
     },
 
     /* Player events */
@@ -466,6 +485,78 @@ export default defineComponent({
         this.ended = false;
       }
     },
+
+    onKeyPress: function (event) {
+      var catched = true;
+      switch (event.key) {
+        case "M":
+        case "m":
+          this.toggleMuted();
+          this.showVolume();
+          break;
+        case "E":
+        case "e":
+          this.toggleExpand();
+          break;
+        case " ":
+        case "K":
+        case "k":
+          this.togglePlay();
+          break;
+        case "ArrowUp":
+          this.changeVolume(Math.min(1, this.volume + 0.05));
+          break;
+        case "ArrowDown":
+          this.changeVolume(Math.max(0, this.volume - 0.05));
+          break;
+        case "F":
+        case "f":
+          this.toggleFullScreen();
+          break;
+        case "J":
+        case "j":
+        case "ArrowRight":
+          if (!this.live) {
+            this.setTime(this.currentTime + 5, true);
+          }
+          break;
+        case "L":
+        case "l":
+        case "ArrowLeft":
+          if (!this.live) {
+            this.setTime(this.currentTime - 5, true);
+          }
+          break;
+        case ".":
+          if (!this.playing && !this.live) {
+            this.setTime(this.currentTime - 1 / 30);
+          }
+          break;
+        case ",":
+          if (!this.playing && !this.live) {
+            this.setTime(this.currentTime + 1 / 30);
+          }
+          break;
+        case "Home":
+          if (!this.live) {
+            this.setTime(0, true);
+          }
+          break;
+        case "End":
+          if (!this.live) {
+            this.setTime(this.duration, true);
+          }
+          break;
+        default:
+          catched = false;
+      }
+
+      if (catched) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.interactWithControls();
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -523,23 +614,23 @@ export default defineComponent({
   color: white;
 
   display: block;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    font-family: monospace;
-    -webkit-touch-callout: none;
-    /* iOS Safari */
-    -webkit-user-select: none;
-    /* Safari */
-    -khtml-user-select: none;
-    /* Konqueror HTML */
-    -moz-user-select: none;
-    /* Old versions of Firefox */
-    -ms-user-select: none;
-    /* Internet Explorer/Edge */
-    user-select: none;
-    /* Non-prefixed version, currently
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  font-family: monospace;
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
@@ -612,30 +703,32 @@ export default defineComponent({
   display: flex;
   align-items: center;
   width: 50%;
-  padding: 8px;
+  height: 100%;
   justify-content: left;
+  padding-left: 8px;
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.player-min .player-controls-left {
-  padding: 4px;
+  overflow: hidden;
 }
 
 .player-controls-right {
   display: flex;
   align-items: center;
   width: 50%;
-  padding: 8px;
+  height: 100%;
   justify-content: right;
+  padding-right: 8px;
   position: absolute;
   top: 0;
   right: 0;
 }
 
 .player-min .player-controls-right {
-  padding: 4px;
+  padding-right: 4px;
+}
+.player-controls-left .player-controls-left {
+  padding-left: 4px;
 }
 
 /* Player Loader */

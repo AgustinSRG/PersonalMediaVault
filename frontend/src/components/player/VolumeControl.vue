@@ -83,7 +83,7 @@ export default defineComponent({
         btnWidth = 24;
       }
 
-      return btnWidth + (expanded ? barWidth + margins : 0) + "px";
+      return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
     },
     computeBarContainerWidth(width: number) {
       let margins = 24;
