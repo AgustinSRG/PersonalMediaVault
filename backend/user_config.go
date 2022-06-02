@@ -119,7 +119,7 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 }
 
 func (res UserConfigResolution) Fits(width int32, height int32, fps int32) bool {
-	return (res.Width < width) && (res.Height < height) && (res.Fps < fps)
+	return (res.Width < width) && (res.Height < height) && (res.Fps < fps || res.Fps <= 30)
 }
 
 func (res UserConfigImageResolution) Fits(width int32, height int32) bool {
