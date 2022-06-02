@@ -335,6 +335,10 @@ paths:
                 type: number
                 format: int32
                 description: Image/Video height
+              fps:
+                type: number
+                format: int32
+                description: Frames per second
               ready:
                 type: boolean
                 description: "Set to true if the media asset finish uploading"
@@ -1517,7 +1521,11 @@ definitions:
         height:
           type: number
           format: int32
-          description: Image/Video height      
+          description: Image/Video height
+        fps:
+          type: number
+          format: int32
+          description: Frames per second
     
     UserConfig:
       description: User configuration

@@ -152,7 +152,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = media.CreateNewMediaAsset(session.key, probe_data.Type, mediaTitle, "", probe_data.Duration, probe_data.Width, probe_data.Height)
+	err = media.CreateNewMediaAsset(session.key, probe_data.Type, mediaTitle, "", probe_data.Duration, probe_data.Width, probe_data.Height, probe_data.Fps)
 
 	if err != nil {
 		LogError(err)

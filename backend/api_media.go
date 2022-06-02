@@ -20,6 +20,7 @@ type MediaListAPIItem struct {
 	Duration  float64   `json:"duration"`
 	Width     int32     `json:"width"`
 	Height    int32     `json:"height"`
+	Fps       int32     `json:"fps"`
 }
 
 func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
@@ -46,6 +47,7 @@ func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem 
 		result.Duration = meta.MediaDuration
 		result.Width = meta.Width
 		result.Height = meta.Height
+		result.Fps = meta.Fps
 	} else {
 		result.Type = MediaTypeDeleted
 		result.Title = ""
@@ -53,6 +55,7 @@ func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem 
 		result.Duration = 0
 		result.Width = 0
 		result.Height = 0
+		result.Fps = 0
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)
@@ -83,6 +86,7 @@ type MediaAPIMetaResponse struct {
 	Duration float64 `json:"duration"`
 	Width    int32   `json:"width"`
 	Height   int32   `json:"height"`
+	Fps      int32   `json:"fps"`
 
 	Ready   bool   `json:"ready"`
 	Encoded bool   `json:"encoded"`
@@ -156,6 +160,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	result.Duration = meta.MediaDuration
 	result.Width = meta.Width
 	result.Height = meta.Height
+	result.Fps = meta.Fps
 
 	if meta.OriginalReady && meta.OriginalEncoded {
 		result.Ready = true
