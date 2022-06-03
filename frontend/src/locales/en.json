@@ -1,3 +1,23 @@
 {
-  "message": "hello i18n !!"
+  "Audio": "Audio",
+  "Deleted media": "Deleted media",
+  "Exit full screen": "Exit full screen",
+  "Full screen": "Full screen",
+  "Image": "Image",
+  "Loop": "Loop",
+  "Muted": "Muted",
+  "Next": "Next",
+  "Normal": "Normal",
+  "Original": "Original",
+  "Pause": "Pause",
+  "Pending": "Pending",
+  "Play": "Play",
+  "Playback speed": "Playback speed",
+  "Player Configuration": "Player Configuration",
+  "Previous": "Previous",
+  "Quality": "Quality",
+  "Unknown": "Unknown",
+  "Untitled": "Untitled",
+  "Video": "Video",
+  "Volume": "Volume"
 }
