@@ -1,6 +1,28 @@
 <template>
   <div class="main-container">
-    <VideoPlayer :mid="0" :metadata="{width: 1080, height: 720, fps: 30, url: '/testvid/video.mp4', resolutions: [{width: 480, height: 360, fps: 30, url: '/testvid/video-480.mp4', ready: true}]}" :rtick="0"></VideoPlayer>
+    <VideoPlayer
+      :mid="0"
+      :metadata="{
+        width: 1080,
+        height: 720,
+        fps: 30,
+        url: '/testvid/video.mp4',
+        ready: true,
+        encoded: true,
+        resolutions: [
+          {
+            width: 480,
+            height: 360,
+            fps: 30,
+            url: '/testvid/video-480.mp4',
+            ready: true,
+          },
+        ],
+      }"
+      :rtick="0"
+      :next="{}"
+      :prev="{}"
+    ></VideoPlayer>
   </div>
 
   <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
@@ -11,11 +33,10 @@ import { Options, Vue } from "vue-class-component";
 
 // Player components
 import VolumeControl from "./components/player/VolumeControl.vue";
-import VideoPlayer from "./components/player/VideoPlayer.vue"
+import VideoPlayer from "./components/player/VideoPlayer.vue";
 
 @Options({
   components: {
-
     VideoPlayer,
     VolumeControl,
   },

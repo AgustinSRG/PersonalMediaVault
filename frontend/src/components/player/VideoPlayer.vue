@@ -97,10 +97,7 @@
           @update:muted="onUserMutedUpdated"
         ></VolumeControl>
 
-        <div
-          class="player-time-label-container"
-          v-if="!minPlayer"
-        >
+        <div class="player-time-label-container" v-if="!minPlayer">
           <span
             >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
           >
@@ -149,11 +146,14 @@ export default defineComponent({
     VolumeControl,
   },
   name: "VideoPlayer",
-  emits: [],
+  emits: ["gonext", "goprev"],
   props: {
     mid: Number,
     metadata: Object,
     rtick: Number,
+
+    next: Object,
+    prev: Object,
   },
   data: function () {
     return {
@@ -161,6 +161,8 @@ export default defineComponent({
       loading: true,
 
       videoURL: "",
+      videoPending: false,
+      videoPendingTask: 0,
 
       minPlayer: false,
       fullScreen: false,
@@ -179,7 +181,6 @@ export default defineComponent({
 
       loop: false,
 
-      resolutions: [],
       currentResolution: -1,
 
       volume: 1,
@@ -190,6 +191,18 @@ export default defineComponent({
     };
   },
   methods: {
+    goNext: function () {
+      if (this.next) {
+        this.$emit("gonext");
+      }
+    },
+
+    goPrev: function () {
+      if (this.prev) {
+        this.$emit("goprev");
+      }
+    },
+
     onUserVolumeUpdated() {
       PlayerPreferences.SetVolume(this.volume);
     },
@@ -557,6 +570,60 @@ export default defineComponent({
         this.interactWithControls();
       }
     },
+
+    initializeVideo() {
+      if (!this.metadata) {
+        return;
+      }
+      this.currentTime = 0;
+      this.duration = 0;
+      this.speed = 1;
+      this.loop = false;
+      this.currentResolution = PlayerPreferences.GetResolutionIndex(
+        this.metadata
+      );
+      this.loading = true;
+      this.playing = true;
+      this.setVideoURL();
+    },
+
+    setVideoURL() {
+      if (!this.metadata) {
+        this.videoURL = "";
+      }
+
+      if (this.currentResolution < 0) {
+        if (this.metadata.encoded) {
+          this.videoURL = this.metadata.url;
+          this.videoPending = false;
+          this.videoPendingTask = 0;
+        } else {
+          this.videoURL = "";
+          this.videoPending = true;
+          this.videoPendingTask = this.metadata.task;
+        }
+      } else {
+        if (
+          this.metadata.resolutions &&
+          this.metadata.resolutions.length > this.currentResolution
+        ) {
+          let res = this.metadata.resolutions[this.currentResolution];
+          if (res.ready) {
+            this.videoURL = res.url;
+            this.videoPending = false;
+            this.videoPendingTask = 0;
+          } else {
+            this.videoURL = "";
+            this.videoPending = true;
+            this.videoPendingTask = res.task;
+          }
+        } else {
+          this.videoURL = "";
+          this.videoPending = true;
+          this.videoPendingTask = 0;
+        }
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -564,8 +631,6 @@ export default defineComponent({
     this.volume = PlayerPreferences.PlayerVolume;
 
     this.$options.timer = setInterval(this.tick.bind(this), 100);
-
-    this.videoURL = this.metadata.url;
 
     this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
     document.addEventListener(
@@ -584,6 +649,8 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+
+    this.initializeVideo();
   },
   beforeUnmount: function () {
     clearInterval(this.$options.timer);
@@ -604,6 +671,11 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+  },
+  watch: {
+    rtick: function () {
+      this.initializeVideo();
+    },
   },
 });
 </script>
