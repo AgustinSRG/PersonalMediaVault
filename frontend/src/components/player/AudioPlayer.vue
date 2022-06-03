@@ -1,7 +1,7 @@
 <template>
   <div
     tabindex="0"
-    class="video-player"
+    class="audio-player"
     :class="{ 'player-min': minPlayer, 'no-controls': !showControls }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
@@ -12,9 +12,9 @@
     @touchend="playerMouseUp"
     @keydown="onKeyPress"
   >
-    <video
-      v-if="videoURL"
-      :src="videoURL"
+    <audio
+      v-if="audioURL"
+      :src="audioURL"
       :key="rtick"
       playsinline
       webkit-playsinline
@@ -28,7 +28,9 @@
       @loadedmetadata="onLoadMetaData"
       @waiting="onWaitForBuffer(true)"
       @playing="onWaitForBuffer(false)"
-    ></video>
+    ></audio>
+
+    <canvas v-if="audioURL"></canvas>
 
     <div class="player-feeback-container">
       <div
@@ -263,27 +265,20 @@
       class="player-tooltip"
       :style="{ left: tooltipX + 'px' }"
     >
-      <div v-if="tooltipImage && !tooltipImageInvalid">
-        <img
-          class="player-tooltip-image"
-          :src="tooltipImage"
-          @error="onTooltipImageError"
-        />
-      </div>
       <div class="player-tooltip-text">{{ tooltipText }}</div>
     </div>
 
-    <VideoPlayerConfig
+    <AudioPlayerConfig
       v-model:shown="displayConfig"
       v-model:speed="speed"
       v-model:loop="loop"
-      v-model:resolution="currentResolution"
-      @update:resolution="onResolutionUpdated"
+      v-model:animcolors="animationColors"
       :rtick="internalTick"
       :metadata="metadata"
+      @update:animcolors="onUpdateAnimColors"
       @enter="enterControls"
       @leave="leaveControls"
-    ></VideoPlayerConfig>
+    ></AudioPlayerConfig>
   </div>
 </template>
 
@@ -297,15 +292,15 @@ import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
-import VideoPlayerConfig from "./VideoPlayerConfig.vue";
+import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 
 export default defineComponent({
   components: {
     VolumeControl,
-    VideoPlayerConfig,
+    AudioPlayerConfig,
     PlayerMediaChangePreview,
   },
-  name: "VideoPlayer",
+  name: "AudioPlayer",
   emits: ["gonext", "goprev"],
   props: {
     mid: Number,
@@ -320,9 +315,9 @@ export default defineComponent({
       playing: false,
       loading: true,
 
-      videoURL: "",
-      videoPending: false,
-      videoPendingTask: 0,
+      audioURL: "",
+      audioPending: false,
+      audioPendingTask: 0,
 
       minPlayer: false,
       fullScreen: false,
@@ -340,16 +335,12 @@ export default defineComponent({
       tooltipText: "",
       tooltipX: 0,
       tooltipEventX: 0,
-      tooltipImage: "",
-      tooltipImageInvalid: false,
 
       showControls: true,
       lastControlsInteraction: Date.now(),
       mouseInControls: false,
 
       loop: false,
-
-      currentResolution: -1,
 
       volume: 1,
       muted: false,
@@ -361,6 +352,8 @@ export default defineComponent({
       feedback: "",
 
       helpTooltip: "",
+
+      animationColors: "",
     };
   },
   methods: {
@@ -380,39 +373,6 @@ export default defineComponent({
     showConfig: function (e) {
       this.displayConfig = !this.displayConfig;
       e.stopPropagation();
-    },
-
-    getThumbnailForTime: function (time: number) {
-      if (
-        this.duration <= 0 ||
-        !this.metadata ||
-        !this.metadata.video_previews ||
-        !this.metadata.video_previews_interval
-      ) {
-        return "";
-      }
-      let thumbCount = Math.floor(
-        this.duration / this.metadata.video_previews_interval
-      );
-
-      if (thumbCount <= 0) {
-        return "";
-      }
-
-      var part = Math.floor(time / this.metadata.video_previews_interval);
-      if (part > thumbCount) {
-        part = thumbCount;
-      }
-
-      return this.metadata.video_previews.replace("{INDEX}", "" + part);
-    },
-
-    onResolutionUpdated: function () {
-      PlayerPreferences.SetResolutionIndex(
-        this.metadata,
-        this.currentResolution
-      );
-      this.setVideoURL();
     },
 
     clickControls: function (e) {
@@ -436,6 +396,10 @@ export default defineComponent({
       PlayerPreferences.SetVolume(this.volume);
     },
 
+    onUpdateAnimColors: function () {
+      PlayerPreferences.SetAudioAnymationStyle(this.animationColors);
+    },
+
     changeVolume: function (v: number) {
       this.volume = v;
       this.onUserVolumeUpdated();
@@ -453,15 +417,15 @@ export default defineComponent({
     /* Player events */
 
     onLoadMetaData: function () {
-      this.duration = this.getVideoElement().duration;
+      this.duration = this.getAudioElement().duration;
 
-      this.getVideoElement().currentTime = this.currentTime;
-      this.getVideoElement().playbackRate = this.speed;
+      this.getAudioElement().currentTime = this.currentTime;
+      this.getAudioElement().playbackRate = this.speed;
     },
     onVideoTimeUpdate: function () {
       if (this.loading) return;
-      this.currentTime = this.getVideoElement().currentTime;
-      this.duration = this.getVideoElement().duration;
+      this.currentTime = this.getAudioElement().currentTime;
+      this.duration = this.getAudioElement().duration;
       if (Date.now() - this.lastTimeChangedEvent > 5000) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
@@ -472,13 +436,20 @@ export default defineComponent({
       if (!this.playing) {
         return;
       }
-      var promise = this.getVideoElement().play();
+      var promise = this.getAudioElement().play();
       if (promise) {
+        promise.then(
+          function () {
+            this.setupAudioRenderer();
+          }.bind(this)
+        );
         promise.catch(
           function () {
             this.playing = false;
           }.bind(this)
         );
+      } else {
+        this.setupAudioRenderer();
       }
     },
     onWaitForBuffer: function (b) {
@@ -487,7 +458,7 @@ export default defineComponent({
     onEnded: function () {
       this.loading = false;
       if (this.loop) {
-        this.getVideoElement().currentTime = 0;
+        this.getAudioElement().currentTime = 0;
       } else {
         this.pause();
         this.$emit("ended");
@@ -538,10 +509,10 @@ export default defineComponent({
         }
       }
 
-      var video = this.getVideoElement();
+      var audio = this.getAudioElement();
 
-      if (video && video.buffered.length > 0) {
-        this.bufferedTime = video.buffered.end(video.buffered.length - 1);
+      if (audio && audio.buffered.length > 0) {
+        this.bufferedTime = audio.buffered.end(audio.buffered.length - 1);
       } else {
         this.bufferedTime = 0;
       }
@@ -566,8 +537,8 @@ export default defineComponent({
       }
     },
 
-    getVideoElement() {
-      return this.$el.querySelector("video");
+    getAudioElement() {
+      return this.$el.querySelector("audio");
     },
 
     interactWithControls() {
@@ -607,18 +578,20 @@ export default defineComponent({
     },
 
     play: function () {
-      var video = this.getVideoElement();
+      var audio = this.getAudioElement();
       this.playing = true;
-      if (video) {
-        video.play();
+      if (audio) {
+        audio.play();
+
+        this.setupAudioRenderer();
       }
     },
     pause: function () {
-      var video = this.getVideoElement();
+      var audio = this.getAudioElement();
       this.playing = false;
 
-      if (video) {
-        video.pause();
+      if (audio) {
+        audio.pause();
       }
 
       PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
@@ -703,11 +676,6 @@ export default defineComponent({
 
       this.tooltipShown = true;
       this.tooltipText = this.renderTime(time);
-      var oldTooltipImage = this.tooltipImage;
-      this.tooltipImage = this.getThumbnailForTime(time);
-      if (oldTooltipImage !== this.tooltipImage) {
-        this.tooltipImageInvalid = false;
-      }
       this.tooltipEventX = x;
 
       nextTick(this.tick.bind(this));
@@ -716,12 +684,12 @@ export default defineComponent({
       return renderTimeSeconds(s);
     },
 
-    setTime: function (time, save) {
+    setTime: function (time: number, save: boolean) {
       time = Math.max(0, time);
       time = Math.min(time, this.duration);
       this.currentTime = time;
 
-      var video = this.getVideoElement();
+      var video = this.getAudioElement();
 
       if (video) {
         video.currentTime = time;
@@ -818,7 +786,7 @@ export default defineComponent({
       }
     },
 
-    initializeVideo() {
+    initializeAudio() {
       if (!this.metadata) {
         return;
       }
@@ -826,69 +794,164 @@ export default defineComponent({
       this.duration = 0;
       this.speed = 1;
       this.loop = false;
-      this.currentResolution = PlayerPreferences.GetResolutionIndex(
-        this.metadata
-      );
       this.loading = true;
       this.playing = true;
-      this.setVideoURL();
+      this.clearAudioRenderer();
+      this.setAudioURL();
     },
 
-    setVideoURL() {
+    setAudioURL() {
       if (!this.metadata) {
-        this.videoURL = "";
+        this.audioURL = "";
         this.duration = 0;
+        this.clearAudioRenderer();
         return;
       }
 
-      if (this.currentResolution < 0) {
-        if (this.metadata.encoded) {
-          this.videoURL = this.metadata.url;
-          this.videoPending = false;
-          this.videoPendingTask = 0;
-        } else {
-          this.videoURL = "";
-          this.videoPending = true;
-          this.videoPendingTask = this.metadata.task;
-          this.duration = 0;
-        }
+      if (this.metadata.encoded) {
+        this.audioURL = this.metadata.url;
+        this.audioPending = false;
+        this.audioPendingTask = 0;
       } else {
-        if (
-          this.metadata.resolutions &&
-          this.metadata.resolutions.length > this.currentResolution
-        ) {
-          let res = this.metadata.resolutions[this.currentResolution];
-          if (res.ready) {
-            this.videoURL = res.url;
-            this.videoPending = false;
-            this.videoPendingTask = 0;
-          } else {
-            this.videoURL = "";
-            this.videoPending = true;
-            this.videoPendingTask = res.task;
-            this.duration = 0;
-          }
-        } else {
-          this.videoURL = "";
-          this.videoPending = true;
-          this.videoPendingTask = 0;
-          this.duration = 0;
+        this.audioURL = "";
+        this.audioPending = true;
+        this.audioPendingTask = this.metadata.task;
+        this.duration = 0;
+        this.clearAudioRenderer();
+      }
+    },
+
+    clearAudioRenderer: function () {
+      if (this.$options.rendererTimer) {
+        clearInterval(this.$options.rendererTimer);
+        this.$options.rendererTimer = null;
+      }
+
+      if (this.$options.audioSource && this.$options.audioAnalyser) {
+        this.$options.audioSource.disconnect(this.$options.audioAnalyser);
+      }
+
+      if (this.$options.audioContext && this.$options.audioAnalyser) {
+        this.$options.audioAnalyser.disconnect(
+          this.$options.audioContext.destination
+        );
+      }
+
+      if (this.$options.audioSource) {
+        this.$options.audioSource.disconnect();
+      }
+
+      if (this.$options.audioContext) {
+        this.$options.audioContext.close();
+      }
+
+      this.$options.audioContext = null;
+      this.$options.audioSource = null;
+      this.$options.audioAnalyser = null;
+    },
+
+    setupAudioRenderer: function () {
+      if (this.$options.audioContext) {
+        return;
+      }
+
+      if (this.audioURL) {
+        const context = new AudioContext();
+        const source = context.createMediaElementSource(this.getAudioElement());
+
+        const analyser = context.createAnalyser();
+        this.$options.audioContext = context;
+        this.$options.audioSource = source;
+        this.$options.audioAnalyser = analyser;
+        source.connect(analyser);
+        analyser.connect(context.destination);
+
+        analyser.fftSize = 256;
+
+        this.$options.rendererTimer = setInterval(
+          this.audioAnimationFrame.bind(this),
+          Math.floor(1000 / 30)
+        );
+      } else {
+        this.$options.audioContext = null;
+        this.$options.audioSource = null;
+        this.$options.audioAnalyser = null;
+      }
+    },
+
+    audioAnimationFrame: function () {
+      if (!this.playing) {
+        return;
+      }
+
+      const analyser = this.$options.audioAnalyser;
+      const canvas = this.$el.querySelector("canvas");
+
+      if (!analyser || !canvas) {
+        return;
+      }
+
+      const rect = this.$el.getBoundingClientRect();
+      if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+
+      const bufferLength = analyser.frequencyBinCount;
+
+      const dataArray = new Uint8Array(bufferLength);
+
+      const WIDTH = canvas.width;
+      const HEIGHT = canvas.height;
+
+      let barWidth = (WIDTH / bufferLength) * 2.5;
+      let barHeight;
+      let x = 0;
+
+      analyser.getByteFrequencyData(dataArray);
+
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      if (this.animationColors === "none") {
+        return;
+      }
+
+      for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i];
+
+        switch (this.animationColors) {
+          case "gradient":
+            {
+              let r = barHeight + 25 * (i / bufferLength);
+              let g = 250 * (i / bufferLength);
+              let b = 50;
+              ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+            }
+            break;
+          default:
+            ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
         }
+
+        let trueHeight = Math.floor(HEIGHT * (barHeight / 255));
+
+        ctx.fillRect(x, HEIGHT - trueHeight, barWidth, trueHeight);
+
+        x += barWidth + 1;
       }
     },
 
     onFeedBackAnimationEnd: function () {
       this.feedback = "";
     },
-
-    onTooltipImageError: function () {
-      this.tooltipImageInvalid = true;
-    },
   },
   mounted: function () {
     // Load player preferences
     this.muted = PlayerPreferences.PlayerMuted;
     this.volume = PlayerPreferences.PlayerVolume;
+    this.animationColors = PlayerPreferences.AudioAnymationStyle;
 
     this.$options.timer = setInterval(this.tick.bind(this), 100);
 
@@ -910,10 +973,13 @@ export default defineComponent({
       this.$options.exitFullScreenListener
     );
 
-    this.initializeVideo();
+    this.initializeAudio();
   },
   beforeUnmount: function () {
+    this.audioURL = "";
     clearInterval(this.$options.timer);
+
+    this.clearAudioRenderer();
 
     document.removeEventListener(
       "fullscreenchange",
@@ -935,10 +1001,10 @@ export default defineComponent({
   watch: {
     rtick: function () {
       this.internalTick++;
-      this.initializeVideo();
+      this.initializeAudio();
     },
-    videoURL: function () {
-      if (this.videoURL) {
+    audioURL: function () {
+      if (this.audioURL) {
         this.loading = true;
       }
     },
@@ -947,7 +1013,7 @@ export default defineComponent({
 </script>
 
 <style>
-.video-player {
+.audio-player {
   background: black;
   color: white;
 
@@ -971,7 +1037,7 @@ export default defineComponent({
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-.video-player video {
+.audio-player canvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -980,314 +1046,15 @@ export default defineComponent({
   pointer-events: none;
 }
 
-.video-player:focus {
+.audio-player audio {
+  visibility: hidden;
+}
+
+.audio-player:focus {
   outline: none;
 }
 
-.video-player.no-controls {
+.audio-player.no-controls {
   cursor: none;
-}
-
-.player-controls {
-  position: absolute;
-  display: block;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 56px;
-  background-color: rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s;
-  opacity: 1;
-}
-
-.player-min .player-controls {
-  height: 32px;
-}
-
-.player-controls.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.player-btn {
-  display: block;
-  width: 40px;
-  height: 40px;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
-  background: transparent;
-  outline: none;
-}
-
-.player-btn:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.player-min .player-btn {
-  width: 24px;
-  height: 24px;
-  font-size: 14px;
-}
-
-.player-btn:hover {
-  color: white;
-}
-
-.player-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.player-btn:focus {
-  outline: none;
-}
-
-.player-controls-left {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  justify-content: left;
-  padding-left: 8px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-}
-
-.player-controls-right {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  width: auto;
-  justify-content: right;
-  padding-right: 8px;
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.player-min .player-controls-right {
-  padding-right: 4px;
-}
-.player-controls-left .player-controls-left {
-  padding-left: 4px;
-}
-
-/* Player Loader */
-
-.player-loader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.player-lds-ring {
-  display: inline-block;
-  position: relative;
-  width: 120px;
-  height: 120px;
-}
-
-.player-min .player-lds-ring {
-  width: 48px;
-  height: 48px;
-}
-
-.player-lds-ring div {
-  box-sizing: border-box;
-  display: block;
-  position: absolute;
-  width: 110px;
-  height: 110px;
-  margin: 8px;
-  border: 8px solid #fff;
-  border-radius: 50%;
-  animation: player-lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
-}
-
-.player-min .player-lds-ring div {
-  width: 42px;
-  height: 42px;
-  margin: 4px;
-  border: 4px solid #fff;
-  border-color: #fff transparent transparent transparent;
-}
-
-.player-lds-ring div:nth-child(1) {
-  animation-delay: -0.45s;
-}
-
-.player-lds-ring div:nth-child(2) {
-  animation-delay: -0.3s;
-}
-
-.player-lds-ring div:nth-child(3) {
-  animation-delay: -0.15s;
-}
-
-@keyframes player-lds-ring {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Timeline */
-
-.player-timeline {
-  position: absolute;
-  height: 20px;
-  overflow: visible;
-  bottom: 56px;
-  left: 10px;
-  width: calc(100% - 20px);
-  cursor: pointer;
-  transition: opacity 0.3s;
-  opacity: 1;
-}
-
-.player-timeline.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.player-min .player-timeline {
-  bottom: 32px;
-}
-
-.player-timeline-back {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 5px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.player-timeline-buffer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 5px;
-  width: 0;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.player-timeline-current {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 5px;
-  width: 0;
-  background: red;
-}
-
-.player-timeline-thumb {
-  border-radius: 50%;
-  width: 15px;
-  height: 15px;
-  background: red;
-  position: absolute;
-  bottom: -5px;
-  left: -7px;
-}
-
-/* Player feedback */
-
-.player-feeback-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-@keyframes player-feedback-animation {
-  0% {
-    opacity: 1;
-    transform: scale(0.75);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(1.5);
-  }
-}
-
-.player-feedback {
-  animation-name: player-feedback-animation;
-  animation-fill-mode: forwards;
-  animation-duration: 1s;
-
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 24px;
-}
-
-.player-min .player-feedback {
-  width: 64px;
-  height: 64px;
-  font-size: 16px;
-}
-
-.player-tooltip {
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 0.5rem 0.75rem;
-  position: absolute;
-  bottom: 80px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  max-width: 50%;
-}
-
-.player-tooltip-image {
-  height: 108px;
-  padding-bottom: 0.5rem;
-}
-
-.player-min .player-tooltip-image {
-  height: 72px;
-}
-
-.player-min .player-tooltip {
-  bottom: 50px;
-}
-
-.player-helptip-left {
-  left: 8px;
-}
-
-.player-helptip-right {
-  right: 8px;
 }
 </style>

@@ -18,6 +18,8 @@ export class PlayerPreferences {
 
     public static PlayerMuted = false;
 
+    public static AudioAnymationStyle = "gradient";
+
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
         if (userRes) {
@@ -32,6 +34,7 @@ export class PlayerPreferences {
 
         PlayerPreferences.PlayerVolume = LocalStorage.Get("player-pref-volume", 1);
         PlayerPreferences.PlayerMuted = LocalStorage.Get("player-pref-muted", false);
+        PlayerPreferences.AudioAnymationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -119,5 +122,10 @@ export class PlayerPreferences {
     public static SetMuted(m: boolean) {
         PlayerPreferences.PlayerMuted = m;
         LocalStorage.Set("player-pref-muted", m);
+    }
+
+    public static SetAudioAnymationStyle(s: string) {
+        PlayerPreferences.AudioAnymationStyle = s;
+        LocalStorage.Set("player-pref-audio-anim", s);
     }
 }

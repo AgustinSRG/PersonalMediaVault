@@ -1,6 +1,6 @@
 <template>
   <div
-    class="video-player-config"
+    class="audio-player-config"
     :class="{ hidden: !shown }"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
@@ -27,13 +27,13 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="goToResolutions">
+      <tr class="tr-button" tabindex="0" @click="goToAnimStyles">
         <td>
-          <i class="fas fa-photo-film icon-config"></i>
-          <b>{{ $t("Quality") }}</b>
+          <i class="fas fa-chart-column icon-config"></i>
+          <b>{{ $t("Animation style") }}</b>
         </td>
         <td class="td-right">
-          {{ renderResolution(resolution, rtick) }}
+          {{ renderAnimStyle(animcolors) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -63,37 +63,27 @@
         <td class="td-right"></td>
       </tr>
     </table>
-    <table v-if="page === 'resolution'">
+    <table v-if="page === 'anim'">
       <tr class="tr-button" tabindex="0" @click="goBack">
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Quality") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr class="tr-button" tabindex="0" @click="changeResolution(-1)">
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': -1 !== resolution }"
-          ></i>
-          {{ renderResolution(-1, rtick) }}
+          <b>{{ $t("Animation style") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
       <tr
-        v-for="(r, i) in metadata.resolutions"
-        :key="i"
+        v-for="s in animStyles"
+        :key="s"
         class="tr-button"
         tabindex="0"
-        @click="changeResolution(i)"
+        @click="setAnimStyle(s)"
       >
         <td>
           <i
             class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': i !== resolution }"
+            :class="{ 'check-uncheck': s !== animcolors }"
           ></i>
-          {{ renderResolution(i, rtick) }}
+          {{ renderAnimStyle(s) }}
         </td>
         <td class="td-right"></td>
       </tr>
@@ -108,12 +98,12 @@ import PlayerSwitch from "./PlayerSwitch.vue";
 
 export default defineComponent({
   components: { PlayerSwitch },
-  name: "VideoPlayerConfig",
+  name: "AudioPlayerConfig",
   emits: [
     "update:shown",
     "update:loop",
     "update:speed",
-    "update:resolution",
+    "update:animcolors",
     "enter",
     "leave",
   ],
@@ -122,7 +112,7 @@ export default defineComponent({
     metadata: Object,
     loop: Boolean,
     speed: Number,
-    resolution: Number,
+    animcolors: String,
     rtick: Number,
   },
   setup(props) {
@@ -130,20 +120,17 @@ export default defineComponent({
       shownState: useVModel(props, "shown"),
       loopState: useVModel(props, "loop"),
       speedState: useVModel(props, "speed"),
-      resolutionState: useVModel(props, "resolution"),
+      animColorsState: useVModel(props, "animcolors"),
     };
   },
   data: function () {
     return {
       page: "",
       speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-      resolutions: [],
+      animStyles: ["gradient", "", "none"],
     };
   },
   methods: {
-    changeResolution: function (i) {
-      this.resolutionState = i;
-    },
     enterConfig: function () {
       this.$emit("enter");
     },
@@ -168,8 +155,8 @@ export default defineComponent({
       this.page = "speed";
     },
 
-    goToResolutions: function () {
-      this.page = "resolution";
+    goToAnimStyles: function () {
+      this.page = "anim";
     },
 
     renderSpeed: function (speed: number) {
@@ -181,64 +168,35 @@ export default defineComponent({
         return this.$t("Normal");
       }
     },
-    renderResolution: function (res: number, rtick: number) {
-      if (rtick < 0 || !this.metadata) {
-        return this.$t("Unknown");
-      }
-      if (res < 0) {
-        return (
-          this.metadata.width +
-          "x" +
-          this.metadata.height +
-          ", " +
-          this.metadata.fps +
-          " fps (" +
-          this.$t("Original") +
-          ")" +
-          (this.metadata.encoded ? "" : "(" + this.$t("Pending") + ")")
-        );
-      } else {
-        let resData = this.metadata.resolutions[res];
-        if (resData) {
-          return (
-            resData.width +
-            "x" +
-            resData.height +
-            ", " +
-            resData.fps +
-            " fps " +
-            (resData.ready ? "" : "(" + this.$t("Pending") + ")")
-          );
-        } else {
-          return this.$t("Unknown");
-        }
+
+    renderAnimStyle: function (s) {
+      switch (s) {
+        case "gradient":
+          return this.$t('Gradient');
+        case "none":
+          return this.$t('None');
+        default:
+          return this.$t('Monochrome');
       }
     },
-    updateResolutions: function () {
-      if (this.metadata && this.metadata.resolutions) {
-        this.resolutions = this.metadata.resolutions.slice();
-      } else {
-        this.resolutions = [];
-      }
+
+    setAnimStyle: function (s) {
+      this.animColorsState = s;
     },
   },
   mounted: function () {
-    this.updateResolutions();
   },
   beforeUnmount: function () {},
   watch: {
     shown: function () {
       this.page = "";
     },
-    rtick: function () {
-      this.updateResolutions();
-    },
   },
 });
 </script>
 
 <style>
-.video-player-config {
+.audio-player-config {
   position: absolute;
   bottom: 80px;
   right: 8px;
@@ -251,49 +209,49 @@ export default defineComponent({
   overflow-y: auto;
 }
 
-.player-min .video-player-config {
+.player-min .audio-player-config {
   font-size: small;
   bottom: 55px;
 }
 
-.video-player-config.hidden {
+.audio-player-config.hidden {
   display: none;
 }
 
-.video-player-config table {
+.audio-player-config table {
   width: 100%;
   border-spacing: 0; /* Removes the cell spacing via CSS */
   border-collapse: collapse; /* Optional - if you don't want to have double border where cells touch */
 }
 
-.video-player-config table td {
+.audio-player-config table td {
   padding: 0.75rem 1rem;
   text-align: left;
   vertical-align: middle;
 }
 
-.video-player-config .tr-button {
+.audio-player-config .tr-button {
   cursor: pointer;
 }
 
-.video-player-config .arrow-config {
+.audio-player-config .arrow-config {
   margin-left: 0.5rem;
 }
 
-.video-player-config .icon-config {
+.audio-player-config .icon-config {
   margin-right: 0.5rem;
   width: 24px;
 }
 
-.video-player-config .tr-button:hover {
+.audio-player-config .tr-button:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.video-player-config .td-right {
+.audio-player-config .td-right {
   text-align: right;
 }
 
-.video-player-config .check-uncheck {
+.audio-player-config .check-uncheck {
   visibility: hidden;
 }
 
@@ -302,7 +260,7 @@ export default defineComponent({
 
 /* width */
 
-.video-player-config::-webkit-scrollbar {
+.audio-player-config::-webkit-scrollbar {
     width: 5px;
     height: 3px;
 }
@@ -310,14 +268,14 @@ export default defineComponent({
 
 /* Track */
 
-.video-player-config::-webkit-scrollbar-track {
+.audio-player-config::-webkit-scrollbar-track {
     background: #bdbdbd;
 }
 
 
 /* Handle */
 
-.video-player-config::-webkit-scrollbar-thumb {
+.audio-player-config::-webkit-scrollbar-thumb {
     background: #757575;
 }
 </style>
