@@ -7,6 +7,8 @@
         height: 720,
         fps: 30,
         url: '/testvid/video.mp4',
+        video_previews: '/testvid/thumb_{INDEX}.jpg',
+        video_previews_interval: 3,
         ready: true,
         encoded: true,
         resolutions: [
@@ -16,6 +18,14 @@
             fps: 30,
             url: '/testvid/video-480.mp4',
             ready: true,
+          },
+          {
+            width: 240,
+            height: 144,
+            fps: 30,
+            url: '',
+            ready: false,
+            task: 1,
           },
         ],
       }"

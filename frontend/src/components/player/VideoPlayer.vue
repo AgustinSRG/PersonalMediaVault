@@ -110,7 +110,7 @@
         <VolumeControl
           ref="volumeControl"
           :min="minPlayer"
-          :width="80"
+          :width="minPlayer ? 50 : 80"
           v-model:muted="muted"
           v-model:volume="volume"
           v-model:expanded="volumeShown"
@@ -181,6 +181,21 @@
       ></div>
     </div>
 
+    <div
+      v-if="tooltipShown"
+      class="player-tooltip"
+      :style="{ left: tooltipX + 'px' }"
+    >
+      <div v-if="tooltipImage && !tooltipImageInvalid">
+        <img
+          class="player-tooltip-image"
+          :src="tooltipImage"
+          @error="onTooltipImageError"
+        />
+      </div>
+      <div class="player-tooltip-text">{{ tooltipText }}</div>
+    </div>
+
     <VideoPlayerConfig
       v-model:shown="displayConfig"
       v-model:speed="speed"
@@ -240,6 +255,14 @@ export default defineComponent({
       timelineGrabbed: false,
       lastTimeChangedEvent: 0,
 
+      // Timeline tooltip
+      tooltipShown: false,
+      tooltipText: "",
+      tooltipX: 0,
+      tooltipEventX: 0,
+      tooltipImage: "",
+      tooltipImageInvalid: false,
+
       showControls: true,
       lastControlsInteraction: Date.now(),
       mouseInControls: false,
@@ -262,6 +285,31 @@ export default defineComponent({
     showConfig: function (e) {
       this.displayConfig = !this.displayConfig;
       e.stopPropagation();
+    },
+
+    getThumbnailForTime: function (time: number) {
+      if (
+        this.duration <= 0 ||
+        !this.metadata ||
+        !this.metadata.video_previews ||
+        !this.metadata.video_previews_interval
+      ) {
+        return "";
+      }
+      let thumbCount = Math.floor(
+        this.duration / this.metadata.video_previews_interval
+      );
+
+      if (thumbCount <= 0) {
+        return "";
+      }
+
+      var part = Math.floor(time / this.metadata.video_previews_interval);
+      if (part > thumbCount) {
+        part = thumbCount;
+      }
+
+      return this.metadata.video_previews.replace("{INDEX}", "" + part);
     },
 
     onResolutionUpdated: function () {
@@ -400,6 +448,25 @@ export default defineComponent({
       } else {
         this.bufferedTime = 0;
       }
+
+      if (this.tooltipShown) {
+        var tooltip = this.$el.querySelector(".player-tooltip");
+        if (tooltip) {
+          var x = this.tooltipEventX;
+          var toolTipWidth = tooltip.getBoundingClientRect().width;
+          var leftPlayer = this.$el.getBoundingClientRect().left;
+          var widthPlayer = this.$el.getBoundingClientRect().width;
+
+          x = x - Math.floor(toolTipWidth / 2);
+          if (x + toolTipWidth > leftPlayer + widthPlayer - 20) {
+            x = leftPlayer + widthPlayer - 20 - toolTipWidth;
+          }
+          if (x < leftPlayer + 10) {
+            x = leftPlayer + 10;
+          }
+          this.tooltipX = x - leftPlayer;
+        }
+      }
     },
 
     getVideoElement() {
@@ -433,7 +500,11 @@ export default defineComponent({
     },
 
     clickPlayer: function () {
-      this.togglePlay();
+      if (this.displayConfig) {
+        this.displayConfig = false;
+      } else {
+        this.togglePlay();
+      }
       this.interactWithControls();
     },
 
@@ -511,7 +582,7 @@ export default defineComponent({
       this.leaveControls();
     },
     mouseMoveTimeline: function (event) {
-      /*var x = event.pageX;
+      var x = event.pageX;
       var offset = this.$el
         .querySelector(".player-timeline-back")
         .getBoundingClientRect().left;
@@ -526,7 +597,16 @@ export default defineComponent({
         var p = x - offset;
         var tP = Math.min(1, p / width);
         time = tP * this.duration;
-      }*/
+      }
+
+      this.tooltipShown = true;
+      this.tooltipText = this.renderTime(time);
+      var oldTooltipImage = this.tooltipImage;
+      this.tooltipImage = this.getThumbnailForTime(time);
+      if (oldTooltipImage !== this.tooltipImage) {
+        this.tooltipImageInvalid = false;
+      }
+      this.tooltipEventX = x;
 
       nextTick(this.tick.bind(this));
     },
@@ -689,6 +769,7 @@ export default defineComponent({
     setVideoURL() {
       if (!this.metadata) {
         this.videoURL = "";
+        this.duration = 0;
       }
 
       if (this.currentResolution < 0) {
@@ -700,6 +781,7 @@ export default defineComponent({
           this.videoURL = "";
           this.videoPending = true;
           this.videoPendingTask = this.metadata.task;
+          this.duration = 0;
         }
       } else {
         if (
@@ -715,17 +797,23 @@ export default defineComponent({
             this.videoURL = "";
             this.videoPending = true;
             this.videoPendingTask = res.task;
+            this.duration = 0;
           }
         } else {
           this.videoURL = "";
           this.videoPending = true;
           this.videoPendingTask = 0;
+          this.duration = 0;
         }
       }
     },
 
     onFeedBackAnimationEnd: function () {
       this.feedback = "";
+    },
+
+    onTooltipImageError: function () {
+      this.tooltipImageInvalid = true;
     },
   },
   mounted: function () {
@@ -1098,5 +1186,31 @@ export default defineComponent({
   width: 64px;
   height: 64px;
   font-size: 16px;
+}
+
+.player-tooltip {
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    position: absolute;
+    bottom: 80px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-tooltip-image {
+    height: 108px;
+    padding-bottom: 0.5rem;
+}
+
+.player-min .player-tooltip-image {
+    height: 72px;
+}
+
+.player-min .player-tooltip {
+    bottom: 50px;
 }
 </style>
