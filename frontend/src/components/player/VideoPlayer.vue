@@ -20,6 +20,7 @@
       x-webkit-airplay="allow"
       :muted="muted"
       :volume.prop="volume"
+      :playbackRate.prop="speed"
       @ended="onEnded"
       @timeupdate="onVideoTimeUpdate"
       @canplay="onCanPlay"
@@ -40,33 +41,23 @@
     <div
       class="player-controls"
       :class="{ hidden: !showControls }"
-      @click="stopPropagationEvent"
+      @click="clickControls"
       @dblclick="stopPropagationEvent"
       @mouseenter="enterControls"
       @mouseleave="leaveControls"
     >
-      <div class="player-controls-right">
-        <button
-          v-if="!fullScreen"
-          type="button"
-          :title="$t('Full screen')"
-          class="player-btn player-expand-btn"
-          @click="toggleFullScreen"
-        >
-          <i class="fas fa-expand"></i>
-        </button>
-        <button
-          v-if="fullScreen"
-          type="button"
-          :title="$t('Exit full screen')"
-          class="player-btn player-expand-btn"
-          @click="toggleFullScreen"
-        >
-          <i class="fas fa-compress"></i>
-        </button>
-      </div>
-
       <div class="player-controls-left">
+        <button
+          v-if="!!next || !!prev"
+          :disabled="!prev"
+          type="button"
+          :title="$t('Previous')"
+          class="player-btn"
+          @click="goPrev"
+        >
+          <i class="fas fa-backward-step"></i>
+        </button>
+
         <button
           v-if="!playing"
           type="button"
@@ -86,6 +77,17 @@
           <i class="fas fa-pause"></i>
         </button>
 
+        <button
+          v-if="!!next || !!prev"
+          :disabled="!next"
+          type="button"
+          :title="$t('Next')"
+          class="player-btn"
+          @click="goNext"
+        >
+          <i class="fas fa-forward-step"></i>
+        </button>
+
         <VolumeControl
           ref="volumeControl"
           :min="minPlayer"
@@ -102,6 +104,36 @@
             >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
           >
         </div>
+      </div>
+
+      <div class="player-controls-right">
+        <button
+          type="button"
+          :title="$t('Player Configuration')"
+          class="player-btn"
+          @click="showConfig"
+        >
+          <i class="fas fa-cog"></i>
+        </button>
+
+        <button
+          v-if="!fullScreen"
+          type="button"
+          :title="$t('Full screen')"
+          class="player-btn player-expand-btn"
+          @click="toggleFullScreen"
+        >
+          <i class="fas fa-expand"></i>
+        </button>
+        <button
+          v-if="fullScreen"
+          type="button"
+          :title="$t('Exit full screen')"
+          class="player-btn player-expand-btn"
+          @click="toggleFullScreen"
+        >
+          <i class="fas fa-compress"></i>
+        </button>
       </div>
     </div>
 
@@ -129,6 +161,18 @@
         :style="{ left: getTimelineThumbLeft(currentTime, duration) }"
       ></div>
     </div>
+
+    <VideoPlayerConfig
+      v-model:shown="displayConfig"
+      v-model:speed="speed"
+      v-model:loop="loop"
+      v-model:resolution="currentResolution"
+      @update:resolution="onResolutionUpdated"
+      :rtick="internalTick"
+      :metadata="metadata"
+      @enter="enterControls"
+      @leave="leaveControls"
+    ></VideoPlayerConfig>
   </div>
 </template>
 
@@ -140,10 +184,12 @@ import VolumeControl from "./VolumeControl.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
+import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 
 export default defineComponent({
   components: {
     VolumeControl,
+    VideoPlayerConfig,
   },
   name: "VideoPlayer",
   emits: ["gonext", "goprev"],
@@ -186,11 +232,27 @@ export default defineComponent({
       volume: 1,
       muted: 0,
       volumeShown: isTouchDevice(),
+      internalTick: 0,
 
       speed: 1,
     };
   },
   methods: {
+    showConfig: function (e) {
+      this.displayConfig = !this.displayConfig;
+      e.stopPropagation();
+    },
+
+    onResolutionUpdated: function () {
+      PlayerPreferences.SetResolutionIndex(this.metadata, this.currentResolution);
+      this.setVideoURL();
+    },
+
+    clickControls: function (e) {
+      this.displayConfig = false;
+      e.stopPropagation();
+    },
+
     goNext: function () {
       if (this.next) {
         this.$emit("gonext");
@@ -303,6 +365,7 @@ export default defineComponent({
         if (Date.now() - this.lastControlsInteraction > 2000) {
           this.showControls = false;
           this.volumeShown = false;
+          this.displayConfig = false;
         }
       }
 
@@ -339,6 +402,8 @@ export default defineComponent({
       } else {
         this.play();
       }
+
+      this.displayConfig = false;
     },
 
     clickPlayer: function () {
@@ -560,6 +625,12 @@ export default defineComponent({
             this.setTime(this.duration, true);
           }
           break;
+        case "PageDown":
+          this.goPrev();
+          break;
+        case "PageUp":
+          this.goNext();
+          break;
         default:
           catched = false;
       }
@@ -575,7 +646,7 @@ export default defineComponent({
       if (!this.metadata) {
         return;
       }
-      this.currentTime = 0;
+      this.currentTime = PlayerPreferences.GetInitialTime(this.mid);
       this.duration = 0;
       this.speed = 1;
       this.loop = false;
@@ -674,7 +745,13 @@ export default defineComponent({
   },
   watch: {
     rtick: function () {
+      this.internalTick++;
       this.initializeVideo();
+    },
+    videoURL: function () {
+      if (this.videoURL) {
+        this.loading = true;
+      }
     },
   },
 });
@@ -690,7 +767,6 @@ export default defineComponent({
   overflow: hidden;
   width: 100%;
   height: 100%;
-  font-family: monospace;
   -webkit-touch-callout: none;
   /* iOS Safari */
   -webkit-user-select: none;
@@ -757,6 +833,11 @@ export default defineComponent({
   outline: none;
 }
 
+.player-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 .player-min .player-btn {
   width: 24px;
   height: 24px;
@@ -767,6 +848,10 @@ export default defineComponent({
   color: white;
 }
 
+.player-btn:disabled:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 .player-btn:focus {
   outline: none;
 }
@@ -774,7 +859,7 @@ export default defineComponent({
 .player-controls-left {
   display: flex;
   align-items: center;
-  width: 50%;
+  width: 100%;
   height: 100%;
   justify-content: left;
   padding-left: 8px;
@@ -787,8 +872,8 @@ export default defineComponent({
 .player-controls-right {
   display: flex;
   align-items: center;
-  width: 50%;
   height: 100%;
+  width: auto;
   justify-content: right;
   padding-right: 8px;
   position: absolute;

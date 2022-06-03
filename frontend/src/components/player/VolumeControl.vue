@@ -75,7 +75,7 @@ export default defineComponent({
       min: boolean,
       expanded: boolean
     ) {
-      let margins = 24;
+      let margins = 31;
       let barWidth = width;
       let btnWidth = 40;
 
@@ -86,7 +86,7 @@ export default defineComponent({
       return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
     },
     computeBarContainerWidth(width: number) {
-      let margins = 24;
+      let margins = 31;
       return width + margins + "px";
     },
     computeBarContainerInnerWidth(width: number) {
@@ -208,7 +208,7 @@ export default defineComponent({
   flex-wrap: nowrap;
   height: 40px;
   overflow: hidden;
-  transition: width 0.5s;
+  transition: width 0.3s;
 }
 
 .player-volume-control.player-min {
@@ -246,10 +246,10 @@ export default defineComponent({
   position: relative;
   display: flex;
   height: 40px;
-  width: 96px;
   align-items: center;
   cursor: pointer;
   padding-left: 8px;
+  padding-right: 8px;
   overflow: hidden;
   transition: width 0.5s;
 }
@@ -265,13 +265,11 @@ export default defineComponent({
 .player-volume-bar-container {
   position: relative;
   overflow: hidden;
-  width: 96px;
   height: 15px;
 }
 
 .player-volume-bar {
   background: rgba(255, 255, 255, 0.25);
-  width: 80px;
   height: 3px;
   position: absolute;
   top: 6px;
@@ -280,7 +278,6 @@ export default defineComponent({
 
 .player-volume-current {
   background: white;
-  width: 40px;
   height: 3px;
   position: absolute;
   top: 6px;
@@ -290,7 +287,6 @@ export default defineComponent({
 .player-volume-thumb {
   position: absolute;
   top: 0;
-  left: 40px;
   border-radius: 50%;
   background: white;
   width: 15px;
