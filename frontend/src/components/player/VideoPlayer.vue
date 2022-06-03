@@ -345,7 +345,7 @@ export default defineComponent({
       currentResolution: -1,
 
       volume: 1,
-      muted: 0,
+      muted: false,
       volumeShown: isTouchDevice(),
       internalTick: 0,
 
