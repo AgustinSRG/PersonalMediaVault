@@ -74,28 +74,4 @@ export default class App extends Vue {}
   width: 100%;
   height: 100%;
 }
-
-/* Custom scroll bar */
-
-
-/* width */
-
-::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
-}
-
-
-/* Track */
-
-::-webkit-scrollbar-track {
-    background: #bdbdbd;
-}
-
-
-/* Handle */
-
-::-webkit-scrollbar-thumb {
-    background: #757575;
-}
 </style>

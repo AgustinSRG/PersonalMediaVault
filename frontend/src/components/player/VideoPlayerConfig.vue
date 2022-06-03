@@ -296,4 +296,28 @@ export default defineComponent({
 .video-player-config .check-uncheck {
   visibility: hidden;
 }
+
+/* Custom scroll bar */
+
+
+/* width */
+
+.video-player-config::-webkit-scrollbar {
+    width: 5px;
+    height: 3px;
+}
+
+
+/* Track */
+
+.video-player-config::-webkit-scrollbar-track {
+    background: #bdbdbd;
+}
+
+
+/* Handle */
+
+.video-player-config::-webkit-scrollbar-thumb {
+    background: #757575;
+}
 </style>

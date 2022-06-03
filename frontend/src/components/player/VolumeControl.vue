@@ -3,7 +3,8 @@
     class="player-volume-control"
     :class="{ expanded: expanded, 'player-min': min }"
     :style="{ width: computeFullWidth(width, min, expanded) }"
-    @mouseenter="showVolumeBar"
+    @mouseenter="onEnter"
+    @mpuseleave="onLeave"
   >
     <button class="player-volume-btn" @click="clickOnVolumeButton">
       <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>
@@ -49,7 +50,7 @@ import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({
   name: "VolumeControl",
-  emits: ["update:volume", "update:muted", "update:expanded"],
+  emits: ["update:volume", "update:muted", "update:expanded", "enter", "leave"],
   props: {
     width: Number,
     volume: Number,
@@ -70,12 +71,19 @@ export default defineComponent({
     };
   },
   methods: {
+    onEnter: function () {
+      this.$emit("enter");
+      this.showVolumeBar();
+    },
+    onLeave: function () {
+      this.$emit("leave");
+    },
     computeFullWidth: function (
       width: number,
       min: boolean,
       expanded: boolean
     ) {
-      let margins = 31;
+      let margins = 40;
       let barWidth = width;
       let btnWidth = 40;
 
@@ -86,7 +94,7 @@ export default defineComponent({
       return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
     },
     computeBarContainerWidth(width: number) {
-      let margins = 31;
+      let margins = 32;
       return width + margins + "px";
     },
     computeBarContainerInnerWidth(width: number) {
@@ -97,7 +105,7 @@ export default defineComponent({
       this.mutedState = !this.mutedState;
     },
     getVolumeBarWidth(width: number) {
-      return width + "px";
+      return width + 16 + "px";
     },
     getVolumeBarCurrentWidth(width: number, volume: number, muted: boolean) {
       let actualVolume = volume;
@@ -226,6 +234,7 @@ export default defineComponent({
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
   outline: none;
+  margin-right: 8px;
 }
 
 .player-min .player-volume-btn {
@@ -248,10 +257,8 @@ export default defineComponent({
   height: 40px;
   align-items: center;
   cursor: pointer;
-  padding-left: 8px;
-  padding-right: 8px;
   overflow: hidden;
-  transition: width 0.5s;
+  transition: width 0.3s;
 }
 
 .player-min .player-volume-btn-expand {

@@ -29,6 +29,25 @@
       @playing="onWaitForBuffer(false)"
     ></video>
 
+    <div class="player-feeback-container">
+      <div
+        class="player-feedback player-feedback-play"
+        key="play"
+        v-if="feedback === 'play'"
+        @animationend="onFeedBackAnimationEnd"
+      >
+        <div><i class="fas fa-play"></i></div>
+      </div>
+      <div
+        class="player-feedback player-feedback-pause"
+        key="pause"
+        v-if="feedback === 'pause'"
+        @animationend="onFeedBackAnimationEnd"
+      >
+        <div><i class="fas fa-pause"></i></div>
+      </div>
+    </div>
+
     <div class="player-loader" v-if="loading">
       <div class="player-lds-ring">
         <div></div>
@@ -235,6 +254,8 @@ export default defineComponent({
       internalTick: 0,
 
       speed: 1,
+
+      feedback: "",
     };
   },
   methods: {
@@ -244,7 +265,10 @@ export default defineComponent({
     },
 
     onResolutionUpdated: function () {
-      PlayerPreferences.SetResolutionIndex(this.metadata, this.currentResolution);
+      PlayerPreferences.SetResolutionIndex(
+        this.metadata,
+        this.currentResolution
+      );
       this.setVideoURL();
     },
 
@@ -399,8 +423,10 @@ export default defineComponent({
     togglePlay() {
       if (this.playing) {
         this.pause();
+        this.feedback = "pause";
       } else {
         this.play();
+        this.feedback = "play";
       }
 
       this.displayConfig = false;
@@ -583,9 +609,11 @@ export default defineComponent({
           break;
         case "ArrowUp":
           this.changeVolume(Math.min(1, this.volume + 0.05));
+          this.volumeShown = true;
           break;
         case "ArrowDown":
           this.changeVolume(Math.max(0, this.volume - 0.05));
+          this.volumeShown = true;
           break;
         case "F":
         case "f":
@@ -694,6 +722,10 @@ export default defineComponent({
           this.videoPendingTask = 0;
         }
       }
+    },
+
+    onFeedBackAnimationEnd: function () {
+      this.feedback = "";
     },
   },
   mounted: function () {
@@ -1014,5 +1046,57 @@ export default defineComponent({
   position: absolute;
   bottom: -5px;
   left: -7px;
+}
+
+/* Player feedback */
+
+.player-feeback-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@keyframes player-feedback-animation {
+  0% {
+    opacity: 1;
+    transform: scale(0.75);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.player-feedback {
+  animation-name: player-feedback-animation;
+  animation-fill-mode: forwards;
+  animation-duration: 1s;
+
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 24px;
+}
+
+.player-min .player-feedback {
+  width: 64px;
+  height: 64px;
+  font-size: 16px;
 }
 </style>
