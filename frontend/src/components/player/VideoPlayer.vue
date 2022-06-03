@@ -207,7 +207,7 @@
     </div>
 
     <div
-      v-if="helpTooltip === 'config'"
+      v-if="!displayConfig && helpTooltip === 'config'"
       class="player-tooltip player-helptip-right"
     >
       {{ $t("Player Configuration") }}
