@@ -30,8 +30,26 @@
         ],
       }"
       :rtick="0"
-      :next="{}"
-      :prev="null"
+      :next="{
+        id: 2,
+        type: 2,
+        title: '',
+        thumbnail: '/testvid/thumb_1.jpg',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
+      :prev="{
+        id: 2,
+        type: 3,
+        title: '',
+        thumbnail: '',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
     ></VideoPlayer>
   </div>
 

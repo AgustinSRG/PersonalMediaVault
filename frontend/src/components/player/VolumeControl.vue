@@ -4,7 +4,7 @@
     :class="{ expanded: expanded, 'player-min': min }"
     :style="{ width: computeFullWidth(width, min, expanded) }"
     @mouseenter="onEnter"
-    @mpuseleave="onLeave"
+    @mouseleave="onLeave"
   >
     <button class="player-volume-btn" @click="clickOnVolumeButton">
       <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>

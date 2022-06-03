@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from "vue";
+import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -70,7 +70,7 @@ export default defineComponent({
   width: 48px;
   box-shadow: inset 0px 0px 2px 0px rgba(0, 0, 0, 0.33);
   border-radius: 16px;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.1s ease-in-out;
   cursor: pointer;
   background: gray;
 }
@@ -80,7 +80,7 @@ export default defineComponent({
   width: 26px;
   border-radius: 26px;
   background: white;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.1s ease-in-out;
   transform: translate(0, -6px);
 }
 

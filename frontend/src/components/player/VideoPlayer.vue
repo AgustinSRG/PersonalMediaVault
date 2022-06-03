@@ -73,6 +73,8 @@
           :title="$t('Previous')"
           class="player-btn"
           @click="goPrev"
+          @mouseenter="enterTooltip('prev')"
+          @mouseleave="leaveTooltip('prev')"
         >
           <i class="fas fa-backward-step"></i>
         </button>
@@ -83,6 +85,8 @@
           :title="$t('Play')"
           class="player-btn player-play-btn"
           @click="togglePlay"
+          @mouseenter="enterTooltip('play')"
+          @mouseleave="leaveTooltip('play')"
         >
           <i class="fas fa-play"></i>
         </button>
@@ -92,6 +96,8 @@
           :title="$t('Pause')"
           class="player-btn player-play-btn"
           @click="togglePlay"
+          @mouseenter="enterTooltip('pause')"
+          @mouseleave="leaveTooltip('pause')"
         >
           <i class="fas fa-pause"></i>
         </button>
@@ -103,6 +109,8 @@
           :title="$t('Next')"
           class="player-btn"
           @click="goNext"
+          @mouseenter="enterTooltip('next')"
+          @mouseleave="leaveTooltip('next')"
         >
           <i class="fas fa-forward-step"></i>
         </button>
@@ -116,6 +124,8 @@
           v-model:expanded="volumeShown"
           @update:volume="onUserVolumeUpdated"
           @update:muted="onUserMutedUpdated"
+          @enter="enterTooltip('volume')"
+          @leave="leaveTooltip('volume')"
         ></VolumeControl>
 
         <div class="player-time-label-container" v-if="!minPlayer">
@@ -131,6 +141,8 @@
           :title="$t('Player Configuration')"
           class="player-btn"
           @click="showConfig"
+          @mouseenter="enterTooltip('config')"
+          @mouseleave="leaveTooltip('config')"
         >
           <i class="fas fa-cog"></i>
         </button>
@@ -141,6 +153,8 @@
           :title="$t('Full screen')"
           class="player-btn player-expand-btn"
           @click="toggleFullScreen"
+          @mouseenter="enterTooltip('full-screen')"
+          @mouseleave="leaveTooltip('full-screen')"
         >
           <i class="fas fa-expand"></i>
         </button>
@@ -150,10 +164,66 @@
           :title="$t('Exit full screen')"
           class="player-btn player-expand-btn"
           @click="toggleFullScreen"
+          @mouseenter="enterTooltip('full-screen-exit')"
+          @mouseleave="leaveTooltip('full-screen-exit')"
         >
           <i class="fas fa-compress"></i>
         </button>
       </div>
+    </div>
+
+    <div
+      v-if="helpTooltip === 'play'"
+      class="player-tooltip player-helptip-left"
+    >
+      {{ $t("Play") }}
+    </div>
+    <div
+      v-if="helpTooltip === 'pause'"
+      class="player-tooltip player-helptip-left"
+    >
+      {{ $t("Pause") }}
+    </div>
+
+    <div
+      v-if="prev && helpTooltip === 'prev'"
+      class="player-tooltip player-helptip-left"
+    >
+      <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
+    </div>
+
+    <div
+      v-if="next && helpTooltip === 'next'"
+      class="player-tooltip player-helptip-left"
+    >
+      <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
+    </div>
+
+    <div
+      v-if="helpTooltip === 'volume'"
+      class="player-tooltip player-helptip-left"
+    >
+      {{ $t("Volume") }} ({{ muted ? $t("Muted") : renderVolume(volume) }})
+    </div>
+
+    <div
+      v-if="helpTooltip === 'config'"
+      class="player-tooltip player-helptip-right"
+    >
+      {{ $t("Player Configuration") }}
+    </div>
+
+    <div
+      v-if="helpTooltip === 'full-screen'"
+      class="player-tooltip player-helptip-right"
+    >
+      {{ $t("Full screen") }}
+    </div>
+    <div
+      v-if="helpTooltip === 'full-screen-exit'"
+      class="player-tooltip player-helptip-right"
+    >
+      {{ $t("Exit full screen") }}
     </div>
 
     <div
@@ -215,8 +285,10 @@ import { PlayerPreferences } from "@/control/player-preferences";
 import { defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
+import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue"
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
+import { renderTimeSeconds } from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 
@@ -224,6 +296,7 @@ export default defineComponent({
   components: {
     VolumeControl,
     VideoPlayerConfig,
+    PlayerMediaChangePreview,
   },
   name: "VideoPlayer",
   emits: ["gonext", "goprev"],
@@ -279,9 +352,24 @@ export default defineComponent({
       speed: 1,
 
       feedback: "",
+
+      helpTooltip: "",
     };
   },
   methods: {
+    renderVolume: function (v: number): string {
+      return Math.round(v * 100) + "%";
+    },
+    enterTooltip: function (t: string) {
+      this.helpTooltip = t;
+    },
+
+    leaveTooltip: function (t: string) {
+      if (t === this.helpTooltip) {
+        this.helpTooltip = "";
+      }
+    },
+
     showConfig: function (e) {
       this.displayConfig = !this.displayConfig;
       e.stopPropagation();
@@ -417,6 +505,7 @@ export default defineComponent({
       if (!this.playing) return;
       this.showControls = false;
       this.volumeShown = isTouchDevice();
+      this.helpTooltip = "";
       this.displayConfig = false;
     },
 
@@ -437,6 +526,7 @@ export default defineComponent({
         if (Date.now() - this.lastControlsInteraction > 2000) {
           this.showControls = false;
           this.volumeShown = false;
+          this.helpTooltip = "";
           this.displayConfig = false;
         }
       }
@@ -485,6 +575,7 @@ export default defineComponent({
     leaveControls: function () {
       this.mouseInControls = false;
       this.volumeShown = isTouchDevice();
+      this.helpTooltip = "";
     },
 
     togglePlay() {
@@ -610,44 +701,8 @@ export default defineComponent({
 
       nextTick(this.tick.bind(this));
     },
-    renderTime: function (s) {
-      if (isNaN(s) || !isFinite(s)) {
-        s = 0;
-      }
-      s = Math.floor(s);
-      var hours = 0;
-      var minutes = 0;
-      if (s >= 3600) {
-        hours = Math.floor(s / 3600);
-        s = s % 3600;
-      }
-      if (s > 60) {
-        minutes = Math.floor(s / 60);
-        s = s % 60;
-      }
-      var r = "";
-
-      if (s > 9) {
-        r = "" + s + r;
-      } else {
-        r = "0" + s + r;
-      }
-
-      if (minutes > 9) {
-        r = "" + minutes + ":" + r;
-      } else {
-        r = "0" + minutes + ":" + r;
-      }
-
-      if (hours > 0) {
-        if (hours > 9) {
-          r = "" + hours + ":" + r;
-        } else {
-          r = "0" + hours + ":" + r;
-        }
-      }
-
-      return r;
+    renderTime: function (s: number): string {
+      return renderTimeSeconds(s);
     },
 
     setTime: function (time, save) {
@@ -690,10 +745,12 @@ export default defineComponent({
         case "ArrowUp":
           this.changeVolume(Math.min(1, this.volume + 0.05));
           this.volumeShown = true;
+          this.helpTooltip = "volume";
           break;
         case "ArrowDown":
           this.changeVolume(Math.max(0, this.volume - 0.05));
           this.volumeShown = true;
+          this.helpTooltip = "volume";
           break;
         case "F":
         case "f":
@@ -1189,28 +1246,36 @@ export default defineComponent({
 }
 
 .player-tooltip {
-    background: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 0.5rem 0.75rem;
-    position: absolute;
-    bottom: 80px;
-    left: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  position: absolute;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 50%;
 }
 
 .player-tooltip-image {
-    height: 108px;
-    padding-bottom: 0.5rem;
+  height: 108px;
+  padding-bottom: 0.5rem;
 }
 
 .player-min .player-tooltip-image {
-    height: 72px;
+  height: 72px;
 }
 
 .player-min .player-tooltip {
-    bottom: 50px;
+  bottom: 50px;
+}
+
+.player-helptip-left {
+  left: 8px;
+}
+
+.player-helptip-right {
+  right: 8px;
 }
 </style>
