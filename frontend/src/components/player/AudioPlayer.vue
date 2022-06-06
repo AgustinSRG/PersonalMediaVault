@@ -2,7 +2,11 @@
   <div
     tabindex="0"
     class="audio-player"
-    :class="{ 'player-min': minPlayer, 'no-controls': !showControls }"
+    :class="{
+      'player-min': minPlayer,
+      'no-controls': !showControls,
+      'full-screen': fullScreen,
+    }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
     @dblclick="toggleFullScreen"
@@ -279,6 +283,16 @@
       @enter="enterControls"
       @leave="leaveControls"
     ></AudioPlayerConfig>
+
+    <PlayerTopBar
+      v-if="metadata"
+      :mid="mid"
+      :metadata="metadata"
+      :shown="showControls"
+      :fullscreen="fullScreen"
+      :expanded="expandedTitle"
+      :albumexpanded="expandedAlbum"
+    ></PlayerTopBar>
   </div>
 </template>
 
@@ -288,6 +302,7 @@ import { defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
+import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time-utils";
@@ -299,6 +314,7 @@ export default defineComponent({
     VolumeControl,
     AudioPlayerConfig,
     PlayerMediaChangePreview,
+    PlayerTopBar,
   },
   name: "AudioPlayer",
   emits: ["gonext", "goprev"],
@@ -354,6 +370,9 @@ export default defineComponent({
       helpTooltip: "",
 
       animationColors: "",
+
+      expandedTitle: false,
+      expandedAlbum: false,
     };
   },
   methods: {
@@ -488,9 +507,11 @@ export default defineComponent({
     },
 
     checkPlayerSize() {
-      var width = this.$el.getBoundingClientRect().width;
+      const rect = this.$el.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
 
-      if (width < 480) {
+      if (width < 480 || height < 360) {
         this.minPlayer = true;
       } else {
         this.minPlayer = false;
@@ -1056,5 +1077,14 @@ export default defineComponent({
 
 .audio-player.no-controls {
   cursor: none;
+}
+
+.audio-player.full-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
 }
 </style>

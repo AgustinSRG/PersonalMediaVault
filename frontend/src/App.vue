@@ -5,6 +5,7 @@
       :metadata="{
         width: 1080,
         height: 720,
+        title: 'Media asset title here (very long name)',
         fps: 30,
         url: '/testvid/video.mp4',
         video_previews: '/testvid/thumb_{INDEX}.jpg',
@@ -56,6 +57,7 @@
       :metadata="{
         width: 0,
         height: 0,
+        title: 'Media asset title here (very long name)',
         fps: 0,
         url: '/testvid/audio.mp3',
         ready: true,
@@ -101,7 +103,7 @@ import AudioPlayer from "./components/player/AudioPlayer.vue";
   },
   data: function () {
     return {
-      test: 2,
+      test: 1,
       rtick: 0,
       volume: 0.5,
       muted: false,
