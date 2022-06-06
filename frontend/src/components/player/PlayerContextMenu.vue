@@ -154,39 +154,21 @@ export default defineComponent({
       const x = this.x;
       const y = this.y;
 
-      if (y < pageHeight / 2) {
-        let top = y;
-        let left = x;
+      let top = y;
+      let left = x;
 
-        let width = Math.min(240, pageWidth - left);
-        let maxWidth = pageWidth - left;
+      let width = Math.min(240, pageWidth - left);
+      let maxWidth = pageWidth - left;
 
-        let maxHeight = pageHeight - top;
+      let maxHeight = pageHeight - top;
 
-        this.top = top + "px";
-        this.left = left + "px";
-        this.right = "auto";
-        this.bottom = "auto";
-        this.width = width + "px";
-        this.maxWidth = maxWidth + "px";
-        this.maxHeight = maxHeight + "px";
-      } else {
-        let bottom = pageHeight - y;
-        let left = x;
-
-        let width = Math.min(240, pageWidth - left);
-        let maxWidth = pageWidth - left;
-
-        let maxHeight = pageHeight - bottom;
-
-        this.top = "auto";
-        this.left = left + "px";
-        this.right = "auto";
-        this.bottom = bottom + "px";
-        this.width = width + "px";
-        this.maxWidth = maxWidth + "px";
-        this.maxHeight = maxHeight + "px";
-      }
+      this.top = top + "px";
+      this.left = left + "px";
+      this.right = "auto";
+      this.bottom = "auto";
+      this.width = width + "px";
+      this.maxWidth = maxWidth + "px";
+      this.maxHeight = maxHeight + "px";
     },
   },
   mounted: function () {
@@ -218,7 +200,9 @@ export default defineComponent({
   background: rgba(0, 0, 0, 0.8);
   overflow: auto;
   z-index: 10;
-  min-width: 360px;
+  min-width: 380px;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
 }
 
 .player-context-menu.hidden {
@@ -236,7 +220,7 @@ export default defineComponent({
 }
 
 .player-context-menu-table td {
-  padding: 0.75rem 1rem;
+  padding: 1rem 0.75rem;
   text-align: left;
   vertical-align: middle;
   white-space: nowrap;
@@ -247,7 +231,7 @@ export default defineComponent({
 }
 
 .player-context-menu-table .tr-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .player-context-menu-table .td-right {

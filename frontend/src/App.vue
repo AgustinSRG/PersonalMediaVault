@@ -155,7 +155,7 @@ import ImagePlayer from "./components/player/ImagePlayer.vue";
   },
   data: function () {
     return {
-      test: 2,
+      test: 1,
       rtick: 0,
       volume: 0.5,
       muted: false,
