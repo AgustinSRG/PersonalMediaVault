@@ -27,7 +27,7 @@
       >
         <td>
           <i class="fas fa-repeat icon-config"></i>
-          <b>{{ $t("Loop") }}</b>
+          <span class="context-entry-title">{{ $t("Loop") }}</span>
         </td>
         <td class="td-right">
           <i class="fas fa-check" :class="{ 'check-uncheck': !loop }"></i>
@@ -41,7 +41,7 @@
       >
         <td>
           <i class="fas fa-magnifying-glass icon-config"></i>
-          <b>{{ $t("Fit image") }}</b>
+          <span class="context-entry-title">{{ $t("Fit image") }}</span>
         </td>
         <td class="td-right">
           <i class="fas fa-check" :class="{ 'check-uncheck': !fit }"></i>
@@ -56,7 +56,7 @@
       >
         <td>
           <i class="fas fa-eye-slash icon-config"></i>
-          <b>{{ $t("Hide controls") }}</b>
+          <span class="context-entry-title">{{ $t("Hide controls") }}</span>
         </td>
         <td class="td-right">
           <i class="fas fa-check" :class="{ 'check-uncheck': controls }"></i>
@@ -66,7 +66,7 @@
       <tr v-if="url" class="tr-button" tabindex="0" @click="download">
         <td>
           <i class="fas fa-download icon-config"></i>
-          <b>{{ $t("Download") }}</b>
+          <span class="context-entry-title">{{ $t("Download") }}</span>
         </td>
         <td class="td-right"></td>
       </tr>
@@ -75,12 +75,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   name: "PlayerContextMenu",
-  emits: ["update:shown"],
+  emits: ["update:shown", "update:loop", "update:controls", "update:fit"],
   props: {
     shown: Boolean,
     type: String,
@@ -157,7 +157,7 @@ export default defineComponent({
       let top = y;
       let left = x;
 
-      let width = Math.min(240, pageWidth - left);
+      let width = Math.min(0, pageWidth - left);
       let maxWidth = pageWidth - left;
 
       let maxHeight = pageHeight - top;
@@ -203,6 +203,10 @@ export default defineComponent({
   min-width: 380px;
   padding-top: 0.3rem;
   padding-bottom: 0.3rem;
+}
+
+.player-min .player-context-menu  {
+  min-width: fit-content;
 }
 
 .player-context-menu.hidden {
@@ -267,4 +271,9 @@ export default defineComponent({
 .player-context-menu::-webkit-scrollbar-thumb {
   background: #757575;
 }
+
+.context-entry-title {
+  font-size: small;
+}
+
 </style>

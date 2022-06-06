@@ -9,6 +9,8 @@
     }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
+    @mousedown="hideContext"
+    @touchstart="hideContext"
     @dblclick="toggleFullScreen"
     @mouseleave="mouseLeavePlayer"
     @mouseup="playerMouseUp"
@@ -249,6 +251,7 @@
       @dblclick="stopPropagationEvent"
       @click="stopPropagationEvent"
       @mousedown="grabTimeline"
+      @touchstart="grabTimeline"
     >
       <div class="player-timeline-back"></div>
       <div
@@ -329,7 +332,7 @@ export default defineComponent({
     PlayerContextMenu,
   },
   name: "AudioPlayer",
-  emits: ["gonext", "goprev"],
+  emits: ["gonext", "goprev", "ended"],
   props: {
     mid: Number,
     metadata: Object,
@@ -397,6 +400,12 @@ export default defineComponent({
       this.contextMenuY = e.pageY;
       this.contextMenuShown = true;
       e.preventDefault();
+    },
+
+    hideContext: function (e) {
+      if (this.contextMenuShown) {
+        e.stopPropagation();
+      }
     },
 
     renderVolume: function (v: number): string {
@@ -530,6 +539,7 @@ export default defineComponent({
       }
     },
     mouseLeavePlayer: function () {
+      this.timelineGrabbed = false;
       if (!this.playing) return;
       this.showControls = false;
       this.volumeShown = isTouchDevice();
@@ -621,8 +631,9 @@ export default defineComponent({
     },
 
     clickPlayer: function () {
-      if (this.displayConfig) {
+      if (this.displayConfig || this.contextMenuShown) {
         this.displayConfig = false;
+        this.contextMenuShown = false;
       } else {
         this.togglePlay();
       }
@@ -674,10 +685,10 @@ export default defineComponent({
     grabTimeline: function (e) {
       this.timelineGrabbed = true;
       if (e.touches && e.touches.length > 0) {
-          this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
-        } else {
-          this.onTimelineSkip(e.pageX, e.pageY);
-        }
+        this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+      } else {
+        this.onTimelineSkip(e.pageX, e.pageY);
+      }
     },
     getTimelineBarWidth: function (time, duration) {
       if (duration > 0) {
@@ -743,6 +754,11 @@ export default defineComponent({
     setTime: function (time: number, save: boolean) {
       time = Math.max(0, time);
       time = Math.min(time, this.duration);
+
+      if (isNaN(time) || !isFinite(time) || time < 0) {
+        return;
+      }
+
       this.currentTime = time;
 
       var video = this.getAudioElement();

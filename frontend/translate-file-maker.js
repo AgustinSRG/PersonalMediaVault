@@ -72,10 +72,6 @@ function findTranslationConfigFiles() {
     return result;
 }
 
-function getLangFromFile(file) {
-    return Path.basename(file).split(".")[0];
-}
-
 function scanDirectories(root) {
     const files = [];
     const filesInDir = FS.readdirSync(root);
