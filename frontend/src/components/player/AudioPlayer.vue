@@ -15,6 +15,7 @@
     @touchmove="playerMouseMove"
     @touchend="playerMouseUp"
     @keydown="onKeyPress"
+    @contextmenu="onContextMenu"
   >
     <audio
       v-if="audioURL"
@@ -293,6 +294,15 @@
       :expanded="expandedTitle"
       :albumexpanded="expandedAlbum"
     ></PlayerTopBar>
+
+    <PlayerContextMenu
+      type="audio"
+      v-model:shown="contextMenuShown"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      v-model:loop="loop"
+      :url="audioURL"
+    ></PlayerContextMenu>
   </div>
 </template>
 
@@ -308,6 +318,7 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
+import PlayerContextMenu from "./PlayerContextMenu.vue";
 
 export default defineComponent({
   components: {
@@ -315,6 +326,7 @@ export default defineComponent({
     AudioPlayerConfig,
     PlayerMediaChangePreview,
     PlayerTopBar,
+    PlayerContextMenu,
   },
   name: "AudioPlayer",
   emits: ["gonext", "goprev"],
@@ -373,9 +385,20 @@ export default defineComponent({
 
       expandedTitle: false,
       expandedAlbum: false,
+
+      contextMenuX: 0,
+      contextMenuY: 0,
+      contextMenuShown: false,
     };
   },
   methods: {
+    onContextMenu: function (e) {
+      this.contextMenuX = e.pageX;
+      this.contextMenuY = e.pageY;
+      this.contextMenuShown = true;
+      e.preventDefault();
+    },
+
     renderVolume: function (v: number): string {
       return Math.round(v * 100) + "%";
     },
@@ -487,7 +510,11 @@ export default defineComponent({
 
     playerMouseUp: function (e) {
       if (this.timelineGrabbed) {
-        this.onTimelineSkip(e.pageX, e.pageY);
+        if (e.touches && e.touches.length > 0) {
+          this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+        } else {
+          this.onTimelineSkip(e.pageX, e.pageY);
+        }
         this.timelineGrabbed = false;
       }
     },
@@ -495,7 +522,11 @@ export default defineComponent({
       this.interactWithControls();
 
       if (this.timelineGrabbed) {
-        this.onTimelineSkip(e.pageX, e.pageY);
+        if (e.touches && e.touches.length > 0) {
+          this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+        } else {
+          this.onTimelineSkip(e.pageX, e.pageY);
+        }
       }
     },
     mouseLeavePlayer: function () {
@@ -640,9 +671,13 @@ export default defineComponent({
 
     /* Timeline */
 
-    grabTimeline: function (event) {
+    grabTimeline: function (e) {
       this.timelineGrabbed = true;
-      this.onTimelineSkip(event.pageX, event.pageY);
+      if (e.touches && e.touches.length > 0) {
+          this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+        } else {
+          this.onTimelineSkip(e.pageX, e.pageY);
+        }
     },
     getTimelineBarWidth: function (time, duration) {
       if (duration > 0) {

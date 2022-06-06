@@ -13,6 +13,7 @@
     @mouseleave="mouseLeavePlayer"
     @touchmove="playerMouseMove"
     @keydown="onKeyPress"
+    @contextmenu="onContextMenu"
   >
     <div class="image-scroller">
       <img
@@ -204,6 +205,17 @@
       :expanded="expandedTitle"
       :albumexpanded="expandedAlbum"
     ></PlayerTopBar>
+
+    <PlayerContextMenu
+      type="image"
+      v-model:shown="contextMenuShown"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      v-model:fit="fit"
+      @update:fit="onUserFitUpdated"
+      :url="imageURL"
+      v-model:controls="showControls"
+    ></PlayerContextMenu>
   </div>
 </template>
 
@@ -218,6 +230,7 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
+import PlayerContextMenu from "./PlayerContextMenu.vue";
 
 export default defineComponent({
   components: {
@@ -225,6 +238,7 @@ export default defineComponent({
     ImagePlayerConfig,
     PlayerMediaChangePreview,
     PlayerTopBar,
+    PlayerContextMenu,
   },
   name: "ImagePlayer",
   emits: ["gonext", "goprev"],
@@ -271,9 +285,20 @@ export default defineComponent({
 
       expandedTitle: false,
       expandedAlbum: false,
+
+      contextMenuX: 0,
+      contextMenuY: 0,
+      contextMenuShown: false,
     };
   },
   methods: {
+    onContextMenu: function (e) {
+      this.contextMenuX = e.pageX;
+      this.contextMenuY = e.pageY;
+      this.contextMenuShown = true;
+      e.preventDefault();
+    },
+
     centerScroll: function () {
       const scroller = this.$el.querySelector(".image-scroller");
 
@@ -281,8 +306,10 @@ export default defineComponent({
         return;
       }
 
-      scroller.scrollTop =  (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2
-      scroller.scrollLeft =  (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2
+      scroller.scrollTop =
+        (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
+      scroller.scrollLeft =
+        (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
     },
 
     computeImageDimensions() {
@@ -356,14 +383,8 @@ export default defineComponent({
           width = (height * this.width) / this.height;
         }
 
-        let top = Math.max(
-          0,
-          (scrollerDimensions.height - height) / 2
-        );
-        let left = Math.max(
-          0,
-          (scrollerDimensions.width - width) / 2
-        );
+        let top = Math.max(0, (scrollerDimensions.height - height) / 2);
+        let left = Math.max(0, (scrollerDimensions.width - width) / 2);
 
         this.imageTop = Math.floor(top) + "px";
         this.imageLeft = Math.floor(left) + "px";
@@ -434,7 +455,7 @@ export default defineComponent({
       this.loading = false;
     },
 
-    playerMouseMove: function (e) {
+    playerMouseMove: function () {
       this.interactWithControls();
     },
     mouseLeavePlayer: function () {
@@ -520,6 +541,10 @@ export default defineComponent({
         case "F":
         case "f":
           this.toggleFullScreen();
+          break;
+        case "C":
+        case "c":
+          this.showControls = !this.showControls;
           break;
         case "PageDown":
         case "ArrowLeft":
@@ -614,7 +639,10 @@ export default defineComponent({
     this.fit = PlayerPreferences.PlayerFit;
     this.scale = PlayerPreferences.PlayerScale;
 
-    this.$options.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
+    this.$options.timer = setInterval(
+      this.tick.bind(this),
+      Math.floor(1000 / 30)
+    );
 
     this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
     document.addEventListener(
