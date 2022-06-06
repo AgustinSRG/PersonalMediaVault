@@ -8,7 +8,6 @@
     <div v-if="!expanded && !albumexpanded" class="player-title-container">
       <div class="player-title-left">
         <button
-          v-if="!playing"
           type="button"
           :title="$t('View Album')"
           class="player-btn"
@@ -22,7 +21,6 @@
       </div>
       <div class="player-title-right">
         <button
-          v-if="!playing"
           type="button"
           :title="$t('Expand')"
           class="player-btn"

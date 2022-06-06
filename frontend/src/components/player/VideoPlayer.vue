@@ -2,7 +2,11 @@
   <div
     tabindex="0"
     class="video-player"
-    :class="{ 'player-min': minPlayer, 'no-controls': !showControls, 'full-screen': fullScreen }"
+    :class="{
+      'player-min': minPlayer,
+      'no-controls': !showControls,
+      'full-screen': fullScreen,
+    }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
     @dblclick="toggleFullScreen"
@@ -759,11 +763,8 @@ export default defineComponent({
         case "M":
         case "m":
           this.toggleMuted();
-          this.showVolume();
-          break;
-        case "E":
-        case "e":
-          this.toggleExpand();
+          this.volumeShown = true;
+          this.helpTooltip = "volume";
           break;
         case " ":
         case "K":
@@ -787,36 +788,28 @@ export default defineComponent({
         case "J":
         case "j":
         case "ArrowRight":
-          if (!this.live) {
-            this.setTime(this.currentTime + 5, true);
-          }
+          this.setTime(this.currentTime + 5, true);
           break;
         case "L":
         case "l":
         case "ArrowLeft":
-          if (!this.live) {
-            this.setTime(this.currentTime - 5, true);
-          }
+          this.setTime(this.currentTime - 5, true);
           break;
         case ".":
-          if (!this.playing && !this.live) {
+          if (!this.playing) {
             this.setTime(this.currentTime - 1 / 30);
           }
           break;
         case ",":
-          if (!this.playing && !this.live) {
+          if (!this.playing) {
             this.setTime(this.currentTime + 1 / 30);
           }
           break;
         case "Home":
-          if (!this.live) {
-            this.setTime(0, true);
-          }
+          this.setTime(0, true);
           break;
         case "End":
-          if (!this.live) {
-            this.setTime(this.duration, true);
-          }
+          this.setTime(this.duration, true);
           break;
         case "PageDown":
           this.goPrev();
@@ -855,6 +848,7 @@ export default defineComponent({
       if (!this.metadata) {
         this.videoURL = "";
         this.duration = 0;
+        this.loading = false;
         return;
       }
 
@@ -868,6 +862,7 @@ export default defineComponent({
           this.videoPending = true;
           this.videoPendingTask = this.metadata.task;
           this.duration = 0;
+          this.loading = false;
         }
       } else {
         if (
@@ -884,12 +879,14 @@ export default defineComponent({
             this.videoPending = true;
             this.videoPendingTask = res.task;
             this.duration = 0;
+            this.loading = false;
           }
         } else {
           this.videoURL = "";
           this.videoPending = true;
           this.videoPendingTask = 0;
           this.duration = 0;
+          this.loading = false;
         }
       }
     },

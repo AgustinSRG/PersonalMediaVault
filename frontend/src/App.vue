@@ -86,6 +86,56 @@
         fps: 30,
       }"
     ></AudioPlayer>
+    <ImagePlayer v-if="test === 3"
+      :mid="0"
+      :metadata="{
+        width: 1280,
+        height: 1308,
+        title: 'Media asset title here (very long name)',
+        fps: 0,
+        url: '/testvid/test.jpg',
+        ready: true,
+        encoded: true,
+        resolutions: [
+          {
+            width: 480,
+            height: 491,
+            fps: 30,
+            url: '/testvid/test-480.jpg',
+            ready: true,
+          },
+          {
+            width: 240,
+            height: 144,
+            fps: 30,
+            url: '',
+            ready: false,
+            task: 1,
+          },
+        ],
+      }"
+      :rtick="rtick"
+      :next="{
+        id: 2,
+        type: 2,
+        title: '',
+        thumbnail: '/testvid/thumb_1.jpg',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
+      :prev="{
+        id: 2,
+        type: 3,
+        title: '',
+        thumbnail: '',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
+    ></ImagePlayer>
   </div>
 </template>
 
@@ -95,15 +145,17 @@ import { Options, Vue } from "vue-class-component";
 // Player components
 import VideoPlayer from "./components/player/VideoPlayer.vue";
 import AudioPlayer from "./components/player/AudioPlayer.vue";
+import ImagePlayer from "./components/player/ImagePlayer.vue";
 
 @Options({
   components: {
     VideoPlayer,
     AudioPlayer,
+    ImagePlayer,
   },
   data: function () {
     return {
-      test: 1,
+      test: 3,
       rtick: 0,
       volume: 0.5,
       muted: false,

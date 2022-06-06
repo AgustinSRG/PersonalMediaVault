@@ -12,11 +12,19 @@ export class PlayerPreferences {
         fps: 0,
     };
 
+    public static UserSelectedResolutionImage = {
+        original: true,
+        width: 0,
+        height: 0,
+    };
+
     public static PlayTimeCache: { mid: number, time: number }[] = [];
 
     public static PlayerVolume = 1;
-
     public static PlayerMuted = false;
+
+    public static PlayerScale = 0;
+    public static PlayerFit = true;
 
     public static AudioAnymationStyle = "gradient";
 
@@ -24,6 +32,11 @@ export class PlayerPreferences {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
         if (userRes) {
             PlayerPreferences.UserSelectedResolution = userRes;
+        }
+
+        const userResImage = LocalStorage.Get("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage)
+        if (userResImage) {
+            PlayerPreferences.UserSelectedResolutionImage = userResImage;
         }
 
         const playTimeCache = LocalStorage.Get("player-play-time-cache", []);
@@ -34,6 +47,10 @@ export class PlayerPreferences {
 
         PlayerPreferences.PlayerVolume = LocalStorage.Get("player-pref-volume", 1);
         PlayerPreferences.PlayerMuted = LocalStorage.Get("player-pref-muted", false);
+
+        PlayerPreferences.PlayerScale = LocalStorage.Get("player-pref-scale", 0);
+        PlayerPreferences.PlayerFit = LocalStorage.Get("player-pref-fit", true);
+
         PlayerPreferences.AudioAnymationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
     }
 
@@ -50,6 +67,28 @@ export class PlayerPreferences {
                 continue;
             }
             const resVal = res.width * res.height * res.fps;
+            if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
+                currentVal = resVal;
+                currenRes = i;
+            }
+        }
+
+        return currenRes;
+    }
+
+    public static GetResolutionIndexImage(metadata: any): number {
+        if (PlayerPreferences.UserSelectedResolutionImage.original || !metadata.resolutions || metadata.resolutions.length === 0) {
+            return -1;
+        }
+        let currentVal = metadata.width * metadata.height;
+        const prefVal = PlayerPreferences.UserSelectedResolutionImage.width * PlayerPreferences.UserSelectedResolutionImage.height;
+        let currenRes = -1;
+        for (let i = 0; i < metadata.resolutions.length; i++) {
+            const res = metadata.resolutions[i];
+            if (!res.ready) {
+                continue;
+            }
+            const resVal = res.width * res.height;
             if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
                 currentVal = resVal;
                 currenRes = i;
@@ -77,6 +116,24 @@ export class PlayerPreferences {
         }
 
         LocalStorage.Set("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
+    }
+
+    public static SetResolutionIndexImage(metadata: any, index: number) {
+        if (index < 0) {
+            PlayerPreferences.UserSelectedResolutionImage = {
+                original: true,
+                width: 0,
+                height: 0, 
+            };
+        } else if (metadata  && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+            PlayerPreferences.UserSelectedResolutionImage = {
+                original: false,
+                width: metadata.resolutions[index].width,
+                height: metadata.resolutions[index].height,
+            };
+        }
+
+        LocalStorage.Set("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage)
     }
 
     public static GetInitialTime(mid: number) {
@@ -122,6 +179,16 @@ export class PlayerPreferences {
     public static SetMuted(m: boolean) {
         PlayerPreferences.PlayerMuted = m;
         LocalStorage.Set("player-pref-muted", m);
+    }
+
+    public static SetScale(s: number) {
+        PlayerPreferences.PlayerScale = s;
+        LocalStorage.Set("player-pref-scale", s);
+    }
+
+    public static SetFit(f: boolean) {
+        PlayerPreferences.PlayerFit = f;
+        LocalStorage.Set("player-pref-fit", f);
     }
 
     public static SetAudioAnymationStyle(s: string) {
