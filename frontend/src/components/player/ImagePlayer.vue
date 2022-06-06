@@ -15,7 +15,10 @@
     @keydown="onKeyPress"
     @contextmenu="onContextMenu"
   >
-    <div class="image-scroller">
+    <div
+      class="image-scroller"
+      @mousedown="grabScroll"
+    >
       <img
         v-if="imageURL"
         :src="imageURL"
@@ -289,6 +292,12 @@ export default defineComponent({
       contextMenuX: 0,
       contextMenuY: 0,
       contextMenuShown: false,
+
+      scrollGrabbed: false,
+      scrollGrabX: 0,
+      scrollGrabY: 0,
+      scrollGrabTop: 0,
+      scrollGrabLeft: 0,
     };
   },
   methods: {
@@ -297,6 +306,70 @@ export default defineComponent({
       this.contextMenuY = e.pageY;
       this.contextMenuShown = true;
       e.preventDefault();
+    },
+
+    grabScroll: function (e) {
+      const scroller = this.$el.querySelector(".image-scroller");
+
+      if (!scroller) {
+        return;
+      }
+
+      this.scrollGrabTop = scroller.scrollTop;
+      this.scrollGrabLeft = scroller.scrollLeft;
+
+      this.scrollGrabbed = true;
+      if (e.touches && e.touches.length > 0) {
+        this.scrollGrabX = e.touches[0].pageX;
+        this.scrollGrabY = e.touches[0].pageY;
+      } else {
+        this.scrollGrabX = e.pageX;
+        this.scrollGrabY = e.pageY;
+      }
+    },
+
+    moveScrollByMouse: function (x: number, y: number) {
+      const scroller = this.$el.querySelector(".image-scroller");
+
+      if (!scroller) {
+        return;
+      }
+
+      const rect = scroller.getBoundingClientRect();
+
+      const maxScrollLeft = scroller.scrollWidth - rect.width;
+      const maxScrollTop =  scroller.scrollHeight - rect.height;
+
+      const diffX = x - this.scrollGrabX;
+      const diffY = y - this.scrollGrabY;
+
+      scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
+      scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
+    },
+
+    dropScroll: function (e) {
+      if (!this.scrollGrabbed) {
+        return;
+      }
+      this.scrollGrabbed = false;
+
+      if (e.touches && e.touches.length > 0) {
+        this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
+      } else {
+        this.moveScrollByMouse(e.pageX, e.pageY);
+      }
+    },
+
+    moveScroll: function (e) {
+      if (!this.scrollGrabbed) {
+        return;
+      }
+
+      if (e.touches && e.touches.length > 0) {
+        this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
+      } else {
+        this.moveScrollByMouse(e.pageX, e.pageY);
+      }
     },
 
     centerScroll: function () {
@@ -459,7 +532,6 @@ export default defineComponent({
       this.interactWithControls();
     },
     mouseLeavePlayer: function () {
-      this.volumeShown = isTouchDevice();
       this.helpTooltip = "";
       this.displayConfig = false;
     },
@@ -491,7 +563,6 @@ export default defineComponent({
 
     leaveControls: function () {
       this.mouseInControls = false;
-      this.volumeShown = isTouchDevice();
       this.helpTooltip = "";
     },
 
@@ -662,6 +733,13 @@ export default defineComponent({
       this.$options.exitFullScreenListener
     );
 
+    this.$options.dropScrollHandler = this.dropScroll.bind(this);
+    document.addEventListener("mouseup", this.$options.dropScrollHandler);
+
+    this.$options.moveScrollHandler = this.moveScroll.bind(this);
+
+    document.addEventListener("mousemove", this.$options.moveScrollHandler);
+
     this.initializeImage();
   },
   beforeUnmount: function () {
@@ -684,6 +762,10 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+
+    document.removeEventListener("mouseup", this.$options.dropScrollHandler);
+
+    document.removeEventListener("mousemove", this.$options.moveScrollHandler);
   },
   watch: {
     rtick: function () {
@@ -749,6 +831,7 @@ export default defineComponent({
   height: auto;
   left: 0;
   width: 100%;
+  cursor: move;
 }
 
 .player-min .image-scroller {
@@ -779,6 +862,7 @@ export default defineComponent({
 
 .image-scroller img {
   position: absolute;
+  pointer-events: none;
 }
 
 .no-controls .image-scroller {
