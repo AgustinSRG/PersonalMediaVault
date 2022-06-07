@@ -1,74 +1,68 @@
 <template>
   <div class="top-bar">
-        <div class="top-bar-logo-td">
-          <button type="button" class="top-bar-button" :title="$t('Main menu')">
-            <i class="fas fa-bars"></i>
-          </button>
-          <span :title="$t('Personal Media Vault')" class="top-bar-title"
-            ><i class="fab fa-youtube"></i>
-            {{ $t("Personal Media Vault") }}</span
-          >
-        </div>
-        <div class="top-bar-search-td">
-          <div class="top-bar-center-div">
-            <div class="top-bar-search-input-container">
-              <input
-                type="text"
-                class="top-bar-search-input"
-                spellcheck="false"
-                autocorrect="off"
-                autocomplete="off"
-                autocapitalize="none"
-                :placeholder="$t('Search by tag')"
-              />
-              <button
-                type="button"
-                class="top-bar-button top-bar-search-button"
-                :title="$t('Search')"
-              >
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="top-bar-user-td">
-            <button
+    <div class="top-bar-logo-td">
+      <button type="button" class="top-bar-button" :title="$t('Main menu')">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span :title="$t('Personal Media Vault')" class="top-bar-title"
+        ><i class="fab fa-youtube"></i> {{ $t("Personal Media Vault") }}</span
+      >
+      <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
+        ><i class="fab fa-youtube"></i> PMV</span
+      >
+    </div>
+    <div class="top-bar-search-td">
+      <div class="top-bar-center-div">
+        <div class="top-bar-search-input-container">
+          <input
+            type="text"
+            class="top-bar-search-input"
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="none"
+            :placeholder="$t('Search by tag')"
+          />
+          <button
             type="button"
-            class="top-bar-button top-bar-botton-min-version"
+            class="top-bar-button top-bar-search-button"
             :title="$t('Search')"
           >
             <i class="fas fa-search"></i>
           </button>
-          <button
-            type="button"
-            class="top-bar-button"
-            :title="$t('Change Theme')"
-          >
-            <i class="fas fa-moon"></i>
-          </button>
-          <button
-            type="button"
-            class="top-bar-button"
-            :title="$t('Change Language')"
-          >
-            <i class="fas fa-language"></i>
-          </button>
-
-          <button
-            type="button"
-            class="top-bar-button"
-            :title="$t('Account Settings')"
-          >
-            <i class="fas fa-user"></i>
-          </button>
-          <button
-            type="button"
-            class="top-bar-button"
-            :title="$t('Close vault')"
-          >
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
         </div>
+      </div>
+    </div>
+    <div class="top-bar-user-td">
+      <button
+        type="button"
+        class="top-bar-button top-bar-botton-min-version"
+        :title="$t('Search')"
+      >
+        <i class="fas fa-search"></i>
+      </button>
+      <button type="button" class="top-bar-button" :title="$t('Change Theme')">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button
+        type="button"
+        class="top-bar-button"
+        :title="$t('Change Language')"
+      >
+        <i class="fas fa-language"></i>
+      </button>
+
+      <button
+        type="button"
+        class="top-bar-button"
+        :title="$t('Account Settings')"
+      >
+        <i class="fas fa-user"></i>
+      </button>
+      <button type="button" class="top-bar-button" :title="$t('Close vault')">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -95,6 +89,8 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  white-space: nowrap;
 }
 
 .top-bar-logo-td {
@@ -117,8 +113,25 @@ export default defineComponent({
   padding-left: 8px;
 }
 
+.top-bar-title-min {
+  font-weight: bold;
+  font-size: 24px;
+  padding-left: 8px;
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .top-bar-title {
+    display: none;
+  }
+
+  .top-bar-title-min {
+    display: initial;
+  }
+}
+
+@media (max-width: 400px) {
+  .top-bar-title-min {
     display: none;
   }
 }
@@ -183,23 +196,29 @@ export default defineComponent({
   padding: 1px 4px;
 }
 
-@media (max-width: 748px) {
+@media (max-width: 850px) {
   .top-bar-search-input-container {
-    width: 200px;
+    width: 360px;
+  }
+}
+
+@media (max-width: 740px) {
+  .top-bar-search-input-container {
+    width: 240px;
   }
 }
 
 .top-bar-botton-min-version {
-    display: none;
+  display: none;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .top-bar-search-input-container {
     display: none;
   }
 
   .top-bar-botton-min-version {
-      display: inline-block;
+    display: inline-block;
   }
 }
 
