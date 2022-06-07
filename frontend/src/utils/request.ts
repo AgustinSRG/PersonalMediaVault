@@ -5,6 +5,34 @@
 import axios, { AxiosError } from "axios";
 import { getCookie } from "./cookie";
 
+export function GetAPIURL(path: string): string {
+    if (process.env.NODE_ENV === 'development') {
+        return (process.env.DEV_TEST_HOST || "http://localhost") + path;
+    } else {
+        return path;
+    }
+}
+
+export function GenerateURIQuery(params: any): string {
+    const keys = Object.keys(params);
+    if (keys.length === 0) {
+        return "";
+    }
+
+    let result = "";
+
+    for (const key of keys) {
+        if (result !== "") {
+            result += "&";
+        } else {
+            result += "?";
+        }
+
+        result += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
+    }
+
+    return result;
+}
 
 export interface RequestParams {
     method: "GET" | "POST";

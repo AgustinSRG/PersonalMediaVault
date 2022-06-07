@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from "vue";
+import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
