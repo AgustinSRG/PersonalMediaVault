@@ -1,6 +1,32 @@
 <template>
   <div class="main-container">
-    <VideoPlayer v-if="test === 1"
+    <EmptyPlayer
+      v-if="test === 0"
+      :mid="0"
+      :status="'404'"
+      :next="{
+        id: 2,
+        type: 2,
+        title: '',
+        thumbnail: '/testvid/thumb_1.jpg',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
+      :prev="{
+        id: 2,
+        type: 3,
+        title: '',
+        thumbnail: '',
+        duration: 120,
+        width: 800,
+        height: 600,
+        fps: 30,
+      }"
+    ></EmptyPlayer>
+    <VideoPlayer
+      v-if="test === 1"
       :mid="0"
       :metadata="{
         width: 1080,
@@ -52,7 +78,8 @@
         fps: 30,
       }"
     ></VideoPlayer>
-    <AudioPlayer v-if="test === 2"
+    <AudioPlayer
+      v-if="test === 2"
       :mid="0"
       :metadata="{
         width: 0,
@@ -86,7 +113,8 @@
         fps: 30,
       }"
     ></AudioPlayer>
-    <ImagePlayer v-if="test === 3"
+    <ImagePlayer
+      v-if="test === 3"
       :mid="0"
       :metadata="{
         width: 1280,
@@ -146,16 +174,18 @@ import { Options, Vue } from "vue-class-component";
 import VideoPlayer from "./components/player/VideoPlayer.vue";
 import AudioPlayer from "./components/player/AudioPlayer.vue";
 import ImagePlayer from "./components/player/ImagePlayer.vue";
+import EmptyPlayer from "./components/player/EmptyPlayer.vue";
 
 @Options({
   components: {
     VideoPlayer,
     AudioPlayer,
     ImagePlayer,
+    EmptyPlayer,
   },
   data: function () {
     return {
-      test: 1,
+      test: 0,
       rtick: 0,
       volume: 0.5,
       muted: false,
@@ -167,7 +197,7 @@ import ImagePlayer from "./components/player/ImagePlayer.vue";
     },
   },
   mounted: function () {
-    window["TestReload"] = function() {
+    window["TestReload"] = function () {
       this.rtick++;
     }.bind(this);
   },

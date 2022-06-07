@@ -17,10 +17,11 @@
         </button>
       </div>
       <div class="player-title">
-        <div>{{ metadata.title }}</div>
+        <div v-if="metadata">{{ metadata.title }}</div>
       </div>
       <div class="player-title-right">
         <button
+          v-if="metadata"
           type="button"
           :title="$t('Expand')"
           class="player-btn"

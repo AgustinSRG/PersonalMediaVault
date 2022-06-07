@@ -130,19 +130,6 @@
     </div>
 
     <div
-      v-if="helpTooltip === 'play'"
-      class="player-tooltip player-helptip-left"
-    >
-      {{ $t("Play") }}
-    </div>
-    <div
-      v-if="helpTooltip === 'pause'"
-      class="player-tooltip player-helptip-left"
-    >
-      {{ $t("Pause") }}
-    </div>
-
-    <div
       v-if="prev && helpTooltip === 'prev'"
       class="player-tooltip player-helptip-left"
     >
