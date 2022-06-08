@@ -41,23 +41,13 @@
       >
         <i class="fas fa-search"></i>
       </button>
-      <button type="button" class="top-bar-button" :title="$t('Change Theme')">
-        <i class="fas fa-moon"></i>
-      </button>
-      <button
-        type="button"
-        class="top-bar-button"
-        :title="$t('Change Language')"
-      >
-        <i class="fas fa-language"></i>
-      </button>
 
       <button
         type="button"
         class="top-bar-button"
-        :title="$t('Account Settings')"
+        :title="$t('Settings')"
       >
-        <i class="fas fa-user"></i>
+        <i class="fas fa-cog"></i>
       </button>
       <button type="button" class="top-bar-button" :title="$t('Close vault')">
         <i class="fas fa-sign-out-alt"></i>
@@ -130,7 +120,7 @@ export default defineComponent({
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 300px) {
   .top-bar-title-min {
     display: none;
   }
