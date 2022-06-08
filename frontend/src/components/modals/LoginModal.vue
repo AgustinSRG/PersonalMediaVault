@@ -195,6 +195,16 @@ export default defineComponent({
     0 8px 10px -5px rgb(0 0 0 / 40%);
 }
 
+.modal-sm {
+  width: 240px;
+}
+
+@media (max-width: 300px) {
+  .modal-sm {
+    width: calc(100% - 1rem);
+  }
+}
+
 .modal-md {
   width: 500px;
 }
@@ -294,10 +304,11 @@ export default defineComponent({
   text-align: left;
   padding: 1rem;
   white-space: nowrap;
+  font-weight: bold;
 }
 
 .modal-footer-btn i {
-  margin-right: 1rem;
+  width: 1.5rem;
 }
 
 .modal-footer-btn:disabled {

@@ -9,7 +9,9 @@
       'layout-media': layout === 'media',
     }"
   >
-    <TopBar @logout="logout"></TopBar>
+    <TopBar @logout="logout" @settings="showSettings"></TopBar>
+
+    <SettingsModal v-model:display="displaySettings"></SettingsModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -25,6 +27,7 @@ import TopBar from "./TopBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
 import LogoutModal from "../modals/LogoutModal.vue";
+import SettingsModal from "../modals/SettingsModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { AppEvents } from "../../control/app-events";
@@ -37,6 +40,7 @@ export default defineComponent({
     LoadingOverlay,
     LoginModal,
     LogoutModal,
+    SettingsModal,
   },
   name: "MainLayout",
   data: function () {
@@ -47,11 +51,16 @@ export default defineComponent({
       layout: AppStatus.CurrentLayout,
 
       displayLogout: false,
+      displaySettings: false,
     };
   },
   methods: {
     logout: function () {
       this.displayLogout = true;
+    },
+
+    showSettings: function () {
+      this.displaySettings = true;
     },
   },
   mounted: function () {

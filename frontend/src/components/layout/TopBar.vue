@@ -1,7 +1,12 @@
 <template>
   <div class="top-bar">
     <div class="top-bar-logo-td">
-      <button type="button" class="top-bar-button" :title="$t('Main menu')">
+      <button
+        type="button"
+        class="top-bar-button"
+        :title="$t('Main menu')"
+        @click="menu"
+      >
         <i class="fas fa-bars"></i>
       </button>
       <span :title="$t('Personal Media Vault')" class="top-bar-title"
@@ -46,10 +51,16 @@
         type="button"
         class="top-bar-button"
         :title="$t('Settings')"
+        @click="settings"
       >
         <i class="fas fa-cog"></i>
       </button>
-      <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
+      <button
+        type="button"
+        class="top-bar-button"
+        :title="$t('Close vault')"
+        @click="logout"
+      >
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </div>
@@ -61,12 +72,20 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
-  emits: ['logout'],
+  emits: ["logout", "settings", "menu"],
   methods: {
+    menu: function () {
+      this.$emit("menu");
+    },
+
     logout: function () {
       this.$emit("logout");
     },
-  }
+
+    settings: function () {
+      this.$emit("settings");
+    },
+  },
 });
 
 // Searchbox background: hsl(0, 0%, 7%)
