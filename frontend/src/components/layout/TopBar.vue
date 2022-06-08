@@ -49,7 +49,7 @@
       >
         <i class="fas fa-cog"></i>
       </button>
-      <button type="button" class="top-bar-button" :title="$t('Close vault')">
+      <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </div>
@@ -61,6 +61,12 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
+  emits: ['logout'],
+  methods: {
+    logout: function () {
+      this.$emit("logout");
+    },
+  }
 });
 
 // Searchbox background: hsl(0, 0%, 7%)

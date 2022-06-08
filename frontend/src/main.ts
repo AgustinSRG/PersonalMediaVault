@@ -11,6 +11,8 @@ PlayerPreferences.LoadPreferences();
 
 AppStatus.Initialize();
 
+AuthController.Initialize();
+
 // Setup App
 
 import { createApp } from 'vue'
@@ -18,6 +20,7 @@ import { createApp } from 'vue'
 import i18n from './i18n'
 import './registerServiceWorker'
 import App from './App.vue'
+import { AuthController } from './control/auth';
 
 document.addEventListener("drop", function(e) {
     e.preventDefault();

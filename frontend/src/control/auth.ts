@@ -11,6 +11,7 @@ export class AuthController {
     public static Locked = true;
     public static Session = "";
     public static Username = "";
+    public static Loading = true;
 
     public static Initialize() {
         AuthController.Session = getCookie("x-session-token");
@@ -19,12 +20,14 @@ export class AuthController {
     }
 
     public static CheckAuthStatus() {
+        AuthController.Loading = true;
         AppEvents.Emit("auth-status-loading", true);
         Timeouts.Abort("auth-control-check");
         Request.Pending("auth-control-check", AccountAPI.GetUsername()).onSuccess(response => {
             AuthController.Locked = false;
             AuthController.Username = response.username;
             AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+            AuthController.Loading = false;
             AppEvents.Emit("auth-status-loading", false);
 
         }).onRequestError(err => {
@@ -33,6 +36,7 @@ export class AuthController {
                     AuthController.Locked = true;
                     AuthController.Username = "";
                     AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+                    AuthController.Loading = false;
                     AppEvents.Emit("auth-status-loading", false);
                 })
                 .add("*", "*", () => {
@@ -46,6 +50,7 @@ export class AuthController {
             AuthController.Locked = true;
             AuthController.Username = "";
             AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+            AuthController.Loading = false;
             AppEvents.Emit("auth-status-loading", false);
         });
     }
@@ -65,7 +70,7 @@ export class AuthController {
     }
 
     public static Logout() {
-        let currentSession = AuthController.Session;
+        const currentSession = AuthController.Session;
         Request.Do(AuthAPI.Logout()).onSuccess(() => {
             if (AuthController.Session === currentSession) {
                 AuthController.ClearSession();
