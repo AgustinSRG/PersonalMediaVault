@@ -277,12 +277,14 @@ export class RequestErrorHandler {
         this.callbacks = [];
     }
 
-    public add(status: number | string, code: string, callback: () => void) {
+    public add(status: number | string, code: string, callback: () => void): RequestErrorHandler {
         this.callbacks.push({
             status: status,
             code: code,
             callback: callback,
-        })
+        });
+
+        return this;
     }
 
     public handle(error: AxiosError) {
