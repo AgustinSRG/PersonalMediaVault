@@ -11,7 +11,11 @@
   >
     <TopBar @logout="logout" @settings="showSettings"></TopBar>
 
-    <SettingsModal v-model:display="displaySettings"></SettingsModal>
+    <SettingsModal
+      v-model:display="displaySettings"
+      @goto="onGoSettings"
+    ></SettingsModal>
+    <LanguageModal v-model:display="displayLang"></LanguageModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -28,6 +32,7 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
 import LogoutModal from "../modals/LogoutModal.vue";
 import SettingsModal from "../modals/SettingsModal.vue";
+import LanguageModal from "../modals/LanguageModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { AppEvents } from "../../control/app-events";
@@ -41,6 +46,7 @@ export default defineComponent({
     LoginModal,
     LogoutModal,
     SettingsModal,
+    LanguageModal,
   },
   name: "MainLayout",
   data: function () {
@@ -52,6 +58,11 @@ export default defineComponent({
 
       displayLogout: false,
       displaySettings: false,
+      displayTheme: false,
+      displayLang: false,
+      displayUsernameModal: false,
+      displayPasswordModal: false,
+      displayAdvancedSettings: false,
     };
   },
   methods: {
@@ -61,6 +72,26 @@ export default defineComponent({
 
     showSettings: function () {
       this.displaySettings = true;
+    },
+
+    onGoSettings: function (o: string) {
+      switch (o) {
+        case "theme":
+          this.displayTheme = true;
+          break;
+        case "lang":
+          this.displayLang = true;
+          break;
+        case "username":
+          this.displayUsernameModal = true;
+          break;
+        case "password":
+          this.displayPasswordModal = true;
+          break;
+        case "advanced":
+          this.displayAdvancedSettings = true;
+          break;
+      }
     },
   },
   mounted: function () {

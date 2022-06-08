@@ -15,52 +15,64 @@
         </button>
       </div>
       <div class="modal-body with-menu">
-        <div class="modal-menu">
-          <div
+        <table class="modal-menu">
+          <tr
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnOption('theme')"
           >
-            <i class="modal-menu-item-icon fas fa-moon"></i>
-            {{ $t("Change theme (Dark / Light)") }}
-          </div>
+            <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Change theme (Dark / Light)") }}
+            </td>
+          </tr>
 
-          <div
+          <tr
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnOption('lang')"
           >
-            <i class="modal-menu-item-icon fas fa-language"></i>
-            {{ $t("Change language") }}
-          </div>
+            <td class="modal-menu-item-icon">
+              <i class="fas fa-language"></i>
+            </td>
+            <td class="modal-menu-item-title">
+              {{ $t("Change language") }}
+            </td>
+          </tr>
 
-          <div
+          <tr
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnOption('username')"
           >
-            <i class="modal-menu-item-icon fas fa-user"></i>
-            {{ $t("Change username") }}
-          </div>
+            <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Change username") }}
+            </td>
+          </tr>
 
-          <div
+          <tr
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnOption('password')"
           >
-            <i class="modal-menu-item-icon fas fa-key"></i>
-            {{ $t("Change password") }}
-          </div>
+            <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Change password") }}
+            </td>
+          </tr>
 
-          <div
+          <tr
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnOption('advanced')"
           >
-            <i class="modal-menu-item-icon fas fa-cog"></i>
-            {{ $t("Advanced settings") }}
-          </div>
-        </div>
+            <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Advanced settings") }}
+            </td>
+          </tr>
+        </table>
       </div>
     </div>
   </div>
@@ -99,14 +111,14 @@ export default defineComponent({
 </script>
 
 <style>
-.modal-container-settings {
+.modal-container-theme {
   z-index: 250;
 }
 
 .modal-menu {
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  border-spacing: 0; /* Removes the cell spacing via CSS */
+  border-collapse: collapse; /* Optional - if you don't want to have double border where cells touch */
 }
 
 .modal-body.with-menu {
@@ -114,12 +126,19 @@ export default defineComponent({
 }
 
 .modal-menu-item {
-  padding: 1rem;
   cursor: pointer;
+}
+
+.modal-menu-item-title {
+  padding-top: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
   font-weight: bold;
 }
 
 .modal-menu-item-icon {
+  padding: 1rem;
+  text-align: center;
   width: 2rem;
 }
 

@@ -10,7 +10,7 @@
         <i class="fas fa-bars"></i>
       </button>
       <span :title="$t('Personal Media Vault')" class="top-bar-title"
-        ><i class="fab fa-youtube"></i> {{ $t("Personal Media Vault") }}</span
+        ><i class="fab fa-youtube"></i> PMV</span
       >
       <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
         ><i class="fab fa-youtube"></i> PMV</span

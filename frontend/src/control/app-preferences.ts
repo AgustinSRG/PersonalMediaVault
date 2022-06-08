@@ -9,7 +9,9 @@ export class AppPreferences {
 
 
     public static LoadPreferences() {
-        AppPreferences.Language = LocalStorage.Get("app-pref-lang", "");
+        const locale = (navigator.language || "en");
+
+        AppPreferences.Language = LocalStorage.Get("app-pref-lang", locale);
         AppPreferences.Theme = LocalStorage.Get("app-pref-theme", "light");
     }
 
