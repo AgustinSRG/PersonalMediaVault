@@ -18,3 +18,9 @@ import MainLayout from "./components/layout/MainLayout.vue";
 })
 export default class App extends Vue {}
 </script>
+
+<style>
+
+/* Add here any global / shared styles */ 
+
+</style>

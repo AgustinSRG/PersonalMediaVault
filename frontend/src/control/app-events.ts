@@ -2,19 +2,19 @@
 
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
-export class GlobalEvents {
+export class AppEvents {
     public static events: {[key: string]: CallbackFunctionVariadic[]} = {};
 
     public static AddEventListener(eventName: string, handler: CallbackFunctionVariadic) {
-        if (!this.events[eventName]) {
-            this.events[eventName] = [];
+        if (!AppEvents.events[eventName]) {
+            AppEvents.events[eventName] = [];
         }
-        this.events[eventName].push(handler);
+        AppEvents.events[eventName].push(handler);
     }
 
-    public static Emit(eventName: string, ...args: string[]) {
-        if (this.events[eventName]) {
-            for (const handler of this.events[eventName]) {
+    public static Emit(eventName: string, ...args: any[]) {
+        if (AppEvents.events[eventName]) {
+            for (const handler of AppEvents.events[eventName]) {
                 try {
                     handler(...args);
                 } catch (ex) {
@@ -25,14 +25,14 @@ export class GlobalEvents {
     }
 
     public static RemoveEventListener(eventName: string, handler: CallbackFunctionVariadic) {
-        if (!this.events[eventName]) {
+        if (!AppEvents.events[eventName]) {
             return;
         }
-        const i = this.events[eventName].indexOf(handler);
+        const i = AppEvents.events[eventName].indexOf(handler);
         if (i >= 0) {
-            this.events[eventName].splice(i, 1);
-            if (this.events[eventName].length === 0) {
-                delete this.events[eventName];
+            AppEvents.events[eventName].splice(i, 1);
+            if (AppEvents.events[eventName].length === 0) {
+                delete AppEvents.events[eventName];
             }
         }
     }

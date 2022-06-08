@@ -22,6 +22,10 @@ export function GenerateURIQuery(params: any): string {
     let result = "";
 
     for (const key of keys) {
+        if (!params[key]) {
+            continue;
+        }
+
         if (result !== "") {
             result += "&";
         } else {

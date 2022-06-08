@@ -1,10 +1,23 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import './registerServiceWorker'
-import i18n from './i18n'
+// Entry point
+
+// Initialize stuff
+
+import { AppPreferences } from './control/app-preferences';
+import { AppStatus } from './control/app-status';
 import { PlayerPreferences } from './control/player-preferences'
 
+AppPreferences.LoadPreferences();
 PlayerPreferences.LoadPreferences();
+
+AppStatus.Initialize();
+
+// Setup App
+
+import { createApp } from 'vue'
+
+import i18n from './i18n'
+import './registerServiceWorker'
+import App from './App.vue'
 
 document.addEventListener("drop", function(e) {
     e.preventDefault();
