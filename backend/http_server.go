@@ -56,7 +56,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func corsHeadInsecure() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "HEAD" {
+		if r.Method == "OPTIONS" {
 			w.WriteHeader(200)
 		} else {
 			w.WriteHeader(404)
