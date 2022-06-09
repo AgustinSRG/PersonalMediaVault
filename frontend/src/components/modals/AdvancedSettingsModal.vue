@@ -23,10 +23,10 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div v-if="loading && display" class="modal-body">
+      <div v-if="loading" class="modal-body">
         <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
       </div>
-      <div v-if="!loading || !display" class="modal-body">
+      <div v-if="!loading" class="modal-body">
         <div class="form-group">
           <label
             >{{
@@ -311,11 +311,11 @@ export default defineComponent({
       Timeouts.Abort("advanced-settings");
       Request.Abort("advanced-settings");
 
-      this.loading = true;
-
       if (!this.display) {
         return;
       }
+
+      this.loading = true;
 
       Request.Pending("advanced-settings", ConfigAPI.GetConfig())
         .onSuccess((response: VaultUserConfig) => {
