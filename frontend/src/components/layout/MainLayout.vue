@@ -16,11 +16,15 @@
       @goto="onGoSettings"
     ></SettingsModal>
     <LanguageModal v-model:display="displayLang"></LanguageModal>
+    <ThemeModal v-model:display="displayTheme"></ThemeModal>
+    <ChangeUsernameModal v-model:display="displayUsernameModal"></ChangeUsernameModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
     <LoadingOverlay :display="locked || loadingAuth"></LoadingOverlay>
     <LoginModal :display="locked && !loadingAuth"></LoginModal>
+
+    <SnackBar></SnackBar>
   </div>
 </template>
 
@@ -28,11 +32,14 @@
 import { defineComponent } from "vue";
 
 import TopBar from "./TopBar.vue";
+import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
 import LogoutModal from "../modals/LogoutModal.vue";
 import SettingsModal from "../modals/SettingsModal.vue";
 import LanguageModal from "../modals/LanguageModal.vue";
+import ThemeModal from "../modals/ThemeModal.vue";
+import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { AppEvents } from "../../control/app-events";
@@ -47,6 +54,9 @@ export default defineComponent({
     LogoutModal,
     SettingsModal,
     LanguageModal,
+    ThemeModal,
+    ChangeUsernameModal,
+    SnackBar,
   },
   name: "MainLayout",
   data: function () {

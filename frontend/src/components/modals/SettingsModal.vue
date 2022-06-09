@@ -10,7 +10,7 @@
     <div class="modal-dialog" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Vault settings") }}</div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>

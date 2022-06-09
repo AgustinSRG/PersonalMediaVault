@@ -18,6 +18,7 @@
             name="username"
             v-model="username"
             :disabled="busy"
+            maxlength="255"
             class="form-control form-control-full-width auto-focus"
           />
         </div>
@@ -28,6 +29,7 @@
             name="password"
             v-model="password"
             :disabled="busy"
+            maxlength="255"
             class="form-control form-control-full-width"
           />
         </div>
@@ -99,6 +101,8 @@ export default defineComponent({
       Request.Do(AuthAPI.Login(this.username, this.password))
         .onSuccess((response) => {
           this.busy = false;
+          this.username = "";
+          this.password = "";
           AuthController.SetSession(response.session_id);
         })
         .onCancel(() => {
@@ -148,6 +152,7 @@ export default defineComponent({
   },
   watch: {
     display: function () {
+      this.error = "";
       this.autoFocus();
     },
   },

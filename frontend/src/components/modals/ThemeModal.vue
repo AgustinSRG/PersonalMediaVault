@@ -9,28 +9,34 @@
   >
     <div class="modal-dialog" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
-        <div class="modal-title">{{ $t("Choose your language") }}</div>
+        <div class="modal-title">{{ $t("Select a theme for the app") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body with-menu limited-height">
         <table class="modal-menu">
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @click="changeLocale('en')"
-          >
-            <td class="modal-menu-item-icon"><i class="fas fa-check" :class="{ 'unchecked': lang !== 'en' }"></i></td>
-            <td class="modal-menu-item-title">English ({{ $t('Default') }})</td>
+          <tr class="modal-menu-item" tabindex="0" @click="changeTheme('dark')">
+            <td class="modal-menu-item-icon">
+              <i
+                class="fas fa-check"
+                :class="{ unchecked: theme !== 'dark' }"
+              ></i>
+            </td>
+            <td class="modal-menu-item-title">Dark Theme</td>
           </tr>
           <tr
             class="modal-menu-item"
             tabindex="0"
-            @click="changeLocale('es')"
+            @click="changeTheme('light')"
           >
-            <td class="modal-menu-item-icon"><i class="fas fa-check" :class="{ 'unchecked': lang !== 'es' }"></i></td>
-            <td class="modal-menu-item-title">Español (Internacional)</td>
+            <td class="modal-menu-item-icon">
+              <i
+                class="fas fa-check"
+                :class="{ unchecked: theme !== 'light' }"
+              ></i>
+            </td>
+            <td class="modal-menu-item-title">Light Theme</td>
           </tr>
         </table>
       </div>
@@ -39,12 +45,13 @@
 </template>
 
 <script lang="ts">
+import { AppEvents } from "@/control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
-  name: "LanguageModal",
+  name: "ThemeModal",
   emits: ["update:display"],
   props: {
     display: Boolean,
@@ -56,7 +63,7 @@ export default defineComponent({
   },
   data: function () {
     return {
-      lang: AppPreferences.Language,
+      theme: AppPreferences.Theme,
     };
   },
   methods: {
@@ -68,22 +75,23 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    changeLocale: function (l: string) {
-      this.lang = l;
-      AppPreferences.SetLanguage(l);
-      this.$i18n.locale = l;
+    changeTheme: function (t: string) {
+      AppPreferences.SetTheme(t);
     },
+
+    themeUpdated: function () {
+      this.theme = AppPreferences.Theme;
+    },
+  },
+  mounted: function () {
+    this.$options.themeHandler = this.themeUpdated.bind(this);
+    AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
+  },
+  beforeUnmount: function () {
+    AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
   },
 });
 </script>
 
 <style>
-.modal-body.limited-height {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.modal-menu-item-icon .unchecked{
-  visibility: hidden;
-}
 </style>
