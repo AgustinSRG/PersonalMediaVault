@@ -14,10 +14,6 @@ export interface VaultUserConfig {
         width: number,
         height: number,
     }[],
-    pinned_tags: {
-        tag: string,
-        title: string,
-    }[],
 }
 
 export class ConfigAPI {

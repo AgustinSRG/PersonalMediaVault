@@ -19,6 +19,7 @@
     <ThemeModal v-model:display="displayTheme"></ThemeModal>
     <ChangeUsernameModal v-model:display="displayUsernameModal"></ChangeUsernameModal>
     <ChangePasswordModal v-model:display="displayPasswordModal"></ChangePasswordModal>
+    <AdvancedSettingsModal v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -42,6 +43,7 @@ import LanguageModal from "../modals/LanguageModal.vue";
 import ThemeModal from "../modals/ThemeModal.vue";
 import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
 import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
+import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { AppEvents } from "../../control/app-events";
@@ -59,6 +61,7 @@ export default defineComponent({
     ThemeModal,
     ChangeUsernameModal,
     ChangePasswordModal,
+    AdvancedSettingsModal,
     SnackBar,
   },
   name: "MainLayout",

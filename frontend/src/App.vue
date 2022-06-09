@@ -23,4 +23,20 @@ export default class App extends Vue {}
 
 /* Add here any global / shared styles */ 
 
+.bold {
+  font-weight: bold;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
 </style>

@@ -174,8 +174,8 @@ export default defineComponent({
 
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+
+  padding: 1rem;
 
   transition: opacity 0.2s;
   opacity: 1;
@@ -194,6 +194,7 @@ export default defineComponent({
 
 .modal-dialog {
   display: flex;
+  margin: auto;
   flex-direction: column;
   background: #212121;
   box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
