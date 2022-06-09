@@ -12,6 +12,8 @@ PlayerPreferences.LoadPreferences();
 AppStatus.Initialize();
 
 AuthController.Initialize();
+TagsController.Initailize();
+AlbumsController.Initailize();
 
 // Setup App
 
@@ -21,6 +23,8 @@ import i18n from './i18n'
 import './registerServiceWorker'
 import App from './App.vue'
 import { AuthController } from './control/auth';
+import { TagsController } from './control/tags';
+import { AlbumsController } from './control/albums';
 
 document.addEventListener("drop", function(e) {
     e.preventDefault();

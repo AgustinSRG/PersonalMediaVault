@@ -23,7 +23,7 @@
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
-    <LoadingOverlay :display="locked || loadingAuth"></LoadingOverlay>
+    <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums"></LoadingOverlay>
     <LoginModal :display="locked && !loadingAuth"></LoginModal>
 
     <SnackBar></SnackBar>
@@ -46,6 +46,8 @@ import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
 import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
 
 import { AuthController } from "../../control/auth";
+import { TagsController } from "../../control/tags";
+import { AlbumsController } from "../../control/albums";
 import { AppEvents } from "../../control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
@@ -71,6 +73,9 @@ export default defineComponent({
       locked: AuthController.Locked,
       loadingAuth: AuthController.Loading,
       layout: AppStatus.CurrentLayout,
+
+      loadingTags: TagsController.Loading,
+      loadingAlbums: AlbumsController.Loading,
 
       displayLogout: false,
       displaySettings: false,
@@ -125,6 +130,14 @@ export default defineComponent({
 
     AppEvents.AddEventListener("auth-status-loading", (l: boolean) => {
       this.loadingAuth = l;
+    });
+
+    AppEvents.AddEventListener("tags-loading", (l: boolean) => {
+      this.loadingTags = l;
+    });
+
+    AppEvents.AddEventListener("albums-loading", (l: boolean) => {
+      this.loadingAlbums = l;
     });
   },
 });
