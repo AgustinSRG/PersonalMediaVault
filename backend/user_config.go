@@ -40,6 +40,7 @@ type UserConfigManager struct {
 
 func (uc *UserConfigManager) Initialize(base_path string) {
 	uc.file = path.Join(base_path, "user_config.pmv")
+	uc.lock = CreateReadWriteLock()
 }
 
 func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
