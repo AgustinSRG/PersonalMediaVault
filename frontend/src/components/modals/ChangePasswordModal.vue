@@ -7,57 +7,68 @@
     :aria-hidden="!display"
   >
     <form
-       @submit="submit"
+      @submit="submit"
       class="modal-dialog modal-md"
       role="document"
       @click="stopPropagationEvent"
     >
       <div class="modal-header">
-        <div class="modal-title">{{ $t("Change username") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <div class="modal-title">{{ $t("Change password") }}</div>
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>{{ $t("Current username") }}:</label>
+          <label>{{ $t("Current password") }}:</label>
           <input
-            type="text"
-            name="current-username"
-            v-model="currentUsername"
-            :disabled="busy"
-            maxlength="255"
-            readonly="readonly"
-            class="form-control form-control-full-width"
-          />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("New username") }}:</label>
-          <input
-            type="text"
-            name="username"
-            v-model="username"
+            type="password"
+            name="password"
+            v-model="currentPassword"
             :disabled="busy"
             maxlength="255"
             class="form-control form-control-full-width auto-focus"
           />
         </div>
         <div class="form-group">
-          <label>{{ $t("Password") }}:</label>
+          <label>{{ $t("New password") }}:</label>
           <input
             type="password"
-            name="password"
+            name="new-password"
             v-model="password"
             :disabled="busy"
+            autocomplete="new-password"
             maxlength="255"
             class="form-control form-control-full-width"
           />
         </div>
+        <div class="form-group">
+          <label
+            >{{ $t("New password") }} ({{
+              $t("Repeat it for confirmation")
+            }}):</label
+          >
+          <input
+            type="password"
+            name="new-password-repeat"
+            v-model="password2"
+            :disabled="busy"
+            autocomplete="new-password"
+            maxlength="255"
+            class="form-control form-control-full-width"
+          />
+        </div>
+
         <div class="form-error">{{ error }}</div>
       </div>
       <div class="modal-footer">
         <button type="submit" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Change username") }}
+          <i class="fas fa-check"></i> {{ $t("Change password") }}
         </button>
       </div>
     </form>
@@ -67,13 +78,12 @@
 <script lang="ts">
 import { AccountAPI } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
-  name: "ChangeUsernameModal",
+  name: "ChangePasswordModal",
   emits: ["update:display"],
   props: {
     display: Boolean,
@@ -85,9 +95,9 @@ export default defineComponent({
   },
   data: function () {
     return {
-      currentUsername: "",
-      username: "",
+      currentPassword: "",
       password: "",
+      password2: "",
       busy: false,
       error: "",
     };
@@ -112,16 +122,21 @@ export default defineComponent({
         return;
       }
 
+      if (this.password !== this.password2) {
+        this.error = this.$t("The passwords do not match");
+        return;
+      }
+
       this.busy = true;
       this.error = "";
 
-      Request.Do(AccountAPI.ChangeUsername(this.username, this.password))
+      Request.Do(AccountAPI.ChangePassword(this.currentPassword, this.password))
         .onSuccess(() => {
           this.busy = false;
-          AuthController.UpdateUsername(this.username);
-          this.username = "";
+          this.currentPassword = "";
           this.password = "";
-          AppEvents.Emit("snack", this.$t("Vault username changed!"));
+          this.password2 = "";
+          AppEvents.Emit("snack", this.$t("Vault password changed!"));
           this.close();
         })
         .onCancel(() => {
@@ -131,7 +146,7 @@ export default defineComponent({
           this.busy = false;
           Request.ErrorHandler()
             .add(400, "*", () => {
-              this.error = this.$t("Invalid username provided");
+              this.error = this.$t("Invalid password provided");
             })
             .add(401, "*", () => {
               this.error = this.$t("Access denied");
@@ -162,29 +177,16 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
-
-    usernameUpdated: function () {
-      this.currentUsername = AuthController.Username;
-    },
   },
   mounted: function () {
-    this.currentUsername = AuthController.Username;
-    this.$options.usernameUpdatedH = this.usernameUpdated.bind(this);
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.usernameUpdatedH
-    );
     this.autoFocus();
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.usernameUpdatedH
-    );
   },
   watch: {
     display: function () {
       this.error = "";
+      this.currentPassword = "";
+      this.password = "";
+      this.password2 = "";
       this.autoFocus();
     },
   },

@@ -24,7 +24,7 @@ export class AccountAPI {
     public static ChangePassword(password: string, newPassword: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/account/username"),
+            url: GetAPIURL("/api/account/password"),
             json: {
                 old_password: password,
                 password: newPassword,

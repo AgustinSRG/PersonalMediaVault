@@ -206,7 +206,7 @@ export default defineComponent({
   background: hsl(0, 0%, 7%);
   height: 38px;
   border: none;
-  font-size: large;
+  font-size: 16px;
   margin: 0;
   padding: 1px 4px;
 }
