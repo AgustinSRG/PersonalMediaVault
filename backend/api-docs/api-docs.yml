@@ -1568,17 +1568,6 @@ definitions:
                 type: number
                 format: int32
                 description: Height (px)
-        pinned_tags:
-          type: array
-          description: Pinned tags by the user
-          items:
-            properties:
-              tag:
-                type: string
-                description: Tag name
-              title:
-                type: string
-                description: Title to show to the user
                 
     TaskInfo:
       description: Task status info
