@@ -86,7 +86,7 @@ export class AppStatus {
 
     public static UpdateLayout() {
         if (AppStatus.CurrentMedia >= 0) {
-            if (AppStatus.CurrentAlbum) {
+            if (AppStatus.CurrentAlbum >= 0) {
                 // Media with album list
                 AppStatus.CurrentLayout = "album";
             } else if (AppStatus.ListSplitMode) {
@@ -96,6 +96,8 @@ export class AppStatus {
                 // Media alone
                 AppStatus.CurrentLayout = "media";
             }
+        } else if (AppStatus.CurrentAlbum >= 0) {
+            AppStatus.CurrentLayout = "album";
         } else {
             // Just initial, sidebar + List
             AppStatus.CurrentLayout = "initial";

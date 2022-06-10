@@ -14,6 +14,7 @@ AppStatus.Initialize();
 AuthController.Initialize();
 TagsController.Initailize();
 AlbumsController.Initailize();
+MediaController.Initialize();
 
 // Setup App
 
@@ -25,6 +26,7 @@ import App from './App.vue'
 import { AuthController } from './control/auth';
 import { TagsController } from './control/tags';
 import { AlbumsController } from './control/albums';
+import { MediaController } from './control/media';
 
 document.addEventListener("drop", function(e) {
     e.preventDefault();

@@ -13,6 +13,14 @@ export function GetAPIURL(path: string): string {
     }
 }
 
+export function GetAssetURL(path: string): string {
+    if (process.env.NODE_ENV === 'development') {
+        return (process.env.DEV_TEST_HOST || "http://localhost") + path + GenerateURIQuery({ 'x-session-token': getCookie("x-session-token") + "" });
+    } else {
+        return path;
+    }
+}
+
 export function GenerateURIQuery(params: any): string {
     const keys = Object.keys(params);
     if (keys.length === 0) {
