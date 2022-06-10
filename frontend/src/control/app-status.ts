@@ -139,4 +139,87 @@ export class AppStatus {
             }
         }
     }
+
+    public static OnStatusUpdate() {
+        AppStatus.UpdateLayout();
+
+        AppEvents.Emit("app-status-update", AppStatus);
+
+        AppStatus.UpdateURL();
+    }
+
+    public static GoToPage(page: string) {
+        AppStatus.CurrentPage = page;
+
+        AppStatus.CurrentAlbum = -1;
+        AppStatus.CurrentMedia = -1;
+
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static GoToSearch(search: string) {
+        AppStatus.CurrentPage = "home";
+        AppStatus.CurrentSearch = search;
+
+        AppStatus.CurrentAlbum = -1;
+        AppStatus.CurrentMedia = -1;
+
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static ClickOnMedia(mediaId: number) {
+        AppStatus.CurrentAlbum = -1;
+        AppStatus.CurrentMedia = mediaId;
+
+        AppStatus.ListSplitMode = true;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static ClickOnAlbum(albumId: number, mediaId: number) {
+        AppStatus.CurrentAlbum = albumId;
+        AppStatus.CurrentMedia = mediaId;
+
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static FocusAltContent() {
+        AppStatus.CurrentFocus = "alt";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static OpenMenu() {
+        AppStatus.CurrentFocus = "menu";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static CloseMenu() {
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
 }
