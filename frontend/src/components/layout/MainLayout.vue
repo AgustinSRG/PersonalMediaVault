@@ -7,9 +7,11 @@
       'layout-album': layout === 'album',
       'layout-media-split': layout === 'media-split',
       'layout-media': layout === 'media',
+      'sidebar-hidden': !displaySidebar,
     }"
   >
-    <TopBar @logout="logout" @settings="showSettings"></TopBar>
+    <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
+    <SideBar v-model:display="displaySidebar"></SideBar>
 
     <SettingsModal
       v-model:display="displaySettings"
@@ -34,6 +36,7 @@
 import { defineComponent } from "vue";
 
 import TopBar from "./TopBar.vue";
+import SideBar from "./SideBar.vue";
 import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
@@ -55,6 +58,7 @@ import { AppStatus } from "@/control/app-status";
 export default defineComponent({
   components: {
     TopBar,
+    SideBar,
     LoadingOverlay,
     LoginModal,
     LogoutModal,
@@ -84,6 +88,8 @@ export default defineComponent({
       displayUsernameModal: false,
       displayPasswordModal: false,
       displayAdvancedSettings: false,
+
+      displaySidebar: true,
     };
   },
   methods: {
@@ -113,6 +119,10 @@ export default defineComponent({
           this.displayAdvancedSettings = true;
           break;
       }
+    },
+
+    toggleSidebar: function () {
+      this.displaySidebar = !this.displaySidebar;
     },
   },
   mounted: function () {

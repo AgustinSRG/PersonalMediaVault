@@ -21,7 +21,7 @@ export interface AlbumData {
 }
 
 export class AlbumsController {
-    public static Abums: { [id: string]: AlbumEntry } = Object.create(null);
+    public static Albums: { [id: string]: AlbumEntry } = Object.create(null);
 
     public static Loading = true;
 
@@ -47,13 +47,13 @@ export class AlbumsController {
 
         Timeouts.Abort("albums-load");
         Request.Pending("albums-load", AmbumsAPI.GetAlbums()).onSuccess(albums => {
-            AlbumsController.Abums = Object.create(null);
+            AlbumsController.Albums = Object.create(null);
 
             for (const album of albums) {
-                AlbumsController.Abums[album.id + ""] = album;
+                AlbumsController.Albums[album.id + ""] = album;
             }
 
-            AppEvents.Emit("albums-update", AlbumsController.Abums);
+            AppEvents.Emit("albums-update", AlbumsController.Albums);
             AlbumsController.Loading = false;
             AppEvents.Emit("albums-loading", false);
         }).onRequestError(err => {
@@ -133,5 +133,20 @@ export class AlbumsController {
             // Retry
             Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
         });
+    }
+
+    public static GetAlbumsListCopy() {
+        const result = [];
+
+        for (const album of Object.values(AlbumsController.Albums)) {
+            result.push({
+                id: album.id,
+                name: album.name,
+                nameLowerCase: album.name.toLowerCase(),
+                list: album.list.slice(),
+            })
+        }
+
+        return result;
     }
 }

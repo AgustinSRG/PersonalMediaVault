@@ -65,7 +65,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && (["home", "random", "albums"].includes(page))) {
+        if (page && (["home", "random", "albums", "upload"].includes(page))) {
             AppStatus.CurrentPage = page;
         } else {
             AppStatus.CurrentPage = "home";
