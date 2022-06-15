@@ -42,7 +42,7 @@
             <td class="bold">{{ m.name }}</td>
             <td>{{ renderSize(m.size) }}</td>
             <td>{{ renderStatus(m.status, m.progress, m.error) }}</td>
-            <td class="text-right">
+            <td class="text-right one-line">
               <button
                 v-if="
                   m.status === 'pending' ||
@@ -302,9 +302,9 @@ export default defineComponent({
         MediaAPI.GetMedia(m.mid)
       )
         .onSuccess((media) => {
+          m.busy = false;
           if (media.ready) {
             m.status = "ready";
-            m.busy = false;
           }
         })
         .onCancel(() => {

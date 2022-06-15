@@ -39,4 +39,8 @@ export default class App extends Vue {}
   text-align: left;
 }
 
+.one-line {
+  white-space: nowrap;
+}
+
 </style>
