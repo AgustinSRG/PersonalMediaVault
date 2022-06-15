@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/binary"
 	"errors"
+	"io"
 	"os"
 )
 
@@ -354,7 +355,7 @@ func (file *FileBlockEncryptReadStream) FetchBlock(block_num int64) error {
 // Normally reads until the buffer is full, unless the file ends
 func (file *FileBlockEncryptReadStream) Read(buf []byte) (int, error) {
 	if file.cur_pos >= file.file_size {
-		return 0, nil
+		return 0, io.EOF
 	}
 
 	filedLength := 0

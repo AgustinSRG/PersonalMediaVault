@@ -166,12 +166,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Ready = true
 		result.Encoded = true
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_ " + fmt.Sprint(media_id) + "." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension
 	} else if meta.OriginalReady {
 		result.Ready = true
 		result.Encoded = false
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_ " + fmt.Sprint(media_id) + "." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension
 	} else {
 		result.Ready = false
 		result.Encoded = false

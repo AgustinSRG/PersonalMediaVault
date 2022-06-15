@@ -167,10 +167,10 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	var finished bool = false
 	var bytesCopied int64 = 0
 
-	for finished {
+	for !finished {
 		c, err := s.Read(buf)
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 			f.Close()
@@ -187,8 +187,11 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 			return
 		}
 
-		if c == 0 {
+		if err == io.EOF {
 			finished = true
+		}
+
+		if c == 0 {
 			continue
 		}
 

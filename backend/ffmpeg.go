@@ -70,6 +70,7 @@ func ParseFrameRate(fr string) int32 {
 }
 
 func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
+	LogDebug("[FFPROBE] Probing " + file)
 	data, err := ffprobe.GetProbeData(file, 5*time.Second)
 
 	if err != nil {
@@ -139,8 +140,6 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
-	cmd.Dir = tempPath
-
 	args := make([]string, 1)
 
 	args[0] = FFMPEG_BINARY_PATH
@@ -167,7 +166,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-vf", videoFilter)
 
 	// MP4
-	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
+	args = append(args, "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -176,8 +175,6 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 
 func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
-
-	cmd.Dir = tempPath
 
 	args := make([]string, 1)
 
@@ -192,7 +189,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
 	// MP4
-	args = append(args, "-vcodec", "libx264", "-acodec", "aac", "video.mp4")
+	args = append(args, "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -201,8 +198,6 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 
 func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
-
-	cmd.Dir = tempPath
 
 	args := make([]string, 1)
 
@@ -219,7 +214,7 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-f", "mp3", "-vn") // Output format
 
 	// Playlist name
-	args = append(args, "audio.mp3")
+	args = append(args, tempPath+"/audio.mp3")
 
 	cmd.Args = args
 
@@ -228,8 +223,6 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 
 func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
-
-	cmd.Dir = tempPath
 
 	args := make([]string, 1)
 
@@ -250,7 +243,7 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 	args = append(args, "-vf", videoFilter)
 
 	// Playlist name
-	args = append(args, "image.png")
+	args = append(args, tempPath+"/image.png")
 
 	cmd.Args = args
 
@@ -259,8 +252,6 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 
 func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
-
-	cmd.Dir = tempPath
 
 	args := make([]string, 1)
 
@@ -275,7 +266,7 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
 	// Playlist name
-	args = append(args, "image.png")
+	args = append(args, tempPath+"/image.png")
 
 	cmd.Args = args
 
@@ -407,8 +398,6 @@ const (
 func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
-	cmd.Dir = tempPath
-
 	args := make([]string, 1)
 
 	args[0] = FFMPEG_BINARY_PATH
@@ -429,7 +418,7 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	args = append(args, "-vf", videoFilter)
 
 	// Playlist name
-	args = append(args, "thumb_%d.jpg")
+	args = append(args, tempPath+"/thumb_%d.jpg")
 
 	cmd.Args = args
 
@@ -445,6 +434,8 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	}
 
 	// Start the command
+
+	LogDebug("Running command: " + cmd.String())
 
 	err = cmd.Start()
 
@@ -463,10 +454,11 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 
 		if err != nil {
 			finished = true
-			continue
 		}
 
 		line = strings.ReplaceAll(line, "\r", "")
+
+		LogDebug("[FFMPEG] " + line)
 
 		if !strings.HasPrefix(line, "frame=") {
 			continue // Not a progress line
