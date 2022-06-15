@@ -49,17 +49,13 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		return
 	}
 
-	// Wait for the original asset to be ready
+	// Original asset must be ready for the task, not ready means broken media
 	for !meta.OriginalReady {
-		meta, err = media.ReadMetadata(task.session.key)
+		LogTaskError(task.definition.Id, "Error: Media not ready, but task was somehow started")
 
-		if err != nil {
-			LogTaskError(task.definition.Id, "Error: "+err.Error())
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-
-			return
-		}
+		return
 	}
 
 	if meta.OriginalEncoded {

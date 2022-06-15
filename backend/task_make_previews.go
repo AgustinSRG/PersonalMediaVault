@@ -77,8 +77,9 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 	// Check metadata
 
-	if !meta.OriginalReady {
-		LogTaskError(task.definition.Id, "Error: Original is not ready yet.")
+	// Original asset must be ready for the task, not ready means broken media
+	for !meta.OriginalReady {
+		LogTaskError(task.definition.Id, "Error: Media not ready, but task was somehow started")
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
