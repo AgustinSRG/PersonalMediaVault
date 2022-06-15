@@ -65,7 +65,6 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 
 		result = append(result, header...)
 		result = append(result, ciphertext...)
-
 	} else if method == AES256_FLAT {
 		// Include pre-encryption size to the header
 		header := make([]byte, 20)

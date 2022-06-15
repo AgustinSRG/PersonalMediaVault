@@ -63,7 +63,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	// Write to temp file
 
-	f, err := os.OpenFile(tempFile, os.O_WRONLY, FILE_PERMISSION)
+	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE, FILE_PERMISSION)
 
 	if err != nil {
 		LogError(err)
@@ -88,8 +88,11 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 			return
 		}
 
-		if n <= 0 || err == io.EOF {
+		if err == io.EOF {
 			finished = true
+		}
+
+		if n == 0 {
 			continue
 		}
 
@@ -223,7 +226,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	meta.ThumbnailAsset = thumb_asset
 
 	// Save
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, false)
 
 	if err != nil {
 		LogError(err)

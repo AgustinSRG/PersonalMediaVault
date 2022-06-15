@@ -166,12 +166,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Ready = true
 		result.Encoded = true
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/video." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_ " + fmt.Sprint(media_id) + "." + meta.OriginalExtension
 	} else if meta.OriginalReady {
 		result.Ready = true
 		result.Encoded = false
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/video." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_ " + fmt.Sprint(media_id) + "." + meta.OriginalExtension
 	} else {
 		result.Ready = false
 		result.Encoded = false
@@ -293,7 +293,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 	meta.Title = p.Title
 
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, false)
 
 	if err != nil {
 		LogError(err)
@@ -372,7 +372,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 
 	meta.Description = p.Description
 
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, false)
 
 	if err != nil {
 		LogError(err)
@@ -412,7 +412,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	meta, err := media.StartWrite(session.key)
+	meta, err := media.StartWriteWithFullLock(session.key)
 
 	if err != nil {
 		LogError(err)
@@ -480,7 +480,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		}
 	}
 
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, true)
 
 	if err != nil {
 		LogError(err)
@@ -544,7 +544,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	meta, err := media.StartWrite(session.key)
+	meta, err := media.StartWriteWithFullLock(session.key)
 
 	if err != nil {
 		LogError(err)
@@ -606,7 +606,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 
 	meta.Resolutions = append(meta.Resolutions, resolution)
 
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, true)
 
 	if err != nil {
 		LogError(err)
@@ -682,7 +682,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	meta, err := media.StartWrite(session.key)
+	meta, err := media.StartWriteWithFullLock(session.key)
 
 	if err != nil {
 		LogError(err)
@@ -732,7 +732,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 		meta.RemoveResolution(res_index)
 	}
 
-	err = media.EndWrite(meta, session.key)
+	err = media.EndWrite(meta, session.key, true)
 
 	if err != nil {
 		LogError(err)

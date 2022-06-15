@@ -104,7 +104,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
-	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_MUTI_FILE)
+	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_SINGLE_FILE)
 
 	if !found {
 		GetVault().media.ReleaseMediaResource(media_id)
@@ -125,7 +125,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if start >= s.file_size || end >= s.file_size || end <= start {
+	if start >= s.file_size || end >= s.file_size || end < start {
 		// Invalid range
 		s.Close()
 

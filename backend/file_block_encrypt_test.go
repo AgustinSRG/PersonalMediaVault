@@ -39,7 +39,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 		panic(err)
 	}
 
-	buf := make([]byte, 1*1024*1024)
+	buf := make([]byte, 269*1024)
 
 	for j := 0; j < len(buf); j++ {
 		buf[j] = 'A'
@@ -80,7 +80,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 		t.Errorf("Expected block_count = (%d), but got (%d)", ws.block_count, rs.block_count)
 	}
 
-	buf2 := make([]byte, 1*1024*1024)
+	buf2 := make([]byte, 269*1024)
 
 	for i := 0; i < 48; i++ {
 		n, err := rs.Read(buf2)

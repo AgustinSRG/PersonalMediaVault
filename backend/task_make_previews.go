@@ -501,7 +501,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	metaToWrite.PreviewsInterval = PREVIEWS_INTERVAL_SECONDS
 	metaToWrite.PreviewsTask = 0
 
-	err = media.EndWrite(metaToWrite, task.session.key)
+	err = media.EndWrite(metaToWrite, task.session.key, false)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())

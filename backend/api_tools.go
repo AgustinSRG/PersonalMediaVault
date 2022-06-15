@@ -195,8 +195,11 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 			return "", err
 		}
 
-		if c == 0 {
+		if err == io.EOF {
 			finished = true
+		}
+
+		if c == 0 {
 			continue
 		}
 

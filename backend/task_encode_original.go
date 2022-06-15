@@ -49,12 +49,17 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		return
 	}
 
-	if !meta.OriginalReady {
-		LogTaskError(task.definition.Id, "Error: Original is not ready yet.")
+	// Wait for the original asset to be ready
+	for !meta.OriginalReady {
+		meta, err = media.ReadMetadata(task.session.key)
 
-		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+		if err != nil {
+			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-		return
+			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+			return
+		}
 	}
 
 	if meta.OriginalEncoded {
@@ -371,8 +376,11 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 			return
 		}
 
-		if c == 0 {
+		if err == io.EOF {
 			finished = true
+		}
+
+		if c == 0 {
 			continue
 		}
 
@@ -471,7 +479,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	metaToWrite.OriginalExtension = encoded_ext
 	metaToWrite.OriginalTask = 0
 
-	err = media.EndWrite(metaToWrite, task.session.key)
+	err = media.EndWrite(metaToWrite, task.session.key, false)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())

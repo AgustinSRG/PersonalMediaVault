@@ -96,6 +96,13 @@ type MediaMetadata struct {
 }
 
 func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64, width int32, height int32, fps int32) error {
+	// Create the folder
+	err := os.MkdirAll(media.path, FOLDER_PERMISSION)
+
+	if err != nil {
+		LogError(err)
+	}
+
 	now := time.Now().UnixMilli()
 
 	meta := MediaMetadata{
@@ -203,7 +210,14 @@ func (media *MediaAsset) StartWrite(key []byte) (*MediaMetadata, error) {
 	return media.readData(key)
 }
 
-func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte) error {
+func (media *MediaAsset) StartWriteWithFullLock(key []byte) (*MediaMetadata, error) {
+	media.lock.RequestWrite() // Request write
+	media.lock.StartWrite()
+
+	return media.readData(key)
+}
+
+func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock bool) error {
 	defer media.lock.EndWrite()
 
 	jsonData, err := json.Marshal(data)
@@ -229,9 +243,13 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte) error {
 	}
 
 	// Save to original file
-	media.lock.StartWrite()
+	if !hasFullLock {
+		media.lock.StartWrite()
+	}
 
 	err = os.Rename(tmpFile, path.Join(media.path, "meta.pmv"))
+
+	LogDebug("WRITE META: " + string(jsonData))
 
 	return err
 }

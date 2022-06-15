@@ -390,8 +390,11 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 			return
 		}
 
-		if c == 0 {
+		if err == io.EOF {
 			finished = true
+		}
+
+		if c == 0 {
 			continue
 		}
 
@@ -510,7 +513,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	resToWrite.Extension = encoded_ext
 	resToWrite.TaskId = 0
 
-	err = media.EndWrite(metaToWrite, task.session.key)
+	err = media.EndWrite(metaToWrite, task.session.key, false)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())

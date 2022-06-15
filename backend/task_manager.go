@@ -233,6 +233,7 @@ func (tm *TaskManager) RunTask(task *ActiveTask) {
 
 	delete(tm.tasks, task.definition.Id)
 	delete(tm.pending_tasks.Pending, task.definition.Id)
+	tm.running_count--
 
 	tm.lock.Unlock()
 

@@ -115,7 +115,7 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 		if meta != nil {
 			meta.AddTag(tag_id)
 
-			err = media.EndWrite(meta, session.key)
+			err = media.EndWrite(meta, session.key, false)
 
 			GetVault().media.ReleaseMediaResource(p.Media)
 
@@ -204,7 +204,7 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 		if meta != nil {
 			meta.RemoveTag(p.Tag)
 
-			err = media.EndWrite(meta, session.key)
+			err = media.EndWrite(meta, session.key, false)
 
 			GetVault().media.ReleaseMediaResource(p.Media)
 

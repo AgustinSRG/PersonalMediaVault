@@ -37,6 +37,38 @@ type FFprobeMediaResult struct {
 	Fps      int32
 }
 
+func ParseFrameRate(fr string) int32 {
+	if fr == "" {
+		return 0
+	}
+	parts := strings.Split(fr, "/")
+	if len(parts) == 2 {
+		n, err := strconv.Atoi(parts[0])
+
+		if err != nil {
+			return 0
+		}
+
+		n2, err := strconv.Atoi(parts[1])
+
+		if err != nil || n2 == 0 {
+			return 0
+		}
+
+		return int32(n) / int32(n2)
+	} else if len(parts) == 1 {
+		n, err := strconv.Atoi(parts[0])
+
+		if err != nil {
+			return 0
+		}
+
+		return int32(n)
+	} else {
+		return 0
+	}
+}
+
 func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	data, err := ffprobe.GetProbeData(file, 5*time.Second)
 
@@ -50,7 +82,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	audioStream := data.GetFirstAudioStream()
 
 	if videoStream != nil {
-		if videoStream.Duration == "" {
+		if videoStream.Duration == "" || videoStream.DurationTs <= 1 {
 			// Image
 			result := FFprobeMediaResult{
 				Type:     MediaTypeImage,
@@ -76,7 +108,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 				Duration: duration,
 				Width:    int32(videoStream.Width),
 				Height:   int32(videoStream.Height),
-				Fps:      0,
+				Fps:      ParseFrameRate(videoStream.AvgFrameRate),
 			}
 
 			return &result, nil
