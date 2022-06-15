@@ -75,6 +75,10 @@ export class AuthController {
             if (AuthController.Session === currentSession) {
                 AuthController.ClearSession();
             }
+        }).onRequestError(() => {
+            if (AuthController.Session === currentSession) {
+                AuthController.ClearSession();
+            }
         });
     }
 

@@ -6,10 +6,10 @@
       <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage"><i class="fas fa-times"></i></button>
     </div>
 
-    <PageHome v-if="page === 'home'"></PageHome>
-    <PageUpload v-if="page === 'upload'"></PageUpload>
-    <PageRandom v-if="page === 'random'"></PageRandom>
-    <PageAlbums v-if="page === 'albums'"></PageAlbums>
+    <PageHome :display="page === 'home'"></PageHome>
+    <PageUpload :display="page === 'upload'"></PageUpload>
+    <PageRandom :display="page === 'random'"></PageRandom>
+    <PageAlbums :display="page === 'albums'"></PageAlbums>
   </div>
 </template>
 
@@ -182,6 +182,14 @@ export default defineComponent({
 
 .layout-media-split .page-title {
   width: calc(100% - 48px - 48px);
+}
+
+.page-inner {
+  padding: 1rem;
+}
+
+.page-inner.hidden {
+  display: none;
 }
 
 </style>

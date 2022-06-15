@@ -1,5 +1,5 @@
 <template>
-  <div class="page-inner">
+  <div class="page-inner" :class="{hidden: !display}">
     
   </div>
 </template>
@@ -9,6 +9,9 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "PageAlbums",
+  props: {
+    display: Boolean,
+  },
   data: function () {
     return {};
   },
