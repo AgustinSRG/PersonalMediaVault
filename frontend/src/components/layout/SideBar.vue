@@ -161,6 +161,7 @@ export default defineComponent({
 
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
 
+    this.updateStatus();
     this.updateAlbums();
   },
   beforeUnmount: function () {

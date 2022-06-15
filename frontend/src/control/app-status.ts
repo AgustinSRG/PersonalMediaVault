@@ -222,4 +222,10 @@ export class AppStatus {
 
         AppStatus.OnStatusUpdate();
     }
+
+    public static ClosePage() {
+        AppStatus.CurrentFocus = "content";
+        AppStatus.ListSplitMode = false;
+        AppStatus.OnStatusUpdate();
+    }
 }

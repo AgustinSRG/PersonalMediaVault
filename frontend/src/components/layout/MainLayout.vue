@@ -10,6 +10,8 @@
       'sidebar-hidden': !displaySidebar,
     }"
   >
+    <PageContent></PageContent>
+
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
     <SideBar v-model:display="displaySidebar"></SideBar>
 
@@ -37,6 +39,7 @@ import { defineComponent } from "vue";
 
 import TopBar from "./TopBar.vue";
 import SideBar from "./SideBar.vue";
+import PageContent from "./PageContent.vue";
 import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
@@ -59,6 +62,7 @@ export default defineComponent({
   components: {
     TopBar,
     SideBar,
+    PageContent,
     LoadingOverlay,
     LoginModal,
     LogoutModal,
