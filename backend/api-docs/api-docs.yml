@@ -1032,6 +1032,9 @@ paths:
                     type: number
                     format: int64
                     description: Media ID
+                thumbnail:
+                  type: string
+                  description: Thumbnail for the album (of the first media)
                     
     post:
       summary: Create album

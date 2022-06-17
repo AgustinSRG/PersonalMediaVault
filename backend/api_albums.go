@@ -11,9 +11,10 @@ import (
 )
 
 type AlbumAPIItem struct {
-	Id   uint64   `json:"id"`
-	Name string   `json:"name"`
-	List []uint64 `json:"list"`
+	Id        uint64   `json:"id"`
+	Name      string   `json:"name"`
+	List      []uint64 `json:"list"`
+	Thumbnail string   `json:"thumbnail"` // This thumbnail is from the first media asset in the album
 }
 
 func api_getAlbums(response http.ResponseWriter, request *http.Request) {
@@ -36,10 +37,18 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 	result := make([]AlbumAPIItem, 0)
 
 	for album_id, album := range albums.Albums {
+		thumbnail := ""
+
+		if len(album.List) > 0 {
+			media_info := GetMediaMinInfo(album.List[0], session)
+			thumbnail = media_info.Thumbnail
+		}
+
 		result = append(result, AlbumAPIItem{
-			Id:   album_id,
-			Name: album.Name,
-			List: album.List,
+			Id:        album_id,
+			Name:      album.Name,
+			List:      album.List,
+			Thumbnail: thumbnail,
 		})
 	}
 
