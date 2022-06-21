@@ -3,3 +3,4 @@ frontend/public/testvid/*.mp4
 frontend/public/testvid/*.mp3
 frontend/public/testvid/*.png
 frontend/public/testvid/*.jpg
+frontend/test.js

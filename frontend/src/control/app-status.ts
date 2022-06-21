@@ -15,6 +15,8 @@ export class AppStatus {
 
     public static CurrentSearch = "";
 
+    public static SearchParams = "";
+
     public static ListSplitMode = true;
 
     public static CurrentMedia = -1;
@@ -79,6 +81,14 @@ export class AppStatus {
             AppStatus.CurrentSearch = "";
         }
 
+        const searchParams = getParameterByName("sparams");
+
+        if (searchParams) {
+            AppStatus.SearchParams = searchParams;
+        } else {
+            AppStatus.SearchParams = "";
+        }
+
         const split = getParameterByName("split");
 
         AppStatus.ListSplitMode = (split === "yes");
@@ -123,6 +133,10 @@ export class AppStatus {
             params["search"] = AppStatus.CurrentSearch;
         }
 
+        if (AppStatus.SearchParams) {
+            params["sparams"] = AppStatus.SearchParams;
+        }
+
         if (AppStatus.ListSplitMode) {
             params["split"] = "yes";
         }
@@ -150,6 +164,7 @@ export class AppStatus {
 
     public static GoToPage(page: string) {
         AppStatus.CurrentPage = page;
+        AppStatus.CurrentSearch = "";
 
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
@@ -227,5 +242,47 @@ export class AppStatus {
         AppStatus.CurrentFocus = "content";
         AppStatus.ListSplitMode = false;
         AppStatus.OnStatusUpdate();
+    }
+
+    public static ChangeSearchParams(params: string) {
+        AppStatus.SearchParams = params;
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static PackSearchParams(page: number, pageSize: number, order: string): string {
+        if (page === 0 && pageSize === 50 && order === "desc") {
+            return "";
+        }
+        return page + "," + pageSize + "," + order;
+    }
+
+    public static UnPackSearchParams(params: string): {page: number, pageSize: number, order: string} {
+        const res = {
+            page: 0,
+            pageSize: 50,
+            order: "desc",
+        };
+
+        if (params) {
+            const spl = params.split(",");
+            res.page = parseInt(spl[0], 10) || 0;
+            if (res.page < 0) {
+                res.page = 0;
+            }
+
+            res.pageSize = parseInt(spl[1], 10) || 0;
+            if (res.pageSize <= 0) {
+                res.pageSize = 50;
+            }
+
+            res.order = spl[2] || "desc";
+
+            if (res.order !== "desc" && res.order !== "asc") {
+                res.order = "desc";
+            }
+        }
+
+        return res;
     }
 }
