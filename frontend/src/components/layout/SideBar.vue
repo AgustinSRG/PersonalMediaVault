@@ -107,6 +107,7 @@ export default defineComponent({
     return {
       page: AppStatus.CurrentPage,
       album: AppStatus.CurrentAlbum,
+      layout: AppStatus.CurrentLayout,
 
       albums: [],
     };
@@ -117,12 +118,16 @@ export default defineComponent({
     },
 
     updateStatus: function () {
-      this.page = AppStatus.CurrentPage;
-      this.album = AppStatus.CurrentAlbum;
-
       if (AppStatus.CurrentLayout !== "initial") {
         this.displayStatus = false;
+      } else if (this.layout !== "initial") {
+        this.displayStatus = true;
       }
+
+      this.layout = AppStatus.CurrentLayout;
+
+      this.page = AppStatus.CurrentPage;
+      this.album = AppStatus.CurrentAlbum;
     },
 
     goToPage: function (p) {

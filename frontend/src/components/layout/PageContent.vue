@@ -102,12 +102,44 @@ export default defineComponent({
   height: calc(100% - 57px);
   left: 240px;
   width: calc(100% - 240px);
+  overflow: auto;
 }
 
-.layout-media-split .page-content {
+.sidebar-hidden .page-content {
+  left: 0;
+  width: 100%;
+}
+
+/* Custom scroll bar */
+
+
+/* width */
+
+.page-content::-webkit-scrollbar {
+    width: 5px;
+    height: 3px;
+}
+
+
+/* Track */
+
+.page-content::-webkit-scrollbar-track {
+    background: #bdbdbd;
+}
+
+
+/* Handle */
+
+.page-content::-webkit-scrollbar-thumb {
+    background: #757575;
+}
+
+.layout-media-split .page-content,
+.sidebar-hidden .layout-media-split .page-content {
   left: auto;
   right: 0;
   width: 400px;
+  border-left: solid 1px rgba(255, 255, 255, 0.1);
 }
 
 .layout-album .page-content {
