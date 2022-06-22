@@ -113,30 +113,6 @@ export default defineComponent({
   width: 100%;
 }
 
-/* Custom scroll bar */
-
-
-/* width */
-
-.page-content::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
-}
-
-
-/* Track */
-
-.page-content::-webkit-scrollbar-track {
-    background: #bdbdbd;
-}
-
-
-/* Handle */
-
-.page-content::-webkit-scrollbar-thumb {
-    background: #757575;
-}
-
 .layout-media-split .page-content,
 .sidebar-hidden .layout-media-split .page-content {
   left: auto;
@@ -225,6 +201,30 @@ export default defineComponent({
 
 .page-inner.hidden {
   display: none;
+}
+
+/* Custom scroll bar */
+
+
+/* width */
+
+.page-content::-webkit-scrollbar {
+    width: 5px;
+    height: 3px;
+}
+
+
+/* Track */
+
+.page-content::-webkit-scrollbar-track {
+    background: #bdbdbd;
+}
+
+
+/* Handle */
+
+.page-content::-webkit-scrollbar-thumb {
+    background: #757575;
 }
 
 </style>

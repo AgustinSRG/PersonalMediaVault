@@ -14,7 +14,7 @@
           <b>{{ $t("Loop") }}</b>
         </td>
         <td class="td-right">
-          <player-switch v-model:val="loopState"></player-switch>
+          <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
         </td>
       </tr>
       <tr class="tr-button" tabindex="0" @click="goToSpeeds">

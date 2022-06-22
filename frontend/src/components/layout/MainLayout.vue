@@ -4,6 +4,7 @@
     :class="{
       'light-theme': theme !== 'dark',
       'dark-theme': theme === 'dark',
+      'layout-initial': layout === 'initial',
       'layout-album': layout === 'album',
       'layout-media-split': layout === 'media-split',
       'layout-media': layout === 'media',
@@ -11,6 +12,7 @@
     }"
   >
     <PageContent :min="layout === 'media-split'"></PageContent>
+    <PlayerContainer></PlayerContainer>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
     <SideBar v-model:display="displaySidebar"></SideBar>
@@ -40,6 +42,7 @@ import { defineComponent } from "vue";
 import TopBar from "./TopBar.vue";
 import SideBar from "./SideBar.vue";
 import PageContent from "./PageContent.vue";
+import PlayerContainer from "./PlayerContainer.vue";
 import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
@@ -63,6 +66,7 @@ export default defineComponent({
     TopBar,
     SideBar,
     PageContent,
+    PlayerContainer,
     LoadingOverlay,
     LoginModal,
     LogoutModal,

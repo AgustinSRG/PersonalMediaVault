@@ -322,6 +322,7 @@ import { renderTimeSeconds } from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import { GetAssetURL } from "@/utils/request";
 
 export default defineComponent({
   components: {
@@ -871,7 +872,7 @@ export default defineComponent({
       }
 
       if (this.metadata.encoded) {
-        this.audioURL = this.metadata.url;
+        this.audioURL = GetAssetURL(this.metadata.url);
         this.audioPending = false;
         this.audioPendingTask = 0;
       } else {

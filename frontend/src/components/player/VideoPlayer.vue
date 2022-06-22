@@ -327,6 +327,7 @@ import { renderTimeSeconds } from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import { GetAssetURL } from "@/utils/request";
 
 export default defineComponent({
   components: {
@@ -905,7 +906,7 @@ export default defineComponent({
 
       if (this.currentResolution < 0) {
         if (this.metadata.encoded) {
-          this.videoURL = this.metadata.url;
+          this.videoURL = GetAssetURL(this.metadata.url);
           this.videoPending = false;
           this.videoPendingTask = 0;
         } else {
@@ -922,7 +923,7 @@ export default defineComponent({
         ) {
           let res = this.metadata.resolutions[this.currentResolution];
           if (res.ready) {
-            this.videoURL = res.url;
+            this.videoURL = GetAssetURL(res.url);
             this.videoPending = false;
             this.videoPendingTask = 0;
           } else {

@@ -221,6 +221,7 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import { GetAssetURL } from "@/utils/request";
 
 export default defineComponent({
   components: {
@@ -651,7 +652,7 @@ export default defineComponent({
 
       if (this.currentResolution < 0) {
         if (this.metadata.encoded) {
-          this.imageURL = this.metadata.url;
+          this.imageURL = GetAssetURL(this.metadata.url);
           this.imagePending = false;
           this.imagePendingTask = 0;
           this.width = this.metadata.width;
@@ -669,7 +670,7 @@ export default defineComponent({
         ) {
           let res = this.metadata.resolutions[this.currentResolution];
           if (res.ready) {
-            this.imageURL = res.url;
+            this.imageURL = GetAssetURL(res.url);
             this.imagePending = false;
             this.imagePendingTask = 0;
             this.width = res.width;
