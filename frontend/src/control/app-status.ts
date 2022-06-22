@@ -251,7 +251,7 @@ export class AppStatus {
     }
 
     public static PackSearchParams(page: number, pageSize: number, order: string): string {
-        if (page === 0 && pageSize === 50 && order === "desc") {
+        if (page === 0 && pageSize === 25 && order === "desc") {
             return "";
         }
         return page + "," + pageSize + "," + order;
@@ -260,7 +260,7 @@ export class AppStatus {
     public static UnPackSearchParams(params: string): {page: number, pageSize: number, order: string} {
         const res = {
             page: 0,
-            pageSize: 50,
+            pageSize: 25,
             order: "desc",
         };
 
@@ -273,7 +273,7 @@ export class AppStatus {
 
             res.pageSize = parseInt(spl[1], 10) || 0;
             if (res.pageSize <= 0) {
-                res.pageSize = 50;
+                res.pageSize = 25;
             }
 
             res.order = spl[2] || "desc";

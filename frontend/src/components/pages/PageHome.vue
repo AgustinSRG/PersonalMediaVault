@@ -12,8 +12,10 @@
       <div v-if="loading" class="search-results-loading-display">
         <div v-for="f in loadingFiller" :key="f" class="search-result-item">
           <div class="search-result-thumb">
-            <div class="search-result-loader">
-              <i class="fa fa-spinner fa-spin"></i>
+            <div class="search-result-thumb-inner">
+              <div class="search-result-loader">
+                <i class="fa fa-spinner fa-spin"></i>
+              </div>
             </div>
           </div>
           <div class="search-result-title">{{ $t("Loading") }}...</div>
@@ -44,17 +46,19 @@
             class="search-result-thumb"
             :title="item.title || $t('Untitled')"
           >
-            <div v-if="!item.thumbnail" class="no-thumb">
-              <i v-if="item.type === 1" class="fas fa-image"></i>
-              <i v-else-if="item.type === 2" class="fas fa-video"></i>
-              <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-              <i v-else class="fas fa-ban"></i>
+            <div class="search-result-thumb-inner">
+              <div v-if="!item.thumbnail" class="no-thumb">
+                <i v-if="item.type === 1" class="fas fa-image"></i>
+                <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                <i v-else class="fas fa-ban"></i>
+              </div>
+              <img
+                v-if="item.thumbnail"
+                :src="getThumbnail(item.thumbnail)"
+                :alt="item.title || $t('Untitled')"
+              />
             </div>
-            <img
-              v-if="item.thumbnail"
-              :src="getThumbnail(item.thumbnail)"
-              :alt="item.title || $t('Untitled')"
-            />
           </div>
           <div class="search-result-title">
             {{ item.title || $t("Untitled") }}
@@ -81,8 +85,8 @@
             v-model="order"
             @change="onOrderChanged"
           >
-          <option :value="'desc'">{{$t('Show most recent')}}</option>
-          <option :value="'asc'">{{$t('Show oldest')}}</option>
+            <option :value="'desc'">{{ $t("Show most recent") }}</option>
+            <option :value="'asc'">{{ $t("Show oldest") }}</option>
           </select>
         </div>
         <div class="search-results-option text-right">
@@ -91,16 +95,9 @@
             v-model="pageSize"
             @change="onPageSizeChanged"
           >
-          <option :value="10">10 {{$t('items per page')}}</option>
-         <option :value="20">20 {{$t('items per page')}}</option>
-         <option :value="30">30 {{$t('items per page')}}</option>
-         <option :value="40">40 {{$t('items per page')}}</option>
-         <option :value="50">50 {{$t('items per page')}}</option>
-         <option :value="60">60 {{$t('items per page')}}</option>
-         <option :value="70">70 {{$t('items per page')}}</option>
-         <option :value="80">80 {{$t('items per page')}}</option>
-         <option :value="90">90 {{$t('items per page')}}</option>
-          <option :value="100">100 {{$t('items per page')}}</option>
+            <option v-for="po in pageSizeOptions" :key="po" :value="po">
+              {{ po }} {{ $t("items per page") }}
+            </option>
           </select>
         </div>
       </div>
@@ -144,6 +141,8 @@ export default defineComponent({
       pageItems: [],
 
       loadingFiller: [],
+
+      pageSizeOptions: [],
     };
   },
   methods: {
@@ -270,6 +269,10 @@ export default defineComponent({
       this.$options.statusChangeH
     );
 
+    for (let i = 1; i <= 20; i++) {
+      this.pageSizeOptions.push(5 * i);
+    }
+
     this.updateSearchParams();
     this.load();
   },
@@ -309,7 +312,8 @@ export default defineComponent({
 }
 
 .search-result-item {
-  width: 232px;
+  min-width: 232px;
+  width: 20%;
   padding: 24px;
 }
 
@@ -322,8 +326,15 @@ export default defineComponent({
 }
 
 .search-result-thumb {
-  width: 184px;
-  height: 184px;
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+}
+
+.search-result-thumb-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   border-radius: 4px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.1);
@@ -390,6 +401,6 @@ export default defineComponent({
 
 .search-results-option {
   width: 50%;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 24px 0.5rem 24px;
 }
 </style>
