@@ -1,7 +1,7 @@
 <template>
   <div class="paginated-menu" :class="{ 'menu-min': min }">
     <button
-      v-if="page > 0"
+      :disabled="page <= 0"
       type="button"
       class="paginated-menu-btn paginated-menu-btn-edge"
       @click="clickPage(page - 1)"
@@ -23,7 +23,7 @@
     </button>
 
     <button
-      v-if="page < pages - 1"
+      :disabled="page >= pages - 1"
       type="button"
       class="paginated-menu-btn paginated-menu-btn-edge"
       @click="clickPage(page + 1)"

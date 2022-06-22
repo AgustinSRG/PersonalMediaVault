@@ -138,7 +138,7 @@ export default defineComponent({
 .sidebar-hidden .layout-media-split .page-content {
   left: auto;
   right: 0;
-  width: 400px;
+  width: 500px;
   border-left: solid 1px rgba(255, 255, 255, 0.1);
 }
 
@@ -216,7 +216,7 @@ export default defineComponent({
   width: calc(100% - 48px - 48px);
 }
 
-.page-inner {
+.page-inner-padded {
   padding: 1rem;
 }
 

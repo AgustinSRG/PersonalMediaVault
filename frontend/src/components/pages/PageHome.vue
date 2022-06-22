@@ -69,6 +69,41 @@
         :min="min"
         @goto="changePage"
       ></PageMenu>
+
+      <div v-if="total > 0" class="search-results-total">
+        {{ $t("Total") }}: {{ total }}
+      </div>
+
+      <div v-if="total > 0" class="search-results-options">
+        <div class="search-results-option">
+          <select
+            class="form-control form-select form-control-full-width"
+            v-model="order"
+            @change="onOrderChanged"
+          >
+          <option :value="'desc'">{{$t('Show most recent')}}</option>
+          <option :value="'asc'">{{$t('Show oldest')}}</option>
+          </select>
+        </div>
+        <div class="search-results-option text-right">
+          <select
+            class="form-control form-select form-control-full-width"
+            v-model="pageSize"
+            @change="onPageSizeChanged"
+          >
+          <option :value="10">10 {{$t('items per page')}}</option>
+         <option :value="20">20 {{$t('items per page')}}</option>
+         <option :value="30">30 {{$t('items per page')}}</option>
+         <option :value="40">40 {{$t('items per page')}}</option>
+         <option :value="50">50 {{$t('items per page')}}</option>
+         <option :value="60">60 {{$t('items per page')}}</option>
+         <option :value="70">70 {{$t('items per page')}}</option>
+         <option :value="80">80 {{$t('items per page')}}</option>
+         <option :value="90">90 {{$t('items per page')}}</option>
+          <option :value="100">100 {{$t('items per page')}}</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -154,6 +189,19 @@ export default defineComponent({
           // Retry
           Timeouts.Set("page-home-load", 1500, this.$options.loadH);
         });
+    },
+
+    onOrderChanged: function () {
+      this.page = 0;
+      this.load();
+      this.onSearchParamsChanged();
+    },
+
+    onPageSizeChanged: function () {
+      this.updateLoadingFiller();
+      this.page = 0;
+      this.load();
+      this.onSearchParamsChanged();
     },
 
     onAppStatusChanged: function () {
@@ -252,13 +300,13 @@ export default defineComponent({
 .search-results-loading-display {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: center;
 }
 
 .search-results-final-display {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: center;
 }
 
 .search-result-item {
@@ -324,5 +372,24 @@ export default defineComponent({
 
 .search-results-msg-btn {
   padding-top: 1rem;
+}
+
+.search-results-total {
+  padding-top: 0.5rem;
+  font-size: small;
+  text-align: center;
+}
+
+.search-results-options {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.search-results-option {
+  width: 50%;
+  padding: 0.5rem 1rem;
 }
 </style>

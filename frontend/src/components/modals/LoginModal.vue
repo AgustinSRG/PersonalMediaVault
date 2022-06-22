@@ -333,35 +333,4 @@ export default defineComponent({
 .modal-footer-btn:focus {
   outline: none;
 }
-
-.form-group {
-  padding-bottom: 0.75rem;
-}
-
-.form-group label {
-  display: block;
-  width: 100%;
-  padding-bottom: 0.3rem;
-}
-
-.form-control {
-    outline: none;
-    padding: 6px 12px;
-    font-size: 14px;
-    line-height: 1.42857143;
-    color: #fff;
-    background: hsl(0, 0%, 7%);
-    border: none;
-    box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
-    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
-}
-
-.form-control-full-width {
-  width: 100%;
-}
-
-.form-error {
-  color: red;
-}
-
 </style>

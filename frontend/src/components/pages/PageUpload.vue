@@ -1,5 +1,5 @@
 <template>
-  <div class="page-inner" :class="{ hidden: !display }">
+  <div class="page-inner page-inner-padded" :class="{ hidden: !display }">
     <input
       type="file"
       class="file-hidden"
