@@ -20,7 +20,7 @@ import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
-  name: "PlayerSwitch",
+  name: "ToggleSwitch",
   emits: ["update:val"],
   props: {
     val: Boolean,

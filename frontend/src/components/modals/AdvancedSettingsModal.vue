@@ -80,7 +80,7 @@
                 <tr v-for="res in resolutions" :key="res.name">
                   <td class="bold">{{res.name}}</td>
                   <td>{{res.width}}x{{res.height}}, {{res.fps}} fps</td>
-                  <td class="text-right"><PlayerSwitch v-model:val="res.enabled"></PlayerSwitch></td>
+                  <td class="text-right"><ToggleSwitch v-model:val="res.enabled"></ToggleSwitch></td>
                 </tr>
               </tbody>
             </table>
@@ -107,7 +107,7 @@
                 <tr v-for="res in imageResolutions" :key="res.name">
                   <td class="bold">{{res.name}}</td>
                   <td>{{res.width}}x{{res.height}}</td>
-                  <td class="text-right"><PlayerSwitch v-model:val="res.enabled"></PlayerSwitch></td>
+                  <td class="text-right"><ToggleSwitch v-model:val="res.enabled"></ToggleSwitch></td>
                 </tr>
               </tbody>
             </table>
@@ -131,11 +131,11 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
-import PlayerSwitch from "../player/PlayerSwitch.vue"
+import ToggleSwitch from "../utils/ToggleSwitch.vue"
 
 export default defineComponent({
   components: {
-    PlayerSwitch,
+    ToggleSwitch,
   },
   name: "AdvancedSettingsModal",
   emits: ["update:display"],

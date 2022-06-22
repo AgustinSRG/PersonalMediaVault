@@ -94,10 +94,10 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
-import PlayerSwitch from "./PlayerSwitch.vue";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
-  components: { PlayerSwitch },
+  components: { ToggleSwitch },
   name: "AudioPlayerConfig",
   emits: [
     "update:shown",
