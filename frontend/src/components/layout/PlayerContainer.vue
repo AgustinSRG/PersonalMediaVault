@@ -1,9 +1,9 @@
 <template>
   <div class="player-container">
-    <EmptyPlayer v-if="!mdata || mdata.type === 0" :mid="mid" :status="status" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev"></EmptyPlayer>
-    <ImagePlayer v-if="mdata && mdata.type === 1" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev"></ImagePlayer>
-    <VideoPlayer v-if="mdata && mdata.type === 2" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev"></VideoPlayer>
-    <AudioPlayer v-if="mdata && mdata.type === 3" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev"></AudioPlayer>
+    <EmptyPlayer v-if="!mdata || mdata.type === 0" :mid="mid" :status="status" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></EmptyPlayer>
+    <ImagePlayer v-if="mdata && mdata.type === 1" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen" v-model:showcontrols="showControls"></ImagePlayer>
+    <VideoPlayer v-if="mdata && mdata.type === 2" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></VideoPlayer>
+    <AudioPlayer v-if="mdata && mdata.type === 3" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></AudioPlayer>
   </div>
 </template>
 
@@ -32,6 +32,9 @@ export default defineComponent({
       loading: MediaController.Loading,
       mid: MediaController.MediaId,
       mdata: MediaController.MediaData,
+
+      fullScreen: false,
+      showControls: true,
 
       prev: null,
       next: null,

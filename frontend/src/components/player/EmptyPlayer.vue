@@ -4,7 +4,7 @@
     class="empty-player"
     :class="{
       'player-min': minPlayer,
-      'full-screen': fullScreen,
+      'full-screen': fullscreen,
     }"
     @dblclick="toggleFullScreen"
     @keydown="onKeyPress"
@@ -59,7 +59,7 @@
       <div class="player-controls-right">
 
         <button
-          v-if="!fullScreen"
+          v-if="!fullscreen"
           type="button"
           :title="$t('Full screen')"
           class="player-btn player-expand-btn"
@@ -70,7 +70,7 @@
           <i class="fas fa-expand"></i>
         </button>
         <button
-          v-if="fullScreen"
+          v-if="fullscreen"
           type="button"
           :title="$t('Exit full screen')"
           class="player-btn player-expand-btn"
@@ -121,7 +121,7 @@
       :mid="mid"
       :metadata="null"
       :shown="true"
-      :fullscreen="fullScreen"
+      :fullscreen="fullscreen"
       :expanded="expandedTitle"
       :albumexpanded="expandedAlbum"
     ></PlayerTopBar>
@@ -135,6 +135,7 @@ import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
+import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   components: {
@@ -142,18 +143,24 @@ export default defineComponent({
     PlayerTopBar,
   },
   name: "EmptyPlayer",
-  emits: ["gonext", "goprev"],
+  emits: ["gonext", "goprev", "update:fullscreen"],
   props: {
     mid: Number,
     status: String,
 
+    fullscreen: Boolean,
+
     next: Object,
     prev: Object,
+  },
+  setup(props) {
+    return {
+      fullScreen: useVModel(props, "fullscreen"),
+    };
   },
   data: function () {
     return {
       minPlayer: false,
-      fullScreen: false,
 
       helpTooltip: "",
 
@@ -209,12 +216,12 @@ export default defineComponent({
     },
 
     toggleFullScreen: function () {
-      this.fullScreen = !this.fullScreen;
-      if (this.fullScreen) {
+      if (!this.fullscreen) {
         openFullscreen();
       } else {
         closeFullscreen();
       }
+      this.fullScreen = !this.fullScreen;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {

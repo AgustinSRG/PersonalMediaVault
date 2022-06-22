@@ -5,7 +5,7 @@
     :class="{
       'player-min': minPlayer,
       'no-controls': !showControls,
-      'full-screen': fullScreen,
+      'full-screen': fullscreen,
     }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
@@ -156,7 +156,7 @@
         </button>
 
         <button
-          v-if="!fullScreen"
+          v-if="!fullscreen"
           type="button"
           :title="$t('Full screen')"
           class="player-btn player-expand-btn"
@@ -167,7 +167,7 @@
           <i class="fas fa-expand"></i>
         </button>
         <button
-          v-if="fullScreen"
+          v-if="fullscreen"
           type="button"
           :title="$t('Exit full screen')"
           class="player-btn player-expand-btn"
@@ -298,7 +298,7 @@
       :mid="mid"
       :metadata="metadata"
       :shown="showControls"
-      :fullscreen="fullScreen"
+      :fullscreen="fullscreen"
       :expanded="expandedTitle"
       :albumexpanded="expandedAlbum"
     ></PlayerTopBar>
@@ -328,6 +328,7 @@ import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
+import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   components: {
@@ -338,14 +339,21 @@ export default defineComponent({
     PlayerContextMenu,
   },
   name: "VideoPlayer",
-  emits: ["gonext", "goprev", "ended"],
+  emits: ["gonext", "goprev", "ended", "update:fullscreen"],
   props: {
     mid: Number,
     metadata: Object,
     rtick: Number,
 
+    fullscreen: Boolean,
+
     next: Object,
     prev: Object,
+  },
+  setup(props) {
+    return {
+      fullScreen: useVModel(props, "fullscreen"),
+    };
   },
   data: function () {
     return {
@@ -357,7 +365,6 @@ export default defineComponent({
       videoPendingTask: 0,
 
       minPlayer: false,
-      fullScreen: false,
       displayConfig: false,
 
       currentTime: 0,
@@ -692,12 +699,12 @@ export default defineComponent({
     },
 
     toggleFullScreen: function () {
-      this.fullScreen = !this.fullScreen;
-      if (this.fullScreen) {
+      if (!this.fullscreen) {
         openFullscreen();
       } else {
         closeFullscreen();
       }
+      this.fullScreen = !this.fullScreen;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {
@@ -887,7 +894,7 @@ export default defineComponent({
       this.currentTime = PlayerPreferences.GetInitialTime(this.mid);
       this.duration = 0;
       this.speed = 1;
-      this.loop = false;
+      this.loop = !this.next;
       this.currentResolution = PlayerPreferences.GetResolutionIndex(
         this.metadata
       );

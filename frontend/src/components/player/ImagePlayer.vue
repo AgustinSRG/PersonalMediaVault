@@ -4,8 +4,8 @@
     class="image-player"
     :class="{
       'player-min': minPlayer,
-      'no-controls': !showControls,
-      'full-screen': fullScreen,
+      'no-controls': !showcontrols,
+      'full-screen': fullscreen,
     }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
@@ -45,7 +45,7 @@
 
     <div
       class="player-controls"
-      :class="{ hidden: !showControls }"
+      :class="{ hidden: !showcontrols }"
       @click="clickControls"
       @dblclick="stopPropagationEvent"
       @mouseenter="enterControls"
@@ -105,7 +105,7 @@
         </button>
 
         <button
-          v-if="!fullScreen"
+          v-if="!fullscreen"
           type="button"
           :title="$t('Full screen')"
           class="player-btn player-expand-btn"
@@ -116,7 +116,7 @@
           <i class="fas fa-expand"></i>
         </button>
         <button
-          v-if="fullScreen"
+          v-if="fullscreen"
           type="button"
           :title="$t('Exit full screen')"
           class="player-btn player-expand-btn"
@@ -190,8 +190,8 @@
       v-if="metadata"
       :mid="mid"
       :metadata="metadata"
-      :shown="showControls"
-      :fullscreen="fullScreen"
+      :shown="showcontrols"
+      :fullscreen="fullscreen"
       :expanded="expandedTitle"
       :albumexpanded="expandedAlbum"
     ></PlayerTopBar>
@@ -222,6 +222,7 @@ import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
+import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   components: {
@@ -232,14 +233,24 @@ export default defineComponent({
     PlayerContextMenu,
   },
   name: "ImagePlayer",
-  emits: ["gonext", "goprev"],
+  emits: ["gonext", "goprev", "update:fullscreen", "update:showcontrols"],
   props: {
     mid: Number,
     metadata: Object,
     rtick: Number,
 
+    showcontrols: Boolean,
+
+    fullscreen: Boolean,
+
     next: Object,
     prev: Object,
+  },
+  setup(props) {
+    return {
+      fullScreen: useVModel(props, "fullscreen"),
+      showControls: useVModel(props, "showcontrols"),
+    };
   },
   data: function () {
     return {
@@ -254,7 +265,6 @@ export default defineComponent({
       height: 0,
 
       minPlayer: false,
-      fullScreen: false,
       displayConfig: false,
 
       imageTop: "0",
@@ -262,7 +272,6 @@ export default defineComponent({
       imageWidth: "auto",
       imageHeight: "auto",
 
-      showControls: true,
       lastControlsInteraction: Date.now(),
       mouseInControls: false,
 
@@ -562,12 +571,12 @@ export default defineComponent({
     },
 
     toggleFullScreen: function () {
-      this.fullScreen = !this.fullScreen;
-      if (this.fullScreen) {
+      if (!this.fullscreen) {
         openFullscreen();
       } else {
         closeFullscreen();
       }
+      this.fullScreen = !this.fullScreen;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {
