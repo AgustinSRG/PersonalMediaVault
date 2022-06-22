@@ -20,12 +20,11 @@
     @contextmenu="onContextMenu"
   >
     <audio
-      v-if="audioURL"
-      :src="audioURL"
-      :key="rtick"
+      :src="audioURL || undefined"
       playsinline
       webkit-playsinline
       x-webkit-airplay="allow"
+      crossorigin="anonymous"
       :muted="muted"
       :volume.prop="volume"
       :playbackRate.prop="speed"
@@ -35,6 +34,8 @@
       @loadedmetadata="onLoadMetaData"
       @waiting="onWaitForBuffer(true)"
       @playing="onWaitForBuffer(false)"
+      @play="setupAudioRenderer"
+      @pause="clearAudioRenderer"
     ></audio>
 
     <canvas v-if="audioURL"></canvas>
@@ -490,18 +491,11 @@ export default defineComponent({
       }
       var promise = this.getAudioElement().play();
       if (promise) {
-        promise.then(
-          function () {
-            this.setupAudioRenderer();
-          }.bind(this)
-        );
         promise.catch(
           function () {
             this.playing = false;
           }.bind(this)
         );
-      } else {
-        this.setupAudioRenderer();
       }
     },
     onWaitForBuffer: function (b) {
@@ -646,8 +640,6 @@ export default defineComponent({
       this.playing = true;
       if (audio) {
         audio.play();
-
-        this.setupAudioRenderer();
       }
     },
     pause: function () {
@@ -868,6 +860,7 @@ export default defineComponent({
         this.duration = 0;
         this.loading = false;
         this.clearAudioRenderer();
+        this.getAudioElement().load();
         return;
       }
 
@@ -875,6 +868,7 @@ export default defineComponent({
         this.audioURL = GetAssetURL(this.metadata.url);
         this.audioPending = false;
         this.audioPendingTask = 0;
+        this.getAudioElement().load();
       } else {
         this.audioURL = "";
         this.audioPending = true;
@@ -882,6 +876,7 @@ export default defineComponent({
         this.duration = 0;
         this.loading = false;
         this.clearAudioRenderer();
+        this.getAudioElement().load();
       }
     },
 
@@ -891,40 +886,30 @@ export default defineComponent({
         this.$options.rendererTimer = null;
       }
 
-      if (this.$options.audioSource && this.$options.audioAnalyser) {
-        this.$options.audioSource.disconnect(this.$options.audioAnalyser);
-      }
-
-      if (this.$options.audioContext && this.$options.audioAnalyser) {
-        this.$options.audioAnalyser.disconnect(
-          this.$options.audioContext.destination
-        );
-      }
-
       if (this.$options.audioSource) {
         this.$options.audioSource.disconnect();
       }
 
-      if (this.$options.audioContext) {
-        this.$options.audioContext.close();
+      if (this.$options.audioAnalyser) {
+        this.$options.audioAnalyser.disconnect();
       }
 
-      this.$options.audioContext = null;
-      this.$options.audioSource = null;
       this.$options.audioAnalyser = null;
     },
 
     setupAudioRenderer: function () {
-      if (this.$options.audioContext) {
-        return;
+      if (!this.$options.audioContext) {
+        this.setupAudioContext();
       }
 
+      this.clearAudioRenderer();
+
       if (this.audioURL) {
-        const context = new AudioContext();
-        const source = context.createMediaElementSource(this.getAudioElement());
+        const context = this.$options.audioContext;
+        const source = this.$options.audioSource;
 
         const analyser = context.createAnalyser();
-        this.$options.audioContext = context;
+
         this.$options.audioSource = source;
         this.$options.audioAnalyser = analyser;
         source.connect(analyser);
@@ -941,6 +926,22 @@ export default defineComponent({
         this.$options.audioSource = null;
         this.$options.audioAnalyser = null;
       }
+    },
+
+    setupAudioContext: function () {
+      const context = new AudioContext();
+      this.$options.audioContext = context;
+      const source = context.createMediaElementSource(this.getAudioElement());
+      this.$options.audioSource = source;
+    },
+
+    closeAudioContext: function () {
+      if (this.$options.audioContext) {
+        this.$options.audioContext.close();
+      }
+
+      this.$options.audioContext = null;
+      this.$options.audioSource = null;
     },
 
     audioAnimationFrame: function () {
@@ -1044,6 +1045,7 @@ export default defineComponent({
     clearInterval(this.$options.timer);
 
     this.clearAudioRenderer();
+    this.closeAudioContext();
 
     document.removeEventListener(
       "fullscreenchange",
