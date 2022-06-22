@@ -895,6 +895,12 @@ export default defineComponent({
         this.$options.audioSource.disconnect(this.$options.audioAnalyser);
       }
 
+      if (this.$options.audioContext && this.$options.audioAnalyser) {
+        this.$options.audioAnalyser.disconnect(
+          this.$options.audioContext.destination
+        );
+      }
+
       if (this.$options.audioSource) {
         this.$options.audioSource.disconnect();
       }
@@ -922,6 +928,7 @@ export default defineComponent({
         this.$options.audioSource = source;
         this.$options.audioAnalyser = analyser;
         source.connect(analyser);
+        analyser.connect(context.destination);
 
         analyser.fftSize = 256;
 
