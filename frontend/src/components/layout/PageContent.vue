@@ -6,7 +6,7 @@
       <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage"><i class="fas fa-times"></i></button>
     </div>
 
-    <PageHome :display="page === 'home'"></PageHome>
+    <PageHome :display="page === 'home'" :min="min"></PageHome>
     <PageUpload :display="page === 'upload'"></PageUpload>
     <PageRandom :display="page === 'random'"></PageRandom>
     <PageAlbums :display="page === 'albums'"></PageAlbums>
@@ -31,6 +31,9 @@ export default defineComponent({
     PageRandom,
   },
   name: "PageContent",
+  props: {
+    min: Boolean,
+  },
   data: function () {
     return {
       page: AppStatus.CurrentPage,

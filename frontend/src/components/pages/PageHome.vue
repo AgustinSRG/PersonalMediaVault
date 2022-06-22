@@ -126,6 +126,7 @@ export default defineComponent({
   },
   props: {
     display: Boolean,
+    min: Boolean,
   },
   data: function () {
     return {
@@ -143,8 +144,6 @@ export default defineComponent({
       pageItems: [],
 
       loadingFiller: [],
-
-      min: false,
     };
   },
   methods: {
@@ -386,6 +385,7 @@ export default defineComponent({
   width: 100%;
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 .search-results-option {

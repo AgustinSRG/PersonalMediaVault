@@ -10,7 +10,7 @@
       'sidebar-hidden': !displaySidebar,
     }"
   >
-    <PageContent></PageContent>
+    <PageContent :min="layout === 'media-split'"></PageContent>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
     <SideBar v-model:display="displaySidebar"></SideBar>

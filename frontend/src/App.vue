@@ -59,6 +59,10 @@ export default class App extends Vue {}
   white-space: nowrap;
 }
 
+.btn-sm {
+  font-size: 16px;
+}
+
 .btn i {
   margin-right: 12px;
 }
