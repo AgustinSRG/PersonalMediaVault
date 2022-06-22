@@ -70,11 +70,20 @@
         </td>
         <td class="td-right"></td>
       </tr>
+
+      <tr v-if="url" class="tr-button" tabindex="0" @click="refreshMedia">
+        <td>
+          <i class="fas fa-sync-alt icon-config"></i>
+          <span class="context-entry-title">{{ $t("Refresh") }}</span>
+        </td>
+        <td class="td-right"></td>
+      </tr>
     </table>
   </div>
 </template>
 
 <script lang="ts">
+import { MediaController } from "@/control/media";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -131,6 +140,11 @@ export default defineComponent({
 
     toggleControls: function () {
       this.controlsState = !this.controlsState;
+      this.shownState = false;
+    },
+
+    refreshMedia: function () {
+      MediaController.Load();
       this.shownState = false;
     },
 
