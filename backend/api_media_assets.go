@@ -125,20 +125,6 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if start >= s.file_size || end >= s.file_size || end < start {
-		// Invalid range
-		s.Close()
-
-		asset_lock.EndRead()
-		media.ReleaseAsset(asset_id)
-		GetVault().media.ReleaseMediaResource(media_id)
-
-		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.file_size))
-
-		response.WriteHeader(416)
-		return
-	}
-
 	fileSeek := int64(0)
 	fileEnding := s.file_size - 1
 	contentLength := s.file_size
@@ -160,6 +146,20 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		fileEnding = end
 		contentLength = end - start + 1
 		hasRange = true
+	}
+
+	if fileSeek < 0 || fileSeek >= s.file_size || fileEnding >= s.file_size || fileEnding < fileSeek {
+		// Invalid range
+		s.Close()
+
+		asset_lock.EndRead()
+		media.ReleaseAsset(asset_id)
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.file_size))
+
+		response.WriteHeader(416)
+		return
 	}
 
 	if fileSeek > 0 {
