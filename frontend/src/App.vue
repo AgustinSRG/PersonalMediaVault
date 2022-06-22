@@ -20,8 +20,7 @@ export default class App extends Vue {}
 </script>
 
 <style>
-
-/* Add here any global / shared styles */ 
+/* Add here any global / shared styles */
 
 .bold {
   font-weight: bold;
@@ -43,10 +42,9 @@ export default class App extends Vue {}
   white-space: nowrap;
 }
 
-
 .btn {
   display: inline-block;
-  
+
   box-shadow: none;
   border: none;
   cursor: pointer;
@@ -103,15 +101,26 @@ export default class App extends Vue {}
 }
 
 .form-control {
-    outline: none;
-    padding: 6px 12px;
-    font-size: 14px;
-    line-height: 1.42857143;
-    color: #fff;
-    background: hsl(0, 0%, 7%);
-    border: none;
-    box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
-    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  background-clip: padding-box;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  color: #fff;
+  background: hsl(0, 0%, 7%);
+}
+
+.form-control:focus {
+  color: #fff;
+  background: hsl(0, 0%, 7%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
 }
 
 .form-control-full-width {
@@ -121,6 +130,4 @@ export default class App extends Vue {}
 .form-error {
   color: red;
 }
-
-
 </style>
