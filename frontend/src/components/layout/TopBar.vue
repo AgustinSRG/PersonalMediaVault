@@ -27,11 +27,14 @@
             autocomplete="off"
             autocapitalize="none"
             :placeholder="$t('Search by tag')"
+            v-model="search"
+            @change="goSearch"
           />
           <button
             type="button"
             class="top-bar-button top-bar-search-button"
             :title="$t('Search')"
+            @click="goSearch"
           >
             <i class="fas fa-search"></i>
           </button>
@@ -68,11 +71,18 @@
 </template>
 
 <script lang="ts">
+import { AppEvents } from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
   emits: ["logout", "settings", "menu"],
+  data: function () {
+    return {
+      search: AppStatus.CurrentSearch,
+    };
+  },
   methods: {
     menu: function () {
       this.$emit("menu");
@@ -85,6 +95,30 @@ export default defineComponent({
     settings: function () {
       this.$emit("settings");
     },
+
+    goSearch: function () {
+      AppStatus.GoToSearch(this.search);
+    },
+
+    onSearchChanged: function () {
+      this.search = AppStatus.CurrentSearch;
+    },
+  },
+
+  mounted: function () {
+    this.$options.statusChangeH = this.onSearchChanged.bind(this);
+
+    AppEvents.AddEventListener(
+      "app-status-update",
+      this.$options.statusChangeH
+    );
+  },
+
+  beforeUnmount: function () {
+    AppEvents.RemoveEventListener(
+      "app-status-update",
+      this.$options.statusChangeH
+    );
   },
 });
 

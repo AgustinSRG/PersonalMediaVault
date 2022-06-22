@@ -25,13 +25,25 @@
     <div class="side-bar-body">
       <div
         class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'home' }"
+        :class="{ selected: album < 0 && page === 'home' && !search }"
         tabindex="0"
         :title="$t('Home')"
         @click="goToPage('home')"
       >
         <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
         <div class="side-bar-option-text">{{ $t("Home") }}</div>
+      </div>
+
+      <div
+        v-if="!!search"
+        class="side-bar-option"
+        :class="{ selected: album < 0 && page === 'home' && !!search }"
+        tabindex="0"
+        :title="$t('Search results')"
+        @click="goToSearch"
+      >
+        <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
+        <div class="side-bar-option-text">{{ $t("Search results") }}</div>
       </div>
 
       <div
@@ -108,6 +120,7 @@ export default defineComponent({
       page: AppStatus.CurrentPage,
       album: AppStatus.CurrentAlbum,
       layout: AppStatus.CurrentLayout,
+      search: AppStatus.CurrentSearch,
 
       albums: [],
     };
@@ -128,10 +141,16 @@ export default defineComponent({
 
       this.page = AppStatus.CurrentPage;
       this.album = AppStatus.CurrentAlbum;
+
+      this.search = AppStatus.CurrentSearch;
     },
 
     goToPage: function (p) {
       AppStatus.GoToPage(p);
+    },
+
+    goToSearch: function () {
+      AppStatus.GoToSearch(this.search);
     },
 
     goToAlbum: function (a) {
