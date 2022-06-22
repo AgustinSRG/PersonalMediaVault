@@ -456,7 +456,7 @@ export default defineComponent({
         part = thumbCount;
       }
 
-      return this.metadata.video_previews.replace("{INDEX}", "" + part);
+      return GetAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
     },
 
     onResolutionUpdated: function () {
