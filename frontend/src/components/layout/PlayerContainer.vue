@@ -1,6 +1,6 @@
 <template>
   <div class="player-container">
-    <EmptyPlayer v-if="!mdata || mdata.type === 0" :mid="mid" :status="status" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></EmptyPlayer>
+    <EmptyPlayer v-if="!mdata || mdata.type === 0" :mid="mid" :status="status" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></EmptyPlayer>
     <ImagePlayer v-if="mdata && mdata.type === 1" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen" v-model:showcontrols="showControls"></ImagePlayer>
     <VideoPlayer v-if="mdata && mdata.type === 2" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></VideoPlayer>
     <AudioPlayer v-if="mdata && mdata.type === 3" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></AudioPlayer>

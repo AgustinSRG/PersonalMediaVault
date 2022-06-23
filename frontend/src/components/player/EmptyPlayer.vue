@@ -129,7 +129,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
@@ -149,6 +149,8 @@ export default defineComponent({
     status: String,
 
     fullscreen: Boolean,
+
+    rtick: Number,
 
     next: Object,
     prev: Object,
@@ -282,6 +284,10 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+
+    nextTick(() => {
+        this.$el.focus();
+      });
   },
   beforeUnmount: function () {
     clearInterval(this.$options.timer);
@@ -302,6 +308,13 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+  },
+  watch: {
+    rtick: function () {
+      nextTick(() => {
+        this.$el.focus();
+      });
+    },
   },
 });
 </script>

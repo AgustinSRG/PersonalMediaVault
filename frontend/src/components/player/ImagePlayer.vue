@@ -653,6 +653,9 @@ export default defineComponent({
     },
 
     setImageURL() {
+      nextTick(() => {
+        this.$el.focus();
+      });
       if (!this.metadata) {
         this.imageURL = "";
         this.loading = false;

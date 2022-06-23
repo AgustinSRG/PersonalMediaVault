@@ -818,6 +818,7 @@ export default defineComponent({
 
     onKeyPress: function (event) {
       var catched = true;
+      var shifting = event.shiftKey;
       switch (event.key) {
         case "M":
         case "m":
@@ -847,12 +848,20 @@ export default defineComponent({
         case "J":
         case "j":
         case "ArrowRight":
-          this.setTime(this.currentTime + 5, true);
+          if (shifting) {
+            this.goNext();
+          } else {
+            this.setTime(this.currentTime + 5, true);
+          }
           break;
         case "L":
         case "l":
         case "ArrowLeft":
-          this.setTime(this.currentTime - 5, true);
+          if (shifting) {
+            this.goPrev();
+          } else {
+            this.setTime(this.currentTime - 5, true);
+          }
           break;
         case ".":
           if (!this.playing) {
@@ -904,6 +913,9 @@ export default defineComponent({
     },
 
     setVideoURL() {
+      nextTick(() => {
+        this.$el.focus();
+      });
       if (!this.metadata) {
         this.videoURL = "";
         this.duration = 0;
