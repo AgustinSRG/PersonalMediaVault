@@ -18,6 +18,17 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
+
+      <tr class="tr-button" tabindex="0" @click="goToBackgrounds">
+        <td>
+          <i class="fas fa-palette icon-config"></i>
+          <b>{{ $t("Background") }}</b>
+        </td>
+        <td class="td-right">
+          {{ renderBackground(background) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
     </table>
     <table v-if="page === 'resolution'">
       <tr class="tr-button" tabindex="0" @click="goBack">
@@ -54,6 +65,25 @@
         <td class="td-right"></td>
       </tr>
     </table>
+    <table v-if="page === 'background'">
+      <tr class="tr-button" tabindex="0" @click="goBack">
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Background") }}</b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr v-for="b in bgOptions" :key="b" class="tr-button" tabindex="0" @click="changeBackground(b)">
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': b !== background }"
+          ></i>
+          {{ renderBackground(b) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
   </div>
 </template>
 
@@ -66,6 +96,7 @@ export default defineComponent({
   emits: [
     "update:shown",
     "update:resolution",
+    "update:background",
     "enter",
     "leave",
   ],
@@ -73,24 +104,32 @@ export default defineComponent({
     shown: Boolean,
     metadata: Object,
     resolution: Number,
+    background: String,
     rtick: Number,
   },
   setup(props) {
     return {
       shownState: useVModel(props, "shown"),
       resolutionState: useVModel(props, "resolution"),
+      backgroundState: useVModel(props, "background"),
     };
   },
   data: function () {
     return {
       page: "",
       resolutions: [],
+      bgOptions: ['default', 'black', 'white'],
     };
   },
   methods: {
     changeResolution: function (i) {
       this.resolutionState = i;
     },
+
+    changeBackground: function (b) {
+      this.backgroundState = b;
+    },
+
     enterConfig: function () {
       this.$emit("enter");
     },
@@ -109,6 +148,21 @@ export default defineComponent({
 
     goToResolutions: function () {
       this.page = "resolution";
+    },
+
+    goToBackgrounds: function () {
+      this.page = "background";
+    },
+
+    renderBackground: function (b: string) {
+      switch (b) {
+        case "white":
+          return this.$t("White");
+        case "black":
+          return this.$t("Black");
+        default:
+          return this.$t("Default (Theme)");
+      }
     },
 
     renderResolution: function (res: number, rtick: number) {
@@ -225,25 +279,22 @@ export default defineComponent({
 
 /* Custom scroll bar */
 
-
 /* width */
 
 .image-player-config::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
+  width: 5px;
+  height: 3px;
 }
-
 
 /* Track */
 
 .image-player-config::-webkit-scrollbar-track {
-    background: #bdbdbd;
+  background: #bdbdbd;
 }
-
 
 /* Handle */
 
 .image-player-config::-webkit-scrollbar-thumb {
-    background: #757575;
+  background: #757575;
 }
 </style>

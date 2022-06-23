@@ -6,6 +6,8 @@
       'player-min': minPlayer,
       'no-controls': !showcontrols,
       'full-screen': fullscreen,
+      'bg-black': background === 'black',
+      'bg-white': background === 'white',
     }"
     @mousemove="playerMouseMove"
     @click="clickPlayer"
@@ -179,6 +181,7 @@
     <ImagePlayerConfig
       v-model:shown="displayConfig"
       v-model:resolution="currentResolution"
+      v-model:background="background"
       @update:resolution="onResolutionUpdated"
       :rtick="internalTick"
       :metadata="metadata"
@@ -278,6 +281,8 @@ export default defineComponent({
       scale: 0,
       fit: true,
       scaleShown: isTouchDevice(),
+
+      background: 'default',
 
       internalTick: 0,
 
@@ -832,6 +837,14 @@ export default defineComponent({
   left: 0;
   width: 100%;
   cursor: move;
+}
+
+.image-player.bg-black .image-scroller {
+  background: black;
+}
+
+.image-player.bg-white .image-scroller {
+  background: white;
 }
 
 .player-min .image-scroller {
