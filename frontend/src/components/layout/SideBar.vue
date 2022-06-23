@@ -25,7 +25,7 @@
     <div class="side-bar-body">
       <div
         class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'home' && !search }"
+        :class="{ selected: album < 0 && page === 'home' }"
         tabindex="0"
         :title="$t('Home')"
         @click="goToPage('home')"
@@ -37,7 +37,7 @@
       <div
         v-if="!!search"
         class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'home' && !!search }"
+        :class="{ selected: album < 0 && page === 'search' }"
         tabindex="0"
         :title="$t('Search results')"
         @click="goToSearch"

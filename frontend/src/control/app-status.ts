@@ -67,7 +67,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && (["home", "random", "albums", "upload"].includes(page))) {
+        if (page && (["home", "search", "random", "albums", "upload"].includes(page))) {
             AppStatus.CurrentPage = page;
         } else {
             AppStatus.CurrentPage = "home";
@@ -95,6 +95,10 @@ export class AppStatus {
     }
 
     public static UpdateLayout() {
+        if (AppStatus.CurrentPage === "search" && !AppStatus.CurrentSearch) {
+            AppStatus.CurrentPage = "home";
+        }
+
         if (AppStatus.CurrentMedia >= 0) {
             if (AppStatus.CurrentAlbum >= 0) {
                 // Media with album list
@@ -164,11 +168,17 @@ export class AppStatus {
 
     public static GoToPage(page: string) {
         AppStatus.CurrentPage = page;
-        AppStatus.CurrentSearch = "";
 
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "content";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static ExpandPage() {
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
-
         AppStatus.ListSplitMode = false;
 
         AppStatus.UpdateLayout();
@@ -179,13 +189,8 @@ export class AppStatus {
     }
 
     public static GoToSearch(search: string) {
-        AppStatus.CurrentPage = "home";
+        AppStatus.CurrentPage = "search";
         AppStatus.CurrentSearch = search;
-
-        AppStatus.CurrentAlbum = -1;
-        AppStatus.CurrentMedia = -1;
-
-        AppStatus.ListSplitMode = false;
 
         AppStatus.UpdateLayout();
 

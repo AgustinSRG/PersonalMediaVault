@@ -32,6 +32,11 @@
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
+        <div class="search-results-msg-btn">
+          <button type="button" @click="clearSearch" class="btn btn-primary btn-sm">
+            <i class="fas fa-times"></i> {{ $t("Clear Search") }}
+          </button>
+        </div>
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
@@ -117,7 +122,7 @@ import { defineComponent } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
 
 export default defineComponent({
-  name: "PageHome",
+  name: "PageSearch",
   components: {
     PageMenu,
   },
@@ -147,8 +152,8 @@ export default defineComponent({
   },
   methods: {
     load: function () {
-      Timeouts.Abort("page-home-load");
-      Request.Abort("page-home-load");
+      Timeouts.Abort("page-search-load");
+      Request.Abort("page-search-load");
 
       if (!this.display) {
         return;
@@ -161,8 +166,8 @@ export default defineComponent({
       }
 
       Request.Pending(
-        "page-home-load",
-        SearchAPI.Search("", this.order, this.page, this.pageSize)
+        "page-search-load",
+        SearchAPI.Search(this.search, this.order, this.page, this.pageSize)
       )
         .onSuccess((result) => {
           this.pageItems = result.page_items;
@@ -178,14 +183,14 @@ export default defineComponent({
             })
             .add("*", "*", () => {
               // Retry
-              Timeouts.Set("page-home-load", 1500, this.$options.loadH);
+              Timeouts.Set("page-search-load", 1500, this.$options.loadH);
             })
             .handle(err);
         })
         .onUnexpectedError((err) => {
           console.error(err);
           // Retry
-          Timeouts.Set("page-home-load", 1500, this.$options.loadH);
+          Timeouts.Set("page-search-load", 1500, this.$options.loadH);
         });
     },
 
@@ -203,6 +208,14 @@ export default defineComponent({
     },
 
     onAppStatusChanged: function () {
+      if (AppStatus.CurrentSearch !== this.search) {
+        this.search = AppStatus.CurrentSearch;
+        this.page = 0;
+        this.order = "desc";
+        this.load();
+        this.onSearchParamsChanged();
+      }
+
       if (AppStatus.SearchParams !== this.searchParams) {
         this.searchParams = AppStatus.SearchParams;
         this.updateSearchParams();
@@ -250,6 +263,10 @@ export default defineComponent({
     getThumbnail(thumb: string) {
       return GetAssetURL(thumb);
     },
+
+    clearSearch: function () {
+      AppStatus.GoToSearch("");
+    },
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
@@ -269,8 +286,8 @@ export default defineComponent({
     this.load();
   },
   beforeUnmount: function () {
-    Timeouts.Abort("page-home-load");
-    Request.Abort("page-home-load");
+    Timeouts.Abort("page-search-load");
+    Request.Abort("page-search-load");
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.RemoveEventListener(
       "app-status-update",
@@ -286,113 +303,5 @@ export default defineComponent({
 </script>
 
 <style>
-.search-results {
-  display: flex;
-  flex-direction: column;
-}
 
-.search-results-loading-display {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.search-results-final-display {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.search-result-item {
-  min-width: 232px;
-  width: 20%;
-  padding: 24px;
-}
-
-.search-result-item.clickable {
-  cursor: pointer;
-}
-
-.search-result-item.clickable:hover {
-  opacity: 0.7;
-}
-
-.search-result-thumb {
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%;
-}
-
-.search-result-thumb-inner {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.search-result-thumb .no-thumb {
-  opacity: 0.7;
-  font-size: 24px;
-}
-
-.search-result-thumb img {
-  width: 100%;
-  height: 100%;
-}
-
-.search-result-title {
-  padding-top: 0.5rem;
-  line-height: 22px;
-  font-size: 14px;
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.search-results-msg-display {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  opacity: 0.7;
-}
-
-.search-results-msg-icon {
-  font-size: 48px;
-}
-
-.search-results-msg-text {
-  padding-top: 1rem;
-  font-size: x-large;
-}
-
-.search-results-msg-btn {
-  padding-top: 1rem;
-}
-
-.search-results-total {
-  padding-top: 0.5rem;
-  font-size: small;
-  text-align: center;
-}
-
-.search-results-options {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.search-results-option {
-  width: 50%;
-  padding: 0.5rem 24px 0.5rem 24px;
-}
 </style>
