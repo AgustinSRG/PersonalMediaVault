@@ -69,6 +69,7 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
+              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
             </div>
           </div>
           <div class="search-result-title">
@@ -86,6 +87,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { GetAssetURL, Request } from "@/utils/request";
+import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
@@ -200,6 +202,10 @@ export default defineComponent({
 
     getThumbnail(thumb: string) {
       return GetAssetURL(thumb);
+    },
+
+    renderTime: function (s: number): string {
+      return renderTimeSeconds(s);
     },
   },
   mounted: function () {

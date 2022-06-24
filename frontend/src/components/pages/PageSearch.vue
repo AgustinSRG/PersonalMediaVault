@@ -63,6 +63,7 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
+              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
             </div>
           </div>
           <div class="search-result-title">
@@ -120,6 +121,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
+import { renderTimeSeconds } from "@/utils/time-utils";
 
 export default defineComponent({
   name: "PageSearch",
@@ -266,6 +268,10 @@ export default defineComponent({
 
     clearSearch: function () {
       AppStatus.GoToSearch("");
+    },
+
+    renderTime: function (s: number): string {
+      return renderTimeSeconds(s);
     },
   },
   mounted: function () {

@@ -58,6 +58,7 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
+              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
             </div>
           </div>
           <div class="search-result-title">
@@ -115,6 +116,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
+import { renderTimeSeconds } from "@/utils/time-utils";
 
 export default defineComponent({
   name: "PageHome",
@@ -249,6 +251,10 @@ export default defineComponent({
 
     getThumbnail(thumb: string) {
       return GetAssetURL(thumb);
+    },
+
+    renderTime: function (s: number): string {
+      return renderTimeSeconds(s);
     },
   },
   mounted: function () {
@@ -395,4 +401,14 @@ export default defineComponent({
   width: 50%;
   padding: 0.5rem 24px 0.5rem 24px;
 }
+
+.search-result-thumb-tag {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.3);
+  bottom: 0.5rem;
+  right: 0.5rem;
+  font-size: small;
+  padding: 0.25rem;
+}
+
 </style>

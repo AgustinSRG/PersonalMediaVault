@@ -92,6 +92,9 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled album')"
               />
+              <div class="search-result-thumb-tag" v-if="item.list.length == 0">({{$t('Empty')}})</div>
+              <div class="search-result-thumb-tag" v-else-if="item.list.length == 1">1 {{$t('item')}}</div>
+              <div class="search-result-thumb-tag" v-else-if="item.list.length > 1">{{item.list.length}} {{$t('items')}}</div>
             </div>
           </div>
           <div class="search-result-title">
