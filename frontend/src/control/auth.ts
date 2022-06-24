@@ -11,10 +11,12 @@ export class AuthController {
     public static Locked = true;
     public static Session = "";
     public static Username = "";
+    public static Fingerprint = "";
     public static Loading = true;
 
     public static Initialize() {
         AuthController.Session = getCookie("x-session-token");
+        AuthController.Fingerprint = getCookie("x-vault-fingerprint");
         AuthController.CheckAuthStatus();
         AppEvents.AddEventListener("unauthorized", AuthController.ClearSession);
     }
@@ -60,10 +62,12 @@ export class AuthController {
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
     }
 
-    public static SetSession(session: string) {
+    public static SetSession(session: string, fingerprint: string) {
         AuthController.Locked = true;
         AuthController.Session = session;
         setCookie("x-session-token", session);
+        AuthController.Fingerprint = fingerprint;
+        setCookie("x-vault-fingerprint", fingerprint);
         AuthController.Username = "";
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();

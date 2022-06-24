@@ -103,7 +103,7 @@ export default defineComponent({
           this.busy = false;
           this.username = "";
           this.password = "";
-          AuthController.SetSession(response.session_id);
+          AuthController.SetSession(response.session_id, response.vault_fingerprint);
         })
         .onCancel(() => {
           this.busy = false;

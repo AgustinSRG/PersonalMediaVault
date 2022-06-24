@@ -15,7 +15,8 @@ type LoginAPIBody struct {
 }
 
 type LoginAPIResponse struct {
-	SessionId string `json:"session_id"`
+	SessionId        string `json:"session_id"`
+	VaultFinderprint string `json:"vault_fingerprint"`
 }
 
 const (
@@ -86,6 +87,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 	var r LoginAPIResponse
 
 	r.SessionId = s
+	r.VaultFinderprint = GetVault().credentials.GetFingerprint()
 
 	jsonResult, err := json.Marshal(r)
 

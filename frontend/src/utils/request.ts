@@ -2,6 +2,7 @@
 
 "use strict";
 
+import { AuthController } from "@/control/auth";
 import axios, { AxiosError } from "axios";
 import { getCookie } from "./cookie";
 
@@ -15,9 +16,14 @@ export function GetAPIURL(path: string): string {
 
 export function GetAssetURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
-        return (process.env.DEV_TEST_HOST || "http://localhost") + path + GenerateURIQuery({ 'x-session-token': getCookie("x-session-token") + "" });
+        return (process.env.DEV_TEST_HOST || "http://localhost") + path + GenerateURIQuery({
+            'x-session-token': AuthController.Session,
+            'vault-fp': AuthController.Fingerprint,
+        });
     } else {
-        return path;
+        return path + GenerateURIQuery({
+            'vault-fp': AuthController.Fingerprint,
+        });
     }
 }
 

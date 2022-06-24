@@ -7,6 +7,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +18,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"golang.org/x/term"
 )
@@ -28,11 +31,12 @@ const (
 )
 
 type VaultCredentials struct {
-	Method       string `json:"method"`
-	User         string `json:"user"`
-	Salt         []byte `json:"salt"`
-	PasswordHash []byte `json:"pwhash"`
-	EncryptedKey []byte `json:"enckey"`
+	Method           string `json:"method"`
+	User             string `json:"user"`
+	Salt             []byte `json:"salt"`
+	PasswordHash     []byte `json:"pwhash"`
+	EncryptedKey     []byte `json:"enckey"`
+	VaultFingerprint string `json:"fingerprint"`
 }
 
 type VaultCredentialsManager struct {
@@ -40,6 +44,16 @@ type VaultCredentialsManager struct {
 	credentials VaultCredentials
 
 	lock *sync.Mutex
+}
+
+func GenerateFingerprint() string {
+	data := make([]byte, 16)
+	now := time.Now().UnixMilli()
+
+	binary.BigEndian.PutUint64(data[:8], uint64(now))
+	rand.Read(data[8:])
+
+	return hex.EncodeToString(data)
 }
 
 func InitializeCredentialsPath(base_path string) {
@@ -163,6 +177,11 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 		if err != nil {
 			return err
 		}
+
+		if manager.credentials.VaultFingerprint == "" {
+			manager.credentials.VaultFingerprint = GenerateFingerprint()
+			manager.SaveCredentials()
+		}
 	} else if errors.Is(err, os.ErrNotExist) {
 		// does *not* exist
 
@@ -171,6 +190,7 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 		rand.Read(key)
 
 		// Set default credentials
+		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.SetCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
 		manager.SaveCredentials()
 	} else {
@@ -197,6 +217,7 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 		rand.Read(key)
 
 		// Set default credentials
+		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.SetCredentials(user, password, key)
 		manager.SaveCredentials()
 	} else {
@@ -338,4 +359,11 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 	} else {
 		return nil, errors.New("Unknown credentials method")
 	}
+}
+
+func (manager *VaultCredentialsManager) GetFingerprint() string {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	return manager.credentials.VaultFingerprint
 }

@@ -78,6 +78,9 @@ paths:
               session_id:
                 type: string
                 description: "Session ID. Set a cookie named 'x-session-token' with that value. Sessions expire when you log out or after 24 hours."
+              vault_fingerprint:
+                type: string
+                description: "Vault fingerprint"
                 
   "/api/auth/logout":
     post:
