@@ -135,7 +135,7 @@ export class AlbumsController {
         });
     }
 
-    public static GetAlbumsListCopy() {
+    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string, list: number[] }[] {
         const result = [];
 
         for (const album of Object.values(AlbumsController.Albums)) {

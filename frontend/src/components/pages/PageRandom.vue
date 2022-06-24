@@ -34,9 +34,9 @@
       </div>
 
       <div v-if="!loading && total <= 0" class="search-results-msg-display">
-        <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
+        <div class="search-results-msg-icon"><i class="fas fa-box-open"></i></div>
         <div class="search-results-msg-text">
-          {{ $t("Could not find any result") }}
+          {{ $t("The vault is empty") }}
         </div>
         <div class="search-results-msg-btn">
           <button type="button" @click="load" class="btn btn-primary">
