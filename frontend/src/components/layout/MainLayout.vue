@@ -11,7 +11,7 @@
       'sidebar-hidden': !displaySidebar,
     }"
   >
-    <PageContent :min="layout === 'media-split'"></PageContent>
+    <PageContent :min="layout === 'media-split'" @album-create="createAlbum"></PageContent>
     <PlayerContainer></PlayerContainer>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
@@ -26,6 +26,9 @@
     <ChangeUsernameModal v-model:display="displayUsernameModal"></ChangeUsernameModal>
     <ChangePasswordModal v-model:display="displayPasswordModal"></ChangePasswordModal>
     <AdvancedSettingsModal v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
+
+    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumListModal v-model:display="displayAlbumList"></AlbumListModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -53,6 +56,8 @@ import ThemeModal from "../modals/ThemeModal.vue";
 import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
 import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
 import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
+import AlbumCreateModal from "../modals/AlbumCreateModal.vue"
+import AlbumListModal from "../modals/AlbumListModal.vue"
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -76,6 +81,8 @@ export default defineComponent({
     ChangeUsernameModal,
     ChangePasswordModal,
     AdvancedSettingsModal,
+    AlbumCreateModal,
+    AlbumListModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -96,6 +103,9 @@ export default defineComponent({
       displayUsernameModal: false,
       displayPasswordModal: false,
       displayAdvancedSettings: false,
+
+      displayAlbumCreate: false,
+      displayAlbumList: false,
 
       displaySidebar: true,
     };
@@ -131,6 +141,14 @@ export default defineComponent({
 
     toggleSidebar: function () {
       this.displaySidebar = !this.displaySidebar;
+    },
+
+    createAlbum: function () {
+      this.displayAlbumCreate = true;
+    },
+
+    showAlbumList: function () {
+      this.displayAlbumList = true;
     },
   },
   mounted: function () {

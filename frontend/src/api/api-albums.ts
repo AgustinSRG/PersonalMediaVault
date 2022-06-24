@@ -20,7 +20,7 @@ export class AmbumsAPI {
     public static CreateAlbum(name: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/albums/"),
+            url: GetAPIURL("/api/albums"),
             json: {
                 name: name,
             },

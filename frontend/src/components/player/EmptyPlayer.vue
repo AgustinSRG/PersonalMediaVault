@@ -23,6 +23,10 @@
       <div class="player-error">{{ $t('Error: Media asset does not exists or it was removed from the vault') }}</div>
     </div>
 
+    <div class="player-error-container" v-if="status === 'none'">
+      <div class="player-info">{{ $t('The album is empty. Browse your vault and add item to this album in order to play it.') }}</div>
+    </div>
+
     <div
       class="player-controls"
       @dblclick="stopPropagationEvent"
@@ -375,7 +379,6 @@ export default defineComponent({
 
 .player-error {
   color: red;
-  font-size: small;
 }
 
 </style>

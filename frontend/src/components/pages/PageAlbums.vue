@@ -150,11 +150,17 @@ import { GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
+import PageMenu from "@/components/utils/PageMenu.vue";
+
 export default defineComponent({
   name: "PageAlbums",
   emits: ['album-create'],
+  components: {
+    PageMenu,
+  },
   props: {
     display: Boolean,
+    min: Boolean,
   },
   data: function () {
     return {

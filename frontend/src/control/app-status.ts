@@ -169,6 +169,8 @@ export class AppStatus {
     public static GoToPage(page: string) {
         AppStatus.CurrentPage = page;
 
+        AppStatus.CurrentAlbum = -1;
+
         AppStatus.UpdateLayout();
 
         AppStatus.CurrentFocus = "content";
@@ -191,6 +193,8 @@ export class AppStatus {
     public static GoToSearch(search: string) {
         AppStatus.CurrentPage = "search";
         AppStatus.CurrentSearch = search;
+
+        AppStatus.CurrentAlbum = -1;
 
         AppStatus.UpdateLayout();
 

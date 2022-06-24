@@ -60,6 +60,8 @@ export default defineComponent({
         this.status = "loading";
       } else if (this.mdata) {
         this.status = "200";
+      } else if (this.mid === -1) {
+        this.status = "none";
       } else {
         this.status = "404";
       }

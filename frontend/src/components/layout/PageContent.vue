@@ -10,7 +10,7 @@
     <PageSearch :display="page === 'search'" :min="min"></PageSearch>
     <PageUpload :display="page === 'upload'"></PageUpload>
     <PageRandom :display="page === 'random'"></PageRandom>
-    <PageAlbums :display="page === 'albums'"></PageAlbums>
+    <PageAlbums :display="page === 'albums'" @album-create="createAlbum" :min="min"></PageAlbums>
   </div>
 </template>
 
@@ -34,6 +34,7 @@ export default defineComponent({
     PageRandom,
   },
   name: "PageContent",
+  emits: ['album-create'],
   props: {
     min: Boolean,
   },
@@ -51,6 +52,10 @@ export default defineComponent({
 
     expandPage: function () {
       AppStatus.ExpandPage();
+    },
+
+    createAlbum: function () {
+      this.$emit("album-create");
     },
 
     closePage: function () {

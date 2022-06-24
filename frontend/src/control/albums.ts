@@ -149,4 +149,17 @@ export class AlbumsController {
 
         return result;
     }
+
+
+    public static FindDuplicatedName(name: string): boolean {
+        const nameLower = name.toLowerCase();
+
+        for (const album of Object.values(AlbumsController.Albums)) {
+            if (nameLower === album.name.toLowerCase()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
