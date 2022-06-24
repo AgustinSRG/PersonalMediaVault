@@ -26,7 +26,9 @@ export class PlayerPreferences {
     public static PlayerScale = 0;
     public static PlayerFit = true;
 
-    public static AudioAnymationStyle = "gradient";
+    public static AudioAnimationStyle = "gradient";
+
+    public static ImagePlayerBackground = "default";
 
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
@@ -51,7 +53,9 @@ export class PlayerPreferences {
         PlayerPreferences.PlayerScale = LocalStorage.Get("player-pref-scale", 0);
         PlayerPreferences.PlayerFit = LocalStorage.Get("player-pref-fit", true);
 
-        PlayerPreferences.AudioAnymationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
+        PlayerPreferences.AudioAnimationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
+
+        PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -191,8 +195,13 @@ export class PlayerPreferences {
         LocalStorage.Set("player-pref-fit", f);
     }
 
-    public static SetAudioAnymationStyle(s: string) {
-        PlayerPreferences.AudioAnymationStyle = s;
+    public static SetAudioAnimationStyle(s: string) {
+        PlayerPreferences.AudioAnimationStyle = s;
         LocalStorage.Set("player-pref-audio-anim", s);
+    }
+
+    public static SetImagePlayerBackground(s: string) {
+        PlayerPreferences.ImagePlayerBackground = s;
+        LocalStorage.Set("player-pref-img-bg", s);
     }
 }

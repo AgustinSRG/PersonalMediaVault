@@ -457,7 +457,7 @@ export default defineComponent({
     },
 
     onUpdateAnimColors: function () {
-      PlayerPreferences.SetAudioAnymationStyle(this.animationColors);
+      PlayerPreferences.SetAudioAnimationStyle(this.animationColors);
     },
 
     changeVolume: function (v: number) {
@@ -1035,7 +1035,7 @@ export default defineComponent({
     // Load player preferences
     this.muted = PlayerPreferences.PlayerMuted;
     this.volume = PlayerPreferences.PlayerVolume;
-    this.animationColors = PlayerPreferences.AudioAnymationStyle;
+    this.animationColors = PlayerPreferences.AudioAnimationStyle;
 
     this.$options.timer = setInterval(this.tick.bind(this), 100);
 

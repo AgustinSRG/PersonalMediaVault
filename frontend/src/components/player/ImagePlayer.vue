@@ -183,6 +183,7 @@
       v-model:resolution="currentResolution"
       v-model:background="background"
       @update:resolution="onResolutionUpdated"
+      @update:background="onBackgroundChanged"
       :rtick="internalTick"
       :metadata="metadata"
       @enter="enterControls"
@@ -524,6 +525,10 @@ export default defineComponent({
       this.onUserFitUpdated();
     },
 
+    onBackgroundChanged() {
+      PlayerPreferences.SetImagePlayerBackground(this.background);
+    },
+
     /* Player events */
 
     onImageLoaded: function () {
@@ -714,6 +719,7 @@ export default defineComponent({
     // Load player preferences
     this.fit = PlayerPreferences.PlayerFit;
     this.scale = PlayerPreferences.PlayerScale;
+    this.background = PlayerPreferences.ImagePlayerBackground;
 
     this.$options.timer = setInterval(
       this.tick.bind(this),
