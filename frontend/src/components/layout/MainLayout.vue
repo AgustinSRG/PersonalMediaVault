@@ -9,12 +9,15 @@
       'layout-media-split': layout === 'media-split',
       'layout-media': layout === 'media',
       'sidebar-hidden': !displaySidebar,
+      'focus-left': focus === 'left',
+      'focus-right': focus === 'right',
     }"
   >
     <PageContent :min="layout === 'media-split'" @album-create="createAlbum"></PageContent>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
+    <BottomBar></BottomBar>
     <div class="sidebar-float-overlay" :class="{hidden: !displaySidebar}" @click="hideSidebar"></div>
     <SideBar v-model:display="displaySidebar"></SideBar>
 
@@ -44,6 +47,7 @@
 import { defineComponent } from "vue";
 
 import TopBar from "./TopBar.vue";
+import BottomBar from "./BottomBar.vue";
 import SideBar from "./SideBar.vue";
 import PageContent from "./PageContent.vue";
 import PlayerContainer from "./PlayerContainer.vue";
@@ -70,6 +74,7 @@ import { AppStatus } from "@/control/app-status";
 export default defineComponent({
   components: {
     TopBar,
+    BottomBar,
     SideBar,
     PageContent,
     PlayerContainer,
@@ -93,6 +98,7 @@ export default defineComponent({
       locked: AuthController.Locked,
       loadingAuth: AuthController.Loading,
       layout: AppStatus.CurrentLayout,
+      focus: AppStatus.CurrentFocus,
 
       loadingTags: TagsController.Loading,
       loadingAlbums: AlbumsController.Loading,
@@ -163,6 +169,7 @@ export default defineComponent({
 
     AppEvents.AddEventListener("app-status-update", () => {
       this.layout = AppStatus.CurrentLayout;
+      this.focus = AppStatus.CurrentFocus;
     });
 
     AppEvents.AddEventListener("auth-status-changed", (locked: boolean) => {

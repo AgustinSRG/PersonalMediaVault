@@ -133,6 +133,17 @@ export default defineComponent({
   border-left: solid 1px rgba(255, 255, 255, 0.1);
 }
 
+@media (max-width: 1000px) {
+  .layout-media-split .page-content {
+    width: calc(100%);
+    height: calc(100% - 57px - 40px);
+  }
+
+  .layout-media-split.focus-left .page-content {
+    display: none;
+  }
+}
+
 .layout-album .page-content {
   display: none;
 }
@@ -213,30 +224,6 @@ export default defineComponent({
 
 .page-inner.hidden {
   display: none;
-}
-
-/* Custom scroll bar */
-
-
-/* width */
-
-.page-content::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
-}
-
-
-/* Track */
-
-.page-content::-webkit-scrollbar-track {
-    background: #bdbdbd;
-}
-
-
-/* Handle */
-
-.page-content::-webkit-scrollbar-thumb {
-    background: #757575;
 }
 
 </style>

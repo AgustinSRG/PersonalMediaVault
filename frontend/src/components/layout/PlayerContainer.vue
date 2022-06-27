@@ -1,9 +1,53 @@
 <template>
   <div class="player-container">
-    <EmptyPlayer v-if="!mdata || mdata.type === 0" :mid="mid" :status="status" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen"></EmptyPlayer>
-    <ImagePlayer v-if="mdata && mdata.type === 1" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen" v-model:showcontrols="showControls" @albums-open="openAlbums"></ImagePlayer>
-    <VideoPlayer v-if="mdata && mdata.type === 2" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen" @albums-open="openAlbums"></VideoPlayer>
-    <AudioPlayer v-if="mdata && mdata.type === 3" :mid="mid" :metadata="mdata" :rtick="tick" :prev="prev" :next="next" @gonext="goNext" @goprev="goPrev" v-model:fullscreen="fullScreen" @albums-open="openAlbums"></AudioPlayer>
+    <EmptyPlayer
+      v-if="!mdata || mdata.type === 0"
+      :mid="mid"
+      :status="status"
+      :rtick="tick"
+      :prev="prev"
+      :next="next"
+      @gonext="goNext"
+      @goprev="goPrev"
+      v-model:fullscreen="fullScreen"
+    ></EmptyPlayer>
+    <ImagePlayer
+      v-if="mdata && mdata.type === 1"
+      :mid="mid"
+      :metadata="mdata"
+      :rtick="tick"
+      :prev="prev"
+      :next="next"
+      @gonext="goNext"
+      @goprev="goPrev"
+      v-model:fullscreen="fullScreen"
+      v-model:showcontrols="showControls"
+      @albums-open="openAlbums"
+    ></ImagePlayer>
+    <VideoPlayer
+      v-if="mdata && mdata.type === 2"
+      :mid="mid"
+      :metadata="mdata"
+      :rtick="tick"
+      :prev="prev"
+      :next="next"
+      @gonext="goNext"
+      @goprev="goPrev"
+      v-model:fullscreen="fullScreen"
+      @albums-open="openAlbums"
+    ></VideoPlayer>
+    <AudioPlayer
+      v-if="mdata && mdata.type === 3"
+      :mid="mid"
+      :metadata="mdata"
+      :rtick="tick"
+      :prev="prev"
+      :next="next"
+      @gonext="goNext"
+      @goprev="goPrev"
+      v-model:fullscreen="fullScreen"
+      @albums-open="openAlbums"
+    ></AudioPlayer>
   </div>
 </template>
 
@@ -72,13 +116,9 @@ export default defineComponent({
       this.$emit("albums-open");
     },
 
-    goNext: function () {
+    goNext: function () {},
 
-    },
-
-    goPrev: function () {
-
-    },
+    goPrev: function () {},
   },
   mounted: function () {
     this.$options.loadingH = this.updateLoading.bind(this);
@@ -120,6 +160,24 @@ export default defineComponent({
 .layout-album .player-container {
   width: calc(100% - 500px);
 }
+
+@media (max-width: 1000px) {
+  .layout-media-split .player-container,
+  .layout-album .player-container {
+    width: calc(100%);
+    height: calc(100% - 57px - 40px);
+  }
+
+  .layout-media-split.focus-right .player-container {
+    display: none;
+  }
+
+  .layout-album.focus-right .player-container {
+    display: none;
+  }
+}
+
+
 
 .layout-initial .player-container {
   display: none;

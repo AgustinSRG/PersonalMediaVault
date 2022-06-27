@@ -9,7 +9,7 @@ import { AppEvents } from "./app-events";
 export class AppStatus {
 
     public static CurrentLayout = "initial";
-    public static CurrentFocus = "content";
+    public static CurrentFocus = "left";
 
     public static CurrentPage = "home";
 
@@ -177,7 +177,7 @@ export class AppStatus {
 
         AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
@@ -189,7 +189,7 @@ export class AppStatus {
 
         AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
@@ -206,7 +206,7 @@ export class AppStatus {
 
         AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
@@ -219,7 +219,7 @@ export class AppStatus {
 
         AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "left";
 
         AppStatus.OnStatusUpdate();
     }
@@ -232,31 +232,25 @@ export class AppStatus {
 
         AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "left";
 
         AppStatus.OnStatusUpdate();
     }
 
-    public static FocusAltContent() {
-        AppStatus.CurrentFocus = "alt";
+    public static FocusLeft() {
+        AppStatus.CurrentFocus = "left";
 
         AppStatus.OnStatusUpdate();
     }
 
-    public static OpenMenu() {
-        AppStatus.CurrentFocus = "menu";
-
-        AppStatus.OnStatusUpdate();
-    }
-
-    public static CloseMenu() {
-        AppStatus.CurrentFocus = "content";
+    public static FocusRight() {
+        AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
 
     public static ClosePage() {
-        AppStatus.CurrentFocus = "content";
+        AppStatus.CurrentFocus = "left";
         AppStatus.ListSplitMode = false;
         AppStatus.OnStatusUpdate();
     }
