@@ -7,7 +7,7 @@
     :aria-hidden="!display"
     @click="close"
   >
-    <div class="modal-dialog" role="document" @click="stopPropagationEvent">
+    <div class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Vault settings") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">

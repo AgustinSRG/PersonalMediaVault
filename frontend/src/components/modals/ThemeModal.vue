@@ -7,7 +7,7 @@
     :aria-hidden="!display"
     @click="close"
   >
-    <div class="modal-dialog" role="document" @click="stopPropagationEvent">
+    <div class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Select a theme for the app") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -23,7 +23,7 @@
                 :class="{ unchecked: theme !== 'dark' }"
               ></i>
             </td>
-            <td class="modal-menu-item-title">Dark Theme</td>
+            <td class="modal-menu-item-title">{{ $t('Dark Theme') }}</td>
           </tr>
           <tr
             class="modal-menu-item"
@@ -36,7 +36,7 @@
                 :class="{ unchecked: theme !== 'light' }"
               ></i>
             </td>
-            <td class="modal-menu-item-title">Light Theme</td>
+            <td class="modal-menu-item-title">{{ $t('Light Theme') }}</td>
           </tr>
         </table>
       </div>

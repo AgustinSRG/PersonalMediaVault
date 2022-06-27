@@ -25,10 +25,17 @@ function getResourcesFromTranslationsFile(file) {
 function searchTranslationUsages(file) {
     const str = FS.readFileSync(file).toString();
 
-    const matches = (str.match(/\$t\(\"([^\\"]*)\"\)/gi) || []).concat((str.match(/\$t\(\'[^\\']*\'\)/gi) || []));
+    const matches = (str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\"([^\\"]*)\"([\s\n\t]+)*\)/gi) || [])
+        .concat((str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\'[^\\']*\'([\s\n\t]+)*\)/gi) || []));
     const usages = {};
 
-    for (const match of matches) {
+    for (let match of matches) {
+        match = match.replace(/\(([\s\n\t]+)*\"/gi, '("')
+            .replace(/\(([\s\n\t]+)*\'/gi, '(\'')
+            .replace(/\"([\s\n\t]+)*\)/gi, '")')
+            .replace(/\'([\s\n\t]+)*\)/gi, '\')')
+            .trim()
+        // console.log(match);
         const tKey = JSON.parse('"' + match.substr(4, match.length - 6) + '"');
 
         usages[tKey] = "";
