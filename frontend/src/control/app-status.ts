@@ -171,6 +171,10 @@ export class AppStatus {
 
         AppStatus.CurrentAlbum = -1;
 
+        if (AppStatus.CurrentMedia >= 0) {
+            AppStatus.ListSplitMode = true;
+        }
+
         AppStatus.UpdateLayout();
 
         AppStatus.CurrentFocus = "content";
@@ -195,6 +199,10 @@ export class AppStatus {
         AppStatus.CurrentSearch = search;
 
         AppStatus.CurrentAlbum = -1;
+
+        if (AppStatus.CurrentMedia >= 0) {
+            AppStatus.ListSplitMode = true;
+        }
 
         AppStatus.UpdateLayout();
 

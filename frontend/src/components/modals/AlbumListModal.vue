@@ -37,7 +37,9 @@
         </div>
         <table class="modal-menu">
           <tr v-if="albums.length === 0">
-            <td colspan="2" class="albums-menu-empty">{{ $t("No albums found") }}</td>
+            <td colspan="2" class="albums-menu-empty">
+              {{ $t("No albums found") }}
+            </td>
           </tr>
           <tr
             v-for="a in albums"
@@ -67,9 +69,11 @@
 </template>
 
 <script lang="ts">
+import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { Request } from "@/utils/request";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -104,7 +108,55 @@ export default defineComponent({
       this.$emit("album-create");
     },
 
-    clickOnAlbum: function (album) {},
+    clickOnAlbum: function (album) {
+      if (album.added) {
+        // Remove
+        Request.Do(AmbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
+          .onSuccess(() => {
+            album.added = false;
+            AppEvents.Emit("snack", this.$t("Successfully removed from album"));
+            AlbumsController.OnChangedAlbum(album.id);
+          })
+          .onCancel(() => {
+            this.busy = false;
+          })
+          .onRequestError((err) => {
+            this.busy = false;
+            Request.ErrorHandler()
+              .add(401, "*", () => {
+                this.error = this.$t("Access denied");
+                AppEvents.Emit("unauthorized");
+              })
+              .handle(err);
+          })
+          .onUnexpectedError((err) => {
+            console.error(err);
+          });
+      } else {
+        // Add
+        Request.Do(AmbumsAPI.AddMediaToAlbum(album.id, this.mid))
+          .onSuccess(() => {
+            album.added = true;
+            AppEvents.Emit("snack", this.$t("Successfully added to album"));
+            AlbumsController.OnChangedAlbum(album.id);
+          })
+          .onCancel(() => {
+            this.busy = false;
+          })
+          .onRequestError((err) => {
+            this.busy = false;
+            Request.ErrorHandler()
+              .add(401, "*", () => {
+                this.error = this.$t("Access denied");
+                AppEvents.Emit("unauthorized");
+              })
+              .handle(err);
+          })
+          .onUnexpectedError((err) => {
+            console.error(err);
+          });
+      }
+    },
 
     onUpdateStatus: function () {
       const changed = this.mid !== AppStatus.CurrentMedia;

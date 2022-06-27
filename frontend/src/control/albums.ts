@@ -12,6 +12,7 @@ export interface AlbumEntry {
     id: number;
     name: string;
     list: number[];
+    thumbnail: string;
 }
 
 export interface AlbumData {
@@ -144,6 +145,7 @@ export class AlbumsController {
                 name: album.name,
                 nameLowerCase: album.name.toLowerCase(),
                 list: album.list.slice(),
+                thumbnail: album.thumbnail,
             })
         }
 
@@ -161,5 +163,12 @@ export class AlbumsController {
         }
 
         return false;
+    }
+
+    public static OnChangedAlbum(albumId: number) {
+        if (AlbumsController.CurrentAlbum === albumId) {
+            AlbumsController.LoadCurrentAlbum();
+        }
+        AlbumsController.Load();
     }
 }
