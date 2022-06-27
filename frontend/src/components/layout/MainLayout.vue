@@ -15,6 +15,7 @@
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
+    <div class="sidebar-float-overlay" :class="{hidden: !displaySidebar}" @click="hideSidebar"></div>
     <SideBar v-model:display="displaySidebar"></SideBar>
 
     <SettingsModal
@@ -150,6 +151,10 @@ export default defineComponent({
     showAlbumList: function () {
       this.displayAlbumList = true;
     },
+
+    hideSidebar: function () {
+      this.displaySidebar = false;
+    },
   },
   mounted: function () {
     AppEvents.AddEventListener("theme-changed", () => {
@@ -194,5 +199,27 @@ export default defineComponent({
   height: 100%;
   background: #181818;
   color: white;
+}
+
+.sidebar-float-overlay {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  opacity: 1;
+  transition: opacity 0.2s;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.sidebar-float-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.layout-initial .sidebar-float-overlay {
+  display: none;
 }
 </style>
