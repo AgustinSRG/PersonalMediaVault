@@ -12,7 +12,7 @@
     }"
   >
     <PageContent :min="layout === 'media-split'" @album-create="createAlbum"></PageContent>
-    <PlayerContainer></PlayerContainer>
+    <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
     <SideBar v-model:display="displaySidebar"></SideBar>
@@ -27,8 +27,8 @@
     <ChangePasswordModal v-model:display="displayPasswordModal"></ChangePasswordModal>
     <AdvancedSettingsModal v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
 
+    <AlbumListModal v-model:display="displayAlbumList" @album-create="createAlbum"></AlbumListModal>
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
-    <AlbumListModal v-model:display="displayAlbumList"></AlbumListModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 

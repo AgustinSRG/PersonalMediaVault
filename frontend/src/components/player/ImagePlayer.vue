@@ -97,6 +97,17 @@
       <div class="player-controls-right">
         <button
           type="button"
+          :title="$t('Manage albums')"
+          class="player-btn"
+          @click="manageAlbums"
+          @mouseenter="enterTooltip('albums')"
+          @mouseleave="leaveTooltip('albums')"
+        >
+          <i class="fas fa-list-ol"></i>
+        </button>
+
+        <button
+          type="button"
           :title="$t('Player Configuration')"
           class="player-btn"
           @click="showConfig"
@@ -163,6 +174,13 @@
       class="player-tooltip player-helptip-right"
     >
       {{ $t("Player Configuration") }}
+    </div>
+
+    <div
+      v-if="!displayConfig && helpTooltip === 'albums'"
+      class="player-tooltip player-helptip-right"
+    >
+      {{ $t("Manage albums") }}
     </div>
 
     <div
@@ -237,7 +255,7 @@ export default defineComponent({
     PlayerContextMenu,
   },
   name: "ImagePlayer",
-  emits: ["gonext", "goprev", "update:fullscreen", "update:showcontrols"],
+  emits: ["gonext", "goprev", "update:fullscreen", "update:showcontrols", "albums-open"],
   props: {
     mid: Number,
     metadata: Object,
@@ -309,6 +327,10 @@ export default defineComponent({
       this.contextMenuY = e.pageY;
       this.contextMenuShown = true;
       e.preventDefault();
+    },
+
+    manageAlbums: function () {
+      this.$emit("albums-open");
     },
 
     grabScroll: function (e) {

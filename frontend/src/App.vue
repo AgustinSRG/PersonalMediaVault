@@ -130,4 +130,19 @@ export default class App extends Vue {}
 .form-error {
   color: red;
 }
+
+/* Custom scroll bar */
+
+*::-webkit-scrollbar {
+    width: 5px;
+    height: 3px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #bdbdbd;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #757575;
+}
 </style>

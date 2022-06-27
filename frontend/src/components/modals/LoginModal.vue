@@ -202,7 +202,7 @@ export default defineComponent({
 }
 
 .modal-sm {
-  width: 240px;
+  width: 300px;
 }
 
 @media (max-width: 300px) {

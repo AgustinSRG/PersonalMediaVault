@@ -7,90 +7,88 @@
     :aria-hidden="!display"
     @click="close"
   >
-    <div class="modal-dialog" role="document" @click="stopPropagationEvent">
+    <div
+      class="modal-dialog modal-sm"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
-        <div class="modal-title">{{ $t("Vault settings") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <div class="modal-title">{{ $t("Albums") }}</div>
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body with-menu">
-        <table class="modal-menu">
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @click="clickOnOption('theme')"
-          >
-            <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change theme (Dark / Light)") }}
-            </td>
-          </tr>
 
+      <div class="modal-body with-menu limited-size">
+        <div class="albums-modal-filter">
+          <input
+            type="text"
+            autocomplete="off"
+            @input="updateAlbums"
+            v-model="filter"
+            class="form-control form-control-full-width"
+            :placeholder="$t('Filter by name') + '...'"
+          />
+        </div>
+        <table class="modal-menu">
+          <tr v-if="albums.length === 0">
+            <td colspan="2" class="albums-menu-empty">{{ $t("No albums found") }}</td>
+          </tr>
           <tr
+            v-for="a in albums"
+            :key="a.id"
             class="modal-menu-item"
             tabindex="0"
-            @click="clickOnOption('lang')"
+            @click="clickOnAlbum(a)"
           >
             <td class="modal-menu-item-icon">
-              <i class="fas fa-language"></i>
+              <i v-if="a.added" class="far fa-square-check"></i>
+              <i v-else class="far fa-square"></i>
             </td>
             <td class="modal-menu-item-title">
-              {{ $t("Change language") }}
-            </td>
-          </tr>
-
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @click="clickOnOption('username')"
-          >
-            <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change username") }}
-            </td>
-          </tr>
-
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @click="clickOnOption('password')"
-          >
-            <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change password") }}
-            </td>
-          </tr>
-
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @click="clickOnOption('advanced')"
-          >
-            <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Advanced settings") }}
+              {{ a.name }}
             </td>
           </tr>
         </table>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" @click="createAlbum" class="modal-footer-btn">
+          <i class="fas fa-plus"></i> {{ $t("Create album") }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { AlbumsController } from "@/control/albums";
+import { AppEvents } from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   name: "AlbumListModal",
-  emits: ["update:display", "goto"],
+  emits: ["update:display"],
   props: {
     display: Boolean,
   },
   setup(props) {
     return {
       displayStatus: useVModel(props, "display"),
+    };
+  },
+  data: function () {
+    return {
+      albums: [],
+      filter: "",
+      mid: AppStatus.CurrentMedia,
     };
   },
   methods: {
@@ -102,14 +100,70 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    clickOnOption: function (o: string) {
-      this.$emit("goto", o);
-      this.close();
+    createAlbum: function () {
+      this.$emit("album-create");
     },
+
+    clickOnAlbum: function (album) {},
+
+    onUpdateStatus: function () {
+      const changed = this.mid !== AppStatus.CurrentMedia;
+      this.mid = AppStatus.CurrentMedia;
+      if (changed) {
+        this.updateAlbums();
+      }
+    },
+
+    updateAlbums: function () {
+      var mid = AppStatus.CurrentMedia;
+      var filter = (this.filter + "").toLowerCase();
+      this.albums = AlbumsController.GetAlbumsListCopy()
+        .filter((a) => {
+          return !filter || a.nameLowerCase.indexOf(filter) >= 0;
+        })
+        .map((a: any) => {
+          a.added = mid >= 0 && a.list.indexOf(mid) >= 0;
+          return a;
+        })
+        .sort((a, b) => {
+          if (a.nameLowerCase < b.nameLowerCase) {
+            return -1;
+          } else if (a.nameLowerCase > b.nameLowerCase) {
+            return 1;
+          } else {
+            return 1;
+          }
+        });
+    },
+  },
+  mounted: function () {
+    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+
+    this.$options.statusH = this.onUpdateStatus.bind(this);
+    AppEvents.AddEventListener("app-status-update", this.$options.statusH);
+
+    this.updateAlbums();
+  },
+  beforeUnmount: function () {
+    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+    AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
   },
 });
 </script>
 
 <style>
+.modal-body.with-menu.limited-size {
+  max-height: 300px;
+  overflow-y: auto;
+}
 
+.albums-menu-empty {
+  padding: 1rem;
+  text-align: center;
+}
+
+.albums-modal-filter {
+  padding: 0.5rem 0.25rem;
+}
 </style>
