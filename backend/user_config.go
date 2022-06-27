@@ -101,7 +101,7 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 
 	// Create temp file to write it
 
-	tmpFile := GetTemporalFileName("pmv")
+	tmpFile := GetTemporalFileName("pmv", true)
 
 	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
 

@@ -84,7 +84,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		return
 	}
 
-	tempFolder, err := GetTemporalFolder()
+	tempFolder, err := GetTemporalFolder(false)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -331,7 +331,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		return
 	}
 
-	encrypted_temp := path.Join(tempFolder, "asset.pma")
+	encrypted_temp := GetTemporalFileName("pma", true)
 
 	ws, err := CreateFileBlockEncryptWriteStream(encrypted_temp)
 
@@ -355,6 +355,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
+		os.Remove(encrypted_temp)
 		return
 	}
 
@@ -372,6 +373,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			WipeTemporalPath(tempFolder)
+			os.Remove(encrypted_temp)
 			return
 		}
 
@@ -393,6 +395,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			WipeTemporalPath(tempFolder)
+			os.Remove(encrypted_temp)
 			return
 		}
 
@@ -405,6 +408,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			WipeTemporalPath(tempFolder)
+			os.Remove(encrypted_temp)
 			return
 		}
 	}
@@ -420,6 +424,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
 		WipeTemporalPath(tempFolder)
+		os.Remove(encrypted_temp)
 
 		return
 	}
@@ -431,6 +436,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
+		os.Remove(encrypted_temp)
 		return
 	}
 
@@ -446,6 +452,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
+		os.Remove(encrypted_temp)
 		return
 	}
 
@@ -466,6 +473,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
+		os.Remove(encrypted_temp)
 		return
 	}
 

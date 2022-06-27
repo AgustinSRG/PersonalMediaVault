@@ -286,7 +286,7 @@ func (manager *VaultCredentialsManager) SaveCredentials() error {
 	}
 
 	// Make a temp file
-	tFile := GetTemporalFileName("json")
+	tFile := GetTemporalFileName("json", true)
 
 	// Write file
 	err = ioutil.WriteFile(tFile, jsonData, FILE_PERMISSION)

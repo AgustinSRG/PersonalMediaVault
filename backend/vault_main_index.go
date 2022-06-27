@@ -51,7 +51,7 @@ func (vmi *VaultMainIndex) StartWrite() (*VaultIndexWriteResource, error) {
 	vmi.lock.RequestWrite() // Request write
 
 	// Make temp file
-	tmpFile := GetTemporalFileName("index")
+	tmpFile := GetTemporalFileName("index", true)
 
 	// Copy file
 	_, err := CopyFile(vmi.file, tmpFile)

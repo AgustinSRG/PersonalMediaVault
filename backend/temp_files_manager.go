@@ -11,18 +11,22 @@ import (
 )
 
 var (
-	temp_files_path    = "./temp"
+	temp_files_path             = "./temp"
+	unencrypted_temp_files_path = "./temp"
+
 	temp_files_prefix  = "pmv_tmp_"
 	temp_files_lock    = &sync.Mutex{}
 	temp_files_counter = 0
 )
 
 // Initialize
-func SetTempFilesPath(path string) {
-	temp_files_path = path
+func SetTempFilesPath(tempPath string, unencryptedTempPath string) {
+	temp_files_path = tempPath
+	unencrypted_temp_files_path = unencryptedTempPath
 
 	// Create path if not exists
 	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
 
 	// Create unique prefix for each execution
 	timeNow := time.Now().UTC().UnixMilli()
@@ -47,10 +51,27 @@ func ClearTemporalFilesPath() {
 			WipeTemporalPath(path.Join(temp_files_path, entries[i].Name()))
 		}
 	}
+
+	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+
+	entries, err = os.ReadDir(unencrypted_temp_files_path)
+
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	for i := 0; i < len(entries); i++ {
+		if entries[i].Type().IsRegular() {
+			WipeTemporalFile(path.Join(unencrypted_temp_files_path, entries[i].Name()))
+		} else if entries[i].Type().IsDir() {
+			WipeTemporalPath(path.Join(unencrypted_temp_files_path, entries[i].Name()))
+		}
+	}
 }
 
 // Gets a name for a temporal file
-func GetTemporalFileName(extension string) string {
+func GetTemporalFileName(extension string, encrypted bool) string {
 	temp_files_lock.Lock()
 
 	temp_files_counter++
@@ -62,11 +83,19 @@ func GetTemporalFileName(extension string) string {
 		fileName += "." + extension
 	}
 
-	return path.Join(temp_files_path, fileName)
+	var baseFolder string
+
+	if encrypted {
+		baseFolder = temp_files_path
+	} else {
+		baseFolder = unencrypted_temp_files_path
+	}
+
+	return path.Join(baseFolder, fileName)
 }
 
 // Creates a temporal folder and returns the path
-func GetTemporalFolder() (string, error) {
+func GetTemporalFolder(encrypted bool) (string, error) {
 	temp_files_lock.Lock()
 
 	temp_files_counter++
@@ -74,7 +103,15 @@ func GetTemporalFolder() (string, error) {
 
 	temp_files_lock.Unlock()
 
-	folderPath := path.Join(temp_files_path, folderName)
+	var baseFolder string
+
+	if encrypted {
+		baseFolder = temp_files_path
+	} else {
+		baseFolder = unencrypted_temp_files_path
+	}
+
+	folderPath := path.Join(baseFolder, folderName)
 
 	err := os.MkdirAll(folderPath, FOLDER_PERMISSION)
 

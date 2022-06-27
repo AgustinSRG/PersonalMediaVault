@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"runtime"
 )
 
@@ -24,7 +25,8 @@ type BackendOptions struct {
 	vaultPath string
 
 	// Temp path
-	tempPath string
+	tempPath            string
+	unencryptedTempPath string
 }
 
 var (
@@ -41,10 +43,11 @@ func main() {
 	args := os.Args
 
 	options := BackendOptions{
-		ffmpegPath:  os.Getenv("FFMPEG_PATH"),
-		ffprobePath: os.Getenv("FFPROBE_PATH"),
-		vaultPath:   "./vault",
-		tempPath:    os.Getenv("TEMP_PATH"),
+		ffmpegPath:          os.Getenv("FFMPEG_PATH"),
+		ffprobePath:         os.Getenv("FFPROBE_PATH"),
+		vaultPath:           "./vault",
+		tempPath:            os.Getenv("TEMP_PATH"),
+		unencryptedTempPath: os.Getenv("UNENCRYPTED_TEMP_PATH"),
 	}
 
 	if options.ffmpegPath == "" {
@@ -65,6 +68,17 @@ func main() {
 
 	if options.tempPath == "" {
 		options.tempPath = "./temp"
+	}
+
+	if options.unencryptedTempPath == "" {
+		userhome, err := os.UserHomeDir()
+
+		if err != nil {
+			LogError(err)
+			os.Exit(1)
+		}
+
+		options.unencryptedTempPath = path.Join(userhome, ".pmv", "temp")
 	}
 
 	for i := 1; i < len(args); i++ {
@@ -107,7 +121,7 @@ func main() {
 		}
 	}
 
-	SetTempFilesPath(options.tempPath) // Set temporal files path
+	SetTempFilesPath(options.tempPath, options.unencryptedTempPath) // Set temporal files path
 
 	if options.clean {
 		LogInfo("Cleaning temporal files...")
@@ -168,7 +182,11 @@ func printHelp() {
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
-	fmt.Println("        TEMP_PATH                  Temporal path to store thing like uploaded files.")
+	fmt.Println("        TEMP_PATH                  Temporal path to modify files before pushing them to the vault.")
+	fmt.Println("                                   Note: It should be in the same filesystem as the vault.")
+	fmt.Println("        UNENCRYPTED_TEMP_PATH      Temporal path to store things like uploaded files or to use for FFMPEG encoding.")
+	fmt.Println("                                   Note: It should be in a different filesystem if the vault is stored in an unsafe environment.")
+	fmt.Println("                                   By default, this will be stored in ~/.pmv/temp")
 	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
 	fmt.Println("        BIND_ADDRESS               Bind address for listening HTTP and HTTPS.")
 	fmt.Println("        HTTP_PORT                  HTTP listening port, 80 by default.")

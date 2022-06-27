@@ -280,7 +280,7 @@ const (
 
 func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMediaResult) (string, error) {
 	if probedata.Type == MediaTypeVideo {
-		tmpFile := GetTemporalFileName("jpg")
+		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 		args := make([]string, 1)
@@ -336,7 +336,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		return tmpFile, nil
 	} else if probedata.Type == MediaTypeImage {
-		tmpFile := GetTemporalFileName("jpg")
+		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 		args := make([]string, 1)

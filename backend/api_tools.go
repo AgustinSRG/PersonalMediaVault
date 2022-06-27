@@ -145,7 +145,7 @@ func GetNameFromFileName(fileName string) string {
 }
 
 func EncryptAssetFile(file string, key []byte) (string, error) {
-	encrypted_file := GetTemporalFileName("pma")
+	encrypted_file := GetTemporalFileName("pma", true)
 
 	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 

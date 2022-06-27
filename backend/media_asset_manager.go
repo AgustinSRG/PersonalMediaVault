@@ -96,7 +96,7 @@ func (mm *MediaAssetsManager) NextMediaId() (uint64, error) {
 
 	// Create temp file to write it
 
-	tmpFile := GetTemporalFileName("json")
+	tmpFile := GetTemporalFileName("json", true)
 
 	err = ioutil.WriteFile(tmpFile, jsonData, FILE_PERMISSION)
 

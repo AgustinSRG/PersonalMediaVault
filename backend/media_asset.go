@@ -147,7 +147,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 
 	// Create temp file to write it
 
-	tmpFile := GetTemporalFileName("pmv")
+	tmpFile := GetTemporalFileName("pmv", true)
 
 	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
@@ -234,7 +234,7 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock b
 
 	// Create temp file to write it
 
-	tmpFile := GetTemporalFileName("pmv")
+	tmpFile := GetTemporalFileName("pmv", true)
 
 	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
