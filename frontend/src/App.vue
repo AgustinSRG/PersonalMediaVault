@@ -86,7 +86,7 @@ export default class App extends Vue {}
   border: solid 1px rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary:not(disabled):hover {
+.btn-primary:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
