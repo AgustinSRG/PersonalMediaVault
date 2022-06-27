@@ -1284,11 +1284,17 @@ export default defineComponent({
   bottom: 32px;
 }
 
+.player-timeline-back,
+.player-timeline-buffer,
+.player-timeline-current {
+  height: 3px;
+  transition: height 0.1s;
+}
+
 .player-timeline-back {
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 5px;
   width: 100%;
   background: rgba(255, 255, 255, 0.25);
 }
@@ -1297,7 +1303,6 @@ export default defineComponent({
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 5px;
   width: 0;
   background: rgba(255, 255, 255, 0.5);
 }
@@ -1306,9 +1311,14 @@ export default defineComponent({
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 5px;
   width: 0;
   background: red;
+}
+
+.player-timeline:hover .player-timeline-back,
+.player-timeline:hover .player-timeline-buffer,
+.player-timeline:hover .player-timeline-current {
+  height: 5px;
 }
 
 .player-timeline-thumb {
@@ -1319,6 +1329,11 @@ export default defineComponent({
   position: absolute;
   bottom: -5px;
   left: -7px;
+  display: none;
+}
+
+.player-timeline:hover .player-timeline-thumb {
+  display: block;
 }
 
 /* Player feedback */
