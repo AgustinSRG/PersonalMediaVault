@@ -390,10 +390,19 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 	// Original
 	meta.OriginalReady = true
-	meta.OriginalEncoded = false
-	meta.OriginalExtension = ext
-	meta.OriginalAsset = original_asset
-	meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+
+	if probe_data.Encoded {
+		meta.OriginalEncoded = true
+		meta.OriginalExtension = probe_data.EncodedExt
+		meta.OriginalAsset = original_asset
+		meta.OriginalTask = 0
+	} else {
+		// Must start a task to encode
+		meta.OriginalEncoded = false
+		meta.OriginalExtension = ext
+		meta.OriginalAsset = original_asset
+		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+	}
 
 	if meta.Type == MediaTypeVideo {
 		// Previews
