@@ -68,6 +68,15 @@
         </button>
 
         <button
+          disabled
+          type="button"
+          :title="$t('Play')"
+          class="player-btn"
+        >
+          <i class="fas fa-play"></i>
+        </button>
+
+        <button
           v-if="!!next || !!prev"
           :disabled="!next"
           type="button"

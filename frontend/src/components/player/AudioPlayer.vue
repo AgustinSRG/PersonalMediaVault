@@ -531,6 +531,7 @@ export default defineComponent({
       this.loading = b;
     },
     onEnded: function () {
+      PlayerPreferences.SetInitialTime(this.mid, 0);
       this.loading = false;
       if (this.loop) {
         this.getAudioElement().currentTime = 0;
@@ -679,7 +680,10 @@ export default defineComponent({
         audio.pause();
       }
 
-      PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+      if (!audio.ended) {
+        PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+      }
+
       this.lastTimeChangedEvent = Date.now();
 
       this.interactWithControls();

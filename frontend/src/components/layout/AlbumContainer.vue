@@ -55,7 +55,7 @@
           </button>
         </div>
         <div class="album-post-text">
-          {{ renderPos(currentPos) }} / {{ albumLength }}
+          {{ renderPos(currentPos) }} / {{ albumList.length }}
         </div>
       </div>
     </div>
@@ -138,8 +138,7 @@ export default defineComponent({
 
       loading: AlbumsController.CurrentAlbumLoading,
 
-      currentPos: -1,
-      albumLength: 0,
+      currentPos: AlbumsController.CurrentAlbumPos,
 
       loop: false,
       random: false,
@@ -167,11 +166,11 @@ export default defineComponent({
     },
 
     toggleLoop: function () {
-      this.loop = !this.loop;
+      AlbumsController.ToggleLoop();
     },
 
     toggleRandom: function () {
-      this.random = !this.random;
+      AlbumsController.ToggleRandom();
     },
 
     renameAlbum: function () {},
@@ -220,6 +219,12 @@ export default defineComponent({
     showOptions: function (item, event) {
       event.stopPropagation();
     },
+
+    onAlbumPosUpdate: function () {
+      this.loop = AlbumsController.AlbumLoop;
+      this.random = AlbumsController.AlbumRandom;
+      this.currentPos = AlbumsController.CurrentAlbumPos;
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -228,10 +233,15 @@ export default defineComponent({
       this.$options.albumUpdateH
     );
 
+    this.onAlbumPosUpdate();
+
     this.updateAlbumsList();
 
     this.$options.loadingH = this.onAlbumLoading.bind(this);
     AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
+
+    this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
+    AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
 
     // Sortable
     var element = this.$el.querySelector(".album-body");
@@ -248,6 +258,8 @@ export default defineComponent({
       "current-album-loading",
       this.$options.loadingH
     );
+
+    AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
 
     // Sortable
     if (this.$options.sortable) {

@@ -2,6 +2,7 @@
 
 import { AmbumsAPI } from "@/api/api-albums";
 import { Request } from "@/utils/request";
+import { shuffleArray } from "@/utils/shuffle";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
@@ -83,6 +84,7 @@ export class AlbumsController {
             AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
             AlbumsController.LoadCurrentAlbum();
         }
+        AlbumsController.UpdateAlbumCurrentPos();
     }
 
     public static LoadCurrentAlbum() {
@@ -94,6 +96,8 @@ export class AlbumsController {
             AppEvents.Emit("current-album-update", null);
             AlbumsController.CurrentAlbumLoading = false;
             AppEvents.Emit("current-album-loading", false);
+
+            AlbumsController.UpdateAlbumCurrentPos();
 
             return;
         }
@@ -112,6 +116,8 @@ export class AlbumsController {
 
             AlbumsController.CurrentAlbumLoading = false;
             AppEvents.Emit("current-album-loading", false);
+
+            AlbumsController.UpdateAlbumCurrentPos();
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
@@ -170,5 +176,80 @@ export class AlbumsController {
             AlbumsController.LoadCurrentAlbum();
         }
         AlbumsController.Load();
+    }
+
+    public static CurrentAlbumPos = -1;
+    public static CurrentPrev: MediaEntry = null;
+    public static CurrentNext: MediaEntry = null;
+
+    public static AlbumLoop = false;
+    public static AlbumRandom = false;
+
+    public static ToggleLoop() {
+        AlbumsController.AlbumLoop = !AlbumsController.AlbumLoop;
+        this.UpdateAlbumCurrentPos();
+    }
+
+    public static ToggleRandom() {
+        AlbumsController.AlbumRandom = !AlbumsController.AlbumRandom;
+        this.UpdateAlbumCurrentPos();
+    }
+
+    public static UpdateAlbumCurrentPos() {
+        const mediaId = AppStatus.CurrentMedia;
+
+        if (!AlbumsController.CurrentAlbumData) {
+            AlbumsController.CurrentAlbumPos = -1;
+            AlbumsController.CurrentPrev = null;
+            AlbumsController.CurrentNext = null;
+            AppEvents.Emit("album-pos-update");
+            return;
+        }
+
+        let mediaPos = -1;
+
+        for (let i = 0; i < AlbumsController.CurrentAlbumData.list.length; i++) {
+            if (mediaId === AlbumsController.CurrentAlbumData.list[i].id) {
+                mediaPos = i;
+                break;
+            }
+        }
+
+        AlbumsController.CurrentAlbumPos = mediaPos;
+
+        if (mediaPos >= 0) {
+            if (AlbumsController.AlbumRandom) {
+                const shuffled = shuffleArray(AlbumsController.CurrentAlbumData.list).filter(a => {
+                    return a.id !== mediaId;
+                });
+
+                AlbumsController.CurrentPrev = null;
+                AlbumsController.CurrentNext = shuffled[1] || null;
+
+                if (AlbumsController.AlbumLoop) {
+                    if (AlbumsController.CurrentNext === null) {
+                        AlbumsController.CurrentNext = AlbumsController.CurrentAlbumData.list[0] || null;
+                    }
+                }
+            } else {
+                AlbumsController.CurrentPrev = AlbumsController.CurrentAlbumData.list[mediaPos - 1] || null;
+                AlbumsController.CurrentNext = AlbumsController.CurrentAlbumData.list[mediaPos + 1] || null;
+
+                if (AlbumsController.AlbumLoop) {
+                    if (AlbumsController.CurrentPrev === null) {
+                        AlbumsController.CurrentPrev = AlbumsController.CurrentAlbumData.list[AlbumsController.CurrentAlbumData.list.length - 1] || null;
+                    }
+
+                    if (AlbumsController.CurrentNext === null) {
+                        AlbumsController.CurrentNext = AlbumsController.CurrentAlbumData.list[0] || null;
+                    }
+                }
+            }
+        } else {
+            AlbumsController.CurrentPrev = null;
+            AlbumsController.CurrentNext = null;
+        }
+
+        AppEvents.Emit("album-pos-update");
     }
 }

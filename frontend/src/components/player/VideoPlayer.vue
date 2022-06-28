@@ -567,6 +567,7 @@ export default defineComponent({
     },
     onEnded: function () {
       this.loading = false;
+      PlayerPreferences.SetInitialTime(this.mid, 0);
       if (this.loop) {
         this.getVideoElement().currentTime = 0;
       } else {
@@ -714,7 +715,10 @@ export default defineComponent({
         video.pause();
       }
 
-      PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+      if (!video.ended) {
+        PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+      }
+      
       this.lastTimeChangedEvent = Date.now();
 
       this.interactWithControls();
