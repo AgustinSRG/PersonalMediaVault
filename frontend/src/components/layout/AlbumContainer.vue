@@ -39,7 +39,7 @@
           <button
             type="button"
             :title="$t('Rename')"
-            class="page-header-btn"
+            class="album-header-btn"
             @click="renameAlbum"
           >
             <i class="fas fa-pencil-alt"></i>
@@ -59,13 +59,14 @@
         </div>
       </div>
     </div>
-    <div v-if="!loading && albumData" class="album-body">
+    <div v-show="!loading && albumData" class="album-body">
       <div
-        v-for="(item, i) in albumData.list"
-        :key="i"
+        v-for="(item, i) in albumList"
+        :key="item.list_id"
         class="album-body-item"
         :class="{ current: i === currentPos }"
         :title="item.title || $t('Untitled')"
+        @click="clickMedia(item)"
       >
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">
@@ -90,7 +91,18 @@
           </div>
         </div>
 
-        <div class="album-body-item-title">{{item.title || $t('Untitled')}}</div>
+        <div class="album-body-item-title">
+          {{ item.title || $t("Untitled") }}
+        </div>
+
+        <button
+            type="button"
+            :title="$t('Options')"
+            class="album-body-btn"
+            @click="showOptions(item, $event)"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
       </div>
     </div>
     <div v-if="loading" class="album-loader">
@@ -108,9 +120,12 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { copyObject } from "@/utils/objects";
 import { GetAssetURL } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { defineComponent } from "vue";
+
+declare var Sortable;
 
 export default defineComponent({
   name: "AlbumContainer",
@@ -118,6 +133,8 @@ export default defineComponent({
     return {
       albumId: AlbumsController.CurrentAlbum,
       albumData: AlbumsController.CurrentAlbumData,
+
+      albumList: [],
 
       loading: AlbumsController.CurrentAlbumLoading,
 
@@ -132,6 +149,7 @@ export default defineComponent({
     onAlbumUpdate: function () {
       this.albumId = AlbumsController.CurrentAlbum;
       this.albumData = AlbumsController.CurrentAlbumData;
+      this.updateAlbumsList();
     },
 
     onAlbumLoading: function (l) {
@@ -175,6 +193,33 @@ export default defineComponent({
     getThumbnail(thumb: string) {
       return GetAssetURL(thumb);
     },
+
+    onUpdateSortable: function (event) {
+       this.albumList.splice(event.newIndex, 0, this.albumList.splice(event.oldIndex, 1)[0]);
+    },
+
+    updateAlbumsList: function () {
+      const prefix = "" + Date.now() + "-";
+      let i = 0;
+      if (this.albumData) {
+        this.albumList = this.albumData.list.map(a => {
+          const o = copyObject(a);
+          o.list_id = prefix + i;
+          i++;
+          return o;
+        });
+      } else {
+        this.albumList = [];
+      }
+    },
+
+    clickMedia: function (item) {
+      AppStatus.ClickOnMedia(item.id);
+    },
+
+    showOptions: function (item, event) {
+      event.stopPropagation();
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -183,8 +228,16 @@ export default defineComponent({
       this.$options.albumUpdateH
     );
 
+    this.updateAlbumsList();
+
     this.$options.loadingH = this.onAlbumLoading.bind(this);
     AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
+
+    // Sortable
+    var element = this.$el.querySelector(".album-body");
+    this.$options.sortable = Sortable.create(element, {
+      onUpdate: this.onUpdateSortable.bind(this),
+    });
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -195,6 +248,12 @@ export default defineComponent({
       "current-album-loading",
       this.$options.loadingH
     );
+
+    // Sortable
+    if (this.$options.sortable) {
+      this.$options.sortable.destroy();
+      this.$options.sortable = null;
+    }
   },
 });
 </script>
@@ -321,24 +380,37 @@ export default defineComponent({
   border-radius: 100vw;
 }
 
+.album-body-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+  outline: none;
+  border-radius: 100vw;
+}
+
 .album-header-btn.toggled {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.album-header-btn:disabled {
+.album-header-btn:disabled,
+.album-body-btn:disabled {
   opacity: 0.7;
   cursor: default;
 }
 
-.album-header-btn:hover {
+.album-header-btn:not(:disabled):hover,
+.album-body-btn:not(:disabled):hover {
   color: white;
 }
 
-.album-header-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.album-header-btn:focus {
+.album-header-btn:focus,
+.album-body-btn:focus {
   outline: none;
 }
 
@@ -391,7 +463,7 @@ export default defineComponent({
 .album-body-item-title {
   padding: 0.5rem;
   font-size: 1.1rem;
-  width: calc(100% - 114px);
+  width: calc(100% - 114px - 32px);
   height: 114px;
   overflow: hidden;
   text-overflow: ellipsis;

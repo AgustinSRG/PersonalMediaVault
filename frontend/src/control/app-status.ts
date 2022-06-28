@@ -212,7 +212,6 @@ export class AppStatus {
     }
 
     public static ClickOnMedia(mediaId: number) {
-        AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = mediaId;
 
         AppStatus.ListSplitMode = true;
