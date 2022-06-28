@@ -13,12 +13,23 @@
       'focus-right': focus === 'right',
     }"
   >
-    <PageContent :min="layout === 'media-split'" @album-create="createAlbum"></PageContent>
+    <PageContent
+      :min="layout === 'media-split'"
+      @album-create="createAlbum"
+    ></PageContent>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
-    <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar"></TopBar>
+    <TopBar
+      @logout="logout"
+      @settings="showSettings"
+      @menu="toggleSidebar"
+    ></TopBar>
     <BottomBar></BottomBar>
-    <div class="sidebar-float-overlay" :class="{hidden: !displaySidebar}" @click="hideSidebar"></div>
+    <div
+      class="sidebar-float-overlay"
+      :class="{ hidden: !displaySidebar }"
+      @click="hideSidebar"
+    ></div>
     <SideBar v-model:display="displaySidebar"></SideBar>
 
     <SettingsModal
@@ -27,16 +38,27 @@
     ></SettingsModal>
     <LanguageModal v-model:display="displayLang"></LanguageModal>
     <ThemeModal v-model:display="displayTheme"></ThemeModal>
-    <ChangeUsernameModal v-model:display="displayUsernameModal"></ChangeUsernameModal>
-    <ChangePasswordModal v-model:display="displayPasswordModal"></ChangePasswordModal>
-    <AdvancedSettingsModal v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
+    <ChangeUsernameModal
+      v-model:display="displayUsernameModal"
+    ></ChangeUsernameModal>
+    <ChangePasswordModal
+      v-model:display="displayPasswordModal"
+    ></ChangePasswordModal>
+    <AdvancedSettingsModal
+      v-model:display="displayAdvancedSettings"
+    ></AdvancedSettingsModal>
 
-    <AlbumListModal v-model:display="displayAlbumList" @album-create="createAlbum"></AlbumListModal>
+    <AlbumListModal
+      v-model:display="displayAlbumList"
+      @album-create="createAlbum"
+    ></AlbumListModal>
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
-    <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums"></LoadingOverlay>
+    <LoadingOverlay
+      :display="locked || loadingAuth || loadingTags || loadingAlbums"
+    ></LoadingOverlay>
     <LoginModal :display="locked && !loadingAuth"></LoginModal>
 
     <SnackBar></SnackBar>
@@ -61,8 +83,8 @@ import ThemeModal from "../modals/ThemeModal.vue";
 import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
 import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
 import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
-import AlbumCreateModal from "../modals/AlbumCreateModal.vue"
-import AlbumListModal from "../modals/AlbumListModal.vue"
+import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+import AlbumListModal from "../modals/AlbumListModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -226,7 +248,9 @@ export default defineComponent({
   pointer-events: none;
 }
 
-.layout-initial .sidebar-float-overlay {
-  display: none;
+@media (min-width: 1000px) {
+  .layout-initial .sidebar-float-overlay {
+    display: none;
+  }
 }
 </style>

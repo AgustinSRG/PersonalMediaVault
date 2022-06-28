@@ -1,16 +1,36 @@
 <template>
   <div class="page-content">
     <div class="page-header">
-      <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage"><i class="fas fa-chevron-left"></i></button>
-      <div class="page-title"><i :class="getIcon(page)"></i> {{renderTitle(page, search)}}</div>
-      <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage"><i class="fas fa-times"></i></button>
+      <button
+        type="button"
+        :title="$t('Expand')"
+        class="page-header-btn page-expand-btn"
+        @click="expandPage"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="page-title">
+        <i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}
+      </div>
+      <button
+        type="button"
+        :title="$t('Close')"
+        class="page-header-btn page-close-btn"
+        @click="closePage"
+      >
+        <i class="fas fa-times"></i>
+      </button>
     </div>
 
     <PageHome :display="page === 'home'" :min="min"></PageHome>
     <PageSearch :display="page === 'search'" :min="min"></PageSearch>
     <PageUpload :display="page === 'upload'"></PageUpload>
     <PageRandom :display="page === 'random'"></PageRandom>
-    <PageAlbums :display="page === 'albums'" @album-create="createAlbum" :min="min"></PageAlbums>
+    <PageAlbums
+      :display="page === 'albums'"
+      @album-create="createAlbum"
+      :min="min"
+    ></PageAlbums>
   </div>
 </template>
 
@@ -34,7 +54,7 @@ export default defineComponent({
     PageRandom,
   },
   name: "PageContent",
-  emits: ['album-create'],
+  emits: ["album-create"],
   props: {
     min: Boolean,
   },
@@ -65,15 +85,15 @@ export default defineComponent({
     renderTitle: function (p, s) {
       switch (p) {
         case "home":
-          return this.$t('Home');
+          return this.$t("Home");
         case "search":
-          return (this.$t('Search results') + ": " + s);
+          return this.$t("Search results") + ": " + s;
         case "upload":
-          return this.$t('Upload media');
-        case 'albums':
-          return this.$t('Albums list');
-        case 'random':
-          return this.$t('Random results');
+          return this.$t("Upload media");
+        case "albums":
+          return this.$t("Albums list");
+        case "random":
+          return this.$t("Random results");
         default:
           return "";
       }
@@ -82,15 +102,15 @@ export default defineComponent({
     getIcon: function (p) {
       switch (p) {
         case "home":
-          return 'fas fa-home';
+          return "fas fa-home";
         case "search":
-          return 'fas fa-search';
+          return "fas fa-search";
         case "upload":
-          return 'fas fa-upload';
-        case 'albums':
-          return 'fas fa-list';
-        case 'random':
-          return 'fas fa-shuffle';
+          return "fas fa-upload";
+        case "albums":
+          return "fas fa-list";
+        case "random":
+          return "fas fa-shuffle";
         default:
           return "";
       }
@@ -123,6 +143,13 @@ export default defineComponent({
 .sidebar-hidden .page-content {
   left: 0;
   width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .page-content {
+    left: 0;
+    width: 100%;
+  }
 }
 
 .layout-media-split .page-content,
@@ -208,7 +235,6 @@ export default defineComponent({
   display: none;
 }
 
-
 .layout-media-split .page-expand-btn,
 .layout-media-split .page-close-btn {
   display: block;
@@ -225,5 +251,4 @@ export default defineComponent({
 .page-inner.hidden {
   display: none;
 }
-
 </style>

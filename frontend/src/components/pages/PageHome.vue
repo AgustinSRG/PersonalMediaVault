@@ -395,11 +395,18 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-results-option {
   width: 50%;
   padding: 0.5rem 24px 0.5rem 24px;
+}
+
+@media (max-width: 500px) {
+  .search-results-option {
+    width: 100%;
+  }
 }
 
 .search-result-thumb-tag {

@@ -19,7 +19,7 @@
       :disabled="m.type === 'skip'"
       @click="clickPage(m.page)"
     >
-      {{ m.type === "skip" ? "..." : (m.page + 1) }}
+      {{ m.type === "skip" ? "..." : m.page + 1 }}
     </button>
 
     <button
@@ -129,5 +129,16 @@ export default defineComponent({
 .menu-min .paginated-menu-btn.current,
 .menu-min .paginated-menu-btn.paginated-menu-btn-edge {
   display: block;
+}
+
+@media (max-width: 1000px) {
+  .paginated-menu-btn {
+    display: none;
+  }
+
+  .paginated-menu-btn.current,
+  .paginated-menu-btn.paginated-menu-btn-edge {
+    display: block;
+  }
 }
 </style>
