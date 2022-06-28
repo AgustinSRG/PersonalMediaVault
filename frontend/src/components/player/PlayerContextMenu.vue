@@ -171,7 +171,6 @@ export default defineComponent({
       let top = y;
       let left = x;
 
-      let width = Math.min(0, pageWidth - left);
       let maxWidth = pageWidth - left;
 
       let maxHeight = pageHeight - top;
@@ -180,7 +179,7 @@ export default defineComponent({
       this.left = left + "px";
       this.right = "auto";
       this.bottom = "auto";
-      this.width = width + "px";
+      this.width = "auto";
       this.maxWidth = maxWidth + "px";
       this.maxHeight = maxHeight + "px";
     },

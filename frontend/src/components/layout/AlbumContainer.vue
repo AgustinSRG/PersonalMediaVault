@@ -96,15 +96,24 @@
         </div>
 
         <button
-            type="button"
-            :title="$t('Options')"
-            class="album-body-btn"
-            @click="showOptions(item, $event)"
-          >
-            <i class="fas fa-bars"></i>
-          </button>
+          type="button"
+          :title="$t('Options')"
+          class="album-body-btn"
+          @click="showOptions(item, i, $event)"
+          @mousedown="stopPropagationEvent"
+          @touchstart="stopPropagationEvent"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
       </div>
     </div>
+    <AlbumContextMenu
+      v-model:shown="contextShown"
+      :mindex="contextIndex"
+      :mlength="albumList.length"
+      :x="contextX"
+      :y="contextY"
+    ></AlbumContextMenu>
     <div v-if="loading" class="album-loader">
       <div class="loading-overlay-loader">
         <div></div>
@@ -125,10 +134,15 @@ import { GetAssetURL } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { defineComponent } from "vue";
 
+import AlbumContextMenu from "./AlbumContextMenu.vue";
+
 declare var Sortable;
 
 export default defineComponent({
   name: "AlbumContainer",
+  components: {
+    AlbumContextMenu,
+  },
   data: function () {
     return {
       albumId: AlbumsController.CurrentAlbum,
@@ -140,6 +154,12 @@ export default defineComponent({
 
       currentPos: AlbumsController.CurrentAlbumPos,
 
+      currentMenuOpen: "",
+      contextShown: false,
+      contextIndex: -1,
+      contextX: 0,
+      contextY: 0,
+
       loop: false,
       random: false,
     };
@@ -149,6 +169,10 @@ export default defineComponent({
       this.albumId = AlbumsController.CurrentAlbum;
       this.albumData = AlbumsController.CurrentAlbumData;
       this.updateAlbumsList();
+    },
+
+    closeOptionsMenu: function () {
+      this.currentMenuOpen = "";
     },
 
     onAlbumLoading: function (l) {
@@ -194,14 +218,19 @@ export default defineComponent({
     },
 
     onUpdateSortable: function (event) {
-       this.albumList.splice(event.newIndex, 0, this.albumList.splice(event.oldIndex, 1)[0]);
+      this.albumList.splice(
+        event.newIndex,
+        0,
+        this.albumList.splice(event.oldIndex, 1)[0]
+      );
     },
 
     updateAlbumsList: function () {
+      this.currentMenuOpen = "";
       const prefix = "" + Date.now() + "-";
       let i = 0;
       if (this.albumData) {
-        this.albumList = this.albumData.list.map(a => {
+        this.albumList = this.albumData.list.map((a) => {
           const o = copyObject(a);
           o.list_id = prefix + i;
           i++;
@@ -216,8 +245,27 @@ export default defineComponent({
       AppStatus.ClickOnMedia(item.id);
     },
 
-    showOptions: function (item, event) {
+    showOptions: function (item, i, event) {
       event.stopPropagation();
+
+      if (this.contextShown && this.currentMenuOpen === item.list_id) {
+        this.currentMenuOpen = "";
+        this.contextShown = false;
+      } else {
+        this.currentMenuOpen = item.list_id;
+        this.contextShown = true;
+        this.contextIndex = i;
+
+        var targetRect = event.target.getBoundingClientRect();
+
+        this.contextX = targetRect.left + targetRect.width;
+
+        if (targetRect.top > window.innerHeight / 2) {
+          this.contextY = targetRect.top;
+        } else {
+          this.contextY = targetRect.top + targetRect.height;
+        }
+      }
     },
 
     onAlbumPosUpdate: function () {
@@ -225,6 +273,16 @@ export default defineComponent({
       this.random = AlbumsController.AlbumRandom;
       this.currentPos = AlbumsController.CurrentAlbumPos;
     },
+
+    stopPropagationEvent: function (e) {
+      e.stopPropagation();
+    },
+
+    moveMediaUp: function (item, i) {},
+
+    moveMediaDown: function (item, i) {},
+
+    removeMedia: function (item) {},
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -429,7 +487,7 @@ export default defineComponent({
 .album-body-item {
   position: relative;
   display: flex;
-  padding: 0.5rem;
+  padding: 8px;
   align-items: center;
   cursor: pointer;
 }
