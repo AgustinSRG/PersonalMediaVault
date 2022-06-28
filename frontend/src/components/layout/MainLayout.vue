@@ -17,6 +17,7 @@
       :min="layout === 'media-split'"
       @album-create="createAlbum"
     ></PageContent>
+    <AlbumContainer></AlbumContainer>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar
@@ -73,6 +74,7 @@ import BottomBar from "./BottomBar.vue";
 import SideBar from "./SideBar.vue";
 import PageContent from "./PageContent.vue";
 import PlayerContainer from "./PlayerContainer.vue";
+import AlbumContainer from "./AlbumContainer.vue";
 import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoginModal from "../modals/LoginModal.vue";
@@ -99,6 +101,7 @@ export default defineComponent({
     BottomBar,
     SideBar,
     PageContent,
+    AlbumContainer,
     PlayerContainer,
     LoadingOverlay,
     LoginModal,

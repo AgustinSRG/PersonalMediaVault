@@ -252,6 +252,14 @@ export class AppStatus {
     public static ClosePage() {
         AppStatus.CurrentFocus = "left";
         AppStatus.ListSplitMode = false;
+        AppStatus.UpdateLayout();
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static CloseAbum(){
+        AppStatus.CurrentFocus = "left";
+        AppStatus.CurrentAlbum = -1;
+        AppStatus.UpdateLayout();
         AppStatus.OnStatusUpdate();
     }
 

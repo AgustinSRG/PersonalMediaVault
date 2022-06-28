@@ -52,7 +52,7 @@ export default defineComponent({
   align-items: center;
 
 
-  position: fixed;
+  position: absolute;
   bottom: 0;
   height: 40px;
   left: 0;
