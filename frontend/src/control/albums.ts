@@ -82,6 +82,7 @@ export class AlbumsController {
     public static OnCurrentAlbumChanged() {
         if (AppStatus.CurrentAlbum !== AlbumsController.CurrentAlbum) {
             AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
+            AlbumsController.CurrentAlbumData = null;
             AlbumsController.LoadCurrentAlbum();
         }
         AlbumsController.UpdateAlbumCurrentPos();
@@ -240,6 +241,11 @@ export class AlbumsController {
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
             AppEvents.Emit("album-pos-update");
+            return;
+        }
+
+        if (mediaId < 0 && AlbumsController.CurrentAlbumData.list.length > 0) {
+            AppStatus.ClickOnMedia(AlbumsController.CurrentAlbumData.list[0].id);
             return;
         }
 
