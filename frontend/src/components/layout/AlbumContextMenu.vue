@@ -84,17 +84,17 @@ export default defineComponent({
     },
 
     moveMediaUp: function () {
-      this.$emit("move-up");
+      this.$emit("move-up", this.mindex);
       this.hide();
     },
 
     moveMediaDown: function () {
-      this.$emit("move-up");
+      this.$emit("move-up", this.mindex);
       this.hide();
     },
 
     removeMedia: function () {
-      this.$emit("media-remove");
+      this.$emit("media-remove", this.mindex);
       this.hide();
     },
 

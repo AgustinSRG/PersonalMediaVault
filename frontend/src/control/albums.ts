@@ -178,6 +178,41 @@ export class AlbumsController {
         AlbumsController.Load();
     }
 
+    public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number) {
+        if (!AlbumsController.CurrentAlbumData) {
+            return;
+        }
+        AlbumsController.CurrentAlbumData.list.splice(
+            newIndex,
+            0,
+            AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]
+        );
+
+        AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+
+        AlbumsController.UpdateAlbumCurrentPos();
+
+        // Update in server
+        const albumId = AlbumsController.CurrentAlbumData.id;
+        const albumList = AlbumsController.CurrentAlbumData.list.map(a => {
+            return a.id;
+        });
+        Request.Do(AmbumsAPI.SetAlbumOrder(albumId, albumList))
+            .onSuccess(() => {
+                AppEvents.Emit("album-order-saved");
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized");
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+            });
+    }
+
     public static CurrentAlbumPos = -1;
     public static CurrentPrev: MediaEntry = null;
     public static CurrentNext: MediaEntry = null;

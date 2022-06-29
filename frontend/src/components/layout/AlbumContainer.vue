@@ -59,7 +59,11 @@
         </div>
       </div>
     </div>
-    <div v-show="!loading && albumData" class="album-body" @scroll="closeOptionsMenu">
+    <div
+      v-show="!loading && albumData"
+      class="album-body"
+      @scroll="closeOptionsMenu"
+    >
       <div
         v-for="(item, i) in albumList"
         :key="item.list_id"
@@ -113,6 +117,9 @@
       :mlength="albumList.length"
       :x="contextX"
       :y="contextY"
+      @move-up="moveMediaUp"
+      @move-down="moveMediaDown"
+      @media-remove="removeMedia"
     ></AlbumContextMenu>
     <div v-if="loading" class="album-loader">
       <div class="loading-overlay-loader">
@@ -126,11 +133,12 @@
 </template>
 
 <script lang="ts">
+import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { copyObject } from "@/utils/objects";
-import { GetAssetURL } from "@/utils/request";
+import { GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { defineComponent } from "vue";
 
@@ -220,11 +228,7 @@ export default defineComponent({
     },
 
     onUpdateSortable: function (event) {
-      this.albumList.splice(
-        event.newIndex,
-        0,
-        this.albumList.splice(event.oldIndex, 1)[0]
-      );
+      AlbumsController.MoveCurrentAlbumOrder(event.oldIndex, event.newIndex);
     },
 
     updateAlbumsList: function () {
@@ -280,11 +284,40 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    moveMediaUp: function (item, i) {},
+    moveMediaUp: function (i: number) {
+      if (i > 0) {
+        AlbumsController.MoveCurrentAlbumOrder(i, i - 1);
+      }
+    },
 
-    moveMediaDown: function (item, i) {},
+    moveMediaDown: function (i: number) {
+      if (i < this.albumList.length - 1) {
+        AlbumsController.MoveCurrentAlbumOrder(i, i + 1);
+      }
+    },
 
-    removeMedia: function (item) {},
+    removeMedia: function (i: number) {
+      const media = this.albumList[i];
+      if (!media) {
+        return;
+      }
+      const albumId = this.albumId;
+      Request.Do(AmbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
+        .onSuccess(() => {
+          AppEvents.Emit("snack", this.$t("Successfully removed from album"));
+          AlbumsController.OnChangedAlbum(albumId);
+        })
+        .onRequestError((err) => {
+          Request.ErrorHandler()
+            .add(401, "*", () => {
+              AppEvents.Emit("unauthorized");
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          console.error(err);
+        });
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);

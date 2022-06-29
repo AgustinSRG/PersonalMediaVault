@@ -117,14 +117,9 @@ export default defineComponent({
             AppEvents.Emit("snack", this.$t("Successfully removed from album"));
             AlbumsController.OnChangedAlbum(album.id);
           })
-          .onCancel(() => {
-            this.busy = false;
-          })
           .onRequestError((err) => {
-            this.busy = false;
             Request.ErrorHandler()
               .add(401, "*", () => {
-                this.error = this.$t("Access denied");
                 AppEvents.Emit("unauthorized");
               })
               .handle(err);
@@ -140,14 +135,9 @@ export default defineComponent({
             AppEvents.Emit("snack", this.$t("Successfully added to album"));
             AlbumsController.OnChangedAlbum(album.id);
           })
-          .onCancel(() => {
-            this.busy = false;
-          })
           .onRequestError((err) => {
-            this.busy = false;
             Request.ErrorHandler()
               .add(401, "*", () => {
-                this.error = this.$t("Access denied");
                 AppEvents.Emit("unauthorized");
               })
               .handle(err);
