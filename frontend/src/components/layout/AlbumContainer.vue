@@ -59,7 +59,7 @@
         </div>
       </div>
     </div>
-    <div v-show="!loading && albumData" class="album-body">
+    <div v-show="!loading && albumData" class="album-body" @scroll="closeOptionsMenu">
       <div
         v-for="(item, i) in albumList"
         :key="item.list_id"
@@ -172,7 +172,9 @@ export default defineComponent({
     },
 
     closeOptionsMenu: function () {
-      this.currentMenuOpen = "";
+      if (this.contextShown) {
+        this.contextShown = false;
+      }
     },
 
     onAlbumLoading: function (l) {
