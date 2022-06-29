@@ -37,7 +37,7 @@ export class AmbumsAPI {
     public static RenameAlbum(id: number, name: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/albums/" + encodeURIComponent(id + "") + "/delete"),
+            url: GetAPIURL("/api/albums/" + encodeURIComponent(id + "") + "/rename"),
             json: {
                 name: name,
             },

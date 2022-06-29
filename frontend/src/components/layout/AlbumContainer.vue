@@ -148,6 +148,7 @@ declare var Sortable;
 
 export default defineComponent({
   name: "AlbumContainer",
+  emits: ["album-rename", "album-delete"],
   components: {
     AlbumContextMenu,
   },
@@ -207,7 +208,9 @@ export default defineComponent({
       AlbumsController.ToggleRandom();
     },
 
-    renameAlbum: function () {},
+    renameAlbum: function () {
+      this.$emit("album-rename");
+    },
 
     renderPos: function (p) {
       if (p < 0) {
@@ -217,7 +220,9 @@ export default defineComponent({
       }
     },
 
-    deleteAlbum: function () {},
+    deleteAlbum: function () {
+      this.$emit("album-delete");
+    },
 
     renderTime: function (s: number): string {
       return renderTimeSeconds(s);
@@ -566,6 +571,12 @@ export default defineComponent({
   position: relative;
   width: 114px;
   height: 114px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .album-body-item-thumbnail img {

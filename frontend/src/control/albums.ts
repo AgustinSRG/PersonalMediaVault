@@ -129,6 +129,8 @@ export class AlbumsController {
 
                     AlbumsController.CurrentAlbumLoading = false;
                     AppEvents.Emit("current-album-loading", false);
+
+                    AppStatus.CloseAbum();
                 })
                 .add("*", "*", () => {
                     // Retry

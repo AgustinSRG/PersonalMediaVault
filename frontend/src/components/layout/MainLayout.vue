@@ -17,7 +17,7 @@
       :min="layout === 'media-split'"
       @album-create="createAlbum"
     ></PageContent>
-    <AlbumContainer></AlbumContainer>
+    <AlbumContainer @album-rename="showAlbumRename"></AlbumContainer>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar
@@ -54,6 +54,7 @@
       @album-create="createAlbum"
     ></AlbumListModal>
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -87,6 +88,7 @@ import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
 import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import AlbumListModal from "../modals/AlbumListModal.vue";
+import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -114,6 +116,7 @@ export default defineComponent({
     AdvancedSettingsModal,
     AlbumCreateModal,
     AlbumListModal,
+    AlbumRenameModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -138,6 +141,7 @@ export default defineComponent({
 
       displayAlbumCreate: false,
       displayAlbumList: false,
+      displayAlbumRename: false,
 
       displaySidebar: true,
     };
@@ -181,6 +185,10 @@ export default defineComponent({
 
     showAlbumList: function () {
       this.displayAlbumList = true;
+    },
+
+    showAlbumRename: function () {
+      this.displayAlbumRename = true;
     },
 
     hideSidebar: function () {
