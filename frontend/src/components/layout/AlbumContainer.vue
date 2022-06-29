@@ -140,7 +140,7 @@ import { AppStatus } from "@/control/app-status";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import AlbumContextMenu from "./AlbumContextMenu.vue";
 
@@ -278,6 +278,9 @@ export default defineComponent({
       this.loop = AlbumsController.AlbumLoop;
       this.random = AlbumsController.AlbumRandom;
       this.currentPos = AlbumsController.CurrentAlbumPos;
+      nextTick(() => {
+        this.scrollToSelected();
+      });
     },
 
     stopPropagationEvent: function (e) {
@@ -317,6 +320,29 @@ export default defineComponent({
         .onUnexpectedError((err) => {
           console.error(err);
         });
+    },
+
+    scrollToSelected: function () {
+      const itemHeight = 128;
+      const element = this.$el.querySelector(".album-body");
+
+      if (!element) {
+        return;
+      }
+
+      const scrollHeight = element.scrollHeight;
+      const height = element.getBoundingClientRect().height;
+
+      const itemTop = this.currentPos * itemHeight;
+
+      const expectedTop = height / 2 - itemHeight / 2;
+
+      const scroll = Math.max(
+        0,
+        Math.min(scrollHeight - height, itemTop - expectedTop)
+      );
+
+      element.scrollTop = scroll;
     },
   },
   mounted: function () {
