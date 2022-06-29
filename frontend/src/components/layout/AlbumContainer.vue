@@ -140,6 +140,7 @@ import { AppStatus } from "@/control/app-status";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
+import { isTouchDevice } from "@/utils/touch";
 import { defineComponent, nextTick } from "vue";
 
 import AlbumContextMenu from "./AlbumContextMenu.vue";
@@ -368,10 +369,12 @@ export default defineComponent({
     AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
 
     // Sortable
-    var element = this.$el.querySelector(".album-body");
-    this.$options.sortable = Sortable.create(element, {
-      onUpdate: this.onUpdateSortable.bind(this),
-    });
+    if (!isTouchDevice()) {
+      var element = this.$el.querySelector(".album-body");
+      this.$options.sortable = Sortable.create(element, {
+        onUpdate: this.onUpdateSortable.bind(this),
+      });
+    }
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
