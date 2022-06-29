@@ -4,6 +4,7 @@
     :class="{ hidden: !shown, 'with-album': inalbum, 'album-expand': albumexpanded, 'expanded': expanded && !albumexpanded }"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
+    @contextmenu="stopPropagationEvent"
   >
     <div v-if="!albumexpanded" class="player-title-container">
       <div class="player-title-left">
