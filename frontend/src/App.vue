@@ -134,15 +134,18 @@ export default class App extends Vue {}
 /* Custom scroll bar */
 
 *::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
+    width: 16px;
+    height: 16px;
 }
 
 *::-webkit-scrollbar-track {
-    background: #bdbdbd;
+    background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
     background: #757575;
+    border-radius: 8px;
+    border: 4px solid transparent;
+    background-clip: content-box;
 }
 </style>
