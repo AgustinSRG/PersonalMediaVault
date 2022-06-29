@@ -274,7 +274,7 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 	videoFilter := "scale=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
 		":force_original_aspect_ratio=decrease,format=rgba,pad=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
 		":(ow-iw)/2:(oh-ih)/2:color=#00000000"
-	args = append(args, "-vf", videoFilter)
+	args = append(args, "-pix_fmt", "rgba", "-vf", videoFilter)
 
 	// Playlist name
 	args = append(args, tempPath+"/image.png")
