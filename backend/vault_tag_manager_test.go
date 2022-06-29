@@ -11,7 +11,7 @@ import (
 func TestVaultTagManager(t *testing.T) {
 	test_path_base := "./temp"
 
-	SetTempFilesPath(test_path_base, test_path_base)
+	SetTempFilesPath(test_path_base)
 
 	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
 

@@ -17,6 +17,9 @@ type BackendOptions struct {
 	initialize bool
 	clean      bool
 
+	// Lock
+	skipLock bool
+
 	// FFmpeg
 	ffmpegPath  string
 	ffprobePath string
@@ -46,8 +49,8 @@ func main() {
 		ffmpegPath:          os.Getenv("FFMPEG_PATH"),
 		ffprobePath:         os.Getenv("FFPROBE_PATH"),
 		vaultPath:           "./vault",
-		tempPath:            os.Getenv("TEMP_PATH"),
-		unencryptedTempPath: os.Getenv("UNENCRYPTED_TEMP_PATH"),
+		tempPath:            "./vault/temp",
+		unencryptedTempPath: os.Getenv("TEMP_PATH"),
 	}
 
 	if options.ffmpegPath == "" {
@@ -64,10 +67,6 @@ func main() {
 		} else {
 			options.ffprobePath = "/usr/bin/ffprobe"
 		}
-	}
-
-	if options.tempPath == "" {
-		options.tempPath = "./temp"
 	}
 
 	if options.unencryptedTempPath == "" {
@@ -100,12 +99,15 @@ func main() {
 			CORS_INSECURE_MODE_ENABLED = true
 		} else if arg == "--init" || arg == "-i" {
 			options.initialize = true
+		} else if arg == "--skip-lock" || arg == "-sl" {
+			options.skipLock = true
 		} else if arg == "--vault-path" || arg == "-vp" {
 			if i == len(args)-1 {
 				fmt.Println("The option '--vault-path' requires a value")
 				os.Exit(1)
 			}
 			options.vaultPath = args[i+1]
+			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
 		} else {
 			fmt.Println("Invalid argument: " + arg)
@@ -114,22 +116,24 @@ func main() {
 	}
 
 	if options.daemon || options.clean || options.initialize {
-		// Setup lockfile
-		if !TryLockVault(options.vaultPath) {
-			fmt.Println("Error: The vault is already in use.")
-			os.Exit(1)
+		if !options.skipLock {
+			// Setup lockfile
+			if !TryLockVault(options.vaultPath) {
+				fmt.Println("Error: The vault is already in use. If this is not true, please remove the file vault.lock in your vault folder.")
+				os.Exit(1)
+			}
 		}
-	}
-
-	SetTempFilesPath(options.tempPath, options.unencryptedTempPath) // Set temporal files path
-
-	if options.clean {
-		LogInfo("Cleaning temporal files...")
-		ClearTemporalFilesPath()
 	}
 
 	if options.initialize {
 		InitializeCredentialsPath(options.vaultPath)
+	}
+
+	SetTempFilesPath(options.tempPath) // Set temporal files path
+
+	if options.clean {
+		LogInfo("Cleaning vault temporal files...")
+		ClearTemporalFilesPath()
 	}
 
 	if options.daemon {
@@ -159,9 +163,35 @@ func main() {
 
 		GLOBAL_VAULT = &vault
 
+		options.unencryptedTempPath = path.Join(options.unencryptedTempPath, vault.credentials.GetFingerprint())
+
+		SetUnencryptedTempFilesPath(options.unencryptedTempPath)
+
+		if options.clean {
+			LogInfo("Cleaning unencrypted temporal files...")
+			ClearUnencryptedTempFilesPath()
+		}
+
 		// Create and run HTTP server
 		RunHTTPServer()
 	} else if options.initialize || options.clean {
+		vault := Vault{}
+		err := vault.Initialize(options.vaultPath)
+
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		options.unencryptedTempPath = path.Join(options.unencryptedTempPath, vault.credentials.GetFingerprint())
+
+		SetUnencryptedTempFilesPath(options.unencryptedTempPath)
+
+		if options.clean {
+			LogInfo("Cleaning unencrypted temporal files...")
+			ClearUnencryptedTempFilesPath()
+		}
+
 		return
 	} else {
 		printHelp()
@@ -179,12 +209,11 @@ func printHelp() {
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
 	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
+	fmt.Println("        --skip-lock, -sl           Ignores vault lockfile.")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
-	fmt.Println("        TEMP_PATH                  Temporal path to modify files before pushing them to the vault.")
-	fmt.Println("                                   Note: It should be in the same filesystem as the vault.")
-	fmt.Println("        UNENCRYPTED_TEMP_PATH      Temporal path to store things like uploaded files or to use for FFMPEG encoding.")
+	fmt.Println("        TEMP_PATH                  Temporal path to store things like uploaded files or to use for FFMPEG encoding.")
 	fmt.Println("                                   Note: It should be in a different filesystem if the vault is stored in an unsafe environment.")
 	fmt.Println("                                   By default, this will be stored in ~/.pmv/temp")
 	fmt.Println("        FRONTEND_PATH              Path to static frontend.")

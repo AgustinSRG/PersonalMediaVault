@@ -20,41 +20,34 @@ var (
 )
 
 // Initialize
-func SetTempFilesPath(tempPath string, unencryptedTempPath string) {
+func SetTempFilesPath(tempPath string) {
 	temp_files_path = tempPath
-	unencrypted_temp_files_path = unencryptedTempPath
 
 	// Create path if not exists
 	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
-	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
 
 	// Create unique prefix for each execution
 	timeNow := time.Now().UTC().UnixMilli()
 	temp_files_prefix = "pmv_tmp_" + fmt.Sprint(timeNow) + "_"
 }
 
+func SetUnencryptedTempFilesPath(unencryptedTempPath string) {
+	unencrypted_temp_files_path = unencryptedTempPath
+
+	// Create path if not exists
+	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+}
+
 // Clears temp path on application exit
 func ClearTemporalFilesPath() {
+	os.RemoveAll(temp_files_path)
 	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+}
 
-	entries, err := os.ReadDir(temp_files_path)
-
-	if err != nil {
-		LogError(err)
-		return
-	}
-
-	for i := 0; i < len(entries); i++ {
-		if entries[i].Type().IsRegular() {
-			WipeTemporalFile(path.Join(temp_files_path, entries[i].Name()))
-		} else if entries[i].Type().IsDir() {
-			WipeTemporalPath(path.Join(temp_files_path, entries[i].Name()))
-		}
-	}
-
+func ClearUnencryptedTempFilesPath() {
 	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
 
-	entries, err = os.ReadDir(unencrypted_temp_files_path)
+	entries, err := os.ReadDir(unencrypted_temp_files_path)
 
 	if err != nil {
 		LogError(err)
