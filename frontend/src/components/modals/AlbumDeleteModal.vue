@@ -10,7 +10,7 @@
     <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">
-          {{ $t("Rename album") }}
+          {{ $t("Delete album") }}
         </div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
@@ -18,12 +18,15 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>{{ $t("Album name") }}:</label>
+          <label>{{ $t("Remember. If you delete the album by accident you would have to recreate it. Make sure you actually want to delete it.") }}</label>
+        </div>
+        <div class="form-group">
+          <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
           <input
             type="text"
-            name="album-name"
+            name="confirmation"
             autocomplete="off"
-            v-model="name"
+            v-model="confimation"
             :disabled="busy"
             maxlength="255"
             class="form-control form-control-full-width auto-focus"
@@ -33,7 +36,7 @@
       </div>
       <div class="modal-footer">
         <button :disabled="busy" type="submit" class="modal-footer-btn">
-          <i class="fas fa-pencil-alt"></i> {{ $t("Rename album") }}
+          <i class="fas fa-trash-alt"></i> {{ $t("Delete album") }}
         </button>
       </div>
     </form>
@@ -49,7 +52,7 @@ import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
-  name: "AlbumRenameModal",
+  name: "AlbumDeleteModal",
   emits: ["update:display"],
   props: {
     display: Boolean,
@@ -57,8 +60,9 @@ export default defineComponent({
   data: function () {
     return {
       currentAlbum: -1,
-      name: "",
       oldName: "",
+
+      confimation: "",
 
       busy: false,
       error: "",
@@ -86,7 +90,6 @@ export default defineComponent({
       this.currentAlbum = AlbumsController.CurrentAlbum;
       if (AlbumsController.CurrentAlbumData) {
         this.oldName = AlbumsController.CurrentAlbumData.name;
-        this.name = this.oldName;
       }
     },
 
@@ -105,20 +108,8 @@ export default defineComponent({
         return;
       }
 
-      if (!this.name) {
-        this.error = this.$t("Invalid album name provided");
-        return;
-      }
-
-      if (this.name === this.oldName) {
-        this.close();
-        return;
-      }
-
-      if (AlbumsController.FindDuplicatedName(this.name)) {
-        this.error = this.$t(
-          "There is already another album with the same name"
-        );
+      if (this.confimation.toLowerCase() !== "confirm") {
+        this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the album");
         return;
       }
 
@@ -127,11 +118,11 @@ export default defineComponent({
 
       const albumId = this.currentAlbum;
 
-      Request.Do(AmbumsAPI.RenameAlbum(albumId, this.name))
+      Request.Do(AmbumsAPI.DeleteAlbum(albumId))
         .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Album renamed") + ": " + this.name);
+          AppEvents.Emit("snack", this.$t("Album deleted") + ": " + this.oldName);
           this.busy = false;
-          this.name = "";
+          this.confimation = "";
           this.close();
           AlbumsController.OnChangedAlbum(albumId)
         })
@@ -141,15 +132,15 @@ export default defineComponent({
         .onRequestError((err) => {
           this.busy = false;
           Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid album name provided");
-            })
             .add(401, "*", () => {
               this.error = this.$t("Access denied");
               AppEvents.Emit("unauthorized");
             })
             .add(403, "*", () => {
               this.error = this.$t("Access denied");
+            })
+            .add(404, "*", () => {
+              this.error = this.$t("Not found");
             })
             .add(500, "*", () => {
               this.error = this.$t("Internal server error");
@@ -185,7 +176,7 @@ export default defineComponent({
   watch: {
     display: function () {
       this.error = "";
-      this.name = this.oldName;
+      this.confimation = "";
       this.autoFocus();
     },
   },

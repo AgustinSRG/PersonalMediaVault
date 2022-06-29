@@ -9,9 +9,12 @@
   >
     <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
-        <div class="modal-title no-close">
+        <div class="modal-title">
           {{ $t("Create new album") }}
         </div>
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
