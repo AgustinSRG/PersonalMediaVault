@@ -1115,6 +1115,7 @@ export default defineComponent({
   watch: {
     rtick: function () {
       this.internalTick++;
+      this.expandedTitle = false;
       this.initializeAudio();
     },
     audioURL: function () {

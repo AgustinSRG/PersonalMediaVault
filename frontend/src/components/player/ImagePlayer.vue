@@ -814,6 +814,7 @@ export default defineComponent({
   watch: {
     rtick: function () {
       this.internalTick++;
+      this.expandedTitle = false;
       this.initializeImage();
     },
     imageURL: function () {

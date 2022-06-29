@@ -317,6 +317,7 @@ export default defineComponent({
   },
   watch: {
     rtick: function () {
+      this.expandedTitle = false;
       nextTick(() => {
         this.$el.focus();
       });
