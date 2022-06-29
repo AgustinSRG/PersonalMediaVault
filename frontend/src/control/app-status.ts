@@ -214,8 +214,6 @@ export class AppStatus {
     public static ClickOnMedia(mediaId: number) {
         AppStatus.CurrentMedia = mediaId;
 
-        AppStatus.ListSplitMode = true;
-
         AppStatus.UpdateLayout();
 
         AppStatus.CurrentFocus = "left";
