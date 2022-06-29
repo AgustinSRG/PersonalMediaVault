@@ -223,8 +223,9 @@
       :metadata="metadata"
       :shown="showcontrols"
       :fullscreen="fullscreen"
-      :expanded="expandedTitle"
-      :albumexpanded="expandedAlbum"
+      v-model:expanded="expandedTitle"
+      v-model:albumexpanded="expandedAlbum"
+      :inalbum="inalbum"
     ></PlayerTopBar>
 
     <PlayerContextMenu
@@ -276,6 +277,7 @@ export default defineComponent({
 
     next: Object,
     prev: Object,
+    inalbum: Boolean,
   },
   setup(props) {
     return {

@@ -1,11 +1,11 @@
 <template>
   <div
     class="player-top-bar"
-    :class="{ hidden: !shown, 'with-album': !!album }"
+    :class="{ hidden: !shown, 'with-album': inalbum, 'album-expand': albumexpanded, 'expanded': expanded && !albumexpanded }"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
   >
-    <div v-if="!expanded && !albumexpanded" class="player-title-container">
+    <div v-if="!albumexpanded" class="player-title-container">
       <div class="player-title-left">
         <button
           type="button"
@@ -21,7 +21,7 @@
       </div>
       <div class="player-title-right">
         <button
-          v-if="metadata"
+          v-if="metadata && !expanded"
           type="button"
           :title="$t('Expand')"
           class="player-btn"
@@ -29,8 +29,21 @@
         >
           <i class="fas fa-chevron-down"></i>
         </button>
+
+        <button
+          v-if="metadata && expanded"
+          type="button"
+          :title="$t('Close')"
+          class="player-btn"
+          @click="closeTitle"
+        >
+          <i class="fas fa-chevron-up"></i>
+        </button>
       </div>
     </div>
+
+    <PlayerAlbumFullScreen :expanded="albumexpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
+
   </div>
 </template>
 
@@ -38,14 +51,19 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 
 export default defineComponent({
   name: "PlayerTopBar",
-  emits: [],
+  components: {
+    PlayerAlbumFullScreen,
+  },
+  emits: ['update:expanded', 'update:albumexpanded'],
   props: {
     mid: Number,
     metadata: Object,
-    album: Object,
+
+    inalbum: Boolean,
 
     shown: Boolean,
     fullscreen: Boolean,
@@ -59,15 +77,35 @@ export default defineComponent({
     };
   },
   data: function () {
-    return {};
+    return {
+    };
   },
   methods: {
-    expandTitle: function () {},
+    expandTitle: function () {
+      this.albumexpandedState = false;
+      this.expandedState = true;
+    },
 
-    expandAlbum: function () {},
+    closeTitle: function () {
+      this.expandedState = false;
+    },
+
+    expandAlbum: function () {
+      this.albumexpandedState = true;
+      this.expandedState = false;
+    },
+
+    closeAlbum: function () {
+      this.albumexpandedState = false;
+    },
 
     stopPropagationEvent: function (e) {
       e.stopPropagation();
+    },
+  },
+  watch: {
+    fullscreen: function () {
+      this.albumexpandedState = false;
     },
   },
   mounted: function () {},
@@ -79,7 +117,7 @@ export default defineComponent({
 .player-top-bar {
   position: absolute;
   background-color: rgba(0, 0, 0, 0.2);
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, height 0.1s, width 0.1s;
   opacity: 1;
   color: white;
   overflow: hidden;
@@ -87,11 +125,23 @@ export default defineComponent({
   top: 0;
   left: 0;
   width: 100%;
-  display: flex;
 }
 
 .player-min .player-top-bar {
   height: 32px;
+}
+
+.player-top-bar.album-expand,
+.player-min .player-top-bar.album-expand {
+  max-width: 500px;
+  width: 100%;
+  height: 100%;
+}
+
+.player-top-bar.expanded,
+.player-min .player-top-bar.expanded {
+  width: 100%;
+  height: 100%;
 }
 
 .player-top-bar.hidden {
@@ -100,9 +150,16 @@ export default defineComponent({
 }
 
 .player-title-container {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: 57px;
   display: flex;
+}
+
+.player-min .player-title-container {
+  height: 32px;
 }
 
 .player-title {
@@ -145,7 +202,7 @@ export default defineComponent({
   display: none;
 }
 
-.with-album .player-title-left {
+.full-screen .with-album .player-title-left {
   width: 48px;
   height: 100%;
   display: flex;
@@ -153,7 +210,7 @@ export default defineComponent({
   justify-content: right;
 }
 
-.player-min .with-album .player-title-left {
+.player-min.full-screen .with-album .player-title-left {
   width: 28px;
 }
 

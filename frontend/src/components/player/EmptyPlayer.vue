@@ -126,8 +126,9 @@
       :metadata="null"
       :shown="true"
       :fullscreen="fullscreen"
-      :expanded="expandedTitle"
-      :albumexpanded="expandedAlbum"
+      v-model:expanded="expandedTitle"
+      v-model:albumexpanded="expandedAlbum"
+      :inalbum="inalbum"
     ></PlayerTopBar>
   </div>
 </template>
@@ -158,6 +159,7 @@ export default defineComponent({
 
     next: Object,
     prev: Object,
+    inalbum: Boolean,
   },
   setup(props) {
     return {
