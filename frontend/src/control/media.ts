@@ -25,6 +25,7 @@ export interface MediaData {
 
     title: string;
     description: string;
+    tags: number[];
 
     thumbnail: string;
 

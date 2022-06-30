@@ -21,7 +21,7 @@ export class TagsAPI {
         };
     }
 
-    public static UntagMedia(media: number, tagId: string): RequestParams {
+    public static UntagMedia(media: number, tagId: number): RequestParams {
         return {
             method: "POST",
             url: GetAPIURL("/api/tags/remove"),

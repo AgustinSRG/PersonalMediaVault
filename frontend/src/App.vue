@@ -177,8 +177,18 @@ export default class App extends Vue {}
   border: solid 1px rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary:not(:disabled):hover {
+.btn-primary:not(:disabled):hover,
+.btn-primary:not(:disabled):focus {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-danger {
+  border: solid 1px rgba(255, 0, 0, 0.1);
+}
+
+.btn-danger:not(:disabled):hover,
+.btn-danger:not(:disabled):focus {
+  background: rgba(255, 0, 0, 0.1);
 }
 
 .form-group {

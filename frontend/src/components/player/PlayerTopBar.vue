@@ -5,6 +5,7 @@
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
     @contextmenu="stopPropagationEvent"
+    @keydown="stopPropagationEvent"
   >
     <div v-if="!albumexpanded" class="player-title-container">
       <div class="player-title-left">
@@ -44,20 +45,24 @@
     </div>
 
     <PlayerAlbumFullScreen :expanded="albumexpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
+    <PlayerMediaEditor v-if="expanded" @changed="onEditDone"></PlayerMediaEditor>
 
   </div>
 </template>
 
 
 <script lang="ts">
+import { MediaController } from "@/control/media";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
+import PlayerMediaEditor from "./PlayerMediaEditor.vue";
 
 export default defineComponent({
   name: "PlayerTopBar",
   components: {
     PlayerAlbumFullScreen,
+    PlayerMediaEditor,
   },
   emits: ['update:expanded', 'update:albumexpanded'],
   props: {
@@ -79,12 +84,17 @@ export default defineComponent({
   },
   data: function () {
     return {
+      dirty: false,
     };
   },
   methods: {
     expandTitle: function () {
       this.albumexpandedState = false;
       this.expandedState = true;
+    },
+
+    onEditDone: function () {
+      this.dirty = true;
     },
 
     closeTitle: function () {
@@ -107,6 +117,15 @@ export default defineComponent({
   watch: {
     fullscreen: function () {
       this.albumexpandedState = false;
+    },
+
+    expanded: function () {
+      if (this.dirty) {
+        this.dirty = false;
+        setTimeout(() => {
+          MediaController.Load();
+        }, 100);
+      }
     },
   },
   mounted: function () {},
@@ -157,6 +176,10 @@ export default defineComponent({
   width: 100%;
   height: 57px;
   display: flex;
+}
+
+.expanded .player-title-container {
+  background: rgba(0, 0, 0, 0.9);
 }
 
 .player-min .player-title-container {
