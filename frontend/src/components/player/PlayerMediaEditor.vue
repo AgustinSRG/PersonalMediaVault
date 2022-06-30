@@ -68,8 +68,21 @@
           autocomplete="off"
           maxlength="255"
           v-model="tagToAdd"
+          @input="onTagAddChanged"
           class="form-control"
         />
+      </div>
+      <div class="form-group" v-if="matchingTags.length > 0">
+        <button
+          v-for="mt in matchingTags"
+          :key="mt.id"
+          type="button"
+          class="btn btn-primary btn-xs"
+          :disabled="busy"
+          @click="addMatchingTag(mt.name)"
+        >
+          <i class="fas fa-plus"></i> {{ mt.name }}
+        </button>
       </div>
       <div class="form-group">
         <button
@@ -420,6 +433,7 @@ export default defineComponent({
           if (this.tags.indexOf(res.id) === -1) {
             this.tags.push(res.id);
           }
+          this.findTags();
           TagsController.AddTag(res.id, res.name);
           this.$emit("changed");
         })
@@ -459,6 +473,113 @@ export default defineComponent({
           this.busy = false;
         });
     },
+
+    addMatchingTag: function (tag) {
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      Request.Do(TagsAPI.TagMedia(mediaId, tag))
+        .onSuccess((res) => {
+          AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+          this.busy = false;
+          if (this.tags.indexOf(res.id) === -1) {
+            this.tags.push(res.id);
+          }
+          this.findTags();
+          TagsController.AddTag(res.id, res.name);
+          this.$emit("changed");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Invalid tag name"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    onTagAddChanged: function () {
+      if (this.$options.findTagTimeout) {
+        return;
+      }
+      this.$options.findTagTimeout = setTimeout(() => {
+        this.$options.findTagTimeout = null;
+        this.findTags();
+      }, 200);
+    },
+
+    findTags: function () {
+      const tagFilter = this.tagToAdd
+        .replace(/[\n\r]/g, " ")
+        .trim()
+        .replace(/[\s]/g, "_")
+        .toLowerCase();
+      if (!tagFilter) {
+        this.matchingTags = [];
+        return;
+      }
+      this.matchingTags = Object.values(this.tagData)
+        .map((a: any) => {
+          const i = a.name.indexOf(tagFilter);
+          return {
+            id: a.id,
+            name: a.name,
+            starts: i === 0,
+            contains: i >= 0,
+          };
+        })
+        .filter((a) => {
+          if (this.tags.indexOf(a.id) >= 0) {
+            return false;
+          }
+          return a.starts || a.contains;
+        })
+        .sort((a, b) => {
+          if (a.starts && !b.starts) {
+            return -1;
+          } else if (b.starts && !a.starts) {
+            return 1;
+          } else if (a.name < b.name) {
+            return -1;
+          } else {
+            return 1;
+          }
+        })
+        .slice(0, 10);
+    },
   },
 
   mounted: function () {
@@ -484,6 +605,10 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+
+    if (this.$options.findTagTimeout) {
+      clearTimeout(this.$options.findTagTimeout);
+    }
   },
 });
 </script>
