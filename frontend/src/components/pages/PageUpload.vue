@@ -243,9 +243,17 @@ export default defineComponent({
         case "pending":
           return this.$t("Pending");
         case "uploading":
-          return this.$t("Uploading") + "... (" + p + "%)";
+          if (p > 0) {
+            return this.$t("Uploading") + "... (" + p + "%)";
+          } else {
+            return this.$t("Uploading") + "...";
+          }
         case "encrypting":
-          return this.$t("Encrypting") + "... (" + p + "%)";
+          if (p > 0) {
+            return this.$t("Encrypting") + "... (" + p + "%)";
+          } else {
+            return this.$t("Encrypting") + "...";
+          }
         case "error":
           return this.$t("Error") + ": " + err;
         default:
