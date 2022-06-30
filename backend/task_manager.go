@@ -380,6 +380,7 @@ type TaskListInfoEntry struct {
 
 	Stage      string  `json:"stage"`
 	StageStart int64   `json:"stage_start"`
+	Now        int64   `json:"time_now"`
 	Progress   float64 `json:"stage_progress"`
 }
 
@@ -406,6 +407,7 @@ func (tm *TaskManager) GetTaskInfo(task_id uint64) *TaskListInfoEntry {
 
 	info.Stage = stage
 	info.StageStart = stage_start
+	info.Now = time.Now().UnixMilli()
 	info.Progress = stage_p
 
 	return &info
@@ -431,6 +433,7 @@ func (tm *TaskManager) GetAllTasks() []*TaskListInfoEntry {
 
 		info.Stage = stage
 		info.StageStart = stage_start
+		info.Now = time.Now().UnixMilli()
 		info.Progress = stage_p
 
 		result = append(result, &info)

@@ -1643,6 +1643,10 @@ definitions:
           type: number
           format: int64
           description: Stage start timestamp (Unix millis)
+        time_now:
+          type: number
+          format: int64
+          description: Current server time (Unix millis)
         stage_progress:
           type: number
           format: double
