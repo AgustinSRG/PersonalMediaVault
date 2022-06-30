@@ -45,6 +45,8 @@
       </div>
     </div>
 
+    <PlayerEncodingPending v-if="!loading && !imageURL && imagePending" :mid="mid" :tid="imagePendingTask" :res="currentResolution"></PlayerEncodingPending>
+
     <div
       class="player-controls"
       :class="{ hidden: !showcontrols }"
@@ -248,6 +250,7 @@ import { defineComponent, nextTick } from "vue";
 import ScaleControl from "./ScaleControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
+import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
@@ -263,6 +266,7 @@ export default defineComponent({
     PlayerMediaChangePreview,
     PlayerTopBar,
     PlayerContextMenu,
+    PlayerEncodingPending,
   },
   name: "ImagePlayer",
   emits: ["gonext", "goprev", "update:fullscreen", "update:showcontrols", "albums-open"],

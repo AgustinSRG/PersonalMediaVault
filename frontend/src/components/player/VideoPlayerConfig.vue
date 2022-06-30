@@ -195,7 +195,7 @@ export default defineComponent({
           " fps (" +
           this.$t("Original") +
           ")" +
-          (this.metadata.encoded ? "" : "(" + this.$t("Pending") + ")")
+          (this.metadata.encoded ? "" : " (" + this.$t("Pending") + ")")
         );
       } else {
         let resData = this.metadata.resolutions[res];
@@ -207,7 +207,7 @@ export default defineComponent({
             ", " +
             resData.fps +
             " fps " +
-            (resData.ready ? "" : "(" + this.$t("Pending") + ")")
+            (resData.ready ? "" : " (" + this.$t("Pending") + ")")
           );
         } else {
           return this.$t("Unknown");

@@ -127,4 +127,11 @@ export class MediaController {
             Timeouts.Set("media-current-load", 1500, MediaController.Load);
         });
     }
+
+    public static NextPendingId = 0;
+
+    public static GetPendingId() {
+        MediaController.NextPendingId++;
+        return "pending-check-" + Date.now() + "-" + MediaController.NextPendingId;
+    }
 }

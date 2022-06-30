@@ -1,7 +1,7 @@
 
 
 export function renderTimeSeconds(s: number): string {
-    if (isNaN(s) || !isFinite(s)) {
+    if (isNaN(s) || !isFinite(s) || s < 0) {
         s = 0;
     }
     s = Math.floor(s);

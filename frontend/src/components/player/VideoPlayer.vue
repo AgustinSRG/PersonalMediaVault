@@ -65,6 +65,8 @@
       </div>
     </div>
 
+    <PlayerEncodingPending v-if="!loading && !videoURL && videoPending" :mid="mid" :tid="videoPendingTask" :res="currentResolution"></PlayerEncodingPending>
+
     <div
       class="player-controls"
       :class="{ hidden: !showControls }"
@@ -341,6 +343,7 @@ import { defineComponent, nextTick } from "vue";
 import VolumeControl from "./VolumeControl.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
+import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time-utils";
@@ -358,6 +361,7 @@ export default defineComponent({
     PlayerMediaChangePreview,
     PlayerTopBar,
     PlayerContextMenu,
+    PlayerEncodingPending,
   },
   name: "VideoPlayer",
   emits: ["gonext", "goprev", "ended", "update:fullscreen", "albums-open"],

@@ -68,6 +68,8 @@
       </div>
     </div>
 
+    <PlayerEncodingPending v-if="!loading && !audioURL && audioPending" :mid="mid" :tid="audioPendingTask" :res="-1"></PlayerEncodingPending>
+
     <div
       class="player-controls"
       :class="{ hidden: !showControls }"
@@ -337,6 +339,7 @@ import { defineComponent, nextTick } from "vue";
 import VolumeControl from "./VolumeControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
+import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time-utils";
@@ -354,6 +357,7 @@ export default defineComponent({
     PlayerMediaChangePreview,
     PlayerTopBar,
     PlayerContextMenu,
+    PlayerEncodingPending,
   },
   name: "AudioPlayer",
   emits: ["gonext", "goprev", "ended", "update:fullscreen", "albums-open"],
