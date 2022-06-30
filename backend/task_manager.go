@@ -269,8 +269,8 @@ func (tm *TaskManager) RunPendingTasks() {
 func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_type TaskDefinitionType, resolution *UserConfigResolution) uint64 {
 	tm.lock.Lock()
 
-	task_id := tm.pending_tasks.NextId
 	tm.pending_tasks.NextId++
+	task_id := tm.pending_tasks.NextId
 
 	task_definition := TaskDefinition{
 		Id:         task_id,
