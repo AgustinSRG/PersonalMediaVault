@@ -194,6 +194,16 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    public static OnDeleteMedia() {
+        AppStatus.CurrentMedia = -1;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "right";
+
+        AppStatus.OnStatusUpdate();
+    }
+
     public static GoToSearch(search: string) {
         AppStatus.CurrentPage = "search";
         AppStatus.CurrentSearch = search;

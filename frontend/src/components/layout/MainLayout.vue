@@ -56,6 +56,7 @@
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+    <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -91,6 +92,7 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import AlbumListModal from "../modals/AlbumListModal.vue";
 import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
+import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -120,6 +122,7 @@ export default defineComponent({
     AlbumListModal,
     AlbumRenameModal,
     AlbumDeleteModal,
+    MediaDeleteModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -146,6 +149,8 @@ export default defineComponent({
       displayAlbumList: false,
       displayAlbumRename: false,
       displayAlbumDelete: false,
+
+      displayMediaDelete: false,
 
       displaySidebar: true,
     };
@@ -199,6 +204,10 @@ export default defineComponent({
       this.displayAlbumDelete = true;
     },
 
+    showMediaDelete: function () {
+      this.displayMediaDelete = true;
+    },
+
     hideSidebar: function () {
       this.displaySidebar = false;
     },
@@ -227,6 +236,10 @@ export default defineComponent({
 
     AppEvents.AddEventListener("albums-loading", (l: boolean) => {
       this.loadingAlbums = l;
+    });
+
+    AppEvents.AddEventListener("media-delete-request", () => {
+      this.showMediaDelete();
     });
   },
 });
