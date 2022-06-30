@@ -143,9 +143,16 @@ export class PlayerPreferences {
     public static GetInitialTime(mid: number) {
         for (const entry of PlayerPreferences.PlayTimeCache) {
             if (entry.mid === mid) {
-                return entry.time;
+                const time = entry.time;
+                if (typeof time === "number" && !isNaN(time) && isFinite(time) && time >= 0) {
+                    return time;
+                } else {
+                    return 0;
+                }
             }
         }
+
+        return 0;
     }
 
     public static SetInitialTime(mid: number, time: number) {

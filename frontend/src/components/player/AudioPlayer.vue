@@ -345,6 +345,7 @@ import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/vmodel";
+import { MediaController } from "@/control/media";
 
 export default defineComponent({
   components: {
@@ -422,6 +423,8 @@ export default defineComponent({
       contextMenuX: 0,
       contextMenuY: 0,
       contextMenuShown: false,
+
+      requiresRefresh: false,
     };
   },
   methods: {
@@ -504,7 +507,10 @@ export default defineComponent({
     onLoadMetaData: function () {
       this.duration = this.getAudioElement().duration;
 
-      this.getAudioElement().currentTime = this.currentTime;
+      if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
+        this.getAudioElement().currentTime = Math.min(this.currentTime, this.duration);
+      }
+
       this.getAudioElement().playbackRate = this.speed;
     },
     onVideoTimeUpdate: function () {
@@ -526,6 +532,7 @@ export default defineComponent({
         promise.catch(
           function () {
             this.playing = false;
+            this.requiresRefresh = true;
           }.bind(this)
         );
       }
@@ -669,6 +676,11 @@ export default defineComponent({
     },
 
     play: function () {
+      if (this.requiresRefresh) {
+        this.requiresRefresh = false;
+        MediaController.Load();
+        return;
+      }
       var audio = this.getAudioElement();
       this.playing = true;
       if (audio) {
