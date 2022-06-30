@@ -318,7 +318,7 @@ func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, te
 func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFile string, ext string, probe_data *FFprobeMediaResult, userConfig *UserConfig) {
 	// Encrypt the original file
 
-	original_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
+	original_encrypted_file, err := EncryptOriginalAssetFile(media_id, tempFile, session.key)
 
 	if err != nil {
 		LogError(err)

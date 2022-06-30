@@ -345,6 +345,10 @@ paths:
               ready:
                 type: boolean
                 description: "Set to true if the media asset finish uploading"
+              ready_p:
+                type: number
+                format: int32
+                description: "Number from 0 to 100 in case ready = false to indicate the storage progress"
               encoded:
                 type: boolean
                 description: "Set to true if the media asset is encoded and ready to play."

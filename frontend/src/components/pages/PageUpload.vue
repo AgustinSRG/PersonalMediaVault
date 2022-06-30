@@ -96,6 +96,11 @@
           </tr>
         </tbody>
       </table>
+      <div class="form-group" v-if="pendingToUpload.length > 0">
+        <button type="button" class="btn btn-primary btn-sm" @click="clearList">
+          <i class="fas fa-broom"></i> {{ $t("Clear list") }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -208,6 +213,16 @@ export default defineComponent({
       }
     },
 
+    clearList: function () {
+      for (let i = 0; i < this.pendingToUpload.length; i++) {
+        const id = this.pendingToUpload[i].id;
+        Request.Abort("upload-media-" + id);
+        Request.Abort("check-media-encryption-" + id);
+      }
+
+      this.pendingToUpload = [];
+    },
+
     tryAgain: function (m) {
       m.error = "";
       m.progress = 0;
@@ -230,7 +245,7 @@ export default defineComponent({
         case "uploading":
           return this.$t("Uploading") + "... (" + p + "%)";
         case "encrypting":
-          return this.$t("Encrypting") + "...";
+          return this.$t("Encrypting") + "... (" + p + "%)";
         case "error":
           return this.$t("Error") + ": " + err;
         default:
@@ -254,6 +269,7 @@ export default defineComponent({
         .onSuccess((data) => {
           m.mid = data.media_id;
           m.status = "encrypting";
+          m.progress = 0;
           this.uploadingCount--;
         })
         .onCancel(() => {
@@ -305,6 +321,8 @@ export default defineComponent({
           m.busy = false;
           if (media.ready) {
             m.status = "ready";
+          } else {
+            m.progress = media.ready_p;
           }
         })
         .onCancel(() => {
@@ -335,7 +353,7 @@ export default defineComponent({
             this.uploadMedia(pending);
           }
         } else if (pending.status === "encrypting") {
-          if (!pending.busy && Date.now() - pending.lastRequest > 2000) {
+          if (!pending.busy && Date.now() - pending.lastRequest > 1000) {
             this.checkEncryptionStatus(pending);
           }
         }

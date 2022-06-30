@@ -26,6 +26,9 @@ type MediaAssetsManager struct {
 	assets map[uint64]*MediaAsset
 
 	lock *sync.Mutex
+
+	ready_progress_map  map[uint64]int32
+	ready_progress_lock *sync.Mutex
 }
 
 func (mm *MediaAssetsManager) Initialize(base_path string) {
@@ -35,6 +38,9 @@ func (mm *MediaAssetsManager) Initialize(base_path string) {
 
 	mm.data_file = path.Join(base_path, "media_ids.json")
 	mm.data_file_lock = &sync.Mutex{}
+
+	mm.ready_progress_map = make(map[uint64]int32)
+	mm.ready_progress_lock = &sync.Mutex{}
 
 	mm.assets = make(map[uint64]*MediaAsset)
 }
@@ -159,4 +165,25 @@ func (mm *MediaAssetsManager) ReleaseMediaResource(media_id uint64) {
 	if mm.assets[media_id].use_count <= 0 {
 		delete(mm.assets, media_id)
 	}
+}
+
+func (mm *MediaAssetsManager) GetProgress(mid uint64) int32 {
+	mm.ready_progress_lock.Lock()
+	defer mm.ready_progress_lock.Unlock()
+
+	return mm.ready_progress_map[mid]
+}
+
+func (mm *MediaAssetsManager) SetProgress(mid uint64, p int32) {
+	mm.ready_progress_lock.Lock()
+	defer mm.ready_progress_lock.Unlock()
+
+	mm.ready_progress_map[mid] = p
+}
+
+func (mm *MediaAssetsManager) EndProgress(mid uint64) {
+	mm.ready_progress_lock.Lock()
+	defer mm.ready_progress_lock.Unlock()
+
+	delete(mm.ready_progress_map, mid)
 }

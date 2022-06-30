@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -142,6 +143,98 @@ func GetNameFromFileName(fileName string) string {
 	} else {
 		return fileName
 	}
+}
+
+func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, error) {
+	encrypted_file := GetTemporalFileName("pma", true)
+
+	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
+
+	if err != nil {
+		return "", err
+	}
+
+	f_info, err := f.Stat()
+
+	if err != nil {
+		f.Close()
+
+		return "", err
+	}
+
+	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+
+	if err != nil {
+		f.Close()
+
+		return "", err
+	}
+
+	err = ws.Initialize(f_info.Size(), key)
+
+	if err != nil {
+		ws.Close()
+		f.Close()
+
+		os.Remove(encrypted_file)
+
+		return "", err
+	}
+
+	finished := false
+	buf := make([]byte, 1024*1024)
+	bytesEncrypted := 0
+
+	for !finished {
+		c, err := f.Read(buf)
+
+		if err != nil && err != io.EOF {
+			ws.Close()
+			f.Close()
+
+			os.Remove(encrypted_file)
+
+			GetVault().media.EndProgress(mid)
+
+			return "", err
+		}
+
+		if err == io.EOF {
+			finished = true
+		}
+
+		if c == 0 {
+			continue
+		}
+
+		err = ws.Write(buf[:c])
+
+		if err != nil {
+			LogError(err)
+
+			ws.Close()
+			f.Close()
+
+			GetVault().media.EndProgress(mid)
+
+			os.Remove(encrypted_file)
+
+			return "", err
+		}
+
+		bytesEncrypted += c
+
+		progress_enc := math.Round(float64(bytesEncrypted) * 100 / float64(ws.file_size))
+		p := int32(progress_enc)
+		GetVault().media.SetProgress(mid, p)
+	}
+
+	ws.Close()
+	f.Close()
+
+	GetVault().media.EndProgress(mid)
+
+	return encrypted_file, nil
 }
 
 func EncryptAssetFile(file string, key []byte) (string, error) {

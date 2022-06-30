@@ -88,10 +88,11 @@ type MediaAPIMetaResponse struct {
 	Height   int32   `json:"height"`
 	Fps      int32   `json:"fps"`
 
-	Ready   bool   `json:"ready"`
-	Encoded bool   `json:"encoded"`
-	Url     string `json:"url"`
-	Task    uint64 `json:"task"`
+	Ready         bool   `json:"ready"`
+	ReadyProgress int32  `json:"ready_p"`
+	Encoded       bool   `json:"encoded"`
+	Url           string `json:"url"`
+	Task          uint64 `json:"task"`
 
 	VideoPreviews         string  `json:"video_previews"`
 	VideoPreviewsInterval float64 `json:"video_previews_interval"`
@@ -174,6 +175,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension
 	} else {
 		result.Ready = false
+		result.ReadyProgress = GetVault().media.GetProgress(media_id)
 		result.Encoded = false
 		result.Task = meta.OriginalTask
 		result.Url = ""
