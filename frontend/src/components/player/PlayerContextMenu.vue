@@ -216,6 +216,8 @@ export default defineComponent({
   min-width: 380px;
   padding-top: 0.3rem;
   padding-bottom: 0.3rem;
+  opacity: 1;
+  transition: opacity 0.1s;
 }
 
 .player-min .player-context-menu  {
@@ -223,7 +225,8 @@ export default defineComponent({
 }
 
 .player-context-menu.hidden {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .full-screen .player-context-menu {
