@@ -18,7 +18,10 @@
     </div>
     <div class="top-bar-search-td">
       <div class="top-bar-center-div">
-        <div class="top-bar-search-input-container">
+        <div
+          class="top-bar-search-input-container"
+          :class="{ focused: searchFocus }"
+        >
           <input
             type="text"
             class="top-bar-search-input"
@@ -28,7 +31,10 @@
             autocapitalize="none"
             :placeholder="$t('Search by tag')"
             v-model="search"
+            @input="onSearchInput"
             @change="goSearch"
+            @focus="focusSearch"
+            @blur="blurSearch"
           />
           <button
             type="button"
@@ -38,6 +44,19 @@
           >
             <i class="fas fa-search"></i>
           </button>
+          <div
+            class="top-bar-search-suggestions"
+            :class="{ hidden: suggestions.length === 0 }"
+          >
+            <div
+              v-for="s in suggestions"
+              :key="s.id"
+              class="top-bar-search-suggestion"
+              @click="selectSearch(s)"
+            >
+              {{ s.name }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -73,6 +92,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -81,6 +101,8 @@ export default defineComponent({
   data: function () {
     return {
       search: AppStatus.CurrentSearch,
+      searchFocus: false,
+      suggestions: [],
     };
   },
   methods: {
@@ -98,10 +120,78 @@ export default defineComponent({
 
     goSearch: function () {
       AppStatus.GoToSearch(this.search);
+      this.$el.querySelector(".top-bar-search-input").blur();
     },
 
     onSearchChanged: function () {
       this.search = AppStatus.CurrentSearch;
+    },
+
+    focusSearch: function () {
+      if (this.$options.blurTimeout) {
+        clearTimeout(this.$options.blurTimeout);
+        this.$options.blurTimeout = null;
+      }
+      this.searchFocus = true;
+      this.updateSuggestions();
+    },
+
+    blurSearch: function () {
+      if (this.$options.blurTimeout) {
+        clearTimeout(this.$options.blurTimeout);
+        this.$options.blurTimeout = null;
+      }
+      this.$options.blurTimeout = setTimeout(() => {
+        this.$options.blurTimeout = null;
+        this.searchFocus = false;
+      }, 100);
+    },
+
+    selectSearch: function (s) {
+      this.search = s.name;
+      this.goSearch();
+    },
+
+    updateSuggestions: function () {
+      const tagFilter = this.search
+        .replace(/[\n\r]/g, " ")
+        .trim()
+        .replace(/[\s]/g, "_")
+        .toLowerCase();
+      this.suggestions = Object.values(TagsController.Tags)
+        .map((a: any) => {
+          const i = tagFilter ? a.name.indexOf(tagFilter) : 0;
+          return {
+            id: a.id,
+            name: a.name,
+            starts: i === 0,
+            contains: i >= 0,
+          };
+        })
+        .filter((a) => {
+          return a.starts || a.contains;
+        })
+        .sort((a, b) => {
+          if (a.starts && !b.starts) {
+            return -1;
+          } else if (b.starts && !a.starts) {
+            return 1;
+          } else if (a.name < b.name) {
+            return -1;
+          } else {
+            return 1;
+          }
+        });
+    },
+
+    onSearchInput: function () {
+      if (this.$options.findTagTimeout) {
+        return;
+      }
+      this.$options.findTagTimeout = setTimeout(() => {
+        this.$options.findTagTimeout = null;
+        this.updateSuggestions();
+      }, 200);
     },
   },
 
@@ -119,6 +209,15 @@ export default defineComponent({
       "app-status-update",
       this.$options.statusChangeH
     );
+
+    if (this.$options.findTagTimeout) {
+      clearTimeout(this.$options.findTagTimeout);
+    }
+
+    if (this.$options.blurTimeout) {
+      clearTimeout(this.$options.blurTimeout);
+      this.$options.blurTimeout = null;
+    }
   },
 });
 
@@ -231,6 +330,11 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.top-bar-search-input-container.focused {
+  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
 }
 
 .top-bar-search-input {
@@ -279,6 +383,46 @@ export default defineComponent({
   width: 54px;
   height: 40px;
   font-size: 20px;
+}
+
+.top-bar-search-suggestions {
+  position: absolute;
+  top: calc(40px + 0.2rem);
+  left: 0;
+  width: calc(100% + 0.1rem);
+  background: rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.top-bar-search-input-container.focused .top-bar-search-suggestions {
+  opacity: 1;
+  pointer-events: all;
+  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
+}
+
+.top-bar-search-input-container.focused .top-bar-search-suggestions.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.top-bar-search-suggestion {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.top-bar-search-suggestion:hover,
+.top-bar-search-suggestion:focus {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
 
