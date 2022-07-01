@@ -98,7 +98,7 @@
       <label>{{ $t("Thumbnail") }}:</label>
     </div>
     <div class="form-group">
-      <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}:</label>
+      <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}</label>
       <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail">
     </div>
     <div class="form-group">
