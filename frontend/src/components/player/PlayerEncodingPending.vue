@@ -311,7 +311,7 @@ export default defineComponent({
 
 .player-task-progress-bar {
     height: 2.5rem;
-    width: calc(100% - 1rem);
+    width: 100%;
     max-width: 500px;
     border: solid 1px rgba(255, 255, 255, 0.1);
     padding: 0.1rem;

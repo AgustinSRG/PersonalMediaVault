@@ -201,6 +201,8 @@ export class AppStatus {
 
         AppStatus.CurrentFocus = "right";
 
+        AppEvents.Emit("media-delete");
+
         AppStatus.OnStatusUpdate();
     }
 

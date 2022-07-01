@@ -213,6 +213,7 @@ export default defineComponent({
     this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
 
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
+    AppEvents.AddEventListener("media-delete", this.$options.loadH);
     AppEvents.AddEventListener(
       "app-status-update",
       this.$options.statusChangeH
@@ -229,6 +230,7 @@ export default defineComponent({
     Timeouts.Abort("page-random-load");
     Request.Abort("page-random-load");
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
+    AppEvents.RemoveEventListener("media-delete", this.$options.loadH);
     AppEvents.RemoveEventListener(
       "app-status-update",
       this.$options.statusChangeH
