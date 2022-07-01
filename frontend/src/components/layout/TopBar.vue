@@ -31,6 +31,7 @@
             autocapitalize="none"
             :placeholder="$t('Search by tag')"
             v-model="search"
+            @keydown="onKeyDown"
             @input="onSearchInput"
             @change="goSearch"
             @focus="focusSearch"
@@ -192,6 +193,15 @@ export default defineComponent({
         this.$options.findTagTimeout = null;
         this.updateSuggestions();
       }, 200);
+    },
+
+    onKeyDown: function (event) {
+      if (event.key === "Tab") {
+        if (this.suggestions.length > 0) {
+          this.selectSearch(this.suggestions[0]);
+          event.preventDefault();
+        }
+      }
     },
   },
 
