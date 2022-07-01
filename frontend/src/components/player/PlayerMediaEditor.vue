@@ -95,6 +95,29 @@
       </div>
     </form>
     <div class="form-group border-top">
+      <label>{{ $t("Thumbnail") }}:</label>
+    </div>
+    <div class="form-group">
+      <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}:</label>
+      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail">
+    </div>
+    <div class="form-group">
+      <input
+      type="file"
+      class="file-hidden"
+      @change="inputFileChanged"
+      name="thumbnail-upload"
+    />
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        :disabled="busy"
+        @click="uploadThumbnail"
+      >
+        <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
+      </button>
+    </div>
+    <div class="form-group border-top">
       <label>{{
         $t(
           "If the media resource did not encode properly, try using the button below. If it still does not work, try re-uploading the media."
@@ -132,12 +155,13 @@
 <script lang="ts">
 import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
+import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { copyObject } from "@/utils/objects";
-import { Request } from "@/utils/request";
+import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -156,6 +180,8 @@ export default defineComponent({
       tagData: {},
       matchingTags: [],
 
+      thumbnail: "",
+
       busy: false,
     };
   },
@@ -173,6 +199,79 @@ export default defineComponent({
       this.desc = this.originalDesc;
 
       this.tags = MediaController.MediaData.tags.slice();
+
+      this.thumbnail = MediaController.MediaData.thumbnail;
+    },
+
+    getThumbnail(thumb: string) {
+      return GetAssetURL(thumb);
+    },
+
+    uploadThumbnail: function () {
+      this.$el.querySelector(".file-hidden").click();
+    },
+
+    inputFileChanged: function (e) {
+      const data = e.target.files;
+      if (data && data.length > 0) {
+        const file = data[0];
+        this.changeThumbnail(file);
+      }
+    },
+
+    changeThumbnail: function (file) {
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      Request.Do(MediaAPI.ChangeMediaThumbnail(mediaId, file))
+        .onSuccess((res) => {
+          AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
+          this.busy = false;
+          this.thumbnail = res.url;
+          this.$emit("changed");
+          AlbumsController.LoadCurrentAlbum();
+          AppEvents.Emit("media-meta-change");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Invalid thumbnail provided"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
     },
 
     changeTitle: function (e) {
@@ -194,6 +293,8 @@ export default defineComponent({
           this.busy = false;
           this.originalTitle = this.title;
           this.$emit("changed");
+          AlbumsController.LoadCurrentAlbum();
+          AppEvents.Emit("media-meta-change");
         })
         .onCancel(() => {
           this.busy = false;
@@ -678,5 +779,11 @@ export default defineComponent({
 
 .media-tag-btn:focus {
   outline: none;
+}
+
+.form-group-thumbnail {
+  max-width: 100%;
+  width: auto;
+  height: auto;
 }
 </style>
