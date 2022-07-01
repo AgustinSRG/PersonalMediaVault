@@ -141,6 +141,18 @@
       >
     </div>
 
+    <div class="form-group" v-if="type === 2 || type === 1">
+      <label v-if="type === 1"
+        >{{ $t("Original resolution") }}: {{ width }}x{{
+          res.height
+        }}</label
+      >
+      <label v-if="type === 2">
+        {{ $t("Original resolution") }}: {{ width }}x{{ height }},
+        {{ fps }} fps
+      </label>
+    </div>
+
     <div v-if="type === 2 || type === 1" class="table-responsive">
       <table class="table">
         <thead>
@@ -247,6 +259,10 @@ export default defineComponent({
 
       thumbnail: "",
 
+      width: 0,
+      height: 0,
+      fps: 0,
+
       standardResolutions: [
         {
           name: "144p",
@@ -341,6 +357,10 @@ export default defineComponent({
 
       this.originalDesc = MediaController.MediaData.description;
       this.desc = this.originalDesc;
+
+      this.width = MediaController.MediaData.width;
+      this.height = MediaController.MediaData.height;
+      this.fps = MediaController.MediaData.fps;
 
       this.tags = MediaController.MediaData.tags.slice();
 
@@ -947,7 +967,9 @@ export default defineComponent({
 
           const mediaId = AppStatus.CurrentMedia;
 
-          Request.Do(MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+          Request.Do(
+            MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps)
+          )
             .onSuccess(() => {
               AppEvents.Emit(
                 "snack",
