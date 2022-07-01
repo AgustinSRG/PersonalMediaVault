@@ -68,7 +68,12 @@
       </div>
     </div>
 
-    <PlayerEncodingPending v-if="!loading && !audioURL && audioPending" :mid="mid" :tid="audioPendingTask" :res="-1"></PlayerEncodingPending>
+    <PlayerEncodingPending
+      v-if="!loading && !audioURL && audioPending"
+      :mid="mid"
+      :tid="audioPendingTask"
+      :res="-1"
+    ></PlayerEncodingPending>
 
     <div
       class="player-controls"
@@ -509,18 +514,37 @@ export default defineComponent({
     /* Player events */
 
     onLoadMetaData: function () {
-      this.duration = this.getAudioElement().duration;
+      const audioElement = this.getAudioElement();
 
-      if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
-        this.getAudioElement().currentTime = Math.min(this.currentTime, this.duration);
+      if (!audioElement) {
+        return;
       }
 
-      this.getAudioElement().playbackRate = this.speed;
+      this.duration = audioElement.duration;
+
+      if (
+        typeof this.currentTime === "number" &&
+        !isNaN(this.currentTime) &&
+        isFinite(this.currentTime) &&
+        this.currentTime >= 0
+      ) {
+        audioElement.currentTime = Math.min(this.currentTime, this.duration);
+      }
+
+      audioElement.playbackRate = this.speed;
     },
     onVideoTimeUpdate: function () {
       if (this.loading) return;
-      this.currentTime = this.getAudioElement().currentTime;
-      this.duration = this.getAudioElement().duration;
+
+      const audioElement = this.getAudioElement();
+
+      if (!audioElement) {
+        return;
+      }
+
+      this.currentTime = audioElement.currentTime;
+      this.duration = audioElement.duration;
+
       if (Date.now() - this.lastTimeChangedEvent > 5000) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
@@ -548,7 +572,10 @@ export default defineComponent({
       PlayerPreferences.SetInitialTime(this.mid, 0);
       this.loading = false;
       if (this.loop) {
-        this.getAudioElement().currentTime = 0;
+        const audioElement = this.getAudioElement();
+        if (audioElement) {
+          this.getAudioElement().currentTime = 0;
+        }
       } else {
         this.pause();
         this.$emit("ended");

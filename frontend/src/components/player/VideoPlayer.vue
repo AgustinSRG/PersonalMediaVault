@@ -544,18 +544,27 @@ export default defineComponent({
     /* Player events */
 
     onLoadMetaData: function () {
-      this.duration = this.getVideoElement().duration;
-
-      if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
-        this.getVideoElement().currentTime = Math.min(this.currentTime, this.duration);
+      const videoElement = this.getVideoElement();
+      if (!videoElement) {
+        return;
       }
 
-      this.getVideoElement().playbackRate = this.speed;
+      this.duration = videoElement.duration;
+
+      if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
+        videoElement.currentTime = Math.min(this.currentTime, this.duration);
+      }
+
+      videoElement.playbackRate = this.speed;
     },
     onVideoTimeUpdate: function () {
       if (this.loading) return;
-      this.currentTime = this.getVideoElement().currentTime;
-      this.duration = this.getVideoElement().duration;
+      const videoElement = this.getVideoElement();
+      if (!videoElement) {
+        return;
+      }
+      this.currentTime = videoElement.currentTime;
+      this.duration = videoElement.duration;
       if (Date.now() - this.lastTimeChangedEvent > 5000) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
@@ -583,7 +592,10 @@ export default defineComponent({
       this.loading = false;
       PlayerPreferences.SetInitialTime(this.mid, 0);
       if (this.loop) {
-        this.getVideoElement().currentTime = 0;
+        const videoElement = this.getVideoElement();
+        if (videoElement) {
+          videoElement.currentTime = 0;
+        }
       } else {
         this.pause();
         this.$emit("ended");
