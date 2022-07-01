@@ -57,6 +57,7 @@
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
+    <ResolutionConfirmationModal v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -93,6 +94,7 @@ import AlbumListModal from "../modals/AlbumListModal.vue";
 import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
+import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -123,6 +125,7 @@ export default defineComponent({
     AlbumRenameModal,
     AlbumDeleteModal,
     MediaDeleteModal,
+    ResolutionConfirmationModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -151,6 +154,8 @@ export default defineComponent({
       displayAlbumDelete: false,
 
       displayMediaDelete: false,
+
+      displayResolutionConfirmation: false,
 
       displaySidebar: true,
     };

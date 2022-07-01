@@ -98,16 +98,23 @@
       <label>{{ $t("Thumbnail") }}:</label>
     </div>
     <div class="form-group">
-      <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}</label>
-      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail">
+      <label v-if="!thumbnail">{{
+        $t("No thumbnail set for this media")
+      }}</label>
+      <img
+        v-if="thumbnail"
+        :src="getThumbnail(thumbnail)"
+        :alt="originalTitle"
+        class="form-group-thumbnail"
+      />
     </div>
     <div class="form-group">
       <input
-      type="file"
-      class="file-hidden"
-      @change="inputFileChanged"
-      name="thumbnail-upload"
-    />
+        type="file"
+        class="file-hidden"
+        @change="inputFileChanged"
+        name="thumbnail-upload"
+      />
       <button
         type="button"
         class="btn btn-primary btn-sm"
@@ -116,6 +123,61 @@
       >
         <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
       </button>
+    </div>
+    <div class="form-group border-top" v-if="type === 2 || type === 1">
+      <label v-if="type === 2"
+        >{{
+          $t(
+            "Extra resolutions for videos. These resolutions can be used for slow connections or small screens"
+          )
+        }}:</label
+      >
+      <label v-if="type === 1"
+        >{{
+          $t(
+            "Extra resolutions for images. These resolutions can be used for slow connections or small screens"
+          )
+        }}:</label
+      >
+    </div>
+
+    <div v-if="type === 2 || type === 1" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="text-left">{{ $t("Name") }}</th>
+            <th class="text-left">{{ $t("Properties") }}</th>
+            <th class="text-right"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="res in resolutions" :key="res.name">
+            <td class="bold">{{ res.name }}</td>
+            <td v-if="type === 1">{{ res.width }}x{{ res.height }}</td>
+            <td v-if="type === 2">
+              {{ res.width }}x{{ res.height }}, {{ res.fps }} fps
+            </td>
+            <td class="text-right">
+              <button
+                v-if="!res.enabled"
+                type="button"
+                class="btn btn-primary btn-xs"
+                @click="addResolution(res)"
+              >
+                <i class="fas fa-plus"></i> {{ $t("Encode") }}
+              </button>
+              <button
+                v-if="res.enabled"
+                type="button"
+                class="btn btn-danger btn-xs"
+                @click="deleteResolution(res)"
+              >
+                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div class="form-group border-top">
       <label>{{
@@ -160,6 +222,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/consts";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
@@ -169,6 +232,8 @@ export default defineComponent({
   emits: ["changed"],
   data: function () {
     return {
+      type: 0,
+
       title: "",
       originalTitle: "",
 
@@ -182,6 +247,83 @@ export default defineComponent({
 
       thumbnail: "",
 
+      standardResolutions: [
+        {
+          name: "144p",
+          width: 256,
+          height: 144,
+          fps: 30,
+        },
+        {
+          name: "240p",
+          width: 352,
+          height: 240,
+          fps: 30,
+        },
+        {
+          name: "360p",
+          width: 480,
+          height: 360,
+          fps: 30,
+        },
+        {
+          name: "480p",
+          width: 858,
+          height: 480,
+          fps: 30,
+        },
+        {
+          name: "720p",
+          width: 1280,
+          height: 720,
+          fps: 30,
+        },
+        {
+          name: "720p60",
+          width: 1280,
+          height: 720,
+          fps: 60,
+        },
+        {
+          name: "1080p",
+          width: 1920,
+          height: 1080,
+          fps: 30,
+        },
+        {
+          name: "1080p60",
+          width: 1920,
+          height: 1080,
+          fps: 60,
+        },
+        {
+          name: "2k",
+          width: 2048,
+          height: 1152,
+          fps: 30,
+        },
+        {
+          name: "2k60",
+          width: 2048,
+          height: 1152,
+          fps: 60,
+        },
+        {
+          name: "4k",
+          width: 3860,
+          height: 2160,
+          fps: 30,
+        },
+        {
+          name: "4k60",
+          width: 3860,
+          height: 2160,
+          fps: 60,
+        },
+      ],
+
+      resolutions: [],
+
       busy: false,
     };
   },
@@ -192,6 +334,8 @@ export default defineComponent({
         return;
       }
 
+      this.type = MediaController.MediaData.type;
+
       this.originalTitle = MediaController.MediaData.title;
       this.title = this.originalTitle;
 
@@ -201,6 +345,43 @@ export default defineComponent({
       this.tags = MediaController.MediaData.tags.slice();
 
       this.thumbnail = MediaController.MediaData.thumbnail;
+
+      this.updateResolutions(MediaController.MediaData.resolutions);
+    },
+
+    updateResolutions: function (resolutions) {
+      this.resolutions = this.standardResolutions
+        .filter((r) => {
+          if (this.type === MEDIA_TYPE_IMAGE) {
+            return r.fps === 30;
+          } else if (this.type === MEDIA_TYPE_VIDEO) {
+            return true;
+          } else {
+            return false;
+          }
+        })
+        .map((r) => {
+          let enabled = false;
+          let fps = r.fps;
+          for (let res of resolutions) {
+            if (
+              res.width === r.width &&
+              res.height === r.height &&
+              (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)
+            ) {
+              enabled = true;
+              fps = res.fps;
+              break;
+            }
+          }
+          return {
+            enabled: enabled,
+            name: r.name,
+            width: r.width,
+            height: r.height,
+            fps: fps,
+          };
+        });
     },
 
     getThumbnail(thumb: string) {
@@ -681,6 +862,139 @@ export default defineComponent({
         })
         .slice(0, 10);
     },
+
+    addResolution: function (r) {
+      AppEvents.Emit("resolution-confirmation", {
+        type: this.type,
+        deleting: false,
+        name: r.name,
+        width: r.width,
+        height: r.height,
+        fps: r.fps,
+        callback: () => {
+          if (this.busy) {
+            return;
+          }
+
+          this.busy = true;
+
+          const mediaId = AppStatus.CurrentMedia;
+
+          Request.Do(MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+            .onSuccess((result) => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Added resolution") + ": " + r.name
+              );
+              this.busy = false;
+              r.enabled = true;
+              r.fps = result.fps;
+              this.$emit("changed");
+            })
+            .onCancel(() => {
+              this.busy = false;
+            })
+            .onRequestError((err) => {
+              this.busy = false;
+              Request.ErrorHandler()
+                .add(400, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Bad request"));
+                })
+                .add(401, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                  AppEvents.Emit("unauthorized");
+                })
+                .add(403, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                })
+                .add(404, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Not found"));
+                })
+                .add(500, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Internal server error"));
+                })
+                .add("*", "*", () => {
+                  AppEvents.Emit(
+                    "snack",
+                    this.$t("Could not connect to the server")
+                  );
+                })
+                .handle(err);
+            })
+            .onUnexpectedError((err) => {
+              AppEvents.Emit("snack", err.message);
+              console.error(err);
+              this.busy = false;
+            });
+        },
+      });
+    },
+
+    deleteResolution: function (r) {
+      AppEvents.Emit("resolution-confirmation", {
+        type: this.type,
+        deleting: true,
+        name: r.name,
+        width: r.width,
+        height: r.height,
+        fps: r.fps,
+        callback: () => {
+          if (this.busy) {
+            return;
+          }
+
+          this.busy = true;
+
+          const mediaId = AppStatus.CurrentMedia;
+
+          Request.Do(MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+            .onSuccess(() => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Removed resolution") + ": " + r.name
+              );
+              this.busy = false;
+              r.enabled = false;
+              this.$emit("changed");
+            })
+            .onCancel(() => {
+              this.busy = false;
+            })
+            .onRequestError((err) => {
+              this.busy = false;
+              Request.ErrorHandler()
+                .add(400, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Bad request"));
+                })
+                .add(401, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                  AppEvents.Emit("unauthorized");
+                })
+                .add(403, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                })
+                .add(404, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Not found"));
+                })
+                .add(500, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Internal server error"));
+                })
+                .add("*", "*", () => {
+                  AppEvents.Emit(
+                    "snack",
+                    this.$t("Could not connect to the server")
+                  );
+                })
+                .handle(err);
+            })
+            .onUnexpectedError((err) => {
+              AppEvents.Emit("snack", err.message);
+              console.error(err);
+              this.busy = false;
+            });
+        },
+      });
+    },
   },
 
   mounted: function () {
@@ -785,5 +1099,6 @@ export default defineComponent({
   max-width: 100%;
   width: auto;
   height: auto;
+  border: solid 1px rgba(255, 255, 255, 0.1);
 }
 </style>
