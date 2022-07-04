@@ -1,6 +1,6 @@
 <template>
   <div
-    tabindex="0"
+    tabindex="-1"
     class="image-player"
     :class="{
       'player-min': minPlayer,
@@ -887,10 +887,6 @@ export default defineComponent({
   user-select: none;
   /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
-}
-
-.image-player:focus {
-  outline: none;
 }
 
 .image-player.no-controls {

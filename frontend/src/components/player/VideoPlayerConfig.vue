@@ -2,6 +2,7 @@
   <div
     class="video-player-config"
     :class="{ hidden: !shown }"
+    tabindex="-1"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
     @mouseenter="enterConfig"
@@ -17,7 +18,12 @@
           <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
         </td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="goToSpeeds">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToSpeeds"
+      >
         <td>
           <i class="fas fa-gauge icon-config"></i>
           <b>{{ $t("Playback speed") }}</b>
@@ -27,7 +33,12 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="goToResolutions">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToResolutions"
+      >
         <td>
           <i class="fas fa-photo-film icon-config"></i>
           <b>{{ $t("Quality") }}</b>
@@ -39,7 +50,12 @@
       </tr>
     </table>
     <table v-if="page === 'speed'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Playback speed") }}</b>
@@ -51,6 +67,7 @@
         :key="s"
         class="tr-button"
         tabindex="0"
+        @keydown="clickOnEnter"
         @click="changeSpeed(s)"
       >
         <td>
@@ -64,14 +81,24 @@
       </tr>
     </table>
     <table v-if="page === 'resolution'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Quality") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="changeResolution(-1)">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeResolution(-1)"
+      >
         <td>
           <i
             class="fas fa-check icon-config"
@@ -86,6 +113,7 @@
         :key="i"
         class="tr-button"
         tabindex="0"
+        @keydown="clickOnEnter"
         @click="changeResolution(i)"
       >
         <td>
@@ -102,7 +130,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
@@ -221,6 +249,14 @@ export default defineComponent({
         this.resolutions = [];
       }
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.updateResolutions();
@@ -229,6 +265,11 @@ export default defineComponent({
   watch: {
     shown: function () {
       this.page = "";
+      if (this.shown) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
     rtick: function () {
       this.updateResolutions();
@@ -299,25 +340,22 @@ export default defineComponent({
 
 /* Custom scroll bar */
 
-
 /* width */
 
 .video-player-config::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
+  width: 5px;
+  height: 3px;
 }
-
 
 /* Track */
 
 .video-player-config::-webkit-scrollbar-track {
-    background: #bdbdbd;
+  background: #bdbdbd;
 }
-
 
 /* Handle */
 
 .video-player-config::-webkit-scrollbar-thumb {
-    background: #757575;
+  background: #757575;
 }
 </style>

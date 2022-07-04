@@ -1,6 +1,7 @@
 <template>
   <div
     class="audio-player-config"
+    tabindex="-1"
     :class="{ hidden: !shown }"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
@@ -17,7 +18,12 @@
           <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
         </td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="goToSpeeds">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goToSpeeds"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-gauge icon-config"></i>
           <b>{{ $t("Playback speed") }}</b>
@@ -27,7 +33,12 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="goToAnimStyles">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goToAnimStyles"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-chart-column icon-config"></i>
           <b>{{ $t("Animation style") }}</b>
@@ -39,7 +50,12 @@
       </tr>
     </table>
     <table v-if="page === 'speed'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goBack"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Playback speed") }}</b>
@@ -52,6 +68,7 @@
         class="tr-button"
         tabindex="0"
         @click="changeSpeed(s)"
+        @keydown="clickOnEnter"
       >
         <td>
           <i
@@ -64,7 +81,12 @@
       </tr>
     </table>
     <table v-if="page === 'anim'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goBack"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Animation style") }}</b>
@@ -76,6 +98,7 @@
         :key="s"
         class="tr-button"
         tabindex="0"
+        @keydown="clickOnEnter"
         @click="setAnimStyle(s)"
       >
         <td>
@@ -92,7 +115,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
@@ -172,24 +195,36 @@ export default defineComponent({
     renderAnimStyle: function (s) {
       switch (s) {
         case "gradient":
-          return this.$t('Gradient');
+          return this.$t("Gradient");
         case "none":
-          return this.$t('None');
+          return this.$t("None");
         default:
-          return this.$t('Monochrome');
+          return this.$t("Monochrome");
       }
     },
 
     setAnimStyle: function (s) {
       this.animColorsState = s;
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
-  mounted: function () {
-  },
+  mounted: function () {},
   beforeUnmount: function () {},
   watch: {
     shown: function () {
       this.page = "";
+      if (this.shown) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
   },
 });
@@ -257,25 +292,22 @@ export default defineComponent({
 
 /* Custom scroll bar */
 
-
 /* width */
 
 .audio-player-config::-webkit-scrollbar {
-    width: 5px;
-    height: 3px;
+  width: 5px;
+  height: 3px;
 }
-
 
 /* Track */
 
 .audio-player-config::-webkit-scrollbar-track {
-    background: #bdbdbd;
+  background: #bdbdbd;
 }
-
 
 /* Handle */
 
 .audio-player-config::-webkit-scrollbar-thumb {
-    background: #757575;
+  background: #757575;
 }
 </style>

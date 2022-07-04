@@ -13,6 +13,7 @@
       'max-width': maxWidth,
       'max-height': maxHeight,
     }"
+    tabindex="-1"
     @mousedown="stopPropagationEvent"
     @touchstart="stopPropagationEvent"
     @click="stopPropagationEvent"
@@ -24,6 +25,7 @@
         class="tr-button"
         tabindex="0"
         @click="toggleLoop"
+        @keydown="clickOnEnter"
       >
         <td>
           <i class="fas fa-repeat icon-config"></i>
@@ -38,6 +40,7 @@
         class="tr-button"
         tabindex="0"
         @click="toggleFit"
+        @keydown="clickOnEnter"
       >
         <td>
           <i class="fas fa-magnifying-glass icon-config"></i>
@@ -52,6 +55,7 @@
         v-if="type === 'image'"
         class="tr-button"
         tabindex="0"
+        @keydown="clickOnEnter"
         @click="toggleControls"
       >
         <td>
@@ -63,7 +67,7 @@
         </td>
       </tr>
 
-      <tr v-if="url" class="tr-button" tabindex="0" @click="download">
+      <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="download">
         <td>
           <i class="fas fa-download icon-config"></i>
           <span class="context-entry-title">{{ $t("Download") }}</span>
@@ -71,7 +75,7 @@
         <td class="td-right"></td>
       </tr>
 
-      <tr v-if="url" class="tr-button" tabindex="0" @click="refreshMedia">
+      <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="refreshMedia">
         <td>
           <i class="fas fa-sync-alt icon-config"></i>
           <span class="context-entry-title">{{ $t("Refresh") }}</span>
@@ -84,7 +88,7 @@
 
 <script lang="ts">
 import { MediaController } from "@/control/media";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -183,6 +187,14 @@ export default defineComponent({
       this.maxWidth = maxWidth + "px";
       this.maxHeight = maxHeight + "px";
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.computeDimensions();
@@ -202,6 +214,13 @@ export default defineComponent({
     },
     y: function () {
       this.computeDimensions();
+    },
+    shown: function () {
+      if (this.shown) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
   },
 });
@@ -225,8 +244,10 @@ export default defineComponent({
 }
 
 .player-context-menu.hidden {
+  transition: opacity 0.1s, visibility 0.1s;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .full-screen .player-context-menu {

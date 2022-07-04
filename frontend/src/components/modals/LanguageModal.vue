@@ -7,10 +7,19 @@
     :aria-hidden="!display"
     @click="close"
   >
-    <div class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <div
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">{{ $t("Choose your language") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -19,17 +28,23 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="changeLocale('en')"
           >
-            <td class="modal-menu-item-icon"><i class="fas fa-check" :class="{ 'unchecked': lang !== 'en' }"></i></td>
-            <td class="modal-menu-item-title">English ({{ $t('Default') }})</td>
+            <td class="modal-menu-item-icon">
+              <i class="fas fa-check" :class="{ unchecked: lang !== 'en' }"></i>
+            </td>
+            <td class="modal-menu-item-title">English ({{ $t("Default") }})</td>
           </tr>
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="changeLocale('es')"
           >
-            <td class="modal-menu-item-icon"><i class="fas fa-check" :class="{ 'unchecked': lang !== 'es' }"></i></td>
+            <td class="modal-menu-item-icon">
+              <i class="fas fa-check" :class="{ unchecked: lang !== 'es' }"></i>
+            </td>
             <td class="modal-menu-item-title">Español (Internacional)</td>
           </tr>
         </table>
@@ -40,7 +55,7 @@
 
 <script lang="ts">
 import { AppPreferences } from "@/control/app-preferences";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -73,6 +88,23 @@ export default defineComponent({
       AppPreferences.SetLanguage(l);
       this.$i18n.locale = l;
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
+  },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
+    },
   },
 });
 </script>
@@ -83,7 +115,7 @@ export default defineComponent({
   overflow-y: auto;
 }
 
-.modal-menu-item-icon .unchecked{
+.modal-menu-item-icon .unchecked {
   visibility: hidden;
 }
 </style>

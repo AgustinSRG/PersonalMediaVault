@@ -1,6 +1,6 @@
 <template>
   <div
-    tabindex="0"
+    tabindex="-1"
     class="video-player"
     :class="{
       'player-min': minPlayer,
@@ -1123,10 +1123,6 @@ export default defineComponent({
   pointer-events: none;
 }
 
-.video-player:focus {
-  outline: none;
-}
-
 .video-player.no-controls {
   cursor: none;
 }
@@ -1171,7 +1167,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .player-btn:disabled {
@@ -1191,10 +1186,6 @@ export default defineComponent({
 
 .player-btn:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.player-btn:focus {
-  outline: none;
 }
 
 .player-controls-left {

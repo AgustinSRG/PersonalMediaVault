@@ -60,8 +60,10 @@ export default defineComponent({
 }
 
 .snackbar.hidden {
+  transition: bottom 0.3s, opacity 0.1s, visibility 0.1s;
   bottom: -5rem;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 </style>

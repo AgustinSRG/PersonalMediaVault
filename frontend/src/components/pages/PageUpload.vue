@@ -18,6 +18,7 @@
       @dragend="dragLeave"
       @dragleave="dragLeave"
       @drop="onDrop"
+      @keydown="clickOnEnter"
     >
       <div class="upload-box-hint">
         {{ $t("Drop file here or click to open the file selection dialog.") }}
@@ -367,6 +368,14 @@ export default defineComponent({
         }
       }
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.timer = setInterval(this.tick.bind(this), 500);
@@ -416,7 +425,6 @@ export default defineComponent({
   font-size: 16px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .table-btn:disabled {
@@ -430,9 +438,5 @@ export default defineComponent({
 
 .table-btn:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.table-btn:focus {
-  outline: none;
 }
 </style>

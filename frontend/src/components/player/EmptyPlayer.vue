@@ -1,6 +1,6 @@
 <template>
   <div
-    tabindex="0"
+    tabindex="-1"
     class="empty-player"
     :class="{
       'player-min': minPlayer,
@@ -361,10 +361,6 @@ export default defineComponent({
   user-select: none;
   /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
-}
-
-.empty-player:focus {
-  outline: none;
 }
 
 .empty-player.no-controls {

@@ -51,7 +51,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -128,6 +128,15 @@ export default defineComponent({
       "resolution-confirmation",
       this.$options.showH
     );
+  },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
+    },
   },
 });
 </script>

@@ -3,6 +3,7 @@
     class="side-bar"
     :class="{ hidden: !display }"
     @click="stopPropagationEvent"
+    tabindex="-1"
   >
     <div class="side-bar-header">
       <div class="top-bar-logo-td">
@@ -29,6 +30,7 @@
         tabindex="0"
         :title="$t('Home')"
         @click="goToPage('home')"
+        @keydown="clickOnEnter"
       >
         <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
         <div class="side-bar-option-text">{{ $t("Home") }}</div>
@@ -41,6 +43,7 @@
         tabindex="0"
         :title="$t('Search results')"
         @click="goToSearch"
+        @keydown="clickOnEnter"
       >
         <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
         <div class="side-bar-option-text">{{ $t("Search results") }}</div>
@@ -50,6 +53,7 @@
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'albums' }"
         tabindex="0"
+        @keydown="clickOnEnter"
         :title="$t('Albums')"
         @click="goToPage('albums')"
       >
@@ -61,6 +65,7 @@
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'upload' }"
         tabindex="0"
+        @keydown="clickOnEnter"
         :title="$t('Upload')"
         @click="goToPage('upload')"
       >
@@ -72,6 +77,7 @@
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'random' }"
         tabindex="0"
+        @keydown="clickOnEnter"
         :title="$t('Random')"
         @click="goToPage('random')"
       >
@@ -87,6 +93,7 @@
         class="side-bar-option"
         :class="{ selected: album == a.id }"
         tabindex="0"
+        @keydown="clickOnEnter"
         :title="a.name"
         @click="goToAlbum(a)"
       >
@@ -101,7 +108,7 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -172,6 +179,14 @@ export default defineComponent({
         }
       });
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.statusUpdater = this.updateStatus.bind(this);
@@ -196,6 +211,15 @@ export default defineComponent({
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
   },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
+    },
+  },
 });
 </script>
 
@@ -216,6 +240,8 @@ export default defineComponent({
 
 .side-bar.hidden {
   left: -300px;
+  transition: left 0.2s, visibility 0.2s;
+  visibility: hidden;
 }
 
 .side-bar-header {

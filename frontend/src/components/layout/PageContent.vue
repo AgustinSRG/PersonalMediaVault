@@ -210,7 +210,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .page-header-btn:disabled {
@@ -224,10 +223,6 @@ export default defineComponent({
 
 .page-header-btn:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.page-header-btn:focus {
-  outline: none;
 }
 
 .page-expand-btn,

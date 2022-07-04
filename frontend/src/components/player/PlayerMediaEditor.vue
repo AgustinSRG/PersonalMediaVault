@@ -1106,15 +1106,10 @@ export default defineComponent({
   font-size: 16px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .media-tag-btn:hover {
   color: white;
-}
-
-.media-tag-btn:focus {
-  outline: none;
 }
 
 .form-group-thumbnail {

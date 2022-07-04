@@ -188,8 +188,10 @@ export default defineComponent({
 }
 
 .modal-container.hidden {
+  transition: opacity 0.2s, visibility 0.2s;
   pointer-events: none;
   opacity: 0;
+  visibility: hidden;
 }
 
 .modal-dialog {
@@ -269,7 +271,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .modal-close-btn:disabled {
@@ -283,10 +284,6 @@ export default defineComponent({
 
 .modal-close-btn:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.modal-close-btn:focus {
-  outline: none;
 }
 
 .modal-body {
@@ -306,7 +303,6 @@ export default defineComponent({
   font-size: 16px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
   text-align: left;
   padding: 1rem;
   white-space: nowrap;
@@ -328,9 +324,5 @@ export default defineComponent({
 
 .modal-footer-btn:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.modal-footer-btn:focus {
-  outline: none;
 }
 </style>

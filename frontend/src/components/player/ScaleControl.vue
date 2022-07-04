@@ -227,7 +227,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
   margin-right: 8px;
 }
 
@@ -239,10 +238,6 @@ export default defineComponent({
 
 .player-scale-btn:hover {
   color: white;
-}
-
-.player-scale-btn:focus {
-  outline: none;
 }
 
 .player-scale-btn-expand {

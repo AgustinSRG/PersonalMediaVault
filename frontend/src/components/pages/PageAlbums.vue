@@ -93,6 +93,7 @@
           class="search-result-item clickable"
           tabindex="0"
           @click="goToAlbum(item)"
+          @keydown="clickOnEnter"
         >
           <div
             class="search-result-thumb"
@@ -334,6 +335,14 @@ export default defineComponent({
 
     goToAlbum: function (album) {
       AppStatus.ClickOnAlbum(album.id, album.list);
+    },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
     },
   },
   mounted: function () {

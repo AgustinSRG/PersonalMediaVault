@@ -233,7 +233,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
   margin-right: 8px;
 }
 
@@ -245,10 +244,6 @@ export default defineComponent({
 
 .player-volume-btn:hover {
   color: white;
-}
-
-.player-volume-btn:focus {
-  outline: none;
 }
 
 .player-volume-btn-expand {

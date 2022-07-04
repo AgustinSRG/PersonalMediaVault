@@ -28,7 +28,7 @@
 
 <script lang="ts">
 import { AuthController } from "@/control/auth";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -54,6 +54,15 @@ export default defineComponent({
     logout: function () {
       AuthController.Logout();
       this.close();
+    },
+  },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
   },
 });

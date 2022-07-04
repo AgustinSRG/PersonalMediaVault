@@ -47,6 +47,7 @@
             class="modal-menu-item"
             tabindex="0"
             @click="clickOnAlbum(a)"
+            @keydown="clickOnEnter"
           >
             <td class="modal-menu-item-icon">
               <i v-if="a.added" class="far fa-square-check"></i>
@@ -74,7 +75,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -177,6 +178,14 @@ export default defineComponent({
           }
         });
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumsUpdateH = this.updateAlbums.bind(this);
@@ -190,6 +199,15 @@ export default defineComponent({
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
     AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
+  },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
+    },
   },
 });
 </script>

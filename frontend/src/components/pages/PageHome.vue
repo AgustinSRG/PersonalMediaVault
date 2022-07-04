@@ -40,6 +40,7 @@
           :key="i"
           class="search-result-item clickable"
           tabindex="0"
+          @keydown="clickOnEnter"
           @click="goToMedia(item.id)"
         >
           <div
@@ -255,6 +256,14 @@ export default defineComponent({
 
     renderTime: function (s: number): string {
       return renderTimeSeconds(s);
+    },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
     },
   },
   mounted: function () {

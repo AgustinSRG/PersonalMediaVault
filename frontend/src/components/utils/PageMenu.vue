@@ -94,7 +94,6 @@ export default defineComponent({
   font-size: 18px;
   font-weight: bold;
   background: transparent;
-  outline: none;
   margin: 0.5rem;
   color: white;
 }
@@ -110,10 +109,6 @@ export default defineComponent({
 
 .paginated-menu-btn:disabled:hover {
   background: none;
-}
-
-.paginated-menu-btn:focus {
-  outline: none;
 }
 
 .paginated-menu-btn.current,

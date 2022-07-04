@@ -7,10 +7,19 @@
     :aria-hidden="!display"
     @click="close"
   >
-    <div class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent">
+    <div
+      class="modal-dialog modal-sm"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">{{ $t("Vault settings") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -19,6 +28,7 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('theme')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
@@ -30,6 +40,7 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('lang')"
           >
             <td class="modal-menu-item-icon">
@@ -43,6 +54,7 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('username')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
@@ -54,6 +66,7 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('password')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
@@ -65,6 +78,7 @@
           <tr
             class="modal-menu-item"
             tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('advanced')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
@@ -79,7 +93,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -105,6 +119,23 @@ export default defineComponent({
     clickOnOption: function (o: string) {
       this.$emit("goto", o);
       this.close();
+    },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
+  },
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
   },
 });

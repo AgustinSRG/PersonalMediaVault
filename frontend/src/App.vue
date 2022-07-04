@@ -142,7 +142,6 @@ export default class App extends Vue {}
   font-size: 24px;
   color: white;
   background: transparent;
-  outline: none;
   border-radius: 100vw;
   padding: 12px 24px;
   white-space: nowrap;
@@ -174,16 +173,11 @@ export default class App extends Vue {}
   opacity: 0.7;
 }
 
-.btn:focus {
-  outline: none;
-}
-
 .btn-primary {
   border: solid 1px rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary:not(:disabled):hover,
-.btn-primary:not(:disabled):focus {
+.btn-primary:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -191,8 +185,7 @@ export default class App extends Vue {}
   border: solid 1px rgba(255, 0, 0, 0.1);
 }
 
-.btn-danger:not(:disabled):hover,
-.btn-danger:not(:disabled):focus {
+.btn-danger:not(:disabled):hover {
   background: rgba(255, 0, 0, 0.1);
 }
 

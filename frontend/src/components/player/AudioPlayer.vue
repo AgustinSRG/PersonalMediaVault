@@ -1,6 +1,6 @@
 <template>
   <div
-    tabindex="0"
+    tabindex="-1"
     class="audio-player"
     :class="{
       'player-min': minPlayer,
@@ -1206,10 +1206,6 @@ export default defineComponent({
 
 .audio-player audio {
   visibility: hidden;
-}
-
-.audio-player:focus {
-  outline: none;
 }
 
 .audio-player.no-controls {

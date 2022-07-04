@@ -196,8 +196,8 @@ export default defineComponent({
     },
 
     onKeyDown: function (event) {
-      if (event.key === "Tab") {
-        if (this.suggestions.length > 0) {
+      if (event.key === "Tab" && this.search && !event.shiftKey) {
+        if (this.suggestions.length > 0 && this.suggestions[0].name !== this.search) {
           this.selectSearch(this.suggestions[0]);
           event.preventDefault();
         }
@@ -304,7 +304,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
 }
 
 .top-bar-button:disabled {
@@ -318,10 +317,6 @@ export default defineComponent({
 
 .top-bar-button:disabled:hover {
   color: rgba(255, 255, 255, 0.75);
-}
-
-.top-bar-button:focus {
-  outline: none;
 }
 
 .top-bar-center-div {
@@ -403,7 +398,7 @@ export default defineComponent({
   background: rgba(0, 0, 0, 0.8);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.1s;
+  transition: opacity 0.1s, visibility 0.1s;
 
   display: flex;
   flex-direction: column;
@@ -412,6 +407,7 @@ export default defineComponent({
 }
 
 .top-bar-search-input-container.focused .top-bar-search-suggestions {
+  transition: opacity 0.1s;
   opacity: 1;
   pointer-events: all;
   box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
@@ -420,6 +416,7 @@ export default defineComponent({
 .top-bar-search-input-container.focused .top-bar-search-suggestions.hidden {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .top-bar-search-suggestion {

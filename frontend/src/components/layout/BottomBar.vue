@@ -1,10 +1,22 @@
 <template>
   <div class="bottom-bar">
-    <div class="bottom-bar-option bottom-bar-option-media" :class="{selected: focus === 'left'}" tabindex="0" @click="clickLeft">
-      <i class="fas fa-photo-film"></i> {{ $t('Media') }}
+    <div
+      class="bottom-bar-option bottom-bar-option-media"
+      :class="{ selected: focus === 'left' }"
+      tabindex="0"
+      @click="clickLeft"
+      @keydown="clickOnEnter"
+    >
+      <i class="fas fa-photo-film"></i> {{ $t("Media") }}
     </div>
-    <div class="bottom-bar-option bottom-bar-option-list" :class="{selected: focus === 'right'}" tabindex="0" @click="clickRight">
-      <i class="fas fa-list"></i> {{ $t('List') }}
+    <div
+      class="bottom-bar-option bottom-bar-option-list"
+      :class="{ selected: focus === 'right' }"
+      tabindex="0"
+      @click="clickRight"
+      @keydown="clickOnEnter"
+    >
+      <i class="fas fa-list"></i> {{ $t("List") }}
     </div>
   </div>
 </template>
@@ -33,13 +45,27 @@ export default defineComponent({
     clickRight: function () {
       AppStatus.FocusRight();
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.updateStatusH = this.onStatusUpdate.bind(this);
-    AppEvents.AddEventListener("app-status-update", this.$options.updateStatusH);
+    AppEvents.AddEventListener(
+      "app-status-update",
+      this.$options.updateStatusH
+    );
   },
   beforeUnmount: function () {
-    AppEvents.RemoveEventListener("app-status-update", this.$options.updateStatusH);
+    AppEvents.RemoveEventListener(
+      "app-status-update",
+      this.$options.updateStatusH
+    );
   },
 });
 </script>
@@ -50,7 +76,6 @@ export default defineComponent({
   flex-direction: row;
   justify-content: center;
   align-items: center;
-
 
   position: absolute;
   bottom: 0;
@@ -99,5 +124,4 @@ export default defineComponent({
 .bottom-bar-option.selected:hover {
   background: rgba(255, 255, 255, 0.2);
 }
-
 </style>

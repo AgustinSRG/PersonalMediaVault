@@ -1,5 +1,9 @@
 <template>
-  <div class="player-album-container" :class="{ expanded: expanded }">
+  <div
+    class="player-album-container"
+    :class="{ expanded: expanded }"
+    tabindex="-1"
+  >
     <div v-if="!loading && albumData" class="album-header">
       <div class="album-header-title">
         <div class="album-title">
@@ -54,7 +58,9 @@
         class="album-body-item"
         :class="{ current: i === currentPos }"
         :title="item.title || $t('Untitled')"
+        tabindex="0"
         @click="clickMedia(item)"
+        @keydown="clickOnEnter"
       >
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">
@@ -226,6 +232,14 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -258,7 +272,12 @@ export default defineComponent({
   },
   watch: {
     expanded: function () {
-      this.scrollToSelected();
+      if (this.expanded) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.scrollToSelected();
+      }
     },
   },
 });
@@ -272,12 +291,15 @@ export default defineComponent({
   width: 100%;
   max-width: 500px;
   height: 100%;
-  transition: left 0.1s;
+  transition: left 0.1s, visibility 0.1s;
   background: rgba(0, 0, 0, 0.9);
+  visibility: hidden;
 }
 
 .full-screen .player-album-container.expanded {
   left: 0;
+  visibility: visible;
+  transition: left 0.1s;
 }
 
 .album-body-item-title.no-btn {

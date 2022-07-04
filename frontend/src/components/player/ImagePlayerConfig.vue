@@ -2,13 +2,14 @@
   <div
     class="image-player-config"
     :class="{ hidden: !shown }"
+    tabindex="-1"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
     @mouseenter="enterConfig"
     @mouseleave="leaveConfig"
   >
     <table v-if="page === ''">
-      <tr class="tr-button" tabindex="0" @click="goToResolutions">
+      <tr class="tr-button" tabindex="0" @click="goToResolutions" @keydown="clickOnEnter">
         <td>
           <i class="fas fa-photo-film icon-config"></i>
           <b>{{ $t("Quality") }}</b>
@@ -19,7 +20,7 @@
         </td>
       </tr>
 
-      <tr class="tr-button" tabindex="0" @click="goToBackgrounds">
+      <tr class="tr-button" tabindex="0" @click="goToBackgrounds" @keydown="clickOnEnter">
         <td>
           <i class="fas fa-palette icon-config"></i>
           <b>{{ $t("Background") }}</b>
@@ -30,7 +31,7 @@
         </td>
       </tr>
 
-      <tr class="tr-button" tabindex="0" @click="goToAutonext">
+      <tr class="tr-button" tabindex="0" @click="goToAutonext" @keydown="clickOnEnter">
         <td>
           <i class="fas fa-clock-rotate-left icon-config"></i>
           <b>{{ $t("Auto next") }}</b>
@@ -43,14 +44,14 @@
 
     </table>
     <table v-if="page === 'resolution'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr class="tr-button" tabindex="0" @click="goBack" @keydown="clickOnEnter">
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Quality") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="changeResolution(-1)">
+      <tr class="tr-button" tabindex="0" @click="changeResolution(-1)" @keydown="clickOnEnter">
         <td>
           <i
             class="fas fa-check icon-config"
@@ -65,6 +66,7 @@
         :key="i"
         class="tr-button"
         tabindex="0"
+        @keydown="clickOnEnter"
         @click="changeResolution(i)"
       >
         <td>
@@ -78,14 +80,14 @@
       </tr>
     </table>
     <table v-if="page === 'background'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Background") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr v-for="b in bgOptions" :key="b" class="tr-button" tabindex="0" @click="changeBackground(b)">
+      <tr v-for="b in bgOptions" :key="b" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeBackground(b)">
         <td>
           <i
             class="fas fa-check icon-config"
@@ -97,14 +99,14 @@
       </tr>
     </table>
      <table v-if="page === 'autotext'">
-      <tr class="tr-button" tabindex="0" @click="goBack">
+      <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Auto next") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr v-for="b in autoNextOptions" :key="b" class="tr-button" tabindex="0" @click="changeAutoNext(b)">
+      <tr v-for="b in autoNextOptions" :key="b" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeAutoNext(b)">
         <td>
           <i
             class="fas fa-check icon-config"
@@ -120,7 +122,7 @@
 
 <script lang="ts">
 import { PlayerPreferences } from "@/control/player-preferences";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -258,6 +260,14 @@ export default defineComponent({
         this.resolutions = [];
       }
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.updateResolutions();
@@ -266,6 +276,11 @@ export default defineComponent({
   watch: {
     shown: function () {
       this.page = "";
+      if (this.shown) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
     rtick: function () {
       this.updateResolutions();

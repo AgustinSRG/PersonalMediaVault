@@ -1,5 +1,5 @@
 <template>
-  <div class="album-container">
+  <div class="album-container" tabindex="-1">
     <div v-if="!loading && albumData" class="album-header">
       <div class="album-header-title">
         <div class="album-title">
@@ -48,7 +48,7 @@
           <button
             type="button"
             :title="$t('Delete')"
-            class="page-header-btn"
+            class="album-header-btn"
             @click="deleteAlbum"
           >
             <i class="fas fa-trash-alt"></i>
@@ -70,7 +70,9 @@
         class="album-body-item"
         :class="{ current: i === currentPos }"
         :title="item.title || $t('Untitled')"
+        tabindex="0"
         @click="clickMedia(item)"
+        @keydown="clickOnEnter"
       >
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">
@@ -350,6 +352,14 @@ export default defineComponent({
 
       element.scrollTop = scroll;
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -515,7 +525,6 @@ export default defineComponent({
   font-size: 24px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
   border-radius: 100vw;
 }
 
@@ -529,7 +538,6 @@ export default defineComponent({
   font-size: 20px;
   color: rgba(255, 255, 255, 0.75);
   background: transparent;
-  outline: none;
   border-radius: 100vw;
 }
 
@@ -546,11 +554,6 @@ export default defineComponent({
 .album-header-btn:not(:disabled):hover,
 .album-body-btn:not(:disabled):hover {
   color: white;
-}
-
-.album-header-btn:focus,
-.album-body-btn:focus {
-  outline: none;
 }
 
 .album-body-item {

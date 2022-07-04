@@ -13,6 +13,7 @@
       'max-width': maxWidth,
       'max-height': maxHeight,
     }"
+    tabindex="-1"
     @mousedown="stopPropagationEvent"
     @touchstart="stopPropagationEvent"
     @click="stopPropagationEvent"
@@ -22,6 +23,7 @@
       v-if="mindex > 0"
       tabindex="0"
       @click="moveMediaUp"
+      @keydown="clickOnEnter"
       class="album-body-item-options-menu-btn"
     >
       <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
@@ -29,6 +31,7 @@
     <div
       v-if="mindex < mlength - 1"
       tabindex="0"
+      @keydown="clickOnEnter"
       @click="moveMediaDown"
       class="album-body-item-options-menu-btn"
     >
@@ -36,6 +39,7 @@
     </div>
     <div
       tabindex="0"
+      @keydown="clickOnEnter"
       @click="removeMedia"
       class="album-body-item-options-menu-btn"
     >
@@ -45,7 +49,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
@@ -89,7 +93,7 @@ export default defineComponent({
     },
 
     moveMediaDown: function () {
-      this.$emit("move-up", this.mindex);
+      this.$emit("move-down", this.mindex);
       this.hide();
     },
 
@@ -141,6 +145,14 @@ export default defineComponent({
         this.maxHeight = maxHeight + "px";
       }
     },
+
+    clickOnEnter: function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.target.click();
+      }
+    },
   },
   mounted: function () {
     this.computeDimensions();
@@ -160,6 +172,13 @@ export default defineComponent({
     },
     y: function () {
       this.computeDimensions();
+    },
+    shown: function () {
+      if (this.shown) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
     },
   },
 });
