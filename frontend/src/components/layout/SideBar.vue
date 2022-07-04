@@ -154,7 +154,7 @@ export default defineComponent({
     },
 
     goToAlbum: function (a) {
-      AppStatus.ClickOnAlbum(a.id, a.list.length > 0 ? a.list[0] : -1);
+      AppStatus.ClickOnAlbum(a.id, a.list);
     },
 
     stopPropagationEvent: function (e) {

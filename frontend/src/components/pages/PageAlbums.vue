@@ -3,10 +3,21 @@
     <div class="search-results">
       <div class="search-results-options">
         <div class="search-results-option">
-          <input type="text" class="form-control form-control-full-width" autocomplete="off" v-model="filter" :placeholder="$t('Filter by name') + '...'" @input="changeFilter">
+          <input
+            type="text"
+            class="form-control form-control-full-width"
+            autocomplete="off"
+            v-model="filter"
+            :placeholder="$t('Filter by name') + '...'"
+            @input="changeFilter"
+          />
         </div>
         <div class="search-results-option text-right">
-           <button type="button" @click="createAlbum" class="btn btn-primary btn-sm">
+          <button
+            type="button"
+            @click="createAlbum"
+            class="btn btn-primary btn-sm"
+          >
             <i class="fas fa-plus"></i> {{ $t("Create album") }}
           </button>
         </div>
@@ -44,7 +55,11 @@
           {{ $t("This vault does not have any albums yet") }}
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="refreshAlbums" class="btn btn-primary btn-sm">
+          <button
+            type="button"
+            @click="refreshAlbums"
+            class="btn btn-primary btn-sm"
+          >
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
@@ -92,9 +107,21 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled album')"
               />
-              <div class="search-result-thumb-tag" v-if="item.list.length == 0">({{$t('Empty')}})</div>
-              <div class="search-result-thumb-tag" v-else-if="item.list.length == 1">1 {{$t('item')}}</div>
-              <div class="search-result-thumb-tag" v-else-if="item.list.length > 1">{{item.list.length}} {{$t('items')}}</div>
+              <div class="search-result-thumb-tag" v-if="item.list.length == 0">
+                ({{ $t("Empty") }})
+              </div>
+              <div
+                class="search-result-thumb-tag"
+                v-else-if="item.list.length == 1"
+              >
+                1 {{ $t("item") }}
+              </div>
+              <div
+                class="search-result-thumb-tag"
+                v-else-if="item.list.length > 1"
+              >
+                {{ item.list.length }} {{ $t("items") }}
+              </div>
             </div>
           </div>
           <div class="search-result-title">
@@ -154,7 +181,7 @@ import PageMenu from "@/components/utils/PageMenu.vue";
 
 export default defineComponent({
   name: "PageAlbums",
-  emits: ['album-create'],
+  emits: ["album-create"],
   components: {
     PageMenu,
   },
@@ -188,7 +215,7 @@ export default defineComponent({
     },
 
     createAlbum: function () {
-      this.$emit("album-create")
+      this.$emit("album-create");
     },
 
     refreshAlbums: function () {
@@ -306,10 +333,7 @@ export default defineComponent({
     },
 
     goToAlbum: function (album) {
-      AppStatus.ClickOnAlbum(
-        album.id,
-        album.list.length > 0 ? album.list[0] : -1
-      );
+      AppStatus.ClickOnAlbum(album.id, album.list);
     },
   },
   mounted: function () {

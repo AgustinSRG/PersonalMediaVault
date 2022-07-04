@@ -5,6 +5,7 @@
 import { getParameterByName } from "@/utils/cookie";
 import { GenerateURIQuery } from "@/utils/request";
 import { AppEvents } from "./app-events";
+import { PlayerPreferences } from "./player-preferences";
 
 export class AppStatus {
 
@@ -233,9 +234,18 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static ClickOnAlbum(albumId: number, mediaId: number) {
+    public static ClickOnAlbum(albumId: number, list: number[]) {
         AppStatus.CurrentAlbum = albumId;
-        AppStatus.CurrentMedia = mediaId;
+
+        const pos = PlayerPreferences.GetAlbumPos(albumId);
+
+        if (pos < list.length) {
+            AppStatus.CurrentMedia = list[pos];
+        } else if (list.length > 0) {
+            AppStatus.CurrentMedia = list[0];
+        } else {
+            AppStatus.CurrentMedia = -1;
+        }
 
         AppStatus.ListSplitMode = false;
 

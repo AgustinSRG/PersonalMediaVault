@@ -3,6 +3,7 @@
 import { LocalStorage } from "./local-storage";
 
 const MAX_CACHE_PLAY_TIME_SIZE = 100;
+const MAX_CACHE_ALBUM_POS_SIZE = 100;
 
 export class PlayerPreferences {
     public static UserSelectedResolution = {
@@ -19,6 +20,8 @@ export class PlayerPreferences {
     };
 
     public static PlayTimeCache: { mid: number, time: number }[] = [];
+
+    public static AlbumCurrentCache: { id: number, pos: number}[] = [];
 
     public static PlayerVolume = 1;
     public static PlayerMuted = false;
@@ -47,6 +50,13 @@ export class PlayerPreferences {
 
         if (playTimeCache) {
             PlayerPreferences.PlayTimeCache = playTimeCache;
+        }
+
+
+        const albumPosCache = LocalStorage.Get("player-album-pos-cache", []);
+
+        if (albumPosCache) {
+            PlayerPreferences.AlbumCurrentCache = albumPosCache;
         }
 
         PlayerPreferences.PlayerVolume = LocalStorage.Get("player-pref-volume", 1);
@@ -184,6 +194,38 @@ export class PlayerPreferences {
         });
 
         LocalStorage.Set("player-play-time-cache", PlayerPreferences.PlayTimeCache);
+    }
+
+    public static GetAlbumPos(id: number): number {
+        for (const entry of PlayerPreferences.AlbumCurrentCache) {
+            if (entry.id === id) {
+                const pos = entry.pos;
+                if (typeof pos === "number" && !isNaN(pos) && isFinite(pos) && pos >= 0) {
+                    return pos;
+                } else {
+                    return 0;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    public static SetAlbumPos(id: number, pos: number) {
+        PlayerPreferences.AlbumCurrentCache = PlayerPreferences.AlbumCurrentCache.filter(e => {
+            return e.id !== id;
+        });
+
+        while (PlayerPreferences.AlbumCurrentCache.length >= MAX_CACHE_ALBUM_POS_SIZE) {
+            PlayerPreferences.AlbumCurrentCache.shift();
+        }
+
+        PlayerPreferences.AlbumCurrentCache.push({
+            id: id,
+            pos: pos,
+        });
+
+        LocalStorage.Set("player-album-pos-cache", PlayerPreferences.AlbumCurrentCache);
     }
 
     public static SetVolume(vol: number) {

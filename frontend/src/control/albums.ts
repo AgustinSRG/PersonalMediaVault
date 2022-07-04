@@ -8,6 +8,7 @@ import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
 import { MediaEntry } from "./media";
+import { PlayerPreferences } from "./player-preferences";
 
 export interface AlbumEntry {
     id: number;
@@ -245,7 +246,9 @@ export class AlbumsController {
         }
 
         if (mediaId < 0 && AlbumsController.CurrentAlbumData.list.length > 0) {
-            AppStatus.ClickOnMedia(AlbumsController.CurrentAlbumData.list[0].id);
+            AppStatus.ClickOnAlbum(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumData.list.map(a => {
+                return a.id;
+            }));
             return;
         }
 
@@ -292,6 +295,8 @@ export class AlbumsController {
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
         }
+
+        PlayerPreferences.SetAlbumPos(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
 
         AppEvents.Emit("album-pos-update");
     }
