@@ -30,6 +30,8 @@ export class PlayerPreferences {
 
     public static ImagePlayerBackground = "default";
 
+    public static ImageAutoNext = 0;
+
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
         if (userRes) {
@@ -56,6 +58,8 @@ export class PlayerPreferences {
         PlayerPreferences.AudioAnimationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
 
         PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
+
+        PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-autonext", 0);
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -210,5 +214,10 @@ export class PlayerPreferences {
     public static SetImagePlayerBackground(s: string) {
         PlayerPreferences.ImagePlayerBackground = s;
         LocalStorage.Set("player-pref-img-bg", s);
+    }
+
+    public static SetImageAutoNext(s: number) {
+        PlayerPreferences.ImageAutoNext = s;
+        LocalStorage.Set("player-pref-img-autonext", s);
     }
 }

@@ -29,6 +29,18 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
+
+      <tr class="tr-button" tabindex="0" @click="goToAutonext">
+        <td>
+          <i class="fas fa-clock-rotate-left icon-config"></i>
+          <b>{{ $t("Auto next") }}</b>
+        </td>
+        <td class="td-right">
+          {{ renderAutoNext(autoNext) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
+
     </table>
     <table v-if="page === 'resolution'">
       <tr class="tr-button" tabindex="0" @click="goBack">
@@ -84,10 +96,30 @@
         <td class="td-right"></td>
       </tr>
     </table>
+     <table v-if="page === 'autotext'">
+      <tr class="tr-button" tabindex="0" @click="goBack">
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Auto next") }}</b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr v-for="b in autoNextOptions" :key="b" class="tr-button" tabindex="0" @click="changeAutoNext(b)">
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': b !== autoNext }"
+          ></i>
+          {{ renderAutoNext(b) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
   </div>
 </template>
 
 <script lang="ts">
+import { PlayerPreferences } from "@/control/player-preferences";
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -97,6 +129,7 @@ export default defineComponent({
     "update:shown",
     "update:resolution",
     "update:background",
+    "update-autonext",
     "enter",
     "leave",
   ],
@@ -119,6 +152,8 @@ export default defineComponent({
       page: "",
       resolutions: [],
       bgOptions: ['default', 'black', 'white'],
+      autoNext: PlayerPreferences.ImageAutoNext,
+      autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
     };
   },
   methods: {
@@ -128,6 +163,12 @@ export default defineComponent({
 
     changeBackground: function (b) {
       this.backgroundState = b;
+    },
+
+    changeAutoNext: function (b) {
+      this.autoNext = b;
+      PlayerPreferences.SetImageAutoNext(b);
+      this.$emit("update-autonext");
     },
 
     enterConfig: function () {
@@ -154,6 +195,10 @@ export default defineComponent({
       this.page = "background";
     },
 
+    goToAutonext: function () {
+      this.page = "autotext";
+    },
+
     renderBackground: function (b: string) {
       switch (b) {
         case "white":
@@ -162,6 +207,18 @@ export default defineComponent({
           return this.$t("Black");
         default:
           return this.$t("Default (Theme)");
+      }
+    },
+
+    renderAutoNext: function (s: number) {
+      if (!isNaN(s) && isFinite(s) && s > 0) {
+        if (s === 1) {
+          return s + " " + this.$t('second');
+        } else {
+          return s + " " + this.$t('seconds');
+        }
+      } else {
+        return this.$t('Disabled');
       }
     },
 

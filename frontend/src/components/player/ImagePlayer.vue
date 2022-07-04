@@ -213,6 +213,7 @@
       v-model:background="background"
       @update:resolution="onResolutionUpdated"
       @update:background="onBackgroundChanged"
+      @update-autonext="setupAutoNextTimer"
       :rtick="internalTick"
       :metadata="metadata"
       @enter="enterControls"
@@ -716,6 +717,7 @@ export default defineComponent({
           this.imagePendingTask = 0;
           this.width = this.metadata.width;
           this.height = this.metadata.height;
+          this.setupAutoNextTimer();
         } else {
           this.imageURL = "";
           this.imagePending = true;
@@ -734,6 +736,7 @@ export default defineComponent({
             this.imagePendingTask = 0;
             this.width = res.width;
             this.height = res.height;
+            this.setupAutoNextTimer();
           } else {
             this.imageURL = "";
             this.imagePending = true;
@@ -750,6 +753,29 @@ export default defineComponent({
 
       this.computeImageDimensions();
       nextTick(this.centerScroll.bind(this));
+    },
+
+    setupAutoNextTimer: function () {
+      if (this.$options.autoNextTimer) {
+        clearTimeout(this.$options.autoNextTimer);
+        this.$options.autoNextTimer = null;
+      }
+      const timerS = PlayerPreferences.ImageAutoNext;
+
+      if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
+        return;
+      }
+
+      if (!this.next) {
+        return;
+      }
+
+      const ms = timerS * 1000;
+
+      this.$options.autoNextTimer = setTimeout(() => {
+        this.$options.autoNextTimer = null;
+        this.goNext();
+      }, ms);
     },
   },
   mounted: function () {
@@ -814,6 +840,11 @@ export default defineComponent({
     document.removeEventListener("mouseup", this.$options.dropScrollHandler);
 
     document.removeEventListener("mousemove", this.$options.moveScrollHandler);
+
+    if (this.$options.autoNextTimer) {
+        clearTimeout(this.$options.autoNextTimer);
+        this.$options.autoNextTimer = null;
+      }
   },
   watch: {
     rtick: function () {
@@ -825,6 +856,9 @@ export default defineComponent({
       if (this.imageURL) {
         this.loading = true;
       }
+    },
+    next: function () {
+      this.setupAutoNextTimer();
     },
   },
 });
