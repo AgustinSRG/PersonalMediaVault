@@ -20,11 +20,14 @@
     </div>
 
     <div class="player-error-container" v-if="status === '404'">
-      <div class="player-error">{{ $t('Error: Media asset does not exists or it was removed from the vault') }}</div>
+      <div class="player-info-icon"><i class="fas fa-ban"></i></div>
+      <div class="player-error">{{ $t('Media asset does not exist or was removed from the vault') }}</div>
     </div>
 
     <div class="player-error-container" v-if="status === 'none'">
-      <div class="player-info">{{ $t('The album is empty. Browse your vault and add item to this album in order to play it.') }}</div>
+      <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
+      <div class="player-info">{{ $t('The album is empty') }}</div>
+      <div class="player-info">{{ $t('Browse the vault in order to add media to it') }}</div>
     </div>
 
     <div
@@ -44,6 +47,15 @@
           @mouseleave="leaveTooltip('prev')"
         >
           <i class="fas fa-backward-step"></i>
+        </button>
+
+        <button
+          disabled
+          type="button"
+          :title="$t('Play')"
+          class="player-btn"
+        >
+          <i class="fas fa-play"></i>
         </button>
 
         <button
@@ -377,11 +389,24 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   padding: 0.5rem;
+  opacity: 0.75;
+}
+
+.player-info {
+  font-size: x-large;
+  padding-bottom: 0.5rem;
+}
+
+.player-info-icon {
+  font-size: 48px;
+  padding-bottom: 1rem;
 }
 
 .player-error {
-  color: red;
+  font-size: x-large;
+  padding-bottom: 0.5rem;
 }
 
 </style>
