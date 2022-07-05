@@ -160,7 +160,6 @@ export default class App extends Vue {}
   margin-bottom: 0.5rem;
 }
 
-
 .btn i {
   margin-right: 12px;
 }

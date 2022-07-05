@@ -53,6 +53,13 @@ export interface MediaData {
 
         url: string;
     }[],
+
+    subtitles: {
+        id: string;
+        name: string;
+
+        url: string;
+    }[],
 }
 
 export class MediaController {

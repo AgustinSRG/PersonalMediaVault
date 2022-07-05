@@ -17,7 +17,10 @@
       :min="layout === 'media-split'"
       @album-create="createAlbum"
     ></PageContent>
-    <AlbumContainer @album-rename="showAlbumRename" @album-delete="showAlbumDelete"></AlbumContainer>
+    <AlbumContainer
+      @album-rename="showAlbumRename"
+      @album-delete="showAlbumDelete"
+    ></AlbumContainer>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
 
     <TopBar
@@ -57,7 +60,12 @@
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
-    <ResolutionConfirmationModal v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
+    <ResolutionConfirmationModal
+      v-model:display="displayResolutionConfirmation"
+    ></ResolutionConfirmationModal>
+    <SubtitlesDeleteModal
+      v-model:display="displaySubtitlesDelete"
+    ></SubtitlesDeleteModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -95,6 +103,7 @@ import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
+import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -126,6 +135,7 @@ export default defineComponent({
     AlbumDeleteModal,
     MediaDeleteModal,
     ResolutionConfirmationModal,
+    SubtitlesDeleteModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -156,6 +166,8 @@ export default defineComponent({
       displayMediaDelete: false,
 
       displayResolutionConfirmation: false,
+
+      displaySubtitlesDelete: false,
 
       displaySidebar: true,
     };

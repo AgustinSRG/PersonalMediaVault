@@ -124,6 +124,110 @@
         <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
       </button>
     </div>
+    <div class="form-group border-top" v-if="type === 2 || type === 3">
+      <label>{{ $t("Subtitles") }}:</label>
+    </div>
+
+    <div v-if="type === 2 || type === 3" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="text-left">{{ $t("ID") }}</th>
+            <th class="text-left">{{ $t("Name") }}</th>
+            <th class="text-right"></th>
+            <th class="text-right"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="sub in subtitles" :key="sub.id">
+            <td class="bold">{{ sub.id }}</td>
+            <td class="bold">{{ sub.name }}</td>
+            <td class="text-right">
+              <button
+                type="button"
+                class="btn btn-primary btn-xs mr-1"
+                @click="downloadSubtitles(sub)"
+              >
+                <i class="fas fa-download"></i> {{ $t("Download") }}
+              </button>
+            </td>
+            <td class="text-right">
+              <button
+                type="button"
+                class="btn btn-danger btn-xs"
+                @click="removeSubtitles(sub)"
+              >
+                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-group" v-if="type === 2 || type === 3">
+      <label
+        >{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label
+      >
+      <input
+        type="file"
+        class="file-hidden srt-file-hidden"
+        @change="srtFileChanged"
+        name="srt-upload"
+        accept=".srt"
+      />
+      <button
+        v-if="!srtFileName"
+        type="button"
+        class="btn btn-primary btn-sm"
+        :disabled="busy"
+        @click="selectSRTFile"
+      >
+        <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
+      </button>
+
+      <button
+        v-if="srtFileName"
+        type="button"
+        class="btn btn-primary btn-sm"
+        :disabled="busy"
+        @click="selectSRTFile"
+      >
+        <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
+      </button>
+    </div>
+    <div class="form-group" v-if="type === 2 || type === 3">
+      <label>{{ $t("Subtitles identifier") }}:</label>
+      <input
+        type="text"
+        autocomplete="off"
+        maxlength="255"
+        :disabled="busy"
+        v-model="srtId"
+        class="form-control"
+      />
+    </div>
+    <div class="form-group" v-if="type === 2 || type === 3">
+      <label>{{ $t("Subtitles name") }}:</label>
+      <input
+        type="text"
+        autocomplete="off"
+        maxlength="255"
+        :disabled="busy"
+        v-model="srtName"
+        class="form-control"
+      />
+    </div>
+    <div class="form-group" v-if="type === 2 || type === 3">
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        :disabled="busy || !srtId || !srtName || !srtFile"
+        @click="addSubtitles"
+      >
+        <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
+      </button>
+    </div>
     <div class="form-group border-top" v-if="type === 2 || type === 1">
       <label v-if="type === 2"
         >{{
@@ -143,13 +247,10 @@
 
     <div class="form-group" v-if="type === 2 || type === 1">
       <label v-if="type === 1"
-        >{{ $t("Original resolution") }}: {{ width }}x{{
-          height
-        }}</label
+        >{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label
       >
       <label v-if="type === 2">
-        {{ $t("Original resolution") }}: {{ width }}x{{ height }},
-        {{ fps }} fps
+        {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps
       </label>
     </div>
 
@@ -340,6 +441,12 @@ export default defineComponent({
 
       resolutions: [],
 
+      subtitles: [],
+      srtFile: null,
+      srtFileName: "",
+      srtId: "en",
+      srtName: "English",
+
       busy: false,
     };
   },
@@ -365,6 +472,14 @@ export default defineComponent({
       this.tags = (MediaController.MediaData.tags || []).slice();
 
       this.thumbnail = MediaController.MediaData.thumbnail;
+
+      this.subtitles = (MediaController.MediaData.subtitles || []).map((a) => {
+        return {
+          id: a.id,
+          name: a.name,
+          url: a.url,
+        };
+      });
 
       this.updateResolutions(MediaController.MediaData.resolutions || []);
     },
@@ -1016,6 +1131,192 @@ export default defineComponent({
             });
         },
       });
+    },
+
+    selectSRTFile: function () {
+      this.$el.querySelector(".srt-file-hidden").click();
+    },
+
+    srtFileChanged: function (e) {
+      const data = e.target.files;
+      if (data && data.length > 0) {
+        const file = data[0];
+        this.srtFile = file;
+        this.srtFileName = file.name;
+      }
+    },
+
+    addSubtitles: function () {
+      if (!this.srtFile) {
+        AppEvents.Emit("snack", this.$t("Please, select a SubRip file first"));
+        return;
+      }
+
+      const id = this.srtId;
+      const name = this.srtName;
+
+      let duped = false;
+      for (let sub of this.subtitles) {
+        if (sub.id === id) {
+          duped = true;
+          break;
+        }
+      }
+
+      if (duped) {
+        AppEvents.Emit(
+          "snack",
+          this.$t(
+            "There is already another subtitles file with the same identifier"
+          )
+        );
+        return;
+      }
+
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      Request.Do(MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
+        .onSuccess((res) => {
+          AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
+          this.busy = false;
+          this.subtitles.push(res);
+          this.$emit("changed");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "INVALID_SRT", () => {
+              AppEvents.Emit("snack", this.$t("Invalid SubRip file"));
+            })
+            .add(400, "INVALID_ID", () => {
+              AppEvents.Emit("snack", this.$t("Invalid subtitles identifier"));
+            })
+            .add(400, "INVALID_NAME", () => {
+              AppEvents.Emit("snack", this.$t("Invalid subtitles name"));
+            })
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Bad request"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(413, "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Subtitles file too big (max is $MAX)").replace(
+                  "$MAX",
+                  "10MB"
+                )
+              );
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    removeSubtitles: function (sub) {
+      AppEvents.Emit("subtitles-confirmation", {
+        name: sub.name,
+        callback: () => {
+          if (this.busy) {
+            return;
+          }
+
+          this.busy = true;
+
+          const mediaId = AppStatus.CurrentMedia;
+          const id = sub.id;
+
+          Request.Do(MediaAPI.RemoveSubtitles(mediaId, id))
+            .onSuccess(() => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Removed subtitles") + ": " + sub.name
+              );
+              this.busy = false;
+              for (let i = 0; i < this.subtitles.length; i++) {
+                if (this.subtitles[i].id === id) {
+                  this.subtitles.splice(i, 1);
+                  break;
+                }
+              }
+              this.$emit("changed");
+            })
+            .onCancel(() => {
+              this.busy = false;
+            })
+            .onRequestError((err) => {
+              this.busy = false;
+              Request.ErrorHandler()
+                .add(400, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Bad request"));
+                })
+                .add(401, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                  AppEvents.Emit("unauthorized");
+                })
+                .add(403, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                })
+                .add(404, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Not found"));
+                })
+                .add(500, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Internal server error"));
+                })
+                .add("*", "*", () => {
+                  AppEvents.Emit(
+                    "snack",
+                    this.$t("Could not connect to the server")
+                  );
+                })
+                .handle(err);
+            })
+            .onUnexpectedError((err) => {
+              AppEvents.Emit("snack", err.message);
+              console.error(err);
+              this.busy = false;
+            });
+        },
+      });
+    },
+
+    downloadSubtitles: function (sub) {
+      this.shownState = false;
+      const link = document.createElement("a");
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.href = GetAssetURL(sub.url);
+      link.click();
     },
   },
 

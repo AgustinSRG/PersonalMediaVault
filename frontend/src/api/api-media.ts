@@ -89,4 +89,21 @@ export class MediaAPI {
             },
         };
     }
+
+    public static SetSubtitles(mediaId: number, id: string, name: string, srt: File): RequestParams {
+        const form = new FormData();
+        form.append("file", srt);
+        return {
+            method: "POST",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/set?id=" + encodeURIComponent(id) + "&name=" + encodeURIComponent(name)),
+            form: form,
+        };
+    }
+
+    public static RemoveSubtitles(mediaId: number, id: string): RequestParams {
+        return {
+            method: "POST",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/remove?id=" + encodeURIComponent(id)),
+        };
+    }
 }
