@@ -97,7 +97,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	audioStream := data.GetFirstAudioStream()
 
 	if videoStream != nil {
-		if videoStream.Duration == "" || videoStream.DurationTs <= 1 {
+		if data.Format.Duration() <= 0 {
 			// Image
 			encoded := (format == "png_pipe")
 
@@ -115,7 +115,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			return &result, nil
 		} else {
 			// Video
-			duration, err := strconv.ParseFloat(videoStream.Duration, 64)
+			duration := data.Format.Duration()
 
 			if err != nil {
 				return nil, err
@@ -134,7 +134,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			result := FFprobeMediaResult{
 				Type:       MediaTypeVideo,
 				Format:     format,
-				Duration:   duration,
+				Duration:   duration.Seconds(),
 				Width:      int32(videoStream.Width),
 				Height:     int32(videoStream.Height),
 				Fps:        ParseFrameRate(videoStream.AvgFrameRate),
@@ -146,18 +146,14 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 		}
 	} else if audioStream != nil {
 		// Audio
-		duration, err := strconv.ParseFloat(audioStream.Duration, 64)
-
-		if err != nil {
-			return nil, err
-		}
+		duration := data.Format.Duration()
 
 		encoded := ((format == "mp3") && (audioStream.CodecName == "mp3"))
 
 		result := FFprobeMediaResult{
 			Type:       MediaTypeAudio,
 			Format:     format,
-			Duration:   duration,
+			Duration:   duration.Seconds(),
 			Width:      0,
 			Height:     0,
 			Fps:        0,
