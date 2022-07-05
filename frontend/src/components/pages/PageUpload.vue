@@ -234,7 +234,7 @@ export default defineComponent({
       if (m.mid < 0) {
         return;
       }
-      AppStatus.ClickOnMedia(m.mid);
+      AppStatus.ClickOnMedia(m.mid, true);
     },
 
     renderStatus(status, p, err) {

@@ -127,13 +127,13 @@ export default defineComponent({
 
     goNext: function () {
       if (this.next) {
-        AppStatus.ClickOnMedia(this.next.id);
+        AppStatus.ClickOnMedia(this.next.id, false);
       }
     },
 
     goPrev: function () {
       if (this.prev) {
-        AppStatus.ClickOnMedia(this.prev.id);
+        AppStatus.ClickOnMedia(this.prev.id, false);
       }
     },
 

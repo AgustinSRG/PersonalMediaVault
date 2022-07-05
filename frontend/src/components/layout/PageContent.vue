@@ -26,6 +26,7 @@
     <PageSearch :display="page === 'search'" :min="min"></PageSearch>
     <PageUpload :display="page === 'upload'"></PageUpload>
     <PageRandom :display="page === 'random'"></PageRandom>
+    <PageAdvancedSearch :display="page === 'advsearch'"></PageAdvancedSearch>
     <PageAlbums
       :display="page === 'albums'"
       @album-create="createAlbum"
@@ -44,6 +45,7 @@ import PageSearch from "../pages/PageSearch.vue";
 import PageUpload from "../pages/PageUpload.vue";
 import PageRandom from "../pages/PageRandom.vue";
 import PageAlbums from "../pages/PageAlbums.vue";
+import PageAdvancedSearch from "../pages/PageAdvancedSearch.vue";
 
 export default defineComponent({
   components: {
@@ -52,6 +54,7 @@ export default defineComponent({
     PageAlbums,
     PageUpload,
     PageRandom,
+    PageAdvancedSearch,
   },
   name: "PageContent",
   emits: ["album-create"],
@@ -88,6 +91,8 @@ export default defineComponent({
           return this.$t("Home");
         case "search":
           return this.$t("Search results") + ": " + s;
+        case "advsearch":
+          return this.$t("Advanced search");
         case "upload":
           return this.$t("Upload media");
         case "albums":
@@ -104,6 +109,7 @@ export default defineComponent({
         case "home":
           return "fas fa-home";
         case "search":
+        case "advsearch":
           return "fas fa-search";
         case "upload":
           return "fas fa-upload";

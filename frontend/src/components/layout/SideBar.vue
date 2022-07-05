@@ -85,6 +85,18 @@
         <div class="side-bar-option-text">{{ $t("Random") }}</div>
       </div>
 
+      <div
+        class="side-bar-option"
+        :class="{ selected: album < 0 && page === 'advsearch' }"
+        tabindex="0"
+        :title="$t('Advanced search')"
+        @click="goToPage('advsearch')"
+        @keydown="clickOnEnter"
+      >
+        <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
+        <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
+      </div>
+
       <div class="side-bar-separator"></div>
 
       <div

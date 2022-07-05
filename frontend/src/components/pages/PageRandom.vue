@@ -180,7 +180,7 @@ export default defineComponent({
     },
 
     goToMedia: function (mid) {
-      AppStatus.ClickOnMedia(mid);
+      AppStatus.ClickOnMedia(mid, true);
     },
 
     updateSearchParams: function () {

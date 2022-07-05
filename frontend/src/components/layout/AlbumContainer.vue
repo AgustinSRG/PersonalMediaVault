@@ -256,7 +256,7 @@ export default defineComponent({
     },
 
     clickMedia: function (item) {
-      AppStatus.ClickOnMedia(item.id);
+      AppStatus.ClickOnMedia(item.id, false);
     },
 
     showOptions: function (item, i, event) {

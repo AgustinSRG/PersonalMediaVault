@@ -68,7 +68,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && (["home", "search", "random", "albums", "upload"].includes(page))) {
+        if (page && (["home", "search", "random", "albums", "upload", "advsearch"].includes(page))) {
             AppStatus.CurrentPage = page;
         } else {
             AppStatus.CurrentPage = "home";
@@ -224,8 +224,12 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static ClickOnMedia(mediaId: number) {
+    public static ClickOnMedia(mediaId: number, split: boolean) {
         AppStatus.CurrentMedia = mediaId;
+
+        if (split) {
+            AppStatus.ListSplitMode = true;
+        }
 
         AppStatus.UpdateLayout();
 
