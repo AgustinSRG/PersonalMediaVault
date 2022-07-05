@@ -2,7 +2,7 @@
   <div class="page-inner" :class="{ hidden: !display }">
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
-        <label>{{ $t("Title must contain") }}:</label>
+        <label>{{ $t("Title or description must contain") }}:</label>
         <input
           type="text"
           autoxomplete="off"
@@ -22,6 +22,48 @@
           <option :value="2">{{ $t("Videos") }}</option>
           <option :value="3">{{ $t("Audios") }}</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label>{{ $t("Tags") }}:</label>
+      </div>
+      <div class="form-group media-tags">
+        <label v-if="tags.length === 0">{{
+          $t("There are no tags yet for this filter.")
+        }}</label>
+        <div v-for="tag in tags" :key="tag" class="media-tag">
+          <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+          <button
+            type="button"
+            :title="$t('Remove tag')"
+            class="media-tag-btn"
+            @click="removeTag(tag)"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <input
+          type="text"
+          autocomplete="off"
+          maxlength="255"
+          v-model="tagToAdd"
+          @input="onTagAddChanged"
+          class="form-control"
+          :placeholder="$t('Search for tags') + '...'"
+        />
+      </div>
+      <div class="form-group" v-if="matchingTags.length > 0">
+        <button
+          v-for="mt in matchingTags"
+          :key="mt.id"
+          type="button"
+          class="btn btn-primary btn-xs btn-tag-mini"
+          @click="addMatchingTag(mt)"
+        >
+          <i class="fas fa-plus"></i> {{ mt.name }}
+        </button>
       </div>
 
       <div class="form-group">
@@ -50,14 +92,14 @@
         <button
           v-if="!loading"
           type="submit"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm btn-mr"
         >
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
         <button
           v-if="loading"
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm btn-mr"
           disabled
         >
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{
@@ -67,7 +109,7 @@
         <button
           v-if="loading"
           type="button"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary btn-sm btn-mr"
           @click="cancel"
         >
           <i class="fas fa-times"></i> {{ $t("Cancel") }}
@@ -76,6 +118,19 @@
     </form>
 
     <div class="search-results">
+
+      <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
+        <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
+        <div class="search-results-msg-text">
+          {{ $t("Could not find any result") }}
+        </div>
+        <div class="search-results-msg-btn">
+          <button type="button" @click="startSearch()" class="btn btn-primary btn-sm">
+            <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+          </button>
+        </div>
+      </div>
+
       <div
         v-if="!loading && pageItems.length > 0"
         class="search-results-final-display"
@@ -127,6 +182,8 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { MediaEntry } from "@/control/media";
+import { TagsController } from "@/control/tags";
+import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
@@ -151,7 +208,13 @@ export default defineComponent({
       totalPages: 0,
       progress: 0,
 
+      started: false,
       finished: true,
+
+      tagData: {},
+      tags: [],
+      tagToAdd: "",
+      matchingTags: [],
 
       pageSizeOptions: [],
     };
@@ -213,19 +276,34 @@ export default defineComponent({
     filterElements: function (results: MediaEntry[]) {
       const filterText = this.textSearch.toLowerCase();
       const filterType = this.type;
+      const filterTags = this.tags.slice();
       for (let e of results) {
         if (this.pageItems.length >= this.pageSize) {
           return;
         }
 
         if (filterText) {
-          if (!e.title.toLowerCase().includes(filterText)) {
+          if (!e.title.toLowerCase().includes(filterText) && !e.description.toLowerCase().includes(filterText)) {
             continue;
           }
         }
 
         if (filterType) {
           if (e.type !== filterType) {
+            continue;
+          }
+        }
+
+        if (filterTags.length > 0) {
+          let passesTags = true;
+          for (let tag of filterTags) {
+            if (!e.tags || !e.tags.includes(tag)) {
+              passesTags = false;
+              break;
+            }
+          }
+
+          if (!passesTags) {
             continue;
           }
         }
@@ -243,6 +321,7 @@ export default defineComponent({
       this.page = 0;
       this.totalPages = 0;
       this.progress = 0;
+      this.started = true;
       this.finished = false;
       this.load();
     },
@@ -263,6 +342,7 @@ export default defineComponent({
       this.progress = 0;
       this.loading = false;
       this.finished = true;
+      this.started = false;
     },
 
     goToMedia: function (mid) {
@@ -288,6 +368,83 @@ export default defineComponent({
     cssProgress: function (p: number) {
       return Math.round(p) + "%";
     },
+
+    updateTagData: function () {
+      this.tagData = copyObject(TagsController.Tags);
+      this.onTagAddChanged();
+    },
+
+    getTagName: function (tag, data) {
+      if (data[tag + ""]) {
+        return data[tag + ""].name;
+      } else {
+        return "???";
+      }
+    },
+
+    removeTag: function (tag) {
+      this.tags = this.tags.filter((t) => {
+        return tag !== t;
+      });
+    },
+
+    addMatchingTag: function (tag) {
+      this.tags.push(tag.id);
+    },
+
+    onTagAddChanged: function () {
+      if (this.$options.findTagTimeout) {
+        return;
+      }
+      this.$options.findTagTimeout = setTimeout(() => {
+        this.$options.findTagTimeout = null;
+        this.findTags();
+      }, 200);
+    },
+
+    findTags: function () {
+      const tagFilter = this.tagToAdd
+        .replace(/[\n\r]/g, " ")
+        .trim()
+        .replace(/[\s]/g, "_")
+        .toLowerCase();
+      this.matchingTags = Object.values(this.tagData)
+        .map((a: any) => {
+          if (!tagFilter) {
+            return {
+              id: a.id,
+              name: a.name,
+              starts: true,
+              contains: true,
+            };
+          }
+          const i = a.name.indexOf(tagFilter);
+          return {
+            id: a.id,
+            name: a.name,
+            starts: i === 0,
+            contains: i >= 0,
+          };
+        })
+        .filter((a) => {
+          if (this.tags.indexOf(a.id) >= 0) {
+            return false;
+          }
+          return a.starts || a.contains;
+        })
+        .sort((a, b) => {
+          if (a.starts && !b.starts) {
+            return -1;
+          } else if (b.starts && !a.starts) {
+            return 1;
+          } else if (a.name < b.name) {
+            return -1;
+          } else {
+            return 1;
+          }
+        })
+        .slice(0, 10);
+    },
   },
   mounted: function () {
     for (let i = 1; i <= 20; i++) {
@@ -300,6 +457,12 @@ export default defineComponent({
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.AddEventListener("media-delete", this.$options.resetH);
     AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
+
+    this.$options.tagUpdateH = this.updateTagData.bind(this);
+
+    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
+    this.updateTagData();
   },
   beforeUnmount: function () {
     Timeouts.Abort("page-advsearch-load");
@@ -308,6 +471,12 @@ export default defineComponent({
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
     AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
+
+    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+
+    if (this.$options.findTagTimeout) {
+      clearTimeout(this.$options.findTagTimeout);
+    }
   },
   watch: {
     display: function () {

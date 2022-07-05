@@ -11,11 +11,10 @@ export interface MediaEntry {
     id: number;
     type: number;
     title: string;
+    description: string;
+    tags: number[];
     thumbnail: string;
     duration: number;
-    width: number;
-    height: number;
-    fps: number;
 }
 
 export interface MediaData {

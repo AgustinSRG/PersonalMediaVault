@@ -77,7 +77,7 @@
           v-for="mt in matchingTags"
           :key="mt.id"
           type="button"
-          class="btn btn-primary btn-xs"
+          class="btn btn-primary btn-xs btn-tag-mini"
           :disabled="busy"
           @click="addMatchingTag(mt.name)"
         >
@@ -362,11 +362,11 @@ export default defineComponent({
       this.height = MediaController.MediaData.height;
       this.fps = MediaController.MediaData.fps;
 
-      this.tags = MediaController.MediaData.tags.slice();
+      this.tags = (MediaController.MediaData.tags || []).slice();
 
       this.thumbnail = MediaController.MediaData.thumbnail;
 
-      this.updateResolutions(MediaController.MediaData.resolutions);
+      this.updateResolutions(MediaController.MediaData.resolutions || []);
     },
 
     updateResolutions: function (resolutions) {
@@ -1117,5 +1117,11 @@ export default defineComponent({
   width: auto;
   height: auto;
   border: solid 1px rgba(255, 255, 255, 0.1);
+}
+
+.btn-tag-mini {
+  padding: 0.25rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>

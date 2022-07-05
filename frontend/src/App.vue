@@ -155,6 +155,11 @@ export default class App extends Vue {}
   font-size: 12px;
 }
 
+.btn-mr {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 
 .btn i {
   margin-right: 12px;
