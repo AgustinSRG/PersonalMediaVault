@@ -13,14 +13,13 @@ import (
 )
 
 type MediaListAPIItem struct {
-	Id        uint64    `json:"id"`
-	Type      MediaType `json:"type"`
-	Title     string    `json:"title"`
-	Thumbnail string    `json:"thumbnail"`
-	Duration  float64   `json:"duration"`
-	Width     int32     `json:"width"`
-	Height    int32     `json:"height"`
-	Fps       int32     `json:"fps"`
+	Id          uint64    `json:"id"`
+	Type        MediaType `json:"type"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Tags        []uint64  `json:"tags"`
+	Thumbnail   string    `json:"thumbnail"`
+	Duration    float64   `json:"duration"`
 }
 
 func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
@@ -45,17 +44,15 @@ func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem 
 			result.Thumbnail = ""
 		}
 		result.Duration = meta.MediaDuration
-		result.Width = meta.Width
-		result.Height = meta.Height
-		result.Fps = meta.Fps
+		result.Description = meta.Description
+		result.Tags = meta.Tags
 	} else {
 		result.Type = MediaTypeDeleted
 		result.Title = ""
 		result.Thumbnail = ""
 		result.Duration = 0
-		result.Width = 0
-		result.Height = 0
-		result.Fps = 0
+		result.Description = ""
+		result.Tags = make([]uint64, 0)
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)

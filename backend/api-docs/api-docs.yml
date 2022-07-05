@@ -1516,6 +1516,16 @@ definitions:
           type: string
           description: "Media title"
           example: "Media title"
+        description:
+          type: string
+          description: "Media description"
+          example: "Media description"
+        tags:
+          type: array
+          description: List of tags
+          items:
+            type: number
+            format: int64
         thumbnail:
           type: string
           description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
@@ -1524,18 +1534,6 @@ definitions:
           type: number
           format: double
           description: Duration of the media in seconds (videos and audios)
-        width:
-          type: number
-          format: int32
-          description: Image/Video width
-        height:
-          type: number
-          format: int32
-          description: Image/Video height
-        fps:
-          type: number
-          format: int32
-          description: Frames per second
     
     UserConfig:
       description: User configuration
