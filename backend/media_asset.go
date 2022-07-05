@@ -60,6 +60,12 @@ type MediaResolution struct {
 	TaskId uint64 `json:"task_id"`
 }
 
+type MediaSubtitle struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Asset uint64 `json:"asset"`
+}
+
 type MediaMetadata struct {
 	Id uint64 `json:"id"`
 
@@ -88,6 +94,7 @@ type MediaMetadata struct {
 	ThumbnailAsset uint64 `json:"thumb_asset"`
 
 	Resolutions []MediaResolution `json:"resolutions"`
+	Subtitles   []MediaSubtitle   `json:"subtitles"`
 
 	PreviewsReady    bool    `json:"previews_ready"`
 	PreviewsTask     uint64  `json:"previews_task"`
@@ -125,6 +132,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		ThumbnailReady:    false,
 		ThumbnailAsset:    0,
 		Resolutions:       make([]MediaResolution, 0),
+		Subtitles:         make([]MediaSubtitle, 0),
 		PreviewsReady:     false,
 		PreviewsInterval:  0,
 		PreviewsAsset:     0,
@@ -185,6 +193,14 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 
 		if err != nil {
 			return nil, err
+		}
+
+		if mp.Resolutions == nil {
+			mp.Resolutions = make([]MediaResolution, 0)
+		}
+
+		if mp.Subtitles == nil {
+			mp.Subtitles = make([]MediaSubtitle, 0)
 		}
 
 		return &mp, nil
@@ -409,4 +425,35 @@ func (meta *MediaMetadata) RemoveResolution(index int) {
 	}
 
 	meta.Resolutions = newResolutions
+}
+
+func (meta *MediaMetadata) FindSubtitle(id string) int {
+	for i := 0; i < len(meta.Subtitles); i++ {
+		if meta.Subtitles[i].Id == id {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (meta *MediaMetadata) RemoveSubtitle(index int) {
+	newSubtitles := make([]MediaSubtitle, 0)
+
+	for i := 0; i < len(meta.Subtitles); i++ {
+		if i != index {
+			newSubtitles = append(newSubtitles, meta.Subtitles[i])
+		}
+	}
+
+	meta.Subtitles = newSubtitles
+}
+
+func (meta *MediaMetadata) AddSubtitle(id string, name string, asset uint64) {
+	sub := MediaSubtitle{
+		Id:    id,
+		Name:  name,
+		Asset: asset,
+	}
+	meta.Subtitles = append(meta.Subtitles, sub)
 }

@@ -396,6 +396,23 @@ paths:
                       type: string
                       description: "Playback URL"
                       example: "/assets/b/0/0/video_720p.mp4"
+              subtitles:
+                type: array
+                description: Available subtitles for media
+                items:
+                  properties:
+                    id:
+                      type: string
+                      description: "Subtitles ID"
+                      example: "es"
+                    name:
+                      type: string
+                      description: "Subtitles name"
+                      example: "Spanish"
+                    url:
+                      type: string
+                      description: "SRT file URL"
+                      example: "/assets/b/0/0/subrip.srt"
   
   "/api/media/{id}/edit/title":
     post:
@@ -747,6 +764,122 @@ paths:
                 type: number
                 format: int32
                 description: Frames per second
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          
+  "/api/media/{id}/subtitles/set":
+    post:
+      summary: Sets subtitles
+      description: Add a subtitles file for videos and audios
+      tags:
+        - media
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID for the subtitles. Example: es"
+        - in: query
+          name: name
+          type: string
+          required: true
+          description: "Name for the subtitles. Example: Spanish"
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_SRT - Invalid srt file provided
+                    * INVALID_ID - Invalid subtitles ID
+                    * INVALID_NAME - Invalid subtitles name
+                    * NOT_SUPPORTED - This API only applies to videos and audios
+                enum:
+                  - INVALID_SRT
+                  - INVALID_ID
+                  - INVALID_NAME
+                  - NOT_SUPPORTED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        413:
+          description: SRT file too large (Max 10 MB)
+        200:
+          description: Success
+          schema:
+            properties:
+              id:
+                type: string
+                description: "Subtitles ID"
+                example: "es"
+              name:
+                type: string
+                description: "Subtitles name"
+                example: "Spanish"
+              url:
+                type: string
+                description: "SRT file URL"
+                example: "/assets/b/0/0/subrip.srt"
+  
+  "/api/media/{id}/subtitles/remove":
+    post:
+      summary: Removes subtitles
+      description: Removes subtitles
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID for the subtitles. Example: es"
       responses:
         400:
           description: Bad request.

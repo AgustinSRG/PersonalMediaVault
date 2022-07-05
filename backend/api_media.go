@@ -69,6 +69,12 @@ type MediaAPIMetaResolution struct {
 	Task   uint64 `json:"task"`
 }
 
+type MediaAPIMetaSubtitle struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
 type MediaAPIMetaResponse struct {
 	Id   uint64    `json:"id"`
 	Type MediaType `json:"type"`
@@ -95,6 +101,8 @@ type MediaAPIMetaResponse struct {
 	VideoPreviewsInterval float64 `json:"video_previews_interval"`
 
 	Resolutions []MediaAPIMetaResolution `json:"resolutions"`
+
+	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
 }
 
 func api_getMedia(response http.ResponseWriter, request *http.Request) {
@@ -210,6 +218,23 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	}
 
 	result.Resolutions = resolutions
+
+	subtitles := make([]MediaAPIMetaSubtitle, 0)
+
+	if meta.Subtitles != nil {
+		for i := 0; i < len(meta.Subtitles); i++ {
+			var s MediaAPIMetaSubtitle
+
+			s.Id = meta.Subtitles[i].Id
+			s.Name = meta.Subtitles[i].Name
+
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt"
+
+			subtitles = append(subtitles, s)
+		}
+	}
+
+	result.Subtitles = subtitles
 
 	// Response
 

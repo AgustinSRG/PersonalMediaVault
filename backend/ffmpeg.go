@@ -91,13 +91,17 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 		return nil, err
 	}
 
+	if data.Format == nil {
+		return nil, errors.New("Invalid media file")
+	}
+
 	format := data.Format.FormatName
 
 	videoStream := data.GetFirstVideoStream()
 	audioStream := data.GetFirstAudioStream()
 
 	if videoStream != nil {
-		if data.Format.Duration() <= 0 {
+		if data.Format.Duration().Seconds() < 0.5 || format == "image2" {
 			// Image
 			encoded := (format == "png_pipe")
 
@@ -165,6 +169,23 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	} else {
 		return nil, errors.New("Invalid media file. No audio or video streams.")
 	}
+}
+
+func ValidateSubtitlesFile(file string) bool {
+	LogDebug("[FFPROBE] Probing " + file)
+	data, err := ffprobe.GetProbeData(file, 5*time.Second)
+
+	if err != nil {
+		return false
+	}
+
+	if data.Format == nil {
+		return false
+	}
+
+	format := data.Format.FormatName
+
+	return format == "srt"
 }
 
 func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {

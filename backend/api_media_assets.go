@@ -101,6 +101,9 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		mimeType = "video/webm"
 	case "mkv":
 		mimeType = "video/x-matroska"
+		// Subtitles
+	case "srt":
+		mimeType = "application/x-subrip"
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)

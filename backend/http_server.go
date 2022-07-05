@@ -106,6 +106,9 @@ func RunHTTPServer() {
 	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/add", api_mediaAddResolution).Methods("POST")
 	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/remove", api_mediaRemoveResolution).Methods("POST")
 
+	router.HandleFunc("/api/media/{mid:[0-9]+}/subtitles/set", api_addMediaSubtitles).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/subtitles/remove", api_removeMediaSubtitles).Methods("POST")
+
 	// Search API
 	router.HandleFunc("/api/search", api_searchMedia).Methods("GET")
 	router.HandleFunc("/api/random", api_randomMedia).Methods("GET")
