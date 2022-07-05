@@ -144,7 +144,7 @@
     <div class="form-group" v-if="type === 2 || type === 1">
       <label v-if="type === 1"
         >{{ $t("Original resolution") }}: {{ width }}x{{
-          res.height
+          height
         }}</label
       >
       <label v-if="type === 2">
