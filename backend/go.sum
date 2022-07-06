@@ -1,3 +1,5 @@
+github.com/barbashov/iso639-3 v0.0.0-20211020172741-1f4ffb2d8d1c h1:H9Nm+I7Cg/YVPpEV1RzU3Wq2pjamPc/UtHDgItcb7lE=
+github.com/barbashov/iso639-3 v0.0.0-20211020172741-1f4ffb2d8d1c/go.mod h1:rGod7o6KPeJ+hyBpHfhi4v7blx9sf+QsHsA7KAsdN6U=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/nightlyone/lockfile v1.0.0 h1:RHep2cFKK4PonZJDdEl4GmkabuhbsRMgk/k3uAmxBiA=

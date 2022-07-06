@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	iso639_3 "github.com/barbashov/iso639-3"
 	"github.com/vansante/go-ffprobe"
 )
 
@@ -557,4 +560,110 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	}
 
 	return nil
+}
+
+type ExtractedSubtitlesFile struct {
+	Id   string
+	Name string
+	file string
+}
+
+func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
+	cmd := exec.Command(FFMPEG_BINARY_PATH)
+
+	args := make([]string, 1)
+
+	args[0] = FFMPEG_BINARY_PATH
+
+	args = append(args, "-y") // Overwrite
+
+	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+
+	// Setting the stream map
+	args = append(args, "-map", "0:s:"+fmt.Sprint(streamIndex))
+
+	// Output
+	args = append(args, dest)
+
+	cmd.Args = args
+
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedSubtitlesFile) {
+	result := make([]ExtractedSubtitlesFile, 0)
+	addedMap := make(map[string]bool)
+
+	LogDebug("[FFPROBE] Probing " + originalFilePath)
+	data, err := ffprobe.GetProbeData(originalFilePath, 5*time.Second)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	if data.Format == nil {
+		return errors.New("Invalid media file"), "", nil
+	}
+
+	subtitleStreams := data.GetStreams(ffprobe.STREAM_SUBTITLE)
+
+	tmpFolder, err := GetTemporalFolder(false)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	err = os.MkdirAll(tmpFolder, FOLDER_PERMISSION)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	for i := 0; i < len(subtitleStreams); i++ {
+		stream := subtitleStreams[i]
+
+		lang := stream.Tags.Language
+
+		if lang == "" {
+			continue
+		}
+
+		langInfo := iso639_3.FromAnyCode(lang)
+
+		if langInfo == nil {
+			continue
+		}
+
+		if addedMap[lang] {
+			continue
+		}
+
+		srtPath := path.Join(tmpFolder, lang+".srt")
+
+		LogDebug("Extracting subtitles file for lang: " + lang)
+
+		err = ExtractSubtitlesFromMedia(originalFilePath, probedata, srtPath, i)
+
+		if err != nil {
+			LogError(err)
+			continue
+		}
+
+		entry := ExtractedSubtitlesFile{
+			Id:   lang,
+			Name: langInfo.Name,
+			file: srtPath,
+		}
+
+		result = append(result, entry)
+		addedMap[lang] = true
+	}
+
+	return nil, tmpFolder, result
 }

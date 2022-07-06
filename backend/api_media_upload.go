@@ -187,6 +187,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 	go func() {
 		BackgroundTaskGenerateThumbnail(session, media_id, tempFile, probe_data)
+		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
 		BackgroundTaskSaveOriginal(session, media_id, tempFile, ext, probe_data, userConfig)
 
 		WipeTemporalFile(tempFile)
@@ -313,6 +314,127 @@ func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, te
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)
+}
+
+func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tempFile string, probe_data *FFprobeMediaResult) {
+	if probe_data.Type != MediaTypeVideo && probe_data.Type != MediaTypeAudio {
+		return // Not applicable
+	}
+
+	err, tmpPath, files := ExtractSubtitlesFiles(tempFile, probe_data)
+
+	if err != nil {
+		LogError(err)
+
+		return
+	}
+
+	for i := 0; i < len(files); i++ {
+		// Encrypt the SRT file
+
+		srt_encrypted_file, err := EncryptAssetFile(files[i].file, session.key)
+
+		if err != nil {
+			LogError(err)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		// Put the subtitles into the media assets
+
+		media := GetVault().media.AcquireMediaResource(media_id)
+
+		if media == nil {
+			os.Remove(srt_encrypted_file)
+			WipeTemporalPath(tmpPath)
+			return
+		}
+
+		meta, err := media.StartWrite(session.key)
+
+		if err != nil {
+			LogError(err)
+
+			os.Remove(srt_encrypted_file)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		if meta == nil {
+			media.CancelWrite()
+			os.Remove(srt_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		srt_asset := meta.NextAssetID
+		meta.NextAssetID++
+
+		success, asset_path, asset_lock := media.AcquireAsset(srt_asset, ASSET_SINGLE_FILE)
+
+		if !success {
+			media.CancelWrite()
+			os.Remove(srt_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		asset_lock.RequestWrite()
+		asset_lock.StartWrite()
+
+		// Move temp file
+		err = os.Rename(srt_encrypted_file, asset_path)
+
+		asset_lock.EndWrite()
+
+		media.ReleaseAsset(srt_asset)
+
+		if err != nil {
+			LogError(err)
+
+			media.CancelWrite()
+			os.Remove(srt_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		// Change metadata
+		if meta.FindSubtitle(files[i].Id) == -1 {
+			meta.AddSubtitle(files[i].Id, files[i].Name, srt_asset)
+		}
+
+		// Save
+		err = media.EndWrite(meta, session.key, false)
+
+		if err != nil {
+			LogError(err)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		GetVault().media.ReleaseMediaResource(media_id)
+	}
+
+	WipeTemporalPath(tmpPath) // Remove temp path for subtitles
 }
 
 func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFile string, ext string, probe_data *FFprobeMediaResult, userConfig *UserConfig) {
