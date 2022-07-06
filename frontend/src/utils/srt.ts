@@ -88,3 +88,34 @@ export function sanitizeSubtitlesHTML(html: string): string {
         }
     });
 }
+
+export function findSubtitlesEntry(subtitles: SubtitlesEntry[], time: number): SubtitlesEntry {
+    if (subtitles.length === 0) {
+        return null;
+    }
+
+    let low = 0
+    let high = subtitles.length - 1
+
+    while (low <= high) {
+        const m = (low + high) >> 1;
+        const v = subtitles[m].start;
+
+        if (v < time) {
+            low = m + 1
+        } else if (v > time) {
+            high = m - 1
+        } else {
+            low = m
+			high = m - 1
+        }
+    }
+
+    if (time >= subtitles[low].start && time <= subtitles[low].end) {
+        return subtitles[low];
+    } else if (low > 0 && time >= subtitles[low - 1].start && time <= subtitles[low - 1].end) {
+        return subtitles[low - 1];
+    } else {
+        return null;
+    }
+}

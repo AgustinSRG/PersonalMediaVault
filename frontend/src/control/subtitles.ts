@@ -1,7 +1,7 @@
 // Subtitles controller
 
 import { GetAssetURL, Request } from "@/utils/request";
-import { parseSRT, SubtitlesEntry } from "@/utils/srt";
+import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
@@ -98,16 +98,6 @@ export class SubtitlesController {
     }
 
     public static GetSubtitlesLine(time: number): SubtitlesEntry {
-        if (SubtitlesController.Subtitles.length > 0) {
-            for (const sub of SubtitlesController.Subtitles) {
-                if (time >= sub.start && time <= sub.end) {
-                    return sub;
-                }
-            }
-
-            return null;
-        } else {
-            return null;
-        }
+        return findSubtitlesEntry(SubtitlesController.Subtitles, time);
     }
 }
