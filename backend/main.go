@@ -5,8 +5,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"runtime"
+	"strconv"
+	"time"
 )
 
 type BackendOptions struct {
@@ -31,6 +34,9 @@ type BackendOptions struct {
 	// Temp path
 	tempPath            string
 	unencryptedTempPath string
+
+	// Open browser
+	openBrowser int
 }
 
 var (
@@ -52,6 +58,7 @@ func main() {
 		vaultPath:           "./vault",
 		tempPath:            "./vault/temp",
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
+		openBrowser:         0,
 	}
 
 	if options.ffmpegPath == "" {
@@ -112,6 +119,10 @@ func main() {
 			options.vaultPath = args[i+1]
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
+		} else if arg == "--open-browser" {
+			options.openBrowser = 1
+		} else if arg == "--open-browser-ssl" {
+			options.openBrowser = 2
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
@@ -177,6 +188,9 @@ func main() {
 		}
 
 		// Create and run HTTP server
+		if options.openBrowser > 0 {
+			go openBrowser(options.openBrowser)
+		}
 		RunHTTPServer()
 	} else if options.initialize || options.clean {
 		vault := Vault{}
@@ -215,6 +229,8 @@ func printHelp() {
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
 	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
 	fmt.Println("        --skip-lock, -sl           Ignores vault lockfile.")
+	fmt.Println("        --open-browser             Opens browser in localhost (HTTP).")
+	fmt.Println("        --open-browser-ssl         Opens browser in localhost (HTTPS).")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
@@ -232,4 +248,63 @@ func printHelp() {
 
 func printVersion() {
 	fmt.Println("PersonalMediaVault 1.0.0")
+}
+
+func openBrowser(opt int) {
+	// Generate localhost URL
+	var url string
+
+	if opt == 2 {
+		var ssl_port int
+		ssl_port = 443
+		customSSLPort := os.Getenv("SSL_PORT")
+		if customSSLPort != "" {
+			sslp, e := strconv.Atoi(customSSLPort)
+			if e == nil {
+				ssl_port = sslp
+			}
+		}
+
+		if ssl_port == 443 {
+			url = "https://localhost"
+		} else {
+			url = "https://localhost:" + fmt.Sprint(ssl_port)
+		}
+	} else {
+		var tcp_port int
+		tcp_port = 80
+		customTCPPort := os.Getenv("HTTP_PORT")
+		if customTCPPort != "" {
+			tcpp, e := strconv.Atoi(customTCPPort)
+			if e == nil {
+				tcp_port = tcpp
+			}
+		}
+
+		if tcp_port == 80 {
+			url = "http://localhost"
+		} else {
+			url = "http://localhost:" + fmt.Sprint(tcp_port)
+		}
+	}
+
+	// Wait a bit so the server can start (1 second)
+	time.Sleep(1 * time.Second)
+
+	// Open the browser
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+
+	if err != nil {
+		LogWarning("Error open browser: " + err.Error())
+	}
 }
