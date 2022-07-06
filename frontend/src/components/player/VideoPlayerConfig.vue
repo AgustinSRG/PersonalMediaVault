@@ -49,7 +49,7 @@
         </td>
       </tr>
       <tr
-      v-if="metadata.subtitles && metadata.subtitles.length > 0"
+        v-if="metadata.subtitles && metadata.subtitles.length > 0"
         class="tr-button"
         tabindex="0"
         @keydown="clickOnEnter"
@@ -98,7 +98,9 @@
         </td>
       </tr>
 
-      <tr v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles">
+      <tr
+        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+      >
         <td>
           <i class="fas fa-closed-captioning icon-config"></i>
           <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
@@ -500,7 +502,6 @@ export default defineComponent({
       this.subbgState = s;
       PlayerPreferences.SetSubtitlesBackground(s);
     },
-
 
     updateResolutions: function () {
       if (this.metadata && this.metadata.resolutions) {

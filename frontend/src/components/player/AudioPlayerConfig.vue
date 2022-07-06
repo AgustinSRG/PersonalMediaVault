@@ -50,6 +50,7 @@
       </tr>
 
       <tr
+        v-if="metadata.subtitles && metadata.subtitles.length > 0"
         class="tr-button"
         tabindex="0"
         @keydown="clickOnEnter"
@@ -62,6 +63,51 @@
         <td class="td-right">
           {{ renderSubtitle(subtitles, rtick) }}
           <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
+      <tr
+        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToSubSizes"
+      >
+        <td>
+          <i class="fas fa-closed-captioning icon-config"></i>
+          <b>{{ $t("Subtitles") }} ({{ $t("Size") }})</b>
+        </td>
+        <td class="td-right">
+          {{ renderSubtitleSize(subsize) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
+
+      <tr
+        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToSubBackgrounds"
+      >
+        <td>
+          <i class="fas fa-closed-captioning icon-config"></i>
+          <b>{{ $t("Subtitles") }} ({{ $t("Background") }})</b>
+        </td>
+        <td class="td-right">
+          {{ renderSubtitleBackground(subbg) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
+
+      <tr
+        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+      >
+        <td>
+          <i class="fas fa-closed-captioning icon-config"></i>
+          <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
+        </td>
+        <td class="td-right">
+          <ToggleSwitch v-model:val="subhtmlState"></ToggleSwitch>
         </td>
       </tr>
     </table>
@@ -174,6 +220,70 @@
         <td class="td-right"></td>
       </tr>
     </table>
+
+    <table v-if="page === 'subsizes'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        v-for="s in subtitlesSizes"
+        :key="s"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="updateSubtitleSize(s)"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': s !== subsize }"
+          ></i>
+          {{ renderSubtitleSize(s) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
+
+    <table v-if="page === 'subbg'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Subtitles") }} ({{ $t("Background") }}) </b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        v-for="s in subtitlesBackgrounds"
+        :key="s"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="updateSubtitleBackground(s)"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': s !== subbg }"
+          ></i>
+          {{ renderSubtitleBackground(s) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
   </div>
 </template>
 
@@ -192,6 +302,9 @@ export default defineComponent({
     "update:loop",
     "update:speed",
     "update:animcolors",
+    "update:subsize",
+    "update:subbg",
+    "update:subhtml",
     "enter",
     "leave",
   ],
@@ -201,6 +314,9 @@ export default defineComponent({
     loop: Boolean,
     speed: Number,
     animcolors: String,
+    subsize: String,
+    subbg: String,
+    subhtml: Boolean,
     rtick: Number,
   },
   setup(props) {
@@ -209,6 +325,9 @@ export default defineComponent({
       loopState: useVModel(props, "loop"),
       speedState: useVModel(props, "speed"),
       animColorsState: useVModel(props, "animcolors"),
+      subsizeState: useVModel(props, "subsize"),
+      subbgState: useVModel(props, "subbg"),
+      subhtmlState: useVModel(props, "subhtml"),
     };
   },
   data: function () {
@@ -216,7 +335,11 @@ export default defineComponent({
       page: "",
       speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
       animStyles: ["gradient", "", "none"],
+
       subtitles: "",
+
+      subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
+      subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
     };
   },
   methods: {
@@ -246,6 +369,18 @@ export default defineComponent({
 
     goToAnimStyles: function () {
       this.page = "anim";
+    },
+
+    goToSubtitles: function () {
+      this.page = "subtitles";
+    },
+
+    goToSubSizes: function () {
+      this.page = "subsizes";
+    },
+
+    goToSubBackgrounds: function () {
+      this.page = "subbg";
     },
 
     renderSpeed: function (speed: number) {
@@ -279,8 +414,44 @@ export default defineComponent({
       SubtitlesController.OnSubtitlesChanged();
     },
 
-    goToSubtitles: function () {
-      this.page = "subtitles";
+    renderSubtitleSize: function (s: string) {
+      switch (s) {
+        case "s":
+          return this.$t("Small");
+        case "l":
+          return this.$t("Large");
+        case "xl":
+          return this.$t("Extra large");
+        case "xxl":
+          return this.$t("Extra extra large");
+        default:
+          return this.$t("Medium");
+      }
+    },
+
+    updateSubtitleSize: function (s: string) {
+      this.subsizeState = s;
+      PlayerPreferences.SetSubtitlesSize(s);
+    },
+
+    renderSubtitleBackground: function (s: string) {
+      switch (s) {
+        case "0":
+          return this.$t("Transparent");
+        case "25":
+          return this.$t("Translucid") + " (75%)";
+        case "50":
+          return this.$t("Translucid") + " (50%)";
+        case "75":
+          return this.$t("Translucid") + " (25%)";
+        default:
+          return this.$t("Opaque");
+      }
+    },
+
+    updateSubtitleBackground: function (s: string) {
+      this.subbgState = s;
+      PlayerPreferences.SetSubtitlesBackground(s);
     },
 
     renderSubtitle: function (subId: string, rtick: number) {
