@@ -48,6 +48,22 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
+
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToSubtitles"
+      >
+        <td>
+          <i class="fas fa-closed-captioning icon-config"></i>
+          <b>{{ $t("Subtitles") }}</b>
+        </td>
+        <td class="td-right">
+          {{ renderSubtitle(subtitles, rtick) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
     </table>
     <table v-if="page === 'speed'">
       <tr
@@ -111,10 +127,59 @@
         <td class="td-right"></td>
       </tr>
     </table>
+
+    <table v-if="page === 'subtitles'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Subtitles") }}</b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeSubtitle('')"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': '' !== subtitles }"
+          ></i>
+          {{ renderSubtitle("", rtick) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        v-for="sub in metadata.subtitles"
+        :key="sub.id"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeSubtitle(sub.id)"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': sub.id !== subtitles }"
+          ></i>
+          {{ sub.name }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
   </div>
 </template>
 
 <script lang="ts">
+import { PlayerPreferences } from "@/control/player-preferences";
+import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -151,6 +216,7 @@ export default defineComponent({
       page: "",
       speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
       animStyles: ["gradient", "", "none"],
+      subtitles: "",
     };
   },
   methods: {
@@ -207,6 +273,30 @@ export default defineComponent({
       this.animColorsState = s;
     },
 
+    changeSubtitle: function (s) {
+      this.subtitles = s;
+      PlayerPreferences.SetSubtitles(s);
+      SubtitlesController.OnSubtitlesChanged();
+    },
+
+    goToSubtitles: function () {
+      this.page = "subtitles";
+    },
+
+    renderSubtitle: function (subId: string, rtick: number) {
+      if (rtick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
+        return this.$t("No subtitles");
+      }
+
+      for (let sub of this.metadata.subtitles) {
+        if (sub.id === subId) {
+          return sub.name;
+        }
+      }
+
+      return this.$t("No subtitles");
+    },
+
     clickOnEnter: function (event) {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -215,7 +305,9 @@ export default defineComponent({
       }
     },
   },
-  mounted: function () {},
+  mounted: function () {
+    this.subtitles = PlayerPreferences.SelectedSubtitles;
+  },
   beforeUnmount: function () {},
   watch: {
     shown: function () {

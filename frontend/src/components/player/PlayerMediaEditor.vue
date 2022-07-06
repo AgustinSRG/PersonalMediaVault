@@ -134,15 +134,15 @@
           <tr>
             <th class="text-left">{{ $t("ID") }}</th>
             <th class="text-left">{{ $t("Name") }}</th>
-            <th class="text-right"></th>
-            <th class="text-right"></th>
+            <th class="text-right td-fit"></th>
+            <th class="text-right td-fit"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="sub in subtitles" :key="sub.id">
             <td class="bold">{{ sub.id }}</td>
             <td class="bold">{{ sub.name }}</td>
-            <td class="text-right">
+            <td class="text-right td-fit">
               <button
                 type="button"
                 class="btn btn-primary btn-xs mr-1"
@@ -151,7 +151,7 @@
                 <i class="fas fa-download"></i> {{ $t("Download") }}
               </button>
             </td>
-            <td class="text-right">
+            <td class="text-right td-fit">
               <button
                 type="button"
                 class="btn btn-danger btn-xs"
@@ -1424,5 +1424,9 @@ export default defineComponent({
   padding: 0.25rem;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.td-fit {
+  width: 1px;
 }
 </style>

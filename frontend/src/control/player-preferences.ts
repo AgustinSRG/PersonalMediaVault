@@ -21,7 +21,7 @@ export class PlayerPreferences {
 
     public static PlayTimeCache: { mid: number, time: number }[] = [];
 
-    public static AlbumCurrentCache: { id: number, pos: number}[] = [];
+    public static AlbumCurrentCache: { id: number, pos: number }[] = [];
 
     public static PlayerVolume = 1;
     public static PlayerMuted = false;
@@ -34,6 +34,8 @@ export class PlayerPreferences {
     public static ImagePlayerBackground = "default";
 
     public static ImageAutoNext = 0;
+
+    public static SelectedSubtitles = "";
 
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
@@ -70,6 +72,8 @@ export class PlayerPreferences {
         PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
 
         PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-autonext", 0);
+
+        PlayerPreferences.SelectedSubtitles = LocalStorage.Get("player-pref-subtitles", "");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -124,7 +128,7 @@ export class PlayerPreferences {
                 height: 0,
                 fps: 0,
             };
-        } else if (metadata  && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+        } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
             PlayerPreferences.UserSelectedResolution = {
                 original: false,
                 width: metadata.resolutions[index].width,
@@ -141,9 +145,9 @@ export class PlayerPreferences {
             PlayerPreferences.UserSelectedResolutionImage = {
                 original: true,
                 width: 0,
-                height: 0, 
+                height: 0,
             };
-        } else if (metadata  && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+        } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
             PlayerPreferences.UserSelectedResolutionImage = {
                 original: false,
                 width: metadata.resolutions[index].width,
@@ -261,5 +265,10 @@ export class PlayerPreferences {
     public static SetImageAutoNext(s: number) {
         PlayerPreferences.ImageAutoNext = s;
         LocalStorage.Set("player-pref-img-autonext", s);
+    }
+
+    public static SetSubtitles(s: string) {
+        PlayerPreferences.SelectedSubtitles = s;
+        LocalStorage.Set("player-pref-subtitles", s);
     }
 }
