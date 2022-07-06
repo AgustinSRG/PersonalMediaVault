@@ -2,6 +2,8 @@
 
 "use strict";
 
+import SanitizeHTML from "sanitize-html";
+
 export interface SubtitlesEntry {
     start: number;
     end: number;
@@ -37,6 +39,10 @@ function parseDurationSRT(duration: string): number {
     return result;
 }
 
+function replaceSRTHTMLFormat(text: string): string {
+    return text.replace(/[\n\r]+/g, " ").replace(/\{\\an[0-9]\}/g, "").replace(/\}\}/g, "<").replace(/\}\}/g, ">");
+}
+
 export function parseSRT(srt: string): SubtitlesEntry[] {
     const result: SubtitlesEntry[] = [];
     const lines = srt.split("\n");
@@ -48,7 +54,7 @@ export function parseSRT(srt: string): SubtitlesEntry[] {
         } else {
             if (lineBuffer.length >= 3) {
                 const durationLineParts = lineBuffer[1].split("-->");
-                const text = lineBuffer.slice(2).join("\n").trim();
+                const text = replaceSRTHTMLFormat(lineBuffer.slice(2).join("\n")).trim();
 
                 const start = parseDurationSRT(durationLineParts[0]);
                 const end = parseDurationSRT(durationLineParts[1] || durationLineParts[0]);
@@ -63,4 +69,22 @@ export function parseSRT(srt: string): SubtitlesEntry[] {
         }
     }
     return result;
+}
+
+export function sanitizeSubtitlesHTML(html: string): string {
+    return SanitizeHTML(html, {
+        allowedTags: [ 'b', 'i', 'u', 'em', 'strong', 'font', 'span' ],
+        allowedAttributes: {
+            'span': ['style'],
+            'font': ['face', 'size', 'color'],
+        },
+        allowedStyles: {
+            '*': {
+                'color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+                'background': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+                'background-color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+                'font-size': [/^\d+(?:px|em|%)$/],
+            },
+        }
+    });
 }

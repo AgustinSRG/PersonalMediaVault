@@ -23,6 +23,15 @@ export function escapeHTML(html: string): string {
 }
 
 /**
+ * Turns HTML into text (removes all tags)
+ * @param html HTML
+ * @returns Text
+ */
+export function htmlToText(html: string): string {
+    return (html + "").replace(/<[^>]*>/g, '').trim();
+}
+
+/**
  * Escapes single quotes and reverse bars
  * @param raw The raw input text
  * @returns The escaped text.

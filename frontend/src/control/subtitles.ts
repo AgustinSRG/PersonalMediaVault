@@ -69,7 +69,6 @@ export class SubtitlesController {
             url:  SubtitlesController.SubtitlesFileURL,
         }).onSuccess(srtText => {
             SubtitlesController.Subtitles = parseSRT(srtText);
-            console.log(SubtitlesController.Subtitles);
             AppEvents.Emit("subtitles-update");
         }).onRequestError(err => {
             Request.ErrorHandler()

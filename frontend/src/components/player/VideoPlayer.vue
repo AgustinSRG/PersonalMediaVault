@@ -65,7 +65,33 @@
       </div>
     </div>
 
-    <PlayerEncodingPending v-if="!loading && !videoURL && videoPending" :mid="mid" :tid="videoPendingTask" :res="currentResolution"></PlayerEncodingPending>
+    <PlayerEncodingPending
+      v-if="!loading && !videoURL && videoPending"
+      :mid="mid"
+      :tid="videoPendingTask"
+      :res="currentResolution"
+    ></PlayerEncodingPending>
+
+    <div class="player-subtitles-container">
+      <div
+        class="player-subtitles"
+        v-if="subtitles"
+        v-html="subtitles"
+        :class="{
+          'player-subtitles-s': subtitlesSize === 's',
+          'player-subtitles-m': subtitlesSize === 'm',
+          'player-subtitles-l': subtitlesSize === 'l',
+          'player-subtitles-xl': subtitlesSize === 'xl',
+          'player-subtitles-xxl': subtitlesSize === 'xxl',
+
+          'player-subtitles-bg-0': subtitlesBg === '0',
+          'player-subtitles-bg-25': subtitlesBg === '25',
+          'player-subtitles-bg-50': subtitlesBg === '50',
+          'player-subtitles-bg-75': subtitlesBg === '75',
+          'player-subtitles-bg-100': subtitlesBg === '100',
+        }"
+      ></div>
+    </div>
 
     <div
       class="player-controls"
@@ -306,7 +332,11 @@
       v-model:speed="speed"
       v-model:loop="loop"
       v-model:resolution="currentResolution"
+      v-model:subsize="subtitlesSize"
+      v-model:subbg="subtitlesBg"
+      v-model:subhtml="subtitlesHTML"
       @update:resolution="onResolutionUpdated"
+      @update:subhtml="onUpdateSubHTML"
       :rtick="internalTick"
       :metadata="metadata"
       @enter="enterControls"
@@ -353,6 +383,10 @@ import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/vmodel";
 import { MediaController } from "@/control/media";
+import { SubtitlesController } from "@/control/subtitles";
+import { htmlToText } from "@/utils/text";
+import { AppEvents } from "@/control/app-events";
+import { sanitizeSubtitlesHTML } from "@/utils/srt";
 
 export default defineComponent({
   components: {
@@ -435,6 +469,13 @@ export default defineComponent({
       contextMenuShown: false,
 
       requiresRefresh: false,
+
+      subtitles: "",
+      subtitlesStart: -1,
+      suntitlesEnd: -1,
+      subtitlesSize: "l",
+      subtitlesBg: "75",
+      subtitlesHTML: false,
     };
   },
   methods: {
@@ -495,7 +536,9 @@ export default defineComponent({
         part = thumbCount;
       }
 
-      return GetAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
+      return GetAssetURL(
+        this.metadata.video_previews.replace("{INDEX}", "" + part)
+      );
     },
 
     onResolutionUpdated: function () {
@@ -551,8 +594,14 @@ export default defineComponent({
 
       this.duration = videoElement.duration;
 
-      if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
+      if (
+        typeof this.currentTime === "number" &&
+        !isNaN(this.currentTime) &&
+        isFinite(this.currentTime) &&
+        this.currentTime >= 0
+      ) {
         videoElement.currentTime = Math.min(this.currentTime, this.duration);
+        this.updateSubtitles();
       }
 
       videoElement.playbackRate = this.speed;
@@ -569,6 +618,7 @@ export default defineComponent({
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
       }
+      this.updateSubtitles();
     },
     onCanPlay: function () {
       this.loading = false;
@@ -749,7 +799,7 @@ export default defineComponent({
       if (!video.ended) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
       }
-      
+
       this.lastTimeChangedEvent = Date.now();
 
       this.interactWithControls();
@@ -1026,11 +1076,45 @@ export default defineComponent({
     onTooltipImageError: function () {
       this.tooltipImageInvalid = true;
     },
+
+    reloadSubtitles: function () {
+      this.subtitles = "";
+      this.subtitlesStart = -1;
+      this.subtitlesEnd = -1;
+      this.updateSubtitles();
+    },
+
+    updateSubtitles: function () {
+      if (
+        this.currentTime >= this.subtitlesStart &&
+        this.currentTime <= this.subtitlesEnd
+      ) {
+        return;
+      }
+      const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
+      if (sub) {
+        this.subtitles = this.subtitlesHTML ? sanitizeSubtitlesHTML(sub.text) : htmlToText(sub.text);
+        this.subtitlesStart = sub.start;
+        this.subtitlesEnd = sub.end;
+      } else {
+        this.subtitles = "";
+        this.subtitlesStart = 0;
+        this.subtitlesEnd = 0;
+      }
+    },
+
+    onUpdateSubHTML: function () {
+      PlayerPreferences.SetSubtitlesHTML(this.subtitlesHTML);
+      this.reloadSubtitles();
+    },
   },
   mounted: function () {
     // Load player preferences
     this.muted = PlayerPreferences.PlayerMuted;
     this.volume = PlayerPreferences.PlayerVolume;
+    this.subtitlesSize = PlayerPreferences.SubtitlesSize;
+    this.subtitlesBg = PlayerPreferences.SubtitlesBackground;
+    this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
 
     this.$options.timer = setInterval(this.tick.bind(this), 100);
 
@@ -1050,6 +1134,12 @@ export default defineComponent({
     document.addEventListener(
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
+    );
+
+    this.$options.subtitlesReloadH = this.reloadSubtitles.bind(this);
+    AppEvents.AddEventListener(
+      "subtitles-update",
+      this.$options.subtitlesReloadH
     );
 
     this.initializeVideo();
@@ -1073,11 +1163,19 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+
+    AppEvents.RemoveEventListener(
+      "subtitles-update",
+      this.$options.subtitlesReloadH
+    );
   },
   watch: {
     rtick: function () {
       this.internalTick++;
       this.expandedTitle = false;
+      this.subtitles = "";
+      this.subtitlesStart = -1;
+      this.subtitlesEnd = -1;
       this.initializeVideo();
     },
     videoURL: function () {
@@ -1447,5 +1545,66 @@ export default defineComponent({
 
 .player-helptip-right {
   right: 8px;
+}
+
+.player-subtitles-container {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  bottom: 70px;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+}
+
+.player-min .player-subtitles-container {
+  bottom: 50px;
+}
+
+.player-subtitles {
+  display: inline;
+  color: white;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+
+.player-subtitles-s {
+  font-size: 14px;
+}
+
+.player-subtitles-m {
+  font-size: 16px;
+}
+
+.player-subtitles-l {
+  font-size: 24px;
+}
+
+.player-subtitles-xl {
+  font-size: 32px;
+}
+
+.player-subtitles-xxl {
+  font-size: 48px;
+}
+
+.player-subtitles-bg-0 {
+  background: transparent;
+}
+
+.player-subtitles-bg-25 {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.player-subtitles-bg-50 {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.player-subtitles-bg-75 {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.player-subtitles-bg-100 {
+  background: black;
 }
 </style>
