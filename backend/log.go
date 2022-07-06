@@ -9,11 +9,16 @@ import (
 )
 
 var (
-	log_debug_enabled = false
+	log_debug_enabled    = false
+	log_requests_enabled = false
 )
 
 func SetDebugLogEnabled(enabled bool) {
 	log_debug_enabled = enabled
+}
+
+func SetRequestLogEnabled(enabled bool) {
+	log_requests_enabled = enabled
 }
 
 func LogLine(line string) {
@@ -49,7 +54,7 @@ func LogDebug(line string) {
 }
 
 func LogRequest(r *http.Request) {
-	if log_debug_enabled {
+	if log_requests_enabled {
 		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path)
 	}
 }

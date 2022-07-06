@@ -10,7 +10,8 @@ import (
 )
 
 type BackendOptions struct {
-	debug bool // Debug mode
+	debug       bool // Debug mode
+	logRequests bool
 
 	// Run modes
 	daemon     bool
@@ -85,6 +86,8 @@ func main() {
 
 		if arg == "--debug" {
 			options.debug = true
+		} else if arg == "--log-requests" {
+			options.logRequests = true
 		} else if arg == "--help" || arg == "-h" {
 			printHelp()
 			return
@@ -149,7 +152,8 @@ func main() {
 
 		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath) // Set FFMPEG paths
 
-		SetDebugLogEnabled(options.debug) // Log debug mode
+		SetDebugLogEnabled(options.debug)         // Log debug mode
+		SetRequestLogEnabled(options.logRequests) // Log requests
 
 		// Create and initialize vault
 
@@ -206,6 +210,7 @@ func printHelp() {
 	fmt.Println("        --daemon, -d               Runs backend daemon.")
 	fmt.Println("        --init, -i                 Initializes the vault. Asks for username and password.")
 	fmt.Println("        --debug                    Enables debug mode.")
+	fmt.Println("        --log-requests             Enables logging requests to standard outout.")
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
 	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")

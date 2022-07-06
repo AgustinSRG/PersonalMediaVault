@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./personal-media-vault --daemon --debug
+./personal-media-vault --clean --daemon --debug --log-requests --cors-insecure
