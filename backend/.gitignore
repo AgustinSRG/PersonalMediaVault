@@ -8,10 +8,13 @@ backend.exe
 # Ignore temp files
 
 temp
+test.js
 
 # Ignore data folders
 
 vault
+version.txt
+version.log
 
 # Ignore .env
 

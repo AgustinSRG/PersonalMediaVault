@@ -7,10 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"time"
 )
+
+const BACKEND_VERSION = "1.0.0"
 
 type BackendOptions struct {
 	debug       bool // Debug mode
@@ -130,6 +133,7 @@ func main() {
 	}
 
 	if options.daemon || options.clean || options.initialize {
+		printVersion()
 		if !options.skipLock {
 			// Setup lockfile
 			if !TryLockVault(options.vaultPath) {
@@ -175,6 +179,15 @@ func main() {
 			fmt.Println("Error: " + err.Error())
 			os.Exit(1)
 		}
+
+		absolutePath, err := filepath.Abs(options.vaultPath)
+
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		LogInfo("Openned vault: " + absolutePath)
 
 		GLOBAL_VAULT = &vault
 
@@ -247,7 +260,18 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Println("PersonalMediaVault 1.0.0")
+	fmt.Println("---------------------------------------------------")
+	fmt.Println("-  _____    __  __  __      __")
+	fmt.Println("- |  __ \\  |  \\/  | \\ \\    / /")
+	fmt.Println("- | |__) | | \\  / |  \\ \\  / /")
+	fmt.Println("- |  ___/  | |\\/| |   \\ \\/ /")
+	fmt.Println("- | |      | |  | |    \\  /")
+	fmt.Println("- |_|      |_|  |_|     \\/")
+	fmt.Println("---------------------------------------------------")
+	fmt.Println("- Personal Media Vault")
+	fmt.Println("- Version " + BACKEND_VERSION)
+	fmt.Println("- https://github.com/AgustinSRG/PersonalMediaVault")
+	fmt.Println("---------------------------------------------------")
 }
 
 func openBrowser(opt int) {
@@ -290,6 +314,8 @@ func openBrowser(opt int) {
 
 	// Wait a bit so the server can start (1 second)
 	time.Sleep(1 * time.Second)
+
+	LogInfo("Openning frontend URL: " + url)
 
 	// Open the browser
 	var err error
