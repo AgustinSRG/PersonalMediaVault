@@ -152,6 +152,11 @@ func api_createAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p RenameAlbumAPIBody
@@ -204,6 +209,11 @@ func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	album_id, err := strconv.ParseUint(vars["id"], 10, 64)
@@ -234,6 +244,11 @@ func api_renameAlbum(response http.ResponseWriter, request *http.Request) {
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 
@@ -290,6 +305,11 @@ func api_setAlbumList(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p AlbumSetListAPIBody
@@ -343,6 +363,11 @@ func api_albumAddMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p AlbumMediaAPIBody
@@ -384,6 +409,11 @@ func api_albumRemoveMedia(response http.ResponseWriter, request *http.Request) {
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 

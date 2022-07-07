@@ -33,7 +33,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	// Unlock
 
-	key, err := cred.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
+	key, _, err := cred.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
 
 	if err != nil {
 		t.Error(err)
@@ -46,7 +46,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	// Change password
 
-	err = cred.SetCredentials("user", "password", key)
+	err = cred.SetRootCredentials("user", "password", key)
 
 	if err != nil {
 		t.Error(err)
@@ -65,19 +65,19 @@ func TestCredentialsManager(t *testing.T) {
 
 	// Check password
 
-	b := cred2.CheckCredentials("user", "password")
+	b, _ := cred2.CheckCredentials("user", "password")
 
 	if !b {
 		t.Errorf("Invalid password, but the password was valid")
 	}
 
-	b = cred2.CheckCredentials("user", "passwodd")
+	b, _ = cred2.CheckCredentials("user", "passwodd")
 
 	if b {
 		t.Errorf("Valid password, but the password was invalid")
 	}
 
-	otherKey, err := cred.UnlockVault("user", "password")
+	otherKey, _, err := cred.UnlockVault("user", "password")
 
 	if err != nil {
 		t.Error(err)

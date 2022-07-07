@@ -63,7 +63,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Check credentials
-	valid := GetVault().credentials.CheckCredentials(p.Username, p.Password)
+	valid, _ := GetVault().credentials.CheckCredentials(p.Username, p.Password)
 
 	if !valid {
 		LAST_INVALID_PASSWORD_MAP[clientIP] = now
@@ -74,7 +74,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 
 	LAST_INVALID_PASSWORD_MU.Unlock()
 
-	key, err := GetVault().credentials.UnlockVault(p.Username, p.Password)
+	key, cred_info, err := GetVault().credentials.UnlockVault(p.Username, p.Password)
 
 	if err != nil {
 		LogError(err)
@@ -82,7 +82,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	s := GetVault().sessions.CreateSession(p.Username, key)
+	s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write)
 
 	var r LoginAPIResponse
 

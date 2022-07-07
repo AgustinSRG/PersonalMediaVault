@@ -27,6 +27,11 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
@@ -276,5 +281,4 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	response.WriteHeader(200)
 
 	response.Write(jsonResult)
-
 }

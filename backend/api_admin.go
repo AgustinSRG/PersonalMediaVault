@@ -1,4 +1,4 @@
-// Account API
+// Accounts admin API
 
 package main
 
@@ -7,23 +7,12 @@ import (
 	"net/http"
 )
 
-type UsernameInfoAPIResponse struct {
+type ApiAdminAccountEntry struct {
 	Username string `json:"username"`
-	Root     bool   `json:"root"`
 	Write    bool   `json:"write"`
 }
 
-type ChangeUsernameBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type ChangePasswordBody struct {
-	Password    string `json:"password"`
-	OldPassword string `json:"old_password"`
-}
-
-func api_getUsername(response http.ResponseWriter, request *http.Request) {
+func api_getAccounts(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -31,13 +20,14 @@ func api_getUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var result UsernameInfoAPIResponse
+	if !session.root {
+		response.WriteHeader(403)
+		return
+	}
 
-	result.Username = session.user
-	result.Root = session.root
-	result.Write = session.write
+	accounts := GetVault().credentials.GetAccountsInfo()
 
-	jsonResult, err := json.Marshal(result)
+	jsonResult, err := json.Marshal(accounts)
 
 	if err != nil {
 		LogError(err)
@@ -53,7 +43,13 @@ func api_getUsername(response http.ResponseWriter, request *http.Request) {
 	response.Write(jsonResult)
 }
 
-func api_changeUsername(response http.ResponseWriter, request *http.Request) {
+type ApiAdminCreateAccountBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Write    bool   `json:"write"`
+}
+
+func api_createAccount(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -68,7 +64,7 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
-	var p ChangeUsernameBody
+	var p ApiAdminCreateAccountBody
 
 	err := json.NewDecoder(request.Body).Decode(&p)
 	if err != nil {
@@ -82,15 +78,7 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if len(p.Password) == 0 || len(p.Password) > 255 {
-		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
-		return
-	}
-
-	// Check password
-	valid, _ := GetVault().credentials.CheckCredentials(session.user, p.Password)
-
-	if !valid {
-		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
+		ReturnAPIError(response, 400, "PASSWORD_INVALID", "Invalid password.")
 		return
 	}
 
@@ -102,12 +90,10 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Change username
-	err = GetVault().credentials.ChangeUsername(session.user, p.Username)
+	err = GetVault().credentials.SetAccountCredentials(p.Username, p.Password, session.key, p.Write)
 
 	if err != nil {
 		LogError(err)
-
 		response.WriteHeader(500)
 		return
 	}
@@ -121,13 +107,17 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	GetVault().sessions.ChangeUsername(session.user, p.Username)
-
 	response.WriteHeader(200)
 	return
 }
 
-func api_changePassword(response http.ResponseWriter, request *http.Request) {
+type ApiAdminDeleteAccountBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Write    bool   `json:"write"`
+}
+
+func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -135,9 +125,14 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.root {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
-	var p ChangePasswordBody
+	var p ApiAdminDeleteAccountBody
 
 	err := json.NewDecoder(request.Body).Decode(&p)
 	if err != nil {
@@ -145,34 +140,18 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if len(p.OldPassword) == 0 || len(p.OldPassword) > 255 {
-		response.WriteHeader(400)
+	// Check username
+	exists := GetVault().credentials.CheckUserExists(p.Username)
+
+	if !exists {
+		ReturnAPIError(response, 404, "USER_NOT_FOUND", "User not found")
 		return
 	}
 
-	if len(p.Password) == 0 || len(p.Password) > 255 {
-		response.WriteHeader(400)
-		return
-	}
-
-	// Check password
-	valid, cred_info := GetVault().credentials.CheckCredentials(session.user, p.OldPassword)
-
-	if !valid {
-		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
-		return
-	}
-
-	// Change password
-	if cred_info.root && session.root {
-		err = GetVault().credentials.SetRootCredentials(session.user, p.Password, session.key)
-	} else {
-		err = GetVault().credentials.SetAccountCredentials(session.user, p.Password, session.key, session.write)
-	}
+	err = GetVault().credentials.RemoveAccount(p.Username)
 
 	if err != nil {
 		LogError(err)
-
 		response.WriteHeader(500)
 		return
 	}
@@ -185,6 +164,8 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(500)
 		return
 	}
+
+	GetVault().sessions.RemoveUserSessions(p.Username)
 
 	response.WriteHeader(200)
 	return

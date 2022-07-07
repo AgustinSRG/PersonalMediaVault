@@ -266,6 +266,11 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p MediaAPIEditTitleBody
@@ -345,6 +350,11 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p MediaAPIEditDescriptionBody
@@ -417,6 +427,11 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 
@@ -533,6 +548,12 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		response.WriteHeader(401)
 		return
 	}
+
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p ApiMediaResolutionBody
@@ -680,6 +701,11 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p ApiMediaResolutionBody
@@ -777,6 +803,11 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 

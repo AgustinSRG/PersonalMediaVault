@@ -84,6 +84,11 @@ func api_killTask(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	task_id, err := strconv.ParseUint(vars["id"], 10, 64)

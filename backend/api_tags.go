@@ -67,6 +67,11 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p TagAPISetBody
@@ -162,6 +167,11 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 

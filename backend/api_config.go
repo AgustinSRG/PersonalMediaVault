@@ -48,6 +48,11 @@ func api_setConfig(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.root {
+		response.WriteHeader(403)
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p UserConfig

@@ -23,6 +23,11 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	userConfig, err := GetVault().config.Read(session.key)
 
 	if err != nil {

@@ -31,6 +31,11 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
@@ -306,6 +311,11 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 
 	if session == nil {
 		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
 		return
 	}
 

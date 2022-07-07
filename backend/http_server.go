@@ -86,6 +86,11 @@ func RunHTTPServer() {
 	router.HandleFunc("/api/account/username", api_changeUsername).Methods("POST")
 	router.HandleFunc("/api/account/password", api_changePassword).Methods("POST")
 
+	// Admin API (Manage accounts)
+	router.HandleFunc("/api/admin/accounts", api_getAccounts).Methods("GET")
+	router.HandleFunc("/api/admin/accounts", api_createAccount).Methods("POST")
+	router.HandleFunc("/api/admin/accounts/delete", api_deleteAccount).Methods("POST")
+
 	// Assets API (get encrypted media files)
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
 	router.HandleFunc("/assets/p/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
