@@ -82,6 +82,13 @@ export default defineComponent({
   height: 40px;
   left: 0;
   width: 100%;
+}
+
+.light-theme .bottom-bar {
+  background: white;
+}
+
+.dark-theme .bottom-bar {
   background: #212121;
 }
 
@@ -116,12 +123,21 @@ export default defineComponent({
   margin-right: 1rem;
 }
 
-.bottom-bar-option:hover {
+.light-theme .bottom-bar-option:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .bottom-bar-option.selected,
+.light-theme .bottom-bar-option.selected:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .bottom-bar-option:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.bottom-bar-option.selected,
-.bottom-bar-option.selected:hover {
+.dark-theme .bottom-bar-option.selected,
+.dark-theme .bottom-bar-option.selected:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 </style>

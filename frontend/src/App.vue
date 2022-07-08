@@ -147,6 +147,14 @@ export default class App extends Vue {}
   white-space: nowrap;
 }
 
+.light-theme .btn {
+  color: black;
+}
+
+.dark-theme .btn {
+  color: white;
+}
+
 .btn-sm {
   font-size: 16px;
 }
@@ -177,11 +185,19 @@ export default class App extends Vue {}
   opacity: 0.7;
 }
 
-.btn-primary {
+.light-theme .btn-primary {
+  border: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .btn-primary:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .btn-primary {
   border: solid 1px rgba(255, 255, 255, 0.1);
 }
 
-.btn-primary:not(:disabled):hover {
+.dark-theme .btn-primary:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -210,15 +226,32 @@ export default class App extends Vue {}
   font-weight: 400;
   line-height: 1.5;
   background-clip: padding-box;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
 
+.light-theme .form-control {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: black;
+  background: white;
+}
+
+.dark-theme .form-control {
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   background: hsl(0, 0%, 7%);
 }
 
-.form-control:focus {
+.light-theme .form-control:focus {
+  color: black;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .form-control:focus {
   color: #fff;
   background: hsl(0, 0%, 7%);
   border: 1px solid rgba(255, 255, 255, 0.1);

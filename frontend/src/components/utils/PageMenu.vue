@@ -95,6 +95,13 @@ export default defineComponent({
   font-weight: bold;
   background: transparent;
   margin: 0.5rem;
+}
+
+.light-theme .paginated-menu-btn {
+  color: black;
+}
+
+.dark-theme .paginated-menu-btn {
   color: white;
 }
 
@@ -103,7 +110,11 @@ export default defineComponent({
   cursor: default;
 }
 
-.paginated-menu-btn:hover {
+.light-theme .paginated-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .paginated-menu-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -111,8 +122,14 @@ export default defineComponent({
   background: none;
 }
 
-.paginated-menu-btn.current,
-.paginated-menu-btn.current:hover {
+.light-theme .paginated-menu-btn.current,
+.light-theme .paginated-menu-btn.current:hover {
+  color: white;
+  background: black;
+}
+
+.dark-theme .paginated-menu-btn.current,
+.dark-theme .paginated-menu-btn.current:hover {
   color: black;
   background: white;
 }

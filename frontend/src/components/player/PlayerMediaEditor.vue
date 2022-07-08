@@ -1391,8 +1391,8 @@ export default defineComponent({
   height: calc(100% - 32px);
 }
 
-.form-group.border-top {
-  border-top: solid 1px rgba(255, 255, 255, 0.1);
+.border-top {
+  border-top: solid 1px var(--theme-border-color);
   padding-top: 1rem;
 }
 
@@ -1407,7 +1407,7 @@ export default defineComponent({
 }
 
 .media-tag {
-  border: solid 1px rgba(255, 255, 255, 0.1);
+  border: solid 1px var(--theme-border-color);
   border-radius: 100vw;
   display: flex;
   align-items: center;
@@ -1427,19 +1427,19 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
 }
 
 .media-tag-btn:hover {
-  color: white;
+  color: var(--theme-btn-hover-color);
 }
 
 .form-group-thumbnail {
   max-width: 100%;
   width: auto;
   height: auto;
-  border: solid 1px rgba(255, 255, 255, 0.1);
+  border: solid 1px var(--theme-border-color);
 }
 
 .btn-tag-mini {

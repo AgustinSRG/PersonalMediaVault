@@ -30,8 +30,6 @@ export default defineComponent({
   width: 100%;
   height: 100%;
 
-  background: #181818;
-
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -41,6 +39,14 @@ export default defineComponent({
   opacity: 1;
 
   z-index: 300;
+}
+
+.light-theme .loading-overlay {
+  background: white;
+}
+
+.dark-theme .loading-overlay {
+  background: #181818;
 }
 
 .loading-overlay.hidden {
@@ -55,6 +61,14 @@ export default defineComponent({
   height: 120px;
 }
 
+.light-theme .loading-overlay-loader {
+  --loader-color: #000;
+}
+
+.dark-theme .loading-overlay-loader {
+  --loader-color: #fff;
+}
+
 .loading-overlay-loader div {
   box-sizing: border-box;
   display: block;
@@ -62,10 +76,10 @@ export default defineComponent({
   width: 110px;
   height: 110px;
   margin: 8px;
-  border: 8px solid #fff;
+  border: 8px solid var(--loader-color);
   border-radius: 50%;
   animation: loading-overlay-loader 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
+  border-color: var(--loader-color) transparent transparent transparent;
 }
 
 @media (max-width: 400px) {
@@ -77,8 +91,8 @@ export default defineComponent({
     width: 42px;
     height: 42px;
     margin: 4px;
-    border: 4px solid #fff;
-    border-color: #fff transparent transparent transparent;
+    border: 4px solid var(--loader-color);
+    border-color: var(--loader-color) transparent transparent transparent;
   }
 }
 

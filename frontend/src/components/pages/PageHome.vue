@@ -348,10 +348,17 @@ export default defineComponent({
   height: 100%;
   border-radius: 4px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.light-theme .search-result-thumb-inner {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .search-result-thumb-inner {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .search-result-thumb .no-thumb {
@@ -424,7 +431,8 @@ export default defineComponent({
 
 .search-result-thumb-tag {
   position: absolute;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
   bottom: 0.5rem;
   right: 0.5rem;
   font-size: small;

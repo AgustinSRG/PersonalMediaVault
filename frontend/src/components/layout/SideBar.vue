@@ -263,11 +263,18 @@ export default defineComponent({
   width: 240px;
   max-width: 100%;
   height: 100%;
-  background: #212121;
   display: flex;
   flex-direction: column;
   transition: left 0.2s;
   z-index: 10;
+}
+
+.light-theme .side-bar {
+background: white;
+}
+
+.dark-theme .side-bar {
+background: #212121;
 }
 
 .side-bar.hidden {
@@ -302,12 +309,21 @@ export default defineComponent({
   align-items: center;
 }
 
-.side-bar-option:hover {
+.light-theme .side-bar-option:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .side-bar-option.selected,
+.light-theme .side-bar-option.selected:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .side-bar-option:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.side-bar-option.selected,
-.side-bar-option.selected:hover {
+.dark-theme .side-bar-option.selected,
+.dark-theme .side-bar-option.selected:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -331,10 +347,18 @@ export default defineComponent({
 }
 
 .side-bar-separator {
-  border-top: solid 1px rgba(255, 255, 255, 0.1);
   width: 100%;
   height: 1px;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
 }
+
+.light-theme .side-bar-separator {
+  border-top: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .side-bar-separator {
+  border-top: solid 1px var(--theme-border-color);
+}
+
 </style>

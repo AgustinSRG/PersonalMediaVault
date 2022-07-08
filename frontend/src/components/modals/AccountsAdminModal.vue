@@ -57,7 +57,7 @@
           </div>
         </div>
 
-        <form @submit="submit">
+        <form @submit="submit" class="border-top">
           <div class="form-group">
             <label>{{ $t("Account name") }}:</label>
             <input

@@ -313,7 +313,7 @@ export default defineComponent({
     height: 2.5rem;
     width: 100%;
     max-width: 500px;
-    border: solid 1px rgba(255, 255, 255, 0.1);
+    border: solid 1px var(--theme-border-color);
     padding: 0.1rem;
     display: flex;
 }

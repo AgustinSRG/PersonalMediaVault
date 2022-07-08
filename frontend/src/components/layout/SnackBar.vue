@@ -49,7 +49,6 @@ export default defineComponent({
   left: 1rem;
   bottom: 1rem;
   opacity: 1;
-  background: #212121;
   box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
     0 8px 10px -5px rgb(0 0 0 / 40%);
   padding: 1rem;
@@ -57,6 +56,14 @@ export default defineComponent({
   border-radius: 0.25rem;
   transition: bottom 0.3s, opacity 0.1s;
   z-index: 900;
+}
+
+.light-theme .snackbar {
+  background: white;
+}
+
+.dark-theme .snackbar {
+  background: #212121;
 }
 
 .snackbar.hidden {

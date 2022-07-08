@@ -1,5 +1,5 @@
 <template>
-  <div class="switch-button-container" tabindex="0" @keydown="keyToggle">
+  <div class="switch-button-container" tabindex="0" :disabled="disabled" @keydown="keyToggle">
     <div class="switch-button-control">
       <div
         class="switch-button"
@@ -24,6 +24,7 @@ export default defineComponent({
   emits: ["update:val"],
   props: {
     val: Boolean,
+    disabled: Boolean,
   },
   setup(props) {
     return {
@@ -36,6 +37,9 @@ export default defineComponent({
   },
   methods: {
     toggle: function () {
+      if (this.disabled) {
+        return;
+      }
       this.valState = !this.valState;
     },
     keyToggle: function (e) {
@@ -59,6 +63,22 @@ export default defineComponent({
   width: 100%;
 }
 
+.switch-button-container:disabled {
+  opacity: 0.7;
+}
+
+.light-theme .switch-button-container  {
+  --switch-color: black;
+  --switch-shadow-color: rgba(255, 255, 255, 0.33);
+  --switch-disabled-color: lightgray;
+}
+
+.dark-theme .switch-button-container  {
+  --switch-color: white;
+  --switch-shadow-color: rgba(0, 0, 0, 0.33);
+  --switch-disabled-color: gray;
+}
+
 .switch-button-control {
   display: flex;
   flex-direction: row;
@@ -68,18 +88,18 @@ export default defineComponent({
 .switch-button-control .switch-button {
   height: 16px;
   width: 48px;
-  box-shadow: inset 0px 0px 2px 0px rgba(0, 0, 0, 0.33);
+  box-shadow: inset 0px 0px 2px 0px var(--switch-shadow-color);
   border-radius: 16px;
   transition: all 0.1s ease-in-out;
   cursor: pointer;
-  background: gray;
+  background: var(--switch-disabled-color);
 }
 
 .switch-button-control .switch-button .button {
   height: 26px;
   width: 26px;
   border-radius: 26px;
-  background: white;
+  background: var(--switch-color);
   transition: all 0.1s ease-in-out;
   transform: translate(0, -6px);
 }
@@ -90,7 +110,7 @@ export default defineComponent({
 }
 
 .switch-button-control .switch-button.enabled .button {
-  background: white;
+  background: var(--switch-color);
   transform: translate(24px, -6px);
 }
 </style>

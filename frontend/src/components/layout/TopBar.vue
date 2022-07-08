@@ -242,13 +242,20 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 56px;
-  background: #212121;
 
   display: flex;
   justify-content: space-between;
   align-items: center;
 
   white-space: nowrap;
+}
+
+.light-theme .top-bar {
+  background: #ffffff;
+}
+
+.dark-theme .top-bar {
+  background: #212121;
 }
 
 .top-bar-logo-td {
@@ -302,8 +309,8 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
   background: transparent;
+  color: var(--theme-btn-color);
 }
 
 .top-bar-button:disabled {
@@ -311,12 +318,8 @@ export default defineComponent({
   cursor: default;
 }
 
-.top-bar-button:hover {
-  color: white;
-}
-
-.top-bar-button:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
+.top-bar-button:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 
 .top-bar-center-div {
@@ -330,28 +333,48 @@ export default defineComponent({
   height: 40px;
   display: inline-block;
   width: 480px;
-  border: 1px solid hsl(0, 0%, 18.82%);
-  background: hsla(0, 0%, 100%, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
-.top-bar-search-input-container.focused {
+.dark-theme .top-bar-search-input-container {
+  border: 1px solid hsl(0, 0%, 18.82%);
+  background: hsla(0, 0%, 100%, 0.08);
+}
+
+.light-theme .top-bar-search-input-container {
+  border: 1px solid hsl(0, 0%, 18.82%);
+  background: white;
+}
+
+.light-theme .top-bar-search-input-container.focused {
+  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .top-bar-search-input-container.focused {
   box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
 }
 
 .top-bar-search-input {
   outline: none;
   width: calc(100% - 54px);
-  color: white;
-  background: hsl(0, 0%, 7%);
   height: 38px;
   border: none;
   font-size: 16px;
   margin: 0;
   padding: 1px 4px;
+}
+
+.dark-theme .top-bar-search-input {
+  color: white;
+  background: hsl(0, 0%, 7%);
+}
+
+.light-theme .top-bar-search-input {
+  color: black;
+  background: white;
 }
 
 @media (max-width: 850px) {
@@ -395,7 +418,6 @@ export default defineComponent({
   top: calc(40px + 0.2rem);
   left: 0;
   width: calc(100% + 0.1rem);
-  background: rgba(0, 0, 0, 0.8);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s, visibility 0.1s;
@@ -406,10 +428,25 @@ export default defineComponent({
   overflow-y: auto;
 }
 
+.light-theme .top-bar-search-suggestions {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark-theme .top-bar-search-suggestions {
+  background: rgba(0, 0, 0, 0.8);
+}
+
 .top-bar-search-input-container.focused .top-bar-search-suggestions {
   transition: opacity 0.1s;
   opacity: 1;
   pointer-events: all;
+}
+
+.light-theme .top-bar-search-input-container.focused .top-bar-search-suggestions {
+  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .top-bar-search-input-container.focused .top-bar-search-suggestions {
   box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
 }
 
@@ -427,8 +464,11 @@ export default defineComponent({
   text-align: left;
 }
 
-.top-bar-search-suggestion:hover,
-.top-bar-search-suggestion:focus {
+.light-theme .top-bar-search-suggestion:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .top-bar-search-suggestion:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 </style>

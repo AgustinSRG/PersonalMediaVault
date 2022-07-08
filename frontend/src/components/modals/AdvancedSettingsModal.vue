@@ -439,15 +439,15 @@ export default defineComponent({
 .table td {
   padding: 0.75rem;
   vertical-align: top;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--theme-border-color);
 }
 
 .table thead th {
   vertical-align: bottom;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--theme-border-color);
 }
 
 .table tbody + tbody {
-  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--theme-border-color);
 }
 </style>

@@ -198,6 +198,15 @@ export default defineComponent({
   display: flex;
   margin: auto;
   flex-direction: column;
+}
+
+.light-theme .modal-dialog {
+  background: white;
+  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%), 0 6px 30px 5px rgb(255 255 255 / 12%),
+    0 8px 10px -5px rgb(255 255 255 / 40%);
+}
+
+.dark-theme .modal-dialog {
   background: #212121;
   box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
     0 8px 10px -5px rgb(0 0 0 / 40%);
@@ -247,7 +256,7 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   align-items: center;
-  border-bottom: solid 1px rgba(255, 255, 255, 0.1);
+  border-bottom: solid 1px var(--theme-border-color);
 }
 
 .modal-title {
@@ -269,7 +278,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
 }
 
@@ -278,12 +287,8 @@ export default defineComponent({
   cursor: default;
 }
 
-.modal-close-btn:hover {
-  color: white;
-}
-
-.modal-close-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
+.modal-close-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 
 .modal-body {
@@ -291,7 +296,7 @@ export default defineComponent({
 }
 
 .modal-footer {
-  border-top: solid 1px rgba(255, 255, 255, 0.1);
+  border-top: solid 1px var(--theme-border-color);
 }
 
 .modal-footer-btn {
@@ -301,7 +306,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
   text-align: left;
   padding: 1rem;
@@ -318,11 +323,7 @@ export default defineComponent({
   cursor: default;
 }
 
-.modal-footer-btn:hover {
-  color: white;
-}
-
-.modal-footer-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
+.modal-footer-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 </style>

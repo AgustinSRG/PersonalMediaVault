@@ -163,7 +163,7 @@ export default defineComponent({
   left: auto;
   right: 0;
   width: 500px;
-  border-left: solid 1px rgba(255, 255, 255, 0.1);
+  border-left: solid 1px var(--theme-border-color);
 }
 
 @media (max-width: 1000px) {
@@ -190,7 +190,7 @@ export default defineComponent({
   flex-direction: row;
   align-items: center;
 
-  border-bottom: solid 1px rgba(255, 255, 255, 0.1);
+  border-bottom: solid 1px var(--theme-border-color);
 }
 
 .page-title {
@@ -214,8 +214,9 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
+  
   background: transparent;
+  color: var(--theme-btn-color);
 }
 
 .page-header-btn:disabled {
@@ -223,12 +224,8 @@ export default defineComponent({
   cursor: default;
 }
 
-.page-header-btn:hover {
-  color: white;
-}
-
-.page-header-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
+.page-header-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 
 .page-expand-btn,

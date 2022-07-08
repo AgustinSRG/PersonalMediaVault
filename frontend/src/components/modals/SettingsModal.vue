@@ -215,7 +215,11 @@ export default defineComponent({
   width: 2rem;
 }
 
-.modal-menu-item:hover {
+.light-theme .modal-menu-item:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .modal-menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 </style>

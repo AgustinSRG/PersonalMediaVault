@@ -1,5 +1,5 @@
 <template>
-  <div class="player-container">
+  <div class="player-container dark-theme">
     <EmptyPlayer
       v-if="!mdata || mdata.type === 0"
       :mid="mid"
@@ -200,7 +200,6 @@ export default defineComponent({
   height: calc(100% - 57px);
   left: 0;
   width: 100%;
-  background: blue;
   overflow: auto;
 }
 

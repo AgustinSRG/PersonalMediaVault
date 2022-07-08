@@ -440,7 +440,7 @@ export default defineComponent({
   height: calc(100% - 57px);
   right: 0;
   width: 500px;
-  border-left: solid 1px rgba(255, 255, 255, 0.1);
+  border-left: solid 1px var(--theme-border-color);
   display: none;
 }
 
@@ -476,7 +476,7 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 114px;
-  border-bottom: solid 1px rgba(255, 255, 255, 0.1);
+  border-bottom: solid 1px var(--theme-border-color);
 
   display: flex;
   flex-direction: column;
@@ -549,7 +549,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
   border-radius: 100vw;
 }
@@ -562,12 +562,16 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 20px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
   border-radius: 100vw;
 }
 
-.album-header-btn.toggled {
+.light-theme .album-header-btn.toggled {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .album-header-btn.toggled {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -579,7 +583,7 @@ export default defineComponent({
 
 .album-header-btn:not(:disabled):hover,
 .album-body-btn:not(:disabled):hover {
-  color: white;
+  color: var(--theme-btn-hover-color);
 }
 
 .album-body-item {
@@ -590,12 +594,21 @@ export default defineComponent({
   cursor: pointer;
 }
 
-.album-body-item:hover {
+.light-theme .album-body-item:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .album-body-item.current,
+.light-theme .album-body-item.current:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .album-body-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.album-body-item.current,
-.album-body-item.current:hover {
+.dark-theme .album-body-item.current,
+.dark-theme .album-body-item.current:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -608,6 +621,13 @@ export default defineComponent({
   align-items: center;
   border-radius: 4px;
   overflow: hidden;
+}
+
+.light-theme .album-body-item-thumbnail {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .album-body-item-thumbnail {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -618,7 +638,8 @@ export default defineComponent({
 
 .album-body-item-thumb-tag {
   position: absolute;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
   bottom: 0.25rem;
   right: 0.25rem;
   font-size: small;
@@ -627,7 +648,8 @@ export default defineComponent({
 
 .album-body-item-thumb-pos {
   position: absolute;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
   top: 0.25rem;
   left: 0.25rem;
   font-size: small;

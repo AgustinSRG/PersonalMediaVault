@@ -401,7 +401,7 @@ export default defineComponent({
   width: 100%;
   height: 240px;
 
-  border: dotted 2px rgba(255, 255, 255, 0.1);
+  border: dotted 2px var(--theme-border-color);
 
   align-items: center;
   justify-content: center;
@@ -410,8 +410,13 @@ export default defineComponent({
   cursor: pointer;
 }
 
-.upload-box:hover,
-.upload-box.dragging {
+.light-theme .upload-box:hover,
+.light-theme .upload-box.dragging {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .upload-box:hover,
+.dark-theme .upload-box.dragging {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -427,8 +432,8 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.75);
   background: transparent;
+  color: var(--theme-btn-color);
 }
 
 .table-btn:disabled {
@@ -436,11 +441,8 @@ export default defineComponent({
   cursor: default;
 }
 
-.table-btn:hover {
-  color: white;
+.table-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 
-.table-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
-}
 </style>

@@ -318,8 +318,29 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 100%;
+  
+}
+
+.main-layout.light-theme {
+  background: #f9f9f9;
+}
+
+.light-theme {
+  color: black;
+  --theme-btn-hover-color: black;
+  --theme-btn-color: rgba(0, 0, 0, 0.75);
+  --theme-border-color: rgba(0, 0, 0, 0.1);
+}
+
+.main-layout.dark-theme {
   background: #181818;
+}
+
+.dark-theme {
   color: white;
+  --theme-btn-hover-color: white;
+  --theme-btn-color: rgba(255, 255, 255, 0.75);
+  --theme-border-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-float-overlay {
