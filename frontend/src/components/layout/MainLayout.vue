@@ -241,6 +241,28 @@ export default defineComponent({
 
     AppEvents.AddEventListener("auth-status-changed", (locked: boolean) => {
       this.locked = locked;
+
+      if (this.locked) {
+        // Close all modals
+        this.displayLogout = false;
+        this.displaySettings = false;
+        this.displayTheme = false;
+        this.displayLang = false;
+        this.displayUsernameModal = false;
+        this.displayPasswordModal = false;
+        this.displayAdvancedSettings = false;
+
+        this.displayAlbumCreate = false;
+        this.displayAlbumList = false;
+        this.displayAlbumRename = false;
+        this.displayAlbumDelete = false;
+
+        this.displayMediaDelete = false;
+
+        this.displayResolutionConfirmation = false;
+
+        this.displaySubtitlesDelete = false;
+      }
     });
 
     AppEvents.AddEventListener("auth-status-loading", (l: boolean) => {

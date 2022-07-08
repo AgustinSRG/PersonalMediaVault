@@ -14,6 +14,7 @@
         </div>
         <div class="search-results-option text-right">
           <button
+            v-if="canWrite"
             type="button"
             @click="createAlbum"
             class="btn btn-primary btn-sm"
@@ -179,6 +180,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
+import { AuthController } from "@/control/auth";
 
 export default defineComponent({
   name: "PageAlbums",
@@ -208,6 +210,8 @@ export default defineComponent({
       loadingFiller: [],
 
       pageSizeOptions: [],
+
+      canWrite: AuthController.CanWrite,
     };
   },
   methods: {
@@ -344,6 +348,10 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    updateAuthInfo: function () {
+      this.canWrite = AuthController.CanWrite;
+    },
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
@@ -354,6 +362,13 @@ export default defineComponent({
     AppEvents.AddEventListener(
       "app-status-update",
       this.$options.statusChangeH
+    );
+
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
     );
 
     AppEvents.AddEventListener("albums-loading", this.$options.loadingH);
@@ -377,6 +392,11 @@ export default defineComponent({
 
     AppEvents.RemoveEventListener("albums-loading", this.$options.loadingH);
     AppEvents.RemoveEventListener("albums-update", this.$options.loadH);
+
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
   watch: {
     display: function () {

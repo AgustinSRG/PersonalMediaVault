@@ -37,6 +37,7 @@
           </button>
 
           <button
+            v-if="canWrite"
             type="button"
             :title="$t('Rename')"
             class="album-header-btn"
@@ -46,6 +47,7 @@
           </button>
 
           <button
+            v-if="canWrite"
             type="button"
             :title="$t('Delete')"
             class="album-header-btn"
@@ -102,6 +104,7 @@
         </div>
 
         <button
+          v-if="canWrite"
           type="button"
           :title="$t('Options')"
           class="album-body-btn"
@@ -139,6 +142,7 @@ import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
@@ -174,6 +178,8 @@ export default defineComponent({
 
       loop: false,
       random: false,
+
+      canWrite: AuthController.CanWrite,
     };
   },
   methods: {
@@ -360,6 +366,13 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    updateAuthInfo: function () {
+      this.canWrite = AuthController.CanWrite;
+      if (this.$options.sortable) {
+        this.$options.sortable.option("disabled", !this.canWrite);
+      }
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -378,11 +391,19 @@ export default defineComponent({
     this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
     AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
 
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
+
     // Sortable
     if (!isTouchDevice()) {
       var element = this.$el.querySelector(".album-body");
       this.$options.sortable = Sortable.create(element, {
         onUpdate: this.onUpdateSortable.bind(this),
+        disabled: !this.canWrite,
       });
     }
   },
@@ -397,6 +418,11 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
 
     // Sortable
     if (this.$options.sortable) {

@@ -6,13 +6,14 @@
         <input
           type="text"
           autocomplete="off"
+          :readonly="!canWrite"
           maxlength="255"
           :disabled="busy"
           v-model="title"
           class="form-control form-control-full-width"
         />
       </div>
-      <div class="form-group">
+      <div class="form-group" v-if="canWrite">
         <button
           type="submit"
           class="btn btn-primary btn-sm"
@@ -26,12 +27,13 @@
       <label>{{ $t("Description") }}:</label>
       <textarea
         v-model="desc"
+        :readonly="!canWrite"
         class="form-control form-control-full-width form-textarea"
         rows="3"
         :disabled="busy"
       ></textarea>
     </div>
-    <div class="form-group">
+    <div class="form-group" v-if="canWrite">
       <button
         type="button"
         class="btn btn-primary btn-sm"
@@ -51,6 +53,7 @@
       <div v-for="tag in tags" :key="tag" class="media-tag">
         <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
         <button
+          v-if="canWrite"
           type="button"
           :title="$t('Remove tag')"
           class="media-tag-btn"
@@ -60,7 +63,7 @@
         </button>
       </div>
     </div>
-    <form @submit="addTag">
+    <form @submit="addTag" v-if="canWrite">
       <div class="form-group">
         <label>{{ $t("Tag to add") }}:</label>
         <input
@@ -108,7 +111,7 @@
         class="form-group-thumbnail"
       />
     </div>
-    <div class="form-group">
+    <div class="form-group" v-if="canWrite">
       <input
         type="file"
         class="file-hidden"
@@ -135,7 +138,7 @@
             <th class="text-left">{{ $t("ID") }}</th>
             <th class="text-left">{{ $t("Name") }}</th>
             <th class="text-right td-fit"></th>
-            <th class="text-right td-fit"></th>
+            <th class="text-right td-fit" v-if="canWrite"></th>
           </tr>
         </thead>
         <tbody>
@@ -151,7 +154,7 @@
                 <i class="fas fa-download"></i> {{ $t("Download") }}
               </button>
             </td>
-            <td class="text-right td-fit">
+            <td class="text-right td-fit" v-if="canWrite">
               <button
                 type="button"
                 class="btn btn-danger btn-xs"
@@ -165,7 +168,7 @@
       </table>
     </div>
 
-    <div class="form-group" v-if="type === 2 || type === 3">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <label
         >{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label
       >
@@ -196,7 +199,7 @@
         <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
       </button>
     </div>
-    <div class="form-group" v-if="type === 2 || type === 3">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Subtitles identifier") }}:</label>
       <input
         type="text"
@@ -207,7 +210,7 @@
         class="form-control"
       />
     </div>
-    <div class="form-group" v-if="type === 2 || type === 3">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Subtitles name") }}:</label>
       <input
         type="text"
@@ -218,7 +221,7 @@
         class="form-control"
       />
     </div>
-    <div class="form-group" v-if="type === 2 || type === 3">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <button
         type="button"
         class="btn btn-primary btn-sm"
@@ -228,7 +231,7 @@
         <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
       </button>
     </div>
-    <div class="form-group border-top" v-if="type === 2 || type === 1">
+    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
       <label v-if="type === 2"
         >{{
           $t(
@@ -245,7 +248,7 @@
       >
     </div>
 
-    <div class="form-group" v-if="type === 2 || type === 1">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
       <label v-if="type === 1"
         >{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label
       >
@@ -254,7 +257,7 @@
       </label>
     </div>
 
-    <div v-if="type === 2 || type === 1" class="table-responsive">
+    <div v-if="canWrite && (type === 2 || type === 1)" class="table-responsive">
       <table class="table">
         <thead>
           <tr>
@@ -292,14 +295,14 @@
         </tbody>
       </table>
     </div>
-    <div class="form-group border-top">
+    <div class="form-group border-top" v-if="canWrite">
       <label>{{
         $t(
           "If the media resource did not encode properly, try using the button below. If it still does not work, try re-uploading the media."
         )
       }}</label>
     </div>
-    <div class="form-group">
+    <div class="form-group" v-if="canWrite">
       <button
         type="button"
         class="btn btn-primary btn-sm"
@@ -309,12 +312,12 @@
         <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
       </button>
     </div>
-    <div class="form-group border-top">
+    <div class="form-group border-top" v-if="canWrite">
       <label>{{
         $t("If you want to delete this media resource, click the button below.")
       }}</label>
     </div>
-    <div class="form-group">
+    <div class="form-group" v-if="canWrite">
       <button
         type="button"
         class="btn btn-danger btn-sm"
@@ -333,6 +336,7 @@ import { TagsAPI } from "@/api/api-tags";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/consts";
@@ -448,6 +452,8 @@ export default defineComponent({
       srtName: "English",
 
       busy: false,
+
+      canWrite: AuthController.CanWrite,
     };
   },
 
@@ -1318,6 +1324,10 @@ export default defineComponent({
       link.href = GetAssetURL(sub.url);
       link.click();
     },
+
+    updateAuthInfo: function () {
+      this.canWrite = AuthController.CanWrite;
+    },
   },
 
   mounted: function () {
@@ -1334,6 +1344,13 @@ export default defineComponent({
     this.$options.tagUpdateH = this.updateTagData.bind(this);
 
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
 
   beforeUnmount: function () {
@@ -1343,6 +1360,11 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
 
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);

@@ -176,6 +176,7 @@
 
       <div class="player-controls-right">
         <button
+          v-if="canwrite"
           type="button"
           :title="$t('Manage albums')"
           class="player-btn"
@@ -405,6 +406,8 @@ export default defineComponent({
     next: Object,
     prev: Object,
     inalbum: Boolean,
+
+    canwrite: Boolean,
   },
   setup(props) {
     return {

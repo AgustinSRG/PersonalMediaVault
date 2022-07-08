@@ -52,6 +52,7 @@
           </tr>
 
           <tr
+            v-if="isRoot"
             class="modal-menu-item"
             tabindex="0"
             @keydown="clickOnEnter"
@@ -76,6 +77,7 @@
           </tr>
 
           <tr
+            v-if="isRoot"
             class="modal-menu-item"
             tabindex="0"
             @keydown="clickOnEnter"
@@ -93,6 +95,8 @@
 </template>
 
 <script lang="ts">
+import { AppEvents } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -105,6 +109,12 @@ export default defineComponent({
   setup(props) {
     return {
       displayStatus: useVModel(props, "display"),
+    };
+  },
+  data: function () {
+    return {
+      isRoot: AuthController.IsRoot,
+      canWrite: AuthController.CanWrite,
     };
   },
   methods: {
@@ -128,6 +138,25 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    updateAuthInfo: function () {
+      this.isRoot = AuthController.IsRoot;
+      this.canWrite = AuthController.CanWrite;
+    },
+  },
+  mounted: function () {
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
+  },
+  beforeUnmount: function () {
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
   watch: {
     display: function () {

@@ -14,6 +14,9 @@ export class AuthController {
     public static Fingerprint = "";
     public static Loading = true;
 
+    public static IsRoot = false;
+    public static CanWrite = false;
+
     public static Initialize() {
         AuthController.Session = getCookie("x-session-token");
         AuthController.Fingerprint = getCookie("x-vault-fingerprint");
@@ -27,6 +30,8 @@ export class AuthController {
         Timeouts.Abort("auth-control-check");
         Request.Pending("auth-control-check", AccountAPI.GetUsername()).onSuccess(response => {
             AuthController.Locked = false;
+            AuthController.IsRoot = response.root;
+            AuthController.CanWrite = response.write;
             AuthController.Username = response.username;
             AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
             AuthController.Loading = false;

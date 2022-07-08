@@ -62,6 +62,7 @@
       </div>
 
       <div
+        v-if="canWrite"
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'upload' }"
         tabindex="0"
@@ -120,6 +121,7 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -140,6 +142,8 @@ export default defineComponent({
       album: AppStatus.CurrentAlbum,
       layout: AppStatus.CurrentLayout,
       search: AppStatus.CurrentSearch,
+
+      canWrite: AuthController.CanWrite,
 
       albums: [],
     };
@@ -199,6 +203,10 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    updateAuthInfo: function () {
+      this.canWrite = AuthController.CanWrite;
+    },
   },
   mounted: function () {
     this.$options.statusUpdater = this.updateStatus.bind(this);
@@ -212,6 +220,13 @@ export default defineComponent({
 
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
 
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
+
     this.updateStatus();
     this.updateAlbums();
   },
@@ -222,6 +237,11 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
+
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
   watch: {
     display: function () {

@@ -173,6 +173,7 @@
 
       <div class="player-controls-right">
         <button
+          v-if="canwrite"
           type="button"
           :title="$t('Manage albums')"
           class="player-btn"
@@ -409,6 +410,8 @@ export default defineComponent({
     next: Object,
     prev: Object,
     inalbum: Boolean,
+
+    canwrite: Boolean,
   },
   setup(props) {
     return {
@@ -1093,7 +1096,9 @@ export default defineComponent({
       }
       const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
       if (sub) {
-        this.subtitles = this.subtitlesHTML ? sanitizeSubtitlesHTML(sub.text) : htmlToText(sub.text);
+        this.subtitles = this.subtitlesHTML
+          ? sanitizeSubtitlesHTML(sub.text)
+          : htmlToText(sub.text);
         this.subtitlesStart = sub.start;
         this.subtitlesEnd = sub.end;
       } else {

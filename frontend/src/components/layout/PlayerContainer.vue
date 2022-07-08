@@ -8,6 +8,7 @@
       :prev="prev"
       :next="next"
       :inalbum="isInAlbum"
+      :canwrite="canWrite"
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
@@ -20,6 +21,7 @@
       :prev="prev"
       :next="next"
       :inalbum="isInAlbum"
+      :canwrite="canWrite"
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
@@ -34,6 +36,7 @@
       :prev="prev"
       :next="next"
       :inalbum="isInAlbum"
+      :canwrite="canWrite"
       @gonext="goNext"
       @ended="goNext"
       @goprev="goPrev"
@@ -48,6 +51,7 @@
       :prev="prev"
       :next="next"
       :inalbum="isInAlbum"
+      :canwrite="canWrite"
       @gonext="goNext"
       @ended="goNext"
       @goprev="goPrev"
@@ -68,6 +72,7 @@ import VideoPlayer from "@/components/player/VideoPlayer.vue";
 import ImagePlayer from "@/components/player/ImagePlayer.vue";
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 
 export default defineComponent({
   name: "PlayerContainer",
@@ -92,6 +97,8 @@ export default defineComponent({
       prev: AlbumsController.CurrentPrev,
       next: AlbumsController.CurrentNext,
       isInAlbum: AppStatus.CurrentAlbum >= 0,
+
+      canWrite: AuthController.CanWrite,
     };
   },
   methods: {
@@ -142,6 +149,10 @@ export default defineComponent({
       this.next = AlbumsController.CurrentNext;
       this.isInAlbum = AppStatus.CurrentAlbum >= 0;
     },
+
+    updateAuthInfo: function () {
+      this.canWrite = AuthController.CanWrite;
+    },
   },
   mounted: function () {
     this.$options.loadingH = this.updateLoading.bind(this);
@@ -154,6 +165,13 @@ export default defineComponent({
 
     this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
     AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+
+    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+    AppEvents.AddEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -166,6 +184,11 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+
+    AppEvents.RemoveEventListener(
+      "auth-status-changed",
+      this.$options.authUpdateH
+    );
   },
 });
 </script>

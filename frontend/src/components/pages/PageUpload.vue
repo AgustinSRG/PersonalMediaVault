@@ -296,6 +296,10 @@ export default defineComponent({
               m.status = "error";
               AppEvents.Emit("unauthorized");
             })
+            .add(403, "*", () => {
+              m.error = this.$t("Access denied");
+              m.status = "error";
+            })
             .add(500, "*", () => {
               m.error = this.$t("Internal server error");
               m.status = "error";

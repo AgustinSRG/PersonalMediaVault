@@ -172,6 +172,8 @@ export default defineComponent({
     next: Object,
     prev: Object,
     inalbum: Boolean,
+
+    canwrite: Boolean,
   },
   setup(props) {
     return {

@@ -17,10 +17,7 @@
     @keydown="onKeyPress"
     @contextmenu="onContextMenu"
   >
-    <div
-      class="image-scroller"
-      @mousedown="grabScroll"
-    >
+    <div class="image-scroller" @mousedown="grabScroll">
       <img
         v-if="imageURL"
         :src="imageURL"
@@ -45,7 +42,12 @@
       </div>
     </div>
 
-    <PlayerEncodingPending v-if="!loading && !imageURL && imagePending" :mid="mid" :tid="imagePendingTask" :res="currentResolution"></PlayerEncodingPending>
+    <PlayerEncodingPending
+      v-if="!loading && !imageURL && imagePending"
+      :mid="mid"
+      :tid="imagePendingTask"
+      :res="currentResolution"
+    ></PlayerEncodingPending>
 
     <div
       class="player-controls"
@@ -69,12 +71,7 @@
           <i class="fas fa-backward-step"></i>
         </button>
 
-        <button
-          disabled
-          type="button"
-          :title="$t('Play')"
-          class="player-btn"
-        >
+        <button disabled type="button" :title="$t('Play')" class="player-btn">
           <i class="fas fa-play"></i>
         </button>
 
@@ -107,6 +104,7 @@
 
       <div class="player-controls-right">
         <button
+          v-if="canwrite"
           type="button"
           :title="$t('Manage albums')"
           class="player-btn"
@@ -270,7 +268,13 @@ export default defineComponent({
     PlayerEncodingPending,
   },
   name: "ImagePlayer",
-  emits: ["gonext", "goprev", "update:fullscreen", "update:showcontrols", "albums-open"],
+  emits: [
+    "gonext",
+    "goprev",
+    "update:fullscreen",
+    "update:showcontrols",
+    "albums-open",
+  ],
   props: {
     mid: Number,
     metadata: Object,
@@ -283,6 +287,8 @@ export default defineComponent({
     next: Object,
     prev: Object,
     inalbum: Boolean,
+
+    canwrite: Boolean,
   },
   setup(props) {
     return {
@@ -317,7 +323,7 @@ export default defineComponent({
       fit: true,
       scaleShown: isTouchDevice(),
 
-      background: 'default',
+      background: "default",
 
       internalTick: 0,
 
@@ -379,13 +385,19 @@ export default defineComponent({
       const rect = scroller.getBoundingClientRect();
 
       const maxScrollLeft = scroller.scrollWidth - rect.width;
-      const maxScrollTop =  scroller.scrollHeight - rect.height;
+      const maxScrollTop = scroller.scrollHeight - rect.height;
 
       const diffX = x - this.scrollGrabX;
       const diffY = y - this.scrollGrabY;
 
-      scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
-      scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
+      scroller.scrollTop = Math.max(
+        0,
+        Math.min(maxScrollTop, this.scrollGrabTop - diffY)
+      );
+      scroller.scrollLeft = Math.max(
+        0,
+        Math.min(maxScrollLeft, this.scrollGrabLeft - diffX)
+      );
     },
 
     dropScroll: function (e) {
@@ -842,9 +854,9 @@ export default defineComponent({
     document.removeEventListener("mousemove", this.$options.moveScrollHandler);
 
     if (this.$options.autoNextTimer) {
-        clearTimeout(this.$options.autoNextTimer);
-        this.$options.autoNextTimer = null;
-      }
+      clearTimeout(this.$options.autoNextTimer);
+      this.$options.autoNextTimer = null;
+    }
   },
   watch: {
     rtick: function () {
