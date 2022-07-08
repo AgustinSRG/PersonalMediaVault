@@ -81,6 +81,19 @@
             class="modal-menu-item"
             tabindex="0"
             @keydown="clickOnEnter"
+            @click="clickOnOption('admin')"
+          >
+            <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Administrate accounts") }}
+            </td>
+          </tr>
+
+          <tr
+            v-if="isRoot"
+            class="modal-menu-item"
+            tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('advanced')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>

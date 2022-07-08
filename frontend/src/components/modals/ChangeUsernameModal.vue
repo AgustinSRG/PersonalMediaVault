@@ -130,6 +130,9 @@ export default defineComponent({
         .onRequestError((err) => {
           this.busy = false;
           Request.ErrorHandler()
+          .add(400, "USERNAME_IN_USE", () => {
+              this.error = this.$t("The username is already in use");
+            })
             .add(400, "*", () => {
               this.error = this.$t("Invalid username provided");
             })

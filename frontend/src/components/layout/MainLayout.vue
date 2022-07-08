@@ -67,6 +67,14 @@
       v-model:display="displaySubtitlesDelete"
     ></SubtitlesDeleteModal>
 
+    <AccountsAdminModal
+      v-model:display="displayAccountAdmin"
+    ></AccountsAdminModal>
+
+    <AccountDeleteModal
+      v-model:display="displayAccountDelete"
+    ></AccountDeleteModal>
+
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
     <LoadingOverlay
@@ -104,6 +112,8 @@ import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
+import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
+import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -136,6 +146,8 @@ export default defineComponent({
     MediaDeleteModal,
     ResolutionConfirmationModal,
     SubtitlesDeleteModal,
+    AccountsAdminModal,
+    AccountDeleteModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -169,6 +181,9 @@ export default defineComponent({
 
       displaySubtitlesDelete: false,
 
+      displayAccountAdmin: false,
+      displayAccountDelete: false,
+
       displaySidebar: true,
     };
   },
@@ -197,6 +212,9 @@ export default defineComponent({
           break;
         case "advanced":
           this.displayAdvancedSettings = true;
+          break;
+        case "admin":
+          this.displayAccountAdmin = true;
           break;
       }
     },
@@ -262,6 +280,9 @@ export default defineComponent({
         this.displayResolutionConfirmation = false;
 
         this.displaySubtitlesDelete = false;
+
+        this.displayAccountAdmin = false;
+        this.displayAccountDelete = false;
       }
     });
 
