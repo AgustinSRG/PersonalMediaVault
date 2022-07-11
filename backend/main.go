@@ -230,7 +230,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println("Usage: personal-media-vault [OPTIONS]")
+	fmt.Println("Usage: pmv [OPTIONS]")
 	fmt.Println("    OPTIONS:")
 	fmt.Println("        --help, -h                 Prints command line options.")
 	fmt.Println("        --version, -v              Prints version.")

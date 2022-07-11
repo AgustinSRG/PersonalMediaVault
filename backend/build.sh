@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go build -o personal-media-vault
+go build -o pmv

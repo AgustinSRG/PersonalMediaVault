@@ -13,23 +13,23 @@ go get github.com/AgustinSRG/PersonalMediaVault/backend
 To compile the code type:
 
 ```
-go build -o personal-media-vault
+go build -o pmv
 ```
 
-The build command will create a binary in the currenct directory, called `personal-media-vault`, or `personal-media-vault.exe` if you are using Windows.
+The build command will create a binary in the currenct directory, called `pmv`, or `pmv.exe` if you are using Windows.
 
 ## Usage
 
-In order to run the project, you can run the `personal-media-vault` binary.
+In order to run the project, you can run the `pmv` binary.
 
 In order to see the options, use:
 
 ```
-personal-media-vault --help
+pmv --help
 ```
 
 In order to run the daemon, use:
 
 ```
-personal-media-vault --daemon [OPTIONS]
+pmv --daemon [OPTIONS]
 ```
