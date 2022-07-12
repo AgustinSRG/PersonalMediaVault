@@ -15,7 +15,7 @@ module.exports = defineConfig({
     },
     pwa: {
       name: "Personal Media Vault",
-      themeColor: "#212121",
+      themeColor: "#FF0000",
       manifestOptions: {
         display: "minimal-ui",
       },
