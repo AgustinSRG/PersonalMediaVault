@@ -3,11 +3,13 @@
 package main
 
 import (
+	"mime"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -54,12 +56,12 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func corsHeadInsecure() http.Handler {
+func corsHeadInsecure(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(200)
 		} else {
-			w.WriteHeader(404)
+			next.ServeHTTP(w, r)
 		}
 	})
 }
@@ -157,10 +159,12 @@ func RunHTTPServer() {
 	}
 
 	if CORS_INSECURE_MODE_ENABLED {
-		router.PathPrefix("/").Handler(corsHeadInsecure())
-	} else {
-		router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
+		router.Use(corsHeadInsecure)
 	}
+
+	mime.AddExtensionType(".js", "text/javascript")
+
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
 
 	// Run server
 
@@ -196,7 +200,7 @@ func runHTTPSecureServer(wg *sync.WaitGroup, router *mux.Router) {
 	if certFile != "" && keyFile != "" {
 		// Listen
 		LogInfo("[SSL] Listening on " + bind_addr + ":" + strconv.Itoa(ssl_port))
-		errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, router)
+		errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, handlers.CompressHandler(router))
 
 		if errSSL != nil {
 			LogError(errSSL)
@@ -222,7 +226,7 @@ func runHTTPServer(wg *sync.WaitGroup, router *mux.Router) {
 
 	// Listen
 	LogInfo("[HTTP] Listening on " + bind_addr + ":" + strconv.Itoa(tcp_port))
-	errHTTP := http.ListenAndServe(bind_addr+":"+strconv.Itoa(tcp_port), router)
+	errHTTP := http.ListenAndServe(bind_addr+":"+strconv.Itoa(tcp_port), handlers.CompressHandler(router))
 
 	if errHTTP != nil {
 		LogError(errHTTP)
