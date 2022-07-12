@@ -1,0 +1,11 @@
+out
+build
+debug
+release
+release32
+.vscode
+.vs
+subprojects
+CMakeFiles
+**/CMakeFiles
+**/Makefile
