@@ -66,6 +66,17 @@ func corsHeadInsecure(next http.Handler) http.Handler {
 	})
 }
 
+func cacheTTLAdd(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			w.Header().Set("Cache-Control", "no-cache")
+		} else {
+			w.Header().Set("Cache-Control", "max-age=31536000")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func RunHTTPServer() {
 	router := mux.NewRouter()
 
@@ -164,6 +175,7 @@ func RunHTTPServer() {
 
 	mime.AddExtensionType(".js", "text/javascript")
 
+	router.Use(cacheTTLAdd)
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
 
 	// Run server
