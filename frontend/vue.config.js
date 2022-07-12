@@ -13,12 +13,13 @@ module.exports = defineConfig({
       compositionOnly: true,
       fullInstall: true
     },
-    pwa: {
-      name: "Personal Media Vault",
-      themeColor: "#FF0000",
-      manifestOptions: {
-        display: "minimal-ui",
-      },
+  },
+
+  pwa: {
+    name: "Personal Media Vault",
+    themeColor: "#FF0000",
+    manifestOptions: {
+      display: "minimal-ui",
     },
-  }
+  },
 })
