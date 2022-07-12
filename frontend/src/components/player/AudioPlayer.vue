@@ -10,12 +10,12 @@
     @mousemove="playerMouseMove"
     @click="clickPlayer"
     @mousedown="hideContext"
-    @touchstart="hideContext"
+    @toutchstart.passive="hideContext"
     @dblclick="toggleFullScreen"
     @mouseleave="mouseLeavePlayer"
     @mouseup="playerMouseUp"
     @touchmove="playerMouseMove"
-    @touchend="playerMouseUp"
+    @touchend.passive="playerMouseUp"
     @keydown="onKeyPress"
     @contextmenu="onContextMenu"
   >
@@ -299,7 +299,7 @@
       @dblclick="stopPropagationEvent"
       @click="stopPropagationEvent"
       @mousedown="grabTimeline"
-      @touchstart="grabTimeline"
+      @toutchstart.passive="grabTimeline"
     >
       <div class="player-timeline-back"></div>
       <div

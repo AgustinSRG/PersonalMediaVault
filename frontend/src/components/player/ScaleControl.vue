@@ -14,7 +14,7 @@
       :class="{ hidden: !expanded }"
       :style="{ width: computeBarContainerWidth(width) }"
       @mousedown="grabScale"
-      @touchstart="grabScale"
+      @toutchstart.passive="grabScale"
     >
       <div
         class="player-scale-bar-container"

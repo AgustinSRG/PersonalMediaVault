@@ -64,7 +64,7 @@
     <div
       v-show="!loading && albumData"
       class="album-body"
-      @scroll="closeOptionsMenu"
+      @scroll.passive="closeOptionsMenu"
     >
       <div
         v-for="(item, i) in albumList"
@@ -110,7 +110,7 @@
           class="album-body-btn"
           @click="showOptions(item, i, $event)"
           @mousedown="stopPropagationEvent"
-          @touchstart="stopPropagationEvent"
+          @toutchstart.passive="stopPropagationEvent"
         >
           <i class="fas fa-bars"></i>
         </button>

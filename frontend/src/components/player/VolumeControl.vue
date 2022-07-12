@@ -6,7 +6,7 @@
     @mouseenter="onEnter"
     @mouseleave="onLeave"
   >
-    <button class="player-volume-btn" @click="clickOnVolumeButton">
+    <button class="player-volume-btn" @click="clickOnVolumeButton" :title="$t('Volume')">
       <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>
       <i v-if="!muted && volume <= 0" class="fas fa-volume-off"></i>
       <i
@@ -20,7 +20,7 @@
       :class="{ hidden: !expanded }"
       :style="{ width: computeBarContainerWidth(width) }"
       @mousedown="grabVolume"
-      @touchstart="grabVolume"
+      @toutchstart.passive="grabVolume"
     >
       <div
         class="player-volume-bar-container"

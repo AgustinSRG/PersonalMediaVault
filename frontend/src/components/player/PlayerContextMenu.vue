@@ -15,7 +15,7 @@
     }"
     tabindex="-1"
     @mousedown="stopPropagationEvent"
-    @touchstart="stopPropagationEvent"
+    @toutchstart.passive="stopPropagationEvent"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
   >
