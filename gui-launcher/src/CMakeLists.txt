@@ -22,9 +22,9 @@ SET(SOURCES_RC
 )
 
 # Win app
-add_executable (PersonalMediaVault WIN32 
+add_executable (pmv-launcher WIN32 
     "main_win.cpp" "main_win.h"
     ${SOURCES_RC}
 )
 
-target_link_libraries(PersonalMediaVault ${wxWidgets_LIBRARIES})
+target_link_libraries(pmv-launcher ${wxWidgets_LIBRARIES})

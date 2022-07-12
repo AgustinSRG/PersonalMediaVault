@@ -23,6 +23,6 @@ bool App::OnInit()
 
 int mainEntryPoint(App &app, int argc, char *argv[])
 {
-     wxMessageBox(wxString("Hello world"), wxT("Test"), wxICON_ERROR);
-    return 0;
+    wxMessageBox(wxString("Hello world"), wxT("Test"), wxICON_ERROR);
+    return 1;
 }
