@@ -9,11 +9,12 @@
       >
         <i class="fas fa-bars"></i>
       </button>
+      <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV">
       <span :title="$t('Personal Media Vault')" class="top-bar-title"
-        ><i class="fab fa-youtube"></i> PMV</span
+        >PMV</span
       >
       <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
-        ><i class="fab fa-youtube"></i> PMV</span
+        >PMV</span
       >
     </div>
     <div class="top-bar-search-td">
@@ -259,8 +260,9 @@ export default defineComponent({
 }
 
 .top-bar-logo-td {
-  padding-left: 8px;
   text-align: left;
+  display: flex;
+  align-items: center;
 }
 
 .top-bar-search-td {
@@ -276,12 +278,14 @@ export default defineComponent({
   font-weight: bold;
   font-size: 24px;
   padding-left: 8px;
+  padding-top: 3px;
 }
 
 .top-bar-title-min {
   font-weight: bold;
   font-size: 24px;
   padding-left: 8px;
+  padding-top: 3px;
   display: none;
 }
 
@@ -470,6 +474,15 @@ export default defineComponent({
 
 .dark-theme .top-bar-search-suggestion:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.top-bar-logo-img {
+  width: 32px;
+  height: 32px;
+}
+
+.top-bar-logo-td .top-bar-button {
+  width: 72px;
 }
 </style>
 

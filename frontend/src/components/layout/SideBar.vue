@@ -15,11 +15,12 @@
         >
           <i class="fas fa-bars"></i>
         </button>
+        <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
         <span :title="$t('Personal Media Vault')" class="top-bar-title"
-          ><i class="fab fa-youtube"></i> PMV</span
+          >PMV</span
         >
         <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
-          ><i class="fab fa-youtube"></i> PMV</span
+          >PMV</span
         >
       </div>
     </div>
@@ -270,11 +271,11 @@ export default defineComponent({
 }
 
 .light-theme .side-bar {
-background: white;
+  background: white;
 }
 
 .dark-theme .side-bar {
-background: #212121;
+  background: #212121;
 }
 
 .side-bar.hidden {
@@ -360,5 +361,4 @@ background: #212121;
 .dark-theme .side-bar-separator {
   border-top: solid 1px var(--theme-border-color);
 }
-
 </style>
