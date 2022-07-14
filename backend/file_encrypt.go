@@ -16,11 +16,15 @@ import (
 type FileEncryptionMethod uint16
 
 const (
-	AES256_ZIP  FileEncryptionMethod = 1
-	AES256_FLAT FileEncryptionMethod = 2
+	AES256_ZIP  FileEncryptionMethod = 1 // Compress data, then encrypt it
+	AES256_FLAT FileEncryptionMethod = 2 // Just encrypt the data
 )
 
 // Encrypts file contents
+// data - File data
+// method - algorithm to use
+// key - Encryption key
+// Returns the cipher text
 func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return make([]byte, 0), nil
@@ -102,6 +106,9 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 }
 
 // Decripts file contents
+// data - Cipher text
+// key - Decryption key
+// Returns the original file data
 func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 	if len(data) < 2 {
 		if len(data) == 0 {
@@ -184,6 +191,9 @@ func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 	}
 }
 
+// Add padding to the data, so a block cipher can encrypt it
+// ciphertext - data
+// blockSize - Size of the blocks to encrypt
 func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := (blockSize - len(ciphertext)%blockSize)
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)

@@ -599,6 +599,7 @@ func (manager *VaultCredentialsManager) CheckUserExists(user string) bool {
 	return false
 }
 
+// Gets information of all accounts
 func (manager *VaultCredentialsManager) GetAccountsInfo() []ApiAdminAccountEntry {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()

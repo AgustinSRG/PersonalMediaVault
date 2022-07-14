@@ -1,7 +1,9 @@
-// Media enconding tasks
+// Task main entry point
 
 package main
 
+// Runs a task
+// vault - Reference to the vault
 func (task *ActiveTask) Run(vault *Vault) {
 	if task.killed {
 		return // Task killed

@@ -5,22 +5,26 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 )
 
+// Album data
 type VaultAlbumData struct {
-	Name string   `json:"name"`
-	List []uint64 `json:"list"`
+	Name string   `json:"name"` // Name of the album
+	List []uint64 `json:"list"` // Ordered list of media to play
 }
 
+// Album list data
 type VaultAlbumsData struct {
-	NextId uint64                     `json:"next_id"`
-	Albums map[uint64]*VaultAlbumData `json:"albums"`
+	NextId uint64                     `json:"next_id"` // Id for the next album to create
+	Albums map[uint64]*VaultAlbumData `json:"albums"`  // Albums (Id -> Data)
 }
 
+// Checks if an album has a media in it
+// media_id - Id of the media file
+// Return strue if the album has the media in its list
 func (data *VaultAlbumData) HasMedia(media_id uint64) bool {
 	for i := 0; i < len(data.List); i++ {
 		if data.List[i] == media_id {
@@ -31,23 +35,26 @@ func (data *VaultAlbumData) HasMedia(media_id uint64) bool {
 	return false
 }
 
+// Album manager
 type VaultAlbumsManager struct {
-	path string
+	path string // Vault path
 
-	albums_file string
-	lock        *ReadWriteLock
+	albums_file string         // Path to the albums data file
+	lock        *ReadWriteLock // Lock to control access to the file
 }
 
-func ResolveAlbumFilePath(base_path string, album_id uint64) string {
-	return path.Join(base_path, "tags", "album_"+fmt.Sprint(album_id)+".pmv")
-}
-
+// Initializes albums manager
+// base_path - Vault path
 func (am *VaultAlbumsManager) Initialize(base_path string) {
 	am.path = base_path
 	am.albums_file = path.Join(base_path, "albums.pmv")
 	am.lock = CreateReadWriteLock()
 }
 
+// Reads albums list data
+// key - Vault decryption key
+// Returns the data
+// Thread unsafe: This is an internal method
 func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 	if _, err := os.Stat(am.albums_file); err == nil {
 		// Load file
@@ -90,6 +97,9 @@ func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 	}
 }
 
+// Reads albums data
+// key - Vault decryption key
+// Returns the albums data
 func (am *VaultAlbumsManager) ReadAlbums(key []byte) (*VaultAlbumsData, error) {
 	am.lock.StartRead() // Request read
 	defer am.lock.EndRead()
@@ -97,12 +107,19 @@ func (am *VaultAlbumsManager) ReadAlbums(key []byte) (*VaultAlbumsData, error) {
 	return am.readData(key)
 }
 
+// Starts a write operation in the albums data
+// key - Vault decryption key
+// Returns the albums data
+// After calling this, the file is locked until you call EndWrite() or CancelWrite()
 func (am *VaultAlbumsManager) StartWrite(key []byte) (*VaultAlbumsData, error) {
 	am.lock.RequestWrite() // Request write
 
 	return am.readData(key)
 }
 
+// Applies changes to albums data
+// data - Data to write
+// key - Vault encryption key
 func (am *VaultAlbumsManager) EndWrite(data *VaultAlbumsData, key []byte) error {
 	defer am.lock.EndWrite()
 
@@ -136,10 +153,15 @@ func (am *VaultAlbumsManager) EndWrite(data *VaultAlbumsData, key []byte) error 
 	return err
 }
 
+// Cancels pending write operation
 func (am *VaultAlbumsManager) CancelWrite() {
 	am.lock.EndWrite()
 }
 
+// Creates new album
+// name - Name for the album
+// key - Vault encryption key
+// Returns the ID for the new album
 func (am *VaultAlbumsManager) CreateAlbum(name string, key []byte) (uint64, error) {
 	data, err := am.StartWrite(key)
 
@@ -161,6 +183,11 @@ func (am *VaultAlbumsManager) CreateAlbum(name string, key []byte) (uint64, erro
 	return album_id, err
 }
 
+// Adds a media file to an album
+// album_id - Album ID
+// media_id - Media file ID
+// key - Vault encryption key
+// Returns true if the media was added, false if the media was already in the list
 func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
@@ -187,6 +214,11 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	return true, err
 }
 
+// Removes a media file from an album
+// album_id - Album ID
+// media_id - Media file ID
+// key - Vault encryption key
+// Returns true if the media was removed, false if the media was not in the list
 func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uint64, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
@@ -219,6 +251,11 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 	return true, err
 }
 
+// Sets album media list
+// album_id - Album ID
+// media_list - List of media files
+// key - Vault encryption key
+// Returns true if sucess
 func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
@@ -238,6 +275,11 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 	return true, err
 }
 
+// Sets album name
+// album_id - Album ID
+// name - Album name
+// key - Vault encryption key
+// Returns true if sucess
 func (am *VaultAlbumsManager) RenameAlbum(album_id uint64, name string, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
@@ -257,6 +299,9 @@ func (am *VaultAlbumsManager) RenameAlbum(album_id uint64, name string, key []by
 	return true, err
 }
 
+// Deletes album
+// album_id - Album ID
+// key - Vault encryption key
 func (am *VaultAlbumsManager) DeleteAlbum(album_id uint64, key []byte) error {
 	data, err := am.StartWrite(key)
 

@@ -1,5 +1,13 @@
 // Tool to pack multiple files into the same file
 
+// File structure
+//  - Header (8 bytes):
+//      - Number of files (Long unsigned big endian) (8 bytes)
+//  - Files table (Table of rows of 16 bytes, one per file)
+//      - Start position of the file (Long unsigned big endian) (8 bytes)
+//      - File length (Long unsigned big endian) (8 bytes)
+//  - Body: Files data, consistent with the files table
+
 package main
 
 import (
@@ -12,13 +20,16 @@ import (
 //     WRITE STREAM    //
 /////////////////////////
 
+// Write stream data
 type MultiFilePackWriteStream struct {
-	f                   *os.File
-	file_count          int64
-	current_write_index int64
-	current_write_pt    int64
+	f                   *os.File // File descriptor
+	file_count          int64    // Number of files contained in the file
+	current_write_index int64    // Index of the current file being written
+	current_write_pt    int64    // Position of the cursor to write the next file
 }
 
+// Creates stream to write multiple files in a packed file
+// file - Path of the file
 func CreateMultiFilePackWriteStream(file string) (*MultiFilePackWriteStream, error) {
 	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
 
@@ -35,6 +46,8 @@ func CreateMultiFilePackWriteStream(file string) (*MultiFilePackWriteStream, err
 	return &i, nil
 }
 
+// Initializes write stream (must be called before writting any files)
+// file_count - Number of files to write
 func (file *MultiFilePackWriteStream) Initialize(file_count int64) error {
 	file.file_count = file_count
 
@@ -82,6 +95,9 @@ func (file *MultiFilePackWriteStream) Initialize(file_count int64) error {
 	return nil
 }
 
+// Writes a file into the packed file
+// content - Content of the file
+// Calling this increases the current file index
 func (file *MultiFilePackWriteStream) PutFile(content []byte) error {
 	// Save metadata
 	_, err := file.f.Seek(8+file.current_write_index*16, 0)
@@ -125,6 +141,7 @@ func (file *MultiFilePackWriteStream) PutFile(content []byte) error {
 	return nil
 }
 
+// Closes the stream
 func (file *MultiFilePackWriteStream) Close() {
 	file.f.Close()
 }
@@ -133,11 +150,14 @@ func (file *MultiFilePackWriteStream) Close() {
 //     READ STREAM     //
 /////////////////////////
 
+// Read stream to retreive files from a packed file
 type MultiFilePackReadStream struct {
-	f          *os.File
-	file_count int64
+	f          *os.File // File descriptor
+	file_count int64    // Number of files inside the packed file
 }
 
+// Creates read stream to get files from a packed file
+// file - path to the file
 func CreateMultiFilePackReadStream(file string) (*MultiFilePackReadStream, error) {
 	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 
@@ -163,6 +183,9 @@ func CreateMultiFilePackReadStream(file string) (*MultiFilePackReadStream, error
 	return &i, nil
 }
 
+// Gets a file
+// index - file index
+// Returns the file data
 func (file *MultiFilePackReadStream) GetFile(index int64) ([]byte, error) {
 	if index < 0 || index >= file.file_count {
 		return nil, errors.New("Index out of bounds")
@@ -211,6 +234,7 @@ func (file *MultiFilePackReadStream) GetFile(index int64) ([]byte, error) {
 	return data, nil
 }
 
+// Closes the read stream
 func (file *MultiFilePackReadStream) Close() {
 	file.f.Close()
 }

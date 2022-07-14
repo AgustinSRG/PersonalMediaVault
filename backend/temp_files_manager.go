@@ -11,15 +11,16 @@ import (
 )
 
 var (
-	temp_files_path             = "./temp"
-	unencrypted_temp_files_path = "./temp"
+	temp_files_path             = "./temp" // Path for vault temp files
+	unencrypted_temp_files_path = "./temp" // Path for unencrypted temp files (upload, ffmpeg, etc)
 
 	temp_files_prefix  = "pmv_tmp_"
 	temp_files_lock    = &sync.Mutex{}
 	temp_files_counter = 0
 )
 
-// Initialize
+// Set vault temp files path
+// tempPath - Temp files path
 func SetTempFilesPath(tempPath string) {
 	temp_files_path = tempPath
 
@@ -31,6 +32,8 @@ func SetTempFilesPath(tempPath string) {
 	temp_files_prefix = "pmv_tmp_" + fmt.Sprint(timeNow) + "_"
 }
 
+// Set unencrypted temp files path
+// unencryptedTempPath - Unencrypted temp files path
 func SetUnencryptedTempFilesPath(unencryptedTempPath string) {
 	unencrypted_temp_files_path = unencryptedTempPath
 
@@ -38,12 +41,13 @@ func SetUnencryptedTempFilesPath(unencryptedTempPath string) {
 	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
 }
 
-// Clears temp path on application exit
+// Clears vault temp path
 func ClearTemporalFilesPath() {
 	os.RemoveAll(temp_files_path)
 	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
 }
 
+// Clears all unencrypted temp files
 func ClearUnencryptedTempFilesPath() {
 	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
 
@@ -64,6 +68,9 @@ func ClearUnencryptedTempFilesPath() {
 }
 
 // Gets a name for a temporal file
+// extension - File extension (without the dot)
+// encrypted - True to use the vault temp path, false to use the unencrypted temp path
+// Returns the path to the file
 func GetTemporalFileName(extension string, encrypted bool) string {
 	temp_files_lock.Lock()
 
@@ -88,6 +95,8 @@ func GetTemporalFileName(extension string, encrypted bool) string {
 }
 
 // Creates a temporal folder and returns the path
+// encrypted - True to use the vault temp path, false to use the unencrypted temp path
+// Returns the path to the folder (creates it)
 func GetTemporalFolder(encrypted bool) (string, error) {
 	temp_files_lock.Lock()
 
@@ -116,6 +125,7 @@ func GetTemporalFolder(encrypted bool) (string, error) {
 }
 
 // Wipes file to prevent recovery (secure delete)
+// file - File path
 func WipeTemporalFile(file string) {
 	f, err := os.OpenFile(file, os.O_WRONLY, FILE_PERMISSION)
 
@@ -161,6 +171,8 @@ func WipeTemporalFile(file string) {
 	}
 }
 
+// Wipes unencrypted temp path (secure delete)
+// p - Path
 func WipeTemporalPath(p string) {
 	entries, err := os.ReadDir(p)
 
