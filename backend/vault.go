@@ -4,8 +4,9 @@ package main
 
 import "path"
 
+// Vault main data struct
 type Vault struct {
-	path string
+	path string // Vault path
 
 	credentials *VaultCredentialsManager // Manages vault credentials
 	sessions    *SessionManager          // Manages active user sessiions
@@ -21,6 +22,8 @@ type Vault struct {
 	config *UserConfigManager // User config
 }
 
+// Vault initialization process
+// base_path - Vault path
 func (vault *Vault) Initialize(base_path string) error {
 	vault.path = base_path
 

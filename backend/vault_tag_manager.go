@@ -13,28 +13,35 @@ import (
 	"sync"
 )
 
+// Tag manager
 type VaultTagManager struct {
-	path string
+	path string // Vault path
 
-	tag_list_file string
-	tag_list_lock *ReadWriteLock
+	tag_list_file string         // Path to the tag list file
+	tag_list_lock *ReadWriteLock // Lock to control acess to the file
 
-	lock *sync.Mutex
+	indexes map[uint64]*VaultTagIndexEntry // Indexes for each tag
 
-	indexes map[uint64]*VaultTagIndexEntry
+	lock *sync.Mutex // Lock to control acess to the indexes map
 }
 
+// Tag Index manager data struct
 type VaultTagIndexEntry struct {
-	count        int64
-	index        *VaultMainIndex
-	check_delete bool
+	count        int64           // Number of threads accessing the index
+	index        *VaultMainIndex // Index
+	check_delete bool            // True if the tag is being deleted
 }
 
+// Data inside the tag list file
 type VaultTagListData struct {
-	NextId uint64            `json:"next_id"`
-	Tags   map[uint64]string `json:"tags"`
+	NextId uint64            `json:"next_id"` // ID for the next tag to add
+	Tags   map[uint64]string `json:"tags"`    // Tags Map (id -> name)
 }
 
+// Finds a tag by name
+// tag_name - Name of the tag
+// Returns true if it was found, false if if was not found
+// Also returns the ID of the found tag
 func (data *VaultTagListData) FindTag(tag_name string) (bool, uint64) {
 	parsedName := ParseTagName(tag_name)
 	for key, val := range data.Tags {
@@ -45,6 +52,9 @@ func (data *VaultTagListData) FindTag(tag_name string) (bool, uint64) {
 	return false, 0
 }
 
+// Parses tag name
+// Removes line breaks and other weird stuff from the name
+// Also converts to lowercase
 func ParseTagName(name string) string {
 	return strings.ToLower(
 		strings.ReplaceAll(
@@ -62,10 +72,16 @@ func ParseTagName(name string) string {
 	)
 }
 
+// Given a tag ID generates the path to the index file
+// base_path - Vault path
+// tag_id - Tag ID
+// Returns the path to the index file
 func ResolveTagIndexFilePath(base_path string, tag_id uint64) string {
 	return path.Join(base_path, "tags", "tag_"+fmt.Sprint(tag_id)+".index")
 }
 
+// Initailizes the tag manager
+// base_path - Vault path
 func (tm *VaultTagManager) Initialize(base_path string) error {
 	tm.path = base_path
 	tm.tag_list_file = path.Join(base_path, "tag_list.pmv")
@@ -83,6 +99,10 @@ func (tm *VaultTagManager) Initialize(base_path string) error {
 	return nil
 }
 
+// Reads data from the tag list file
+// key - Vault decryption key
+// Returns the tag list data
+// Warning: Thread unsafe. do not call this method externally, this is used internally
 func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 	if _, err := os.Stat(tm.tag_list_file); err == nil {
 		// Load file
@@ -121,6 +141,9 @@ func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 	}
 }
 
+// Reads data from the tag list file
+// key - Vault decryption key
+// Returns the tag list data
 func (tm *VaultTagManager) ReadList(key []byte) (*VaultTagListData, error) {
 	tm.tag_list_lock.StartRead() // Request read
 	defer tm.tag_list_lock.EndRead()
@@ -128,12 +151,19 @@ func (tm *VaultTagManager) ReadList(key []byte) (*VaultTagListData, error) {
 	return tm.readData(key)
 }
 
+// Starts a modification on the tag list file
+// key - Vault decryption key
+// Returns the tag list data
+// After calling, the file is locked until you call EndWrite() or CancelWrite()
 func (tm *VaultTagManager) StartWrite(key []byte) (*VaultTagListData, error) {
 	tm.tag_list_lock.RequestWrite() // Request write
 
 	return tm.readData(key)
 }
 
+// Applies a modification in the tag list file
+// data - Data to write
+// key - Vault encryption key
 func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 	defer tm.tag_list_lock.EndWrite()
 
@@ -167,10 +197,16 @@ func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 	return err
 }
 
+// Cancels a modification in the tag list file
 func (tm *VaultTagManager) CancelWrite() {
 	tm.tag_list_lock.EndWrite()
 }
 
+// Acquires an index file for a tag
+// tag_id - Id for the tag
+// Returns a reference to the index
+// After this methos is called, an entry is reserved in memory.
+// To release it, make sure to call ReleaseIndexFile()
 func (tm *VaultTagManager) AcquireIndexFile(tag_id uint64) (*VaultMainIndex, error) {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
@@ -196,6 +232,10 @@ func (tm *VaultTagManager) AcquireIndexFile(tag_id uint64) (*VaultMainIndex, err
 	return &newIndex, nil
 }
 
+// Releases an entry for a tag index file
+// tag_id - Id of the tag
+// check_delete - True if the modification made deleted the file
+// key - Vault encryption key
 func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, key []byte) {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
@@ -217,6 +257,10 @@ func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, ke
 	}
 }
 
+// Internal method, called to check if a tag index file requires deletion
+// tag_id - Id of the tag
+// index - Reference to the index
+// key - Vault encryption key
 func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMainIndex, key []byte) {
 	r, err := index.StartRead()
 
@@ -253,6 +297,10 @@ func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMain
 	}
 }
 
+// Adds a tag
+// tag_name - Tag name
+// key - vault encryption key
+// Returns the ID for the tag
 func (tm *VaultTagManager) AddTagToList(tag_name string, key []byte) (uint64, error) {
 	parsedTagName := ParseTagName(tag_name)
 
@@ -279,6 +327,9 @@ func (tm *VaultTagManager) AddTagToList(tag_name string, key []byte) (uint64, er
 	return newIdForTag, err
 }
 
+// Removes tag from the list
+// tag_id - Tag ID
+// key - Vault encryption key
 func (tm *VaultTagManager) RemoveTagFromList(tag_id uint64, key []byte) error {
 	data, err := tm.StartWrite(key)
 
@@ -299,6 +350,11 @@ func (tm *VaultTagManager) RemoveTagFromList(tag_id uint64, key []byte) error {
 	return err
 }
 
+// Adds a tag to a media file
+// media_id - ID of the media file
+// tag_name - Name of the tag
+// key - Vault encryption key
+// Returns the ID for the tag
 func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte) (uint64, error) {
 	tag_id, err := tm.AddTagToList(tag_name, key)
 
@@ -338,6 +394,10 @@ func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte
 	return tag_id, err
 }
 
+// Removes tag from a media file
+// media_id - ID of the media file
+// tag_name - Name of the tag
+// key - Vault encryption key
 func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte) error {
 	indexFile, err := tm.AcquireIndexFile(tag_id)
 
@@ -371,6 +431,11 @@ func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte
 	return err
 }
 
+// Checks if a media file is tagged by a specific tag
+// media_id - ID of the media file
+// tag_name - Name of the tag
+// key - Vault encryption key
+// Returns true if the media is tagged by the given tag
 func (tm *VaultTagManager) CheckMediaTag(media_id uint64, tag_name string, key []byte) (bool, error) {
 	tagList, err := tm.ReadList(key)
 
@@ -410,7 +475,14 @@ func (tm *VaultTagManager) CheckMediaTag(media_id uint64, tag_name string, key [
 	return found, nil
 }
 
-// Returns items, count, err
+// Gets a paginated list of all media tagged by a specific tag
+// tag_name - Name of the tag
+// key - Vault decryption key
+// skip - Number of items to skip (for pagination)
+// limit - Max number of items to return (for pagination)
+// reverse - True for reverse order
+// Returns (1) The list of media files (identifiers) tagged
+// Returns (2) The total amount of items in the full list
 func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int64, limit int64, reverse bool) ([]uint64, int64, error) {
 	tagList, err := tm.ReadList(key)
 
@@ -468,6 +540,12 @@ func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int
 	return values, count, nil
 }
 
+// Returns a random set of media tagged by a tag
+// tag_name - Name of the tag
+// key - Vault decryption key
+// seed - Seed for the random number generator
+// limit - Number of items to return
+// Returns the list of media files (identifiers)
 func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed int64, limit int64) ([]uint64, error) {
 	tagList, err := tm.ReadList(key)
 

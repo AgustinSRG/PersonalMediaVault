@@ -14,6 +14,10 @@ var (
 	VAULT_LOCKFILE lockfile.Lockfile
 )
 
+// Locks the vault
+// Prevents multiple processes to lock the same vault
+// base_path - Vault path
+// Return strue if vault was locked, false if already locked by other process
 func TryLockVault(base_path string) bool {
 	err := os.MkdirAll(base_path, FOLDER_PERMISSION)
 

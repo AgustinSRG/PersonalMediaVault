@@ -1,4 +1,5 @@
 // Logs
+// Any utils to log events must be placed here
 
 package main
 

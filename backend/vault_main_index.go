@@ -7,16 +7,20 @@ import (
 	"os"
 )
 
+// Manages an index file of the vault
 type VaultMainIndex struct {
-	file string
-	lock *ReadWriteLock
+	file string         // path to the index file
+	lock *ReadWriteLock // Lock to control access of threads
 }
 
+// Resource given when a write operation is requested
 type VaultIndexWriteResource struct {
-	file *IndexedListFile
-	path string
+	file *IndexedListFile // Reference to the openned file
+	path string           // Path to a temp file where changes are pre-made
 }
 
+// Initailizes the index file manager
+// file - Path to the index file to manage
 func (vmi *VaultMainIndex) Initialize(file string) error {
 	vmi.file = file
 	vmi.lock = CreateReadWriteLock()
@@ -47,6 +51,7 @@ func (vmi *VaultMainIndex) Initialize(file string) error {
 }
 
 // Starts write operation
+// Returns a temp resource to make the changes
 func (vmi *VaultMainIndex) StartWrite() (*VaultIndexWriteResource, error) {
 	vmi.lock.RequestWrite() // Request write
 
@@ -78,6 +83,7 @@ func (vmi *VaultMainIndex) StartWrite() (*VaultIndexWriteResource, error) {
 }
 
 // Applies a write operation
+// res - Temp file resource
 func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 	res.file.Close()
 
@@ -91,7 +97,7 @@ func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 	return err
 }
 
-// Deletes index
+// Deletes index file
 func (vmi *VaultMainIndex) Delete() error {
 	vmi.lock.RequestWrite()
 	vmi.lock.StartWrite()
@@ -105,6 +111,7 @@ func (vmi *VaultMainIndex) Delete() error {
 }
 
 // Cancels write operation
+// res - Temp file resource
 func (vmi *VaultMainIndex) CancelWrite(res *VaultIndexWriteResource) {
 	res.file.Close()
 	os.Remove(res.path)
@@ -112,6 +119,7 @@ func (vmi *VaultMainIndex) CancelWrite(res *VaultIndexWriteResource) {
 }
 
 // Starts read operation
+// Opens the file for reading and returns the reference
 func (vmi *VaultMainIndex) StartRead() (*IndexedListFile, error) {
 	vmi.lock.StartRead() // Request read
 
@@ -127,6 +135,7 @@ func (vmi *VaultMainIndex) StartRead() (*IndexedListFile, error) {
 }
 
 // Ends read operation
+// fd - Openned file (it closes it)
 func (vmi *VaultMainIndex) EndRead(fd *IndexedListFile) {
 	fd.Close()
 	vmi.lock.EndRead()
