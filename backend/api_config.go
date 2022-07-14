@@ -76,5 +76,14 @@ func api_setConfig(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	err = GetVault().tasks.LoadUserConfigParams(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
 	response.WriteHeader(200)
 }
