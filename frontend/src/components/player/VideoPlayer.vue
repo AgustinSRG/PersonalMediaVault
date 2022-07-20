@@ -388,6 +388,7 @@ import { SubtitlesController } from "@/control/subtitles";
 import { htmlToText } from "@/utils/text";
 import { AppEvents } from "@/control/app-events";
 import { sanitizeSubtitlesHTML } from "@/utils/srt";
+import { AppStatus } from "@/control/app-status";
 
 export default defineComponent({
   components: {
@@ -1013,7 +1014,7 @@ export default defineComponent({
       this.currentTime = PlayerPreferences.GetInitialTime(this.mid);
       this.duration = 0;
       this.speed = 1;
-      this.loop = !this.next;
+      this.loop = AppStatus.CurrentAlbum < 0;
       this.currentResolution = PlayerPreferences.GetResolutionIndex(
         this.metadata
       );
