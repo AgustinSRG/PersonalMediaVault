@@ -2,10 +2,10 @@
 
 import { AccountAPI } from "@/api/api-account";
 import { AuthAPI } from "@/api/api-auth";
-import { getCookie, setCookie } from "@/utils/cookie";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
+import { LocalStorage } from "./local-storage";
 
 export class AuthController {
     public static Locked = true;
@@ -18,8 +18,8 @@ export class AuthController {
     public static CanWrite = false;
 
     public static Initialize() {
-        AuthController.Session = getCookie("x-session-token");
-        AuthController.Fingerprint = getCookie("x-vault-fingerprint");
+        AuthController.Session = LocalStorage.Get("x-session-token", "");
+        AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
         AuthController.CheckAuthStatus();
         AppEvents.AddEventListener("unauthorized", AuthController.ClearSession);
     }
@@ -70,9 +70,9 @@ export class AuthController {
     public static SetSession(session: string, fingerprint: string) {
         AuthController.Locked = true;
         AuthController.Session = session;
-        setCookie("x-session-token", session);
+        LocalStorage.Set("x-session-token", session);
         AuthController.Fingerprint = fingerprint;
-        setCookie("x-vault-fingerprint", fingerprint);
+        LocalStorage.Set("x-vault-fingerprint", fingerprint);
         AuthController.Username = "";
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();
@@ -94,7 +94,7 @@ export class AuthController {
     public static ClearSession() {
         AuthController.Locked = true;
         AuthController.Session = "";
-        setCookie("x-session-token", "");
+        LocalStorage.Set("x-session-token", "");
         AuthController.Username = "";
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
     }
