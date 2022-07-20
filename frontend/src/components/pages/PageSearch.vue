@@ -44,8 +44,6 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
-          tabindex="0"
-          @keydown="clickOnEnter"
           @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"

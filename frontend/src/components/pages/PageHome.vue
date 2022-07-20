@@ -41,12 +41,10 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
-          tabindex="0"
+          @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"
           rel="noopener noreferrer"
-          @keydown="clickOnEnter"
-          @click="goToMedia(item.id, $event)"
         >
           <div
             class="search-result-thumb"

@@ -75,9 +75,7 @@
         class="album-body-item"
         :class="{ current: i === currentPos }"
         :title="item.title || $t('Untitled')"
-        tabindex="0"
         @click="clickMedia(item, $event)"
-        @keydown="clickOnEnter"
       >
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">

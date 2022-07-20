@@ -92,12 +92,10 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
-          tabindex="0"
+          @click="goToAlbum(item, $event)"
           :href="getAlbumURL(item.id)"
           target="_blank"
           rel="noopener noreferrer"
-          @click="goToAlbum(item, $event)"
-          @keydown="clickOnEnter"
         >
           <div
             class="search-result-thumb"

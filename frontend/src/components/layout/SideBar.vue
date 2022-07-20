@@ -25,95 +25,102 @@
       </div>
     </div>
     <div class="side-bar-body">
-      <div
+      <a
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'home' }"
-        tabindex="0"
         :title="$t('Home')"
-        @click="goToPage('home')"
-        @keydown="clickOnEnter"
+        @click="goToPage('home', $event)"
+        :href="getPageURL('home')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
         <div class="side-bar-option-text">{{ $t("Home") }}</div>
-      </div>
+      </a>
 
-      <div
+      <a
         v-if="!!search"
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'search' }"
-        tabindex="0"
         :title="$t('Search results')"
-        @click="goToSearch"
-        @keydown="clickOnEnter"
+        @click="goToSearch($event)"
+        :href="getPageURL('search')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
         <div class="side-bar-option-text">{{ $t("Search results") }}</div>
-      </div>
+      </a>
 
-      <div
+      <a
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'albums' }"
-        tabindex="0"
-        @keydown="clickOnEnter"
         :title="$t('Albums')"
-        @click="goToPage('albums')"
+        @click="goToPage('albums', $event)"
+        :href="getPageURL('albums')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-list"></i></div>
         <div class="side-bar-option-text">{{ $t("Albums") }}</div>
-      </div>
+      </a>
 
-      <div
+      <a
         v-if="canWrite"
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'upload' }"
-        tabindex="0"
-        @keydown="clickOnEnter"
         :title="$t('Upload')"
-        @click="goToPage('upload')"
+        @click="goToPage('upload', $event)"
+        :href="getPageURL('upload')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
         <div class="side-bar-option-text">{{ $t("Upload") }}</div>
-      </div>
+      </a>
 
-      <div
+      <a
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'random' }"
-        tabindex="0"
-        @keydown="clickOnEnter"
         :title="$t('Random')"
-        @click="goToPage('random')"
+        @click="goToPage('random', $event)"
+        :href="getPageURL('random')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-shuffle"></i></div>
         <div class="side-bar-option-text">{{ $t("Random") }}</div>
-      </div>
+      </a>
 
-      <div
+      <a
         class="side-bar-option"
         :class="{ selected: album < 0 && page === 'advsearch' }"
-        tabindex="0"
         :title="$t('Advanced search')"
-        @click="goToPage('advsearch')"
-        @keydown="clickOnEnter"
+        @click="goToPage('advsearch', $event)"
+        :href="getPageURL('advsearch')"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
         <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
-      </div>
+      </a>
 
       <div class="side-bar-separator"></div>
 
-      <div
+      <a
         v-for="a in albums"
         :key="a.id"
         class="side-bar-option"
         :class="{ selected: album == a.id }"
-        tabindex="0"
-        @keydown="clickOnEnter"
         :title="a.name"
-        @click="goToAlbum(a)"
+        @click="goToAlbum(a, $event)"
+        :href="getAlbumURL(a.id)"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         <div class="side-bar-option-icon"><i class="fas fa-list-ol"></i></div>
         <div class="side-bar-option-text">{{ a.name }}</div>
-      </div>
+      </a>
     </div>
   </div>
 </template>
@@ -123,6 +130,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
+import { GenerateURIQuery } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -169,16 +177,49 @@ export default defineComponent({
       this.search = AppStatus.CurrentSearch;
     },
 
-    goToPage: function (p) {
+    goToPage: function (p, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.GoToPage(p);
     },
 
-    goToSearch: function () {
+    goToSearch: function (e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.GoToSearch(this.search);
     },
 
-    goToAlbum: function (a) {
+    goToAlbum: function (a, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnAlbum(a.id, a.list);
+    },
+
+    getPageURL: function (page: string): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          page: page,
+        })
+      );
+    },
+
+    getAlbumURL: function (albumId: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          album: albumId + "",
+        })
+      );
     },
 
     stopPropagationEvent: function (e) {
@@ -308,6 +349,12 @@ export default defineComponent({
   display: flex;
   flex-direction: row;
   align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.side-bar-option:visited {
+  color: inherit;
 }
 
 .light-theme .side-bar-option:hover {
