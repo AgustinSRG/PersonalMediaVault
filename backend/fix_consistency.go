@@ -47,6 +47,8 @@ func FixVaultConsistency(vault *Vault) {
 			}
 		}
 	}
+
+	vault.index.EndRead(index)
 }
 
 func fetchMediaIds(p string) []uint64 {
