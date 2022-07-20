@@ -25,6 +25,10 @@ type BackendOptions struct {
 	clean      bool
 	fix        bool
 
+	// Port + Bind
+	port     string
+	bindAddr string
+
 	// Lock
 	skipLock bool
 
@@ -40,7 +44,7 @@ type BackendOptions struct {
 	unencryptedTempPath string
 
 	// Open browser
-	openBrowser int
+	openBrowser bool
 }
 
 var (
@@ -62,7 +66,9 @@ func main() {
 		vaultPath:           "./vault",
 		tempPath:            "./vault/temp",
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
-		openBrowser:         0,
+		openBrowser:         false,
+		port:                "",
+		bindAddr:            "",
 	}
 
 	if options.ffmpegPath == "" {
@@ -115,6 +121,20 @@ func main() {
 			options.initialize = true
 		} else if arg == "--skip-lock" || arg == "-sl" {
 			options.skipLock = true
+		} else if arg == "--port" || arg == "-p" {
+			if i == len(args)-1 {
+				fmt.Println("The option '--port' requires a value")
+				os.Exit(1)
+			}
+			options.port = args[i+1]
+			i++
+		} else if arg == "--bind" || arg == "-b" {
+			if i == len(args)-1 {
+				fmt.Println("The option '--bind' requires a value")
+				os.Exit(1)
+			}
+			options.bindAddr = args[i+1]
+			i++
 		} else if arg == "--vault-path" || arg == "-vp" {
 			if i == len(args)-1 {
 				fmt.Println("The option '--vault-path' requires a value")
@@ -124,9 +144,7 @@ func main() {
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
 		} else if arg == "--open-browser" {
-			options.openBrowser = 1
-		} else if arg == "--open-browser-ssl" {
-			options.openBrowser = 2
+			options.openBrowser = true
 		} else if arg == "--fix-consistency" {
 			options.fix = true
 		} else {
@@ -209,10 +227,10 @@ func main() {
 		}
 
 		// Create and run HTTP server
-		if options.openBrowser > 0 {
-			go openBrowser(options.openBrowser)
+		if options.openBrowser {
+			go openBrowser(options.port)
 		}
-		RunHTTPServer()
+		RunHTTPServer(options.port, options.bindAddr)
 	} else if options.initialize || options.clean || options.fix {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath)
@@ -249,15 +267,20 @@ func printHelp() {
 	fmt.Println("        --version, -v              Prints version.")
 	fmt.Println("        --daemon, -d               Runs backend daemon.")
 	fmt.Println("        --init, -i                 Initializes the vault. Asks for username and password.")
+	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
+
+	fmt.Println("        --port -p <port>           Sets the listening port. By default 80 (or 443 if using SSL).")
+	fmt.Println("        --bind -b <bind-addr>      Sets the bind address. By default it binds all interfaces.")
+	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
+
+	fmt.Println("        --open-browser             Opens browser in localhost (for local mode).")
+
+	fmt.Println("    DEBUG OPTIONS:")
+	fmt.Println("        --skip-lock                Ignores vault lockfile.")
+	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --log-requests             Enables logging requests to standard outout.")
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
-	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
-	fmt.Println("        --clean, -c                Cleans temporal path before starting the daemon.")
-	fmt.Println("        --skip-lock, -sl           Ignores vault lockfile.")
-	fmt.Println("        --open-browser             Opens browser in localhost (HTTP).")
-	fmt.Println("        --open-browser-ssl         Opens browser in localhost (HTTPS).")
-	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
@@ -265,9 +288,6 @@ func printHelp() {
 	fmt.Println("                                   Note: It should be in a different filesystem if the vault is stored in an unsafe environment.")
 	fmt.Println("                                   By default, this will be stored in ~/.pmv/temp")
 	fmt.Println("        FRONTEND_PATH              Path to static frontend.")
-	fmt.Println("        BIND_ADDRESS               Bind address for listening HTTP and HTTPS.")
-	fmt.Println("        HTTP_PORT                  HTTP listening port, 80 by default.")
-	fmt.Println("        SSL_PORT                   HTTPS listening port, 443 by default.")
 	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
@@ -288,14 +308,17 @@ func printVersion() {
 	fmt.Println("---------------------------------------------------")
 }
 
-func openBrowser(opt int) {
+func openBrowser(port string) {
 	// Generate localhost URL
 	var url string
 
-	if opt == 2 {
+	certFile := os.Getenv("SSL_CERT")
+	keyFile := os.Getenv("SSL_KEY")
+
+	if certFile != "" && keyFile != "" {
 		var ssl_port int
 		ssl_port = 443
-		customSSLPort := os.Getenv("SSL_PORT")
+		customSSLPort := port
 		if customSSLPort != "" {
 			sslp, e := strconv.Atoi(customSSLPort)
 			if e == nil {
@@ -311,7 +334,7 @@ func openBrowser(opt int) {
 	} else {
 		var tcp_port int
 		tcp_port = 80
-		customTCPPort := os.Getenv("HTTP_PORT")
+		customTCPPort := port
 		if customTCPPort != "" {
 			tcpp, e := strconv.Atoi(customTCPPort)
 			if e == nil {

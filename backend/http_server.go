@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -77,7 +76,7 @@ func cacheTTLAdd(next http.Handler) http.Handler {
 	})
 }
 
-func RunHTTPServer() {
+func RunHTTPServer(port string, bindAddr string) {
 	router := mux.NewRouter()
 
 	// Logging middleware
@@ -180,25 +179,25 @@ func RunHTTPServer() {
 
 	// Run server
 
-	var wg sync.WaitGroup
+	certFile := os.Getenv("SSL_CERT")
+	keyFile := os.Getenv("SSL_KEY")
 
-	wg.Add(2)
-
-	go runHTTPServer(&wg, router)
-	go runHTTPSecureServer(&wg, router)
-
-	wg.Wait()
+	if certFile != "" && keyFile != "" {
+		// SSL
+		runHTTPSecureServer(port, bindAddr, certFile, keyFile, router)
+	} else {
+		// Regular HTTP
+		runHTTPServer(port, bindAddr, router)
+	}
 }
 
-func runHTTPSecureServer(wg *sync.WaitGroup, router *mux.Router) {
-	defer wg.Done()
-
-	bind_addr := os.Getenv("BIND_ADDRESS")
+func runHTTPSecureServer(portOption string, bindAddr string, certFile string, keyFile string, router *mux.Router) {
+	bind_addr := bindAddr
 
 	// Setup HTTPS server
 	var ssl_port int
 	ssl_port = 443
-	customSSLPort := os.Getenv("SSL_PORT")
+	customSSLPort := portOption
 	if customSSLPort != "" {
 		sslp, e := strconv.Atoi(customSSLPort)
 		if e == nil {
@@ -206,29 +205,22 @@ func runHTTPSecureServer(wg *sync.WaitGroup, router *mux.Router) {
 		}
 	}
 
-	certFile := os.Getenv("SSL_CERT")
-	keyFile := os.Getenv("SSL_KEY")
+	// Listen
+	LogInfo("[SSL] Listening on " + bind_addr + ":" + strconv.Itoa(ssl_port))
+	errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, handlers.CompressHandler(router))
 
-	if certFile != "" && keyFile != "" {
-		// Listen
-		LogInfo("[SSL] Listening on " + bind_addr + ":" + strconv.Itoa(ssl_port))
-		errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, handlers.CompressHandler(router))
-
-		if errSSL != nil {
-			LogError(errSSL)
-		}
+	if errSSL != nil {
+		LogError(errSSL)
 	}
 }
 
-func runHTTPServer(wg *sync.WaitGroup, router *mux.Router) {
-	defer wg.Done()
-
-	bind_addr := os.Getenv("BIND_ADDRESS")
+func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
+	bind_addr := bindAddr
 
 	// Setup HTTP server
 	var tcp_port int
 	tcp_port = 80
-	customTCPPort := os.Getenv("HTTP_PORT")
+	customTCPPort := portOption
 	if customTCPPort != "" {
 		tcpp, e := strconv.Atoi(customTCPPort)
 		if e == nil {
