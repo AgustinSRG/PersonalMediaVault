@@ -265,7 +265,7 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock b
 
 	err = os.Rename(tmpFile, path.Join(media.path, "meta.pmv"))
 
-	LogDebug("WRITE META: " + string(jsonData))
+	// LogDebug("WRITE META: " + string(jsonData))
 
 	return err
 }

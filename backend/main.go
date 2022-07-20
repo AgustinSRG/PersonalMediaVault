@@ -23,6 +23,7 @@ type BackendOptions struct {
 	daemon     bool
 	initialize bool
 	clean      bool
+	fix        bool
 
 	// Lock
 	skipLock bool
@@ -126,13 +127,15 @@ func main() {
 			options.openBrowser = 1
 		} else if arg == "--open-browser-ssl" {
 			options.openBrowser = 2
+		} else if arg == "--fix-consistency" {
+			options.fix = true
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
 		}
 	}
 
-	if options.daemon || options.clean || options.initialize {
+	if options.daemon || options.clean || options.initialize || options.fix {
 		printVersion()
 		if !options.skipLock {
 			// Setup lockfile
@@ -200,12 +203,17 @@ func main() {
 			ClearUnencryptedTempFilesPath()
 		}
 
+		if options.fix {
+			LogInfo("Fixing vault consistency...")
+			FixVaultConsistency(&vault)
+		}
+
 		// Create and run HTTP server
 		if options.openBrowser > 0 {
 			go openBrowser(options.openBrowser)
 		}
 		RunHTTPServer()
-	} else if options.initialize || options.clean {
+	} else if options.initialize || options.clean || options.fix {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath)
 
@@ -221,6 +229,11 @@ func main() {
 		if options.clean {
 			LogInfo("Cleaning unencrypted temporal files...")
 			ClearUnencryptedTempFilesPath()
+		}
+
+		if options.fix {
+			LogInfo("Fixing vault consistency...")
+			FixVaultConsistency(&vault)
 		}
 
 		return
@@ -244,6 +257,7 @@ func printHelp() {
 	fmt.Println("        --skip-lock, -sl           Ignores vault lockfile.")
 	fmt.Println("        --open-browser             Opens browser in localhost (HTTP).")
 	fmt.Println("        --open-browser-ssl         Opens browser in localhost (HTTPS).")
+	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")

@@ -1,0 +1,75 @@
+// Fix vault consistency:
+// - Remove deleted media that was not removed
+
+package main
+
+import (
+	"fmt"
+	"os"
+	"path"
+	"strconv"
+)
+
+func FixVaultConsistency(vault *Vault) {
+	// Get the full list of media assets in the vault, and check if they exists in the main index
+
+	index, err := vault.index.StartRead()
+
+	if err != nil {
+		vault.index.EndRead(index)
+		LogError(err)
+		os.Exit(1)
+	}
+
+	dirs, err := os.ReadDir(path.Join(vault.path, "media"))
+
+	if err == nil {
+		for i := 0; i < len(dirs); i++ {
+			if dirs[i].Type().IsDir() {
+				media_ids := fetchMediaIds(path.Join(vault.path, "media", dirs[i].Name()))
+
+				for j := 0; j < len(media_ids); j++ {
+					exists, _, err := index.BinarySearch(media_ids[j])
+
+					if err != nil {
+						vault.index.EndRead(index)
+						LogError(err)
+						os.Exit(1)
+					}
+
+					if !exists {
+						// Remove directory
+						LogInfo("Found inconsistency: Media folder not indexed 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_ids[j]) + "' (removing)")
+						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_ids[j])))
+					}
+				}
+
+			}
+		}
+	}
+}
+
+func fetchMediaIds(p string) []uint64 {
+	dirs, err := os.ReadDir(p)
+
+	if err != nil {
+		LogError(err)
+		return make([]uint64, 0)
+	}
+
+	result := make([]uint64, 0)
+
+	for i := 0; i < len(dirs); i++ {
+		if dirs[i].Type().IsDir() {
+			mediaId, err := strconv.ParseUint(dirs[i].Name(), 10, 64)
+
+			if err != nil {
+				continue
+			}
+
+			result = append(result, mediaId)
+		}
+	}
+
+	return result
+}
