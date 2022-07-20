@@ -88,12 +88,15 @@
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
-        <div
+        <a
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
           tabindex="0"
-          @click="goToAlbum(item)"
+          :href="getAlbumURL(item.id)"
+          target="_blank"
+          rel="noopener noreferrer"
+          @click="goToAlbum(item, $event)"
           @keydown="clickOnEnter"
         >
           <div
@@ -129,7 +132,7 @@
           <div class="search-result-title">
             {{ item.name || $t("Untitled") }}
           </div>
-        </div>
+        </a>
       </div>
 
       <PageMenu
@@ -175,7 +178,7 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { GetAssetURL, Request } from "@/utils/request";
+import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
@@ -337,8 +340,23 @@ export default defineComponent({
       return GetAssetURL(thumb);
     },
 
-    goToAlbum: function (album) {
+    goToAlbum: function (album, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnAlbum(album.id, album.list);
+    },
+
+    getAlbumURL: function (albumId: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          album: albumId + "",
+        })
+      );
     },
 
     clickOnEnter: function (event) {

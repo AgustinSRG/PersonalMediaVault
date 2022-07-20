@@ -10,8 +10,8 @@ export class SearchAPI {
             
                 tag: tag,
                 order: order,
-                page_index: page,
-                page_size: pageSize,
+                page_index: page + "",
+                page_size: pageSize + "",
             })),
         };
     }
@@ -22,8 +22,8 @@ export class SearchAPI {
             url: GetAPIURL("/api/random" + GenerateURIQuery({
             
                 tag: tag,
-                seed: seed,
-                page_size: pageSize,
+                seed: seed + "",
+                page_size: pageSize + "",
             })),
         };
     }

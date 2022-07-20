@@ -66,14 +66,17 @@
       class="album-body"
       @scroll.passive="closeOptionsMenu"
     >
-      <div
+      <a
         v-for="(item, i) in albumList"
         :key="item.list_id"
+        :href="getMediaURL(item)"
+        target="_blank"
+        rel="noopener noreferrer"
         class="album-body-item"
         :class="{ current: i === currentPos }"
         :title="item.title || $t('Untitled')"
         tabindex="0"
-        @click="clickMedia(item)"
+        @click="clickMedia(item, $event)"
         @keydown="clickOnEnter"
       >
         <div class="album-body-item-thumbnail">
@@ -114,7 +117,7 @@
         >
           <i class="fas fa-bars"></i>
         </button>
-      </div>
+      </a>
     </div>
     <AlbumContextMenu
       v-model:shown="contextShown"
@@ -144,7 +147,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { copyObject } from "@/utils/objects";
-import { GetAssetURL, Request } from "@/utils/request";
+import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import { defineComponent, nextTick } from "vue";
@@ -261,11 +264,28 @@ export default defineComponent({
       }
     },
 
-    clickMedia: function (item) {
+    clickMedia: function (item, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnMedia(item.id, false);
     },
 
+    getMediaURL: function (item) {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: item.id + "",
+          album: this.albumId + "",
+        })
+      );
+    },
+
     showOptions: function (item, i, event) {
+      event.preventDefault();
       event.stopPropagation();
 
       if (this.contextShown && this.currentMenuOpen === item.list_id) {
@@ -592,6 +612,12 @@ export default defineComponent({
   padding: 8px;
   align-items: center;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.album-body-item:visited {
+  color: inherit;
 }
 
 .light-theme .album-body-item:hover {

@@ -118,14 +118,20 @@
     </form>
 
     <div class="search-results">
-
-      <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
+      <div
+        v-if="!loading && started && pageItems.length === 0"
+        class="search-results-msg-display"
+      >
         <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
         <div class="search-results-msg-text">
           {{ $t("Could not find any result") }}
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="startSearch()" class="btn btn-primary btn-sm">
+          <button
+            type="button"
+            @click="startSearch()"
+            class="btn btn-primary btn-sm"
+          >
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
@@ -135,13 +141,16 @@
         v-if="!loading && pageItems.length > 0"
         class="search-results-final-display"
       >
-        <div
+        <a
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
           tabindex="0"
           @keydown="clickOnEnter"
-          @click="goToMedia(item.id)"
+          @click="goToMedia(item.id, $event)"
+          :href="getMediaURL(item.id)"
+          target="_blank"
+          rel="noopener noreferrer"
         >
           <div
             class="search-result-thumb"
@@ -170,7 +179,7 @@
           <div class="search-result-title">
             {{ item.title || $t("Untitled") }}
           </div>
-        </div>
+        </a>
       </div>
     </div>
   </div>
@@ -184,7 +193,7 @@ import { AuthController } from "@/control/auth";
 import { MediaEntry } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { copyObject } from "@/utils/objects";
-import { GetAssetURL, Request } from "@/utils/request";
+import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
@@ -283,7 +292,10 @@ export default defineComponent({
         }
 
         if (filterText) {
-          if (!e.title.toLowerCase().includes(filterText) && !e.description.toLowerCase().includes(filterText)) {
+          if (
+            !e.title.toLowerCase().includes(filterText) &&
+            !e.description.toLowerCase().includes(filterText)
+          ) {
             continue;
           }
         }
@@ -345,8 +357,23 @@ export default defineComponent({
       this.started = false;
     },
 
-    goToMedia: function (mid) {
+    goToMedia: function (mid, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnMedia(mid, true);
+    },
+
+    getMediaURL: function (mid: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: mid + "",
+        })
+      );
     },
 
     getThumbnail(thumb: string) {

@@ -279,7 +279,7 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static CloseAbum(){
+    public static CloseAbum() {
         AppStatus.CurrentFocus = "left";
         AppStatus.CurrentAlbum = -1;
         AppStatus.UpdateLayout();
@@ -299,7 +299,7 @@ export class AppStatus {
         return page + "," + pageSize + "," + order;
     }
 
-    public static UnPackSearchParams(params: string): {page: number, pageSize: number, order: string} {
+    public static UnPackSearchParams(params: string): { page: number, pageSize: number, order: string } {
         const res = {
             page: 0,
             pageSize: 25,

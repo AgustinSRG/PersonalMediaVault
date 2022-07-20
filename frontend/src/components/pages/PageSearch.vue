@@ -40,13 +40,16 @@
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
-        <div
+        <a
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
           tabindex="0"
           @keydown="clickOnEnter"
-          @click="goToMedia(item.id)"
+          @click="goToMedia(item.id, $event)"
+          :href="getMediaURL(item.id)"
+          target="_blank"
+          rel="noopener noreferrer"
         >
           <div
             class="search-result-thumb"
@@ -70,7 +73,7 @@
           <div class="search-result-title">
             {{ item.title || $t("Untitled") }}
           </div>
-        </div>
+        </a>
       </div>
 
       <PageMenu
@@ -117,7 +120,7 @@ import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { GetAssetURL, Request } from "@/utils/request";
+import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
@@ -241,8 +244,23 @@ export default defineComponent({
       this.load();
     },
 
-    goToMedia: function (mid) {
+    goToMedia: function (mid, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnMedia(mid, true);
+    },
+
+    getMediaURL: function (mid: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: mid + "",
+        })
+      );
     },
 
     updateSearchParams: function () {

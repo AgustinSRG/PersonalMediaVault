@@ -23,7 +23,9 @@
       </div>
 
       <div v-if="!loading && total <= 0" class="search-results-msg-display">
-        <div class="search-results-msg-icon"><i class="fas fa-box-open"></i></div>
+        <div class="search-results-msg-icon">
+          <i class="fas fa-box-open"></i>
+        </div>
         <div class="search-results-msg-text">
           {{ $t("The vault is empty") }}
         </div>
@@ -35,13 +37,16 @@
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
-        <div
+        <a
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
           tabindex="0"
+          :href="getMediaURL(item.id)"
+          target="_blank"
+          rel="noopener noreferrer"
           @keydown="clickOnEnter"
-          @click="goToMedia(item.id)"
+          @click="goToMedia(item.id, $event)"
         >
           <div
             class="search-result-thumb"
@@ -59,13 +64,18 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
-              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
+              <div
+                class="search-result-thumb-tag"
+                v-if="item.type === 2 || item.type === 3"
+              >
+                {{ renderTime(item.duration) }}
+              </div>
             </div>
           </div>
           <div class="search-result-title">
             {{ item.title || $t("Untitled") }}
           </div>
-        </div>
+        </a>
       </div>
 
       <PageMenu
@@ -112,7 +122,7 @@ import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { GetAssetURL, Request } from "@/utils/request";
+import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
@@ -228,8 +238,23 @@ export default defineComponent({
       this.load();
     },
 
-    goToMedia: function (mid) {
+    goToMedia: function (mid, e) {
+      if (e) {
+        e.preventDefault();
+      }
       AppStatus.ClickOnMedia(mid, true);
+    },
+
+     getMediaURL: function (mid: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: mid + "",
+        })
+      );
     },
 
     updateSearchParams: function () {
@@ -326,6 +351,12 @@ export default defineComponent({
   min-width: 232px;
   width: 20%;
   padding: 24px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.search-result-item:visited {
+  color: inherit;
 }
 
 .search-result-item.clickable {
@@ -438,5 +469,4 @@ export default defineComponent({
   font-size: small;
   padding: 0.25rem;
 }
-
 </style>
