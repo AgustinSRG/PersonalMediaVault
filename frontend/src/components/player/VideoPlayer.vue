@@ -351,7 +351,6 @@
       :shown="showControls"
       :fullscreen="fullscreen"
       v-model:expanded="expandedTitle"
-      @update:expanded="pause"
       v-model:albumexpanded="expandedAlbum"
       :inalbum="inalbum"
     ></PlayerTopBar>
