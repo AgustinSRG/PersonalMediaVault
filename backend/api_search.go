@@ -68,6 +68,7 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 
 	var total_count int64
 	var page_items []uint64
+	var tag_id uint64
 
 	// Fetch lists from indexes
 
@@ -121,7 +122,7 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 	} else {
 		// Search by tag
 
-		page_items, total_count, err = GetVault().tags.ListTaggedMedia(tagToSearch, session.key, skip, pageSize, reversed)
+		page_items, total_count, tag_id, err = GetVault().tags.ListTaggedMedia(tagToSearch, session.key, skip, pageSize, reversed)
 
 		if err != nil {
 			LogError(err)
@@ -142,7 +143,18 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 	page_items_meta := make([]*MediaListAPIItem, len(page_items))
 
 	for i := 0; i < len(page_items); i++ {
-		page_items_meta[i] = GetMediaMinInfo(page_items[i], session)
+		mediaInfo := GetMediaMinInfo(page_items[i], session)
+
+		if mediaInfo.Type == MediaTypeDeleted && tagToSearch != "" {
+			// Remove inconsistency
+			err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
+
+			if err != nil {
+				LogError(err)
+			}
+		}
+
+		page_items_meta[i] = mediaInfo
 	}
 
 	// Send response

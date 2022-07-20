@@ -483,23 +483,24 @@ func (tm *VaultTagManager) CheckMediaTag(media_id uint64, tag_name string, key [
 // reverse - True for reverse order
 // Returns (1) The list of media files (identifiers) tagged
 // Returns (2) The total amount of items in the full list
-func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int64, limit int64, reverse bool) ([]uint64, int64, error) {
+// Returns (3) The tag ID
+func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int64, limit int64, reverse bool) ([]uint64, int64, uint64, error) {
 	tagList, err := tm.ReadList(key)
 
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	found, tag_id := tagList.FindTag(tag_name)
 
 	if !found {
-		return make([]uint64, 0), 0, nil
+		return make([]uint64, 0), 0, 0, nil
 	}
 
 	indexFile, err := tm.AcquireIndexFile(tag_id)
 
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	defer tm.ReleaseIndexFile(tag_id, false, key)
@@ -507,14 +508,14 @@ func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int
 	f, err := indexFile.StartRead()
 
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	count, err := f.Count()
 
 	if err != nil {
 		indexFile.EndRead(f)
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	var values []uint64
@@ -524,20 +525,20 @@ func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int
 
 		if err != nil {
 			indexFile.EndRead(f)
-			return nil, 0, err
+			return nil, 0, 0, err
 		}
 	} else {
 		values, err = f.ListValues(skip, limit)
 
 		if err != nil {
 			indexFile.EndRead(f)
-			return nil, 0, err
+			return nil, 0, 0, err
 		}
 	}
 
 	indexFile.EndRead(f)
 
-	return values, count, nil
+	return values, count, tag_id, nil
 }
 
 // Returns a random set of media tagged by a tag
