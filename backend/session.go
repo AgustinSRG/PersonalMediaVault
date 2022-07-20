@@ -134,6 +134,19 @@ func (sm *SessionManager) FindSession(session_id string) *ActiveSession {
 	return nil
 }
 
+// Finds any session
+// Returns a session, or nil if the vault is locked
+func (sm *SessionManager) FindAnySession() *ActiveSession {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for _, session := range sm.sessions {
+		return session
+	}
+
+	return nil
+}
+
 // Changes session username
 // user - Old username
 // new_user - New username

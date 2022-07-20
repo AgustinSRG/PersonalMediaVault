@@ -4,7 +4,6 @@
 
 import { AuthController } from "@/control/auth";
 import axios, { AxiosError } from "axios";
-import { getCookie } from "./cookie";
 
 export function GetAPIURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
@@ -16,14 +15,9 @@ export function GetAPIURL(path: string): string {
 
 export function GetAssetURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
-        return (process.env.DEV_TEST_HOST || "http://localhost") + path + GenerateURIQuery({
-            'x-session-token': AuthController.Session,
-            'vault-fp': AuthController.Fingerprint,
-        });
+        return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
-        return path + GenerateURIQuery({
-            'vault-fp': AuthController.Fingerprint,
-        });
+        return "." + path;
     }
 }
 
@@ -101,7 +95,7 @@ export class Request {
             Request.pending[key] = r;
         }
 
-        const authToken = getCookie("x-session-token")
+        const authToken = AuthController.Session;
 
         axios.get(url, {
             signal: controller.signal,
@@ -143,7 +137,7 @@ export class Request {
             Request.pending[key] = r;
         }
 
-        const authToken = getCookie("x-session-token")
+        const authToken = AuthController.Session;
 
         axios.post(url, json, {
             signal: controller.signal,
@@ -186,7 +180,7 @@ export class Request {
             Request.pending[key] = r;
         }
 
-        const authToken = getCookie("x-session-token")
+        const authToken = AuthController.Session;
 
         axios.post(url, form, {
             signal: controller.signal,

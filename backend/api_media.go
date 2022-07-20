@@ -39,7 +39,7 @@ func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem 
 		result.Type = meta.Type
 		result.Title = meta.Title
 		if meta.ThumbnailReady {
-			result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg"
+			result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, meta.ThumbnailAsset)
 		} else {
 			result.Thumbnail = ""
 		}
@@ -158,7 +158,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	result.UploadTimestamp = meta.UploadTimestamp
 
 	if meta.ThumbnailReady {
-		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg"
+		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, meta.ThumbnailAsset)
 	} else {
 		result.Thumbnail = ""
 	}
@@ -172,12 +172,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Ready = true
 		result.Encoded = true
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?token=" + MakeAssetToken(media_id, meta.OriginalAsset)
 	} else if meta.OriginalReady {
 		result.Ready = true
 		result.Encoded = false
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?token=" + MakeAssetToken(media_id, meta.OriginalAsset)
 	} else {
 		result.Ready = false
 		result.ReadyProgress = GetVault().media.GetProgress(media_id)
@@ -188,7 +188,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	if meta.PreviewsReady {
 		result.VideoPreviewsInterval = meta.PreviewsInterval
-		result.VideoPreviews = "/assets/p/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.PreviewsAsset) + "/preview_{INDEX}.jpg"
+		result.VideoPreviews = "/assets/p/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.PreviewsAsset) + "/preview_{INDEX}.jpg" + "?token=" + MakeAssetToken(media_id, meta.PreviewsAsset)
 	} else {
 		result.VideoPreviewsInterval = 0
 		result.VideoPreviews = ""
@@ -206,7 +206,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 			if meta.Resolutions[i].Ready {
 				r.Ready = true
-				r.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Resolutions[i].Asset) + "/video." + meta.Resolutions[i].Extension
+				r.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Resolutions[i].Asset) + "/video." + meta.Resolutions[i].Extension + "?token=" + MakeAssetToken(media_id, meta.Resolutions[i].Asset)
 			} else {
 				r.Ready = false
 				r.Url = ""
@@ -228,7 +228,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 			s.Id = meta.Subtitles[i].Id
 			s.Name = meta.Subtitles[i].Name
 
-			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt"
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt" + "?token=" + MakeAssetToken(media_id, meta.Subtitles[i].Asset)
 
 			subtitles = append(subtitles, s)
 		}

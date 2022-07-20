@@ -265,7 +265,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	var result ThumbnailAPIResponse
 
-	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumb_asset) + "/thumbnail.jpg"
+	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumb_asset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, thumb_asset)
 
 	jsonResult, err := json.Marshal(result)
 

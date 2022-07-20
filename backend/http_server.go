@@ -87,6 +87,9 @@ func RunHTTPServer(port string, bindAddr string) {
 		router.Use(corsMiddleware)
 	}
 
+	// Initialize tokens
+	InitAssetJWTSecret()
+
 	// API routes
 
 	// Auth API

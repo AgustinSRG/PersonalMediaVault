@@ -13,13 +13,6 @@ import (
 )
 
 func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
-	session := GetSessionFromRequest(request)
-
-	if session == nil {
-		response.WriteHeader(401)
-		return
-	}
-
 	vars := mux.Vars(request)
 
 	onlyHeader := request.Method == "HEAD"
@@ -41,6 +34,20 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		response.WriteHeader(400)
+		return
+	}
+
+	token := request.URL.Query().Get("token")
+
+	if !CheckAssetToken(token, media_id, asset_id) {
+		response.WriteHeader(401)
+		return
+	}
+
+	session := GetVault().sessions.FindAnySession()
+
+	if session == nil {
+		response.WriteHeader(401)
 		return
 	}
 
@@ -252,13 +259,6 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 }
 
 func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Request) {
-	session := GetSessionFromRequest(request)
-
-	if session == nil {
-		response.WriteHeader(401)
-		return
-	}
-
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
@@ -272,6 +272,20 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	if err != nil {
 		response.WriteHeader(400)
+		return
+	}
+
+	token := request.URL.Query().Get("token")
+
+	if !CheckAssetToken(token, media_id, asset_id) {
+		response.WriteHeader(401)
+		return
+	}
+
+	session := GetVault().sessions.FindAnySession()
+
+	if session == nil {
+		response.WriteHeader(401)
 		return
 	}
 

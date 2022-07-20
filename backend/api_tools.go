@@ -3,7 +3,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"net"
@@ -12,27 +14,89 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/golang-jwt/jwt"
 )
 
 const (
 	JSON_BODY_MAX_LENGTH     = 5 * 1024 * 1024
 	AUTH_API_BODY_MAX_LENGTH = 16 * 1024
+	ASSET_JWT_SUB            = "pmv_asset"
 )
+
+var (
+	ASSET_JWT_SECRET = make([]byte, 32)
+)
+
+func InitAssetJWTSecret() {
+	rand.Read(ASSET_JWT_SECRET)
+}
+
+func CheckAssetToken(token string, media_id uint64, asset_id uint64) (valid bool) {
+	if token == "" {
+		return false
+	}
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			valid = false
+		}
+	}()
+
+	t, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		// Check the algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Provide signing key
+		return ASSET_JWT_SECRET, nil
+	})
+
+	if err != nil {
+		return false
+	}
+
+	claims, ok := t.Claims.(jwt.MapClaims)
+
+	if !ok || !t.Valid {
+		return false // Invalid token
+	}
+
+	if claims["sub"] == nil || claims["sub"].(string) != ASSET_JWT_SUB {
+		return false // Invalid sibject
+	}
+
+	if claims["mid"] == nil || claims["mid"].(string) != fmt.Sprint(media_id) {
+		return false // Invalid media ID
+	}
+
+	if claims["aid"] == nil || claims["aid"].(string) != fmt.Sprint(asset_id) {
+		return false // Invalid asset ID
+	}
+
+	return true
+}
+
+func MakeAssetToken(media_id uint64, asset_id uint64) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": ASSET_JWT_SUB,
+		"mid": fmt.Sprint(media_id),
+		"aid": fmt.Sprint(asset_id),
+	})
+
+	tokenb64, e := token.SignedString(ASSET_JWT_SECRET)
+
+	if e != nil {
+		return ""
+	}
+
+	return tokenb64
+}
 
 func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
-
-	if CORS_INSECURE_MODE_ENABLED && sessionToken == "" && (request.Method == "GET" || request.Method == "HEAD") {
-		sessionToken = request.URL.Query().Get("x-session-token")
-	}
-
-	if sessionToken == "" && (request.Method == "GET" || request.Method == "HEAD") {
-		c, err := request.Cookie("x-session-token")
-
-		if err == nil || c != nil {
-			sessionToken = c.Value
-		}
-	}
 
 	return GetVault().sessions.FindSession(sessionToken)
 }
