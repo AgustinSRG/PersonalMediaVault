@@ -154,7 +154,6 @@ func main() {
 	}
 
 	if options.daemon || options.clean || options.initialize || options.fix {
-		printVersion()
 		if !options.skipLock {
 			// Setup lockfile
 			if !TryLockVault(options.vaultPath) {
@@ -261,7 +260,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println("Usage: pmv [OPTIONS]")
+	fmt.Println("Usage: pmvd [OPTIONS]")
 	fmt.Println("    OPTIONS:")
 	fmt.Println("        --help, -h                 Prints command line options.")
 	fmt.Println("        --version, -v              Prints version.")
@@ -302,7 +301,7 @@ func printVersion() {
 	fmt.Println("- | |      | |  | |    \\  /")
 	fmt.Println("- |_|      |_|  |_|     \\/")
 	fmt.Println("---------------------------------------------------")
-	fmt.Println("- Personal Media Vault")
+	fmt.Println("- Personal Media Vault (Backend)")
 	fmt.Println("- Version " + BACKEND_VERSION)
 	fmt.Println("- https://github.com/AgustinSRG/PersonalMediaVault")
 	fmt.Println("---------------------------------------------------")

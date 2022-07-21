@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go build -o pmv
+go build -o pmvd

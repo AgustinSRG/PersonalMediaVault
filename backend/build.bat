@@ -1,3 +1,3 @@
 @echo off
 
-call go build -o pmv.exe
+call go build -o pmvd.exe
