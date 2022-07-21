@@ -214,6 +214,7 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 
 	if errSSL != nil {
 		LogError(errSSL)
+		os.Exit(5)
 	}
 }
 
@@ -237,5 +238,6 @@ func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 
 	if errHTTP != nil {
 		LogError(errHTTP)
+		os.Exit(5)
 	}
 }

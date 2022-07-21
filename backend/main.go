@@ -158,7 +158,7 @@ func main() {
 			// Setup lockfile
 			if !TryLockVault(options.vaultPath) {
 				fmt.Println("Error: The vault is already in use. If this is not true, please remove the file vault.lock in your vault folder.")
-				os.Exit(1)
+				os.Exit(4)
 			}
 		}
 	}
