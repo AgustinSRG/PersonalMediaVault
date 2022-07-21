@@ -60,7 +60,7 @@ func TestVaultTagManager(t *testing.T) {
 		panic(err)
 	}
 
-	list, _, err := tm.ListTaggedMedia("tag_example", key, 0, 100, false)
+	list, _, _, err := tm.ListTaggedMedia("tag_example", key, 0, 100, false)
 
 	if err != nil {
 		t.Error(err)
@@ -166,7 +166,7 @@ func TestVaultTagManager(t *testing.T) {
 		t.Errorf("Expected untagged media, but it was tagged")
 	}
 
-	list, _, err = tm.ListTaggedMedia("tag_example", key, 0, 100, false)
+	list, _, _, err = tm.ListTaggedMedia("tag_example", key, 0, 100, false)
 
 	if err != nil {
 		t.Error(err)
@@ -177,7 +177,7 @@ func TestVaultTagManager(t *testing.T) {
 		t.Errorf("Invalid list: %v", list)
 	}
 
-	list, _, err = tm.ListTaggedMedia("tag_2", key, 0, 100, false)
+	list, _, _, err = tm.ListTaggedMedia("tag_2", key, 0, 100, false)
 
 	if err != nil {
 		t.Error(err)
