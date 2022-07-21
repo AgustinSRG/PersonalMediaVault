@@ -1,0 +1,25 @@
+# Binary files
+
+pmv.exe
+pmv
+laucher
+laucher.exe
+
+# Ignore temp files
+
+temp
+test.js
+
+# Ignore data folders
+
+vault
+version.txt
+version.log
+
+# Ignore .env
+
+.env
+
+# Others
+
+TODO.txt
