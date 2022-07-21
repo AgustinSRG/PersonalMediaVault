@@ -33,21 +33,44 @@ func runCommand(cmdText string, vc *VaultController) {
 	cmdKey := strings.ToLower(args[0])
 
 	switch cmdKey {
-	case "start":
+	case "start", "up":
 		if vc.Start() {
 			vc.WaitForStart()
 			openBrowser(vc.launchConfig.Port)
 		}
-	case "stop":
+	case "stop", "down":
 		if vc.Stop() {
 			vc.WaitForStop()
 		}
-	case "browser":
+	case "status", "check", "s":
+		vc.PrintStatus()
+	case "restart", "rs":
+		if vc.Stop() {
+			vc.WaitForStop()
+		}
+		if vc.Start() {
+			vc.WaitForStart()
+		}
+	case "browser", "b":
 		openBrowser(vc.launchConfig.Port)
+	case "help", "h", "commands", "man", "?":
+		printCommandList()
 	case "exit", "quit", "q":
 		if vc.Stop() {
 			vc.WaitForStop()
 		}
 		os.Exit(0)
+	default:
+		fmt.Println("Unrecognized command: '" + cmdKey + "'. Use 'help' to get the command list.")
 	}
+}
+
+func printCommandList() {
+	fmt.Println("    help    - Prints command list")
+	fmt.Println("    exit    - Closes the vault and exits the program")
+	fmt.Println("    start   - Starts the vault")
+	fmt.Println("    stop    - Stops the vault")
+	fmt.Println("    restart - Restarts the vault")
+	fmt.Println("    status  - Prints current status and configuration")
+	fmt.Println("    browser - Opens the vault using the default browser")
 }

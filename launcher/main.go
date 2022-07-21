@@ -158,7 +158,7 @@ func main() {
 
 	// Initailize the vault if needed
 
-	vaultController.Initialize(vaultPath, launcherConfig, reader)
+	vaultController.Initialize(absolutePath, launcherConfig, reader)
 
 	// Start vault
 

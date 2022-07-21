@@ -45,7 +45,7 @@ func getLogFileName() (string, error) {
 	// Date
 
 	year := fmt.Sprint(time.Now().UTC().Year())
-	month := fmt.Sprint(time.Now().UTC().Month())
+	month := fmt.Sprint(int(time.Now().UTC().Month()))
 	if len(month) < 2 {
 		month = "0" + month
 	}

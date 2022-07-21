@@ -61,6 +61,30 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 func (vc *VaultController) PrintStatus() {
 	vc.lock.Lock()
 	defer vc.lock.Unlock()
+
+	port := fmt.Sprint(vc.launchConfig.Port)
+	bindAddr := "[::]"
+
+	if vc.launchConfig.Local {
+		bindAddr = "[::1]"
+	}
+
+	fmt.Println("Vault path: " + vc.vaultPath)
+	fmt.Println("Vault listening address: " + bindAddr + ":" + port)
+
+	if vc.started {
+		fmt.Println("Status: Started")
+	} else {
+		fmt.Println("Status: Stopped")
+	}
+
+	if vc.errorMessage != "" {
+		fmt.Println("Error: " + vc.errorMessage)
+	}
+
+	if vc.logFilePath != "" {
+		fmt.Println("Log file: " + vc.logFilePath)
+	}
 }
 
 func (vc *VaultController) Start() bool {
@@ -141,6 +165,7 @@ func (vc *VaultController) Start() bool {
 	}
 
 	vc.started = true
+	vc.errorMessage = ""
 	vc.backendProcess = cmd.Process
 
 	go vc.WaitForProcess()
@@ -150,12 +175,16 @@ func (vc *VaultController) Start() bool {
 
 func (vc *VaultController) WaitForStart() {
 	done := false
+	hasErr := false
+	errMsg := ""
 
 	for !done {
 		vc.lock.Lock()
 
 		if !vc.started {
 			done = true // This means the process exitted
+			hasErr = true
+			errMsg = vc.errorMessage
 		}
 
 		vc.lock.Unlock()
@@ -178,7 +207,15 @@ func (vc *VaultController) WaitForStart() {
 		}
 	}
 
-	fmt.Println("Vault successfully started")
+	if hasErr {
+		if errMsg != "" {
+			fmt.Println("Error: " + errMsg)
+		} else {
+			fmt.Println("Could not start the vault. Check logs for details")
+		}
+	} else {
+		fmt.Println("Vault successfully started")
+	}
 }
 
 func (vc *VaultController) Stop() bool {
@@ -243,7 +280,7 @@ func (vc *VaultController) WaitForProcess() {
 		} else if state.ExitCode() == 5 {
 			vc.errorMessage = "Cannot listen to port " + fmt.Sprint(vc.launchConfig.Port) + ". Probably there is another proccess listening on that port."
 		} else {
-			vc.errorMessage = "Backend process error. Check the logs at: " + vc.logFilePath
+			vc.errorMessage = ""
 		}
 	}
 
