@@ -12,7 +12,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	iso639_3 "github.com/barbashov/iso639-3"
@@ -546,7 +545,7 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 			shouldKill := progress_reporter(out_duration * 100 / input_duration)
 
 			if shouldKill {
-				cmd.Process.Signal(syscall.SIGINT)
+				cmd.Process.Kill()
 			}
 		}
 	}
