@@ -34,8 +34,7 @@ func main() {
 			return
 		}
 	} else if len(args) == 1 {
-		printHelp()
-		return
+		vaultPath = "vault"
 	} else {
 		printHelp()
 		os.Exit(1)
@@ -155,6 +154,21 @@ func main() {
 		}
 	}
 
+	var vaultController VaultController
+
+	// Initailize the vault if needed
+
+	vaultController.Initialize(vaultPath, launcherConfig, reader)
+
+	// Start vault
+
+	runCommand("start", &vaultController)
+
+	// Read commands
+
+	for true {
+		readNextCommand(reader, absolutePath, &vaultController)
+	}
 }
 
 func printHelp() {
