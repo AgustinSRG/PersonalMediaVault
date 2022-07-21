@@ -163,11 +163,11 @@ func main() {
 		}
 	}
 
+	SetTempFilesPath(options.tempPath) // Set temporal files path
+
 	if options.initialize {
 		InitializeCredentialsPath(options.vaultPath)
 	}
-
-	SetTempFilesPath(options.tempPath) // Set temporal files path
 
 	if options.clean {
 		LogInfo("Cleaning vault temporal files...")
@@ -230,7 +230,7 @@ func main() {
 			go openBrowser(options.port)
 		}
 		RunHTTPServer(options.port, options.bindAddr)
-	} else if options.initialize || options.clean || options.fix {
+	} else if options.clean || options.fix {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath)
 
@@ -253,6 +253,8 @@ func main() {
 			FixVaultConsistency(&vault)
 		}
 
+		return
+	} else if options.initialize {
 		return
 	} else {
 		printHelp()
