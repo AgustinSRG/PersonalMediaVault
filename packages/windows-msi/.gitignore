@@ -1,0 +1,4 @@
+*.wixobj
+*.msi
+PersonalMediaVault
+HeatFile.wxs
