@@ -146,7 +146,7 @@ func main() {
 		fmt.Println("Configured listening address as [::]:" + fmt.Sprint(launcherConfig.Port))
 	}
 
-	if fileExists(path.Join(vaultPath, "vault.lock")) {
+	if CheckVaultLocked(path.Join(vaultPath, "vault.lock")) {
 		fmt.Println("Seems like the vault is being used by another process.")
 		fmt.Println("Openning the vault by multiple processes could be dangerous for the vault integrity.")
 		fmt.Print("Procceed? (y/n): ")

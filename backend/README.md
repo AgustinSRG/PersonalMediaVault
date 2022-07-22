@@ -52,7 +52,7 @@ Also, here is a list of available debug options:
 
 | Option | Description |
 |---|---|
-| `--skip-lock ` | Ignores vault lockfile. |
+| `--skip-lock` | Ignores vault lockfile. |
 | `--fix-consistency` | Fixes vault consistency at startup (takes some time). |
 | `--debug` | Enables debug mode. |
 | `--log-requests` | Enables logging requests to standard outout. |

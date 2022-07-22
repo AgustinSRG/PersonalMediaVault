@@ -97,7 +97,7 @@ func (vc *VaultController) Start() bool {
 		return false
 	}
 
-	if fileExists(path.Join(vc.vaultPath, "vault.lock")) {
+	if CheckVaultLocked(path.Join(vc.vaultPath, "vault.lock")) {
 		fmt.Println("Seems like the vault is being used by another process.")
 		fmt.Println("Openning the vault by multiple processes could be dangerous for the vault integrity.")
 		fmt.Print("Procceed? (y/n): ")
