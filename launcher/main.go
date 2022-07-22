@@ -34,7 +34,15 @@ func main() {
 			return
 		}
 	} else if len(args) == 1 {
-		vaultPath = "vault"
+		// Default vaulty path
+		userhome, err := os.UserHomeDir()
+
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		vaultPath = path.Join(userhome, ".pmv", "vault")
 	} else {
 		printHelp()
 		os.Exit(1)
