@@ -5,6 +5,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type ApiAdminAccountEntry struct {
@@ -169,4 +171,19 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 
 	response.WriteHeader(200)
 	return
+}
+
+var (
+	LAUNCHER_TAG = ""
+)
+
+func api_checkLauncherTag(response http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	if vars["tag"] == LAUNCHER_TAG {
+		response.WriteHeader(200)
+		return
+	}
+
+	response.WriteHeader(404)
 }

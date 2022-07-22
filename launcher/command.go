@@ -35,8 +35,9 @@ func runCommand(cmdText string, vc *VaultController) {
 	switch cmdKey {
 	case "start", "up":
 		if vc.Start() {
-			vc.WaitForStart()
-			openBrowser(vc.launchConfig.Port)
+			if vc.WaitForStart() {
+				openBrowser(vc.launchConfig.Port)
+			}
 		}
 	case "stop", "down":
 		if vc.Stop() {

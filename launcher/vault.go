@@ -24,6 +24,7 @@ type VaultController struct {
 	backendProcess *os.Process
 	logFilePath    string
 	logFile        *os.File
+	launchTag      string
 
 	lock *sync.Mutex
 }
@@ -144,11 +145,15 @@ func (vc *VaultController) Start() bool {
 		bindAddr = "[::1]"
 	}
 
+	// Tag
+
+	vc.launchTag = fmt.Sprint(time.Now().UnixMilli()) + "-" + fmt.Sprint(os.Getpid())
+
 	// Run backend
 
 	fmt.Println("Starting vault...")
 
-	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr)
+	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag)
 
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
@@ -173,10 +178,11 @@ func (vc *VaultController) Start() bool {
 	return true
 }
 
-func (vc *VaultController) WaitForStart() {
+func (vc *VaultController) WaitForStart() bool {
 	done := false
 	hasErr := false
 	errMsg := ""
+	tag := ""
 
 	for !done {
 		vc.lock.Lock()
@@ -185,13 +191,15 @@ func (vc *VaultController) WaitForStart() {
 			done = true // This means the process exitted
 			hasErr = true
 			errMsg = vc.errorMessage
+		} else {
+			tag = vc.launchTag
 		}
 
 		vc.lock.Unlock()
 
 		if !done {
 			// Check the port availability
-			resp, err := http.Get("http://localhost:" + fmt.Sprint(vc.launchConfig.Port) + "/")
+			resp, err := http.Get("http://localhost:" + fmt.Sprint(vc.launchConfig.Port) + "/api/admin/launcher/" + tag)
 
 			if err == nil {
 				resp.Body.Close()
@@ -216,6 +224,8 @@ func (vc *VaultController) WaitForStart() {
 	} else {
 		fmt.Println("Vault successfully started")
 	}
+
+	return !hasErr
 }
 
 func (vc *VaultController) Stop() bool {

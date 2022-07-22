@@ -57,6 +57,7 @@ Also, here is a list of available debug options:
 | `--debug` | Enables debug mode. |
 | `--log-requests` | Enables logging requests to standard outout. |
 | `--cors-insecure` | Allows all CORS requests (insecure, for development). |
+| `--launch-tag <tag>` | Sets launcher tag (for launcher use). |
 
 Also, here is a list of envonment variables to configure other options:
 

@@ -128,6 +128,13 @@ func main() {
 			}
 			options.port = args[i+1]
 			i++
+		} else if arg == "--launch-tag" {
+			if i == len(args)-1 {
+				fmt.Println("The option '--launch-tag' requires a value")
+				os.Exit(1)
+			}
+			LAUNCHER_TAG = args[i+1]
+			i++
 		} else if arg == "--bind" || arg == "-b" {
 			if i == len(args)-1 {
 				fmt.Println("The option '--bind' requires a value")
@@ -282,6 +289,7 @@ func printHelp() {
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --log-requests             Enables logging requests to standard outout.")
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
+	fmt.Println("        --launch-tag <tag>         Sets launcher tag (for launcher use).")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")

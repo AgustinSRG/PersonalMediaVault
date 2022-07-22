@@ -105,6 +105,7 @@ func RunHTTPServer(port string, bindAddr string) {
 	router.HandleFunc("/api/admin/accounts", api_getAccounts).Methods("GET")
 	router.HandleFunc("/api/admin/accounts", api_createAccount).Methods("POST")
 	router.HandleFunc("/api/admin/accounts/delete", api_deleteAccount).Methods("POST")
+	router.HandleFunc("/api/admin/launcher/{tag}", api_checkLauncherTag).Methods("GET")
 
 	// Assets API (get encrypted media files)
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
