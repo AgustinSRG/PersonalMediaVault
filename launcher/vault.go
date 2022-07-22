@@ -304,3 +304,49 @@ func (vc *VaultController) WaitForProcess() {
 
 	vc.lock.Unlock()
 }
+
+func (vc *VaultController) Clean() {
+	// Clean
+	cmd := exec.Command(BACKEND_BIN, "--clean", "--fix-consistency", "--skip-lock", "--vault-path", vc.vaultPath)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+	}
+}
+
+func (vc *VaultController) Backup(p string) {
+	fmt.Println("You are going to create a backup of the vault in the following location:")
+	fmt.Println(p)
+	fmt.Print("Procceed? (y/n): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+		return
+	}
+
+	// Backup
+	cmd := exec.Command(BACKUP_BIN, vc.vaultPath, p)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+	}
+}

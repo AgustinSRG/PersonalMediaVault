@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -114,6 +115,27 @@ func runCommand(cmdText string, vc *VaultController) {
 		} else {
 			fmt.Println("Usage: local [y/n] - Sets local listening mode")
 		}
+	case "clean", "c":
+		if vc.Stop() {
+			vc.WaitForStop()
+		}
+		vc.Clean()
+		if vc.Start() {
+			if vc.WaitForStart() {
+				openBrowser(vc.launchConfig.Port)
+			}
+		}
+	case "backup", "bkp", "bk":
+		if len(args) == 2 {
+			ap, err := filepath.Abs(args[1])
+			if err != nil {
+				fmt.Println("Usage: backup [path] - Makes a backup of the vault in the specified path")
+			} else {
+				vc.Backup(ap)
+			}
+		} else {
+			fmt.Println("Usage: backup [path] - Makes a backup of the vault in the specified path")
+		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
 	case "exit", "quit", "q":
@@ -143,13 +165,15 @@ func askRestart(vc *VaultController) {
 }
 
 func printCommandList() {
-	fmt.Println("    help        - Prints command list")
-	fmt.Println("    exit        - Closes the vault and exits the program")
-	fmt.Println("    start       - Starts the vault")
-	fmt.Println("    stop        - Stops the vault")
-	fmt.Println("    restart     - Restarts the vault")
-	fmt.Println("    status      - Prints current status and configuration")
-	fmt.Println("    browser     - Opens the vault using the default browser")
-	fmt.Println("    port [p]    - Sets the listening port")
-	fmt.Println("    local [y/n] - Sets local listening mode")
+	fmt.Println("    help          - Prints command list")
+	fmt.Println("    exit          - Closes the vault and exits the program")
+	fmt.Println("    start         - Starts the vault")
+	fmt.Println("    stop          - Stops the vault")
+	fmt.Println("    restart       - Restarts the vault")
+	fmt.Println("    browser       - Opens the vault using the default browser")
+	fmt.Println("    status        - Prints current status and configuration")
+	fmt.Println("    clean         - Restarts the vault and cleans inconsistent files")
+	fmt.Println("    port [p]      - Sets the listening port")
+	fmt.Println("    local [y/n]   - Sets local listening mode")
+	fmt.Println("    backup [path] - Makes a backup of the vault in the specified path")
 }
