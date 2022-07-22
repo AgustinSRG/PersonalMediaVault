@@ -122,6 +122,10 @@ func main() {
 
 		ans = strings.TrimSpace(ans)
 
+		if ans == "" {
+			ans = "y"
+		}
+
 		if strings.HasPrefix(strings.ToLower(ans), "y") {
 			launcherConfig.Local = true
 		} else {

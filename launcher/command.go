@@ -6,6 +6,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
+	"strconv"
 	"strings"
 )
 
@@ -50,10 +52,68 @@ func runCommand(cmdText string, vc *VaultController) {
 			vc.WaitForStop()
 		}
 		if vc.Start() {
-			vc.WaitForStart()
+			if vc.WaitForStart() {
+				openBrowser(vc.launchConfig.Port)
+			}
 		}
 	case "browser", "b":
 		openBrowser(vc.launchConfig.Port)
+	case "port", "p":
+		if len(args) == 1 {
+			fmt.Println("Listening port: " + fmt.Sprint(vc.launchConfig.Port))
+		} else if len(args) == 2 {
+			p, err := strconv.Atoi(args[1])
+
+			if err != nil || p <= 0 {
+				fmt.Println("Usage: port [p] - Sets the listening port")
+			} else {
+				vc.launchConfig.Port = p
+				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+				if err != nil {
+					fmt.Println("Error: " + err.Error())
+				} else {
+					fmt.Println("Listening port changed: " + fmt.Sprint(vc.launchConfig.Port))
+					askRestart(vc)
+				}
+			}
+		} else {
+			fmt.Println("Usage: port [p] - Sets the listening port")
+		}
+	case "local", "localhost", "l":
+		if len(args) == 1 {
+			if vc.launchConfig.Local {
+				fmt.Println("Listening mode: Local (localhost)")
+			} else {
+				fmt.Println("Listening mode: All interfaces ([::])")
+			}
+		} else if len(args) == 2 {
+			if strings.HasPrefix(strings.ToLower(args[1]), "y") {
+				vc.launchConfig.Local = true
+				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+				if err != nil {
+					fmt.Println("Error: " + err.Error())
+				} else {
+					fmt.Println("Listening mode changed: Local (localhost)")
+					askRestart(vc)
+				}
+			} else if strings.HasPrefix(strings.ToLower(args[1]), "n") {
+				vc.launchConfig.Local = false
+				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+				if err != nil {
+					fmt.Println("Error: " + err.Error())
+				} else {
+					fmt.Println("Listening mode changed: All interfaces ([::])")
+					askRestart(vc)
+				}
+			} else {
+				fmt.Println("Usage: local [y/n] - Sets local listening mode")
+			}
+		} else {
+			fmt.Println("Usage: local [y/n] - Sets local listening mode")
+		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
 	case "exit", "quit", "q":
@@ -66,12 +126,30 @@ func runCommand(cmdText string, vc *VaultController) {
 	}
 }
 
+func askRestart(vc *VaultController) {
+	fmt.Print("Restart the vault? (y/n): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if strings.HasPrefix(strings.ToLower(ans), "y") {
+		runCommand("restart", vc)
+	}
+}
+
 func printCommandList() {
-	fmt.Println("    help    - Prints command list")
-	fmt.Println("    exit    - Closes the vault and exits the program")
-	fmt.Println("    start   - Starts the vault")
-	fmt.Println("    stop    - Stops the vault")
-	fmt.Println("    restart - Restarts the vault")
-	fmt.Println("    status  - Prints current status and configuration")
-	fmt.Println("    browser - Opens the vault using the default browser")
+	fmt.Println("    help        - Prints command list")
+	fmt.Println("    exit        - Closes the vault and exits the program")
+	fmt.Println("    start       - Starts the vault")
+	fmt.Println("    stop        - Stops the vault")
+	fmt.Println("    restart     - Restarts the vault")
+	fmt.Println("    status      - Prints current status and configuration")
+	fmt.Println("    browser     - Opens the vault using the default browser")
+	fmt.Println("    port [p]    - Sets the listening port")
+	fmt.Println("    local [y/n] - Sets local listening mode")
 }

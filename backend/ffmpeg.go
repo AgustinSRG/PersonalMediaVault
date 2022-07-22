@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	iso639_3 "github.com/barbashov/iso639-3"
 	"github.com/vansante/go-ffprobe"
 )
 
@@ -633,12 +632,6 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 			continue
 		}
 
-		langInfo := iso639_3.FromAnyCode(lang)
-
-		if langInfo == nil {
-			continue
-		}
-
 		if addedMap[lang] {
 			continue
 		}
@@ -656,7 +649,7 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 
 		entry := ExtractedSubtitlesFile{
 			Id:   lang,
-			Name: langInfo.Name,
+			Name: strings.ToUpper(lang),
 			file: srtPath,
 		}
 
