@@ -19,8 +19,14 @@ var (
 )
 
 type LauncherConfig struct {
-	Port  int  `json:"port"`
-	Local bool `json:"local"`
+	Port     int    `json:"port"`
+	Local    bool   `json:"local"`
+	SSL_Cert string `json:"ssl_cert"`
+	SSL_Key  string `json:"ssl_key"`
+}
+
+func (c *LauncherConfig) hasSSL() bool {
+	return c.SSL_Cert != "" && c.SSL_Key != ""
 }
 
 func detectLauncherPaths() {

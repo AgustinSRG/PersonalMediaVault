@@ -39,7 +39,7 @@ func runCommand(cmdText string, vc *VaultController) {
 	case "start", "up":
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port)
+				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "stop", "down":
@@ -54,11 +54,11 @@ func runCommand(cmdText string, vc *VaultController) {
 		}
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port)
+				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "browser", "b":
-		openBrowser(vc.launchConfig.Port)
+		openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
 	case "port", "p":
 		if len(args) == 1 {
 			fmt.Println("Listening port: " + fmt.Sprint(vc.launchConfig.Port))
@@ -122,7 +122,7 @@ func runCommand(cmdText string, vc *VaultController) {
 		vc.Clean()
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port)
+				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "backup", "bkp", "bk":
@@ -135,6 +135,25 @@ func runCommand(cmdText string, vc *VaultController) {
 			}
 		} else {
 			fmt.Println("Usage: backup [path] - Makes a backup of the vault in the specified path")
+		}
+	case "ssl-check", "ssl":
+		if vc.launchConfig.SSL_Cert == "" {
+			fmt.Println("SSL certificate file: " + "(Not Set)")
+		} else {
+			fmt.Println("SSL certificate file: " + vc.launchConfig.SSL_Cert)
+		}
+		if vc.launchConfig.SSL_Key == "" {
+			fmt.Println("SSL key file: " + "(Not Set)")
+		} else {
+			fmt.Println("SSL key file: " + vc.launchConfig.SSL_Key)
+		}
+	case "ssl-setup":
+		if vc.SetupSSL() {
+			askRestart(vc)
+		}
+	case "ssl-disable":
+		if vc.disableSSL() {
+			askRestart(vc)
 		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
@@ -175,5 +194,8 @@ func printCommandList() {
 	fmt.Println("    clean         - Restarts the vault and cleans inconsistent files")
 	fmt.Println("    port [p]      - Sets the listening port")
 	fmt.Println("    local [y/n]   - Sets local listening mode")
+	fmt.Println("    ssl           - Prints ssl configuration (if any)")
+	fmt.Println("    ssl-setup     - Setups SSL to use HTTPS for accessing your vault")
+	fmt.Println("    ssl-disable   - Disables SSL (use regular HTTP)")
 	fmt.Println("    backup [path] - Makes a backup of the vault in the specified path")
 }

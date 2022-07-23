@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -72,6 +73,12 @@ func (vc *VaultController) PrintStatus() {
 
 	fmt.Println("Vault path: " + vc.vaultPath)
 	fmt.Println("Vault listening address: " + bindAddr + ":" + port)
+
+	if vc.launchConfig.hasSSL() {
+		fmt.Println("SSL: Enabled")
+	} else {
+		fmt.Println("SSL: Disabled")
+	}
 
 	if vc.started {
 		fmt.Println("Status: Started")
@@ -158,6 +165,10 @@ func (vc *VaultController) Start() bool {
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
 
+	if vc.launchConfig.hasSSL() {
+		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
+	}
+
 	cmd.Stderr = logFile
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
@@ -199,13 +210,31 @@ func (vc *VaultController) WaitForStart() bool {
 
 		if !done {
 			// Check the port availability
-			resp, err := http.Get("http://localhost:" + fmt.Sprint(vc.launchConfig.Port) + "/api/admin/launcher/" + tag)
+			if vc.launchConfig.hasSSL() {
+				tr := &http.Transport{
+					TLSClientConfig: &tls.Config{
+						InsecureSkipVerify: true,
+					},
+				}
+				client := &http.Client{Transport: tr}
+				resp, err := client.Get("https://localhost:" + fmt.Sprint(vc.launchConfig.Port) + "/api/admin/launcher/" + tag)
 
-			if err == nil {
-				resp.Body.Close()
+				if err == nil {
+					resp.Body.Close()
 
-				if resp.StatusCode == 200 {
-					done = true
+					if resp.StatusCode == 200 {
+						done = true
+					}
+				}
+			} else {
+				resp, err := http.Get("http://localhost:" + fmt.Sprint(vc.launchConfig.Port) + "/api/admin/launcher/" + tag)
+
+				if err == nil {
+					resp.Body.Close()
+
+					if resp.StatusCode == 200 {
+						done = true
+					}
 				}
 			}
 		}
@@ -289,6 +318,8 @@ func (vc *VaultController) WaitForProcess() {
 			vc.errorMessage = "Vault is locked by another process. Cannot start."
 		} else if state.ExitCode() == 5 {
 			vc.errorMessage = "Cannot listen to port " + fmt.Sprint(vc.launchConfig.Port) + ". Probably there is another proccess listening on that port."
+		} else if state.ExitCode() == 6 {
+			vc.errorMessage = "Invalid SSL keypair provided. Please fix it with 'ssl-setup'."
 		} else {
 			vc.errorMessage = ""
 		}
@@ -348,5 +379,136 @@ func (vc *VaultController) Backup(p string) {
 
 	if err != nil {
 		fmt.Println("Error: " + err.Error())
+	}
+}
+
+func (vc *VaultController) SetupSSL() bool {
+	fmt.Print("Do you want to setup SSL for your vault? (y/n): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+		return false
+	}
+
+	fmt.Println("Type the absolute path in your file system to the SSL CERTIFICATE file you want to use.")
+	fmt.Println("Make sure it is correct and it is in PEM format.")
+	fmt.Print("Certificate file: ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	certFile := ans
+
+	fmt.Println("Type the absolute path in your file system to the SSL PRIVATE KEY file you want to use.")
+	fmt.Println("Make sure it is correct and it is in PEM format.")
+	fmt.Print("Private key file: ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	keyFile := ans
+
+	fmt.Println("")
+	if certFile == "" {
+		fmt.Println("SSL certificate file: " + "(Not Set)")
+	} else {
+		fmt.Println("SSL certificate file: " + certFile)
+	}
+	if keyFile == "" {
+		fmt.Println("SSL key file: " + "(Not Set)")
+	} else {
+		fmt.Println("SSL key file: " + keyFile)
+	}
+
+	fmt.Print("Is this correct? (y/n): ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+		return false
+	}
+
+	vc.launchConfig.SSL_Cert = certFile
+	vc.launchConfig.SSL_Key = keyFile
+
+	if vc.launchConfig.SSL_Cert != "" && vc.launchConfig.SSL_Key != "" {
+		if vc.launchConfig.Port == 80 {
+			vc.launchConfig.Port = 443
+		}
+	} else {
+		if vc.launchConfig.Port == 443 {
+			vc.launchConfig.Port = 80
+		}
+	}
+
+	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		return false
+	} else {
+		fmt.Println("Changes in configuration successfully saved.")
+		return true
+	}
+}
+
+func (vc *VaultController) disableSSL() bool {
+	if !vc.launchConfig.hasSSL() {
+		fmt.Println("SSL is not enabled for this vault.")
+		return false
+	}
+
+	fmt.Print("Do you want to disable SSL for your vault? (y/n): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+		return false
+	}
+
+	vc.launchConfig.SSL_Cert = ""
+	vc.launchConfig.SSL_Key = ""
+
+	if vc.launchConfig.Port == 443 {
+		vc.launchConfig.Port = 80
+	}
+
+	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		return false
+	} else {
+		fmt.Println("Changes in configuration successfully saved.")
+		return true
 	}
 }

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"mime"
 	"net/http"
 	"os"
@@ -207,6 +208,14 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 		if e == nil {
 			ssl_port = sslp
 		}
+	}
+
+	// Check keypair
+	_, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	if err != nil {
+		LogError(err)
+		os.Exit(6)
 	}
 
 	// Listen

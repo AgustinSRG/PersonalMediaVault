@@ -8,14 +8,22 @@ import (
 	"runtime"
 )
 
-func openBrowser(port int) {
+func openBrowser(port int, ssl bool) {
 	// Generate localhost URL
 	var url string
 
-	if port == 80 {
-		url = "http://localhost"
+	if ssl {
+		if port == 443 {
+			url = "https://localhost"
+		} else {
+			url = "https://localhost:" + fmt.Sprint(port)
+		}
 	} else {
-		url = "http://localhost:" + fmt.Sprint(port)
+		if port == 80 {
+			url = "http://localhost"
+		} else {
+			url = "http://localhost:" + fmt.Sprint(port)
+		}
 	}
 
 	fmt.Println("Launching browser: " + url)
