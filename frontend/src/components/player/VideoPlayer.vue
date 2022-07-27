@@ -679,7 +679,7 @@ export default defineComponent({
     },
     mouseLeavePlayer: function () {
       this.timelineGrabbed = false;
-      if (!this.playing) return;
+      if (!this.playing || this.expandedTitle || this.expandedAlbum) return;
       this.showControls = false;
       this.volumeShown = isTouchDevice();
       this.helpTooltip = "";
@@ -701,7 +701,7 @@ export default defineComponent({
     tick() {
       this.checkPlayerSize();
 
-      if (this.showControls && !this.mouseInControls && this.playing) {
+      if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
         if (Date.now() - this.lastControlsInteraction > 2000) {
           this.showControls = false;
           this.volumeShown = false;
