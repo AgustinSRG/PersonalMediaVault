@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"sync"
 	"time"
 )
@@ -278,6 +279,17 @@ func (tm *TaskManager) RunTask(task *ActiveTask) {
 func (tm *TaskManager) RunPendingTasks() {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
+
+	// Pre-sort queue
+	sort.Slice(tm.queue, func(i, j int) bool {
+		if tm.queue[i].definition.Type < tm.queue[j].definition.Type {
+			return true
+		} else if tm.queue[i].definition.Id < tm.queue[j].definition.Id {
+			return true
+		} else {
+			return false
+		}
+	})
 
 	for len(tm.queue) > 0 && (tm.max_tasks <= 0 || tm.running_count < tm.max_tasks) {
 		// Spawn next task
