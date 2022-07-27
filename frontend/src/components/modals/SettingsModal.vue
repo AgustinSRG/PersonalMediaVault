@@ -94,6 +94,19 @@
             class="modal-menu-item"
             tabindex="0"
             @keydown="clickOnEnter"
+            @click="clickOnOption('tasks')"
+          >
+            <td class="modal-menu-item-icon"><i class="fas fa-bars-progress"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Tasks") }}
+            </td>
+          </tr>
+
+          <tr
+            v-if="isRoot"
+            class="modal-menu-item"
+            tabindex="0"
+            @keydown="clickOnEnter"
             @click="clickOnOption('advanced')"
           >
             <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
@@ -184,7 +197,7 @@ export default defineComponent({
 </script>
 
 <style>
-.modal-container-theme {
+.modal-container-settings {
   z-index: 250;
 }
 

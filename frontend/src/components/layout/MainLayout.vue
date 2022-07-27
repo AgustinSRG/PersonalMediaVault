@@ -75,6 +75,8 @@
       v-model:display="displayAccountDelete"
     ></AccountDeleteModal>
 
+    <TaskListModal v-model:display="displayTaskList"></TaskListModal>
+
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
     <LoadingOverlay
@@ -114,6 +116,7 @@ import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.v
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
+import TaskListModal from "../modals/TaskListModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -148,6 +151,7 @@ export default defineComponent({
     SubtitlesDeleteModal,
     AccountsAdminModal,
     AccountDeleteModal,
+    TaskListModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -184,6 +188,8 @@ export default defineComponent({
       displayAccountAdmin: false,
       displayAccountDelete: false,
 
+      displayTaskList: false,
+
       displaySidebar: true,
     };
   },
@@ -212,6 +218,9 @@ export default defineComponent({
           break;
         case "advanced":
           this.displayAdvancedSettings = true;
+          break;
+        case "tasks":
+          this.displayTaskList = true;
           break;
         case "admin":
           this.displayAccountAdmin = true;
