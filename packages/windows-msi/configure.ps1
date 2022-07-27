@@ -1,4 +1,7 @@
 
+# Remove old folder
+Remove-Item -ErrorAction Ignore -Path "PersonalMediaVault" -Recurse
+
 # Create folder
 New-Item -ErrorAction Ignore -Path "PersonalMediaVault" -itemType Directory
 
