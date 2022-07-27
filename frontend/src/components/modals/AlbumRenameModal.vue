@@ -115,13 +115,6 @@ export default defineComponent({
         return;
       }
 
-      if (AlbumsController.FindDuplicatedName(this.name)) {
-        this.error = this.$t(
-          "There is already another album with the same name"
-        );
-        return;
-      }
-
       this.busy = true;
       this.error = "";
 
