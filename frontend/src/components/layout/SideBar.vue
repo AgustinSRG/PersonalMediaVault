@@ -128,6 +128,7 @@
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
+import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { GenerateURIQuery } from "@/utils/request";
@@ -228,12 +229,18 @@ export default defineComponent({
 
     updateAlbums: function () {
       this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-        if (a.nameLowerCase < b.nameLowerCase) {
+        const lruA = AppPreferences.AlbumPositionMap[a.id + ""] || 0;
+        const lruB = AppPreferences.AlbumPositionMap[b.id + ""] || 0;
+        if (lruA > lruB) {
+          return -1;
+        } else if (lruA < lruB) {
+          return 1;
+        } else if (a.nameLowerCase < b.nameLowerCase) {
           return -1;
         } else if (a.nameLowerCase > b.nameLowerCase) {
           return 1;
         } else {
-          return 1;
+          return 0;
         }
       });
     },
@@ -249,6 +256,23 @@ export default defineComponent({
     updateAuthInfo: function () {
       this.canWrite = AuthController.CanWrite;
     },
+
+    putAlbumFirst: function (albumId: number) {
+      for (let i = 0; i < this.albums.length; i++) {
+        if (this.albums[i].id === albumId) {
+          const albumEntry = this.albums.splice(i, 1)[0];
+          this.albums.unshift(albumEntry);
+          return;
+        }
+      }
+    },
+
+    undoScroll: function () {
+      const e = this.$el.querySelector(".side-bar-body");
+      if (e) {
+        e.scrollTop = 0;
+      }
+    },
   },
   mounted: function () {
     this.$options.statusUpdater = this.updateStatus.bind(this);
@@ -261,6 +285,10 @@ export default defineComponent({
     this.$options.albumsUpdater = this.updateAlbums.bind(this);
 
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
+
+    this.$options.albumGoTop = this.putAlbumFirst.bind(this);
+
+    AppEvents.AddEventListener("album-sidebar-top", this.$options.albumGoTop);
 
     this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -279,6 +307,11 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
+
+    AppEvents.RemoveEventListener(
+      "album-sidebar-top",
+      this.$options.albumGoTop
+    );
 
     AppEvents.RemoveEventListener(
       "auth-status-changed",
