@@ -340,6 +340,8 @@ func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_typ
 
 	tm.tasks[task_id] = &task
 
+	tm.pending_tasks.Pending[task_id] = task.definition // Add to pending list
+
 	tm.queue = append(tm.queue, &task) // Enqueue
 
 	tm.lock.Unlock()
