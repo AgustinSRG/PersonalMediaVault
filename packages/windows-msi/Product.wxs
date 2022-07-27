@@ -19,27 +19,27 @@
         <ComponentGroup Id="RegistryEntries">
                 <Component Id="RegistryEntry1" Directory="TARGETDIR" Guid="{735842c1-0b44-4361-8910-0f9c498be3a2}">
                     <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv">
-                        <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]\PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                        <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
                         <RegistryValue Type="string" Value="Open with PersonalMediaVault" />
                     </RegistryKey>
                 </Component>
 
                 <Component Id="RegistryEntry2" Directory="TARGETDIR" Guid="{2f96149f-f11c-4fc6-984c-d0e9a764a734}">
                     <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv\command">
-                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]\PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
+                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
                     </RegistryKey>
                 </Component>
 
                 <Component Id="RegistryEntry3" Directory="TARGETDIR" Guid="{da3988a2-367f-4a3b-9f1d-c19c220fddfc}">
                     <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv">
-                        <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]\PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                        <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
                         <RegistryValue Type="string" Value="Open with PersonalMediaVault" />
                     </RegistryKey>
                 </Component>
 
                 <Component Id="RegistryEntry4" Directory="TARGETDIR" Guid="{807752fb-ee50-4097-beef-6b8f9a377461}">
                     <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv\command">
-                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]\PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
+                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
                     </RegistryKey>
                 </Component>
         </ComponentGroup>
@@ -48,7 +48,7 @@
         <DirectoryRef Id="DIR_Shortcuts">
             <Component Id="CMP_MenuShortcut" Guid="{c9555200-a6ea-473b-ab2e-ec381903864e}">
 
-                <Shortcut Id="ExeShortCut" Name="Personal Media Vault" Description="Personal Media Vault Launcher" Target="[ProgramFiles64Folder]\PersonalMediaVault\pmv.exe" />
+                <Shortcut Id="ExeShortCut" Name="Personal Media Vault" Description="Personal Media Vault Launcher" Target="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" />
 
                 <Shortcut Id="UninstallShortcut" Name="Uninstall Personal Media Vault" Description="Uninstalls Personal Media Vault" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" />
 
