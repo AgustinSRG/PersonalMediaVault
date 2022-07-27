@@ -284,4 +284,8 @@ export default class App extends Vue {}
   border: 4px solid transparent;
   background-clip: content-box;
 }
+
+a, a:visited {
+  color: inherit;
+}
 </style>

@@ -62,7 +62,15 @@
                   </div>
                 </td>
                 <td class="bold one-line">{{ renderType(t.type) }}</td>
-                <td class="bold one-line">{{ t.media_id }}</td>
+                <td class="bold one-line">
+                  <a
+                    @click="goToMedia(t.media_id, $event)"
+                    :href="getMediaURL(t.media_id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >{{ t.media_id }}</a
+                  >
+                </td>
                 <td class="one-line">
                   {{
                     renderStatus(
@@ -86,7 +94,8 @@
 <script lang="ts">
 import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { AppStatus } from "@/control/app-status";
+import { GenerateURIQuery, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
@@ -291,6 +300,26 @@ export default defineComponent({
       } else {
         return this.$t("Task is in queue");
       }
+    },
+
+    goToMedia: function (mid, e) {
+      if (e) {
+        e.preventDefault();
+      }
+      AppStatus.ClickOnMedia(mid, true);
+      this.close();
+    },
+
+    getMediaURL: function (mid: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: mid + "",
+        })
+      );
     },
   },
   mounted: function () {
