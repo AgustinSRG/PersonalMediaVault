@@ -39,7 +39,7 @@
 
                 <Component Id="RegistryEntry4" Directory="TARGETDIR" Guid="{807752fb-ee50-4097-beef-6b8f9a377461}">
                     <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv\command">
-                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
+                        <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%V&quot;" />
                     </RegistryKey>
                 </Component>
         </ComponentGroup>
