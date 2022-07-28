@@ -284,6 +284,8 @@ func (tm *TaskManager) RunPendingTasks() {
 	sort.Slice(tm.queue, func(i, j int) bool {
 		if tm.queue[i].definition.Type < tm.queue[j].definition.Type {
 			return true
+		} else if tm.queue[i].definition.Type > tm.queue[j].definition.Type {
+			return false
 		} else if tm.queue[i].definition.Id < tm.queue[j].definition.Id {
 			return true
 		} else {
