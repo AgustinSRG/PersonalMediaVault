@@ -170,6 +170,7 @@ export default defineComponent({
       loading: AlbumsController.CurrentAlbumLoading,
 
       currentPos: AlbumsController.CurrentAlbumPos,
+      mustScroll: true,
 
       currentMenuOpen: "",
       contextShown: false,
@@ -185,6 +186,9 @@ export default defineComponent({
   },
   methods: {
     onAlbumUpdate: function () {
+      if (this.albumId !== AlbumsController.CurrentAlbum) {
+        this.mustScroll = true;
+      }
       this.albumId = AlbumsController.CurrentAlbum;
       this.albumData = AlbumsController.CurrentAlbumData;
       this.updateAlbumsList();
@@ -309,10 +313,24 @@ export default defineComponent({
     onAlbumPosUpdate: function () {
       this.loop = AlbumsController.AlbumLoop;
       this.random = AlbumsController.AlbumRandom;
+
+      let mustScroll = false;
+
+      if (
+        this.mustScroll ||
+        this.currentPos !== AlbumsController.CurrentAlbumPos
+      ) {
+        this.mustScroll = false;
+        mustScroll = true;
+      }
+
       this.currentPos = AlbumsController.CurrentAlbumPos;
-      nextTick(() => {
-        this.scrollToSelected();
-      });
+
+      if (mustScroll) {
+        nextTick(() => {
+          this.scrollToSelected();
+        });
+      }
     },
 
     stopPropagationEvent: function (e) {
@@ -422,6 +440,9 @@ export default defineComponent({
       this.$options.sortable = Sortable.create(element, {
         onUpdate: this.onUpdateSortable.bind(this),
         disabled: !this.canWrite,
+        scroll: element,
+        forceAutoscrollFallback: true,
+        scrollSensitivity: 100,
       });
     }
   },
