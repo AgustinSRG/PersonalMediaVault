@@ -100,7 +100,7 @@
     <div class="form-group border-top">
       <label>{{ $t("Thumbnail") }}:</label>
     </div>
-    <div class="form-group">
+    <div class="form-group" @drop="onDrop">
       <label v-if="!thumbnail">{{
         $t("No thumbnail set for this media")
       }}</label>
@@ -231,7 +231,10 @@
         <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
       </button>
     </div>
-    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
+    <div
+      class="form-group border-top"
+      v-if="canWrite && (type === 2 || type === 1)"
+    >
       <label v-if="type === 2"
         >{{
           $t(
@@ -535,6 +538,15 @@ export default defineComponent({
 
     inputFileChanged: function (e) {
       const data = e.target.files;
+      if (data && data.length > 0) {
+        const file = data[0];
+        this.changeThumbnail(file);
+      }
+    },
+
+    onDrop: function (e) {
+      e.preventDefault();
+      const data = e.dataTransfer.files;
       if (data && data.length > 0) {
         const file = data[0];
         this.changeThumbnail(file);
