@@ -33,7 +33,11 @@
           </button>
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="clearSearch" class="btn btn-primary btn-sm">
+          <button
+            type="button"
+            @click="clearSearch"
+            class="btn btn-primary btn-sm"
+          >
             <i class="fas fa-times"></i> {{ $t("Clear Search") }}
           </button>
         </div>
@@ -44,6 +48,7 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
+          :class="{ current: currentMedia == item.id }"
           @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"
@@ -65,7 +70,12 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
-              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
+              <div
+                class="search-result-thumb-tag"
+                v-if="item.type === 2 || item.type === 3"
+              >
+                {{ renderTime(item.duration) }}
+              </div>
             </div>
           </div>
           <div class="search-result-title">
@@ -144,6 +154,8 @@ export default defineComponent({
       order: "desc",
       searchParams: AppStatus.SearchParams,
 
+      currentMedia: AppStatus.CurrentMedia,
+
       page: 0,
       total: 0,
       totalPages: 0,
@@ -212,6 +224,8 @@ export default defineComponent({
     },
 
     onAppStatusChanged: function () {
+      this.currentMedia = AppStatus.CurrentMedia;
+
       if (AppStatus.CurrentSearch !== this.search) {
         this.search = AppStatus.CurrentSearch;
         this.page = 0;
@@ -338,5 +352,4 @@ export default defineComponent({
 </script>
 
 <style>
-
 </style>

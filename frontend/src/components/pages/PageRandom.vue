@@ -50,6 +50,7 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
+          :class="{ current: currentMedia == item.id }"
           @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"
@@ -105,6 +106,8 @@ export default defineComponent({
       pageSize: 50,
       order: "desc",
       searchParams: AppStatus.SearchParams,
+
+      currentMedia: AppStatus.CurrentMedia,
 
       pageItems: [],
       total: 0,
@@ -164,6 +167,7 @@ export default defineComponent({
     },
 
     onAppStatusChanged: function () {
+      this.currentMedia = AppStatus.CurrentMedia;
       if (AppStatus.SearchParams !== this.searchParams) {
         this.searchParams = AppStatus.SearchParams;
         this.updateSearchParams();

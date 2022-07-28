@@ -145,6 +145,7 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
+          :class="{ current: currentMedia == item.id }"
           @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"
@@ -209,6 +210,8 @@ export default defineComponent({
       order: "desc",
       textSearch: "",
       type: 0,
+
+      currentMedia: AppStatus.CurrentMedia,
 
       pageItems: [],
       page: 0,
@@ -470,6 +473,10 @@ export default defineComponent({
         })
         .slice(0, 10);
     },
+
+    onAppStatusChanged: function () {
+      this.currentMedia = AppStatus.CurrentMedia;
+    },
   },
   mounted: function () {
     for (let i = 1; i <= 20; i++) {
@@ -478,10 +485,16 @@ export default defineComponent({
 
     this.$options.loadH = this.load.bind(this);
     this.$options.resetH = this.resetSearch.bind(this);
+    this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
 
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.AddEventListener("media-delete", this.$options.resetH);
     AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
+
+    AppEvents.AddEventListener(
+      "app-status-update",
+      this.$options.statusChangeH
+    );
 
     this.$options.tagUpdateH = this.updateTagData.bind(this);
 
@@ -496,6 +509,11 @@ export default defineComponent({
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
     AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
+
+    AppEvents.RemoveEventListener(
+      "app-status-update",
+      this.$options.statusChangeH
+    );
 
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 

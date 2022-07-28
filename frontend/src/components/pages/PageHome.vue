@@ -41,6 +41,7 @@
           v-for="(item, i) in pageItems"
           :key="i"
           class="search-result-item clickable"
+          :class="{ current: currentMedia == item.id }"
           @click="goToMedia(item.id, $event)"
           :href="getMediaURL(item.id)"
           target="_blank"
@@ -146,6 +147,8 @@ export default defineComponent({
       order: "desc",
       searchParams: AppStatus.SearchParams,
 
+      currentMedia: AppStatus.CurrentMedia,
+
       page: 0,
       total: 0,
       totalPages: 0,
@@ -214,6 +217,7 @@ export default defineComponent({
     },
 
     onAppStatusChanged: function () {
+      this.currentMedia = AppStatus.CurrentMedia;
       if (AppStatus.SearchParams !== this.searchParams) {
         this.searchParams = AppStatus.SearchParams;
         this.updateSearchParams();
@@ -243,7 +247,7 @@ export default defineComponent({
       AppStatus.ClickOnMedia(mid, true);
     },
 
-     getMediaURL: function (mid: number): string {
+    getMediaURL: function (mid: number): string {
       return (
         window.location.protocol +
         "//" +
@@ -351,6 +355,14 @@ export default defineComponent({
   padding: 24px;
   text-decoration: none;
   color: inherit;
+}
+
+.light-theme .search-result-item.current {
+  border: solid 2px black;
+}
+
+.dark-theme .search-result-item.current {
+  border: solid 2px white;
 }
 
 .search-result-item:visited {
