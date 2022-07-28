@@ -48,13 +48,13 @@
                 </td>
               </tr>
               <tr v-for="t in tasks" :key="t.id">
-                <td class="one-line" style="width: 1px">
+                <td class="one-line td-shrink">
                   <i
                     class="fas fa-circle task-status"
                     :class="{ 'task-running': t.running }"
                   ></i>
                 </td>
-                <td class="task-pbar-td one-line">
+                <td class="task-pbar-td one-line td-shrink">
                   <div class="task-pbar-container" v-if="t.running">
                     <div
                       class="task-pbar-current"
@@ -62,8 +62,8 @@
                     ></div>
                   </div>
                 </td>
-                <td class="bold one-line">{{ renderType(t.type) }}</td>
-                <td class="bold one-line">
+                <td class="bold one-line td-shrink">{{ renderType(t.type) }}</td>
+                <td class="bold one-line td-shrink">
                   <a
                     @click="goToMedia(t.media_id, $event)"
                     :href="getMediaURL(t.media_id)"

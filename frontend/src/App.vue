@@ -267,6 +267,14 @@ export default class App extends Vue {}
   color: red;
 }
 
+a, a:visited {
+  color: inherit;
+}
+
+.td-shrink {
+  width: 1px;
+}
+
 /* Custom scroll bar */
 
 *::-webkit-scrollbar {
@@ -283,9 +291,5 @@ export default class App extends Vue {}
   border-radius: 8px;
   border: 4px solid transparent;
   background-clip: content-box;
-}
-
-a, a:visited {
-  color: inherit;
 }
 </style>
