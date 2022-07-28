@@ -5,6 +5,7 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
+    @click="close"
   >
     <div
       class="modal-dialog modal-xl"

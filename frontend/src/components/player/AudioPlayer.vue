@@ -768,7 +768,7 @@ export default defineComponent({
         audio.pause();
       }
 
-      if (!audio.ended) {
+      if (audio && !audio.ended) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
       }
 

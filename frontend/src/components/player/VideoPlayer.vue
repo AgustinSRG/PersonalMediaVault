@@ -799,7 +799,7 @@ export default defineComponent({
         video.pause();
       }
 
-      if (!video.ended) {
+      if (video && !video.ended) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
       }
 
