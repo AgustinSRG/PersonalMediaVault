@@ -137,7 +137,14 @@ export default defineComponent({
         SearchAPI.Random("", Date.now(), this.pageSize)
       )
         .onSuccess((result) => {
-          this.pageItems = result.page_items;
+          const s = new Set();
+          this.pageItems = result.page_items.filter(i => {
+            if (s.has(i.id)) {
+              return false;
+            }
+            s.add(i.id);
+            return true;
+          });
           this.total = this.pageItems.length;
           this.loading = false;
         })
