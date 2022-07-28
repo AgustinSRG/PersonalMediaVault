@@ -208,6 +208,10 @@ export default defineComponent({
       // Remove from the array
       for (let i = 0; i < this.pendingToUpload.length; i++) {
         if (this.pendingToUpload[i].id === id) {
+          if (this.pendingToUpload[i].status === "encrypting") {
+            this.uploadingCount--;
+          }
+
           this.pendingToUpload.splice(i, 1);
           return;
         }
@@ -219,6 +223,9 @@ export default defineComponent({
         const id = this.pendingToUpload[i].id;
         Request.Abort("upload-media-" + id);
         Request.Abort("check-media-encryption-" + id);
+        if (this.pendingToUpload[i].status === "encrypting") {
+          this.uploadingCount--;
+        }
       }
 
       this.pendingToUpload = [];
@@ -279,7 +286,6 @@ export default defineComponent({
           m.mid = data.media_id;
           m.status = "encrypting";
           m.progress = 0;
-          this.uploadingCount--;
         })
         .onCancel(() => {
           this.uploadingCount--;
@@ -334,6 +340,7 @@ export default defineComponent({
           m.busy = false;
           if (media.ready) {
             m.status = "ready";
+            this.uploadingCount--;
           } else {
             m.progress = media.ready_p;
           }
@@ -350,6 +357,7 @@ export default defineComponent({
             .add(404, "*", () => {
               m.error = this.$t("The media asset was deleted");
               m.status = "error";
+              this.uploadingCount--;
             })
             .handle(err);
         })
@@ -444,5 +452,4 @@ export default defineComponent({
 .table-btn:not(:disabled):hover {
   color: var(--theme-btn-hover-color);
 }
-
 </style>
