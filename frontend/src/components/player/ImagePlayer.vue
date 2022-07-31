@@ -259,6 +259,10 @@ import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/vmodel";
 
+const SCALE_RANGE = 2;
+const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
+const SCALE_STEP = 0.1 / SCALE_RANGE;
+
 export default defineComponent({
   components: {
     ScaleControl,
@@ -503,10 +507,10 @@ export default defineComponent({
         let height = 0;
 
         if (fitDimensions.fitWidth) {
-          width = scrollerDimensions.width * (0.5 + this.scale * 1.5);
+          width = scrollerDimensions.width * (0.5 + this.scale * SCALE_RANGE);
           height = (width * this.height) / this.width;
         } else {
-          height = scrollerDimensions.height * (0.5 + this.scale * 1.5);
+          height = scrollerDimensions.height * (0.5 + this.scale * SCALE_RANGE);
           width = (height * this.width) / this.height;
         }
 
@@ -521,7 +525,7 @@ export default defineComponent({
     },
 
     renderScale: function (v: number): string {
-      return Math.round(50 + v * 150) + "%";
+      return Math.round(50 + v * SCALE_RANGE_PERCENT) + "%";
     },
     enterTooltip: function (t: string) {
       this.helpTooltip = t;
@@ -659,14 +663,16 @@ export default defineComponent({
           this.helpTooltip = "scale";
           break;
         case "+":
-          this.changeScale(Math.min(1, this.scale + 0.05));
+          this.changeScale(Math.min(1, this.scale + SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
+          this.fit = false;
           break;
         case "-":
-          this.changeScale(Math.max(0, this.scale - 0.05));
+          this.changeScale(Math.max(0, this.scale - SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
+          this.fit = false;
           break;
         case "F":
         case "f":
@@ -797,13 +803,15 @@ export default defineComponent({
         e.preventDefault();
         e.stopPropagation();
         if (e.deltaY > 0) {
-           this.changeScale(Math.max(0, this.scale - 0.05));
+           this.changeScale(Math.max(0, this.scale - SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
+          this.fit = false;
         } else {
-          this.changeScale(Math.min(1, this.scale + 0.05));
+          this.changeScale(Math.min(1, this.scale + SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
+          this.fit = false;
         }
       }
     },
