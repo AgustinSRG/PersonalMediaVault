@@ -16,6 +16,7 @@
     @touchmove="playerMouseMove"
     @keydown="onKeyPress"
     @contextmenu="onContextMenu"
+    @wheel="onMouseWheel"
   >
     <div class="image-scroller" @mousedown="grabScroll">
       <img
@@ -650,6 +651,7 @@ export default defineComponent({
     onKeyPress: function (event) {
       var catched = true;
       switch (event.key) {
+        case " ":
         case "K":
         case "k":
           this.toggleFit();
@@ -788,6 +790,22 @@ export default defineComponent({
         this.$options.autoNextTimer = null;
         this.goNext();
       }, ms);
+    },
+
+    onMouseWheel: function (e: WheelEvent) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.deltaY > 0) {
+           this.changeScale(Math.max(0, this.scale - 0.05));
+          this.scaleShown = true;
+          this.helpTooltip = "scale";
+        } else {
+          this.changeScale(Math.min(1, this.scale + 0.05));
+          this.scaleShown = true;
+          this.helpTooltip = "scale";
+        }
+      }
     },
   },
   mounted: function () {
