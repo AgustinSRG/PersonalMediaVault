@@ -33,7 +33,7 @@
 
       <tr class="tr-button" tabindex="0" @click="goToAutonext" @keydown="clickOnEnter">
         <td>
-          <i class="fas fa-clock-rotate-left icon-config"></i>
+          <i class="fas fa-forward icon-config"></i>
           <b>{{ $t("Auto next") }}</b>
         </td>
         <td class="td-right">

@@ -33,6 +33,7 @@ export class PlayerPreferences {
 
     public static ImagePlayerBackground = "default";
 
+    public static NextOnEnd = true;
     public static ImageAutoNext = 0;
 
     public static SelectedSubtitles = "";
@@ -75,6 +76,7 @@ export class PlayerPreferences {
         PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
 
         PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-autonext", 0);
+        PlayerPreferences.NextOnEnd = LocalStorage.Get("player-pref-next-end", true);
 
         PlayerPreferences.SelectedSubtitles = LocalStorage.Get("player-pref-subtitles", "");
         PlayerPreferences.SubtitlesSize = LocalStorage.Get("player-pref-subtitles-size", "l");
@@ -271,6 +273,11 @@ export class PlayerPreferences {
     public static SetImageAutoNext(s: number) {
         PlayerPreferences.ImageAutoNext = s;
         LocalStorage.Set("player-pref-img-autonext", s);
+    }
+
+    public static SetNextOnEnd(s: boolean) {
+        PlayerPreferences.NextOnEnd = s;
+        LocalStorage.Set("player-pref-next-end", s);
     }
 
     public static SetSubtitles(s: string) {

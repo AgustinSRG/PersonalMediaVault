@@ -18,6 +18,15 @@
           <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
         </td>
       </tr>
+      <tr>
+        <td>
+          <i class="fas fa-forward icon-config"></i>
+          <b>{{ $t("Auto next") }}</b>
+        </td>
+        <td class="td-right">
+          <ToggleSwitch v-model:val="nextendState"></ToggleSwitch>
+        </td>
+      </tr>
       <tr
         class="tr-button"
         tabindex="0"
@@ -314,6 +323,7 @@ export default defineComponent({
   emits: [
     "update:shown",
     "update:loop",
+    "update:nextend",
     "update:speed",
     "update:resolution",
     "update:subsize",
@@ -326,6 +336,7 @@ export default defineComponent({
     shown: Boolean,
     metadata: Object,
     loop: Boolean,
+    nextend: Boolean,
     speed: Number,
     resolution: Number,
     subsize: String,
@@ -337,6 +348,7 @@ export default defineComponent({
     return {
       shownState: useVModel(props, "shown"),
       loopState: useVModel(props, "loop"),
+      nextendState: useVModel(props, "nextend"),
       speedState: useVModel(props, "speed"),
       resolutionState: useVModel(props, "resolution"),
       subsizeState: useVModel(props, "subsize"),

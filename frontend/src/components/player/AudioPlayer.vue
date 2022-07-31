@@ -328,6 +328,7 @@
       v-model:shown="displayConfig"
       v-model:speed="speed"
       v-model:loop="loop"
+      v-model:nextend="nextend"
       v-model:animcolors="animationColors"
       v-model:subsize="subtitlesSize"
       v-model:subbg="subtitlesBg"
@@ -336,6 +337,7 @@
       :metadata="metadata"
       @update:animcolors="onUpdateAnimColors"
       @update:subhtml="onUpdateSubHTML"
+      @update:nextend="onUpdateNextEnd"
       @enter="enterControls"
       @leave="leaveControls"
     ></AudioPlayerConfig>
@@ -444,6 +446,7 @@ export default defineComponent({
       mouseInControls: false,
 
       loop: false,
+      nextend: false,
 
       volume: 1,
       muted: false,
@@ -620,8 +623,10 @@ export default defineComponent({
         }
       } else {
         this.pause();
-        this.$emit("ended");
         this.ended = true;
+        if (this.nextend) {
+          this.goNext();
+        }
       }
     },
 
@@ -977,7 +982,7 @@ export default defineComponent({
       this.currentTime = PlayerPreferences.GetInitialTime(this.mid);
       this.duration = 0;
       this.speed = 1;
-      this.loop = AppStatus.CurrentAlbum < 0;
+      this.loop = AppStatus.CurrentAlbum < 0 || !this.nextend;
       this.loading = true;
       this.playing = true;
       this.clearAudioRenderer();
@@ -1177,6 +1182,10 @@ export default defineComponent({
       PlayerPreferences.SetSubtitlesHTML(this.subtitlesHTML);
       this.reloadSubtitles();
     },
+
+    onUpdateNextEnd: function () {
+      PlayerPreferences.SetNextOnEnd(this.nextend);
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -1186,6 +1195,7 @@ export default defineComponent({
     this.subtitlesSize = PlayerPreferences.SubtitlesSize;
     this.subtitlesBg = PlayerPreferences.SubtitlesBackground;
     this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
+    this.nextend = PlayerPreferences.NextOnEnd;
 
     this.$options.timer = setInterval(this.tick.bind(this), 100);
 
