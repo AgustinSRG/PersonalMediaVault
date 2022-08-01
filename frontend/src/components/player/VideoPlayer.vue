@@ -429,6 +429,8 @@ export default defineComponent({
       videoPending: false,
       videoPendingTask: 0,
 
+      canSaveTime: true,
+
       minPlayer: false,
       displayConfig: false,
 
@@ -620,7 +622,7 @@ export default defineComponent({
       }
       this.currentTime = videoElement.currentTime;
       this.duration = videoElement.duration;
-      if (Date.now() - this.lastTimeChangedEvent > 5000) {
+      if (this.canSaveTime && Date.now() - this.lastTimeChangedEvent > 5000) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
       }
@@ -646,7 +648,9 @@ export default defineComponent({
     },
     onEnded: function () {
       this.loading = false;
-      PlayerPreferences.SetInitialTime(this.mid, 0);
+      if (this.canSaveTime) {
+        PlayerPreferences.SetInitialTime(this.mid, 0);
+      }
       if (this.loop) {
         const videoElement = this.getVideoElement();
         if (videoElement) {
@@ -706,7 +710,13 @@ export default defineComponent({
     tick() {
       this.checkPlayerSize();
 
-      if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
+      if (
+        this.showControls &&
+        !this.mouseInControls &&
+        this.playing &&
+        !this.expandedTitle &&
+        !this.expandedAlbum
+      ) {
         if (Date.now() - this.lastControlsInteraction > 2000) {
           this.showControls = false;
           this.volumeShown = false;
@@ -804,7 +814,7 @@ export default defineComponent({
         video.pause();
       }
 
-      if (video && !video.ended) {
+      if (this.canSaveTime && video && !video.ended) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
       }
 
@@ -922,10 +932,11 @@ export default defineComponent({
         video.currentTime = time;
       }
 
-      if (save) {
+      if (save && this.canSaveTime) {
         PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
         this.lastTimeChangedEvent = Date.now();
       }
+
       if (time < this.duration) {
         this.ended = false;
       }
@@ -1015,7 +1026,10 @@ export default defineComponent({
       if (!this.metadata) {
         return;
       }
-      this.currentTime = PlayerPreferences.GetInitialTime(this.mid);
+      this.canSaveTime = !this.metadata.force_start_beginning;
+      this.currentTime = this.canSaveTime
+        ? PlayerPreferences.GetInitialTime(this.mid)
+        : 0;
       this.duration = 0;
       this.speed = 1;
       this.loop = AppStatus.CurrentAlbum < 0 || !this.nextend;

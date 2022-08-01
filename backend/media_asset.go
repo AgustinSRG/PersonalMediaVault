@@ -100,6 +100,8 @@ type MediaMetadata struct {
 	PreviewsTask     uint64  `json:"previews_task"`
 	PreviewsInterval float64 `json:"previews_interval"`
 	PreviewsAsset    uint64  `json:"previews_asset"`
+
+	ForceStartBeginning bool `json:"force_start_beginning"`
 }
 
 func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64, width int32, height int32, fps int32) error {

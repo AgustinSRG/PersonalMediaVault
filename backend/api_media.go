@@ -103,6 +103,8 @@ type MediaAPIMetaResponse struct {
 	Resolutions []MediaAPIMetaResolution `json:"resolutions"`
 
 	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
+
+	ForceStartBeginning bool `json:"force_start_beginning"`
 }
 
 func api_getMedia(response http.ResponseWriter, request *http.Request) {
@@ -235,6 +237,8 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	}
 
 	result.Subtitles = subtitles
+
+	result.ForceStartBeginning = meta.ForceStartBeginning
 
 	// Response
 
@@ -405,6 +409,85 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 	}
 
 	meta.Description = p.Description
+
+	err = media.EndWrite(meta, session.key, false)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
+}
+
+type MediaAPIEditExtraParams struct {
+	ForceStartBeginning bool `json:"force_start_beginning"`
+}
+
+func api_editMediaExtraParams(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		response.WriteHeader(401)
+		return
+	}
+
+	if !session.write {
+		response.WriteHeader(403)
+		return
+	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p MediaAPIEditExtraParams
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta.ForceStartBeginning = p.ForceStartBeginning
 
 	err = media.EndWrite(meta, session.key, false)
 

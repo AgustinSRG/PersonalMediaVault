@@ -119,6 +119,7 @@ func RunHTTPServer(port string, bindAddr string) {
 
 	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/title", api_editMediaTitle).Methods("POST")
 	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/description", api_editMediaDescription).Methods("POST")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/extra", api_editMediaExtraParams).Methods("POST")
 	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/thumbnail", api_editMediaThumbnail).Methods("POST")
 
 	router.HandleFunc("/api/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")

@@ -41,6 +41,16 @@ export class MediaAPI {
         };
     }
 
+    public static ChangeExtraParams(id: number, forceStartBeginning: boolean): RequestParams {
+        return {
+            method: "POST",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(id + "") + "/edit/extra"),
+            json: {
+                force_start_beginning: forceStartBeginning,
+            },
+        };
+    }
+
     public static ChangeMediaThumbnail(id: number, thumbnail: File): RequestParams {
         const form = new FormData();
         form.append("file", thumbnail);

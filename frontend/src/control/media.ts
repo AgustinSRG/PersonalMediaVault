@@ -60,6 +60,8 @@ export interface MediaData {
 
         url: string;
     }[],
+
+    force_start_beginning: boolean,
 }
 
 export class MediaController {

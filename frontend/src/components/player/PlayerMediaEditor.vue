@@ -298,6 +298,31 @@
         </tbody>
       </table>
     </div>
+     <div class="form-group border-top" v-if="canWrite">
+      <label>{{ $t("Extra media configuration") }}:</label>
+    </div>
+    <div class="table-responsive" v-if="canWrite">
+      <table class="table">
+        <tr>
+          <td class="">
+            {{
+              $t("Reset time to the beginning every time the media reloads?")
+            }}
+          </td>
+          <td class="text-right"><toggle-switch v-model:val="startBeginning"></toggle-switch></td>
+        </tr>
+      </table>
+    </div>
+    <div class="form-group" v-if="canWrite">
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        :disabled="busy || originalStartBeginning === startBeginning"
+        @click="changeExtraParams"
+      >
+        <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
+      </button>
+    </div>
     <div class="form-group border-top" v-if="canWrite">
       <label>{{
         $t(
@@ -346,8 +371,10 @@ import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/consts";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+  components: { ToggleSwitch },
   name: "PlayerMediaEditor",
   emits: ["changed"],
   data: function () {
@@ -457,6 +484,9 @@ export default defineComponent({
       busy: false,
 
       canWrite: AuthController.CanWrite,
+
+      originalStartBeginning: false,
+      startBeginning: false,
     };
   },
 
@@ -473,6 +503,10 @@ export default defineComponent({
 
       this.originalDesc = MediaController.MediaData.description;
       this.desc = this.originalDesc;
+
+      this.originalStartBeginning =
+        MediaController.MediaData.force_start_beginning;
+      this.startBeginning = this.originalStartBeginning;
 
       this.width = MediaController.MediaData.width;
       this.height = MediaController.MediaData.height;
@@ -681,6 +715,62 @@ export default defineComponent({
           AppEvents.Emit("snack", this.$t("Successfully changed description"));
           this.busy = false;
           this.originalDesc = this.desc;
+          this.$emit("changed");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Bad request"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    changeExtraParams: function () {
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      Request.Do(MediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
+        .onSuccess(() => {
+          AppEvents.Emit(
+            "snack",
+            this.$t("Successfully changed media extra params")
+          );
+          this.busy = false;
+          this.originalStartBeginning = this.startBeginning;
           this.$emit("changed");
         })
         .onCancel(() => {
