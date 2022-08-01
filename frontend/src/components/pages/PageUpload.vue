@@ -567,7 +567,7 @@ export default defineComponent({
           };
         })
         .filter((a) => {
-          if (this.tags.indexOf(a.id) >= 0) {
+          if (this.tags.indexOf(a.name) >= 0) {
             return false;
           }
           return a.starts || a.contains;
