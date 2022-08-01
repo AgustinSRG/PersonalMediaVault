@@ -48,3 +48,7 @@ export function escapeSingleQuotes(raw: string): string {
 export function escapeDoubleQuotes(raw: string): string {
     return ("" + raw).replace(/"/g, "\\\"").replace(/\\/g, "\\\\");
 }
+
+export function parseTagName(tag: string): string {
+    return tag.replace(/[\n]/g, " ").replace(/[\r]/g, "").trim().replace(/[\s]/g, "_").toLowerCase();
+}
