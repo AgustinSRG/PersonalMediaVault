@@ -438,6 +438,9 @@ paths:
                       type: string
                       description: "SRT file URL"
                       example: "/assets/b/0/0/subrip.srt"
+              force_start_beginning:
+                type: boolean
+                description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
   
   "/api/media/{id}/edit/title":
     post:
@@ -539,6 +542,45 @@ paths:
                 type: string
                 description: "Error message"
                 example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          
+  "/api/media/{id}/edit/extra":
+    post:
+      summary: Changes media extra params.
+      description: Changes media extra params.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID (Write access required)
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: description
+          schema:
+            properties:
+              force_start_beginning:
+                type: boolean
+                description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+      responses:
+        400:
+          description: Bad request.
         401:
           description: Unauthorized (No valid session)
         404:
