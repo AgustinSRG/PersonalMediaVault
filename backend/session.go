@@ -3,9 +3,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
-	"math/rand"
 	"sync"
 	"time"
 )

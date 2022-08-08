@@ -3,7 +3,7 @@
 package main
 
 import (
-	"math/rand"
+	"crypto/rand"
 	"os"
 	"path"
 	"testing"
