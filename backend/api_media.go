@@ -566,6 +566,9 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 
 			meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
 		}
+	} else if meta.OriginalReady && meta.OriginalEncoded {
+		meta.OriginalEncoded = false
+		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
 	}
 
 	// Check previews
