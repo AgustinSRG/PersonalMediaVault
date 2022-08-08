@@ -2,7 +2,7 @@
   <div
     class="player-top-bar"
     :class="{ hidden: !shown, 'with-album': inalbum, 'album-expand': albumexpanded, 'expanded': expanded && !albumexpanded }"
-    @click="stopPropagationEvent"
+    @click="clickTopBar"
     @dblclick="stopPropagationEvent"
     @contextmenu="stopPropagationEvent"
     @keydown="stopPropagationEvent"
@@ -64,7 +64,7 @@ export default defineComponent({
     PlayerAlbumFullScreen,
     PlayerMediaEditor,
   },
-  emits: ['update:expanded', 'update:albumexpanded'],
+  emits: ['update:expanded', 'update:albumexpanded', 'clickplayer'],
   props: {
     mid: Number,
     metadata: Object,
@@ -88,6 +88,11 @@ export default defineComponent({
     };
   },
   methods: {
+    clickTopBar: function (e) {
+      e.stopPropagation();
+      this.$emit("clickplayer");
+    },
+
     expandTitle: function () {
       this.albumexpandedState = false;
       this.expandedState = true;

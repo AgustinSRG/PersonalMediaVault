@@ -297,7 +297,7 @@
       @mouseleave="mouseLeaveTimeline"
       @mousemove="mouseMoveTimeline"
       @dblclick="stopPropagationEvent"
-      @click="stopPropagationEvent"
+      @click="clickTimeline"
       @mousedown="grabTimeline"
       @toutchstart.passive="grabTimeline"
     >
@@ -351,6 +351,7 @@
       v-model:expanded="expandedTitle"
       v-model:albumexpanded="expandedAlbum"
       :inalbum="inalbum"
+      @clickplayer="clickControls"
     ></PlayerTopBar>
 
     <PlayerContextMenu
@@ -519,6 +520,7 @@ export default defineComponent({
 
     clickControls: function (e) {
       this.displayConfig = false;
+      this.contextMenuShown = false;
       e.stopPropagation();
     },
 
@@ -807,6 +809,12 @@ export default defineComponent({
       }
     },
     stopPropagationEvent: function (e) {
+      e.stopPropagation();
+    },
+
+    clickTimeline: function (e) {
+      this.displayConfig = false;
+      this.contextMenuShown = false;
       e.stopPropagation();
     },
 

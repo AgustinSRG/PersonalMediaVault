@@ -228,6 +228,7 @@
       v-model:expanded="expandedTitle"
       v-model:albumexpanded="expandedAlbum"
       :inalbum="inalbum"
+      @clickplayer="clickControls"
     ></PlayerTopBar>
 
     <PlayerContextMenu
@@ -545,6 +546,7 @@ export default defineComponent({
 
     clickControls: function (e) {
       this.displayConfig = false;
+      this.contextMenuShown = false;
       e.stopPropagation();
     },
 
