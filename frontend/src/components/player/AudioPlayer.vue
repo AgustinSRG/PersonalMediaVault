@@ -360,6 +360,7 @@
       :y="contextMenuY"
       v-model:loop="loop"
       :url="audioURL"
+      @close="focusPlayer"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -1000,6 +1001,12 @@ export default defineComponent({
       this.playing = true;
       this.clearAudioRenderer();
       this.setAudioURL();
+    },
+
+    focusPlayer: function () {
+      nextTick(() => {
+        this.$el.focus();
+      });
     },
 
     setAudioURL() {

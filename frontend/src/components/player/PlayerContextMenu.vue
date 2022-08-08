@@ -93,7 +93,7 @@ import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   name: "PlayerContextMenu",
-  emits: ["update:shown", "update:loop", "update:controls", "update:fit"],
+  emits: ["update:shown", "update:loop", "update:controls", "update:fit", "close"],
   props: {
     shown: Boolean,
     type: String,
@@ -135,21 +135,25 @@ export default defineComponent({
     toggleLoop: function () {
       this.loopState = !this.loopState;
       this.shownState = false;
+      this.$emit("close");
     },
 
     toggleFit: function () {
       this.fitState = !this.fitState;
       this.shownState = false;
+      this.$emit("close");
     },
 
     toggleControls: function () {
       this.controlsState = !this.controlsState;
       this.shownState = false;
+      this.$emit("close");
     },
 
     refreshMedia: function () {
       MediaController.Load();
       this.shownState = false;
+      this.$emit("close");
     },
 
     download: function () {
@@ -159,10 +163,12 @@ export default defineComponent({
       link.rel = "noopener noreferrer";
       link.href = this.url;
       link.click();
+      this.$emit("close");
     },
 
     hide: function () {
       this.shownState = false;
+      this.$emit("close");
     },
 
     computeDimensions: function () {

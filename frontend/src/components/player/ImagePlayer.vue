@@ -239,6 +239,7 @@
       @update:fit="onUserFitUpdated"
       :url="imageURL"
       v-model:controls="showControls"
+      @close="focusPlayer"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -718,6 +719,12 @@ export default defineComponent({
         this.currentResolution
       );
       this.setImageURL();
+    },
+
+    focusPlayer: function () {
+      nextTick(() => {
+        this.$el.focus();
+      });
     },
 
     setImageURL() {
