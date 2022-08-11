@@ -10,7 +10,7 @@
     @keydown="onKeyPress"
   >
 
-    <div class="player-loader" v-if="status === 'loading'">
+    <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumloading)">
       <div class="player-lds-ring">
         <div></div>
         <div></div>
@@ -24,7 +24,7 @@
       <div class="player-error">{{ $t('Media asset does not exist or was removed from the vault') }}</div>
     </div>
 
-    <div class="player-error-container" v-if="status === 'none'">
+    <div class="player-error-container" v-if="status === 'none' && !albumloading">
       <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
       <div class="player-info">{{ $t('The album is empty') }}</div>
       <div class="player-info">{{ $t('Browse the vault in order to add media to it') }}</div>
@@ -164,6 +164,8 @@ export default defineComponent({
   props: {
     mid: Number,
     status: String,
+
+    albumloading: Boolean,
 
     fullscreen: Boolean,
 

@@ -8,6 +8,7 @@
       :prev="prev"
       :next="next"
       :inalbum="isInAlbum"
+      :albumloading="albumLoading"
       :canwrite="canWrite"
       @gonext="goNext"
       @goprev="goPrev"
@@ -95,6 +96,7 @@ export default defineComponent({
       prev: AlbumsController.CurrentPrev,
       next: AlbumsController.CurrentNext,
       isInAlbum: AppStatus.CurrentAlbum >= 0,
+      albumLoading: AlbumsController.CurrentAlbumLoading,
 
       canWrite: AuthController.CanWrite,
     };
@@ -112,6 +114,10 @@ export default defineComponent({
     updateLoading: function (l) {
       this.loading = l;
       this.updateStatus();
+    },
+
+    updateAlbumsLoading: function (l) {
+      this.albumLoading = l;
     },
 
     updateStatus: function () {
@@ -170,6 +176,9 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
+    AppEvents.AddEventListener("current-album-loading", this.$options.albumLoadingH);
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -187,6 +196,8 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    AppEvents.RemoveEventListener("current-album-loading", this.$options.albumLoadingH);
   },
 });
 </script>
