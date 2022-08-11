@@ -13,8 +13,13 @@ import { PlayerPreferences } from "./player-preferences";
 export interface AlbumEntry {
     id: number;
     name: string;
-    list: number[];
+    size: number;
     thumbnail: string;
+}
+
+export interface AlbumEntryMin {
+    id: number;
+    name: string;
 }
 
 export interface AlbumData {
@@ -24,7 +29,7 @@ export interface AlbumData {
 }
 
 export class AlbumsController {
-    public static Albums: { [id: string]: AlbumEntry } = Object.create(null);
+    public static Albums: { [id: string]: AlbumEntryMin } = Object.create(null);
 
     public static Loading = true;
 
@@ -49,7 +54,7 @@ export class AlbumsController {
         }
 
         Timeouts.Abort("albums-load");
-        Request.Pending("albums-load", AmbumsAPI.GetAlbums()).onSuccess(albums => {
+        Request.Pending("albums-load", AmbumsAPI.GetAlbumsMin()).onSuccess(albums => {
             AlbumsController.Albums = Object.create(null);
 
             for (const album of albums) {
@@ -146,7 +151,7 @@ export class AlbumsController {
         });
     }
 
-    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string, list: number[] }[] {
+    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string}[] {
         const result = [];
 
         for (const album of Object.values(AlbumsController.Albums)) {
@@ -154,14 +159,11 @@ export class AlbumsController {
                 id: album.id,
                 name: album.name,
                 nameLowerCase: album.name.toLowerCase(),
-                list: album.list.slice(),
-                thumbnail: album.thumbnail,
             })
         }
 
         return result;
     }
-
 
     public static FindDuplicatedName(name: string): boolean {
         const nameLower = name.toLowerCase();
@@ -179,6 +181,7 @@ export class AlbumsController {
         if (AlbumsController.CurrentAlbum === albumId) {
             AlbumsController.LoadCurrentAlbum();
         }
+        AppEvents.Emit("albums-list-change");
         if (!noUpdateList) {
             AlbumsController.Load();
         }
@@ -206,6 +209,7 @@ export class AlbumsController {
         Request.Do(AmbumsAPI.SetAlbumOrder(albumId, albumList))
             .onSuccess(() => {
                 AppEvents.Emit("album-order-saved");
+                AppEvents.Emit("albums-list-change");
             })
             .onRequestError((err) => {
                 Request.ErrorHandler()
@@ -248,9 +252,10 @@ export class AlbumsController {
         }
 
         if (mediaId < 0 && AlbumsController.CurrentAlbumData.list.length > 0) {
-            AppStatus.ClickOnAlbum(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumData.list.map(a => {
+            const albumList = AlbumsController.CurrentAlbumData.list.map(a => {
                 return a.id;
-            }));
+            });
+            AppStatus.ClickOnAlbumWithList(AlbumsController.CurrentAlbumData.id, albumList);
             return;
         }
 

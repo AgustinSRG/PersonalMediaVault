@@ -358,7 +358,8 @@ export default defineComponent({
       Request.Do(AmbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Successfully removed from album"));
-          AlbumsController.OnChangedAlbum(albumId);
+          AlbumsController.OnChangedAlbum(albumId, true);
+          AppEvents.Emit("albums-list-change");
         })
         .onRequestError((err) => {
           Request.ErrorHandler()

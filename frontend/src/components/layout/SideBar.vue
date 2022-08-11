@@ -196,7 +196,7 @@ export default defineComponent({
       if (e) {
         e.preventDefault();
       }
-      AppStatus.ClickOnAlbum(a.id, a.list);
+      AppStatus.ClickOnAlbum(a.id);
     },
 
     getPageURL: function (page: string): string {

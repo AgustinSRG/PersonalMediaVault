@@ -89,8 +89,8 @@
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
         <a
-          v-for="(item, i) in pageItems"
-          :key="i"
+          v-for="item in pageItems"
+          :key="item.id"
           class="search-result-item clickable"
           @click="goToAlbum(item, $event)"
           :href="getAlbumURL(item.id)"
@@ -110,20 +110,14 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled album')"
               />
-              <div class="search-result-thumb-tag" v-if="item.list.length == 0">
+              <div class="search-result-thumb-tag" v-if="item.size == 0">
                 ({{ $t("Empty") }})
               </div>
-              <div
-                class="search-result-thumb-tag"
-                v-else-if="item.list.length == 1"
-              >
+              <div class="search-result-thumb-tag" v-else-if="item.size == 1">
                 1 {{ $t("item") }}
               </div>
-              <div
-                class="search-result-thumb-tag"
-                v-else-if="item.list.length > 1"
-              >
-                {{ item.list.length }} {{ $t("items") }}
+              <div class="search-result-thumb-tag" v-else-if="item.size > 1">
+                {{ item.size }} {{ $t("items") }}
               </div>
             </div>
           </div>
@@ -173,7 +167,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
@@ -182,6 +175,8 @@ import { defineComponent } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController } from "@/control/auth";
+import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumEntry } from "@/control/albums";
 
 export default defineComponent({
   name: "PageAlbums",
@@ -195,7 +190,9 @@ export default defineComponent({
   },
   data: function () {
     return {
-      loading: AlbumsController.Loading,
+      loading: true,
+
+      albumsList: [],
 
       filter: "",
 
@@ -216,16 +213,12 @@ export default defineComponent({
     };
   },
   methods: {
-    onAlbumsLoading: function (l) {
-      this.loading = l;
-    },
-
     createAlbum: function () {
       this.$emit("album-create");
     },
 
     refreshAlbums: function () {
-      AlbumsController.Load();
+      this.load();
     },
 
     clearFilter: function () {
@@ -235,17 +228,63 @@ export default defineComponent({
 
     changeFilter: function () {
       this.page = 0;
-      this.load();
+      this.updateList();
     },
 
     load: function () {
+      Timeouts.Abort("page-albums-load");
+      Request.Abort("page-albums-load");
+
       if (!this.display) {
         return;
       }
 
-      var filter = (this.filter + "").toLowerCase();
+      this.loading = true;
 
-      var albumsList = AlbumsController.GetAlbumsListCopy();
+      if (AuthController.Locked) {
+        return; // Vault is locked
+      }
+
+      Request.Pending("page-albums-load", AmbumsAPI.GetAlbums())
+        .onSuccess((result) => {
+          this.albumsList = result;
+          this.loading = false;
+          this.updateList();
+        })
+        .onRequestError((err) => {
+          Request.ErrorHandler()
+            .add(401, "*", () => {
+              AppEvents.Emit("unauthorized", false);
+            })
+            .add("*", "*", () => {
+              // Retry
+              Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          console.error(err);
+          // Retry
+          Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+        });
+    },
+
+    updateList: function () {
+      if (!this.display) {
+        return;
+      }
+
+      let filter = (this.filter + "").toLowerCase();
+
+      let albumsList = this.albumsList.map((a: AlbumEntry) => {
+        return {
+          id: a.id,
+          name: a.name,
+          nameLowerCase: a.name.toLowerCase(),
+          size: a.size,
+          thumbnail: a.thumbnail,
+        };
+      });
 
       if (filter) {
         albumsList = albumsList.filter((a) => {
@@ -253,12 +292,20 @@ export default defineComponent({
         });
       }
 
-      if (this.order === "asc") {
+      if (this.order !== "asc") {
         albumsList = albumsList.sort((a, b) => {
           if (a.nameLowerCase < b.nameLowerCase) {
             return -1;
           } else {
             return 1;
+          }
+        });
+      } else {
+        albumsList = albumsList.sort((a, b) => {
+          if (a.id < b.id) {
+            return 1;
+          } else {
+            return -1;
           }
         });
       }
@@ -283,13 +330,13 @@ export default defineComponent({
     onPageSizeChanged: function () {
       this.updateLoadingFiller();
       this.page = 0;
-      this.load();
+      this.updateList();
       this.onSearchParamsChanged();
     },
 
     onOrderChanged: function () {
       this.page = 0;
-      this.load();
+      this.updateList();
       this.onSearchParamsChanged();
     },
 
@@ -297,7 +344,7 @@ export default defineComponent({
       if (AppStatus.SearchParams !== this.searchParams) {
         this.searchParams = AppStatus.SearchParams;
         this.updateSearchParams();
-        this.load();
+        this.updateList();
       }
     },
 
@@ -313,7 +360,7 @@ export default defineComponent({
     changePage: function (p) {
       this.page = p;
       this.onSearchParamsChanged();
-      this.load();
+      this.updateList();
     },
 
     updateSearchParams: function () {
@@ -342,7 +389,7 @@ export default defineComponent({
       if (e) {
         e.preventDefault();
       }
-      AppStatus.ClickOnAlbum(album.id, album.list);
+      AppStatus.ClickOnAlbum(album.id);
     },
 
     getAlbumURL: function (albumId: number): string {
@@ -371,7 +418,6 @@ export default defineComponent({
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
-    this.$options.loadingH = this.onAlbumsLoading.bind(this);
     this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
 
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
@@ -387,8 +433,7 @@ export default defineComponent({
       this.$options.authUpdateH
     );
 
-    AppEvents.AddEventListener("albums-loading", this.$options.loadingH);
-    AppEvents.AddEventListener("albums-update", this.$options.loadH);
+    AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
 
     for (let i = 1; i <= 20; i++) {
       this.pageSizeOptions.push(5 * i);
@@ -398,16 +443,15 @@ export default defineComponent({
     this.load();
   },
   beforeUnmount: function () {
-    Timeouts.Abort("page-home-load");
-    Request.Abort("page-home-load");
+    Timeouts.Abort("page-albums-load");
+    Request.Abort("page-albums-load");
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.RemoveEventListener(
       "app-status-update",
       this.$options.statusChangeH
     );
 
-    AppEvents.RemoveEventListener("albums-loading", this.$options.loadingH);
-    AppEvents.RemoveEventListener("albums-update", this.$options.loadH);
+    AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
 
     AppEvents.RemoveEventListener(
       "auth-status-changed",

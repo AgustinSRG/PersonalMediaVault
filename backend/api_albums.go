@@ -11,10 +11,15 @@ import (
 )
 
 type AlbumAPIItem struct {
-	Id        uint64   `json:"id"`
-	Name      string   `json:"name"`
-	List      []uint64 `json:"list"`
-	Thumbnail string   `json:"thumbnail"` // This thumbnail is from the first media asset in the album
+	Id        uint64 `json:"id"`
+	Name      string `json:"name"`
+	Size      int    `json:"size"`
+	Thumbnail string `json:"thumbnail"` // This thumbnail is from the first media asset in the album
+}
+
+type AlbumAPIItemMinified struct {
+	Id   uint64 `json:"id"`
+	Name string `json:"name"`
 }
 
 func api_getAlbums(response http.ResponseWriter, request *http.Request) {
@@ -34,38 +39,64 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	result := make([]AlbumAPIItem, 0)
+	if request.URL.Query().Get("mode") != "min" {
+		result := make([]AlbumAPIItem, 0)
 
-	for album_id, album := range albums.Albums {
-		thumbnail := ""
+		for album_id, album := range albums.Albums {
+			thumbnail := ""
 
-		if len(album.List) > 0 {
-			media_info := GetMediaMinInfo(album.List[0], session)
-			thumbnail = media_info.Thumbnail
+			if len(album.List) > 0 {
+				media_info := GetMediaMinInfo(album.List[0], session)
+				thumbnail = media_info.Thumbnail
+			}
+
+			result = append(result, AlbumAPIItem{
+				Id:        album_id,
+				Name:      album.Name,
+				Size:      len(album.List),
+				Thumbnail: thumbnail,
+			})
 		}
 
-		result = append(result, AlbumAPIItem{
-			Id:        album_id,
-			Name:      album.Name,
-			List:      album.List,
-			Thumbnail: thumbnail,
-		})
+		jsonResult, err := json.Marshal(result)
+
+		if err != nil {
+			LogError(err)
+
+			response.WriteHeader(500)
+			return
+		}
+
+		response.Header().Add("Content-Type", "application/json")
+		response.Header().Add("Cache-Control", "no-cache")
+		response.WriteHeader(200)
+
+		response.Write(jsonResult)
+	} else {
+		result := make([]AlbumAPIItemMinified, 0)
+
+		for album_id, album := range albums.Albums {
+			result = append(result, AlbumAPIItemMinified{
+				Id:   album_id,
+				Name: album.Name,
+			})
+		}
+
+		jsonResult, err := json.Marshal(result)
+
+		if err != nil {
+			LogError(err)
+
+			response.WriteHeader(500)
+			return
+		}
+
+		response.Header().Add("Content-Type", "application/json")
+		response.Header().Add("Cache-Control", "no-cache")
+		response.WriteHeader(200)
+
+		response.Write(jsonResult)
 	}
-
-	jsonResult, err := json.Marshal(result)
-
-	if err != nil {
-		LogError(err)
-
-		response.WriteHeader(500)
-		return
-	}
-
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
 }
 
 type AlbumAPIDetail struct {

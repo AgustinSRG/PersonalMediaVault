@@ -1251,6 +1251,14 @@ paths:
           type: string
           description: Current session ID
           required: true
+        - in: query
+          name: "mode"
+          type: string
+          enum: 
+            - default
+            - min
+          description: "Set to min to omit size and thumbnail"
+          required: false
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1268,13 +1276,10 @@ paths:
                   type: string
                   description: "Album name"
                   example: "Album name"
-                list:
-                  type: array
-                  description: List of media assets of the album, in order.
-                  items:
-                    type: number
-                    format: int64
-                    description: Media ID
+                size:
+                  type: number
+                  format: int32
+                  description: Number of items in the album
                 thumbnail:
                   type: string
                   description: Thumbnail for the album (of the first media)

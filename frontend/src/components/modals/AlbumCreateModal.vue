@@ -116,6 +116,7 @@ export default defineComponent({
           this.busy = false;
           this.name = "";
           this.close();
+          AppEvents.Emit("albums-list-change");
           AlbumsController.Load();
         })
         .onCancel(() => {

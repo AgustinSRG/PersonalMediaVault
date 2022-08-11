@@ -238,9 +238,22 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static ClickOnAlbum(albumId: number, list: number[]) {
+    public static ClickOnAlbum(albumId: number) {
         AppStatus.CurrentAlbum = albumId;
+        AppStatus.CurrentMedia = -1;
 
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "left";
+
+        AppStatus.OnStatusUpdate();
+    }
+
+    public static ClickOnAlbumWithList(albumId: number, list: number[]) {
+        AppStatus.CurrentAlbum = albumId;
+        
         const pos = PlayerPreferences.GetAlbumPos(albumId);
 
         if (pos < list.length) {

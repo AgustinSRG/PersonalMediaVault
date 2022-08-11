@@ -10,6 +10,13 @@ export class AmbumsAPI {
         };
     }
 
+    public static GetAlbumsMin(): RequestParams {
+        return {
+            method: "GET",
+            url: GetAPIURL("/api/albums?mode=min"),
+        };
+    }
+
     public static GetAlbum(id: number): RequestParams {
         return {
             method: "GET",
