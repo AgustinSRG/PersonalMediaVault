@@ -1038,6 +1038,19 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Remove from albums
+
+	err = GetVault().albums.OnMediaDelete(media_id, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		response.WriteHeader(500)
+		return
+	}
+
 	// Delete
 	media.Delete()
 

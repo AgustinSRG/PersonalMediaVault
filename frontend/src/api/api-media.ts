@@ -3,13 +3,13 @@
 import { GetAPIURL, RequestParams } from "@/utils/request";
 
 export class MediaAPI {
-    public static UploadMedia(title: string, file: File): RequestParams {
+    public static UploadMedia(title: string, file: File, album: number): RequestParams {
         const form = new FormData();
         form.append("file", file);
 
         return {
             method: "POST",
-            url: GetAPIURL("/api/upload?title=" + encodeURIComponent(title)),
+            url: GetAPIURL("/api/upload?title=" + encodeURIComponent(title) + "&album=" + encodeURIComponent(album + "")),
             form: form,
         };
     }

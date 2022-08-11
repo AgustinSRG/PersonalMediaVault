@@ -126,8 +126,8 @@ export default defineComponent({
           this.busy = false;
           this.confimation = "";
           this.close();
-          AppStatus.OnDeleteMedia();
           AlbumsController.LoadCurrentAlbum();
+          AppStatus.OnDeleteMedia();
         })
         .onCancel(() => {
           this.busy = false;

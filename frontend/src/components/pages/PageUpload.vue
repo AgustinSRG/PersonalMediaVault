@@ -30,6 +30,17 @@
       </div>
       <div class="form-group">
         <label
+          >{{ $t("Select an album to add the uploaded media into") }}:</label
+        >
+        <select v-model="album" class="form-control form-select">
+          <option :value="-1">--</option>
+          <option v-for="a in albums" :key="a.id" :value="a.id">
+            {{ a.name }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label
           >{{ $t("Tags to automatically add to the uploaded media") }}:</label
         >
       </div>
@@ -191,6 +202,7 @@
 <script lang="ts">
 import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
+import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
@@ -213,12 +225,15 @@ export default defineComponent({
 
       optionsShown: false,
 
-      maxParallelUploads: 4,
+      maxParallelUploads: 1,
 
       tags: [],
       tagToAdd: "",
       tagData: {},
       matchingTags: [],
+
+      album: -1,
+      albums: [],
     };
   },
   methods: {
@@ -290,6 +305,7 @@ export default defineComponent({
         mid: -1,
         busy: false,
         lastRequest: 0,
+        album: this.album,
         tags: this.tags.slice(),
       });
     },
@@ -357,7 +373,12 @@ export default defineComponent({
             return this.$t("Encrypting") + "...";
           }
         case "tag":
-          return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
+          return (
+            this.$t("Adding tags") +
+            "... (" +
+            this.$t("$N left").replace("$N", "" + p) +
+            ")"
+          );
         case "error":
           return this.$t("Error") + ": " + err;
         default:
@@ -373,7 +394,7 @@ export default defineComponent({
 
       Request.Pending(
         "upload-media-" + m.id,
-        MediaAPI.UploadMedia(m.name, m.file)
+        MediaAPI.UploadMedia(m.name, m.file, m.album)
       )
         .onUploadProgress((loaded, total) => {
           m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
@@ -625,6 +646,16 @@ export default defineComponent({
     showOptions: function (b: boolean) {
       this.optionsShown = b;
     },
+
+    updateAlbums: function () {
+      this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+        if (a.nameLowerCase < b.nameLowerCase) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    },
   },
   mounted: function () {
     this.$options.timer = setInterval(this.tick.bind(this), 500);
@@ -632,10 +663,16 @@ export default defineComponent({
     this.updateTagData();
     this.$options.tagUpdateH = this.updateTagData.bind(this);
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
+    this.updateAlbums();
+    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
   },
   beforeUnmount: function () {
     clearInterval(this.$options.timer);
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+
+    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
 
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);

@@ -322,3 +322,35 @@ func (am *VaultAlbumsManager) DeleteAlbum(album_id uint64, key []byte) error {
 
 	return err
 }
+
+// Called on media delete to remove it from all albums
+// media_id - Media file ID
+// key - Vault encryption key
+func (am *VaultAlbumsManager) OnMediaDelete(media_id uint64, key []byte) error {
+	data, err := am.StartWrite(key)
+
+	if err != nil {
+		return err
+	}
+
+	for album_id := range data.Albums {
+		if !data.Albums[album_id].HasMedia(media_id) {
+			continue
+		}
+
+		old_list := data.Albums[album_id].List
+		new_list := make([]uint64, 0)
+
+		for i := 0; i < len(old_list); i++ {
+			if old_list[i] != media_id {
+				new_list = append(new_list, old_list[i])
+			}
+		}
+
+		data.Albums[album_id].List = new_list
+	}
+
+	err = am.EndWrite(data, key)
+
+	return err
+}

@@ -251,6 +251,10 @@ paths:
           name: "title"
           type: string
           description: "Title for the media. If not provided, file name is used."
+        - in: query
+          name: "album"
+          type: number
+          description: "Album ID where the uploaded media will be added."
         - in: formData
           name: file
           type: file

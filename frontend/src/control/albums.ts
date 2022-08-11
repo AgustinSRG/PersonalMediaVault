@@ -243,7 +243,7 @@ export class AlbumsController {
     public static UpdateAlbumCurrentPos() {
         const mediaId = AppStatus.CurrentMedia;
 
-        if (!AlbumsController.CurrentAlbumData) {
+        if (!AlbumsController.CurrentAlbumData || AlbumsController.CurrentAlbumLoading) {
             AlbumsController.CurrentAlbumPos = -1;
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
