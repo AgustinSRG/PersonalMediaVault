@@ -521,7 +521,9 @@ export default defineComponent({
     clickControls: function (e) {
       this.displayConfig = false;
       this.contextMenuShown = false;
-      e.stopPropagation();
+      if (e) {
+        e.stopPropagation();
+      }
     },
 
     goNext: function () {
