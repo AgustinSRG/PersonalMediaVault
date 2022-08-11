@@ -175,11 +175,13 @@ export class AlbumsController {
         return false;
     }
 
-    public static OnChangedAlbum(albumId: number) {
+    public static OnChangedAlbum(albumId: number, noUpdateList?: boolean) {
         if (AlbumsController.CurrentAlbum === albumId) {
             AlbumsController.LoadCurrentAlbum();
         }
-        AlbumsController.Load();
+        if (!noUpdateList) {
+            AlbumsController.Load();
+        }
     }
 
     public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number) {

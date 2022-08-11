@@ -21,6 +21,13 @@ export class MediaAPI {
         };
     }
 
+    public static GetMediaAlbums(id: number): RequestParams {
+        return {
+            method: "GET",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(id + "") + "/albums"),
+        };
+    }
+
     public static ChangeMediaTitle(id: number, title: string): RequestParams {
         return {
             method: "POST",

@@ -258,6 +258,60 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	response.Write(jsonResult)
 }
 
+func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		response.WriteHeader(401)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	albumsData, err := GetVault().albums.readData(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	albums := make([]uint64, 0)
+
+	if albumsData.Albums != nil {
+		for id, album := range albumsData.Albums {
+			if album.HasMedia(media_id) {
+				albums = append(albums, id)
+			}
+		}
+	}
+
+	// Response
+
+	jsonResult, err := json.Marshal(albums)
+
+	if err != nil {
+		LogError(err)
+
+		response.WriteHeader(500)
+		return
+	}
+
+	response.Header().Add("Content-Type", "application/json")
+	response.Header().Add("Cache-Control", "no-cache")
+	response.WriteHeader(200)
+
+	response.Write(jsonResult)
+}
+
 type MediaAPIEditTitleBody struct {
 	Title string `json:"title"`
 }

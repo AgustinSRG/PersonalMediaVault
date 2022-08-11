@@ -441,6 +441,42 @@ paths:
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+                
+  "/api/media/{id}/albums":
+    get:
+      summary: Gets media albums list
+      description: Gets media albums list
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Albums list
+          schema:
+            type: array
+            items:
+              type: number
+              format: int64
+              description: Album ID
   
   "/api/media/{id}/edit/title":
     post:

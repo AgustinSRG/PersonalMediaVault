@@ -24,7 +24,11 @@
         </button>
       </div>
 
-      <div class="modal-body with-menu limited-size">
+      <div class="modal-body" v-if="loading">
+        <i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...
+      </div>
+
+      <div class="modal-body with-menu limited-size" v-if="!loading">
         <div class="albums-modal-filter">
           <input
             type="text"
@@ -50,7 +54,8 @@
             @keydown="clickOnEnter"
           >
             <td class="modal-menu-item-icon">
-              <i v-if="a.added" class="far fa-square-check"></i>
+              <i v-if="busy" class="fa fa-spinner fa-spin"></i>
+              <i v-else-if="a.added" class="far fa-square-check"></i>
               <i v-else class="far fa-square"></i>
             </td>
             <td class="modal-menu-item-title">
@@ -60,7 +65,7 @@
         </table>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" v-if="!loading">
         <button type="button" @click="createAlbum" class="modal-footer-btn">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
@@ -71,10 +76,13 @@
 
 <script lang="ts">
 import { AmbumsAPI } from "@/api/api-albums";
+import { MediaAPI } from "@/api/api-media";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
+import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
@@ -93,10 +101,56 @@ export default defineComponent({
     return {
       albums: [],
       filter: "",
+
       mid: AppStatus.CurrentMedia,
+      mediaAlbums: [],
+
+      loading: true,
+      busy: false,
     };
   },
   methods: {
+    load: function () {
+      Timeouts.Abort("media-albums-load");
+      Request.Abort("media-albums-load");
+
+      if (!this.display) {
+        return;
+      }
+
+      this.loading = true;
+
+      if (AuthController.Locked) {
+        return; // Vault is locked
+      }
+
+      Request.Pending("media-albums-load", MediaAPI.GetMediaAlbums(this.mid))
+        .onSuccess((result) => {
+          this.mediaAlbums = result;
+          this.loading = false;
+          this.updateAlbums();
+        })
+        .onRequestError((err) => {
+          Request.ErrorHandler()
+            .add(401, "*", () => {
+              AppEvents.Emit("unauthorized", false);
+            })
+            .add(404, "*", () => {
+              this.close();
+            })
+            .add("*", "*", () => {
+              // Retry
+              Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          console.error(err);
+          // Retry
+          Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+        });
+    },
+
     close: function () {
       this.displayStatus = false;
     },
@@ -110,15 +164,27 @@ export default defineComponent({
     },
 
     clickOnAlbum: function (album) {
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
       if (album.added) {
         // Remove
         Request.Do(AmbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
           .onSuccess(() => {
+            this.busy = false;
             album.added = false;
             AppEvents.Emit("snack", this.$t("Successfully removed from album"));
-            AlbumsController.OnChangedAlbum(album.id);
+            if (this.mediaAlbums.indexOf(album.id) >= 0) {
+              this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
+            }
+            this.updateAlbums();
+            AlbumsController.OnChangedAlbum(album.id, true);
           })
           .onRequestError((err) => {
+            this.busy = false;
             Request.ErrorHandler()
               .add(401, "*", () => {
                 AppEvents.Emit("unauthorized");
@@ -126,17 +192,24 @@ export default defineComponent({
               .handle(err);
           })
           .onUnexpectedError((err) => {
+            this.busy = false;
             console.error(err);
           });
       } else {
         // Add
         Request.Do(AmbumsAPI.AddMediaToAlbum(album.id, this.mid))
           .onSuccess(() => {
+            this.busy = false;
             album.added = true;
             AppEvents.Emit("snack", this.$t("Successfully added to album"));
-            AlbumsController.OnChangedAlbum(album.id);
+            if (this.mediaAlbums.indexOf(album.id) === -1) {
+              this.mediaAlbums.push(album.id);
+            }
+            this.updateAlbums();
+            AlbumsController.OnChangedAlbum(album.id, true);
           })
           .onRequestError((err) => {
+            this.busy = false;
             Request.ErrorHandler()
               .add(401, "*", () => {
                 AppEvents.Emit("unauthorized");
@@ -144,6 +217,7 @@ export default defineComponent({
               .handle(err);
           })
           .onUnexpectedError((err) => {
+            this.busy = false;
             console.error(err);
           });
       }
@@ -165,7 +239,7 @@ export default defineComponent({
           return !filter || a.nameLowerCase.indexOf(filter) >= 0;
         })
         .map((a: any) => {
-          a.added = mid >= 0 && a.list.indexOf(mid) >= 0;
+          a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
           return a;
         })
         .sort((a, b) => {
@@ -195,17 +269,24 @@ export default defineComponent({
     AppEvents.AddEventListener("app-status-update", this.$options.statusH);
 
     this.updateAlbums();
+    this.load();
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
     AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
+    Timeouts.Abort("media-albums-load");
+    Request.Abort("media-albums-load");
   },
   watch: {
     display: function () {
       if (this.display) {
+        this.load();
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        Timeouts.Abort("media-albums-load");
+        Request.Abort("media-albums-load");
       }
     },
   },
