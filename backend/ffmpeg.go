@@ -189,7 +189,7 @@ func ValidateSubtitlesFile(file string) bool {
 	return format == "srt"
 }
 
-func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -217,6 +217,9 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 
 	args = append(args, "-vf", videoFilter)
 
+	// Force duration
+	args = append(args, "-t", fmt.Sprint(originalFileDuration))
+
 	// MP4
 	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
 
@@ -225,7 +228,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	return cmd
 }
 
-func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -239,6 +242,9 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	}
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
+
+	// Force duration
+	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// MP4
 	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
@@ -447,7 +453,7 @@ const (
 	PREVIEWS_IMAGE_HEIGHT     = 144
 )
 
-func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -468,6 +474,9 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 		":force_original_aspect_ratio=decrease,pad=" + fmt.Sprint(PREVIEWS_IMAGE_WIDTH) + ":" + fmt.Sprint(PREVIEWS_IMAGE_HEIGHT) +
 		":(ow-iw)/2:(oh-ih)/2"
 	args = append(args, "-vf", videoFilter)
+
+	// Force duration
+	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// Playlist name
 	args = append(args, tempPath+"/thumb_%d.jpg")

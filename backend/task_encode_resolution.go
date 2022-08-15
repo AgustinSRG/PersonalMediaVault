@@ -279,7 +279,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	if probe_data.Type == MediaTypeVideo {
 		encoded_temp = path.Join(tempFolder, "video.mp4")
 		encoded_ext = "mp4"
-		cmd = MakeFFMpegEncodeToMP4Command(originalTemp, probe_data.Format, tempFolder, &resolution, userConfig)
+		cmd = MakeFFMpegEncodeToMP4Command(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, &resolution, userConfig)
 	} else if probe_data.Type == MediaTypeImage {
 		encoded_temp = path.Join(tempFolder, "image.png")
 		encoded_ext = "png"

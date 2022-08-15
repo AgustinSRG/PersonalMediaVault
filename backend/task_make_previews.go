@@ -273,7 +273,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	var cmd *exec.Cmd
 
 	if probe_data.Type == MediaTypeVideo {
-		cmd = MakeFFMpegEncodeToPreviewsCommand(originalTemp, probe_data.Format, tempFolder, userConfig)
+		cmd = MakeFFMpegEncodeToPreviewsCommand(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, userConfig)
 	} else {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
