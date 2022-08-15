@@ -298,7 +298,7 @@
         </tbody>
       </table>
     </div>
-     <div class="form-group border-top" v-if="canWrite">
+    <div class="form-group border-top" v-if="canWrite">
       <label>{{ $t("Extra media configuration") }}:</label>
     </div>
     <div class="table-responsive" v-if="canWrite">
@@ -309,7 +309,9 @@
               $t("Reset time to the beginning every time the media reloads?")
             }}
           </td>
-          <td class="text-right"><toggle-switch v-model:val="startBeginning"></toggle-switch></td>
+          <td class="text-right">
+            <toggle-switch v-model:val="startBeginning"></toggle-switch>
+          </td>
         </tr>
       </table>
     </div>
@@ -811,55 +813,59 @@ export default defineComponent({
     },
 
     encodeMedia: function () {
-      if (this.busy) {
-        return;
-      }
+      AppEvents.Emit("re-encode-confirmation", {
+        callback: () => {
+          if (this.busy) {
+            return;
+          }
 
-      this.busy = true;
+          this.busy = true;
 
-      const mediaId = AppStatus.CurrentMedia;
+          const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.EncodeMedia(mediaId))
-        .onSuccess(() => {
-          AppEvents.Emit(
-            "snack",
-            this.$t("Successfully requested pending encoding tasks")
-          );
-          this.busy = false;
-          MediaController.Load();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
+          Request.Do(MediaAPI.EncodeMedia(mediaId))
+            .onSuccess(() => {
               AppEvents.Emit(
                 "snack",
-                this.$t("Could not connect to the server")
+                this.$t("Successfully requested pending encoding tasks")
               );
+              this.busy = false;
+              MediaController.Load();
             })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
+            .onCancel(() => {
+              this.busy = false;
+            })
+            .onRequestError((err) => {
+              this.busy = false;
+              Request.ErrorHandler()
+                .add(401, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                  AppEvents.Emit("unauthorized");
+                })
+                .add(403, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                })
+                .add(404, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Not found"));
+                })
+                .add(500, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Internal server error"));
+                })
+                .add("*", "*", () => {
+                  AppEvents.Emit(
+                    "snack",
+                    this.$t("Could not connect to the server")
+                  );
+                })
+                .handle(err);
+            })
+            .onUnexpectedError((err) => {
+              AppEvents.Emit("snack", err.message);
+              console.error(err);
+              this.busy = false;
+            });
+        },
+      });
     },
 
     deleteMedia: function () {

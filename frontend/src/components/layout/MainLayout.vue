@@ -66,6 +66,9 @@
     <SubtitlesDeleteModal
       v-model:display="displaySubtitlesDelete"
     ></SubtitlesDeleteModal>
+    <ReEncodeConfirmationModal
+      v-model:display="displayReEncode"
+    ></ReEncodeConfirmationModal>
 
     <AccountsAdminModal
       v-model:display="displayAccountAdmin"
@@ -113,6 +116,7 @@ import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
+import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
@@ -148,6 +152,7 @@ export default defineComponent({
     AlbumDeleteModal,
     MediaDeleteModal,
     ResolutionConfirmationModal,
+    ReEncodeConfirmationModal,
     SubtitlesDeleteModal,
     AccountsAdminModal,
     AccountDeleteModal,
@@ -189,6 +194,8 @@ export default defineComponent({
       displayAccountDelete: false,
 
       displayTaskList: false,
+
+      displayReEncode: false,
 
       displaySidebar: true,
     };
@@ -327,7 +334,6 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 100%;
-  
 }
 
 .main-layout.light-theme {
