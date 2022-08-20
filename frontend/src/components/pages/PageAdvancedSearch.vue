@@ -246,7 +246,7 @@ export default defineComponent({
 
       Request.Pending(
         "page-advsearch-load",
-        SearchAPI.Search("", this.order, this.page, this.pageSize)
+        SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize)
       )
         .onSuccess((result) => {
           this.filterElements(result.page_items);
@@ -400,6 +400,14 @@ export default defineComponent({
     updateTagData: function () {
       this.tagData = copyObject(TagsController.Tags);
       this.onTagAddChanged();
+    },
+
+    getFirstTag: function () {
+      if (this.tags.length > 0) {
+        return this.getTagName(this.tags[0], this.tagData);
+      } else {
+        return "";
+      }
     },
 
     getTagName: function (tag, data) {
