@@ -33,14 +33,43 @@
         </div>
       </div>
 
-      <div v-if="!loading && total <= 0" class="search-results-msg-display">
-        <div class="search-results-msg-icon"><i class="fas fa-box-open"></i></div>
+      <div
+        v-if="!loading && total <= 0 && !search"
+        class="search-results-msg-display"
+      >
+        <div class="search-results-msg-icon">
+          <i class="fas fa-box-open"></i>
+        </div>
         <div class="search-results-msg-text">
           {{ $t("The vault is empty") }}
         </div>
         <div class="search-results-msg-btn">
           <button type="button" @click="load" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-if="!loading && total <= 0 && search"
+        class="search-results-msg-display"
+      >
+        <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
+        <div class="search-results-msg-text">
+          {{ $t("Could not find any result") }}
+        </div>
+        <div class="search-results-msg-btn">
+          <button type="button" @click="load" class="btn btn-primary btn-sm">
+            <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+          </button>
+        </div>
+        <div class="search-results-msg-btn">
+          <button
+            type="button"
+            @click="clearSearch"
+            class="btn btn-primary btn-sm"
+          >
+            <i class="fas fa-times"></i> {{ $t("Clear Search") }}
           </button>
         </div>
       </div>
@@ -72,7 +101,12 @@
                 :src="getThumbnail(item.thumbnail)"
                 :alt="item.title || $t('Untitled')"
               />
-              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">{{ renderTime(item.duration) }}</div>
+              <div
+                class="search-result-thumb-tag"
+                v-if="item.type === 2 || item.type === 3"
+              >
+                {{ renderTime(item.duration) }}
+              </div>
             </div>
           </div>
           <div class="search-result-title">
@@ -102,6 +136,8 @@ export default defineComponent({
   data: function () {
     return {
       loading: false,
+
+      search: AppStatus.CurrentSearch,
 
       pageSize: 50,
       order: "desc",
@@ -134,11 +170,11 @@ export default defineComponent({
 
       Request.Pending(
         "page-random-load",
-        SearchAPI.Random("", Date.now(), this.pageSize)
+        SearchAPI.Random(this.search, Date.now(), this.pageSize)
       )
         .onSuccess((result) => {
           const s = new Set();
-          this.pageItems = result.page_items.filter(i => {
+          this.pageItems = result.page_items.filter((i) => {
             if (s.has(i.id)) {
               return false;
             }
@@ -175,6 +211,11 @@ export default defineComponent({
 
     onAppStatusChanged: function () {
       this.currentMedia = AppStatus.CurrentMedia;
+      if (AppStatus.CurrentSearch !== this.search) {
+        this.search = AppStatus.CurrentSearch;
+        this.load();
+      }
+
       if (AppStatus.SearchParams !== this.searchParams) {
         this.searchParams = AppStatus.SearchParams;
         this.updateSearchParams();
@@ -198,7 +239,7 @@ export default defineComponent({
       AppStatus.ClickOnMedia(mid, true);
     },
 
-     getMediaURL: function (mid: number): string {
+    getMediaURL: function (mid: number): string {
       return (
         window.location.protocol +
         "//" +
@@ -242,6 +283,10 @@ export default defineComponent({
         event.stopPropagation();
         event.target.click();
       }
+    },
+
+    clearSearch: function () {
+      AppStatus.ClearSearch();
     },
   },
   mounted: function () {

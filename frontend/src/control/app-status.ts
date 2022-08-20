@@ -224,6 +224,16 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    public static ClearSearch() {
+        AppStatus.CurrentSearch = "";
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "right";
+
+        AppStatus.OnStatusUpdate();
+    }
+
     public static ClickOnMedia(mediaId: number, split: boolean) {
         AppStatus.CurrentMedia = mediaId;
 
