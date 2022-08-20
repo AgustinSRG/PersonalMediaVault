@@ -17,7 +17,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="form-group" v-if="!deleting">
+        <div class="form-group">
           <label>{{ $t("Do you want to re-encode the media?") }}</label>
         </div>
       </div>
