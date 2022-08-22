@@ -118,6 +118,22 @@
           <ToggleSwitch v-model:val="subhtmlState"></ToggleSwitch>
         </td>
       </tr>
+
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToDelays"
+      >
+        <td>
+          <i class="fas fa-clock icon-config"></i>
+          <b>{{ $t("Toggle play delay") }}</b>
+        </td>
+        <td class="td-right">
+          {{ renderToggleDelay(toggleDelay) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
     </table>
     <table v-if="page === 'speed'">
       <tr
@@ -307,6 +323,38 @@
         <td class="td-right"></td>
       </tr>
     </table>
+
+     <table v-if="page === 'tdelays'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Toggle play delay") }}</b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        v-for="s in toggleDelayOptions"
+        :key="s"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeToggleDelay(s)"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': s !== toggleDelay }"
+          ></i>
+          {{ renderToggleDelay(s) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
   </div>
 </template>
 
@@ -365,11 +413,19 @@ export default defineComponent({
       subtitles: "",
       subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
       subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+
+      toggleDelay: PlayerPreferences.PlayerTogglePlayDelay,
+      toggleDelayOptions: [0, 250, 500, 750, 1000],
     };
   },
   methods: {
     changeResolution: function (i) {
       this.resolutionState = i;
+    },
+
+    changeToggleDelay: function (d) {
+      this.toggleDelay = d;
+      PlayerPreferences.SetPlayerToggleDelay(d);
     },
 
     changeSubtitle: function (s) {
@@ -416,6 +472,10 @@ export default defineComponent({
 
     goToSubBackgrounds: function () {
       this.page = "subbg";
+    },
+
+    goToDelays: function () {
+      this.page = "tdelays";
     },
 
     renderSpeed: function (speed: number) {
@@ -487,6 +547,23 @@ export default defineComponent({
           return this.$t("Extra extra large");
         default:
           return this.$t("Medium");
+      }
+    },
+
+    renderToggleDelay: function (d: number) {
+      switch (d) {
+        case 0:
+          return this.$t("No delay");
+        case 250:
+          return "0.25 s";
+        case 500:
+          return "0.5 s";
+        case 750:
+          return "0.75 s";
+        case 1000:
+          return "1 s";
+        default:
+          return "" + d;
       }
     },
 

@@ -41,6 +41,8 @@ export class PlayerPreferences {
     public static SubtitlesBackground = "75";
     public static SubtitlesHTML = false;
 
+    public static PlayerTogglePlayDelay = 250;
+
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
         if (userRes) {
@@ -82,6 +84,8 @@ export class PlayerPreferences {
         PlayerPreferences.SubtitlesSize = LocalStorage.Get("player-pref-subtitles-size", "l");
         PlayerPreferences.SubtitlesBackground = LocalStorage.Get("player-pref-subtitles-bg", "75");
         PlayerPreferences.SubtitlesHTML = LocalStorage.Get("player-pref-subtitles-html", false);
+
+        PlayerPreferences.PlayerTogglePlayDelay = LocalStorage.Get("player-pref-toggle-delay", 250);
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -298,5 +302,10 @@ export class PlayerPreferences {
     public static SetSubtitlesHTML(s: boolean) {
         PlayerPreferences.SubtitlesHTML = s;
         LocalStorage.Set("player-pref-subtitles-html", s);
+    }
+
+    public static SetPlayerToggleDelay(d: number) {
+        PlayerPreferences.PlayerTogglePlayDelay = d;
+        LocalStorage.Set("player-pref-toggle-delay", d);
     }
 }

@@ -779,11 +779,35 @@ export default defineComponent({
 
     togglePlay() {
       if (this.playing) {
-        this.pause();
-        this.feedback = "pause";
+        if (this.$options.togglePlayDelayTimeout) {
+          clearTimeout(this.$options.togglePlayDelayTimeout);
+          this.$options.togglePlayDelayTimeout = null;
+          this.feedback = "";
+        } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
+          this.feedback = "pause";
+          this.$options.togglePlayDelayTimeout = setTimeout(() => {
+            this.$options.togglePlayDelayTimeout = null;
+            this.pause();
+          }, PlayerPreferences.PlayerTogglePlayDelay);
+        } else {
+          this.feedback = "pause";
+          this.pause();
+        }
       } else {
-        this.play();
-        this.feedback = "play";
+        if (this.$options.togglePlayDelayTimeout) {
+          clearTimeout(this.$options.togglePlayDelayTimeout);
+          this.$options.togglePlayDelayTimeout = null;
+          this.feedback = "";
+        } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
+          this.feedback = "play";
+          this.$options.togglePlayDelayTimeout = setTimeout(() => {
+            this.$options.togglePlayDelayTimeout = null;
+            this.play();
+          }, PlayerPreferences.PlayerTogglePlayDelay);
+        } else {
+          this.feedback = "play";
+          this.play();
+        }
       }
 
       this.displayConfig = false;
@@ -1192,6 +1216,11 @@ export default defineComponent({
   },
   beforeUnmount: function () {
     clearInterval(this.$options.timer);
+
+    if (this.$options.togglePlayDelayTimeout) {
+      clearTimeout(this.$options.togglePlayDelayTimeout);
+      this.$options.togglePlayDelayTimeout = null;
+    }
 
     document.removeEventListener(
       "fullscreenchange",
