@@ -58,11 +58,13 @@
                   <div class="task-pbar-container" v-if="t.running">
                     <div
                       class="task-pbar-current"
-                      :style="{ width: getProgressPercent(t.stage_progress) }"
+                      :style="{ width: getGlobalProgress(t.stage, t.stage_progress) }"
                     ></div>
                   </div>
                 </td>
-                <td class="bold one-line td-shrink">{{ renderType(t.type) }}</td>
+                <td class="bold one-line td-shrink">
+                  {{ renderType(t.type) }}
+                </td>
                 <td class="bold one-line td-shrink">
                   <a
                     @click="goToMedia(t.media_id, $event)"
@@ -220,6 +222,45 @@ export default defineComponent({
       return Math.floor(p * 100) / 100 + "%";
     },
 
+    getGlobalProgress: function (stage: string, p: number) {
+      let baseProgress = 0;
+      let progressCap = 100;
+      switch (stage) {
+        case "PREPARE":
+          baseProgress = 0;
+          progressCap = 0;
+          break;
+        case "COPY":
+          baseProgress = 0;
+          progressCap = 10;
+          break;
+        case "PROBE":
+          baseProgress = 10;
+          progressCap = 0;
+          break;
+        case "ENCODE":
+          baseProgress = 10;
+          progressCap = 60;
+          break;
+        case "ENCRYPT":
+          baseProgress = 70;
+          progressCap = 25;
+          break;
+        case "UPDATE":
+          baseProgress = 95;
+          progressCap = 5;
+          break;
+        case "FINISH":
+          baseProgress = 100;
+          progressCap = 0;
+          break;
+      }
+
+      const realP = baseProgress + (p * progressCap / 100);
+
+      return Math.floor(realP * 100) / 100 + "%";
+    },
+
     close: function () {
       this.displayStatus = false;
     },
@@ -281,10 +322,12 @@ export default defineComponent({
           (((now - ts) / p) * 100 - (now - ts)) / 1000;
 
         let txt =
+          this.getGlobalProgress(stage, p) +
+          " | " + 
           this.$t("Stage") +
           ": " +
-          stageNumber +
-          " / 6 | " +
+          (stageNumber + 1) +
+          " / 7 | " +
           this.$t("Stage progress") +
           ": " +
           progressPercent;
