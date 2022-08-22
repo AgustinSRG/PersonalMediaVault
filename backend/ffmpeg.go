@@ -300,6 +300,9 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 		":(ow-iw)/2:(oh-ih)/2:color=#00000000"
 	args = append(args, "-pix_fmt", "rgba", "-vf", videoFilter)
 
+	// Setting for image
+	args = append(args, "-vframes", "1", "-an")
+
 	// Playlist name
 	args = append(args, tempPath+"/image.png")
 
@@ -322,6 +325,9 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 	}
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
+
+	// Setting for image
+	args = append(args, "-vframes", "1", "-an")
 
 	// Playlist name
 	args = append(args, tempPath+"/image.png")
