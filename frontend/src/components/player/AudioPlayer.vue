@@ -75,7 +75,10 @@
       :res="-1"
     ></PlayerEncodingPending>
 
-    <div class="player-subtitles-container">
+    <div
+      class="player-subtitles-container"
+      :class="{ 'controls-hidden': !showControls }"
+    >
       <div
         class="player-subtitles"
         v-if="subtitles"

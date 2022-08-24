@@ -72,7 +72,10 @@
       :res="currentResolution"
     ></PlayerEncodingPending>
 
-    <div class="player-subtitles-container">
+    <div
+      class="player-subtitles-container"
+      :class="{ 'controls-hidden': !showControls }"
+    >
       <div
         class="player-subtitles"
         v-if="subtitles"
@@ -1634,6 +1637,11 @@ export default defineComponent({
 
 .player-min .player-subtitles-container {
   bottom: 50px;
+}
+
+.player-subtitles-container.controls-hidden,
+.player-min .player-subtitles-container.controls-hidden {
+  bottom: 0;
 }
 
 .player-subtitles {
