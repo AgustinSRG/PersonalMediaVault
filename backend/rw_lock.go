@@ -19,6 +19,8 @@ import (
 	"sync"
 )
 
+// Read / Write lock
+// Controls access to a resource
 type ReadWriteLock struct {
 	lock *sync.Mutex
 
@@ -56,10 +58,16 @@ func CreateReadWriteLock() *ReadWriteLock {
 	}
 }
 
+// Request a write operation
+// This locks the resorce from writting
+// Only one write thread is allowed
 func (lock *ReadWriteLock) RequestWrite() {
 	lock.write_sem.Lock()
 }
 
+// Starts a write operation
+// Waits for pending read threads to finish
+// Locks the resource so only the write thread can use it
 func (lock *ReadWriteLock) StartWrite() {
 	lock.lock.Lock()
 
@@ -83,6 +91,7 @@ func (lock *ReadWriteLock) StartWrite() {
 	}
 }
 
+// Finish a write operation, unlocking the resource
 func (lock *ReadWriteLock) EndWrite() {
 	lock.lock.Lock()
 
@@ -106,6 +115,7 @@ func (lock *ReadWriteLock) EndWrite() {
 	lock.write_sem.Unlock()
 }
 
+// Starts a read operation
 func (lock *ReadWriteLock) StartRead() {
 	lock.lock.Lock()
 
@@ -133,6 +143,7 @@ func (lock *ReadWriteLock) StartRead() {
 	}
 }
 
+// Ends a read operation
 func (lock *ReadWriteLock) EndRead() {
 	lock.lock.Lock()
 
