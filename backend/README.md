@@ -46,7 +46,6 @@ Here is the full list of available options:
 | `--port -p <port>` | Sets the listening port. By default 80 (or 443 if using SSL). |
 | `--bind -b <bind-addr>` | Sets the bind address. By default it binds all interfaces. |
 | `--vault-path, -vp <path>` | Sets the data storage path for the vault. |
-| `--open-browser` | Opens browser in localhost (for local mode). |
 
 Also, here is a list of available debug options:
 

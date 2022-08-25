@@ -5,12 +5,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"time"
 )
 
 const BACKEND_VERSION = "1.0.0"
@@ -42,9 +39,6 @@ type BackendOptions struct {
 	// Temp path
 	tempPath            string
 	unencryptedTempPath string
-
-	// Open browser
-	openBrowser bool
 }
 
 var (
@@ -66,7 +60,6 @@ func main() {
 		vaultPath:           "./vault",
 		tempPath:            "./vault/temp",
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
-		openBrowser:         false,
 		port:                "",
 		bindAddr:            "",
 	}
@@ -150,8 +143,6 @@ func main() {
 			options.vaultPath = args[i+1]
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
-		} else if arg == "--open-browser" {
-			options.openBrowser = true
 		} else if arg == "--fix-consistency" {
 			options.fix = true
 		} else {
@@ -233,9 +224,6 @@ func main() {
 		}
 
 		// Create and run HTTP server
-		if options.openBrowser {
-			go openBrowser(options.port)
-		}
 		RunHTTPServer(options.port, options.bindAddr)
 	} else if options.clean || options.fix {
 		vault := Vault{}
@@ -268,6 +256,7 @@ func main() {
 	}
 }
 
+// Prints help to standard output
 func printHelp() {
 	fmt.Println("Usage: pmvd [OPTIONS]")
 	fmt.Println("    OPTIONS:")
@@ -280,8 +269,6 @@ func printHelp() {
 	fmt.Println("        --port -p <port>           Sets the listening port. By default 80 (or 443 if using SSL).")
 	fmt.Println("        --bind -b <bind-addr>      Sets the bind address. By default it binds all interfaces.")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
-
-	fmt.Println("        --open-browser             Opens browser in localhost (for local mode).")
 
 	fmt.Println("    DEBUG OPTIONS:")
 	fmt.Println("        --skip-lock                Ignores vault lockfile.")
@@ -302,6 +289,7 @@ func printHelp() {
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 }
 
+// Prints version to standard output
 func printVersion() {
 	fmt.Println("---------------------------------------------------")
 	fmt.Println("-  _____    __  __  __      __")
@@ -315,68 +303,4 @@ func printVersion() {
 	fmt.Println("- Version " + BACKEND_VERSION)
 	fmt.Println("- https://github.com/AgustinSRG/PersonalMediaVault")
 	fmt.Println("---------------------------------------------------")
-}
-
-func openBrowser(port string) {
-	// Generate localhost URL
-	var url string
-
-	certFile := os.Getenv("SSL_CERT")
-	keyFile := os.Getenv("SSL_KEY")
-
-	if certFile != "" && keyFile != "" {
-		var ssl_port int
-		ssl_port = 443
-		customSSLPort := port
-		if customSSLPort != "" {
-			sslp, e := strconv.Atoi(customSSLPort)
-			if e == nil {
-				ssl_port = sslp
-			}
-		}
-
-		if ssl_port == 443 {
-			url = "https://localhost"
-		} else {
-			url = "https://localhost:" + fmt.Sprint(ssl_port)
-		}
-	} else {
-		var tcp_port int
-		tcp_port = 80
-		customTCPPort := port
-		if customTCPPort != "" {
-			tcpp, e := strconv.Atoi(customTCPPort)
-			if e == nil {
-				tcp_port = tcpp
-			}
-		}
-
-		if tcp_port == 80 {
-			url = "http://localhost"
-		} else {
-			url = "http://localhost:" + fmt.Sprint(tcp_port)
-		}
-	}
-
-	// Wait a bit so the server can start (1 second)
-	time.Sleep(1 * time.Second)
-
-	LogInfo("Openning frontend URL: " + url)
-
-	// Open the browser
-	var err error
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-
-	if err != nil {
-		LogWarning("Error open browser: " + err.Error())
-	}
 }
