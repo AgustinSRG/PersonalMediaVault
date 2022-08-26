@@ -386,6 +386,16 @@ export default defineComponent({
       }
     },
 
+    getTitleFromFileName: function (fileName: string): string {
+      const parts = (fileName + "").split(".");
+      if (parts.length > 1) {
+        parts.pop();
+        return parts.join(".");
+      } else {
+        return fileName;
+      }
+    },
+
     uploadMedia: function (m) {
       this.uploadingCount++;
 
@@ -394,7 +404,7 @@ export default defineComponent({
 
       Request.Pending(
         "upload-media-" + m.id,
-        MediaAPI.UploadMedia(m.name, m.file, m.album)
+        MediaAPI.UploadMedia(this.getTitleFromFileName(m.name), m.file, m.album)
       )
         .onUploadProgress((loaded, total) => {
           m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
