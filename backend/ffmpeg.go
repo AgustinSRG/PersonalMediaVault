@@ -1,4 +1,6 @@
 // FFMPEG utils
+// This file contains the functions to call ffmpeg processes
+// to encode media or do any other required tasks
 
 package main
 
@@ -18,10 +20,13 @@ import (
 )
 
 var (
-	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"
-	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe"
+	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"  // Location of FFMPEG binary
+	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe" // Location of FFPROBE binary
 )
 
+// Sets FFMPEG config
+// ffmpeg_path - Location of FFMPEG binary
+// ffprobe_path - Location of FFPROBE binary
 func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string) {
 	FFMPEG_BINARY_PATH = ffmpeg_path
 	FFPROBE_BINARY_PATH = ffprobe_path
@@ -29,17 +34,20 @@ func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string) {
 	ffprobe.SetFFProbeBinPath(FFPROBE_BINARY_PATH)
 }
 
+// Result of FFPROBE (media description)
 type FFprobeMediaResult struct {
-	Type       MediaType
-	Format     string
-	Duration   float64
-	Width      int32
-	Height     int32
-	Fps        int32
-	Encoded    bool
-	EncodedExt string
+	Type       MediaType // Type of media (video, audio, image)
+	Format     string    // File format
+	Duration   float64   // Duration
+	Width      int32     // Width (px)
+	Height     int32     // Height (px)
+	Fps        int32     // Frames per second
+	Encoded    bool      // True if already encoded to the expected format
+	EncodedExt string    // Extension of the encoded file
 }
 
+// Parses frame rate from string returned by ffprobe
+// fr - Frame rate in format 'f/t'
 func ParseFrameRate(fr string) int32 {
 	if fr == "" {
 		return 0
@@ -72,6 +80,8 @@ func ParseFrameRate(fr string) int32 {
 	}
 }
 
+// Checks if the video format is valid (mp4)
+// formatName - Video format name
 func validateFormatNameVideo(formatName string) bool {
 	parts := strings.Split(formatName, ",")
 
@@ -84,6 +94,8 @@ func validateFormatNameVideo(formatName string) bool {
 	return false
 }
 
+// Probes a file and returns its properties
+// file - File path
 func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	LogDebug("[FFPROBE] Probing " + file)
 	data, err := ffprobe.GetProbeData(file, 5*time.Second)
@@ -172,6 +184,8 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	}
 }
 
+// Validates subtitles file
+// file - Subtitles file
 func ValidateSubtitlesFile(file string) bool {
 	LogDebug("[FFPROBE] Probing " + file)
 	data, err := ffprobe.GetProbeData(file, 5*time.Second)
@@ -189,6 +203,14 @@ func ValidateSubtitlesFile(file string) bool {
 	return format == "srt"
 }
 
+// Encodes video to MP4 for playback
+// originalFilePath - Original video file
+// originalFileFormat - Original file format
+// originalFileDuration - Original video duration (seconds)
+// tempPath - Temporal path to use for the encoding
+// resolution - Resolution for re-scaling
+// config - User configuration
+// The endoded file will be tempfile/video.mp4
 func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -228,6 +250,13 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	return cmd
 }
 
+// Encodes video to MP4 for playback (No re-scaling)
+// originalFilePath - Original video file
+// originalFileFormat - Original file format
+// originalFileDuration - Original video duration (seconds)
+// tempPath - Temporal path to use for the encoding
+// config - User configuration
+// The endoded file will be tempfile/video.mp4
 func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -254,6 +283,12 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	return cmd
 }
 
+// Encodes audio to MP3 for playback
+// originalFilePath - Original audio file
+// originalFileFormat - Original file format
+// tempPath - Temporal path to use for the encoding
+// config - User configuration
+// The endoded file will be tempfile/audio.mp3
 func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -279,6 +314,13 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 	return cmd
 }
 
+// Encodes image to PNG for display
+// originalFilePath - Original image file
+// originalFileFormat - Original file format
+// tempPath - Temporal path to use for the encoding
+// resolution - Resolution for re-scaling
+// config - User configuration
+// The endoded file will be tempfile/image.png
 func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -311,6 +353,12 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 	return cmd
 }
 
+// Encodes image to PNG for display (no re-scaling)
+// originalFilePath - Original image file
+// originalFileFormat - Original file format
+// tempPath - Temporal path to use for the encoding
+// config - User configuration
+// The endoded file will be tempfile/image.png
 func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -338,10 +386,14 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 }
 
 const (
-	THUMBNAIL_SIZE       = 250
-	THUMBNAIL_VIDEO_TIME = 30
+	THUMBNAIL_SIZE       = 250 // Thumbnail height and width (px)
+	THUMBNAIL_VIDEO_TIME = 30  // Max thumbnail frame start time
 )
 
+// Generates a thumbnail from a video or image file
+// originalFilePath - Original media file
+// probedata - Media file properties
+// Returns the path to a temp file containing the thumbnail
 func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMediaResult) (string, error) {
 	if probedata.Type == MediaTypeVideo {
 		tmpFile := GetTemporalFileName("jpg", false)
@@ -454,11 +506,18 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 }
 
 const (
-	PREVIEWS_INTERVAL_SECONDS = 3
-	PREVIEWS_IMAGE_WIDTH      = 256
-	PREVIEWS_IMAGE_HEIGHT     = 144
+	PREVIEWS_INTERVAL_SECONDS = 3   // Number of seconds between each preview
+	PREVIEWS_IMAGE_WIDTH      = 256 // Preview width (px)
+	PREVIEWS_IMAGE_HEIGHT     = 144 // Preview height (px)
 )
 
+// Generates previews for a video
+// originalFilePath - Original video file
+// originalFileFormat - Original file format
+// originalFileDuration - Original video duration (seconds)
+// tempPath - Temporal path to use for the encoding
+// config - User configuration
+// The previews will be generated with the following format: tempPath/thumb_%d.jpg
 func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -492,6 +551,11 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	return cmd
 }
 
+// Runs FFMPEG command asynchronously (the child process can be managed)
+// cmd - Command to run
+// input_duration - Duration in seconds (used to calculate progress)
+// progress_reporter - Function called each time ffmpeg reports progress vie standard error
+// Note: If you return true in progress_reporter, the process will be killed (use this to interrupt tasks)
 func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) error {
 	// Create a pipe to read StdErr
 	pipe, err := cmd.StderrPipe()
@@ -575,40 +639,20 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	return nil
 }
 
+// Extracted subtitles file (.srt)
 type ExtractedSubtitlesFile struct {
-	Id   string
-	Name string
-	file string
+	Id   string // Language identifier
+	Name string // Name (for display)
+	file string // File path
 }
 
-func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
-	cmd := exec.Command(FFMPEG_BINARY_PATH)
-
-	args := make([]string, 1)
-
-	args[0] = FFMPEG_BINARY_PATH
-
-	args = append(args, "-y") // Overwrite
-
-	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
-
-	// Setting the stream map
-	args = append(args, "-map", "0:s:"+fmt.Sprint(streamIndex))
-
-	// Output
-	args = append(args, dest)
-
-	cmd.Args = args
-
-	err := cmd.Run()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
+// Extracts subtitles files from media file (usually .mkv)
+// originalFilePath - Original media path
+// probedata - Media properties
+// Returns:
+//  1 - error
+//  2 - Temporal path created, where the files where stored
+//  3 - List of files
 func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedSubtitlesFile) {
 	result := make([]ExtractedSubtitlesFile, 0)
 	addedMap := make(map[string]bool)
@@ -673,4 +717,37 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 	}
 
 	return nil, tmpFolder, result
+}
+
+// Extracts a subtitles file from a media file (usually .mkv)
+// originalFilePath - Original media path
+// probedata - Media properties
+// dest - Destination for the subtitles file
+// streamIndex - Subtitles stream index
+func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
+	cmd := exec.Command(FFMPEG_BINARY_PATH)
+
+	args := make([]string, 1)
+
+	args[0] = FFMPEG_BINARY_PATH
+
+	args = append(args, "-y") // Overwrite
+
+	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+
+	// Setting the stream map
+	args = append(args, "-map", "0:s:"+fmt.Sprint(streamIndex))
+
+	// Output
+	args = append(args, dest)
+
+	cmd.Args = args
+
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

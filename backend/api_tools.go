@@ -19,19 +19,24 @@ import (
 )
 
 const (
-	JSON_BODY_MAX_LENGTH     = 5 * 1024 * 1024
-	AUTH_API_BODY_MAX_LENGTH = 16 * 1024
-	ASSET_JWT_SUB            = "pmv_asset"
+	JSON_BODY_MAX_LENGTH     = 5 * 1024 * 1024 // Max length of body for JSON APIs
+	AUTH_API_BODY_MAX_LENGTH = 16 * 1024       // Max length of body for authentication requests
+	ASSET_JWT_SUB            = "pmv_asset"     // Subject to use for JWT for assets
 )
 
 var (
-	ASSET_JWT_SECRET = make([]byte, 32)
+	ASSET_JWT_SECRET = make([]byte, 32) // Secret used to sign tokens for asset requests
 )
 
+// Initailizes secret to sign JWT tokens for assets
 func InitAssetJWTSecret() {
 	rand.Read(ASSET_JWT_SECRET)
 }
 
+// Validates asset JWT
+// token - JWT to validate
+// media_id - Media ID
+// asset_id - Asset ID
 func CheckAssetToken(token string, media_id uint64, asset_id uint64) (valid bool) {
 	if token == "" {
 		return false
@@ -79,6 +84,9 @@ func CheckAssetToken(token string, media_id uint64, asset_id uint64) (valid bool
 	return true
 }
 
+// Creates an asset JWT
+// media_id - Media ID
+// asset_id - Asset ID
 func MakeAssetToken(media_id uint64, asset_id uint64) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": ASSET_JWT_SUB,
@@ -95,12 +103,21 @@ func MakeAssetToken(media_id uint64, asset_id uint64) string {
 	return tokenb64
 }
 
+// Finds session from request headers
+// request - HTTP request
+// Returns the reference to the session, or nil if unauthorized
 func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
 
 	return GetVault().sessions.FindSession(sessionToken)
 }
 
+// Parses range header from request
+// request - HTTP request
+// Returns:
+//  1 - Start index
+//  2 - Ending index
+// Note: -1 in the index means not set
 func ParseRangeHeader(request *http.Request) (int64, int64) {
 	rangeHeader := request.Header.Get("Range")
 
@@ -138,11 +155,17 @@ func ParseRangeHeader(request *http.Request) (int64, int64) {
 	return start, end
 }
 
+// API standard error response
 type APIErrorResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    string `json:"code"`    // Error code
+	Message string `json:"message"` // Error message
 }
 
+// Returns API standard error message
+// response - HTTP response handler
+// status - HTTP status
+// code - Error code
+// message - Error message
 func ReturnAPIError(response http.ResponseWriter, status int, code string, message string) {
 	var m APIErrorResponse
 
@@ -163,6 +186,8 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 	response.Write(jsonRes)
 }
 
+// Gets client IP address
+// request - HTTP request
 func GetClientIP(request *http.Request) string {
 	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
 
@@ -179,36 +204,12 @@ func GetClientIP(request *http.Request) string {
 	}
 }
 
-func GetExtensionFromFileName(fileName string) string {
-	parts := strings.Split(fileName, ".")
-
-	if len(parts) > 1 {
-		ext := strings.ToLower(parts[len(parts)-1])
-
-		r := regexp.MustCompile("[^a-z0-9]+")
-
-		ext = r.ReplaceAllString(ext, "")
-
-		if ext != "" {
-			return ext
-		} else {
-			return "bin"
-		}
-	} else {
-		return "bin"
-	}
-}
-
-func GetNameFromFileName(fileName string) string {
-	parts := strings.Split(fileName, ".")
-
-	if len(parts) > 1 {
-		return strings.Join(parts[:len(parts)-1], ".")
-	} else {
-		return fileName
-	}
-}
-
+// Encrypts original asset file (when uploaded)
+// mid - Media ID
+// file - Unencrypted file path
+// key - Encryption key
+// Returns a temporal file with the encrypted contents
+// This method also sets the progress in the media assets manager
 func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, error) {
 	encrypted_file := GetTemporalFileName("pma", true)
 
@@ -301,6 +302,10 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 	return encrypted_file, nil
 }
 
+// Encrypts media asset file
+// file - File to encrypt
+// key - Encryption key
+// Returns a temporal file with the encrypted contents
 func EncryptAssetFile(file string, key []byte) (string, error) {
 	encrypted_file := GetTemporalFileName("pma", true)
 
