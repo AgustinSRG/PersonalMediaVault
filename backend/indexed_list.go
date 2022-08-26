@@ -1,4 +1,9 @@
 // Indexed list of identifiers, for the main index and tags
+// This kind of file is a sorted list of Media IDs
+// Header:
+//   - List size (uint64) (Big endian) (8 bytes)
+// List (always sorted):
+//   - Each item is an uint64 (Big endian) (8 bytes)
 
 package main
 
@@ -8,11 +13,13 @@ import (
 	"os"
 )
 
+// Indexed list file
 type IndexedListFile struct {
-	f *os.File
+	f *os.File // File descriptor
 }
 
 // Opens index file for writing
+// file - Path to the file to open
 func OpenIndexedListForWriting(file string) (*IndexedListFile, error) {
 	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE, FILE_PERMISSION)
 
@@ -28,6 +35,7 @@ func OpenIndexedListForWriting(file string) (*IndexedListFile, error) {
 }
 
 // Opens index file for reading
+// file - Path to the file to open
 func OpenIndexedListForReading(file string) (*IndexedListFile, error) {
 	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
 
@@ -95,6 +103,7 @@ func (file *IndexedListFile) Initialize() error {
 }
 
 // Reads a value given an index
+// index - Index in the sorted list
 func (file *IndexedListFile) ReadValue(index int64) (uint64, error) {
 	_, err := file.f.Seek(8+(index*8), 0)
 
@@ -114,6 +123,8 @@ func (file *IndexedListFile) ReadValue(index int64) (uint64, error) {
 }
 
 // Writes a value
+// index - Index in the sorted list
+// value - Value to write
 func (file *IndexedListFile) WriteValue(index int64, value uint64) error {
 	_, err := file.f.Seek(8+(index*8), 0)
 
@@ -135,8 +146,10 @@ func (file *IndexedListFile) WriteValue(index int64, value uint64) error {
 }
 
 // Searchs in the file for a value
-// Returns a boolean value = true if the exact value was found
-// The seconds returned value is the closest index to that value
+// val - Value to search in the list
+// Returns:
+//   1 - A boolean value = true if the exact value was found
+//   2 - The closest index to that value
 func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -177,7 +190,14 @@ func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 	return mVal == val, low, nil
 }
 
-// Same as BinarySearch, but you provide the count value
+// Searchs in the file for a value
+// This method requires you to provide the list length.
+// A wrong value will result in undefined behaviour
+// val - Value to search in the list
+// count - List size
+// Returns:
+//   1 - A boolean value = true if the exact value was found
+//   2 - The closest index to that value
 func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int64) (bool, int64, error) {
 	if count == 0 {
 		return false, 0, nil
@@ -214,9 +234,10 @@ func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int6
 }
 
 // Adds a value
+// val - Value to add
 // Returns
-//  - true if it was added, false if it was already in the file
-//  - the index where the value was added
+//   1 - true if it was added, false if it was already in the file
+//   2 - the index where the value was added
 func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -278,9 +299,10 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 }
 
 // Removes a value
+// val - Value to remove
 // Returns
-//   - true if it was removed, false if it was not present in the index
-//   - The new count value
+//   1 - true if it was removed, false if it was not present in the index
+//   2 - The new count value
 func (file *IndexedListFile) RemoveValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -308,6 +330,8 @@ func (file *IndexedListFile) RemoveValue(val uint64) (bool, int64, error) {
 }
 
 // Removes a value given the index and the count
+// index - Index to remove
+// count - List size
 // Returns the new count value
 func (file *IndexedListFile) RemoveIndex(index int64, count int64) (int64, error) {
 	// Move instances 1 above
@@ -353,6 +377,8 @@ func (file *IndexedListFile) RemoveIndex(index int64, count int64) (int64, error
 }
 
 // List values inside the index in order
+// skip - Number of items to skip
+// limit - Max number of items to return
 func (file *IndexedListFile) ListValues(skip int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
 
@@ -385,6 +411,8 @@ func (file *IndexedListFile) ListValues(skip int64, limit int64) ([]uint64, erro
 }
 
 // List values inside the index in reverse order
+// skip - Number of items to skip
+// limit - Max number of items to return
 func (file *IndexedListFile) ListValuesReverse(skip int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
 
@@ -416,6 +444,9 @@ func (file *IndexedListFile) ListValuesReverse(skip int64, limit int64) ([]uint6
 	return result, nil
 }
 
+// Returns a random list of values from the list
+// seed - Seed for the PRNG
+// limit - Max number of items to return
 func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
 

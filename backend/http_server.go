@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	CORS_INSECURE_MODE_ENABLED = false
+	CORS_INSECURE_MODE_ENABLED = false // Insecure CORS mode for development and testing
 )
 
+// Logging middleware to log requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Log request
@@ -26,6 +27,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// CORS middleware, only applied when CORS_INSECURE_MODE_ENABLED = true
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// CORS
@@ -56,6 +58,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// Handler for the OPTIONS method, only when CORS_INSECURE_MODE_ENABLED = true
 func corsHeadInsecure(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
@@ -66,6 +69,7 @@ func corsHeadInsecure(next http.Handler) http.Handler {
 	})
 }
 
+// Adds cache TTL to static asset requests
 func cacheTTLAdd(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -77,6 +81,11 @@ func cacheTTLAdd(next http.Handler) http.Handler {
 	})
 }
 
+// Runs HTTP server
+// Creates mux router and launches the listener
+// NOTE: This method locks the thread forever, run with coroutine: go RunHTTPServer(p, b)
+// port - Port to listen
+// bindAddr - Bind address
 func RunHTTPServer(port string, bindAddr string) {
 	router := mux.NewRouter()
 
@@ -198,6 +207,12 @@ func RunHTTPServer(port string, bindAddr string) {
 	}
 }
 
+// Runs Secure HTTPS server listener
+// portOption - Port to listen
+// bindAddr - Bind address
+// certFile - Path to certificate file
+// keyFile - Path to private key file
+// router - Mux router
 func runHTTPSecureServer(portOption string, bindAddr string, certFile string, keyFile string, router *mux.Router) {
 	bind_addr := bindAddr
 
@@ -230,6 +245,10 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 	}
 }
 
+// Runs flat HTTP server listener
+// portOption - Port to listen
+// bindAddr - Bind address
+// router - Mux router
 func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 	bind_addr := bindAddr
 

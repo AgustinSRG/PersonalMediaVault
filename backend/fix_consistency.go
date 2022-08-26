@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+// Fixes vault consistency
+// vault - Reference to the vault to handle
 func FixVaultConsistency(vault *Vault) {
 	// Get the full list of media assets in the vault, and check if they exists in the main index
 
@@ -51,6 +53,8 @@ func FixVaultConsistency(vault *Vault) {
 	vault.index.EndRead(index)
 }
 
+// Gets the media IDs from the file system
+// p - Path to check
 func fetchMediaIds(p string) []uint64 {
 	dirs, err := os.ReadDir(p)
 
