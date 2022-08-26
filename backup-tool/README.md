@@ -1,6 +1,6 @@
 # Personal media vault (backup tool)
 
-Thi is a backup tool for Personal Media Vault. Works similar to `rsync`, witch can be used alternatively.
+This is a backup tool for Personal Media Vault. Works similar to `rsync`, which can be used alternatively.
 
 ## Compilation
 
