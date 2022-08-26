@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
 type VaultController struct {
@@ -173,12 +175,17 @@ func (vc *VaultController) Start() bool {
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
 
+	child_process_manager.ConfigureCommand(cmd)
+
 	err = cmd.Start()
 
 	if err != nil {
 		fmt.Println("Error: " + err.Error())
 		os.Exit(1)
 	}
+
+	// Add process as a child process
+	child_process_manager.AddChildProcess(cmd.Process)
 
 	vc.started = true
 	vc.errorMessage = ""

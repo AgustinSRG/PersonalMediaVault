@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/vansante/go-ffprobe"
+
+	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
 var (
@@ -557,6 +559,12 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 // progress_reporter - Function called each time ffmpeg reports progress vie standard error
 // Note: If you return true in progress_reporter, the process will be killed (use this to interrupt tasks)
 func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) error {
+	// Configure command
+	err := child_process_manager.ConfigureCommand(cmd)
+	if err != nil {
+		return err
+	}
+
 	// Create a pipe to read StdErr
 	pipe, err := cmd.StderrPipe()
 
@@ -573,6 +581,9 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	if err != nil {
 		return err
 	}
+
+	// Add process as a child process
+	child_process_manager.AddChildProcess(cmd.Process)
 
 	// Read stderr line by line
 

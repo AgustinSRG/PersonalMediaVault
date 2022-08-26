@@ -8,6 +8,8 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+
+	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
 const BACKEND_VERSION = "1.0.0"
@@ -173,6 +175,13 @@ func main() {
 	}
 
 	if options.daemon {
+		err := child_process_manager.InitalizeChildProcessManager()
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+		defer child_process_manager.DisposeChildProcessManager()
+
 		if _, err := os.Stat(options.ffmpegPath); err != nil {
 			fmt.Println("Error: Could not find 'ffmpeg' at specified location: " + options.ffmpegPath)
 			os.Exit(1)
@@ -191,7 +200,7 @@ func main() {
 		// Create and initialize vault
 
 		vault := Vault{}
-		err := vault.Initialize(options.vaultPath)
+		err = vault.Initialize(options.vaultPath)
 
 		if err != nil {
 			fmt.Println("Error: " + err.Error())

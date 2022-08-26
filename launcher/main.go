@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
 const VERSION = "1.0.0"
@@ -47,6 +49,13 @@ func main() {
 		printHelp()
 		os.Exit(1)
 	}
+
+	err := child_process_manager.InitalizeChildProcessManager()
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		os.Exit(1)
+	}
+	defer child_process_manager.DisposeChildProcessManager()
 
 	detectLauncherPaths()
 

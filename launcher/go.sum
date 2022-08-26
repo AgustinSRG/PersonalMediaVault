@@ -1,2 +1,6 @@
+github.com/AgustinSRG/go-child-process-manager v0.0.0-20220826105200-10030c425244 h1:iuaE9QREvhWefBpfZNpK8Rtislxte1egFEZx5nB6Hk8=
+github.com/AgustinSRG/go-child-process-manager v0.0.0-20220826105200-10030c425244/go.mod h1:JgXUSAhyOo1awWbBKGVJ4fU9a5Q6JBo4eR+sXqmYC1w=
 github.com/nightlyone/lockfile v1.0.0 h1:RHep2cFKK4PonZJDdEl4GmkabuhbsRMgk/k3uAmxBiA=
 github.com/nightlyone/lockfile v1.0.0/go.mod h1:rywoIealpdNse2r832aiD9jRk8ErCatROs6LzC841CI=
+golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 h1:UiNENfZ8gDvpiWw7IpOMQ27spWmThO1RwwdQVbJahJM=
+golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
