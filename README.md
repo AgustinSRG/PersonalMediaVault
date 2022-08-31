@@ -1,6 +1,6 @@
 # Personal Media Vault
 
-Web application to store and visualize media files (video, audio and pictures), meant to be run on a personal server or computer.
+Web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
 
 ## Project motivation
 

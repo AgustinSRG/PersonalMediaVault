@@ -15,12 +15,8 @@ Also, make sure you have installed in `C:\ffmpeg\bin` the binaries `ffmpeg.exe` 
 
 To copy the compiled files into a source folder, type:
 
-```
-powershell < configure.ps1
-```
-
-To generate the intaller, run the following script:
+To generate the MSI installer, run the following script:
 
 ```
-make-wix.bat
+build.bat
 ```
