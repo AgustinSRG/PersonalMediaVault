@@ -8,7 +8,7 @@ export class AppPreferences {
     public static Language = "en";
     public static Theme = "dark";
     public static AlbumPositionMap: {[id: string]: number} = Object.create(null);
-
+    public static FavAlbums: string[] = [];
 
     public static LoadPreferences() {
         const locale = (navigator.language || "en");
@@ -16,6 +16,7 @@ export class AppPreferences {
         AppPreferences.Language = LocalStorage.Get("app-pref-lang", locale);
         AppPreferences.Theme = LocalStorage.Get("app-pref-theme", "light");
         AppPreferences.AlbumPositionMap = LocalStorage.Get("app-pref-albums-order", Object.create(null));
+        AppPreferences.FavAlbums = LocalStorage.Get("app-pref-albums-fav", []);
 
         AppEvents.AddEventListener("albums-update", AppPreferences.OnAlbumsUpdate);
         AppEvents.AddEventListener("current-album-update", AppPreferences.OnAlbumLoad);
@@ -38,7 +39,11 @@ export class AppPreferences {
                 delete AppPreferences.AlbumPositionMap[id];
             }
         }
+        AppPreferences.FavAlbums = AppPreferences.FavAlbums.filter(id => {
+            return !!albums[id];
+        });
         LocalStorage.Set("app-pref-albums-order", AppPreferences.AlbumPositionMap);
+        LocalStorage.Set("app-pref-albums-fav", AppPreferences.FavAlbums);
     }
 
     public static OnAlbumLoad() {
@@ -48,5 +53,22 @@ export class AppPreferences {
         AppPreferences.AlbumPositionMap[AlbumsController.CurrentAlbumData.id + ""] = Date.now();
         LocalStorage.Set("app-pref-albums-order", AppPreferences.AlbumPositionMap);
         AppEvents.Emit("album-sidebar-top", AlbumsController.CurrentAlbumData.id);
+    }
+
+    public static albumAddFav(id: string) {
+        if (!AppPreferences.FavAlbums.includes(id)) {
+            AppPreferences.FavAlbums.push(id);
+            LocalStorage.Set("app-pref-albums-fav", AppPreferences.FavAlbums);
+            AppEvents.Emit("albums-fav-updated");
+        }
+    }
+
+    public static albumRemoveFav(id: string) {
+        const index = AppPreferences.FavAlbums.indexOf(id); 
+        if (index >= 0) {
+            AppPreferences.FavAlbums.splice(index, 1);
+            LocalStorage.Set("app-pref-albums-fav", AppPreferences.FavAlbums);
+            AppEvents.Emit("albums-fav-updated");
+        }
     }
 }

@@ -105,10 +105,27 @@
         <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
       </a>
 
+      <div class="side-bar-separator" v-if="albumsFavorite.length > 0"></div>
+
+      <a
+        v-for="a in albumsFavorite"
+        :key="a.id"
+        class="side-bar-option"
+        :class="{ selected: album == a.id }"
+        :title="a.name"
+        @click="goToAlbum(a, $event)"
+        :href="getAlbumURL(a.id)"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div class="side-bar-option-icon"><i class="fas fa-star"></i></div>
+        <div class="side-bar-option-text">{{ a.name }}</div>
+      </a>
+
       <div class="side-bar-separator"></div>
 
       <a
-        v-for="a in albums"
+        v-for="a in albumsRest"
         :key="a.id"
         class="side-bar-option"
         :class="{ selected: album == a.id }"
@@ -156,6 +173,8 @@ export default defineComponent({
       canWrite: AuthController.CanWrite,
 
       albums: [],
+      albumsFavorite: [],
+      albumsRest: [],
     };
   },
   methods: {
@@ -243,6 +262,18 @@ export default defineComponent({
           return 0;
         }
       });
+      const favIdList = AppPreferences.FavAlbums;
+      const albumsFavorite = [];
+      const albumsRest = [];
+      this.albums.forEach((album) => {
+        if (favIdList.includes(album.id + "")) {
+          albumsFavorite.push(album);
+        } else {
+          albumsRest.push(album);
+        }
+      });
+      this.albumsFavorite = albumsFavorite;
+      this.albumsRest = albumsRest;
     },
 
     clickOnEnter: function (event) {
@@ -258,10 +289,17 @@ export default defineComponent({
     },
 
     putAlbumFirst: function (albumId: number) {
-      for (let i = 0; i < this.albums.length; i++) {
-        if (this.albums[i].id === albumId) {
-          const albumEntry = this.albums.splice(i, 1)[0];
-          this.albums.unshift(albumEntry);
+      for (let i = 0; i < this.albumsFavorite.length; i++) {
+        if (this.albumsFavorite[i].id === albumId) {
+          const albumEntry = this.albumsFavorite.splice(i, 1)[0];
+          this.albumsFavorite.unshift(albumEntry);
+          return;
+        }
+      }
+      for (let i = 0; i < this.albumsRest.length; i++) {
+        if (this.albumsRest[i].id === albumId) {
+          const albumEntry = this.albumsRest.splice(i, 1)[0];
+          this.albumsRest.unshift(albumEntry);
           return;
         }
       }
@@ -285,6 +323,10 @@ export default defineComponent({
     this.$options.albumsUpdater = this.updateAlbums.bind(this);
 
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
+    AppEvents.AddEventListener(
+      "albums-fav-updated",
+      this.$options.albumsUpdater
+    );
 
     this.$options.albumGoTop = this.putAlbumFirst.bind(this);
 
@@ -307,6 +349,10 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
+    AppEvents.RemoveEventListener(
+      "albums-fav-updated",
+      this.$options.albumsUpdater
+    );
 
     AppEvents.RemoveEventListener(
       "album-sidebar-top",

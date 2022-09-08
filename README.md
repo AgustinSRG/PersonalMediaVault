@@ -19,20 +19,24 @@ This is a personal project developed with the goal of making a media management 
  - Albums: Media files can be sorted using albums.
  - Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
  - Automated thumbnail generation.
- - Subtitles support for video and audios.
+ - Subtitles support for videos and audios.
  - Video timeline previews.
 
 ## Installation
 
 Depending on the operating system you are using, there are multiple installation options.
 
+### Linux with DEB package support
+
+TODO
+
 ### Windows
 
 TODO
 
-### Linux with DEB package support
+## Docker
 
-TODO
+
 
 ## Project components
 

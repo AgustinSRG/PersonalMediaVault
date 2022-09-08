@@ -47,6 +47,16 @@
           </button>
 
           <button
+            type="button"
+            :title="$t('Favorite')"
+            class="album-header-btn"
+            :class="{ toggled: isFav }"
+            @click="toggleFav"
+          >
+            <i class="fas fa-star"></i>
+          </button>
+
+          <button
             v-if="canWrite"
             type="button"
             :title="$t('Delete')"
@@ -142,6 +152,7 @@
 import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
+import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { copyObject } from "@/utils/objects";
@@ -167,6 +178,10 @@ export default defineComponent({
 
       albumList: [],
 
+      isFav: AppPreferences.FavAlbums.includes(
+        AlbumsController.CurrentAlbum + ""
+      ),
+
       loading: AlbumsController.CurrentAlbumLoading,
 
       currentPos: AlbumsController.CurrentAlbumPos,
@@ -191,6 +206,9 @@ export default defineComponent({
       }
       this.albumId = AlbumsController.CurrentAlbum;
       this.albumData = AlbumsController.CurrentAlbumData;
+      this.isFav = AppPreferences.FavAlbums.includes(
+        AlbumsController.CurrentAlbum + ""
+      );
       this.updateAlbumsList();
     },
 
@@ -220,6 +238,14 @@ export default defineComponent({
 
     toggleRandom: function () {
       AlbumsController.ToggleRandom();
+    },
+
+    toggleFav: function () {
+      if (this.isFav) {
+        AppPreferences.albumRemoveFav(AlbumsController.CurrentAlbum + "");
+      } else {
+        AppPreferences.albumAddFav(AlbumsController.CurrentAlbum + "");
+      }
     },
 
     renameAlbum: function () {
@@ -410,6 +436,12 @@ export default defineComponent({
         this.$options.sortable.option("disabled", !this.canWrite);
       }
     },
+
+    updateFav: function () {
+      this.isFav = AppPreferences.FavAlbums.includes(
+        AlbumsController.CurrentAlbum + ""
+      );
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -433,6 +465,12 @@ export default defineComponent({
     AppEvents.AddEventListener(
       "auth-status-changed",
       this.$options.authUpdateH
+    );
+
+    this.$options.favUpdateH = this.updateFav.bind(this);
+    AppEvents.AddEventListener(
+      "albums-fav-updated",
+      this.$options.favUpdateH
     );
 
     // Sortable
@@ -462,6 +500,11 @@ export default defineComponent({
     AppEvents.RemoveEventListener(
       "auth-status-changed",
       this.$options.authUpdateH
+    );
+
+    AppEvents.RemoveEventListener(
+      "albums-fav-updated",
+      this.$options.favUpdateH
     );
 
     // Sortable
