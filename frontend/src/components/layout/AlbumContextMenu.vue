@@ -40,6 +40,14 @@
     <div
       tabindex="0"
       @keydown="clickOnEnter"
+      @click="changePosition"
+      class="album-body-item-options-menu-btn"
+    >
+      <i class="fas fa-arrows-up-down-left-right"></i> {{ $t("Change position") }}
+    </div>
+    <div
+      tabindex="0"
+      @keydown="clickOnEnter"
       @click="removeMedia"
       class="album-body-item-options-menu-btn"
     >
@@ -54,7 +62,7 @@ import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   name: "AlbumContextMenu",
-  emits: ["update:shown", "move-up", "move-down", "media-remove"],
+  emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
   props: {
     shown: Boolean,
 
@@ -94,6 +102,11 @@ export default defineComponent({
 
     moveMediaDown: function () {
       this.$emit("move-down", this.mindex);
+      this.hide();
+    },
+
+    changePosition: function () {
+      this.$emit("change-pos", this.mindex);
       this.hide();
     },
 

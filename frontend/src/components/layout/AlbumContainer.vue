@@ -135,6 +135,7 @@
       :y="contextY"
       @move-up="moveMediaUp"
       @move-down="moveMediaDown"
+      @change-pos="changeMediaPos"
       @media-remove="removeMedia"
     ></AlbumContextMenu>
     <div v-if="loading" class="album-loader">
@@ -373,6 +374,23 @@ export default defineComponent({
       if (i < this.albumList.length - 1) {
         AlbumsController.MoveCurrentAlbumOrder(i, i + 1);
       }
+    },
+
+    changeMediaPos: function (i: number) {
+      AppEvents.Emit("album-user-request-pos", {
+        pos: i,
+        callback: (newPos: number) => {
+          if (isNaN(newPos) || !isFinite(newPos)) {
+            return;
+          }
+          newPos = Math.min(newPos, this.albumList.length - 1);
+          newPos = Math.max(0, newPos);
+          if (newPos === i) {
+            return;
+          }
+          AlbumsController.MoveCurrentAlbumOrder(i, newPos);
+        },
+      });
     },
 
     removeMedia: function (i: number) {

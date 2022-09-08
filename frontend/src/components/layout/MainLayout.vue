@@ -59,6 +59,9 @@
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+    <AlbumMovePosModal
+      v-model:display="displayAlbumMovePos"
+    ></AlbumMovePosModal>
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
     <ResolutionConfirmationModal
       v-model:display="displayResolutionConfirmation"
@@ -114,6 +117,7 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import AlbumListModal from "../modals/AlbumListModal.vue";
 import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
+import AlbumMovePosModal from "../modals/AlbumMovePosModal.vue";
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
@@ -151,6 +155,7 @@ export default defineComponent({
     AlbumRenameModal,
     AlbumDeleteModal,
     MediaDeleteModal,
+    AlbumMovePosModal,
     ResolutionConfirmationModal,
     ReEncodeConfirmationModal,
     SubtitlesDeleteModal,
@@ -183,6 +188,7 @@ export default defineComponent({
       displayAlbumList: false,
       displayAlbumRename: false,
       displayAlbumDelete: false,
+      displayAlbumMovePos: false,
 
       displayMediaDelete: false,
 
