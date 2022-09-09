@@ -1,0 +1,27 @@
+# Binary files
+
+personal-media-vault.exe
+personal-media-vault
+pmvd.exe
+pmvd
+backend
+backend.exe
+
+# Ignore temp files
+
+temp
+test.js
+
+# Ignore data folders
+
+vault
+version.txt
+version.log
+
+# Ignore .env
+
+.env
+
+# Others
+
+TODO.txt

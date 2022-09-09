@@ -36,7 +36,31 @@ TODO
 
 ## Docker
 
+You can run this project with docker, using the [official image](https://hub.docker.com/r/asanrom/pmv) uploaded to Docker Hub.
 
+In order to pull the image, type:
+
+```
+docker pull asanrom/pmv
+```
+
+To run a personal media vault instance, you can create a container, which is gona  run the backend binary inside it.
+
+Here is an example command to create a container:
+
+```
+docker run -p 80:80 -v /path/to/the/vault:/vault asanrom/pmv --daemon --clean --log-requests --vault-path /vault
+```
+
+You can replace `/path/to/the/vault` for the path where you have your vault stored.
+
+For more options, run:
+
+```
+docker run asanrom/pmv --help
+```
+
+Also check the backend project.
 
 ## Project components
 
