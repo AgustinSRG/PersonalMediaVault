@@ -854,7 +854,8 @@ export default defineComponent({
       }
 
       this.computeImageDimensions();
-      nextTick(this.centerScroll.bind(this));
+      this.incrementImageScroll("home");
+      this.tryHorizontalScroll("home");
     },
 
     setupAutoNextTimer: function () {
