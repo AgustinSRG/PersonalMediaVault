@@ -657,9 +657,39 @@ export default defineComponent({
       e.stopPropagation();
     },
 
+    incrementImageScroll: function (a: number | string) {
+      var el = this.$el.querySelector(".image-scroller");
+
+      if (!el) {
+        return;
+      }
+
+      var maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+
+      if (typeof a === "number") {
+        el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
+      } else if (a === "home") {
+        el.scrollTop = 0;
+      } else if (a === "end") {
+        el.scrollTop = maxScroll;
+      }
+    },
+
     onKeyPress: function (event) {
       var catched = true;
       switch (event.key) {
+        case "ArrowUp":
+          this.incrementImageScroll(-40);
+          break;
+        case "ArrowDown":
+          this.incrementImageScroll(40);
+          break;
+        case "Home":
+          this.incrementImageScroll("home");
+          break;
+        case "End":
+          this.incrementImageScroll("end");
+          break;
         case " ":
         case "K":
         case "k":
@@ -814,7 +844,7 @@ export default defineComponent({
         e.preventDefault();
         e.stopPropagation();
         if (e.deltaY > 0) {
-           this.changeScale(Math.max(0, this.scale - SCALE_STEP));
+          this.changeScale(Math.max(0, this.scale - SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
           this.fit = false;
