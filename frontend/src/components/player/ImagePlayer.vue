@@ -675,8 +675,33 @@ export default defineComponent({
       }
     },
 
+    tryHorizontalScroll: function (a: number | string): boolean {
+      var el = this.$el.querySelector(".image-scroller");
+
+      if (!el) {
+        return false;
+      }
+
+      var maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
+
+      if (maxScroll <= 0) {
+        return false;
+      }
+
+      if (typeof a === "number") {
+        el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
+      } else if (a === "home") {
+        el.scrollLeft = 0;
+      } else if (a === "end") {
+        el.scrollLeft = maxScroll;
+      }
+
+      return true;
+    },
+
     onKeyPress: function (event) {
       var catched = true;
+      var shifting = event.shiftKey;
       switch (event.key) {
         case "ArrowUp":
           this.incrementImageScroll(-40);
@@ -684,11 +709,29 @@ export default defineComponent({
         case "ArrowDown":
           this.incrementImageScroll(40);
           break;
+        case "ArrowRight":
+          if (shifting || !this.tryHorizontalScroll(40)) {
+            this.goNext();
+          }
+          break;
+        case "ArrowLeft":
+          if (shifting || !this.tryHorizontalScroll(-40)) {
+            this.goPrev();
+          }
+          break;
         case "Home":
-          this.incrementImageScroll("home");
+          if (shifting) {
+            this.tryHorizontalScroll("home");
+          } else {
+            this.incrementImageScroll("home");
+          }
           break;
         case "End":
-          this.incrementImageScroll("end");
+          if (shifting) {
+            this.tryHorizontalScroll("end");
+          } else {
+            this.incrementImageScroll("end");
+          }
           break;
         case " ":
         case "K":
@@ -718,11 +761,9 @@ export default defineComponent({
           this.showControls = !this.showControls;
           break;
         case "PageDown":
-        case "ArrowLeft":
           this.goPrev();
           break;
         case "PageUp":
-        case "ArrowRight":
           this.goNext();
           break;
         default:
