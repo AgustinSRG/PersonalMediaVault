@@ -171,6 +171,10 @@ func (vc *VaultController) Start() bool {
 		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
 	}
 
+	if vc.launchConfig.SecureTempDelete {
+		cmd.Env = append(cmd.Env, "TEMP_FILE_DELETE_MODE=SECURE")
+	}
+
 	cmd.Stderr = logFile
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
@@ -510,6 +514,26 @@ func (vc *VaultController) disableSSL() bool {
 	}
 
 	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+
+	if err != nil {
+		fmt.Println("Error: " + err.Error())
+		return false
+	} else {
+		fmt.Println("Changes in configuration successfully saved.")
+		return true
+	}
+}
+
+func (vc *VaultController) SetSecureTempDelete(d bool) bool {
+	vc.launchConfig.SecureTempDelete = d
+
+	if d {
+		fmt.Println("Secure deletion of temp files is now ENABLED.")
+	} else {
+		fmt.Println("Secure deletion of temp files is now DISABLED.")
+	}
+
+	err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 	if err != nil {
 		fmt.Println("Error: " + err.Error())

@@ -155,6 +155,23 @@ func runCommand(cmdText string, vc *VaultController) {
 		if vc.disableSSL() {
 			askRestart(vc)
 		}
+	case "secdel", "secure-delete":
+		if len(args) == 2 {
+			switch args[1] {
+			case "y", "on", "yes", "1", "true":
+				if vc.SetSecureTempDelete(true) {
+					askRestart(vc)
+				}
+			case "n", "off", "no", "0", "false":
+				if vc.SetSecureTempDelete(false) {
+					askRestart(vc)
+				}
+			default:
+				fmt.Println("Usage: secdel [y/n]")
+			}
+		} else {
+			fmt.Println("Usage: secdel [y/n]")
+		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
 	case "exit", "quit", "q":
@@ -197,5 +214,6 @@ func printCommandList() {
 	fmt.Println("    ssl           - Prints ssl configuration (if any)")
 	fmt.Println("    ssl-setup     - Setups SSL to use HTTPS for accessing your vault")
 	fmt.Println("    ssl-disable   - Disables SSL (use regular HTTP)")
+	fmt.Println("    secdel [y/n]  - Enables / disables secure deletion of temp files")
 	fmt.Println("    backup [path] - Makes a backup of the vault in the specified path")
 }
