@@ -150,6 +150,10 @@ export class AppStatus {
     }
 
     public static UpdateURL() {
+        if (AppStatus.CurrentAlbum >= 0 && AppStatus.CurrentMedia < 0) {
+            return;
+        }
+
         if (history.pushState) {
             const newurl = AppStatus.GetCurrentURL();
             // Update URL
