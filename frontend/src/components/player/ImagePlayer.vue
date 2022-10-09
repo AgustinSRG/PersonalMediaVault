@@ -618,6 +618,12 @@ export default defineComponent({
     tick() {
       this.checkPlayerSize();
       this.computeImageDimensions();
+      if (!this.mouseInControls && this.helpTooltip && Date.now() - this.lastControlsInteraction > 2000) {
+        this.helpTooltip = "";
+      }
+      if (this.helpTooltip && !this.showcontrols) {
+        this.helpTooltip = "";
+      }
     },
 
     interactWithControls() {
