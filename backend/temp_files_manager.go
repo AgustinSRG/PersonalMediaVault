@@ -17,6 +17,8 @@ var (
 	temp_files_prefix  = "pmv_tmp_"
 	temp_files_lock    = &sync.Mutex{}
 	temp_files_counter = 0
+
+	secure_temp_file_delete = os.Getenv("TEMP_FILE_DELETE_MODE") == "SECURE"
 )
 
 // Set vault temp files path
@@ -127,6 +129,11 @@ func GetTemporalFolder(encrypted bool) (string, error) {
 // Wipes file to prevent recovery (secure delete)
 // file - File path
 func WipeTemporalFile(file string) {
+	if !secure_temp_file_delete {
+		os.Remove(file)
+		return
+	}
+
 	f, err := os.OpenFile(file, os.O_WRONLY, FILE_PERMISSION)
 
 	if err != nil {

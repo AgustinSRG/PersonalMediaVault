@@ -283,7 +283,7 @@ func printHelp() {
 	fmt.Println("        --skip-lock                Ignores vault lockfile.")
 	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
 	fmt.Println("        --debug                    Enables debug mode.")
-	fmt.Println("        --log-requests             Enables logging requests to standard outout.")
+	fmt.Println("        --log-requests             Enables logging requests to standard output.")
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
 	fmt.Println("        --launch-tag <tag>         Sets launcher tag (for launcher use).")
 	fmt.Println("    ENVIRONMENT VARIABLES:")
@@ -296,6 +296,7 @@ func printHelp() {
 	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
+	fmt.Println("        TEMP_FILE_DELETE_MODE      Set it to 'SECURE' to clear all the bytes of temporal files (secure delete).")
 }
 
 // Prints version to standard output

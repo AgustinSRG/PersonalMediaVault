@@ -16,7 +16,7 @@ To compile the code type:
 go build -o pmvd
 ```
 
-The build command will create a binary in the currenct directory, called `pmvd`, or `pmvd.exe` if you are using Windows.
+The build command will create a binary in the current directory, called `pmvd`, or `pmvd.exe` if you are using Windows.
 
 ## Usage
 
@@ -54,11 +54,11 @@ Also, here is a list of available debug options:
 | `--skip-lock` | Ignores vault lockfile. |
 | `--fix-consistency` | Fixes vault consistency at startup (takes some time). |
 | `--debug` | Enables debug mode. |
-| `--log-requests` | Enables logging requests to standard outout. |
+| `--log-requests` | Enables logging requests to standard output. |
 | `--cors-insecure` | Allows all CORS requests (insecure, for development). |
 | `--launch-tag <tag>` | Sets launcher tag (for launcher use). |
 
-Also, here is a list of envonment variables to configure other options:
+Also, here is a list of environment variables to configure other options:
 
 | Variable Name | Description |
 |---|---|
@@ -69,4 +69,4 @@ Also, here is a list of envonment variables to configure other options:
 | SSL_CERT | Path to the SSL certificate. Required to enable HTTPS |
 | SSL_KEY | Path to SSL private key. Required to enable HTTPS |
 | USING_PROXY | Set it to `YES` if you are using a reverse proxy. |
-
+| TEMP_FILE_DELETE_MODE | Set it to `SECURE` to clear all the bytes of temporal files (secure delete). |
