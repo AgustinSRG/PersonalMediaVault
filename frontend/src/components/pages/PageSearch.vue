@@ -38,7 +38,16 @@
             @click="clearSearch"
             class="btn btn-primary btn-sm"
           >
-            <i class="fas fa-times"></i> {{ $t("Clear Search") }}
+            <i class="fas fa-times"></i> {{ $t("Clear search") }}
+          </button>
+        </div>
+        <div class="search-results-msg-btn">
+          <button
+            type="button"
+            @click="goAdvancedSearch"
+            class="btn btn-primary btn-sm"
+          >
+            <i class="fas fa-search"></i> {{ $t("Advanced search") }}
           </button>
         </div>
       </div>
@@ -299,6 +308,10 @@ export default defineComponent({
 
     clearSearch: function () {
       AppStatus.GoToSearch("");
+    },
+
+    goAdvancedSearch: function () {
+      AppStatus.GoToPage("advsearch");
     },
 
     renderTime: function (s: number): string {
