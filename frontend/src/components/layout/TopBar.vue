@@ -9,23 +9,23 @@
       >
         <i class="fas fa-bars"></i>
       </button>
-      <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV">
-      <span :title="$t('Personal Media Vault')" class="top-bar-title"
-        >PMV</span
-      >
+      <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
+      <span :title="$t('Personal Media Vault')" class="top-bar-title">PMV</span>
       <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
         >PMV</span
       >
     </div>
     <div class="top-bar-search-td">
       <div class="top-bar-center-div">
-        <div
+        <form
           class="top-bar-search-input-container"
           :class="{ focused: searchFocus }"
+          @submit="goSearch"
         >
           <input
             type="text"
             class="top-bar-search-input"
+            name="pmv-search-input"
             spellcheck="false"
             autocorrect="off"
             autocomplete="off"
@@ -34,15 +34,13 @@
             v-model="search"
             @keydown="onKeyDown"
             @input="onSearchInput"
-            @change="goSearch"
             @focus="focusSearch"
             @blur="blurSearch"
           />
           <button
-            type="button"
+            type="submit"
             class="top-bar-button top-bar-search-button"
             :title="$t('Search')"
-            @click="goSearch"
           >
             <i class="fas fa-search"></i>
           </button>
@@ -52,20 +50,22 @@
           >
             <div
               v-for="s in suggestions"
-              :key="s.id"
+              :key="s.key"
               class="top-bar-search-suggestion"
               @click="selectSearch(s)"
             >
-              {{ s.name }}
+              <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
+              <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
+              <span>{{ s.name }}</span>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
     <div class="top-bar-user-td">
       <button
         type="button"
-        class="top-bar-button top-bar-botton-min-version"
+        class="top-bar-button top-bar-bottom-min-version"
         :title="$t('Search')"
       >
         <i class="fas fa-search"></i>
@@ -92,6 +92,7 @@
 </template>
 
 <script lang="ts">
+import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
@@ -120,7 +121,10 @@ export default defineComponent({
       this.$emit("settings");
     },
 
-    goSearch: function () {
+    goSearch: function (event) {
+      if (event) {
+        event.preventDefault();
+      }
       AppStatus.GoToSearch(this.search);
       this.$el.querySelector(".top-bar-search-input").blur();
     },
@@ -150,7 +154,12 @@ export default defineComponent({
     },
 
     selectSearch: function (s) {
-      this.search = s.name;
+      if (s.type === "album") {
+        this.search = "";
+        AppStatus.ClickOnAlbum(s.id);
+      } else {
+        this.search = s.name;
+      }
       this.goSearch();
     },
 
@@ -164,12 +173,30 @@ export default defineComponent({
         .map((a: any) => {
           const i = tagFilter ? a.name.indexOf(tagFilter) : 0;
           return {
+            key: "tag:" + a.id,
             id: a.id,
             name: a.name,
+            nameLower: a.name,
             starts: i === 0,
             contains: i >= 0,
+            type: "tag",
           };
         })
+        .concat(
+          Object.values(AlbumsController.Albums).map((a) => {
+            const name = a.name.replace(/[\s]/g, "_").toLowerCase();
+            const i = tagFilter ? name.indexOf(tagFilter) : 0;
+            return {
+              key: "album:" + a.id,
+              id: a.id,
+              name: a.name,
+              nameLower: name,
+              starts: i === 0,
+              contains: i >= 0,
+              type: "album",
+            };
+          })
+        )
         .filter((a) => {
           return a.starts || a.contains;
         })
@@ -178,7 +205,7 @@ export default defineComponent({
             return -1;
           } else if (b.starts && !a.starts) {
             return 1;
-          } else if (a.name < b.name) {
+          } else if (a.nameLower < b.nameLower) {
             return -1;
           } else {
             return 1;
@@ -198,7 +225,10 @@ export default defineComponent({
 
     onKeyDown: function (event) {
       if (event.key === "Tab" && this.search && !event.shiftKey) {
-        if (this.suggestions.length > 0 && this.suggestions[0].name !== this.search) {
+        if (
+          this.suggestions.length > 0 &&
+          this.suggestions[0].name !== this.search
+        ) {
           this.selectSearch(this.suggestions[0]);
           event.preventDefault();
         }
@@ -393,7 +423,7 @@ export default defineComponent({
   }
 }
 
-.top-bar-botton-min-version {
+.top-bar-bottom-min-version {
   display: none;
 }
 
@@ -402,7 +432,7 @@ export default defineComponent({
     display: none;
   }
 
-  .top-bar-botton-min-version {
+  .top-bar-bottom-min-version {
     display: inline-block;
   }
 }
@@ -446,11 +476,15 @@ export default defineComponent({
   pointer-events: all;
 }
 
-.light-theme .top-bar-search-input-container.focused .top-bar-search-suggestions {
+.light-theme
+  .top-bar-search-input-container.focused
+  .top-bar-search-suggestions {
   box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.1);
 }
 
-.dark-theme .top-bar-search-input-container.focused .top-bar-search-suggestions {
+.dark-theme
+  .top-bar-search-input-container.focused
+  .top-bar-search-suggestions {
   box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
 }
 
@@ -474,6 +508,10 @@ export default defineComponent({
 
 .dark-theme .top-bar-search-suggestion:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.top-bar-search-suggestion i {
+  margin-right: 0.5rem;
 }
 
 .top-bar-logo-img {

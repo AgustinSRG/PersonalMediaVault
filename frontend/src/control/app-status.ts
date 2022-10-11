@@ -212,18 +212,20 @@ export class AppStatus {
     }
 
     public static GoToSearch(search: string) {
-        AppStatus.CurrentPage = "search";
         AppStatus.CurrentSearch = search;
 
-        AppStatus.CurrentAlbum = -1;
+        if (AppStatus.CurrentSearch) {
+            AppStatus.CurrentPage = "search";
+            AppStatus.CurrentAlbum = -1;
 
-        if (AppStatus.CurrentMedia >= 0) {
-            AppStatus.ListSplitMode = true;
+            if (AppStatus.CurrentMedia >= 0) {
+                AppStatus.ListSplitMode = true;
+            }
+
+            AppStatus.UpdateLayout();
+
+            AppStatus.CurrentFocus = "right";
         }
-
-        AppStatus.UpdateLayout();
-
-        AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
@@ -255,6 +257,7 @@ export class AppStatus {
     public static ClickOnAlbum(albumId: number) {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = -1;
+        AppStatus.CurrentSearch = "";
 
         AppStatus.ListSplitMode = false;
 
@@ -267,7 +270,7 @@ export class AppStatus {
 
     public static ClickOnAlbumWithList(albumId: number, list: number[]) {
         AppStatus.CurrentAlbum = albumId;
-        
+
         const pos = PlayerPreferences.GetAlbumPos(albumId);
 
         if (pos < list.length) {
