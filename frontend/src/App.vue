@@ -230,6 +230,8 @@ export default class App extends Vue {}
   line-height: 1.5;
   background-clip: padding-box;
 
+  max-width: 100%;
+
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
