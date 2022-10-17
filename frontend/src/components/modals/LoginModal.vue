@@ -175,7 +175,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
 
-  padding: 1rem;
+  padding: 0.5rem;
 
   transition: opacity 0.2s;
   opacity: 1;
