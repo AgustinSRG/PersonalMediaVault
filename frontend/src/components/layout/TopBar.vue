@@ -20,7 +20,7 @@
         <form
           class="top-bar-search-input-container"
           :class="{ focused: searchFocus }"
-          @submit="goSearch"
+          @submit="submitSearch"
         >
           <input
             type="text"
@@ -30,7 +30,7 @@
             autocorrect="off"
             autocomplete="off"
             autocapitalize="none"
-            :placeholder="$t('Search by tag')"
+            :placeholder="$t('Search')"
             v-model="search"
             @keydown="onKeyDown"
             @input="onSearchInput"
@@ -121,10 +121,7 @@ export default defineComponent({
       this.$emit("settings");
     },
 
-    goSearch: function (event) {
-      if (event) {
-        event.preventDefault();
-      }
+    goSearch: function () {
       AppStatus.GoToSearch(this.search);
       this.$el.querySelector(".top-bar-search-input").blur();
     },
@@ -161,6 +158,18 @@ export default defineComponent({
         this.search = s.name;
       }
       this.goSearch();
+    },
+
+    submitSearch: function (event) {
+      if (event) {
+        event.preventDefault();
+      }
+      this.updateSuggestions();
+      if (this.suggestions.length > 0) {
+        this.selectSearch(this.suggestions[0]);
+      } else {
+        this.goSearch();
+      }
     },
 
     updateSuggestions: function () {
@@ -225,11 +234,9 @@ export default defineComponent({
 
     onKeyDown: function (event) {
       if (event.key === "Tab" && this.search && !event.shiftKey) {
-        if (
-          this.suggestions.length > 0 &&
-          this.suggestions[0].name !== this.search
-        ) {
-          this.selectSearch(this.suggestions[0]);
+        if (this.suggestions.length > 0) {
+          this.search = this.suggestions[0].name;
+          this.onSearchInput();
           event.preventDefault();
         }
       }
