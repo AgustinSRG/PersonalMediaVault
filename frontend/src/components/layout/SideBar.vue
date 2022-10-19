@@ -159,7 +159,7 @@ const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 
 export default defineComponent({
   name: "SideBar",
-  emits: ["update:display"],
+  emits: ["update:display", "skip-to-content"],
   props: {
     display: Boolean,
     initialayout: Boolean,
@@ -208,6 +208,9 @@ export default defineComponent({
         e.preventDefault();
       }
       AppStatus.GoToPage(p);
+      nextTick(() => {
+        this.$emit("skip-to-content");
+      });
     },
 
     goToSearch: function (e) {
@@ -215,6 +218,9 @@ export default defineComponent({
         e.preventDefault();
       }
       AppStatus.GoToSearch(this.search);
+      nextTick(() => {
+        this.$emit("skip-to-content");
+      });
     },
 
     goToAlbum: function (a, e) {
@@ -222,6 +228,9 @@ export default defineComponent({
         e.preventDefault();
       }
       AppStatus.ClickOnAlbum(a.id);
+      nextTick(() => {
+        this.$emit("skip-to-content");
+      });
     },
 
     getPageURL: function (page: string): string {

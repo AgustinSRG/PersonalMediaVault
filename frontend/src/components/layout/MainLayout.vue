@@ -21,7 +21,7 @@
       class="skip-to-main-content"
       >{{ $t("Skip to main content") }}</a
     >
-    <SideBar v-model:display="displaySidebar" :initialayout="layout === 'initial'"></SideBar>
+    <SideBar v-model:display="displaySidebar" :initialayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
     <TopBar
       @logout="logout"
       @settings="showSettings"
@@ -278,7 +278,9 @@ export default defineComponent({
     },
 
     skipToMainContent: function (event) {
-      event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
       let skipTo = null;
       switch (AppStatus.CurrentLayout) {
         case "media":
