@@ -11,6 +11,7 @@
       'sidebar-hidden': !displaySidebar,
       'focus-left': focus === 'left',
       'focus-right': focus === 'right',
+      'vault-locked': locked,
     }"
   >
     <PageContent

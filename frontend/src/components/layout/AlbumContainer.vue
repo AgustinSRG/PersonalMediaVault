@@ -545,6 +545,10 @@ export default defineComponent({
   display: none;
 }
 
+.vault-locked .album-container {
+  visibility: hidden;
+}
+
 .layout-album .album-container {
   display: block;
 }

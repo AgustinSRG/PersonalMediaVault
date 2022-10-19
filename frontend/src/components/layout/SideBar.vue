@@ -390,6 +390,10 @@ export default defineComponent({
   z-index: 10;
 }
 
+.vault-locked .side-bar {
+  visibility: hidden;
+}
+
 .light-theme .side-bar {
   background: white;
 }

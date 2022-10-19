@@ -288,6 +288,10 @@ export default defineComponent({
   white-space: nowrap;
 }
 
+.vault-locked .top-bar {
+  visibility: hidden;
+}
+
 .light-theme .top-bar {
   background: #ffffff;
 }

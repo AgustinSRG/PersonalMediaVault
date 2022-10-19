@@ -357,8 +357,18 @@ export default defineComponent({
   color: inherit;
 }
 
+.light-theme .search-result-item:focus-visible {
+  outline: none;
+  border: solid 1px black;
+}
+
 .light-theme .search-result-item.current {
   border: solid 2px black;
+}
+
+.dark-theme .search-result-item:focus-visible {
+  outline: none;
+  border: solid 1px white;
 }
 
 .dark-theme .search-result-item.current {

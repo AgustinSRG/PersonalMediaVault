@@ -84,6 +84,10 @@ export default defineComponent({
   width: 100%;
 }
 
+.vault-locked .bottom-bar {
+  visibility: hidden;
+}
+
 .light-theme .bottom-bar {
   background: white;
 }

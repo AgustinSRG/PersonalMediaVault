@@ -212,6 +212,10 @@ export default defineComponent({
   overflow: auto;
 }
 
+.vault-locked .player-container {
+  visibility: hidden;
+}
+
 .layout-media-split .player-container {
   width: calc(100% - 500px);
 }

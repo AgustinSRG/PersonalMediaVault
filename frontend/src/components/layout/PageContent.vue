@@ -148,6 +148,10 @@ export default defineComponent({
   overflow: auto;
 }
 
+.vault-locked .page-content {
+  visibility: hidden;
+}
+
 .sidebar-hidden .page-content {
   left: 0;
   width: 100%;
