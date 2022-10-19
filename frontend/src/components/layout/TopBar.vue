@@ -1,5 +1,5 @@
 <template>
-  <div class="top-bar">
+  <div class="top-bar" tabindex="-1">
     <div class="top-bar-logo-td">
       <button
         type="button"

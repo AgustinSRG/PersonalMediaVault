@@ -68,7 +68,6 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import PlayerMediaEditor from "./PlayerMediaEditor.vue";
-import { FocusTrap } from "../../utils/focus-trap";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 
@@ -169,19 +168,12 @@ export default defineComponent({
 
     expanded: function () {
       if (this.expanded) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-          nextTick(() => {
+        nextTick(() => {
             const el = this.$el.querySelector(".player-media-editor");
             if (el) {
               el.focus();
             }
           });
-        }
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
       if (this.dirty) {
         this.dirty = false;
@@ -193,31 +185,20 @@ export default defineComponent({
 
     albumexpanded: function () {
       if (this.albumexpanded) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-          nextTick(() => {
+         nextTick(() => {
             const el = this.$el.querySelector(".player-album-container");
             if (el) {
               el.focus();
             }
           });
-        }
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
   },
   beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
 });

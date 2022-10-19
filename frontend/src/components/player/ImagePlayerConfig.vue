@@ -3,10 +3,13 @@
     class="image-player-config"
     :class="{ hidden: !shown }"
     tabindex="-1"
+    role="dialog"
+    :aria-hidden="!shown"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
     @mouseenter="enterConfig"
     @mouseleave="leaveConfig"
+    @keydown="keyDownHandle"
   >
     <table v-if="page === ''">
       <tr class="tr-button" tabindex="0" @click="goToResolutions" @keydown="clickOnEnter">
@@ -124,6 +127,7 @@
 import { PlayerPreferences } from "@/control/player-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "ImagePlayerConfig",
@@ -185,20 +189,30 @@ export default defineComponent({
       e.stopPropagation();
     },
 
+    focus: function () {
+      nextTick(() => {
+        this.$el.focus();
+      });
+    },
+
     goBack: function () {
       this.page = "";
+      this.focus();
     },
 
     goToResolutions: function () {
       this.page = "resolution";
+      this.focus();
     },
 
     goToBackgrounds: function () {
       this.page = "background";
+      this.focus();
     },
 
     goToAutonext: function () {
       this.page = "autotext";
+      this.focus();
     },
 
     renderBackground: function (b: string) {
@@ -268,18 +282,37 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    close: function () {
+      this.shownState = false;
+    },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
     this.updateResolutions();
   },
-  beforeUnmount: function () {},
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
+  },
   watch: {
     shown: function () {
       this.page = "";
       if (this.shown) {
+        this.$options.focusTrap.activate();
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        this.$options.focusTrap.deactivate();
       }
     },
     rtick: function () {

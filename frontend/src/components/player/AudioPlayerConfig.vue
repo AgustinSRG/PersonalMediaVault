@@ -3,10 +3,13 @@
     class="audio-player-config"
     tabindex="-1"
     :class="{ hidden: !shown }"
+    role="dialog"
+    :aria-hidden="!shown"
     @click="stopPropagationEvent"
     @dblclick="stopPropagationEvent"
     @mouseenter="enterConfig"
     @mouseleave="leaveConfig"
+    @keydown="keyDownHandle"
   >
     <table v-if="page === ''">
       <tr>
@@ -302,6 +305,7 @@ import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   components: { ToggleSwitch },
@@ -367,8 +371,15 @@ export default defineComponent({
       e.stopPropagation();
     },
 
+    focus: function () {
+      nextTick(() => {
+        this.$el.focus();
+      });
+    },
+
     goBack: function () {
       this.page = "";
+      this.focus();
     },
 
     changeSpeed: function (s) {
@@ -377,22 +388,27 @@ export default defineComponent({
 
     goToSpeeds: function () {
       this.page = "speed";
+      this.focus();
     },
 
     goToAnimStyles: function () {
       this.page = "anim";
+      this.focus();
     },
 
     goToSubtitles: function () {
       this.page = "subtitles";
+      this.focus();
     },
 
     goToSubSizes: function () {
       this.page = "subsizes";
+      this.focus();
     },
 
     goToSubBackgrounds: function () {
       this.page = "subbg";
+      this.focus();
     },
 
     renderSpeed: function (speed: number) {
@@ -487,18 +503,37 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    close: function () {
+      this.shownState = false;
+    },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.subtitles = PlayerPreferences.SelectedSubtitles;
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
   },
-  beforeUnmount: function () {},
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
+  },
   watch: {
     shown: function () {
       this.page = "";
       if (this.shown) {
+        this.$options.focusTrap.activate();
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        this.$options.focusTrap.deactivate();
       }
     },
   },

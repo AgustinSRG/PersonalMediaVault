@@ -15,18 +15,23 @@ export class FocusTrap {
 
     private active: boolean;
 
-    constructor(element: Node, onExitFocus: () => void) {
+    private exceptClass: string;
+
+    constructor(element: Node, onExitFocus: () => void, exceptClass?: string) {
         this.element = element;
         this.focusHandler = this.handleFocus.bind(this);
         this.exitHandler = onExitFocus;
+        this.exceptClass = exceptClass || "";
     }
 
     private handleFocus(event: FocusEvent) {
         if (!event.target) {
             return;
         }
+        if (this.exceptClass && (<Element>event.target).classList.contains(this.exceptClass)) {
+            return;
+        }
         if (event.target !== this.element && !this.element.contains(<Node>event.target)) {
-            console.log(event);
             this.exitHandler();
         }
     }

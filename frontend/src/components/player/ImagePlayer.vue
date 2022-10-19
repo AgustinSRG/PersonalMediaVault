@@ -1,7 +1,7 @@
 <template>
   <div
     tabindex="-1"
-    class="image-player"
+    class="image-player player-settings-no-trap"
     :class="{
       'player-min': minPlayer,
       'no-controls': !showcontrols,
@@ -118,7 +118,7 @@
         <button
           type="button"
           :title="$t('Player Configuration')"
-          class="player-btn"
+          class="player-btn player-settings-no-trap"
           @click="showConfig"
           @mouseenter="enterTooltip('config')"
           @mouseleave="leaveTooltip('config')"

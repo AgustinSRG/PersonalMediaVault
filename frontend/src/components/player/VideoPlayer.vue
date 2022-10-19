@@ -1,7 +1,7 @@
 <template>
   <div
     tabindex="-1"
-    class="video-player"
+    class="video-player player-settings-no-trap"
     :class="{
       'player-min': minPlayer,
       'no-controls': !showControls,
@@ -189,7 +189,7 @@
         <button
           type="button"
           :title="$t('Player Configuration')"
-          class="player-btn"
+          class="player-btn player-settings-no-trap"
           @click="showConfig"
           @mouseenter="enterTooltip('config')"
           @mouseleave="leaveTooltip('config')"
@@ -1024,8 +1024,6 @@ export default defineComponent({
             this.toggleFullScreen();
           }
           break;
-        case "J":
-        case "j":
         case "ArrowRight":
           if (shifting || event.altKey) {
             if (this.next) {
@@ -1037,8 +1035,6 @@ export default defineComponent({
             this.setTime(this.currentTime + 5, true);
           }
           break;
-        case "L":
-        case "l":
         case "ArrowLeft":
           if (shifting || event.altKey) {
             if (this.prev) {
