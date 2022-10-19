@@ -1028,6 +1028,19 @@ export default defineComponent({
             caught = false;
           }
           break;
+        case "l":
+        case "L":
+          if (event.altKey || shifting) {
+            caught = false;
+          } else {
+            this.loop = !this.loop;
+            if (this.loop) {
+              AppEvents.Emit("snack", this.$t("Loop enabled"));
+            } else {
+              AppEvents.Emit("snack", this.$t("Loop disabled"));
+            }
+          }
+          break;
         default:
           caught = false;
       }
