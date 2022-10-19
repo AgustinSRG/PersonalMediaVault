@@ -474,8 +474,13 @@ export default defineComponent({
       );
     },
 
-     handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (AuthController.Locked || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (
+        AuthController.Locked ||
+        AppStatus.CurrentLayout !== "album" ||
+        !event.key ||
+        event.ctrlKey
+      ) {
         return false;
       }
 
@@ -499,14 +504,14 @@ export default defineComponent({
         return true;
       }
 
-      if (event.key.toUpperCase() === "HOME") {
+      if (event.key === "Home") {
         if (this.albumList.length > 0) {
           this.clickMedia(this.albumList[0]);
         }
         return true;
       }
 
-      if (event.key.toUpperCase() === "END") {
+      if (event.key === "End") {
         if (this.albumList.length > 0) {
           this.clickMedia(this.albumList[this.albumList.length - 1]);
         }
@@ -544,10 +549,7 @@ export default defineComponent({
     );
 
     this.$options.favUpdateH = this.updateFav.bind(this);
-    AppEvents.AddEventListener(
-      "albums-fav-updated",
-      this.$options.favUpdateH
-    );
+    AppEvents.AddEventListener("albums-fav-updated", this.$options.favUpdateH);
 
     // Sortable
     if (!isTouchDevice()) {
@@ -777,7 +779,7 @@ export default defineComponent({
 
 .album-body-item.current,
 .album-body-item.current:hover {
-  background: var(--theme-option-selected-color)
+  background: var(--theme-option-selected-color);
 }
 
 .album-body-item-thumbnail {

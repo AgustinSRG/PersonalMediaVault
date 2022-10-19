@@ -123,10 +123,11 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time-utils";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   name: "PageHome",
@@ -157,6 +158,8 @@ export default defineComponent({
       loadingFiller: [],
 
       pageSizeOptions: [],
+
+      switchMediaOnLoad: "",
     };
   },
   methods: {
@@ -184,6 +187,25 @@ export default defineComponent({
           this.totalPages = result.page_count;
           this.total = result.total_count;
           this.loading = false;
+          if (this.switchMediaOnLoad === "next") {
+            this.switchMediaOnLoad = "";
+            if (this.pageItems.length > 0) {
+              this.goToMedia(this.pageItems[0].id);
+            }
+          } else if (this.switchMediaOnLoad === "prev") {
+            this.switchMediaOnLoad = "";
+            if (this.pageItems.length > 0) {
+              this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+            }
+          }
+          nextTick(() => {
+            const currentElem = this.$el.querySelector(
+              ".search-result-item.current"
+            );
+            if (currentElem) {
+              currentElem.scrollIntoView();
+            }
+          });
         })
         .onRequestError((err) => {
           Request.ErrorHandler()
@@ -223,6 +245,14 @@ export default defineComponent({
         this.updateSearchParams();
         this.load();
       }
+      nextTick(() => {
+        const currentElem = this.$el.querySelector(
+          ".search-result-item.current"
+        );
+        if (currentElem) {
+          currentElem.scrollIntoView();
+        }
+      });
     },
 
     onSearchParamsChanged: function () {
@@ -292,10 +322,94 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    findCurrentMediaIndex: function (): number {
+      for (let i = 0; i < this.pageItems.length; i++) {
+        if (this.pageItems[i].id === this.currentMedia) {
+          return i;
+        }
+      }
+      return -1;
+    },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPageVisible() ||
+        !this.display ||
+        !event.key ||
+        event.ctrlKey
+      ) {
+        return false;
+      }
+
+      if (event.key === "PageDown") {
+        if (this.page > 0) {
+          this.changePage(this.page - 1);
+        }
+        return true;
+      }
+
+      if (event.key === "PageUp") {
+        if (this.page < this.totalPages - 1) {
+          this.changePage(this.page + 1);
+        }
+        return true;
+      }
+
+      if (event.key === "Home") {
+        if (this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        }
+        return true;
+      }
+
+      if (event.key === "End") {
+        if (this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+        }
+        return true;
+      }
+
+      if (event.key === "ArrowLeft") {
+        const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i > 0) {
+          this.goToMedia(this.pageItems[i - 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        } else if (i === 0) {
+          if (this.page > 0) {
+            this.switchMediaOnLoad = "prev";
+            this.changePage(this.page - 1);
+          }
+        }
+        return true;
+      }
+
+      if (event.key === "ArrowRight") {
+        const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i < this.pageItems.length - 1) {
+          this.goToMedia(this.pageItems[i + 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        } else if (i === this.pageItems.length - 1) {
+          if (this.page < this.totalPages - 1) {
+            this.switchMediaOnLoad = "next";
+            this.changePage(this.page + 1);
+          }
+        }
+        return true;
+      }
+
+      return false;
+    },
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
     this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.AddEventListener("media-delete", this.$options.loadH);
@@ -322,10 +436,12 @@ export default defineComponent({
       "app-status-update",
       this.$options.statusChangeH
     );
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
   watch: {
     display: function () {
       this.load();
+      this.switchMediaOnLoad = "";
     },
   },
 });

@@ -1069,9 +1069,18 @@ export default defineComponent({
       this.setAudioURL();
     },
 
+    onClearURL: function () {
+      const audioElem = this.$el.querySelector("audio");
+      if (audioElem) {
+        audioElem.src = "";
+        audioElem.remove();
+      }
+    },
+
     setAudioURL() {
       if (!this.metadata) {
         this.audioURL = "";
+        this.onClearURL();
         this.duration = 0;
         this.loading = false;
         this.clearAudioRenderer();
@@ -1086,6 +1095,7 @@ export default defineComponent({
         this.getAudioElement().load();
       } else {
         this.audioURL = "";
+        this.onClearURL();
         this.audioPending = true;
         this.audioPendingTask = this.metadata.task;
         this.duration = 0;
@@ -1307,6 +1317,7 @@ export default defineComponent({
   },
   beforeUnmount: function () {
     this.audioURL = "";
+    this.onClearURL();
     clearInterval(this.$options.timer);
 
     this.clearAudioRenderer();

@@ -608,6 +608,10 @@ export default defineComponent({
         return;
       }
 
+      if (typeof videoElement.duration !== "number" || isNaN(videoElement.duration) || !isFinite(videoElement.duration)) {
+        return;
+      }
+
       this.duration = videoElement.duration;
 
       if (
@@ -625,7 +629,7 @@ export default defineComponent({
     onVideoTimeUpdate: function () {
       if (this.loading) return;
       const videoElement = this.getVideoElement();
-      if (!videoElement) {
+      if (!videoElement || typeof videoElement.currentTime !== "number" || isNaN(videoElement.currentTime) || !isFinite(videoElement.currentTime)) {
         return;
       }
       this.currentTime = videoElement.currentTime;
@@ -641,7 +645,11 @@ export default defineComponent({
       if (!this.playing) {
         return;
       }
-      var promise = this.getVideoElement().play();
+      var player = this.getVideoElement();
+      if (!player) {
+        return;
+      }
+      var promise = player.play();
       if (promise) {
         promise.catch(
           function () {
@@ -1132,9 +1140,18 @@ export default defineComponent({
       this.setVideoURL();
     },
 
+    onClearURL: function () {
+      const videoElem = this.$el.querySelector("video");
+      if (videoElem) {
+        videoElem.src = "";
+        videoElem.remove();
+      }
+    },
+
     setVideoURL() {
       if (!this.metadata) {
         this.videoURL = "";
+        this.onClearURL();
         this.duration = 0;
         this.loading = false;
         return;
@@ -1147,6 +1164,7 @@ export default defineComponent({
           this.videoPendingTask = 0;
         } else {
           this.videoURL = "";
+          this.onClearURL();
           this.videoPending = true;
           this.videoPendingTask = this.metadata.task;
           this.duration = 0;
@@ -1164,6 +1182,7 @@ export default defineComponent({
             this.videoPendingTask = 0;
           } else {
             this.videoURL = "";
+            this.onClearURL();
             this.videoPending = true;
             this.videoPendingTask = res.task;
             this.duration = 0;
@@ -1171,6 +1190,7 @@ export default defineComponent({
           }
         } else {
           this.videoURL = "";
+          this.onClearURL();
           this.videoPending = true;
           this.videoPendingTask = 0;
           this.duration = 0;
@@ -1265,6 +1285,9 @@ export default defineComponent({
     this.initializeVideo();
   },
   beforeUnmount: function () {
+    this.videoURL = "";
+    this.onClearURL();
+
     clearInterval(this.$options.timer);
 
     if (this.$options.togglePlayDelayTimeout) {

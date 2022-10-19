@@ -46,6 +46,8 @@ import PageUpload from "../pages/PageUpload.vue";
 import PageRandom from "../pages/PageRandom.vue";
 import PageAlbums from "../pages/PageAlbums.vue";
 import PageAdvancedSearch from "../pages/PageAdvancedSearch.vue";
+import { AuthController } from "@/control/auth";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   components: {
@@ -123,17 +125,44 @@ export default defineComponent({
           return "";
       }
     },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPageVisible() ||
+        !event.key ||
+        event.ctrlKey
+      ) {
+        return false;
+      }
+
+      if (event.key.toUpperCase() === "Q") {
+        this.closePage();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "BACKSPACE") {
+        this.expandPage();
+        return true;
+      }
+
+      return false;
+    },
   },
   mounted: function () {
     this.$options.pageUpdater = this.updatePage.bind(this);
 
     AppEvents.AddEventListener("app-status-update", this.$options.pageUpdater);
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "app-status-update",
       this.$options.pageUpdater
     );
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
 });
 </script>
