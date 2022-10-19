@@ -153,6 +153,8 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { useVModel } from "../../utils/vmodel";
 import { KeyboardManager } from "@/control/keyboard";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 
 export default defineComponent({
   components: {
@@ -257,6 +259,9 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent): boolean {
+      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+        return false;
+      } 
       let caught = true;
       switch (event.key) {
         case "F":

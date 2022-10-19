@@ -713,12 +713,20 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent) {
-      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key) {
+      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
         return false;
-      } 
+      }  
       let caught = true;
       const shifting = event.shiftKey;
       switch (event.key) {
+        case "A":
+        case "a":
+          this.manageAlbums();
+          break;
+        case "S":
+        case "s":
+          this.showConfig();
+          break;
         case "ArrowUp":
           this.incrementImageScroll(-40);
           break;

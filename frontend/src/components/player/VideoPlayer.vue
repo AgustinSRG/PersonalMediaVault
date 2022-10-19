@@ -394,6 +394,7 @@ import { AppEvents } from "@/control/app-events";
 import { sanitizeSubtitlesHTML } from "@/utils/srt";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
+import { AuthController } from "@/control/auth";
 
 export default defineComponent({
   components: {
@@ -980,9 +981,20 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent): boolean {
+      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+        return false;
+      } 
       let caught = true;
       const shifting = event.shiftKey;
       switch (event.key) {
+        case "A":
+        case "a":
+          this.manageAlbums();
+          break;
+        case "S":
+        case "s":
+          this.showConfig();
+          break;
         case "M":
         case "m":
           this.toggleMuted();
