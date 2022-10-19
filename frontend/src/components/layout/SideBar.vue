@@ -152,6 +152,8 @@ import { GenerateURIQuery } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 
+const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
+
 export default defineComponent({
   name: "SideBar",
   emits: ["update:display"],
@@ -273,7 +275,7 @@ export default defineComponent({
         }
       });
       this.albumsFavorite = albumsFavorite;
-      this.albumsRest = albumsRest;
+      this.albumsRest = albumsRest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
     },
 
     clickOnEnter: function (event) {
@@ -300,6 +302,16 @@ export default defineComponent({
         if (this.albumsRest[i].id === albumId) {
           const albumEntry = this.albumsRest.splice(i, 1)[0];
           this.albumsRest.unshift(albumEntry);
+          return;
+        }
+      }
+      for (let i = 0; i < this.albums.length; i++) {
+        if (this.albums[i].id === albumId) {
+          const albumEntry = this.albums[i]
+          this.albumsRest.unshift(albumEntry);
+          if (this.albumsRest.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
+            this.albumsRest.pop()
+          }
           return;
         }
       }
