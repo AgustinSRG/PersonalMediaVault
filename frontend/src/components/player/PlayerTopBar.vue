@@ -1,11 +1,17 @@
 <template>
   <div
     class="player-top-bar"
-    :class="{ hidden: !shown, 'with-album': inalbum, 'album-expand': albumexpanded, 'expanded': expanded && !albumexpanded }"
+    :class="{
+      hidden: !shown,
+      'with-album': inalbum,
+      'album-expand': albumexpanded,
+      expanded: expanded && !albumexpanded,
+    }"
+    tabindex="-1"
     @click="clickTopBar"
     @dblclick="stopPropagationEvent"
     @contextmenu="stopPropagationEvent"
-    @keydown="stopPropagationEvent"
+    @keydown="onKeyDown"
   >
     <div v-if="!albumexpanded" class="player-title-container">
       <div class="player-title-left">
@@ -44,19 +50,27 @@
       </div>
     </div>
 
-    <PlayerAlbumFullScreen :expanded="albumexpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
-    <PlayerMediaEditor v-if="expanded" @changed="onEditDone"></PlayerMediaEditor>
-
+    <PlayerAlbumFullScreen
+      :expanded="albumexpanded"
+      @close="closeAlbum"
+    ></PlayerAlbumFullScreen>
+    <PlayerMediaEditor
+      v-if="expanded"
+      @changed="onEditDone"
+    ></PlayerMediaEditor>
   </div>
 </template>
 
 
 <script lang="ts">
 import { MediaController } from "@/control/media";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import PlayerMediaEditor from "./PlayerMediaEditor.vue";
+import { FocusTrap } from "../../utils/focus-trap";
+import { AuthController } from "@/control/auth";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   name: "PlayerTopBar",
@@ -64,7 +78,7 @@ export default defineComponent({
     PlayerAlbumFullScreen,
     PlayerMediaEditor,
   },
-  emits: ['update:expanded', 'update:albumexpanded', 'clickplayer'],
+  emits: ["update:expanded", "update:albumexpanded", "clickplayer"],
   props: {
     mid: Number,
     metadata: Object,
@@ -115,8 +129,37 @@ export default defineComponent({
       this.albumexpandedState = false;
     },
 
+    close: function () {
+      this.closeTitle();
+      this.closeAlbum();
+    },
+
     stopPropagationEvent: function (e) {
       e.stopPropagation();
+    },
+
+    onKeyDown: function (e) {
+      if (!this.expanded && !this.albumexpanded) {
+        return;
+      }
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.close();
+      }
+    },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (AuthController.Locked || !event.key || event.ctrlKey) {
+        return false;
+      }
+
+      if (event.key.toUpperCase() === "E") {
+        this.expandTitle();
+        return true;
+      }
+
+      return false;
     },
   },
   watch: {
@@ -125,6 +168,21 @@ export default defineComponent({
     },
 
     expanded: function () {
+      if (this.expanded) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+          nextTick(() => {
+            const el = this.$el.querySelector(".player-media-editor");
+            if (el) {
+              el.focus();
+            }
+          });
+        }
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
       if (this.dirty) {
         this.dirty = false;
         setTimeout(() => {
@@ -132,9 +190,36 @@ export default defineComponent({
         }, 100);
       }
     },
+
+    albumexpanded: function () {
+      if (this.albumexpanded) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+          nextTick(() => {
+            const el = this.$el.querySelector(".player-album-container");
+            if (el) {
+              el.focus();
+            }
+          });
+        }
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
+    },
   },
-  mounted: function () {},
-  beforeUnmount: function () {},
+  mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
+  },
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+  },
 });
 </script>
 
@@ -150,6 +235,10 @@ export default defineComponent({
   top: 0;
   left: 0;
   width: 100%;
+}
+
+.player-top-bar:focus {
+  outline: none;
 }
 
 .player-min .player-top-bar {

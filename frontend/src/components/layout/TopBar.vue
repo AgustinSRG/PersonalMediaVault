@@ -250,7 +250,7 @@ export default defineComponent({
 
     handleGlobalKey: function (event: KeyboardEvent): boolean {
       if (AuthController.Locked || !event.key) {
-        return;
+        return false;
       }
 
       if (event.key.toUpperCase() === "M" && event.ctrlKey) {

@@ -1,5 +1,5 @@
 <template>
-  <div class="player-media-editor">
+  <div class="player-media-editor" tabindex="-1">
     <form @submit="changeTitle">
       <div class="form-group">
         <label>{{ $t("Title") }}:</label>
@@ -1492,6 +1492,10 @@ export default defineComponent({
   background: rgba(0, 0, 0, 0.9);
   color: white;
   padding: 1rem;
+}
+
+.player-media-editor:focus {
+  outline: none;
 }
 
 .player-min .player-media-editor {

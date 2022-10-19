@@ -296,6 +296,10 @@ export default defineComponent({
   visibility: hidden;
 }
 
+.player-album-container:focus {
+  outline: none;
+}
+
 .full-screen .player-album-container.expanded {
   left: 0;
   visibility: visible;
