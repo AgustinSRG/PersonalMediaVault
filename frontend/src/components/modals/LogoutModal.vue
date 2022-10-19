@@ -6,8 +6,13 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <div class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <div
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">{{ $t("Close vault") }}</div>
         <button class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -30,6 +35,7 @@
 import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "LogoutModal",
@@ -47,21 +53,43 @@ export default defineComponent({
       this.displayStatus = false;
     },
 
-    stopPropagationEvent: function(e) {
-      e.stopPropagation()
+    stopPropagationEvent: function (e) {
+      e.stopPropagation();
     },
 
     logout: function () {
       AuthController.Logout();
       this.close();
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
+  },
+  mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+  },
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },

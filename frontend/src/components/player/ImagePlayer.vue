@@ -240,7 +240,6 @@
       @update:fit="onUserFitUpdated"
       :url="imageURL"
       v-model:controls="showControls"
-      @close="focusPlayer"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -802,16 +801,7 @@ export default defineComponent({
       this.setImageURL();
     },
 
-    focusPlayer: function () {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    },
-
     setImageURL() {
-      nextTick(() => {
-        this.$el.focus();
-      });
       if (!this.metadata) {
         this.imageURL = "";
         this.loading = false;

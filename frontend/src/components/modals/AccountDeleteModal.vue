@@ -6,13 +6,24 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <form
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Delete account") }}
         </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -20,9 +31,9 @@
         <div class="form-group">
           <label>{{ $t("Do you want to delete this account?") }}</label>
         </div>
-        
+
         <div class="form-group">
-          <label>{{name}}</label>
+          <label>{{ name }}</label>
         </div>
       </div>
       <div class="modal-footer">
@@ -38,6 +49,7 @@
 import { AppEvents } from "@/control/app-events";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AccountDeleteModal",
@@ -81,26 +93,41 @@ export default defineComponent({
 
       this.close();
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.showH = this.onShow.bind(this);
-    AppEvents.AddEventListener(
-      "account-del-confirmation",
-      this.$options.showH
-    );
+    AppEvents.AddEventListener("account-del-confirmation", this.$options.showH);
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "account-del-confirmation",
       this.$options.showH
     );
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },

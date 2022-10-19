@@ -6,13 +6,24 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <form
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Create new album") }}
         </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -45,8 +56,9 @@ import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumCreateModal",
@@ -149,14 +161,38 @@ export default defineComponent({
           this.busy = false;
         });
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
-    this.autoFocus();
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+  },
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

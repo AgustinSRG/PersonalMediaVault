@@ -6,13 +6,24 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <form
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Rename album") }}
         </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -45,8 +56,9 @@ import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumRenameModal",
@@ -126,7 +138,7 @@ export default defineComponent({
           this.busy = false;
           this.name = "";
           this.close();
-          AlbumsController.OnChangedAlbum(albumId)
+          AlbumsController.OnChangedAlbum(albumId);
         })
         .onCancel(() => {
           this.busy = false;
@@ -158,6 +170,13 @@ export default defineComponent({
           this.busy = false;
         });
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -166,20 +185,36 @@ export default defineComponent({
       this.$options.albumUpdateH
     );
 
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+
     this.onAlbumUpdate();
-    this.autoFocus();
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "current-album-update",
       this.$options.albumUpdateH
     );
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.name = this.oldName;
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        this.name = this.oldName;
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

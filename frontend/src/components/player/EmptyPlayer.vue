@@ -146,7 +146,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from "vue";
+import { defineComponent } from "vue";
 
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
@@ -306,10 +306,6 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
-
-    nextTick(() => {
-        this.$el.focus();
-      });
   },
   beforeUnmount: function () {
     clearInterval(this.$options.timer);
@@ -334,9 +330,6 @@ export default defineComponent({
   watch: {
     rtick: function () {
       this.expandedTitle = false;
-      nextTick(() => {
-        this.$el.focus();
-      });
     },
   },
 });

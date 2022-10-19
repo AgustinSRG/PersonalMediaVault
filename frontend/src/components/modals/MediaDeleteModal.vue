@@ -6,19 +6,34 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <form
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Delete media") }}
         </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>{{ $t("Remember. If you delete the media by accident you would have to re-upload it. Make sure you actually want to delete it.") }}</label>
+          <label>{{
+            $t(
+              "Remember. If you delete the media by accident you would have to re-upload it. Make sure you actually want to delete it."
+            )
+          }}</label>
         </div>
         <div class="form-group">
           <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
@@ -50,8 +65,9 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "MediaDeleteModal",
@@ -111,7 +127,9 @@ export default defineComponent({
       }
 
       if (this.confimation.toLowerCase() !== "confirm") {
-        this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the media");
+        this.error = this.$t(
+          "You must type 'confirm' in order to confirm the deletion of the media"
+        );
         return;
       }
 
@@ -122,7 +140,10 @@ export default defineComponent({
 
       Request.Do(MediaAPI.DeleteMedia(mediaId))
         .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Media deleted") + ": " + this.oldName);
+          AppEvents.Emit(
+            "snack",
+            this.$t("Media deleted") + ": " + this.oldName
+          );
           this.busy = false;
           this.confimation = "";
           this.close();
@@ -159,21 +180,26 @@ export default defineComponent({
           this.busy = false;
         });
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.mediaUpdateH = this.onMediaUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.mediaUpdateH
-    );
+    AppEvents.AddEventListener("app-status-update", this.$options.mediaUpdateH);
 
     AppEvents.AddEventListener(
       "current-media-update",
       this.$options.mediaUpdateH
     );
 
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+
     this.onMediaUpdate();
-    this.autoFocus();
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -185,12 +211,28 @@ export default defineComponent({
       "current-media-update",
       this.$options.mediaUpdateH
     );
+
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.confimation = "";
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        this.confimation = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

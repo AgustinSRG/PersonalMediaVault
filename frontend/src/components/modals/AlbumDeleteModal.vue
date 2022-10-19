@@ -6,19 +6,34 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <form
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+      @click="stopPropagationEvent"
+    >
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Delete album") }}
         </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>{{ $t("Remember. If you delete the album by accident you would have to recreate it. Make sure you actually want to delete it.") }}</label>
+          <label>{{
+            $t(
+              "Remember. If you delete the album by accident you would have to recreate it. Make sure you actually want to delete it."
+            )
+          }}</label>
         </div>
         <div class="form-group">
           <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
@@ -48,8 +63,9 @@ import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumDeleteModal",
@@ -109,7 +125,9 @@ export default defineComponent({
       }
 
       if (this.confimation.toLowerCase() !== "confirm") {
-        this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the album");
+        this.error = this.$t(
+          "You must type 'confirm' in order to confirm the deletion of the album"
+        );
         return;
       }
 
@@ -120,11 +138,14 @@ export default defineComponent({
 
       Request.Do(AmbumsAPI.DeleteAlbum(albumId))
         .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Album deleted") + ": " + this.oldName);
+          AppEvents.Emit(
+            "snack",
+            this.$t("Album deleted") + ": " + this.oldName
+          );
           this.busy = false;
           this.confimation = "";
           this.close();
-          AlbumsController.OnChangedAlbum(albumId)
+          AlbumsController.OnChangedAlbum(albumId);
         })
         .onCancel(() => {
           this.busy = false;
@@ -156,6 +177,13 @@ export default defineComponent({
           this.busy = false;
         });
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -165,19 +193,34 @@ export default defineComponent({
     );
 
     this.onAlbumUpdate();
-    this.autoFocus();
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "current-album-update",
       this.$options.albumUpdateH
     );
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.confimation = "";
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        this.confimation = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

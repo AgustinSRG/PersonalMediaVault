@@ -6,6 +6,7 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
     <div
       class="modal-dialog modal-md"
@@ -64,6 +65,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "ThemeModal",
@@ -105,20 +107,38 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.themeHandler = this.themeUpdated.bind(this);
     AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },

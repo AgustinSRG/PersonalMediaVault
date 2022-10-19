@@ -5,6 +5,7 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
+    @keydown="keyDownHandle"
   >
     <div
       class="modal-dialog modal-lg"
@@ -96,7 +97,10 @@
 
           <div class="form-group">
             <label>{{ $t("Account type") }}:</label>
-            <select v-model="accountWrite" class="form-control form-select form-control-full-width">
+            <select
+              v-model="accountWrite"
+              class="form-control form-select form-control-full-width"
+            >
               <option :value="false">{{ $t("Read only") }}</option>
               <option :value="true">{{ $t("Read / Write") }}</option>
             </select>
@@ -105,7 +109,11 @@
           <div class="form-group form-error">{{ error }}</div>
 
           <div class="form-group">
-            <button type="submit" :disabled="busy" class="btn btn-primary btn-sm">
+            <button
+              type="submit"
+              :disabled="busy"
+              class="btn btn-primary btn-sm"
+            >
               <i class="fas fa-plus"></i> {{ $t("Create account") }}
             </button>
           </div>
@@ -120,8 +128,9 @@ import { AdminAPI } from "@/api/api-admin";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AccountsAdminModal",
@@ -149,18 +158,6 @@ export default defineComponent({
     };
   },
   methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      const elem = this.$el.querySelector(".auto-focus");
-      if (elem) {
-        setTimeout(() => {
-          elem.focus();
-        }, 200);
-      }
-    },
-
     load: function () {
       Timeouts.Abort("admin-accounts");
       Request.Abort("admin-accounts");
@@ -175,8 +172,6 @@ export default defineComponent({
         .onSuccess((accounts) => {
           this.accounts = accounts;
           this.loading = false;
-
-          this.autoFocus();
         })
         .onRequestError((err) => {
           Request.ErrorHandler()
@@ -331,23 +326,45 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
   },
   beforeUnmount: function () {
     Timeouts.Abort("admin-accounts");
     Request.Abort("admin-accounts");
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.load();
+      if (this.display) {
+        this.error = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.load();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });
 </script>
 
 <style>
-
 </style>

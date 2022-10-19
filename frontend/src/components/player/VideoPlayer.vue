@@ -368,7 +368,6 @@
       :y="contextMenuY"
       v-model:loop="loop"
       :url="videoURL"
-      @close="focusPlayer"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -1079,16 +1078,7 @@ export default defineComponent({
       this.setVideoURL();
     },
 
-    focusPlayer: function () {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    },
-
     setVideoURL() {
-      nextTick(() => {
-        this.$el.focus();
-      });
       if (!this.metadata) {
         this.videoURL = "";
         this.duration = 0;

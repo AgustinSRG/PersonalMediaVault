@@ -6,6 +6,7 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
     <div
       class="modal-dialog modal-sm"
@@ -96,7 +97,9 @@
             @keydown="clickOnEnter"
             @click="clickOnOption('tasks')"
           >
-            <td class="modal-menu-item-icon"><i class="fas fa-bars-progress"></i></td>
+            <td class="modal-menu-item-icon">
+              <i class="fas fa-bars-progress"></i>
+            </td>
             <td class="modal-menu-item-title">
               {{ $t("Tasks") }}
             </td>
@@ -125,6 +128,7 @@ import { AppEvents } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "SettingsModal",
@@ -169,6 +173,13 @@ export default defineComponent({
       this.isRoot = AuthController.IsRoot;
       this.canWrite = AuthController.CanWrite;
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.authUpdateH = this.updateAuthInfo.bind(this);
@@ -177,19 +188,32 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },

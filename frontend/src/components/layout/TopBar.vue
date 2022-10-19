@@ -233,6 +233,7 @@ export default defineComponent({
     },
 
     onKeyDown: function (event) {
+      event.stopPropagation();
       if (event.key === "Tab" && this.search && !event.shiftKey) {
         if (this.suggestions.length > 0) {
           this.search = this.suggestions[0].name;

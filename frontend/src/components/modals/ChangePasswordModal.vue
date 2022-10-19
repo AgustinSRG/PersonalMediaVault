@@ -5,6 +5,7 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
+    @keydown="keyDownHandle"
   >
     <form
       @submit="submit"
@@ -79,8 +80,9 @@
 import { AccountAPI } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "ChangePasswordModal",
@@ -177,17 +179,41 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
-    this.autoFocus();
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+  },
+  beforeUnmount: function () {
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.currentPassword = "";
-      this.password = "";
-      this.password2 = "";
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        this.currentPassword = "";
+        this.password = "";
+        this.password2 = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

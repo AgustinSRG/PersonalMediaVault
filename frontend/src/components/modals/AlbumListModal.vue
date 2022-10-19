@@ -6,6 +6,7 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
     <div
       class="modal-dialog modal-sm"
@@ -85,6 +86,7 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumListModal",
@@ -260,6 +262,13 @@ export default defineComponent({
         event.target.click();
       }
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.$options.albumsUpdateH = this.updateAlbums.bind(this);
@@ -267,6 +276,8 @@ export default defineComponent({
 
     this.$options.statusH = this.onUpdateStatus.bind(this);
     AppEvents.AddEventListener("app-status-update", this.$options.statusH);
+
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
 
     this.updateAlbums();
     this.load();
@@ -276,15 +287,24 @@ export default defineComponent({
     AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
     Timeouts.Abort("media-albums-load");
     Request.Abort("media-albums-load");
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
-        this.load();
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+        this.load();
       } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");
       }

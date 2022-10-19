@@ -8,7 +8,9 @@
   >
     <form @submit="submit" class="modal-dialog modal-md" role="document">
       <div class="modal-header">
-        <div class="modal-title no-close">{{ $t("The media vault is locked") }}</div>
+        <div class="modal-title no-close">
+          {{ $t("The media vault is locked") }}
+        </div>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -36,14 +38,35 @@
         <div class="form-error">{{ error }}</div>
       </div>
       <div class="modal-footer">
-        <button v-if="!busy && mustWait <= 0" type="submit" class="modal-footer-btn">
+        <button
+          v-if="!busy && mustWait <= 0"
+          type="submit"
+          class="modal-footer-btn"
+        >
           <i class="fas fa-unlock"></i> {{ $t("Unlock vault") }}
         </button>
-        <button v-if="!busy && mustWait === 1" type="button" disabled class="modal-footer-btn">
-          <i class="fas fa-hourglass"></i> {{ $t("You must wait 1 second to try again") }}
+        <button
+          v-if="!busy && mustWait === 1"
+          type="button"
+          disabled
+          class="modal-footer-btn"
+        >
+          <i class="fas fa-hourglass"></i>
+          {{ $t("You must wait 1 second to try again") }}
         </button>
-        <button v-if="!busy && mustWait > 1" type="button" disabled class="modal-footer-btn">
-          <i class="fas fa-hourglass"></i> {{ $t("You must wait $TIME seconds to try again").replace("$TIME", mustWait + "") }}
+        <button
+          v-if="!busy && mustWait > 1"
+          type="button"
+          disabled
+          class="modal-footer-btn"
+        >
+          <i class="fas fa-hourglass"></i>
+          {{
+            $t("You must wait $TIME seconds to try again").replace(
+              "$TIME",
+              mustWait + ""
+            )
+          }}
         </button>
         <button v-if="busy" type="button" disabled class="modal-footer-btn">
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
@@ -103,7 +126,10 @@ export default defineComponent({
           this.busy = false;
           this.username = "";
           this.password = "";
-          AuthController.SetSession(response.session_id, response.vault_fingerprint);
+          AuthController.SetSession(
+            response.session_id,
+            response.vault_fingerprint
+          );
         })
         .onCancel(() => {
           this.busy = false;
@@ -139,7 +165,10 @@ export default defineComponent({
     updateNow: function () {
       this.now = Date.now();
       if (this.now < this.cooldown) {
-        this.mustWait  = Math.max(1, Math.round((this.cooldown - this.now) / 1000));
+        this.mustWait = Math.max(
+          1,
+          Math.round((this.cooldown - this.now) / 1000)
+        );
       } else {
         this.mustWait = 0;
       }
@@ -202,7 +231,8 @@ export default defineComponent({
 
 .light-theme .modal-dialog {
   background: white;
-  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%), 0 6px 30px 5px rgb(255 255 255 / 12%),
+  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
+    0 6px 30px 5px rgb(255 255 255 / 12%),
     0 8px 10px -5px rgb(255 255 255 / 40%);
 }
 

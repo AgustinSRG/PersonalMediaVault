@@ -5,6 +5,7 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
+    @keydown="keyDownHandle"
   >
     <form
       @submit="submit"
@@ -71,16 +72,18 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th class="text-left">{{$t('Name')}}</th>
-                  <th class="text-left">{{$t('Properties')}}</th>
-                  <th class="text-right">{{$t('Enabled')}}</th>
+                  <th class="text-left">{{ $t("Name") }}</th>
+                  <th class="text-left">{{ $t("Properties") }}</th>
+                  <th class="text-right">{{ $t("Enabled") }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="res in resolutions" :key="res.name">
-                  <td class="bold">{{res.name}}</td>
-                  <td>{{res.width}}x{{res.height}}, {{res.fps}} fps</td>
-                  <td class="text-right"><ToggleSwitch v-model:val="res.enabled"></ToggleSwitch></td>
+                  <td class="bold">{{ res.name }}</td>
+                  <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
+                  <td class="text-right">
+                    <ToggleSwitch v-model:val="res.enabled"></ToggleSwitch>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -98,16 +101,18 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th class="text-left">{{$t('Name')}}</th>
-                  <th class="text-left">{{$t('Properties')}}</th>
-                  <th class="text-right">{{$t('Enabled')}}</th>
+                  <th class="text-left">{{ $t("Name") }}</th>
+                  <th class="text-left">{{ $t("Properties") }}</th>
+                  <th class="text-right">{{ $t("Enabled") }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="res in imageResolutions" :key="res.name">
-                  <td class="bold">{{res.name}}</td>
-                  <td>{{res.width}}x{{res.height}}</td>
-                  <td class="text-right"><ToggleSwitch v-model:val="res.enabled"></ToggleSwitch></td>
+                  <td class="bold">{{ res.name }}</td>
+                  <td>{{ res.width }}x{{ res.height }}</td>
+                  <td class="text-right">
+                    <ToggleSwitch v-model:val="res.enabled"></ToggleSwitch>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -129,9 +134,10 @@ import { ConfigAPI, VaultUserConfig } from "@/api/api-config";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
-import ToggleSwitch from "../utils/ToggleSwitch.vue"
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   components: {
@@ -248,10 +254,14 @@ export default defineComponent({
     },
 
     updateResolutions: function (resolutions, imageResolutions) {
-      this.resolutions = this.standardResolutions.map(r => {
+      this.resolutions = this.standardResolutions.map((r) => {
         let enabled = false;
         for (let res of resolutions) {
-          if (res.width === r.width && res.height === r.height && res.fps === r.fps) {
+          if (
+            res.width === r.width &&
+            res.height === r.height &&
+            res.fps === r.fps
+          ) {
             enabled = true;
             break;
           }
@@ -265,46 +275,52 @@ export default defineComponent({
         };
       });
 
-      this.imageResolutions = this.standardResolutions.filter(r => {
-        return r.fps === 30;
-      }).map(r => {
-        let enabled = false;
-        for (let res of imageResolutions) {
-          if (res.width === r.width && res.height === r.height) {
-            enabled = true;
-            break;
+      this.imageResolutions = this.standardResolutions
+        .filter((r) => {
+          return r.fps === 30;
+        })
+        .map((r) => {
+          let enabled = false;
+          for (let res of imageResolutions) {
+            if (res.width === r.width && res.height === r.height) {
+              enabled = true;
+              break;
+            }
           }
-        }
-        return {
-          enabled: enabled,
-          name: r.name,
-          width: r.width,
-          height: r.height,
-        };
-      });
+          return {
+            enabled: enabled,
+            name: r.name,
+            width: r.width,
+            height: r.height,
+          };
+        });
     },
 
     getResolutions: function () {
-      return this.resolutions.filter(r => {
-        return r.enabled;
-      }).map(r => {
-        return {
-          width: r.width,
-          height: r.height,
-          fps: r.fps,
-        };
-      });
+      return this.resolutions
+        .filter((r) => {
+          return r.enabled;
+        })
+        .map((r) => {
+          return {
+            width: r.width,
+            height: r.height,
+            fps: r.fps,
+          };
+        });
     },
 
     getImageResolutions: function () {
-      return this.imageResolutions.filter(r => {
-        return r.enabled;
-      }).map(r => {
-        return {
-          width: r.width,
-          height: r.height,
-        };
-      });
+      return this.imageResolutions
+        .filter((r) => {
+          return r.enabled;
+        })
+        .map((r) => {
+          return {
+            width: r.width,
+            height: r.height,
+          };
+        });
     },
 
     load: function () {
@@ -321,7 +337,10 @@ export default defineComponent({
         .onSuccess((response: VaultUserConfig) => {
           this.maxTasks = response.max_tasks;
           this.encodingThreads = response.encoding_threads;
-          this.updateResolutions(response.resolutions, response.image_resolutions);
+          this.updateResolutions(
+            response.resolutions,
+            response.image_resolutions
+          );
           this.loading = false;
 
           this.autoFocus();
@@ -404,18 +423,41 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
   },
   beforeUnmount: function () {
     Timeouts.Abort("advanced-settings");
     Request.Abort("advanced-settings");
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.load();
+      if (this.display) {
+        this.error = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.load();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

@@ -6,6 +6,7 @@
     role="dialog"
     :aria-hidden="!display"
     @click="close"
+    @keydown="keyDownHandle"
   >
     <div
       class="modal-dialog modal-xl"
@@ -58,7 +59,9 @@
                   <div class="task-pbar-container" v-if="t.running">
                     <div
                       class="task-pbar-current"
-                      :style="{ width: getGlobalProgress(t.stage, t.stage_progress) }"
+                      :style="{
+                        width: getGlobalProgress(t.stage, t.stage_progress),
+                      }"
                     ></div>
                   </div>
                 </td>
@@ -101,8 +104,9 @@ import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "TaskListModal",
@@ -256,7 +260,7 @@ export default defineComponent({
           break;
       }
 
-      const realP = baseProgress + (p * progressCap / 100);
+      const realP = baseProgress + (p * progressCap) / 100;
 
       return Math.floor(realP * 100) / 100 + "%";
     },
@@ -323,7 +327,7 @@ export default defineComponent({
 
         let txt =
           this.getGlobalProgress(stage, p) +
-          " | " + 
+          " | " +
           this.$t("Stage") +
           ": " +
           (stageNumber + 1) +
@@ -365,8 +369,16 @@ export default defineComponent({
         })
       );
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
   },
   beforeUnmount: function () {
@@ -374,10 +386,25 @@ export default defineComponent({
     Request.Abort("admin-tasks");
     Timeouts.Abort("admin-tasks-update");
     Timeouts.Abort("admin-tasks-update");
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.load();
+      if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.load();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });

@@ -5,16 +5,22 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
+    @keydown="keyDownHandle"
   >
     <form
-       @submit="submit"
+      @submit="submit"
       class="modal-dialog modal-md"
       role="document"
       @click="stopPropagationEvent"
     >
       <div class="modal-header">
         <div class="modal-title">{{ $t("Change username") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+        <button
+          type="button"
+          class="modal-close-btn"
+          :title="$t('Close')"
+          @click="close"
+        >
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -69,8 +75,9 @@ import { AccountAPI } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "ChangeUsernameModal",
@@ -130,7 +137,7 @@ export default defineComponent({
         .onRequestError((err) => {
           this.busy = false;
           Request.ErrorHandler()
-          .add(400, "USERNAME_IN_USE", () => {
+            .add(400, "USERNAME_IN_USE", () => {
               this.error = this.$t("The username is already in use");
             })
             .add(400, "*", () => {
@@ -169,6 +176,13 @@ export default defineComponent({
     usernameUpdated: function () {
       this.currentUsername = AuthController.Username;
     },
+
+    keyDownHandle: function (e) {
+      e.stopPropagation();
+      if (e.key === "Escape") {
+        this.close();
+      }
+    },
   },
   mounted: function () {
     this.currentUsername = AuthController.Username;
@@ -177,18 +191,33 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.usernameUpdatedH
     );
-    this.autoFocus();
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "auth-status-changed",
       this.$options.usernameUpdatedH
     );
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
-      this.error = "";
-      this.autoFocus();
+      if (this.display) {
+        this.error = "";
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+        this.autoFocus();
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
     },
   },
 });
