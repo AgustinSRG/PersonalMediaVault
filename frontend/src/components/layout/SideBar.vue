@@ -4,6 +4,8 @@
     :class="{ hidden: !display }"
     @click="stopPropagationEvent"
     tabindex="-1"
+    :role="initialayout ? '' : 'dialog'"
+    :aria-hidden="!display"
   >
     <div class="side-bar-header">
       <div class="top-bar-logo-td">
@@ -151,6 +153,7 @@ import { AuthController } from "@/control/auth";
 import { GenerateURIQuery } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 
@@ -159,6 +162,7 @@ export default defineComponent({
   emits: ["update:display"],
   props: {
     display: Boolean,
+    initialayout: Boolean,
   },
   setup(props) {
     return {
@@ -307,10 +311,10 @@ export default defineComponent({
       }
       for (let i = 0; i < this.albums.length; i++) {
         if (this.albums[i].id === albumId) {
-          const albumEntry = this.albums[i]
+          const albumEntry = this.albums[i];
           this.albumsRest.unshift(albumEntry);
           if (this.albumsRest.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
-            this.albumsRest.pop()
+            this.albumsRest.pop();
           }
           return;
         }
@@ -321,6 +325,12 @@ export default defineComponent({
       const e = this.$el.querySelector(".side-bar-body");
       if (e) {
         e.scrollTop = 0;
+      }
+    },
+
+    lostFocus: function () {
+      if (!this.initialayout) {
+        this.close();
       }
     },
   },
@@ -351,6 +361,15 @@ export default defineComponent({
       this.$options.authUpdateH
     );
 
+    this.$options.focusTrap = new FocusTrap(
+      this.$el,
+      this.lostFocus.bind(this)
+    );
+
+    if (this.display) {
+      this.$options.focusTrap.activate();
+    }
+
     this.updateStatus();
     this.updateAlbums();
   },
@@ -375,13 +394,24 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     display: function () {
       if (this.display) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },

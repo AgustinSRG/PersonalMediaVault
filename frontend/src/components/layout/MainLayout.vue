@@ -21,7 +21,7 @@
       class="skip-to-main-content"
       >{{ $t("Skip to main content") }}</a
     >
-    <SideBar v-model:display="displaySidebar"></SideBar>
+    <SideBar v-model:display="displaySidebar" :initialayout="layout === 'initial'"></SideBar>
     <TopBar
       @logout="logout"
       @settings="showSettings"

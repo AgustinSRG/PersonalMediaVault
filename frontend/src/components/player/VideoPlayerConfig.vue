@@ -629,7 +629,10 @@ export default defineComponent({
       this.shownState = false;
     },
 
-    keyDownHandle: function (e) {
+    keyDownHandle: function (e: KeyboardEvent) {
+      if (e.ctrlKey) {
+        return;
+      }
       e.stopPropagation();
       if (e.key === "Escape") {
         this.close();
