@@ -261,7 +261,11 @@ export default defineComponent({
       switch (event.key) {
         case "F":
         case "f":
-          this.toggleFullScreen();
+          if (event.ctrlKey) {
+            caught = false;
+          } else {
+            this.toggleFullScreen();
+          }
           break;
         case "PageDown":
         case "ArrowLeft":

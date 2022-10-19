@@ -945,7 +945,11 @@ export default defineComponent({
           break;
         case "F":
         case "f":
-          this.toggleFullScreen();
+          if (event.ctrlKey) {
+            caught = false;
+          } else {
+            this.toggleFullScreen();
+          }
           break;
         case "J":
         case "j":
