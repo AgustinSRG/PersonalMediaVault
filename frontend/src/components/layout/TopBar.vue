@@ -3,7 +3,7 @@
     <div class="top-bar-logo-td">
       <button
         type="button"
-        class="top-bar-button"
+        class="top-bar-button top-bar-menu-btn"
         :title="$t('Main menu')"
         @click="menu"
       >
@@ -286,6 +286,7 @@ export default defineComponent({
   align-items: center;
 
   white-space: nowrap;
+  z-index: 10;
 }
 
 .vault-locked .top-bar {
@@ -532,6 +533,14 @@ export default defineComponent({
 
 .top-bar-logo-td .top-bar-button {
   width: 72px;
+}
+
+.top-bar-menu-btn {
+  visibility: hidden;
+}
+
+.sidebar-hidden .top-bar-menu-btn {
+  visibility: visible;
 }
 </style>
 

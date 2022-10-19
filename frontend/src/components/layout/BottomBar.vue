@@ -82,6 +82,7 @@ export default defineComponent({
   height: 40px;
   left: 0;
   width: 100%;
+  z-index: 9;
 }
 
 .vault-locked .bottom-bar {

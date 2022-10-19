@@ -387,7 +387,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   transition: left 0.2s;
-  z-index: 10;
+  z-index: 12;
 }
 
 .vault-locked .side-bar {
@@ -440,22 +440,19 @@ export default defineComponent({
   color: inherit;
 }
 
-.light-theme .side-bar-option:hover {
-  background: rgba(0, 0, 0, 0.1);
+.side-bar-option:hover {
+  background: var(--theme-option-hover-color);
 }
 
-.light-theme .side-bar-option.selected,
-.light-theme .side-bar-option.selected:hover {
-  background: rgba(0, 0, 0, 0.2);
+.side-bar-option:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  background: var(--theme-option-hover-color);
 }
 
-.dark-theme .side-bar-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .side-bar-option.selected,
-.dark-theme .side-bar-option.selected:hover {
-  background: rgba(255, 255, 255, 0.2);
+.side-bar-option.selected,
+.side-bar-option.selected:hover {
+  background: var(--theme-option-selected-color);
 }
 
 .side-bar-option-icon {
@@ -484,11 +481,7 @@ export default defineComponent({
   margin-bottom: 0.25rem;
 }
 
-.light-theme .side-bar-separator {
-  border-top: solid 1px rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .side-bar-separator {
+.side-bar-separator {
   border-top: solid 1px var(--theme-border-color);
 }
 </style>

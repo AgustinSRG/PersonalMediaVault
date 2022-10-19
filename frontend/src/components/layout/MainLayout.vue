@@ -14,6 +14,13 @@
       'vault-locked': locked,
     }"
   >
+  <SideBar v-model:display="displaySidebar"></SideBar>
+  <TopBar
+      @logout="logout"
+      @settings="showSettings"
+      @menu="toggleSidebar"
+    ></TopBar>
+    <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
     <PageContent
       :min="layout === 'media-split'"
       @album-create="createAlbum"
@@ -22,20 +29,15 @@
       @album-rename="showAlbumRename"
       @album-delete="showAlbumDelete"
     ></AlbumContainer>
-    <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
+    
 
-    <TopBar
-      @logout="logout"
-      @settings="showSettings"
-      @menu="toggleSidebar"
-    ></TopBar>
+    
     <BottomBar></BottomBar>
     <div
       class="sidebar-float-overlay"
       :class="{ hidden: !displaySidebar }"
       @click="hideSidebar"
     ></div>
-    <SideBar v-model:display="displaySidebar"></SideBar>
 
     <SettingsModal
       v-model:display="displaySettings"
@@ -351,7 +353,11 @@ export default defineComponent({
   color: black;
   --theme-btn-hover-color: black;
   --theme-btn-color: rgba(0, 0, 0, 0.75);
+
   --theme-border-color: rgba(0, 0, 0, 0.1);
+
+  --theme-option-hover-color: rgba(0, 0, 0, 0.1);
+  --theme-option-selected-color: rgba(0, 0, 0, 0.2);
 }
 
 .main-layout.dark-theme {
@@ -360,9 +366,14 @@ export default defineComponent({
 
 .dark-theme {
   color: white;
+
   --theme-btn-hover-color: white;
   --theme-btn-color: rgba(255, 255, 255, 0.75);
+
   --theme-border-color: rgba(255, 255, 255, 0.1);
+
+  --theme-option-hover-color: rgba(255, 255, 255, 0.1);
+  --theme-option-selected-color: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-float-overlay {
@@ -376,6 +387,7 @@ export default defineComponent({
   opacity: 1;
   transition: opacity 0.2s;
   background: rgba(0, 0, 0, 0.4);
+  z-index: 11;
 }
 
 .sidebar-float-overlay.hidden {
