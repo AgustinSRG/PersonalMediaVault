@@ -95,6 +95,8 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
+import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 
@@ -242,6 +244,37 @@ export default defineComponent({
         }
       }
     },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (AuthController.Locked || !event.key) {
+        return;
+      }
+
+      if (event.key.toUpperCase() === "M" && event.ctrlKey) {
+        this.menu();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "F" && event.ctrlKey) {
+        const searchInput = this.$el.querySelector(".top-bar-search-input");
+        if (searchInput) {
+          searchInput.focus();
+        }
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "S" && event.ctrlKey) {
+        this.settings();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "Q" && event.ctrlKey) {
+        this.logout();
+        return true;
+      }
+
+      return false;
+    },
   },
 
   mounted: function () {
@@ -251,6 +284,9 @@ export default defineComponent({
       "app-status-update",
       this.$options.statusChangeH
     );
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
   },
 
   beforeUnmount: function () {
@@ -267,6 +303,8 @@ export default defineComponent({
       clearTimeout(this.$options.blurTimeout);
       this.$options.blurTimeout = null;
     }
+
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
 });
 

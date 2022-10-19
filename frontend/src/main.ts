@@ -10,15 +10,18 @@ import { TagsController } from './control/tags';
 import { AlbumsController } from './control/albums';
 import { MediaController } from './control/media';
 import { SubtitlesController } from './control/subtitles';
+import { KeyboardManager } from './control/keyboard';
 
 AppPreferences.LoadPreferences();
 PlayerPreferences.LoadPreferences();
 
+KeyboardManager.Initialize();
+
 AppStatus.Initialize();
 
 AuthController.Initialize();
-TagsController.Initailize();
-AlbumsController.Initailize();
+TagsController.Initialize();
+AlbumsController.Initialize();
 MediaController.Initialize();
 SubtitlesController.Initialize();
 

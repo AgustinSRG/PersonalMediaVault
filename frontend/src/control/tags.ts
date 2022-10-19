@@ -16,7 +16,7 @@ export class TagsController {
 
     public static Loading = true;
 
-    public static Initailize() {
+    public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", TagsController.Load);
         TagsController.Load();
     }

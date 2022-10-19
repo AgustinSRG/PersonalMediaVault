@@ -402,6 +402,10 @@ export default defineComponent({
   z-index: 12;
 }
 
+.side-bar:focus {
+  outline: none;
+}
+
 .vault-locked .side-bar {
   visibility: hidden;
 }
