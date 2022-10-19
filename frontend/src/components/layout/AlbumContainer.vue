@@ -156,6 +156,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
+import { KeyboardManager } from "@/control/keyboard";
 import { copyObject } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
@@ -235,17 +236,29 @@ export default defineComponent({
 
     toggleLoop: function () {
       AlbumsController.ToggleLoop();
+      if (AlbumsController.AlbumLoop) {
+        AppEvents.Emit("snack", this.$t("Album loop enabled"));
+      } else {
+        AppEvents.Emit("snack", this.$t("Album loop disabled"));
+      }
     },
 
     toggleRandom: function () {
       AlbumsController.ToggleRandom();
+      if (AlbumsController.AlbumRandom) {
+        AppEvents.Emit("snack", this.$t("Album shuffle enabled"));
+      } else {
+        AppEvents.Emit("snack", this.$t("Album shuffle disabled"));
+      }
     },
 
     toggleFav: function () {
       if (this.isFav) {
         AppPreferences.albumRemoveFav(AlbumsController.CurrentAlbum + "");
+        AppEvents.Emit("snack", this.$t("Album removed from favorites"));
       } else {
         AppPreferences.albumAddFav(AlbumsController.CurrentAlbum + "");
+        AppEvents.Emit("snack", this.$t("Album added to favorites"));
       }
     },
 
@@ -460,6 +473,48 @@ export default defineComponent({
         AlbumsController.CurrentAlbum + ""
       );
     },
+
+     handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (AuthController.Locked || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
+        return false;
+      }
+
+      if (event.key.toUpperCase() === "L") {
+        this.toggleLoop();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "R") {
+        this.toggleRandom();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "Q") {
+        this.closePage();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "F") {
+        this.toggleFav();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "HOME") {
+        if (this.albumList.length > 0) {
+          this.clickMedia(this.albumList[0]);
+        }
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "END") {
+        if (this.albumList.length > 0) {
+          this.clickMedia(this.albumList[this.albumList.length - 1]);
+        }
+        return true;
+      }
+
+      return false;
+    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -467,6 +522,9 @@ export default defineComponent({
       "current-album-update",
       this.$options.albumUpdateH
     );
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
 
     this.onAlbumPosUpdate();
 
@@ -524,6 +582,8 @@ export default defineComponent({
       "albums-fav-updated",
       this.$options.favUpdateH
     );
+
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
 
     // Sortable
     if (this.$options.sortable) {

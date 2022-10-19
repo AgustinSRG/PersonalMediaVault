@@ -798,7 +798,7 @@ export default defineComponent({
           break;
         case "F":
         case "f":
-          if (event.ctrlKey) {
+          if (event.altKey || shifting) {
             caught = false;
           } else {
             this.toggleFullScreen();

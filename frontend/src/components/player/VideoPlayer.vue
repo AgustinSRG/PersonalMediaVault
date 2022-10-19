@@ -981,9 +981,14 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent): boolean {
-      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPlayerVisible() ||
+        !event.key ||
+        event.ctrlKey
+      ) {
         return false;
-      } 
+      }
       let caught = true;
       const shifting = event.shiftKey;
       switch (event.key) {
@@ -1018,7 +1023,7 @@ export default defineComponent({
           break;
         case "F":
         case "f":
-          if (event.ctrlKey) {
+          if (event.altKey || shifting) {
             caught = false;
           } else {
             this.toggleFullScreen();
@@ -1082,6 +1087,19 @@ export default defineComponent({
             this.goNext();
           } else {
             caught = false;
+          }
+          break;
+        case "l":
+        case "L":
+          if (event.altKey || shifting) {
+            caught = false;
+          } else {
+            this.loop = !this.loop;
+            if (this.loop) {
+              AppEvents.Emit("snack", this.$t("Loop enabled"));
+            } else {
+              AppEvents.Emit("snack", this.$t("Loop disabled"));
+            }
           }
           break;
         default:

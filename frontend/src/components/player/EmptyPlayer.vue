@@ -266,7 +266,7 @@ export default defineComponent({
       switch (event.key) {
         case "F":
         case "f":
-          if (event.ctrlKey) {
+          if (event.altKey || event.shiftKey) {
             caught = false;
           } else {
             this.toggleFullScreen();
