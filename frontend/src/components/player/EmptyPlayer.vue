@@ -7,7 +7,6 @@
       'full-screen': fullscreen,
     }"
     @dblclick="toggleFullScreen"
-    @keydown="onKeyPress"
   >
 
     <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumloading)">
@@ -153,6 +152,7 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { useVModel } from "../../utils/vmodel";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   components: {
@@ -256,8 +256,8 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    onKeyPress: function (event) {
-      var catched = true;
+    onKeyPress: function (event: KeyboardEvent): boolean {
+      let caught = true;
       switch (event.key) {
         case "F":
         case "f":
@@ -265,20 +265,25 @@ export default defineComponent({
           break;
         case "PageDown":
         case "ArrowLeft":
-          this.goPrev();
+          if (this.prev) {
+            this.goPrev();
+          } else {
+            caught = false;
+          }
           break;
         case "PageUp":
         case "ArrowRight":
-          this.goNext();
+          if (this.next) {
+            this.goNext();
+          } else {
+            caught = false;
+          }
           break;
         default:
-          catched = false;
+          caught = false;
       }
 
-      if (catched) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+      return caught;
     },
   },
   mounted: function () {
@@ -288,6 +293,9 @@ export default defineComponent({
       this.tick.bind(this),
       Math.floor(1000 / 30)
     );
+
+    this.$options.keyHandler = this.onKeyPress.bind(this);
+    KeyboardManager.AddHandler(this.$options.keyHandler, 100);
 
     this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
     document.addEventListener(
@@ -326,6 +334,7 @@ export default defineComponent({
       "MSFullscreenChange",
       this.$options.exitFullScreenListener
     );
+    KeyboardManager.RemoveHandler(this.$options.keyHandler);
   },
   watch: {
     rtick: function () {

@@ -16,7 +16,6 @@
     @mouseup="playerMouseUp"
     @touchmove="playerMouseMove"
     @touchend.passive="playerMouseUp"
-    @keydown="onKeyPress"
     @contextmenu="onContextMenu"
   >
     <audio
@@ -390,6 +389,7 @@ import { sanitizeSubtitlesHTML } from "@/utils/srt";
 import { htmlToText } from "@/utils/text";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   components: {
@@ -918,9 +918,9 @@ export default defineComponent({
       }
     },
 
-    onKeyPress: function (event) {
-      var catched = true;
-      var shifting = event.shiftKey;
+    onKeyPress: function (event: KeyboardEvent): boolean {
+      let caught = true;
+      const shifting = event.shiftKey;
       switch (event.key) {
         case "M":
         case "m":
@@ -950,8 +950,12 @@ export default defineComponent({
         case "J":
         case "j":
         case "ArrowRight":
-          if (shifting) {
-            this.goNext();
+          if (shifting || event.altKey) {
+            if (this.next) {
+              this.goNext();
+            } else {
+              caught = false;
+            }
           } else {
             this.setTime(this.currentTime + 5, true);
           }
@@ -959,8 +963,12 @@ export default defineComponent({
         case "L":
         case "l":
         case "ArrowLeft":
-          if (shifting) {
-            this.goPrev();
+          if (shifting || event.altKey) {
+            if (this.prev) {
+              this.goPrev();
+            } else {
+              caught = false;
+            }
           } else {
             this.setTime(this.currentTime - 5, true);
           }
@@ -976,26 +984,42 @@ export default defineComponent({
           }
           break;
         case "Home":
-          this.setTime(0, true);
+          if (event.altKey || shifting) {
+            caught = false;
+          } else {
+            this.setTime(0, true);
+          }
           break;
         case "End":
-          this.setTime(this.duration, true);
+          if (event.altKey || shifting) {
+            caught = false;
+          } else {
+            this.setTime(this.duration, true);
+          }
           break;
         case "PageDown":
-          this.goPrev();
+          if (this.prev) {
+              this.goPrev();
+            } else {
+              caught = false;
+            }
           break;
         case "PageUp":
-          this.goNext();
+          if (this.next) {
+              this.goNext();
+            } else {
+              caught = false;
+            }
           break;
         default:
-          catched = false;
+          caught = false;
       }
 
-      if (catched) {
-        event.preventDefault();
-        event.stopPropagation();
+      if (caught) {
         this.interactWithControls();
       }
+
+      return caught;
     },
 
     initializeAudio() {
@@ -1220,6 +1244,9 @@ export default defineComponent({
     this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
     this.nextend = PlayerPreferences.NextOnEnd;
 
+    this.$options.keyHandler = this.onKeyPress.bind(this);
+    KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+
     this.$options.timer = setInterval(this.tick.bind(this), 100);
 
     this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
@@ -1276,6 +1303,7 @@ export default defineComponent({
       "subtitles-update",
       this.$options.subtitlesReloadH
     );
+    KeyboardManager.RemoveHandler(this.$options.keyHandler);
   },
   watch: {
     rtick: function () {

@@ -14,7 +14,6 @@
     @dblclick="toggleFullScreen"
     @mouseleave="mouseLeavePlayer"
     @touchmove="playerMouseMove"
-    @keydown="onKeyPress"
     @contextmenu="onContextMenu"
     @wheel="onMouseWheel"
   >
@@ -259,6 +258,9 @@ import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/vmodel";
+import { AuthController } from "@/control/auth";
+import { AppStatus } from "@/control/app-status";
+import { KeyboardManager } from "@/control/keyboard";
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
@@ -662,14 +664,18 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    incrementImageScroll: function (a: number | string) {
+    incrementImageScroll: function (a: number | string): boolean {
       var el = this.$el.querySelector(".image-scroller");
 
       if (!el) {
-        return;
+        return false;
       }
 
       var maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+
+      if (maxScroll <= 0) {
+        return false;
+      }
 
       if (typeof a === "number") {
         el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
@@ -678,6 +684,8 @@ export default defineComponent({
       } else if (a === "end") {
         el.scrollTop = maxScroll;
       }
+
+      return true;
     },
 
     tryHorizontalScroll: function (a: number | string): boolean {
@@ -704,9 +712,12 @@ export default defineComponent({
       return true;
     },
 
-    onKeyPress: function (event) {
-      var catched = true;
-      var shifting = event.shiftKey;
+    onKeyPress: function (event: KeyboardEvent) {
+      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key) {
+        return false;
+      } 
+      let caught = true;
+      const shifting = event.shiftKey;
       switch (event.key) {
         case "ArrowUp":
           this.incrementImageScroll(-40);
@@ -715,27 +726,47 @@ export default defineComponent({
           this.incrementImageScroll(40);
           break;
         case "ArrowRight":
-          if (shifting || !this.tryHorizontalScroll(40)) {
-            this.goNext();
+          if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
+            if (this.next) {
+              this.goNext();
+            } else {
+              caught = false;
+            }
           }
           break;
         case "ArrowLeft":
-          if (shifting || !this.tryHorizontalScroll(-40)) {
-            this.goPrev();
+          if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
+            if (this.prev) {
+              this.goPrev();
+            } else {
+              caught = false;
+            }
           }
           break;
         case "Home":
-          if (shifting) {
-            this.tryHorizontalScroll("home");
+          if (event.altKey) {
+            caught = false;
+          } else if (shifting) {
+            if (!this.tryHorizontalScroll("home")) {
+              caught = false;
+            }
           } else {
-            this.incrementImageScroll("home");
+            if (!this.incrementImageScroll("home")) {
+              caught = false;
+            }
           }
           break;
         case "End":
-          if (shifting) {
-            this.tryHorizontalScroll("end");
+          if (event.altKey) {
+            caught = false;
+          } else if (shifting) {
+            if (!this.tryHorizontalScroll("end")) {
+              caught = false;
+            }
           } else {
-            this.incrementImageScroll("end");
+            if (!this.incrementImageScroll("end")) {
+              caught = false;
+            }
           }
           break;
         case " ":
@@ -766,20 +797,28 @@ export default defineComponent({
           this.showControls = !this.showControls;
           break;
         case "PageDown":
-          this.goPrev();
+          if (this.prev) {
+            this.goPrev();
+          } else {
+            caught = false;
+          }
           break;
         case "PageUp":
-          this.goNext();
+          if (this.next) {
+            this.goNext();
+          } else {
+            caught = false;
+          }
           break;
         default:
-          catched = false;
+          caught = false;
       }
 
-      if (catched) {
-        event.preventDefault();
-        event.stopPropagation();
+      if (caught) {
         this.interactWithControls();
       }
+
+      return caught;
     },
 
     initializeImage() {
@@ -901,6 +940,9 @@ export default defineComponent({
     this.scale = PlayerPreferences.PlayerScale;
     this.background = PlayerPreferences.ImagePlayerBackground;
 
+    this.$options.keyHandler = this.onKeyPress.bind(this);
+    KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+
     this.$options.timer = setInterval(
       this.tick.bind(this),
       Math.floor(1000 / 30)
@@ -957,6 +999,8 @@ export default defineComponent({
     document.removeEventListener("mouseup", this.$options.dropScrollHandler);
 
     document.removeEventListener("mousemove", this.$options.moveScrollHandler);
+
+    KeyboardManager.RemoveHandler(this.$options.keyHandler);
 
     if (this.$options.autoNextTimer) {
       clearTimeout(this.$options.autoNextTimer);
