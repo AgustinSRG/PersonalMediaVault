@@ -13,6 +13,7 @@
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
+      @update:fullscreen="onUpdateFullScreen"
     ></EmptyPlayer>
     <ImagePlayer
       v-if="mdata && mdata.type === 1"
@@ -26,6 +27,7 @@
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
+      @update:fullscreen="onUpdateFullScreen"
       v-model:showcontrols="showControls"
       @albums-open="openAlbums"
     ></ImagePlayer>
@@ -41,6 +43,7 @@
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
+      @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
     ></VideoPlayer>
     <AudioPlayer
@@ -55,6 +58,7 @@
       @gonext="goNext"
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
+      @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
     ></AudioPlayer>
   </div>
@@ -63,7 +67,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { MediaController } from "@/control/media";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import EmptyPlayer from "@/components/player/EmptyPlayer.vue";
 import AudioPlayer from "@/components/player/AudioPlayer.vue";
@@ -72,6 +76,8 @@ import ImagePlayer from "@/components/player/ImagePlayer.vue";
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
+import { FocusTrap } from "../../utils/focus-trap";
+import { closeFullscreen } from "@/utils/full-screen";
 
 export default defineComponent({
   name: "PlayerContainer",
@@ -157,10 +163,34 @@ export default defineComponent({
     updateAuthInfo: function () {
       this.canWrite = AuthController.CanWrite;
     },
+
+    onUpdateFullScreen: function () {
+      if (this.fullScreen) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
+        nextTick(() => {
+          this.$el.focus();
+        });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
+      }
+    },
+
+    focusLost: function () {
+      closeFullscreen();
+    },
   },
   mounted: function () {
     this.$options.loadingH = this.updateLoading.bind(this);
     this.$options.updateH = this.updateMedia.bind(this);
+
+    this.$options.focusTrap = new FocusTrap(
+      this.$el,
+      this.focusLost.bind(this)
+    );
 
     this.updateStatus();
 
@@ -178,7 +208,10 @@ export default defineComponent({
     );
 
     this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
-    AppEvents.AddEventListener("current-album-loading", this.$options.albumLoadingH);
+    AppEvents.AddEventListener(
+      "current-album-loading",
+      this.$options.albumLoadingH
+    );
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -197,7 +230,14 @@ export default defineComponent({
       this.$options.authUpdateH
     );
 
-    AppEvents.RemoveEventListener("current-album-loading", this.$options.albumLoadingH);
+    AppEvents.RemoveEventListener(
+      "current-album-loading",
+      this.$options.albumLoadingH
+    );
+
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
 });
 </script>
