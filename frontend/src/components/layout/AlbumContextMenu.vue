@@ -43,7 +43,8 @@
       @click="changePosition"
       class="album-body-item-options-menu-btn"
     >
-      <i class="fas fa-arrows-up-down-left-right"></i> {{ $t("Change position") }}
+      <i class="fas fa-arrows-up-down-left-right"></i>
+      {{ $t("Change position") }}
     </div>
     <div
       tabindex="0"
@@ -59,6 +60,7 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumContextMenu",
@@ -174,10 +176,19 @@ export default defineComponent({
 
     document.addEventListener("mousedown", this.$options.hideHandler);
     document.addEventListener("touchstart", this.$options.hideHandler);
+
+    this.$options.focusTrap = new FocusTrap(
+      this.$el,
+      this.hide.bind(this),
+      "album-body-btn"
+    );
   },
   beforeUnmount: function () {
     document.removeEventListener("mousedown", this.$options.hideHandler);
     document.removeEventListener("touchstart", this.$options.hideHandler);
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
   watch: {
     x: function () {
@@ -188,9 +199,16 @@ export default defineComponent({
     },
     shown: function () {
       if (this.shown) {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
+      } else {
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
   },
@@ -206,11 +224,11 @@ export default defineComponent({
   z-index: 110;
 }
 
-.light-theme .album-body-item-options-menu  {
+.light-theme .album-body-item-options-menu {
   background: rgba(255, 255, 255, 0.9);
 }
 
-.dark-theme .album-body-item-options-menu  {
+.dark-theme .album-body-item-options-menu {
   background: rgba(0, 0, 0, 0.9);
 }
 

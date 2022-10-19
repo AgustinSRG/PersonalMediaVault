@@ -765,22 +765,19 @@ export default defineComponent({
   color: inherit;
 }
 
-.light-theme .album-body-item:hover {
-  background: rgba(0, 0, 0, 0.1);
+.album-body-item:hover {
+  background: var(--theme-option-hover-color);
 }
 
-.light-theme .album-body-item.current,
-.light-theme .album-body-item.current:hover {
-  background: rgba(0, 0, 0, 0.2);
+.album-body-item:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  background: var(--theme-option-hover-color);
 }
 
-.dark-theme .album-body-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .album-body-item.current,
-.dark-theme .album-body-item.current:hover {
-  background: rgba(255, 255, 255, 0.2);
+.album-body-item.current,
+.album-body-item.current:hover {
+  background: var(--theme-option-selected-color)
 }
 
 .album-body-item-thumbnail {

@@ -327,7 +327,7 @@
       </tr>
     </table>
 
-     <table v-if="page === 'tdelays'">
+    <table v-if="page === 'tdelays'">
       <tr
         class="tr-button"
         tabindex="0"
@@ -642,7 +642,11 @@ export default defineComponent({
   mounted: function () {
     this.updateResolutions();
     this.subtitles = PlayerPreferences.SelectedSubtitles;
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+    this.$options.focusTrap = new FocusTrap(
+      this.$el,
+      this.close.bind(this),
+      "player-settings-no-trap"
+    );
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {
@@ -653,12 +657,16 @@ export default defineComponent({
     shown: function () {
       this.page = "";
       if (this.shown) {
-        this.$options.focusTrap.activate();
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
       } else {
-        this.$options.focusTrap.deactivate();
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
     rtick: function () {

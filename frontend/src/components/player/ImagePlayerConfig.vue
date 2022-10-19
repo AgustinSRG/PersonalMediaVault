@@ -12,7 +12,12 @@
     @keydown="keyDownHandle"
   >
     <table v-if="page === ''">
-      <tr class="tr-button" tabindex="0" @click="goToResolutions" @keydown="clickOnEnter">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goToResolutions"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-photo-film icon-config"></i>
           <b>{{ $t("Quality") }}</b>
@@ -23,7 +28,12 @@
         </td>
       </tr>
 
-      <tr class="tr-button" tabindex="0" @click="goToBackgrounds" @keydown="clickOnEnter">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goToBackgrounds"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-palette icon-config"></i>
           <b>{{ $t("Background") }}</b>
@@ -34,7 +44,12 @@
         </td>
       </tr>
 
-      <tr class="tr-button" tabindex="0" @click="goToAutonext" @keydown="clickOnEnter">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goToAutonext"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-forward icon-config"></i>
           <b>{{ $t("Auto next") }}</b>
@@ -44,17 +59,26 @@
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
-
     </table>
     <table v-if="page === 'resolution'">
-      <tr class="tr-button" tabindex="0" @click="goBack" @keydown="clickOnEnter">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="goBack"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Quality") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr class="tr-button" tabindex="0" @click="changeResolution(-1)" @keydown="clickOnEnter">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="changeResolution(-1)"
+        @keydown="clickOnEnter"
+      >
         <td>
           <i
             class="fas fa-check icon-config"
@@ -83,14 +107,26 @@
       </tr>
     </table>
     <table v-if="page === 'background'">
-      <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Background") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr v-for="b in bgOptions" :key="b" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeBackground(b)">
+      <tr
+        v-for="b in bgOptions"
+        :key="b"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeBackground(b)"
+      >
         <td>
           <i
             class="fas fa-check icon-config"
@@ -101,15 +137,27 @@
         <td class="td-right"></td>
       </tr>
     </table>
-     <table v-if="page === 'autotext'">
-      <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+    <table v-if="page === 'autotext'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
         <td>
           <i class="fas fa-chevron-left icon-config"></i>
           <b>{{ $t("Auto next") }}</b>
         </td>
         <td class="td-right"></td>
       </tr>
-      <tr v-for="b in autoNextOptions" :key="b" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeAutoNext(b)">
+      <tr
+        v-for="b in autoNextOptions"
+        :key="b"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeAutoNext(b)"
+      >
         <td>
           <i
             class="fas fa-check icon-config"
@@ -157,7 +205,7 @@ export default defineComponent({
     return {
       page: "",
       resolutions: [],
-      bgOptions: ['default', 'black', 'white'],
+      bgOptions: ["default", "black", "white"],
       autoNext: PlayerPreferences.ImageAutoNext,
       autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
     };
@@ -229,12 +277,12 @@ export default defineComponent({
     renderAutoNext: function (s: number) {
       if (!isNaN(s) && isFinite(s) && s > 0) {
         if (s === 1) {
-          return s + " " + this.$t('second');
+          return s + " " + this.$t("second");
         } else {
-          return s + " " + this.$t('seconds');
+          return s + " " + this.$t("seconds");
         }
       } else {
-        return this.$t('Disabled');
+        return this.$t("Disabled");
       }
     },
 
@@ -298,7 +346,11 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+    this.$options.focusTrap = new FocusTrap(
+      this.$el,
+      this.close.bind(this),
+      "player-settings-no-trap"
+    );
     this.updateResolutions();
   },
   beforeUnmount: function () {
@@ -310,12 +362,16 @@ export default defineComponent({
     shown: function () {
       this.page = "";
       if (this.shown) {
-        this.$options.focusTrap.activate();
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.activate();
+        }
         nextTick(() => {
           this.$el.focus();
         });
       } else {
-        this.$options.focusTrap.deactivate();
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }
     },
     rtick: function () {
