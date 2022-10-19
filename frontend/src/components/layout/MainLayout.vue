@@ -14,8 +14,15 @@
       'vault-locked': locked,
     }"
   >
-  <SideBar v-model:display="displaySidebar"></SideBar>
-  <TopBar
+    <a
+      v-if="!locked"
+      href="javascript:;"
+      @click="skipToMainContent"
+      class="skip-to-main-content"
+      >{{ $t("Skip to main content") }}</a
+    >
+    <SideBar v-model:display="displaySidebar"></SideBar>
+    <TopBar
       @logout="logout"
       @settings="showSettings"
       @menu="toggleSidebar"
@@ -29,9 +36,7 @@
       @album-rename="showAlbumRename"
       @album-delete="showAlbumDelete"
     ></AlbumContainer>
-    
 
-    
     <BottomBar></BottomBar>
     <div
       class="sidebar-float-overlay"
@@ -271,6 +276,23 @@ export default defineComponent({
     hideSidebar: function () {
       this.displaySidebar = false;
     },
+
+    skipToMainContent: function (event) {
+      event.preventDefault();
+      let skipTo = null;
+      switch (AppStatus.CurrentLayout) {
+        case "media":
+        case "media-split":
+        case "album":
+          skipTo = this.$el.querySelector(".player-container");
+          break;
+        default:
+          skipTo = this.$el.querySelector(".page-content");
+      }
+      if (skipTo) {
+        skipTo.focus();
+      }
+    },
   },
   mounted: function () {
     AppEvents.AddEventListener("theme-changed", () => {
@@ -358,6 +380,9 @@ export default defineComponent({
 
   --theme-option-hover-color: rgba(0, 0, 0, 0.1);
   --theme-option-selected-color: rgba(0, 0, 0, 0.2);
+
+  --theme-bg-color: #f9f9f9;
+  --theme-bg-alt-color: #ffffff;
 }
 
 .main-layout.dark-theme {
@@ -374,6 +399,9 @@ export default defineComponent({
 
   --theme-option-hover-color: rgba(255, 255, 255, 0.1);
   --theme-option-selected-color: rgba(255, 255, 255, 0.2);
+
+  --theme-bg-color: #181818;
+  --theme-bg-alt-color: #212121;
 }
 
 .sidebar-float-overlay {
@@ -399,5 +427,24 @@ export default defineComponent({
   .layout-initial .sidebar-float-overlay {
     display: none;
   }
+}
+
+.main-content-skip:focus {
+  outline: none;
+}
+
+.skip-to-main-content {
+  padding: 1rem;
+  border: solid 1px var(--theme-border-color);
+  background: var(--theme-bg-alt-color);
+  z-index: 13;
+
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+}
+
+.skip-to-main-content:focus {
+  top: 1rem;
 }
 </style>

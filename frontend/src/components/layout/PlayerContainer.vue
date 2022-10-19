@@ -1,5 +1,5 @@
 <template>
-  <div class="player-container dark-theme">
+  <div class="player-container dark-theme" tabindex="-1">
     <EmptyPlayer
       v-if="!mdata || mdata.type === 0"
       :mid="mid"
@@ -210,6 +210,10 @@ export default defineComponent({
   left: 0;
   width: 100%;
   overflow: auto;
+}
+
+.player-container:focus {
+  outline: none;
 }
 
 .vault-locked .player-container {

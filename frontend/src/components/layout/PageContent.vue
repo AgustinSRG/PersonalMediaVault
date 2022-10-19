@@ -1,5 +1,5 @@
 <template>
-  <div class="page-content">
+  <div class="page-content" tabindex="-1">
     <div class="page-header">
       <button
         type="button"
@@ -146,6 +146,10 @@ export default defineComponent({
   left: 240px;
   width: calc(100% - 240px);
   overflow: auto;
+}
+
+.page-content:focus {
+  outline: none;
 }
 
 .vault-locked .page-content {

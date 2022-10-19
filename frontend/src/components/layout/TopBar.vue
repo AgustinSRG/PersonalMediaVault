@@ -166,6 +166,9 @@ export default defineComponent({
       if (event) {
         event.preventDefault();
       }
+      if (!this.search) {
+        return;
+      }
       this.updateSuggestions();
       if (this.suggestions.length > 0) {
         this.selectSearch(this.suggestions[0]);
@@ -237,7 +240,7 @@ export default defineComponent({
     onKeyDown: function (event) {
       event.stopPropagation();
       if (event.key === "Tab" && this.search && !event.shiftKey) {
-        if (this.suggestions.length > 0) {
+        if (this.suggestions.length > 0 && this.search !== this.suggestions[0].name) {
           this.search = this.suggestions[0].name;
           this.onSearchInput();
           event.preventDefault();
@@ -326,18 +329,12 @@ export default defineComponent({
 
   white-space: nowrap;
   z-index: 10;
+
+  background: var(--theme-bg-alt-color);
 }
 
 .vault-locked .top-bar {
   visibility: hidden;
-}
-
-.light-theme .top-bar {
-  background: #ffffff;
-}
-
-.dark-theme .top-bar {
-  background: #212121;
 }
 
 .top-bar-logo-td {
