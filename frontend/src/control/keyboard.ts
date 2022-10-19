@@ -10,6 +10,9 @@ export class KeyboardManager {
     }
 
     public static Handle(event: KeyboardEvent) {
+        if (!event.ctrlKey && event.target && ['input', 'select'].includes(((<Node>event.target).nodeName + "").toLowerCase())) {
+            return;
+        }
         for (const handler of KeyboardManager.handlers) {
             if (handler.fn(event)) {
                 event.preventDefault();

@@ -189,13 +189,14 @@ import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
+import { KeyboardManager } from "@/control/keyboard";
 import { MediaEntry } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { copyObject } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
   name: "PageAdvancedSearch",
@@ -246,7 +247,12 @@ export default defineComponent({
 
       Request.Pending(
         "page-advsearch-load",
-        SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize)
+        SearchAPI.Search(
+          this.getFirstTag(),
+          this.order,
+          this.page,
+          this.pageSize
+        )
       )
         .onSuccess((result) => {
           this.filterElements(result.page_items);
@@ -257,12 +263,28 @@ export default defineComponent({
           if (this.pageItems.length >= this.pageSize) {
             this.loading = false;
             this.finished = true;
+            nextTick(() => {
+              const currentElem = this.$el.querySelector(
+                ".search-result-item.current"
+              );
+              if (currentElem) {
+                currentElem.scrollIntoView();
+              }
+            });
           } else if (this.page < this.totalPages - 1) {
             this.page++;
             this.load();
           } else {
             this.loading = false;
             this.finished = true;
+            nextTick(() => {
+              const currentElem = this.$el.querySelector(
+                ".search-result-item.current"
+              );
+              if (currentElem) {
+                currentElem.scrollIntoView();
+              }
+            });
           }
         })
         .onRequestError((err) => {
@@ -484,12 +506,80 @@ export default defineComponent({
 
     onAppStatusChanged: function () {
       this.currentMedia = AppStatus.CurrentMedia;
+      nextTick(() => {
+        const currentElem = this.$el.querySelector(
+          ".search-result-item.current"
+        );
+        if (currentElem) {
+          currentElem.scrollIntoView();
+        }
+      });
+    },
+
+    findCurrentMediaIndex: function (): number {
+      for (let i = 0; i < this.pageItems.length; i++) {
+        if (this.pageItems[i].id === this.currentMedia) {
+          return i;
+        }
+      }
+      return -1;
+    },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPageVisible() ||
+        !this.display ||
+        !event.key ||
+        event.ctrlKey
+      ) {
+        return false;
+      }
+
+      if (event.key === "Home") {
+        if (this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        }
+        return true;
+      }
+
+      if (event.key === "End") {
+        if (this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+        }
+        return true;
+      }
+
+      if (event.key === "ArrowLeft") {
+        const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i > 0) {
+          this.goToMedia(this.pageItems[i - 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        }
+        return true;
+      }
+
+      if (event.key === "ArrowRight") {
+        const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i < this.pageItems.length - 1) {
+          this.goToMedia(this.pageItems[i + 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        }
+        return true;
+      }
+
+      return false;
     },
   },
   mounted: function () {
     for (let i = 1; i <= 20; i++) {
       this.pageSizeOptions.push(5 * i);
     }
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
     this.$options.loadH = this.load.bind(this);
     this.$options.resetH = this.resetSearch.bind(this);
@@ -528,6 +618,8 @@ export default defineComponent({
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);
     }
+
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
   watch: {
     display: function () {

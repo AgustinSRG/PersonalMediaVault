@@ -177,6 +177,7 @@ import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController } from "@/control/auth";
 import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumEntry } from "@/control/albums";
+import { KeyboardManager } from "@/control/keyboard";
 
 export default defineComponent({
   name: "PageAlbums",
@@ -415,10 +416,51 @@ export default defineComponent({
     updateAuthInfo: function () {
       this.canWrite = AuthController.CanWrite;
     },
+
+    handleGlobalKey: function (event: KeyboardEvent): boolean {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPageVisible() ||
+        !this.display ||
+        !event.key ||
+        event.ctrlKey
+      ) {
+        return false;
+      }
+
+      if (event.key === "PageDown") {
+        if (this.page > 0) {
+          this.changePage(this.page - 1);
+        }
+        return true;
+      }
+
+      if (event.key === "PageUp") {
+        if (this.page < this.totalPages - 1) {
+          this.changePage(this.page + 1);
+        }
+        return true;
+      }
+
+      if (event.key === "+") {
+        this.createAlbum();
+        return true;
+      }
+
+      if (event.key.toUpperCase() === "R") {
+        this.refreshAlbums();
+        return true;
+      }
+
+      return false;
+    },
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
     this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+
+    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
     AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.AddEventListener(
@@ -457,6 +499,8 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
   },
   watch: {
     display: function () {

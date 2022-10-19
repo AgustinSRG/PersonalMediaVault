@@ -167,6 +167,7 @@ export default defineComponent({
         event.preventDefault();
       }
       if (!this.search) {
+        this.goSearch();
         return;
       }
       this.updateSuggestions();
@@ -238,12 +239,12 @@ export default defineComponent({
     },
 
     onKeyDown: function (event) {
-      event.stopPropagation();
       if (event.key === "Tab" && this.search && !event.shiftKey) {
         if (this.suggestions.length > 0 && this.search !== this.suggestions[0].name) {
           this.search = this.suggestions[0].name;
           this.onSearchInput();
           event.preventDefault();
+          event.stopPropagation();
         }
       }
     },
