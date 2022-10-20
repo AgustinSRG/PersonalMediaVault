@@ -334,6 +334,10 @@ export default defineComponent({
   background: var(--theme-bg-alt-color);
 }
 
+.top-bar:focus {
+  outline: none;
+}
+
 .vault-locked .top-bar {
   visibility: hidden;
 }

@@ -212,6 +212,10 @@ export default defineComponent({
   overflow: auto;
 }
 
+.modal-container:focus {
+  outline: none;
+}
+
 .modal-container-login {
   z-index: 301;
 }
