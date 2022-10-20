@@ -26,6 +26,7 @@
       @logout="logout"
       @settings="showSettings"
       @menu="toggleSidebar"
+      @search-open="openSearchModal"
     ></TopBar>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
     <PageContent
@@ -91,6 +92,8 @@
 
     <TaskListModal v-model:display="displayTaskList"></TaskListModal>
 
+    <SearchInputModal v-model:display="displaySearchModal">></SearchInputModal>
+
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
     <LoadingOverlay
@@ -133,6 +136,7 @@ import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
 import TaskListModal from "../modals/TaskListModal.vue";
+import SearchInputModal from "../modals/SearchInputModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -170,6 +174,7 @@ export default defineComponent({
     AccountsAdminModal,
     AccountDeleteModal,
     TaskListModal,
+    SearchInputModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -208,6 +213,8 @@ export default defineComponent({
       displayAccountDelete: false,
 
       displayTaskList: false,
+
+      displaySearchModal: false,
 
       displayReEncode: false,
 
@@ -277,6 +284,10 @@ export default defineComponent({
       this.displaySidebar = false;
     },
 
+    openSearchModal: function () {
+      this.displaySearchModal = true;
+    },
+
     skipToMainContent: function (event) {
       if (event) {
         event.preventDefault();
@@ -332,6 +343,8 @@ export default defineComponent({
 
         this.displayAccountAdmin = false;
         this.displayAccountDelete = false;
+
+        this.displaySearchModal = false;
       }
     });
 

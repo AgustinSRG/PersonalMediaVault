@@ -65,8 +65,17 @@
     <div class="top-bar-user-td">
       <button
         type="button"
-        class="top-bar-button top-bar-bottom-min-version"
+        class="top-bar-button top-bar-button-large-version"
+        :title="$t('Help')"
+      >
+        <i class="fas fa-question"></i>
+      </button>
+
+      <button
+        type="button"
+        class="top-bar-button top-bar-button-small-version"
         :title="$t('Search')"
+        @click="openSearch"
       >
         <i class="fas fa-search"></i>
       </button>
@@ -102,7 +111,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
-  emits: ["logout", "settings", "menu"],
+  emits: ["logout", "settings", "menu", "search-open"],
   data: function () {
     return {
       search: AppStatus.CurrentSearch,
@@ -121,6 +130,10 @@ export default defineComponent({
 
     settings: function () {
       this.$emit("settings");
+    },
+
+    openSearch: function () {
+      this.$emit("search-open");
     },
 
     goSearch: function () {
@@ -160,6 +173,11 @@ export default defineComponent({
         this.search = s.name;
       }
       this.goSearch();
+    },
+
+    onSearchModalSubmit: function (search: string) {
+      this.search = search;
+      this.submitSearch();
     },
 
     submitSearch: function (event) {
@@ -240,7 +258,10 @@ export default defineComponent({
 
     onKeyDown: function (event) {
       if (event.key === "Tab" && this.search && !event.shiftKey) {
-        if (this.suggestions.length > 0 && this.search !== this.suggestions[0].name) {
+        if (
+          this.suggestions.length > 0 &&
+          this.search !== this.suggestions[0].name
+        ) {
           this.search = this.suggestions[0].name;
           this.onSearchInput();
           event.preventDefault();
@@ -289,6 +310,12 @@ export default defineComponent({
       this.$options.statusChangeH
     );
 
+    this.$options.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
+    AppEvents.AddEventListener(
+      "search-modal-submit",
+      this.$options.onSearchModalSubmitH
+    );
+
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
   },
@@ -297,6 +324,11 @@ export default defineComponent({
     AppEvents.RemoveEventListener(
       "app-status-update",
       this.$options.statusChangeH
+    );
+
+    AppEvents.RemoveEventListener(
+      "search-modal-submit",
+      this.$options.onSearchModalSubmitH
     );
 
     if (this.$options.findTagTimeout) {
@@ -476,7 +508,7 @@ export default defineComponent({
   }
 }
 
-.top-bar-bottom-min-version {
+.top-bar-button-small-version {
   display: none;
 }
 
@@ -485,8 +517,12 @@ export default defineComponent({
     display: none;
   }
 
-  .top-bar-bottom-min-version {
+  .top-bar-button-small-version {
     display: inline-block;
+  }
+
+  .top-bar-button-large-version {
+    display: none;
   }
 }
 
