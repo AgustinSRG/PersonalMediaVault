@@ -21,12 +21,17 @@
       class="skip-to-main-content"
       >{{ $t("Skip to main content") }}</a
     >
-    <SideBar v-model:display="displaySidebar" :initialayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
+    <SideBar
+      v-model:display="displaySidebar"
+      :initialayout="layout === 'initial'"
+      @skip-to-content="skipToMainContent"
+    ></SideBar>
     <TopBar
       @logout="logout"
       @settings="showSettings"
       @menu="toggleSidebar"
       @search-open="openSearchModal"
+      @help="showHelp"
     ></TopBar>
     <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
     <PageContent
@@ -92,7 +97,11 @@
 
     <TaskListModal v-model:display="displayTaskList"></TaskListModal>
 
-    <SearchInputModal v-model:display="displaySearchModal">></SearchInputModal>
+    <SearchInputModal v-model:display="displaySearchModal"></SearchInputModal>
+
+    <HelpHubModal v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubModal>
+
+    <AboutModal v-model:display="displayAboutModal"></AboutModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -137,6 +146,8 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
 import TaskListModal from "../modals/TaskListModal.vue";
 import SearchInputModal from "../modals/SearchInputModal.vue";
+import HelpHubModal from "../modals/HelpHubModal.vue";
+import AboutModal from "../modals/AboutModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -175,6 +186,8 @@ export default defineComponent({
     AccountDeleteModal,
     TaskListModal,
     SearchInputModal,
+    HelpHubModal,
+    AboutModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -219,6 +232,11 @@ export default defineComponent({
       displayReEncode: false,
 
       displaySidebar: true,
+
+      displayHelpModal: false,
+
+      displayAboutModal: false,
+      displayKeyboardHelpModal: false,
     };
   },
   methods: {
@@ -228,6 +246,10 @@ export default defineComponent({
 
     showSettings: function () {
       this.displaySettings = true;
+    },
+
+    showHelp: function () {
+      this.displayHelpModal = true;
     },
 
     onGoSettings: function (o: string) {
@@ -252,6 +274,17 @@ export default defineComponent({
           break;
         case "admin":
           this.displayAccountAdmin = true;
+          break;
+      }
+    },
+
+    onGoHelp: function (o: string) {
+      switch (o) {
+        case "about":
+          this.displayAboutModal = true;
+          break;
+        case "keyboard":
+          this.displayKeyboardHelpModal = true;
           break;
       }
     },

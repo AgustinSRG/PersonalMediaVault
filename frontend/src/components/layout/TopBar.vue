@@ -67,6 +67,7 @@
         type="button"
         class="top-bar-button top-bar-button-large-version"
         :title="$t('Help')"
+        @click="help"
       >
         <i class="fas fa-question"></i>
       </button>
@@ -111,7 +112,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
-  emits: ["logout", "settings", "menu", "search-open"],
+  emits: ["logout", "settings", "menu", "search-open", "help"],
   data: function () {
     return {
       search: AppStatus.CurrentSearch,
@@ -134,6 +135,10 @@ export default defineComponent({
 
     openSearch: function () {
       this.$emit("search-open");
+    },
+
+    help: function () {
+      this.$emit("help");
     },
 
     goSearch: function () {
