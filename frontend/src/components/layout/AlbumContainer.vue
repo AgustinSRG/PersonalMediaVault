@@ -621,7 +621,7 @@ export default defineComponent({
     height: calc(100% - 57px - 40px);
   }
 
-  .layout-media-split.focus-left .album-container {
+  .layout-album.focus-left .album-container {
     display: none;
   }
 }
