@@ -713,7 +713,7 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent) {
-      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
         return false;
       }  
       let caught = true;
