@@ -103,6 +103,8 @@
 
     <AboutModal v-model:display="displayAboutModal"></AboutModal>
 
+    <KeyboardGuideModal v-model:display="displayKeyboardHelpModal"></KeyboardGuideModal>
+
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
     <LoadingOverlay
@@ -148,6 +150,7 @@ import TaskListModal from "../modals/TaskListModal.vue";
 import SearchInputModal from "../modals/SearchInputModal.vue";
 import HelpHubModal from "../modals/HelpHubModal.vue";
 import AboutModal from "../modals/AboutModal.vue";
+import KeyboardGuideModal from "../modals/KeyboardGuideModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -188,6 +191,7 @@ export default defineComponent({
     SearchInputModal,
     HelpHubModal,
     AboutModal,
+    KeyboardGuideModal,
     SnackBar,
   },
   name: "MainLayout",
