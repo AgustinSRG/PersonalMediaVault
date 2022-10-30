@@ -1,29 +1,35 @@
-# pmv-frontend
+# Personal Media Vault (Frontend)
 
-## Project setup
+This project contains the web interface for Personal Media Vault. The interface is inspired by YouTube, but adapted for the personal media use case.
+
+Built using the [Vue.js](https://vuejs.org/) framework.
+
+## Compilation
+
+First, install the dependencies using npm:
+
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+After installing the dependencies, compile the code for production  with the following command:
 
-### Compiles and minifies for production
 ```
 npm run build
 ```
 
-### Run your unit tests
+After compiling, the result will be saved in the `dist` folder.
+
+## Development and testing
+
+In order to run a development server to test the frontend, use:
+
 ```
-npm run test:unit
+npm run serve
 ```
 
-### Lints and fixes files
+In order to lint the code, use:
+
 ```
 npm run lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

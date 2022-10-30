@@ -4,7 +4,7 @@ Web application to store media files (video, audio and pictures) in an encrypted
 
 ## Project motivation
 
-This is a personal project developed with the goal of making a media management tool that has a simimilar web interface to Youtube, while keeping the media files encrypted in disk.
+This is a personal project developed with the goal of making a media management tool that has a similar web interface to YouTube, while keeping the media files encrypted in disk.
 
 **Why encryption?:** When storing your personal pictures, videos or audio recordings, if you store them unencrypted in your computer, any malware that is able to infect your device will be able to easily get them from the file system. By encrypting them, it makes harder for those media files to be stolen. Also, by being encrypted, you can easily make backups of them in cloud storage services like Google Drive, without giving Google the ability to peek into your personal media files.
 
@@ -14,7 +14,7 @@ This is a personal project developed with the goal of making a media management 
 
  - Support for videos, audios and pictures.
  - Web interface: The project provides a Web interface, allowing the access to the vault from multiple devices and operating systems.
- - Encrypted and easy to back-up storage: The vault is encrypted using the user's password, and is stored in files in a data folder. It's possible to make backups of the valut just by copying the folder, ideal for tools like rsync. This project also provides its own backup tool for doing that.
+ - Encrypted and easy to back-up storage: The vault is encrypted using the user's password, and is stored in files in a data folder. It's possible to make backups of the vault just by copying the folder, ideal for tools like rsync. This project also provides its own backup tool for doing that.
  - Indexed tags: Each media asset can be tagged, so the user can search for it with a tag based search system.
  - Albums: Media files can be sorted using albums.
  - Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
@@ -32,7 +32,21 @@ TODO
 
 ### Windows
 
-TODO
+For Windows, we provide a MSI installer:
+
+| Version | Arch | Hash | Hash alg. | Download |
+|---|---|---|---|---|
+| 1.0.0 | x64 | `EF107578BE77D1A66000E62C54DCFD0E893D008CBA263D3890A4D09C09642BF6` | SHA256 | [Google Drive]() / [Mega]() |
+
+In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
+
+When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
+
+```ps1
+Get-FileHash -Path "PersonalMediaVault-1.0.0-x64.msi" -Algorithm SHA256
+```
+
+After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
 
 ## Docker
 
@@ -44,7 +58,7 @@ In order to pull the image, type:
 docker pull asanrom/pmv
 ```
 
-To run a personal media vault instance, you can create a container, which is gona  run the backend binary inside it.
+To run a personal media vault instance, you can create a container, which is going to run the backend binary inside it.
 
 Here is an example command to create a container:
 
@@ -54,13 +68,13 @@ docker run -p 80:80 -v /path/to/the/vault:/vault asanrom/pmv --daemon --clean --
 
 You can replace `/path/to/the/vault` for the path where you have your vault stored.
 
+For empty vaults, a default `admin`, with password `admin` will be created. You should change the password as soon as you first login into your vault to protect it with a strong password.
+
 For more options, run:
 
 ```
 docker run asanrom/pmv --help
 ```
-
-Also check the backend project.
 
 ## Project components
 

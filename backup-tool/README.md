@@ -16,11 +16,11 @@ To compile the code type:
 go build -o pmv-backup
 ```
 
-The build command will create a binary in the currenct directory, called `pmv-backup`, or `pmv-backup.exe` if you are using Windows.
+The build command will create a binary in the current directory, called `pmv-backup`, or `pmv-backup.exe` if you are using Windows.
 
 ## Usage
 
-The tool takes as the first argument the apth of the vault, and the second argument the path of the backup folder.
+The tool takes as the first argument the path of the vault, and the second argument the path of the backup folder.
 
 ```
 pmv-backup </PATH/TO/VAULT> </PATH/TO/BACKUP>

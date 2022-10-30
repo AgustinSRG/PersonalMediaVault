@@ -1,6 +1,6 @@
-# Personal Media Vault (Launcher)
+# Personal Media Vault (CLI Launcher)
 
-Launches a vault with an interactive command line to manage it.
+Launches a vault with an interactive command line interface to manage it.
 
 ## Compilation
 
@@ -16,7 +16,7 @@ To compile the code type:
 go build -o pmv
 ```
 
-The build command will create a binary in the currenct directory, called `pmv`, or `pmv.exe` if you are using Windows.
+The build command will create a binary in the current directory, called `pmv`, or `pmv.exe` if you are using Windows.
 
 ## Usage
 
