@@ -28,7 +28,31 @@ Depending on the operating system you are using, there are multiple installation
 
 ### Linux with DEB package support
 
-TODO
+For apt-compatible Linux distributions, we provide a DEB package:
+
+| Version | Arch | Hash | Hash alg. | Download |
+|---|---|---|---|---|
+| 1.0.0 | amd64 | `EF107578BE77D1A66000E62C54DCFD0E893D008CBA263D3890A4D09C09642BF6` | SHA256 | [Google Drive]() / [Mega]() |
+
+Download it, checks its integrity using:
+
+```sh
+sh256sum ./personalmediavault_1.0-1.deb
+```
+
+Then, install it using `apt`:
+
+```sh
+sudo apt install ./personalmediavault_1.0-1.deb
+```
+
+After the installation, the binary files will be available in `/usr/bin`, and the frontend files will be available in `/usr/lib/pmv/www`.
+
+To run a vault, type:
+
+```sh
+pmv /path/to/vault
+```
 
 ### Windows
 
