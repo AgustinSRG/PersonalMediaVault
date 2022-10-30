@@ -148,10 +148,10 @@ func (vc *VaultController) Start() bool {
 	// Options
 
 	port := fmt.Sprint(vc.launchConfig.Port)
-	bindAddr := "[::]"
+	bindAddr := ""
 
 	if vc.launchConfig.Local {
-		bindAddr = "[::1]"
+		bindAddr = "127.0.0.1"
 	}
 
 	// Tag
