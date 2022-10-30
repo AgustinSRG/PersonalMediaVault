@@ -1,7 +1,8 @@
-# Intallation packages
+# Installation packages
 
-This folder contains the tools and source code to make the installation pacakges for PersonalMediaVault.
+This folder contains the tools and source code to make the installation packages for PersonalMediaVault.
 
 List of available packages
 
- - [Windows MSI Intaller](./windows-msi/)
+ - [DPKG DEB package builder](./dpkg-deb/)
+ - [Windows MSI installer](./windows-msi/)
