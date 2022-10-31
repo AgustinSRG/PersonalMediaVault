@@ -32,7 +32,7 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Hash | Hash alg. | Download |
 |---|---|---|---|---|
-| 1.0.0 | amd64 | `EF107578BE77D1A66000E62C54DCFD0E893D008CBA263D3890A4D09C09642BF6` | SHA256 | [Google Drive]() / [Mega]() |
+| 1.0.0 | amd64 | `d4453a0c2090f2657fc20a75af3b94f5bf49622fa527cd2a719b2bbfebaecb37` | SHA256 | [Google Drive](https://drive.google.com/file/d/1wc1-rpAZCWzE-yKmA96UymIQ4lHpFKWZ/view?usp=sharing) / [Mega](https://mega.nz/file/4XdmzBiJ#9ot_RK6JJj9peRNZaVMh1PWHHh3EEdMspjx-IC2dxJE) |
 
 Download it, checks its integrity using:
 
@@ -60,7 +60,7 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Hash | Hash alg. | Download |
 |---|---|---|---|---|
-| 1.0.0 | x64 | `EF107578BE77D1A66000E62C54DCFD0E893D008CBA263D3890A4D09C09642BF6` | SHA256 | [Google Drive]() / [Mega]() |
+| 1.0.0 | x64 | `C2BA9B15D1360555622993655DE79A94D269954141EA493EE5175159210B7413` | SHA256 | [Google Drive](https://drive.google.com/file/d/1cMg0evZ8YC0uX04VOY8sdk3frqEP1NoF/view?usp=sharing) / [Mega](https://mega.nz/file/0C9iVBZb#yzyluMfQcqCja47IkFG-i2XKt3X_XvktMVmfWa06cMw) |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
 
