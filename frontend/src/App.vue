@@ -9,7 +9,6 @@ import { Options, Vue } from "vue-class-component";
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController } from "./control/albums";
 import { AppEvents } from "./control/app-events";
-import { AppPreferences } from "./control/app-preferences";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
 
@@ -91,8 +90,6 @@ import { MediaController } from "./control/media";
   mounted: function () {
     this.updateTitle();
     this.$options.updateH = this.updateTitle.bind(this);
-
-    this.$i18n.locale = AppPreferences.Language || "en";
 
     AppEvents.AddEventListener("app-status-update", this.$options.updateH);
     AppEvents.AddEventListener("current-album-update", this.$options.updateH);

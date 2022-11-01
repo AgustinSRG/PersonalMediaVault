@@ -59,6 +59,7 @@ import { AppPreferences } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import { FocusTrap } from "../../utils/focus-trap";
+import { AppEvents } from "@/control/app-events";
 
 export default defineComponent({
   name: "LanguageModal",
@@ -88,7 +89,7 @@ export default defineComponent({
     changeLocale: function (l: string) {
       this.lang = l;
       AppPreferences.SetLanguage(l);
-      this.$i18n.locale = l;
+      AppEvents.Emit("set-locale", l);
     },
 
     clickOnEnter: function (event) {

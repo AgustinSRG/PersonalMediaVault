@@ -29,16 +29,16 @@ SubtitlesController.Initialize();
 
 import { createApp } from 'vue'
 
-import i18n from './i18n'
+import { i18n } from './i18n'
 import './registerServiceWorker'
 import App from './App.vue'
 
-document.addEventListener("drop", function(e) {
+document.addEventListener("drop", function (e) {
     e.preventDefault();
     e.stopPropagation();
 });
 
-document.addEventListener("dragover", function(e) {
+document.addEventListener("dragover", function (e) {
     e.preventDefault();
     e.stopPropagation();
 })
