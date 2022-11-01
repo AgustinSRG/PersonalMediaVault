@@ -1,5 +1,5 @@
 <template>
-  <div class="snackbar" :class="{ hidden: !shown }">{{ message }}</div>
+  <div class="snackbar" :class="{ hidden: !shown }" @mouseenter="hide" @click="hide">{{ message }}</div>
 </template>
 
 <script lang="ts">
@@ -28,6 +28,14 @@ export default defineComponent({
         this.shown = false;
       }, 3000);
     },
+
+    hide: function () {
+      if (this.$options.timeout) {
+        clearTimeout(this.$options.timeout);
+        this.$options.timeout = null;
+      }
+      this.shown = false;
+    },
   },
   mounted: function () {
     this.$options.showH = this.show.bind(this);
@@ -54,6 +62,7 @@ export default defineComponent({
   padding: 1rem;
   font-weight: bold;
   border-radius: 0.25rem;
+  user-select: none;
   transition: bottom 0.3s, opacity 0.1s;
   z-index: 900;
 }
