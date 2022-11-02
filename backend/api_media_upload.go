@@ -74,7 +74,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		mediaTitle = mediaTitle[:255]
 	}
 
-	tempFile := GetTemporalFileName(ext, false)
+	tempFile := GetTemporalFileName("", false)
 
 	// Write to temp file
 

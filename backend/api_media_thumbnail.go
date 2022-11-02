@@ -61,10 +61,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	fileName := part.FileName()
-	ext := GetExtensionFromFileName(fileName)
-
-	tempFile := GetTemporalFileName(ext, false)
+	tempFile := GetTemporalFileName("", false)
 
 	// Write to temp file
 

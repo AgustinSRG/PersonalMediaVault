@@ -131,7 +131,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		ext = "avi"
 	}
 
-	originalTemp := path.Join(tempFolder, "original."+ext)
+	originalTemp := path.Join(tempFolder, "original")
 
 	f, err := os.OpenFile(originalTemp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
 
