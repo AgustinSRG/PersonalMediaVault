@@ -665,6 +665,10 @@ export default defineComponent({
     },
 
     incrementImageScroll: function (a: number | string): boolean {
+      if (this.fit) {
+        return false;
+      }
+
       var el = this.$el.querySelector(".image-scroller");
 
       if (!el) {
@@ -689,6 +693,9 @@ export default defineComponent({
     },
 
     tryHorizontalScroll: function (a: number | string): boolean {
+      if (this.fit) {
+        return false;
+      }
       var el = this.$el.querySelector(".image-scroller");
 
       if (!el) {
@@ -789,12 +796,14 @@ export default defineComponent({
           this.scaleShown = true;
           this.helpTooltip = "scale";
           this.fit = false;
+          this.onUserFitUpdated();
           break;
         case "-":
           this.changeScale(Math.max(0, this.scale - SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
           this.fit = false;
+          this.onUserFitUpdated();
           break;
         case "F":
         case "f":
@@ -937,11 +946,13 @@ export default defineComponent({
           this.scaleShown = true;
           this.helpTooltip = "scale";
           this.fit = false;
+          this.onUserFitUpdated();
         } else {
           this.changeScale(Math.min(1, this.scale + SCALE_STEP));
           this.scaleShown = true;
           this.helpTooltip = "scale";
           this.fit = false;
+          this.onUserFitUpdated();
         }
       }
     },
