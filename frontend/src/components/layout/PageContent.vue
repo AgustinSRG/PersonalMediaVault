@@ -174,7 +174,8 @@ export default defineComponent({
   height: calc(100% - 57px);
   left: 240px;
   width: calc(100% - 240px);
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-content:focus {
@@ -224,10 +225,18 @@ export default defineComponent({
   display: none;
 }
 
+.page-inner {
+  width: 100%;
+  height: calc(100% - 54px);
+  overflow: auto;
+}
+
 .page-header {
   display: flex;
   flex-direction: row;
   align-items: center;
+  width: 100%;
+  height: 54px;
 
   border-bottom: solid 1px var(--theme-border-color);
 }
