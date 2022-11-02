@@ -32,6 +32,7 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Hash | Hash alg. | Download |
 |---|---|---|---|---|
+| 1.0.1 | amd64 | `fc53184394837dc2fe6806598cfea8d0f673c5ae760cf24d0b1cd2d0cfc3d8fb` | SHA256 | [Google Drive](https://drive.google.com/file/d/1rlNJGCD2d_Wi68nefpT7qwheMwfd7h-n/view?usp=sharing) / [Mega](https://mega.nz/file/4K8lCLqK#6-F6RrZge91reslkh4cSl9wq5OwMerI6A0dR0quU73Q) |
 | 1.0.0 | amd64 | `d4453a0c2090f2657fc20a75af3b94f5bf49622fa527cd2a719b2bbfebaecb37` | SHA256 | [Google Drive](https://drive.google.com/file/d/1wc1-rpAZCWzE-yKmA96UymIQ4lHpFKWZ/view?usp=sharing) / [Mega](https://mega.nz/file/4XdmzBiJ#9ot_RK6JJj9peRNZaVMh1PWHHh3EEdMspjx-IC2dxJE) |
 
 Download it, checks its integrity using:
@@ -60,6 +61,7 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Hash | Hash alg. | Download |
 |---|---|---|---|---|
+| 1.0.1 | x64 | `80C047F1EC7CD5E163508B4AEEAC20BB9AAD51E3F6B28F0BCEDE10DC638C69A9` | SHA256 | [Google Drive](https://drive.google.com/file/d/1iBpjX-PtqQ9YnVo5QZU82Mfd-ENG3bHn/view?usp=sharing) / [Mega](https://mega.nz/file/wCchQCBS#1gGSLPWIX_N2JoM90akbfXNQXoI_-4qXkQlSKmkCSv4) |
 | 1.0.0 | x64 | `C2BA9B15D1360555622993655DE79A94D269954141EA493EE5175159210B7413` | SHA256 | [Google Drive](https://drive.google.com/file/d/1cMg0evZ8YC0uX04VOY8sdk3frqEP1NoF/view?usp=sharing) / [Mega](https://mega.nz/file/0C9iVBZb#yzyluMfQcqCja47IkFG-i2XKt3X_XvktMVmfWa06cMw) |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
@@ -67,7 +69,7 @@ In order to install Personal Media Vault in Windows, run the installer  and ever
 When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
 
 ```ps1
-Get-FileHash -Path "PersonalMediaVault-1.0.0-x64.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-1.0.1-x64.msi" -Algorithm SHA256
 ```
 
 After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
