@@ -1073,7 +1073,6 @@ export default defineComponent({
       const audioElem = this.$el.querySelector("audio");
       if (audioElem) {
         audioElem.src = "";
-        audioElem.remove();
       }
     },
 

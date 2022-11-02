@@ -1144,7 +1144,6 @@ export default defineComponent({
       const videoElem = this.$el.querySelector("video");
       if (videoElem) {
         videoElem.src = "";
-        videoElem.remove();
       }
     },
 
