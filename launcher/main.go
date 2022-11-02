@@ -14,7 +14,7 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const VERSION = "1.0.0"
+const VERSION = "1.0.1"
 
 // Program entry point
 func main() {
