@@ -259,7 +259,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
 // The endoded file will be tempfile/video.mp4
-func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, width int32, height int32, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -276,6 +276,11 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 
 	// Force duration
 	args = append(args, "-t", fmt.Sprint(originalFileDuration))
+
+	// Fix odd dimensions
+	if (width%2 != 0) || (height%2 != 0) {
+		args = append(args, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2")
+	}
 
 	// MP4
 	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
