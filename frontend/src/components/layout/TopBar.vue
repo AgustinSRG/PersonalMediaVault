@@ -21,6 +21,7 @@
           class="top-bar-search-input-container"
           :class="{ focused: searchFocus }"
           @submit="submitSearch"
+          tabindex="-1"
         >
           <input
             type="text"
@@ -35,12 +36,12 @@
             @keydown="onKeyDown"
             @input="onSearchInput"
             @focus="focusSearch"
-            @blur="blurSearch"
           />
           <button
             type="submit"
             class="top-bar-button top-bar-search-button"
             :title="$t('Search')"
+            @focus="blurSearch"
           >
             <i class="fas fa-search"></i>
           </button>
@@ -109,6 +110,7 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
+import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "TopBar",
@@ -157,6 +159,21 @@ export default defineComponent({
       }
       this.searchFocus = true;
       this.updateSuggestions();
+      if (this.$options.focusTrap) {
+        this.$options.focusTrap.activate();
+      }
+    },
+
+    blurSearchInstantly: function () {
+      if (this.$options.blurTimeout) {
+        clearTimeout(this.$options.blurTimeout);
+        this.$options.blurTimeout = null;
+      }
+      this.$options.blurTimeout = null;
+      this.searchFocus = false;
+      if (this.$options.focusTrap) {
+        this.$options.focusTrap.deactivate();
+      }
     },
 
     blurSearch: function () {
@@ -167,6 +184,9 @@ export default defineComponent({
       this.$options.blurTimeout = setTimeout(() => {
         this.$options.blurTimeout = null;
         this.searchFocus = false;
+        if (this.$options.focusTrap) {
+          this.$options.focusTrap.deactivate();
+        }
       }, 100);
     },
 
@@ -178,6 +198,7 @@ export default defineComponent({
         this.search = s.name;
       }
       this.goSearch();
+      this.blurSearchInstantly();
     },
 
     onSearchModalSubmit: function (search: string) {
@@ -323,6 +344,11 @@ export default defineComponent({
 
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
+
+    this.$options.focusTrap = new FocusTrap(
+      this.$el.querySelector(".top-bar-search-input-container"),
+      this.blurSearch.bind(this)
+    );
   },
 
   beforeUnmount: function () {
@@ -346,6 +372,10 @@ export default defineComponent({
     }
 
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+
+    if (this.$options.focusTrap) {
+      this.$options.focusTrap.destroy();
+    }
   },
 });
 
