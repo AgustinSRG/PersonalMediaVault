@@ -23,10 +23,18 @@
     </div>
 
     <PageHome :display="isDisplayed && page === 'home'" :min="min"></PageHome>
-    <PageSearch :display="isDisplayed && page === 'search'" :min="min"></PageSearch>
-    <PageUpload :display="isDisplayed && page === 'upload'"></PageUpload>
+    <PageSearch
+      :display="isDisplayed && page === 'search'"
+      :min="min"
+    ></PageSearch>
+    <PageUpload
+      :display="isDisplayed && page === 'upload'"
+      @album-create="createAlbum"
+    ></PageUpload>
     <PageRandom :display="isDisplayed && page === 'random'"></PageRandom>
-    <PageAdvancedSearch :display="isDisplayed && page === 'advsearch'"></PageAdvancedSearch>
+    <PageAdvancedSearch
+      :display="isDisplayed && page === 'advsearch'"
+    ></PageAdvancedSearch>
     <PageAlbums
       :display="isDisplayed && page === 'albums'"
       @album-create="createAlbum"
@@ -65,7 +73,9 @@ export default defineComponent({
   },
   data: function () {
     return {
-      isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
+      isDisplayed:
+        (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) &&
+        AppStatus.CurrentAlbum < 0,
       page: AppStatus.CurrentPage,
       search: AppStatus.CurrentSearch,
     };
@@ -74,7 +84,9 @@ export default defineComponent({
     updatePage: function () {
       this.page = AppStatus.CurrentPage;
       this.search = AppStatus.CurrentSearch;
-      this.isDisplayed = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
+      this.isDisplayed =
+        (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) &&
+        AppStatus.CurrentAlbum < 0;
     },
 
     expandPage: function () {
@@ -262,7 +274,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  
+
   background: transparent;
   color: var(--theme-btn-color);
 }

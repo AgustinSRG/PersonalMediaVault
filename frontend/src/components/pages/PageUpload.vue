@@ -40,6 +40,15 @@
         </select>
       </div>
       <div class="form-group">
+         <button
+            type="button"
+            @click="createAlbum"
+            class="btn btn-primary btn-sm"
+          >
+            <i class="fas fa-plus"></i> {{ $t("Create album") }}
+          </button>
+      </div>
+      <div class="form-group">
         <label
           >{{ $t("Tags to automatically add to the uploaded media") }}:</label
         >
@@ -213,6 +222,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "PageUpload",
+  emits: ['album-create'],
   props: {
     display: Boolean,
   },
@@ -239,6 +249,10 @@ export default defineComponent({
   methods: {
     clickToSelect: function () {
       this.$el.querySelector(".file-hidden").click();
+    },
+
+    createAlbum: function () {
+      this.$emit("album-create");
     },
 
     inputFileChanged: function (e) {
