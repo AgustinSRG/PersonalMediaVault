@@ -48,7 +48,9 @@
             </tr>
             <tr>
               <td>{{ $t("Close current modal or menu") }}</td>
-              <td><span class="key-shortcut">{{ $t("Escape") }}</span></td>
+              <td>
+                <span class="key-shortcut">{{ $t("Escape") }}</span>
+              </td>
             </tr>
             <tr>
               <td>{{ $t("Play") }} / {{ $t("Pause") }}</td>
@@ -187,14 +189,18 @@
             <tr>
               <td>{{ $t("Scroll image to the left") }}</td>
               <td>
-                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Home") }}</span>
+                <span class="key-shortcut"
+                  >{{ $t("Shift") }} + {{ $t("Home") }}</span
+                >
               </td>
             </tr>
 
             <tr>
               <td>{{ $t("Scroll image to the right") }}</td>
               <td>
-                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("End") }}</span>
+                <span class="key-shortcut"
+                  >{{ $t("Shift") }} + {{ $t("End") }}</span
+                >
               </td>
             </tr>
 
@@ -222,17 +228,20 @@
             <tr>
               <td>{{ $t("Go to next") }}</td>
               <td>
-                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Right arrow") }}</span>
+                <span class="key-shortcut"
+                  >{{ $t("Shift") }} + {{ $t("Right arrow") }}</span
+                >
               </td>
             </tr>
 
             <tr>
               <td>{{ $t("Go to previous") }}</td>
               <td>
-                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Left arrow") }}</span>
+                <span class="key-shortcut"
+                  >{{ $t("Shift") }} + {{ $t("Left arrow") }}</span
+                >
               </td>
             </tr>
-
 
             <tr>
               <td>{{ $t("Toggle album loop") }}</td>
@@ -255,6 +264,28 @@
               </td>
             </tr>
 
+            <tr>
+              <td>{{ $t("Create new album (while in album list)") }}</td>
+              <td>
+                <span class="key-shortcut">+</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                {{ $t("Close page at the right (in the split view mode)") }}
+              </td>
+              <td>
+                <span class="key-shortcut">Q</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td>{{ $t("Close player (in the split view mode)") }}</td>
+              <td>
+                <span class="key-shortcut">{{ $t("Backspace") }}</span>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
