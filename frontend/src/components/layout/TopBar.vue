@@ -158,6 +158,7 @@ export default defineComponent({
         this.$options.blurTimeout = null;
       }
       this.searchFocus = true;
+      this.$el.querySelector(".top-bar-search-input").select();
       this.updateSuggestions();
       if (this.$options.focusTrap) {
         this.$options.focusTrap.activate();
@@ -210,6 +211,7 @@ export default defineComponent({
       if (event) {
         event.preventDefault();
       }
+      this.blurSearchInstantly();
       if (!this.search) {
         this.goSearch();
         return;
