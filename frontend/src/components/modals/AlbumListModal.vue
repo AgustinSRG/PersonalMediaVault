@@ -162,7 +162,7 @@ export default defineComponent({
     },
 
     createAlbum: function () {
-      this.$emit("album-create");
+      this.$emit("album-create", true);
     },
 
     clickOnAlbum: function (album) {
@@ -267,6 +267,8 @@ export default defineComponent({
       e.stopPropagation();
       if (e.key === "Escape") {
         this.close();
+      } else if (e.key === "+") {
+        this.createAlbum();
       }
     },
   },

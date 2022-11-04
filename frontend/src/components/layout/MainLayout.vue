@@ -70,7 +70,7 @@
       v-model:display="displayAlbumList"
       @album-create="createAlbum"
     ></AlbumListModal>
-    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumCreateModal v-model:display="displayAlbumCreate" @update:display="doneCreateAlbum"></AlbumCreateModal>
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
     <AlbumMovePosModal
@@ -220,6 +220,8 @@ export default defineComponent({
       displayAlbumDelete: false,
       displayAlbumMovePos: false,
 
+      createAlbumFromList: false,
+
       displayMediaDelete: false,
 
       displayResolutionConfirmation: false,
@@ -297,8 +299,16 @@ export default defineComponent({
       this.displaySidebar = !this.displaySidebar;
     },
 
-    createAlbum: function () {
+    createAlbum: function (fromList: boolean) {
       this.displayAlbumCreate = true;
+      this.createAlbumFromList = !!fromList;
+    },
+
+    doneCreateAlbum: function () {
+      if (!this.displayAlbumCreate &&  this.createAlbumFromList) {
+        this.createAlbumFromList = false;
+        this.displayAlbumList = true;
+      }
     },
 
     showAlbumList: function () {
