@@ -349,7 +349,7 @@ export default defineComponent({
 }
 
 .modal-footer-btn i {
-  width: 1.5rem;
+  margin-right: 0.5rem;
 }
 
 .modal-footer-btn:disabled {
