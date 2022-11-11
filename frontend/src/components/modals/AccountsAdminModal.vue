@@ -120,6 +120,10 @@
         </form>
       </div>
     </div>
+
+    <AccountDeleteModal
+      v-model:display="displayAccountDelete"
+    ></AccountDeleteModal>
   </div>
 </template>
 
@@ -131,8 +135,12 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import { FocusTrap } from "../../utils/focus-trap";
+import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 
 export default defineComponent({
+  components: {
+    AccountDeleteModal,
+  },
   name: "AccountsAdminModal",
   emits: ["update:display"],
   props: {
@@ -151,6 +159,8 @@ export default defineComponent({
       accountPassword: "",
       accountPassword2: "",
       accountWrite: false,
+
+      displayAccountDelete: false,
 
       loading: true,
       busy: false,
@@ -321,6 +331,7 @@ export default defineComponent({
 
     close: function () {
       this.displayStatus = false;
+      this.displayAccountDelete = false;
     },
 
     stopPropagationEvent: function (e) {
@@ -355,6 +366,7 @@ export default defineComponent({
         nextTick(() => {
           this.$el.focus();
         });
+        this.displayAccountDelete = false;
         this.load();
       } else {
         if (this.$options.focusTrap) {

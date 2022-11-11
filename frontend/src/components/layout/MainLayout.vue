@@ -91,10 +91,6 @@
       v-model:display="displayAccountAdmin"
     ></AccountsAdminModal>
 
-    <AccountDeleteModal
-      v-model:display="displayAccountDelete"
-    ></AccountDeleteModal>
-
     <TaskListModal v-model:display="displayTaskList"></TaskListModal>
 
     <SearchInputModal v-model:display="displaySearchModal"></SearchInputModal>
@@ -144,7 +140,6 @@ import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
-import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
 import TaskListModal from "../modals/TaskListModal.vue";
 import SearchInputModal from "../modals/SearchInputModal.vue";
@@ -186,7 +181,6 @@ export default defineComponent({
     ReEncodeConfirmationModal,
     SubtitlesDeleteModal,
     AccountsAdminModal,
-    AccountDeleteModal,
     TaskListModal,
     SearchInputModal,
     HelpHubModal,
@@ -229,7 +223,6 @@ export default defineComponent({
       displaySubtitlesDelete: false,
 
       displayAccountAdmin: false,
-      displayAccountDelete: false,
 
       displayTaskList: false,
 
@@ -389,7 +382,6 @@ export default defineComponent({
         this.displaySubtitlesDelete = false;
 
         this.displayAccountAdmin = false;
-        this.displayAccountDelete = false;
 
         this.displaySearchModal = false;
       }
