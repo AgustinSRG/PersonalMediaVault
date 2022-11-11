@@ -58,7 +58,7 @@
           v-if="!busy && mustWait > 1"
           type="button"
           disabled
-          class="btn btn-primary"
+          class="modal-footer-btn"
         >
           <i class="fas fa-hourglass"></i>
           {{
@@ -68,7 +68,7 @@
             )
           }}
         </button>
-        <button v-if="busy" type="button" disabled class="btn btn-primary">
+        <button v-if="busy" type="button" disabled class="modal-footer-btn">
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
         </button>
       </div>
