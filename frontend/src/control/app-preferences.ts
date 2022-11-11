@@ -14,7 +14,7 @@ export class AppPreferences {
         const locale = (navigator.language || "en");
 
         AppPreferences.Language = LocalStorage.Get("app-pref-lang", locale);
-        AppPreferences.Theme = LocalStorage.Get("app-pref-theme", "light");
+        AppPreferences.Theme = LocalStorage.Get("app-pref-theme", "dark");
         AppPreferences.AlbumPositionMap = LocalStorage.Get("app-pref-albums-order", Object.create(null));
         AppPreferences.FavAlbums = LocalStorage.Get("app-pref-albums-fav", []);
 
