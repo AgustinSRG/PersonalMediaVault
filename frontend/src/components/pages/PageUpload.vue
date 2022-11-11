@@ -5,7 +5,7 @@
         v-if="!optionsShown"
         @click="showOptions(true)"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
       >
         <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
       </button>
@@ -13,7 +13,7 @@
         v-if="optionsShown"
         @click="showOptions(false)"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
       >
         <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
       </button>
@@ -43,7 +43,7 @@
          <button
             type="button"
             @click="createAlbum"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-plus"></i> {{ $t("Create album") }}
           </button>
@@ -84,7 +84,7 @@
             v-for="mt in matchingTags"
             :key="mt.id"
             type="button"
-            class="btn btn-primary btn-xs btn-tag-mini"
+            class="btn btn-primary btn-sm btn-tag-mini"
             @click="addTagByName(mt.name)"
           >
             <i class="fas fa-plus"></i> {{ mt.name }}
@@ -93,7 +93,7 @@
         <div class="form-group">
           <button
             type="submit"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
             :disabled="!tagToAdd"
           >
             <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
@@ -200,7 +200,7 @@
         </tbody>
       </table>
       <div class="form-group" v-if="pendingToUpload.length > 0">
-        <button type="button" class="btn btn-primary btn-sm" @click="clearList">
+        <button type="button" class="btn btn-primary" @click="clearList">
           <i class="fas fa-broom"></i> {{ $t("Clear list") }}
         </button>
       </div>

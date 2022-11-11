@@ -43,7 +43,7 @@
         <div class="form-error">{{ error }}</div>
       </div>
       <div class="modal-footer">
-        <button :disabled="busy" type="submit" class="modal-footer-btn">
+        <button :disabled="busy" type="submit" class="btn btn-primary">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
       </div>

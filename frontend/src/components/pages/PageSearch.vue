@@ -28,7 +28,7 @@
           {{ $t("Could not find any result") }}
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="load" class="btn btn-primary btn-sm">
+          <button type="button" @click="load" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
@@ -36,7 +36,7 @@
           <button
             type="button"
             @click="clearSearch"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-times"></i> {{ $t("Clear search") }}
           </button>
@@ -45,7 +45,7 @@
           <button
             type="button"
             @click="goAdvancedSearch"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-search"></i> {{ $t("Advanced search") }}
           </button>

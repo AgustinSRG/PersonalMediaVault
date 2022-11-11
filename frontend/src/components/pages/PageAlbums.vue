@@ -17,7 +17,7 @@
             v-if="canWrite"
             type="button"
             @click="createAlbum"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-plus"></i> {{ $t("Create album") }}
           </button>
@@ -59,7 +59,7 @@
           <button
             type="button"
             @click="refreshAlbums"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
@@ -80,7 +80,7 @@
           <button
             type="button"
             @click="clearFilter"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-times"></i> {{ $t("Clear filter") }}
           </button>

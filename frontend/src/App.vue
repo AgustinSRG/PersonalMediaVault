@@ -139,7 +139,7 @@ export default class App extends Vue {}
   box-shadow: none;
   border: none;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 16px;
   color: white;
   background: transparent;
   border-radius: 100vw;
@@ -156,11 +156,11 @@ export default class App extends Vue {}
 }
 
 .btn-sm {
-  font-size: 16px;
+  font-size: 12px;
 }
 
 .btn-xs {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .btn-mr {
@@ -293,5 +293,149 @@ a, a:visited {
   border-radius: 8px;
   border: 4px solid transparent;
   background-clip: content-box;
+}
+
+/* Modals */
+
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: var(--modal-overlay-bg-color);
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 0.5rem;
+
+  transition: opacity 0.2s;
+  opacity: 1;
+
+  overflow: auto;
+}
+
+.modal-container.hidden {
+  transition: opacity 0.2s, visibility 0.2s;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.modal-container.no-transition,
+.modal-container.no-transition.hidden {
+  transition: none;
+}
+
+.modal-container:focus {
+  outline: none;
+}
+
+.modal-dialog {
+  display: flex;
+  margin: auto;
+  flex-direction: column;
+  background: var(--modal-bg-color);
+}
+
+.light-theme .modal-dialog {
+  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
+    0 6px 30px 5px rgb(255 255 255 / 12%),
+    0 8px 10px -5px rgb(255 255 255 / 40%);
+}
+
+.dark-theme .modal-dialog {
+  box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
+    0 8px 10px -5px rgb(0 0 0 / 40%);
+}
+
+.modal-sm {
+  width: 300px;
+}
+
+@media (max-width: 300px) {
+  .modal-sm {
+    width: calc(100% - 1rem);
+  }
+}
+
+.modal-md {
+  width: 500px;
+}
+
+@media (max-width: 600px) {
+  .modal-md {
+    width: calc(100% - 1rem);
+  }
+}
+
+.modal-lg {
+  width: 800px;
+}
+
+@media (max-width: 900px) {
+  .modal-lg {
+    width: calc(100% - 1rem);
+  }
+}
+
+.modal-xl {
+  width: 1140px;
+}
+
+@media (max-width: 1240px) {
+  .modal-xl {
+    width: calc(100% - 1rem);
+  }
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: solid 1px var(--theme-border-color);
+}
+
+.modal-title {
+  width: calc(100% - 48px);
+  padding: 1rem;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.modal-title.no-close {
+  width: 100%;
+}
+
+.modal-close-btn {
+  display: block;
+  width: 48px;
+  height: 48px;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--theme-btn-color);
+  background: transparent;
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.modal-close-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
+}
+
+.modal-body,
+.modal-footer {
+  padding: 1rem;
+}
+
+.modal-footer {
+  border-top: solid 1px var(--theme-border-color);
 }
 </style>

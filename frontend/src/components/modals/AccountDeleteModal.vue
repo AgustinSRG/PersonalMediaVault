@@ -37,7 +37,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="modal-footer-btn">
+        <button type="submit" class="btn btn-primary">
           <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
         </button>
       </div>

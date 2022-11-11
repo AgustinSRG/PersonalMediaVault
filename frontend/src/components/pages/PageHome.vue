@@ -30,7 +30,7 @@
           {{ $t("The vault is empty") }}
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="load" class="btn btn-primary btn-sm">
+          <button type="button" @click="load" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>

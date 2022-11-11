@@ -112,7 +112,7 @@
             <button
               type="submit"
               :disabled="busy"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary"
             >
               <i class="fas fa-plus"></i> {{ $t("Create account") }}
             </button>

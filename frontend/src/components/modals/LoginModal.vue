@@ -41,7 +41,7 @@
         <button
           v-if="!busy && mustWait <= 0"
           type="submit"
-          class="modal-footer-btn"
+          class="btn btn-primary"
         >
           <i class="fas fa-unlock"></i> {{ $t("Unlock vault") }}
         </button>
@@ -49,7 +49,7 @@
           v-if="!busy && mustWait === 1"
           type="button"
           disabled
-          class="modal-footer-btn"
+          class="btn btn-primary"
         >
           <i class="fas fa-hourglass"></i>
           {{ $t("You must wait 1 second to try again") }}
@@ -58,7 +58,7 @@
           v-if="!busy && mustWait > 1"
           type="button"
           disabled
-          class="modal-footer-btn"
+          class="btn btn-primary"
         >
           <i class="fas fa-hourglass"></i>
           {{
@@ -68,7 +68,7 @@
             )
           }}
         </button>
-        <button v-if="busy" type="button" disabled class="modal-footer-btn">
+        <button v-if="busy" type="button" disabled class="btn btn-primary">
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
         </button>
       </div>
@@ -192,172 +192,7 @@ export default defineComponent({
 </script>
 
 <style>
-.modal-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
-  background: rgba(0, 0, 0, 0.4);
-
-  display: flex;
-  flex-direction: column;
-
-  padding: 0.5rem;
-
-  transition: opacity 0.2s;
-  opacity: 1;
-
-  overflow: auto;
-}
-
-.modal-container:focus {
-  outline: none;
-}
-
 .modal-container-login {
   z-index: 301;
-}
-
-.modal-container.hidden {
-  transition: opacity 0.2s, visibility 0.2s;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-}
-
-.modal-dialog {
-  display: flex;
-  margin: auto;
-  flex-direction: column;
-}
-
-.light-theme .modal-dialog {
-  background: white;
-  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
-    0 6px 30px 5px rgb(255 255 255 / 12%),
-    0 8px 10px -5px rgb(255 255 255 / 40%);
-}
-
-.dark-theme .modal-dialog {
-  background: #212121;
-  box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
-    0 8px 10px -5px rgb(0 0 0 / 40%);
-}
-
-.modal-sm {
-  width: 300px;
-}
-
-@media (max-width: 300px) {
-  .modal-sm {
-    width: calc(100% - 1rem);
-  }
-}
-
-.modal-md {
-  width: 500px;
-}
-
-@media (max-width: 600px) {
-  .modal-md {
-    width: calc(100% - 1rem);
-  }
-}
-
-.modal-lg {
-  width: 800px;
-}
-
-@media (max-width: 900px) {
-  .modal-lg {
-    width: calc(100% - 1rem);
-  }
-}
-
-.modal-xl {
-  width: 1140px;
-}
-
-@media (max-width: 1240px) {
-  .modal-xl {
-    width: calc(100% - 1rem);
-  }
-}
-
-.modal-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  border-bottom: solid 1px var(--theme-border-color);
-}
-
-.modal-title {
-  width: calc(100% - 48px);
-  padding: 1rem;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.modal-title.no-close {
-  width: 100%;
-}
-
-.modal-close-btn {
-  display: block;
-  width: 48px;
-  height: 48px;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  font-size: 24px;
-  color: var(--theme-btn-color);
-  background: transparent;
-}
-
-.modal-close-btn:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.modal-close-btn:not(:disabled):hover {
-  color: var(--theme-btn-hover-color);
-}
-
-.modal-body {
-  padding: 1rem;
-}
-
-.modal-footer {
-  border-top: solid 1px var(--theme-border-color);
-}
-
-.modal-footer-btn {
-  display: block;
-  width: 100%;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--theme-btn-color);
-  background: transparent;
-  text-align: left;
-  padding: 1rem;
-  white-space: nowrap;
-  font-weight: bold;
-}
-
-.modal-footer-btn i {
-  margin-right: 0.5rem;
-}
-
-.modal-footer-btn:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.modal-footer-btn:not(:disabled):hover {
-  color: var(--theme-btn-hover-color);
 }
 </style>

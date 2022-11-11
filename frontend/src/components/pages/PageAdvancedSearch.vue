@@ -59,7 +59,7 @@
           v-for="mt in matchingTags"
           :key="mt.id"
           type="button"
-          class="btn btn-primary btn-xs btn-tag-mini"
+          class="btn btn-primary btn-sm btn-tag-mini"
           @click="addMatchingTag(mt)"
         >
           <i class="fas fa-plus"></i> {{ mt.name }}
@@ -92,14 +92,14 @@
         <button
           v-if="!loading"
           type="submit"
-          class="btn btn-primary btn-sm btn-mr"
+          class="btn btn-primary btn-mr"
         >
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
         <button
           v-if="loading"
           type="button"
-          class="btn btn-primary btn-sm btn-mr"
+          class="btn btn-primary btn-mr"
           disabled
         >
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{
@@ -109,7 +109,7 @@
         <button
           v-if="loading"
           type="button"
-          class="btn btn-primary btn-sm btn-mr"
+          class="btn btn-primary btn-mr"
           @click="cancel"
         >
           <i class="fas fa-times"></i> {{ $t("Cancel") }}
@@ -130,7 +130,7 @@
           <button
             type="button"
             @click="startSearch()"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>

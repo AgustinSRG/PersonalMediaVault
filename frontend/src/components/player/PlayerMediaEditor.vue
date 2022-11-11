@@ -16,7 +16,7 @@
       <div class="form-group" v-if="canWrite">
         <button
           type="submit"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary"
           :disabled="busy || !title || originalTitle === title"
         >
           <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
@@ -36,7 +36,7 @@
     <div class="form-group" v-if="canWrite">
       <button
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy || originalDesc === desc"
         @click="changeDescription"
       >
@@ -90,7 +90,7 @@
       <div class="form-group">
         <button
           type="submit"
-          class="btn btn-primary btn-sm"
+          class="btn btn-primary"
           :disabled="busy || !tagToAdd"
         >
           <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
@@ -120,7 +120,7 @@
       />
       <button
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy"
         @click="uploadThumbnail"
       >
@@ -182,7 +182,7 @@
       <button
         v-if="!srtFileName"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy"
         @click="selectSRTFile"
       >
@@ -192,7 +192,7 @@
       <button
         v-if="srtFileName"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy"
         @click="selectSRTFile"
       >
@@ -224,7 +224,7 @@
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <button
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy || !srtId || !srtName || !srtFile"
         @click="addSubtitles"
       >
@@ -318,7 +318,7 @@
     <div class="form-group" v-if="canWrite">
       <button
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy || originalStartBeginning === startBeginning"
         @click="changeExtraParams"
       >
@@ -335,7 +335,7 @@
     <div class="form-group" v-if="canWrite">
       <button
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         :disabled="busy"
         @click="encodeMedia"
       >
@@ -350,7 +350,7 @@
     <div class="form-group" v-if="canWrite">
       <button
         type="button"
-        class="btn btn-danger btn-sm"
+        class="btn btn-danger"
         :disabled="busy"
         @click="deleteMedia"
       >

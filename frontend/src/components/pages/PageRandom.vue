@@ -2,7 +2,7 @@
   <div class="page-inner" :class="{ hidden: !display }">
     <div v-if="total > 0" class="search-results-options">
       <div class="search-results-option">
-        <button type="button" @click="load" class="btn btn-primary btn-sm">
+        <button type="button" @click="load" class="btn btn-primary">
           <i class="fas fa-shuffle"></i> {{ $t("Refresh") }}
         </button>
       </div>
@@ -59,7 +59,7 @@
           {{ $t("Could not find any result") }}
         </div>
         <div class="search-results-msg-btn">
-          <button type="button" @click="load" class="btn btn-primary btn-sm">
+          <button type="button" @click="load" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
@@ -67,7 +67,7 @@
           <button
             type="button"
             @click="clearSearch"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-times"></i> {{ $t("Clear search") }}
           </button>
@@ -76,7 +76,7 @@
           <button
             type="button"
             @click="goAdvancedSearch"
-            class="btn btn-primary btn-sm"
+            class="btn btn-primary"
           >
             <i class="fas fa-search"></i> {{ $t("Advanced search") }}
           </button>

@@ -445,6 +445,13 @@ export default defineComponent({
 
   --theme-bg-color: #f9f9f9;
   --theme-bg-alt-color: #ffffff;
+
+  --modal-overlay-bg-color: rgba(0, 0, 0, 0.4);
+  --modal-bg-color: white;
+  --bar-bg-color: white;
+
+  --hover-color: rgba(0, 0, 0, 0.1);
+  --selected-color: rgba(0, 0, 0, 0.2);
 }
 
 .main-layout.dark-theme {
@@ -464,6 +471,13 @@ export default defineComponent({
 
   --theme-bg-color: #181818;
   --theme-bg-alt-color: #212121;
+
+  --modal-overlay-bg-color: rgba(0, 0, 0, 0.4);
+  --modal-bg-color: #212121;
+  --bar-bg-color: #212121;
+
+  --hover-color: rgba(255, 255, 255, 0.1);
+  --selected-color: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-float-overlay {

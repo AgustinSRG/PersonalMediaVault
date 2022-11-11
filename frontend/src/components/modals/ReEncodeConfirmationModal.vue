@@ -33,7 +33,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="modal-footer-btn">
+        <button type="submit" class="btn btn-primary">
           <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
         </button>
       </div>

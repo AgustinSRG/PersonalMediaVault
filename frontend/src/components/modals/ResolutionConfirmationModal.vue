@@ -53,10 +53,10 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button v-if="!deleting" type="submit" class="modal-footer-btn">
+        <button v-if="!deleting" type="submit" class="btn btn-primary">
           <i class="fas fa-plus"></i> {{ $t("Encode") }}
         </button>
-        <button v-if="deleting" type="submit" class="modal-footer-btn">
+        <button v-if="deleting" type="submit" class="btn btn-primary">
           <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
         </button>
       </div>
