@@ -207,7 +207,7 @@ export default defineComponent({
     },
 
     scrollToSelected: function () {
-      const itemHeight = 128;
+      const itemHeight = 130;
       const element = this.$el.querySelector(".album-body");
 
       if (!element) {
