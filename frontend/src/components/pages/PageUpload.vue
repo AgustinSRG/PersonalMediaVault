@@ -84,7 +84,7 @@
             v-for="mt in matchingTags"
             :key="mt.id"
             type="button"
-            class="btn btn-primary btn-sm btn-tag-mini"
+            class="btn btn-primary btn-xs btn-tag-mini"
             @click="addTagByName(mt.name)"
           >
             <i class="fas fa-plus"></i> {{ mt.name }}
@@ -706,10 +706,6 @@ export default defineComponent({
 </script>
 
 <style>
-.file-hidden {
-  display: none;
-}
-
 .upload-options-container {
   border: dotted 2px var(--theme-border-color);
   padding: 1rem;

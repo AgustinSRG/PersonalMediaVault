@@ -1503,50 +1503,6 @@ export default defineComponent({
   height: calc(100% - 32px);
 }
 
-.border-top {
-  border-top: solid 1px var(--theme-border-color);
-  padding-top: 1rem;
-}
-
-.form-control.form-textarea {
-  resize: vertical;
-  height: auto;
-}
-
-.media-tags {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.media-tag {
-  border: solid 1px var(--theme-border-color);
-  border-radius: 100vw;
-  display: flex;
-  align-items: center;
-  margin: 0.5rem;
-  padding: 0.25rem;
-}
-
-.media-tag-name {
-  padding: 0.5rem;
-}
-
-.media-tag-btn {
-  display: block;
-  width: 32px;
-  height: 32px;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--theme-btn-color);
-  background: transparent;
-}
-
-.media-tag-btn:hover {
-  color: var(--theme-btn-hover-color);
-}
-
 .form-group-thumbnail {
   max-width: 100%;
   width: auto;
@@ -1554,13 +1510,4 @@ export default defineComponent({
   border: solid 1px var(--theme-border-color);
 }
 
-.btn-tag-mini {
-  padding: 0.25rem;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.td-fit {
-  width: 1px;
-}
 </style>

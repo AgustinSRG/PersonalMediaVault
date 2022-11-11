@@ -711,4 +711,50 @@ export default defineComponent({
     display: none;
   }
 }
+
+/* Common style */
+
+.media-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.media-tag {
+  border: solid 1px var(--theme-border-color);
+  border-radius: 100vw;
+  display: flex;
+  align-items: center;
+  margin: 0.5rem;
+  padding: 0.25rem;
+}
+
+.media-tag-name {
+  padding: 0.5rem;
+}
+
+.media-tag-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--theme-btn-color);
+  background: transparent;
+}
+
+.media-tag-btn:hover {
+  color: var(--theme-btn-hover-color);
+}
+
+.btn-tag-mini {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.td-fit {
+  width: 1px;
+}
+
 </style>

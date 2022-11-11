@@ -221,7 +221,6 @@ export default class App extends Vue {}
   background: var(--input-bg-color);
 }
 
-
 .form-control:focus {
   border: 1px solid var(--theme-border-color);
   color: var(--theme-fg-color);
@@ -234,16 +233,31 @@ export default class App extends Vue {}
   width: 100%;
 }
 
+.form-control.form-textarea {
+  resize: vertical;
+  height: auto;
+}
+
 .form-error {
   color: red;
 }
 
-a, a:visited {
+a,
+a:visited {
   color: inherit;
 }
 
 .td-shrink {
   width: 1px;
+}
+
+.border-top {
+  border-top: solid 1px var(--theme-border-color);
+  padding-top: 1rem;
+}
+
+.file-hidden {
+  display: none;
 }
 
 /* Custom scroll bar */
