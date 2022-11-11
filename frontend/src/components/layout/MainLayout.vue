@@ -245,10 +245,16 @@ export default defineComponent({
 
     showSettings: function () {
       this.displaySettings = !this.displaySettings;
+      this.displayHelpModal = false;
+      this.displayTheme = false;
+      this.displayLang = false;
     },
 
     showHelp: function () {
       this.displayHelpModal = !this.displayHelpModal;
+      this.displaySettings = false;
+      this.displayTheme = false;
+      this.displayLang = false;
     },
 
     onGoSettings: function (o: string) {

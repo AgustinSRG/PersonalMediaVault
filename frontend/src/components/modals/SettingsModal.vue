@@ -183,7 +183,7 @@ export default defineComponent({
       this.$options.authUpdateH
     );
 
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-settings");
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(

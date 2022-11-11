@@ -110,7 +110,7 @@ export default defineComponent({
   mounted: function () {
     this.$options.themeHandler = this.themeUpdated.bind(this);
     AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
