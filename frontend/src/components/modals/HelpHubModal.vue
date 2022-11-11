@@ -17,7 +17,7 @@
       @click="stopPropagationEvent"
     >
       <div class="modal-header-corner">
-        <div class="account-settings-username">{{ $t("Help") }}</div>
+        <div class="modal-header-corner-title">{{ $t("Help") }}</div>
       </div>
       <div class="modal-body with-menu">
         <table class="modal-menu">

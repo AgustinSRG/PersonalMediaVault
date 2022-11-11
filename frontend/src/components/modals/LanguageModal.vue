@@ -1,6 +1,6 @@
 <template>
   <div
-    class="modal-container modal-container-settings"
+    class="modal-container modal-container-corner no-transition"
     :class="{ hidden: !display }"
     tabindex="-1"
     role="dialog"
@@ -13,16 +13,8 @@
       role="document"
       @click="stopPropagationEvent"
     >
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Choose your language") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
-          <i class="fas fa-times"></i>
-        </button>
+      <div class="modal-header-corner">
+        <div class="modal-header-corner-title">{{ $t("Choose your language") }}</div>
       </div>
       <div class="modal-body with-menu limited-height">
         <table class="modal-menu">

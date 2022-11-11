@@ -14,7 +14,7 @@
       @click="stopPropagationEvent"
     >
       <div class="modal-header-corner">
-        <div class="account-settings-username">{{ $t("Vault settings") }}</div>
+        <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
       </div>
       <div class="modal-body with-menu">
         <table class="modal-menu">
@@ -246,8 +246,8 @@ export default defineComponent({
   border-bottom: solid 1px var(--theme-border-color);
 }
 
-.account-settings-username {
+.modal-header-corner-title {
   font-weight: bold;
-  font-size: x-large;
+  font-size: large;
 }
 </style>
