@@ -40,13 +40,9 @@
         </select>
       </div>
       <div class="form-group">
-         <button
-            type="button"
-            @click="createAlbum"
-            class="btn btn-primary"
-          >
-            <i class="fas fa-plus"></i> {{ $t("Create album") }}
-          </button>
+        <button type="button" @click="createAlbum" class="btn btn-primary">
+          <i class="fas fa-plus"></i> {{ $t("Create album") }}
+        </button>
       </div>
       <div class="form-group">
         <label
@@ -75,7 +71,7 @@
             autocomplete="off"
             maxlength="255"
             v-model="tagToAdd"
-            @input="onTagAddChanged"
+            @input="onTagAddChanged(false)"
             class="form-control"
           />
         </div>
@@ -91,11 +87,7 @@
           </button>
         </div>
         <div class="form-group">
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="!tagToAdd"
-          >
+          <button type="submit" class="btn btn-primary" :disabled="!tagToAdd">
             <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
           </button>
         </div>
@@ -222,7 +214,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "PageUpload",
-  emits: ['album-create'],
+  emits: ["album-create"],
   props: {
     display: Boolean,
   },
@@ -635,20 +627,29 @@ export default defineComponent({
       this.tagData = copyObject(TagsController.Tags);
     },
 
-    onTagAddChanged: function () {
-      if (this.$options.findTagTimeout) {
-        return;
-      }
-      this.$options.findTagTimeout = setTimeout(() => {
-        this.$options.findTagTimeout = null;
+    onTagAddChanged: function (forced: boolean) {
+      if (forced) {
+        if (this.$options.findTagTimeout) {
+          clearTimeout(this.$options.findTagTimeout);
+          this.$options.findTagTimeout = null;
+        }
         this.findTags();
-      }, 200);
+      } else {
+        if (this.$options.findTagTimeout) {
+          return;
+        }
+        this.$options.findTagTimeout = setTimeout(() => {
+          this.$options.findTagTimeout = null;
+          this.findTags();
+        }, 200);
+      }
     },
 
     removeTag: function (tag: string) {
       for (let i = 0; i < this.tags.length; i++) {
         if (this.tags[i] === tag) {
           this.tags.splice(i, 1);
+          this.onTagAddChanged(true);
           break;
         }
       }
@@ -665,6 +666,7 @@ export default defineComponent({
       tag = parseTagName(tag);
       this.removeTag(tag);
       this.tags.push(tag);
+      this.onTagAddChanged(true);
     },
 
     showOptions: function (b: boolean) {

@@ -49,7 +49,7 @@
           autocomplete="off"
           maxlength="255"
           v-model="tagToAdd"
-          @input="onTagAddChanged"
+          @input="onTagAddChanged(false)"
           class="form-control"
           :placeholder="$t('Search for tags') + '...'"
         />
@@ -421,7 +421,7 @@ export default defineComponent({
 
     updateTagData: function () {
       this.tagData = copyObject(TagsController.Tags);
-      this.onTagAddChanged();
+      this.onTagAddChanged(false);
     },
 
     getFirstTag: function () {
@@ -444,7 +444,7 @@ export default defineComponent({
       this.tags = this.tags.filter((t) => {
         return tag !== t;
       });
-      this.onTagAddChanged();
+      this.onTagAddChanged(true);
     },
 
     addMatchingTag: function (tag) {
@@ -452,17 +452,25 @@ export default defineComponent({
         return;
       }
       this.tags.push(tag.id);
-      this.onTagAddChanged();
+      this.onTagAddChanged(true);
     },
 
-    onTagAddChanged: function () {
-      if (this.$options.findTagTimeout) {
-        return;
-      }
-      this.$options.findTagTimeout = setTimeout(() => {
-        this.$options.findTagTimeout = null;
+    onTagAddChanged: function (forced: boolean) {
+      if (forced) {
+        if (this.$options.findTagTimeout) {
+          clearTimeout(this.$options.findTagTimeout);
+          this.$options.findTagTimeout = null;
+        }
         this.findTags();
-      }, 200);
+      } else {
+        if (this.$options.findTagTimeout) {
+          return;
+        }
+        this.$options.findTagTimeout = setTimeout(() => {
+          this.$options.findTagTimeout = null;
+          this.findTags();
+        }, 200);
+      }
     },
 
     findTags: function () {
