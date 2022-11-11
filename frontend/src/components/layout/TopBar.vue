@@ -66,7 +66,7 @@
     <div class="top-bar-user-td">
       <button
         type="button"
-        class="top-bar-button top-bar-button-large-version"
+        class="top-bar-button top-bar-button-help top-bar-button-large-version"
         :title="$t('Help')"
         @click="help"
       >
@@ -84,7 +84,7 @@
 
       <button
         type="button"
-        class="top-bar-button"
+        class="top-bar-button top-bar-button-settings"
         :title="$t('Settings')"
         @click="settings"
       >

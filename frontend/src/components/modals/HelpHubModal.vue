@@ -1,6 +1,9 @@
 <template>
   <div
-    class="modal-container modal-container-help"
+    class="
+      modal-container modal-container-corner modal-container-help
+      no-transition
+    "
     :class="{ hidden: !display }"
     tabindex="-1"
     role="dialog"
@@ -13,16 +16,8 @@
       role="document"
       @click="stopPropagationEvent"
     >
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Help") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
-          <i class="fas fa-times"></i>
-        </button>
+      <div class="modal-header-corner">
+        <div class="account-settings-username">{{ $t("Help") }}</div>
       </div>
       <div class="modal-body with-menu">
         <table class="modal-menu">
@@ -37,7 +32,7 @@
               {{ $t("About PMV") }}
             </td>
           </tr>
-          
+
           <tr
             class="modal-menu-item"
             tabindex="0"
@@ -106,7 +101,7 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-help");
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {
@@ -133,7 +128,7 @@ export default defineComponent({
 </script>
 
 <style>
-.modal-container-help {
-  z-index: 250;
+.modal-container.modal-container-corner.modal-container-help {
+  padding-right: 104px;
 }
 </style>

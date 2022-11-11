@@ -1,6 +1,6 @@
 <template>
   <div
-    class="modal-container modal-container-settings"
+    class="modal-container modal-container-corner no-transition"
     :class="{ hidden: !display }"
     tabindex="-1"
     role="dialog"
@@ -13,16 +13,8 @@
       role="document"
       @click="stopPropagationEvent"
     >
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Vault settings") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
-          <i class="fas fa-times"></i>
-        </button>
+      <div class="modal-header-corner">
+        <div class="account-settings-username">{{ $t("Vault settings") }}</div>
       </div>
       <div class="modal-body with-menu">
         <table class="modal-menu">
@@ -145,6 +137,7 @@ export default defineComponent({
     return {
       isRoot: AuthController.IsRoot,
       canWrite: AuthController.CanWrite,
+      username: AuthController.Username,
     };
   },
   methods: {
@@ -172,6 +165,7 @@ export default defineComponent({
     updateAuthInfo: function () {
       this.isRoot = AuthController.IsRoot;
       this.canWrite = AuthController.CanWrite;
+      this.username = AuthController.Username;
     },
 
     keyDownHandle: function (e) {
@@ -189,7 +183,7 @@ export default defineComponent({
       this.$options.authUpdateH
     );
 
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-settings");
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -223,5 +217,37 @@ export default defineComponent({
 <style>
 .modal-container-settings {
   z-index: 250;
+}
+
+.modal-container.modal-container-corner {
+  z-index: 210;
+  justify-content: right;
+  align-items: flex-end;
+  padding-top: 56px;
+  padding-right: 56px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.modal-container.modal-container-corner .modal-dialog {
+  margin: 0;
+  width: 300px;
+  pointer-events: initial;
+}
+
+@media (max-width: 400px) {
+  .modal-container.modal-container-corner .modal-dialog {
+    width: 100%;
+  }
+}
+
+.modal-header-corner {
+  padding: 1rem;
+  border-bottom: solid 1px var(--theme-border-color);
+}
+
+.account-settings-username {
+  font-weight: bold;
+  font-size: x-large;
 }
 </style>

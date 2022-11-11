@@ -251,11 +251,11 @@ export default defineComponent({
     },
 
     showSettings: function () {
-      this.displaySettings = true;
+      this.displaySettings = !this.displaySettings;
     },
 
     showHelp: function () {
-      this.displayHelpModal = true;
+      this.displayHelpModal = !this.displayHelpModal;
     },
 
     onGoSettings: function (o: string) {
