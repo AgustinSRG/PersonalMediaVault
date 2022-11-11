@@ -67,8 +67,8 @@
 
         <div class="form-error">{{ error }}</div>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">
+      <div class="modal-footer no-padding">
+        <button type="submit" class="modal-footer-btn">
           <i class="fas fa-check"></i> {{ $t("Change password") }}
         </button>
       </div>

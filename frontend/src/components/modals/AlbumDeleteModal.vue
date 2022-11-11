@@ -49,8 +49,8 @@
         </div>
         <div class="form-error">{{ error }}</div>
       </div>
-      <div class="modal-footer">
-        <button :disabled="busy" type="submit" class="btn btn-primary">
+      <div class="modal-footer no-padding">
+        <button :disabled="busy" type="submit" class="modal-footer-btn">
           <i class="fas fa-trash-alt"></i> {{ $t("Delete album") }}
         </button>
       </div>

@@ -66,8 +66,8 @@
         </table>
       </div>
 
-      <div class="modal-footer" v-if="!loading">
-        <button type="button" @click="createAlbum" class="btn btn-primary">
+      <div class="modal-footer no-padding" v-if="!loading">
+        <button type="button" @click="createAlbum" class="modal-footer-btn">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
       </div>

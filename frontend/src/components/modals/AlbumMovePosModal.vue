@@ -40,8 +40,8 @@
           />
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">
+      <div class="modal-footer no-padding">
+        <button type="submit" class="modal-footer-btn">
           <i class="fas fa-arrows-up-down-left-right"></i>
           {{ $t("Change position") }}
         </button>

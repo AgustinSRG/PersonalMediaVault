@@ -394,8 +394,40 @@ a, a:visited {
   padding: 1rem;
 }
 
+.modal-footer.no-padding {
+  padding: 0;
+}
+
 .modal-footer {
   border-top: solid 1px var(--theme-border-color);
+}
+
+.modal-footer-btn {
+  display: block;
+  width: 100%;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--theme-btn-color);
+  background: transparent;
+  text-align: left;
+  padding: 1rem;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.modal-footer-btn i {
+  margin-right: 0.5rem;
+}
+
+.modal-footer-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.modal-footer-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 
 .modal-menu {

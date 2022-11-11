@@ -52,11 +52,11 @@
           </label>
         </div>
       </div>
-      <div class="modal-footer">
-        <button v-if="!deleting" type="submit" class="btn btn-primary">
+      <div class="modal-footer no-padding">
+        <button v-if="!deleting" type="submit" class="modal-footer-btn">
           <i class="fas fa-plus"></i> {{ $t("Encode") }}
         </button>
-        <button v-if="deleting" type="submit" class="btn btn-primary">
+        <button v-if="deleting" type="submit" class="modal-footer-btn">
           <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
         </button>
       </div>

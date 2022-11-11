@@ -32,8 +32,8 @@
           <label>{{ $t("Do you want to re-encode the media?") }}</label>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">
+      <div class="modal-footer no-padding">
+        <button type="submit" class="modal-footer-btn">
           <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
         </button>
       </div>

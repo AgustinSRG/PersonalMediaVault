@@ -37,11 +37,11 @@
         </div>
         <div class="form-error">{{ error }}</div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer no-padding">
         <button
           v-if="!busy && mustWait <= 0"
           type="submit"
-          class="btn btn-primary"
+          class="modal-footer-btn"
         >
           <i class="fas fa-unlock"></i> {{ $t("Unlock vault") }}
         </button>
@@ -49,7 +49,7 @@
           v-if="!busy && mustWait === 1"
           type="button"
           disabled
-          class="btn btn-primary"
+          class="modal-footer-btn"
         >
           <i class="fas fa-hourglass"></i>
           {{ $t("You must wait 1 second to try again") }}

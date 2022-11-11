@@ -22,8 +22,8 @@
       <div class="modal-body">
         <p>{{ $t("Do you want to close your session and lock the vault?") }}</p>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" @click="logout">
+      <div class="modal-footer no-padding">
+        <button type="button" class="modal-footer-btn" @click="logout">
           <i class="fas fa-sign-out-alt"></i> {{ $t("Close vault") }}
         </button>
       </div>
