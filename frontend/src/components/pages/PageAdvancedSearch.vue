@@ -444,10 +444,15 @@ export default defineComponent({
       this.tags = this.tags.filter((t) => {
         return tag !== t;
       });
+      this.onTagAddChanged();
     },
 
     addMatchingTag: function (tag) {
+      if (this.tags.indexOf(tag.id) >= 0) {
+        return;
+      }
       this.tags.push(tag.id);
+      this.onTagAddChanged();
     },
 
     onTagAddChanged: function () {
