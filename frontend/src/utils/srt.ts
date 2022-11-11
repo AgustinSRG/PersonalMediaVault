@@ -2,8 +2,6 @@
 
 "use strict";
 
-import SanitizeHTML from "sanitize-html";
-
 export interface SubtitlesEntry {
     start: number;
     end: number;
@@ -69,24 +67,6 @@ export function parseSRT(srt: string): SubtitlesEntry[] {
         }
     }
     return result;
-}
-
-export function sanitizeSubtitlesHTML(html: string): string {
-    return SanitizeHTML(html, {
-        allowedTags: [ 'b', 'i', 'u', 'em', 'strong', 'font', 'span' ],
-        allowedAttributes: {
-            'span': ['style'],
-            'font': ['face', 'size', 'color'],
-        },
-        allowedStyles: {
-            '*': {
-                'color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
-                'background': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
-                'background-color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
-                'font-size': [/^\d+(?:px|em|%)$/],
-            },
-        }
-    });
 }
 
 export function findSubtitlesEntry(subtitles: SubtitlesEntry[], time: number): SubtitlesEntry {

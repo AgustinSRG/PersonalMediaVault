@@ -138,14 +138,7 @@
       @change-pos="changeMediaPos"
       @media-remove="removeMedia"
     ></AlbumContextMenu>
-    <div v-if="loading" class="album-loader">
-      <div class="loading-overlay-loader">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-    </div>
+    <LoadingOverlay v-if="loading"></LoadingOverlay>
   </div>
 </template>
 
@@ -164,14 +157,16 @@ import { isTouchDevice } from "@/utils/touch";
 import { defineComponent, nextTick } from "vue";
 
 import AlbumContextMenu from "./AlbumContextMenu.vue";
+import LoadingOverlay from "./LoadingOverlay.vue";
 
-declare var Sortable;
+import Sortable from 'sortablejs';
 
 export default defineComponent({
   name: "AlbumContainer",
   emits: ["album-rename", "album-delete"],
   components: {
     AlbumContextMenu,
+    LoadingOverlay,
   },
   data: function () {
     return {
@@ -597,46 +592,6 @@ export default defineComponent({
 </script>
 
 <style>
-.album-container {
-  position: absolute;
-  top: 57px;
-  height: calc(100% - 57px);
-  right: 0;
-  width: 500px;
-  border-left: solid 1px var(--theme-border-color);
-  display: none;
-}
-
-.vault-locked .album-container {
-  visibility: hidden;
-}
-
-.layout-album .album-container {
-  display: block;
-}
-
-@media (max-width: 1000px) {
-  .album-container {
-    width: calc(100%);
-    height: calc(100% - 57px - 40px);
-  }
-
-  .layout-album.focus-left .album-container {
-    display: none;
-  }
-}
-
-.album-loader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .album-header {
   position: absolute;
   top: 0;

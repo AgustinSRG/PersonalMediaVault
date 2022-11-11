@@ -180,63 +180,6 @@ export default defineComponent({
 </script>
 
 <style>
-.page-content {
-  position: absolute;
-  top: 57px;
-  height: calc(100% - 57px);
-  left: 240px;
-  width: calc(100% - 240px);
-  display: flex;
-  flex-direction: column;
-}
-
-.page-content:focus {
-  outline: none;
-}
-
-.vault-locked .page-content {
-  visibility: hidden;
-}
-
-.sidebar-hidden .page-content {
-  left: 0;
-  width: 100%;
-}
-
-@media (max-width: 1000px) {
-  .page-content {
-    left: 0;
-    width: 100%;
-  }
-}
-
-.layout-media-split .page-content,
-.sidebar-hidden .layout-media-split .page-content {
-  left: auto;
-  right: 0;
-  width: 500px;
-  border-left: solid 1px var(--theme-border-color);
-}
-
-@media (max-width: 1000px) {
-  .layout-media-split .page-content {
-    width: calc(100%);
-    height: calc(100% - 57px - 40px);
-  }
-
-  .layout-media-split.focus-left .page-content {
-    display: none;
-  }
-}
-
-.layout-album .page-content {
-  display: none;
-}
-
-.layout-media .page-content {
-  display: none;
-}
-
 .page-inner {
   width: 100%;
   height: calc(100% - 54px);

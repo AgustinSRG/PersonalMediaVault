@@ -391,7 +391,7 @@ import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { htmlToText } from "@/utils/text";
 import { AppEvents } from "@/control/app-events";
-import { sanitizeSubtitlesHTML } from "@/utils/srt";
+import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtitles-html";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
@@ -1222,12 +1222,22 @@ export default defineComponent({
       }
       const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
       if (sub) {
-        this.subtitles = this.subtitlesHTML
-          ? sanitizeSubtitlesHTML(sub.text)
-          : htmlToText(sub.text);
+        if (this.subtitlesHTML) {
+          const subTag = getUniqueSubtitlesLoadTag();
+          this.$options.subTag = subTag;
+          sanitizeSubtitlesHTML(sub.text).then(text => {
+            if (this.$options.subTag === subTag) {
+              this.subtitles = text;
+            }
+          });
+        } else {
+          this.$options.subTag = "";
+          this.subtitles = htmlToText(sub.text);
+        }
         this.subtitlesStart = sub.start;
         this.subtitlesEnd = sub.end;
       } else {
+        this.$options.subTag = "";
         this.subtitles = "";
         this.subtitlesStart = 0;
         this.subtitlesEnd = 0;

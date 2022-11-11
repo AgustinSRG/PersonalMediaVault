@@ -33,7 +33,7 @@
       @search-open="openSearchModal"
       @help="showHelp"
     ></TopBar>
-    <PlayerContainer @albums-open="showAlbumList"></PlayerContainer>
+    <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'" @albums-open="showAlbumList"></PlayerContainer>
     <PageContent
       :min="layout === 'media-split'"
       @album-create="createAlbum"
@@ -105,6 +105,7 @@
 
     <LoadingOverlay
       :display="locked || loadingAuth || loadingTags || loadingAlbums"
+      :fixed="true"
     ></LoadingOverlay>
     <LoginModal :display="locked && !loadingAuth"></LoginModal>
 
@@ -113,16 +114,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, defineAsyncComponent } from "vue";
 
 import TopBar from "./TopBar.vue";
 import BottomBar from "./BottomBar.vue";
 import SideBar from "./SideBar.vue";
-import PageContent from "./PageContent.vue";
-import PlayerContainer from "./PlayerContainer.vue";
-import AlbumContainer from "./AlbumContainer.vue";
 import SnackBar from "./SnackBar.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
+import PlayerContainerLoader from "./PlayerContainerLoader.vue";
+import AlbumContainerLoader from "./AlbumContainerLoader.vue";
+import PageContentLoader from "./PageContentLoader.vue";
 import LoginModal from "../modals/LoginModal.vue";
 import LogoutModal from "../modals/LogoutModal.vue";
 import SettingsModal from "../modals/SettingsModal.vue";
@@ -153,6 +154,36 @@ import { AlbumsController } from "../../control/albums";
 import { AppEvents } from "../../control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
+
+const PlayerContainer = defineAsyncComponent({
+  // the loader function
+  loader: () => import("@/components/layout/PlayerContainer.vue"),
+
+  // A component to use while the async component is loading
+  loadingComponent: PlayerContainerLoader,
+  // Delay before showing the loading component. Default: 200ms.
+  delay: 200,
+});
+
+const AlbumContainer = defineAsyncComponent({
+  // the loader function
+  loader: () => import("@/components/layout/AlbumContainer.vue"),
+
+  // A component to use while the async component is loading
+  loadingComponent: AlbumContainerLoader,
+  // Delay before showing the loading component. Default: 200ms.
+  delay: 200,
+});
+
+const PageContent = defineAsyncComponent({
+  // the loader function
+  loader: () => import("@/components/layout/PageContent.vue"),
+
+  // A component to use while the async component is loading
+  loadingComponent: PageContentLoader,
+  // Delay before showing the loading component. Default: 200ms.
+  delay: 200,
+});
 
 export default defineComponent({
   components: {
@@ -541,5 +572,143 @@ export default defineComponent({
 
 .skip-to-main-content:focus {
   top: 1rem;
+}
+
+/* Layout - PlayerContainer */
+
+.player-container {
+  position: absolute;
+  top: 57px;
+  height: calc(100% - 57px);
+  left: 0;
+  width: 100%;
+  overflow: auto;
+}
+
+.player-container:focus {
+  outline: none;
+}
+
+.vault-locked .player-container {
+  visibility: hidden;
+}
+
+.layout-media-split .player-container {
+  width: calc(100% - 500px);
+}
+
+.layout-album .player-container {
+  width: calc(100% - 500px);
+}
+
+@media (max-width: 1000px) {
+  .layout-media-split .player-container,
+  .layout-album .player-container {
+    width: calc(100%);
+    height: calc(100% - 57px - 40px);
+  }
+
+  .layout-media-split.focus-right .player-container {
+    display: none;
+  }
+
+  .layout-album.focus-right .player-container {
+    display: none;
+  }
+}
+
+.layout-initial .player-container {
+  display: none;
+}
+
+/* Layout - PageContent */
+
+.page-content {
+  position: absolute;
+  top: 57px;
+  height: calc(100% - 57px);
+  left: 240px;
+  width: calc(100% - 240px);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content:focus {
+  outline: none;
+}
+
+.vault-locked .page-content {
+  visibility: hidden;
+}
+
+.sidebar-hidden .page-content {
+  left: 0;
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .page-content {
+    left: 0;
+    width: 100%;
+  }
+}
+
+.layout-media-split .page-content,
+.sidebar-hidden .layout-media-split .page-content {
+  left: auto;
+  right: 0;
+  width: 500px;
+  border-left: solid 1px var(--theme-border-color);
+}
+
+@media (max-width: 1000px) {
+  .layout-media-split .page-content {
+    width: calc(100%);
+    height: calc(100% - 57px - 40px);
+  }
+
+  .layout-media-split.focus-left .page-content {
+    display: none;
+  }
+}
+
+.layout-album .page-content {
+  display: none;
+}
+
+.layout-media .page-content {
+  display: none;
+}
+
+
+/* Layout - AlbumContainer */
+
+.album-container {
+  position: absolute;
+  top: 57px;
+  height: calc(100% - 57px);
+  right: 0;
+  width: 500px;
+  border-left: solid 1px var(--theme-border-color);
+  display: none;
+}
+
+.vault-locked .album-container {
+  visibility: hidden;
+}
+
+.layout-album .album-container {
+  display: block;
+}
+
+@media (max-width: 1000px) {
+  .album-container {
+    width: calc(100%);
+    height: calc(100% - 57px - 40px);
+  }
+
+  .layout-album.focus-left .album-container {
+    display: none;
+  }
 }
 </style>

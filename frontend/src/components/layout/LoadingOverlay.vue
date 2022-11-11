@@ -1,5 +1,5 @@
 <template>
-  <div class="loading-overlay" :class="{ hidden: !display }">
+  <div class="loading-overlay" :class="{ 'loading-overlay-fixed': fixed, hidden: !display }">
     <div class="loading-overlay-loader">
       <div></div>
       <div></div>
@@ -15,7 +15,11 @@ import { defineComponent } from "vue";
 export default defineComponent({
   name: "LoadingOverlay",
   props: {
-    display: Boolean,
+    display: {
+      type: Boolean,
+      default: true,
+    },
+    fixed: Boolean,
   },
 });
 </script>
@@ -24,7 +28,7 @@ export default defineComponent({
 /* Loader */
 
 .loading-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -41,6 +45,10 @@ export default defineComponent({
   z-index: 300;
 
   background: var(--theme-bg-color);
+}
+
+.loading-overlay.loading-overlay-fixed {
+  position: fixed;
 }
 
 .loading-overlay.hidden {

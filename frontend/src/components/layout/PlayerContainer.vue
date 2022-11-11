@@ -243,48 +243,4 @@ export default defineComponent({
 </script>
 
 <style>
-.player-container {
-  position: absolute;
-  top: 57px;
-  height: calc(100% - 57px);
-  left: 0;
-  width: 100%;
-  overflow: auto;
-}
-
-.player-container:focus {
-  outline: none;
-}
-
-.vault-locked .player-container {
-  visibility: hidden;
-}
-
-.layout-media-split .player-container {
-  width: calc(100% - 500px);
-}
-
-.layout-album .player-container {
-  width: calc(100% - 500px);
-}
-
-@media (max-width: 1000px) {
-  .layout-media-split .player-container,
-  .layout-album .player-container {
-    width: calc(100%);
-    height: calc(100% - 57px - 40px);
-  }
-
-  .layout-media-split.focus-right .player-container {
-    display: none;
-  }
-
-  .layout-album.focus-right .player-container {
-    display: none;
-  }
-}
-
-.layout-initial .player-container {
-  display: none;
-}
 </style>
