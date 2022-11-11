@@ -731,38 +731,8 @@ export default defineComponent({
   cursor: pointer;
 }
 
-.light-theme .upload-box:hover,
-.light-theme .upload-box.dragging {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .upload-box:hover,
-.dark-theme .upload-box.dragging {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.table.table-vmiddle td {
-  vertical-align: middle;
-}
-
-.table-btn {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  background: transparent;
-  color: var(--theme-btn-color);
-}
-
-.table-btn:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
-.table-btn:not(:disabled):hover {
-  color: var(--theme-btn-hover-color);
+.upload-box:hover,
+.upload-box.dragging {
+  background: var(--hover-color);
 }
 </style>

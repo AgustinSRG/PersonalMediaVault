@@ -140,19 +140,11 @@ export default class App extends Vue {}
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: white;
+  color: var(--theme-fg-color);
   background: transparent;
   border-radius: 100vw;
   padding: 12px 24px;
   white-space: nowrap;
-}
-
-.light-theme .btn {
-  color: black;
-}
-
-.dark-theme .btn {
-  color: white;
 }
 
 .btn-sm {
@@ -185,20 +177,12 @@ export default class App extends Vue {}
   opacity: 0.7;
 }
 
-.light-theme .btn-primary {
-  border: solid 1px rgba(0, 0, 0, 0.1);
+.btn-primary {
+  border: solid 1px var(--theme-border-color);
 }
 
-.light-theme .btn-primary:not(:disabled):hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .btn-primary {
-  border: solid 1px rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .btn-primary:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.1);
+.btn-primary:not(:disabled):hover {
+  background: var(--hover-color);
 }
 
 .btn-danger {
@@ -231,34 +215,19 @@ export default class App extends Vue {}
 
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  border: 1px solid var(--theme-border-color);
+  color: var(--theme-fg-color);
+  background: var(--input-bg-color);
 }
 
-.light-theme .form-control {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: black;
-  background: white;
-}
 
-.dark-theme .form-control {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  background: hsl(0, 0%, 7%);
-}
-
-.light-theme .form-control:focus {
-  color: black;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+.form-control:focus {
+  border: 1px solid var(--theme-border-color);
+  color: var(--theme-fg-color);
+  background: var(--input-bg-color);
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .form-control:focus {
-  color: #fff;
-  background: hsl(0, 0%, 7%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 0.2rem var(--theme-border-color);
 }
 
 .form-control-full-width {
@@ -338,17 +307,7 @@ a, a:visited {
   margin: auto;
   flex-direction: column;
   background: var(--modal-bg-color);
-}
-
-.light-theme .modal-dialog {
-  box-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
-    0 6px 30px 5px rgb(255 255 255 / 12%),
-    0 8px 10px -5px rgb(255 255 255 / 40%);
-}
-
-.dark-theme .modal-dialog {
-  box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
-    0 8px 10px -5px rgb(0 0 0 / 40%);
+  box-shadow: var(--modal-shadow);
 }
 
 .modal-sm {
@@ -437,5 +396,92 @@ a, a:visited {
 
 .modal-footer {
   border-top: solid 1px var(--theme-border-color);
+}
+
+.modal-menu {
+  width: 100%;
+  border-spacing: 0; /* Removes the cell spacing via CSS */
+  border-collapse: collapse; /* Optional - if you don't want to have double border where cells touch */
+}
+
+.modal-body.with-menu {
+  padding: 0;
+}
+
+.modal-menu-item {
+  cursor: pointer;
+}
+
+.modal-menu-item-title {
+  padding-top: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
+  font-weight: bold;
+}
+
+.modal-menu-item-icon {
+  padding: 1rem;
+  text-align: center;
+  width: 2rem;
+}
+
+.modal-menu-item:hover {
+  background: var(--hover-color);
+}
+
+/* Tables */
+
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid var(--theme-border-color);
+}
+
+.table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--theme-border-color);
+}
+
+.table tbody + tbody {
+  border-top: 2px solid var(--theme-border-color);
+}
+
+.table.table-vmiddle td {
+  vertical-align: middle;
+}
+
+.table-btn {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  background: transparent;
+  color: var(--theme-btn-color);
+}
+
+.table-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.table-btn:not(:disabled):hover {
+  color: var(--theme-btn-hover-color);
 }
 </style>

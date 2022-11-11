@@ -83,18 +83,12 @@ export default defineComponent({
   left: 0;
   width: 100%;
   z-index: 9;
+
+  background: var(--bar-bg-color);
 }
 
 .vault-locked .bottom-bar {
   visibility: hidden;
-}
-
-.light-theme .bottom-bar {
-  background: white;
-}
-
-.dark-theme .bottom-bar {
-  background: #212121;
 }
 
 .layout-media-split .bottom-bar,
@@ -128,21 +122,12 @@ export default defineComponent({
   margin-right: 1rem;
 }
 
-.light-theme .bottom-bar-option:hover {
-  background: rgba(0, 0, 0, 0.1);
+.bottom-bar-option:hover {
+  background: var(--hover-color);
 }
 
-.light-theme .bottom-bar-option.selected,
-.light-theme .bottom-bar-option.selected:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.dark-theme .bottom-bar-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .bottom-bar-option.selected,
-.dark-theme .bottom-bar-option.selected:hover {
-  background: rgba(255, 255, 255, 0.2);
+.bottom-bar-option.selected,
+.bottom-bar-option.selected:hover {
+  background: var(--selected-color);
 }
 </style>

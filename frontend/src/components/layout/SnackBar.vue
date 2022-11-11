@@ -65,14 +65,7 @@ export default defineComponent({
   user-select: none;
   transition: bottom 0.3s, opacity 0.1s;
   z-index: 900;
-}
-
-.light-theme .snackbar {
-  background: white;
-}
-
-.dark-theme .snackbar {
-  background: #212121;
+  background: var(--bar-bg-color);
 }
 
 .snackbar.hidden {

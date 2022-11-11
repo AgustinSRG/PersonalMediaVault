@@ -473,22 +473,13 @@ export default defineComponent({
   color: inherit;
 }
 
-.light-theme .search-result-item:focus-visible {
+.search-result-item:focus-visible {
   outline: none;
-  border: solid 1px black;
+  border: solid 1px var(--theme-fg-color);
 }
 
-.light-theme .search-result-item.current {
-  border: solid 2px black;
-}
-
-.dark-theme .search-result-item:focus-visible {
-  outline: none;
-  border: solid 1px white;
-}
-
-.dark-theme .search-result-item.current {
-  border: solid 2px white;
+.search-result-item.current {
+  border: solid 2px var(--theme-fg-color);
 }
 
 .search-result-item:visited {
@@ -520,12 +511,8 @@ export default defineComponent({
   align-items: center;
 }
 
-.light-theme .search-result-thumb-inner {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .search-result-thumb-inner {
-  background: rgba(255, 255, 255, 0.1);
+.search-result-thumb-inner {
+  background: var(--hover-color);
 }
 
 .search-result-thumb .no-thumb {

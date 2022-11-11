@@ -734,12 +734,8 @@ export default defineComponent({
   border-radius: 100vw;
 }
 
-.light-theme .album-header-btn.toggled {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.dark-theme .album-header-btn.toggled {
-  background: rgba(255, 255, 255, 0.2);
+.album-header-btn.toggled {
+  background: var(--selected-color);
 }
 
 .album-header-btn:disabled,
@@ -793,12 +789,8 @@ export default defineComponent({
   overflow: hidden;
 }
 
-.light-theme .album-body-item-thumbnail {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .album-body-item-thumbnail {
-  background: rgba(255, 255, 255, 0.1);
+.album-body-item-thumbnail {
+  background: var(--hover-color);
 }
 
 .album-body-item-thumbnail img {

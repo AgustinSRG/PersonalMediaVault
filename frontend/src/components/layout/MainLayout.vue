@@ -443,15 +443,26 @@ export default defineComponent({
   --theme-option-hover-color: rgba(0, 0, 0, 0.1);
   --theme-option-selected-color: rgba(0, 0, 0, 0.2);
 
+  --theme-fg-color: black;
+  --theme-fg-color-opposite: white;
   --theme-bg-color: #f9f9f9;
-  --theme-bg-alt-color: #ffffff;
 
   --modal-overlay-bg-color: rgba(0, 0, 0, 0.4);
   --modal-bg-color: white;
   --bar-bg-color: white;
 
+  --modal-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
+    0 6px 30px 5px rgb(255 255 255 / 12%),
+    0 8px 10px -5px rgb(255 255 255 / 40%);
+
   --hover-color: rgba(0, 0, 0, 0.1);
   --selected-color: rgba(0, 0, 0, 0.2);
+
+  --input-bg-color: white;
+
+  --switch-color: black;
+  --switch-shadow-color: rgba(255, 255, 255, 0.33);
+  --switch-disabled-color: lightgray;
 }
 
 .main-layout.dark-theme {
@@ -469,15 +480,25 @@ export default defineComponent({
   --theme-option-hover-color: rgba(255, 255, 255, 0.1);
   --theme-option-selected-color: rgba(255, 255, 255, 0.2);
 
+  --theme-fg-color: white;
+  --theme-fg-color-opposite: black;
   --theme-bg-color: #181818;
-  --theme-bg-alt-color: #212121;
 
   --modal-overlay-bg-color: rgba(0, 0, 0, 0.4);
   --modal-bg-color: #212121;
   --bar-bg-color: #212121;
 
+  --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
+    0 8px 10px -5px rgb(0 0 0 / 40%);
+
   --hover-color: rgba(255, 255, 255, 0.1);
   --selected-color: rgba(255, 255, 255, 0.2);
+
+  --input-bg-color: hsl(0, 0%, 7%);
+
+  --switch-color: white;
+  --switch-shadow-color: rgba(0, 0, 0, 0.33);
+  --switch-disabled-color: gray;
 }
 
 .sidebar-float-overlay {
@@ -512,7 +533,7 @@ export default defineComponent({
 .skip-to-main-content {
   padding: 1rem;
   border: solid 1px var(--theme-border-color);
-  background: var(--theme-bg-alt-color);
+  background: var(--bar-bg-color);
   z-index: 13;
 
   position: fixed;

@@ -224,39 +224,4 @@ export default defineComponent({
 .modal-container-settings {
   z-index: 250;
 }
-
-.modal-menu {
-  width: 100%;
-  border-spacing: 0; /* Removes the cell spacing via CSS */
-  border-collapse: collapse; /* Optional - if you don't want to have double border where cells touch */
-}
-
-.modal-body.with-menu {
-  padding: 0;
-}
-
-.modal-menu-item {
-  cursor: pointer;
-}
-
-.modal-menu-item-title {
-  padding-top: 1rem;
-  padding-right: 1rem;
-  padding-bottom: 1rem;
-  font-weight: bold;
-}
-
-.modal-menu-item-icon {
-  padding: 1rem;
-  text-align: center;
-  width: 2rem;
-}
-
-.light-theme .modal-menu-item:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .modal-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 </style>

@@ -464,32 +464,5 @@ export default defineComponent({
 </script>
 
 <style>
-.table-responsive {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
 
-.table {
-  width: 100%;
-  margin-bottom: 1rem;
-  border-collapse: collapse;
-}
-
-.table th,
-.table td {
-  padding: 0.75rem;
-  vertical-align: top;
-  border-top: 1px solid var(--theme-border-color);
-}
-
-.table thead th {
-  vertical-align: bottom;
-  border-bottom: 2px solid var(--theme-border-color);
-}
-
-.table tbody + tbody {
-  border-top: 2px solid var(--theme-border-color);
-}
 </style>

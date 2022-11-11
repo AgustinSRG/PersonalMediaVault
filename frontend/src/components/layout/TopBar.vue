@@ -400,7 +400,7 @@ export default defineComponent({
   white-space: nowrap;
   z-index: 10;
 
-  background: var(--theme-bg-alt-color);
+  background: var(--bar-bg-color);
 }
 
 .top-bar:focus {
@@ -602,16 +602,9 @@ export default defineComponent({
   pointer-events: all;
 }
 
-.light-theme
-  .top-bar-search-input-container.focused
+.top-bar-search-input-container.focused
   .top-bar-search-suggestions {
-  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme
-  .top-bar-search-input-container.focused
-  .top-bar-search-suggestions {
-  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 0.1rem var(--theme-border-color);
 }
 
 .top-bar-search-input-container.focused .top-bar-search-suggestions.hidden {
@@ -628,12 +621,8 @@ export default defineComponent({
   text-align: left;
 }
 
-.light-theme .top-bar-search-suggestion:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .top-bar-search-suggestion:hover {
-  background: rgba(255, 255, 255, 0.1);
+.top-bar-search-suggestion:hover {
+  background: var(--hover-color);
 }
 
 .top-bar-search-suggestion i {

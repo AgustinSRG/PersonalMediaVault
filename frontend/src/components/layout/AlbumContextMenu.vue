@@ -224,12 +224,8 @@ export default defineComponent({
   z-index: 110;
 }
 
-.light-theme .album-body-item-options-menu {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.dark-theme .album-body-item-options-menu {
-  background: rgba(0, 0, 0, 0.9);
+.album-body-item-options-menu {
+  background: var(--bar-bg-color);
 }
 
 .album-body-item-options-menu.hidden {
@@ -247,11 +243,7 @@ export default defineComponent({
   margin-right: 0.5rem;
 }
 
-.light-theme .album-body-item-options-menu-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .album-body-item-options-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.album-body-item-options-menu-btn:hover {
+  background: var(--hover-color);
 }
 </style>

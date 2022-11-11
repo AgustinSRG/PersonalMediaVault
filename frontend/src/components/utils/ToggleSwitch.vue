@@ -67,18 +67,6 @@ export default defineComponent({
   opacity: 0.7;
 }
 
-.light-theme .switch-button-container  {
-  --switch-color: black;
-  --switch-shadow-color: rgba(255, 255, 255, 0.33);
-  --switch-disabled-color: lightgray;
-}
-
-.dark-theme .switch-button-container  {
-  --switch-color: white;
-  --switch-shadow-color: rgba(0, 0, 0, 0.33);
-  --switch-disabled-color: gray;
-}
-
 .switch-button-control {
   display: flex;
   flex-direction: row;

@@ -439,6 +439,8 @@ export default defineComponent({
   flex-direction: column;
   transition: left 0.2s;
   z-index: 12;
+
+  background: var(--bar-bg-color);
 }
 
 .side-bar:focus {
@@ -447,14 +449,6 @@ export default defineComponent({
 
 .vault-locked .side-bar {
   visibility: hidden;
-}
-
-.light-theme .side-bar {
-  background: white;
-}
-
-.dark-theme .side-bar {
-  background: #212121;
 }
 
 .side-bar.hidden {

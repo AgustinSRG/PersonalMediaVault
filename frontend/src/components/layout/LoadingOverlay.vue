@@ -39,14 +39,8 @@ export default defineComponent({
   opacity: 1;
 
   z-index: 300;
-}
 
-.light-theme .loading-overlay {
-  background: white;
-}
-
-.dark-theme .loading-overlay {
-  background: #181818;
+  background: var(--theme-bg-color);
 }
 
 .loading-overlay.hidden {
@@ -59,14 +53,7 @@ export default defineComponent({
   position: relative;
   width: 120px;
   height: 120px;
-}
-
-.light-theme .loading-overlay-loader {
-  --loader-color: #000;
-}
-
-.dark-theme .loading-overlay-loader {
-  --loader-color: #fff;
+  --loader-color: var(--theme-fg-color);
 }
 
 .loading-overlay-loader div {

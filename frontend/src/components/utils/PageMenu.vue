@@ -95,14 +95,7 @@ export default defineComponent({
   font-weight: bold;
   background: transparent;
   margin: 0.5rem;
-}
-
-.light-theme .paginated-menu-btn {
-  color: black;
-}
-
-.dark-theme .paginated-menu-btn {
-  color: white;
+  color: var(--theme-fg-color);
 }
 
 .paginated-menu-btn:disabled {
@@ -110,28 +103,18 @@ export default defineComponent({
   cursor: default;
 }
 
-.light-theme .paginated-menu-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .paginated-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.paginated-menu-btn:hover {
+  background: var(--hover-color);
 }
 
 .paginated-menu-btn:disabled:hover {
   background: none;
 }
 
-.light-theme .paginated-menu-btn.current,
-.light-theme .paginated-menu-btn.current:hover {
-  color: white;
-  background: black;
-}
-
-.dark-theme .paginated-menu-btn.current,
-.dark-theme .paginated-menu-btn.current:hover {
-  color: black;
-  background: white;
+.paginated-menu-btn.current,
+.paginated-menu-btn.current:hover {
+  color: var(--theme-fg-color-opposite);
+  background: var(--theme-fg-color);
 }
 
 .menu-min .paginated-menu-btn {
