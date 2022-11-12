@@ -111,6 +111,10 @@ export default class App extends Vue {}
 </script>
 
 <style>
+/* Font awesome */
+
+@import './assets/font-awesome.css';
+
 /* Add here any global / shared styles */
 
 .bold {

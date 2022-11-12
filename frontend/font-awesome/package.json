@@ -1,0 +1,14 @@
+{
+  "name": "pmv-font-awesome",
+  "version": "1.0.0",
+  "description": "",
+  "main": "create-subset.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AgustinSRG",
+  "license": "MIT",
+  "dependencies": {
+    "fonteditor-core": "2.1.10"
+  }
+}
