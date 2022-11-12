@@ -1,5 +1,5 @@
 <template>
-  <div class="player-container dark-theme" tabindex="-1">
+  <div class="player-container" tabindex="-1">
     <EmptyPlayer
       v-if="!mdata || mdata.type === 0"
       :mid="mid"

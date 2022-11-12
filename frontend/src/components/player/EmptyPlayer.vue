@@ -355,8 +355,8 @@ export default defineComponent({
 
 <style>
 .empty-player {
-  background: black;
-  color: white;
+  background: var(--player-bg-color);
+  color: var(--theme-fg-color);
 
   display: block;
   position: relative;

@@ -385,12 +385,16 @@ import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/vmodel";
 import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
-import { sanitizeSubtitlesHTML, getUniqueSubtitlesLoadTag } from "@/utils/subtitles-html";
+import {
+  sanitizeSubtitlesHTML,
+  getUniqueSubtitlesLoadTag,
+} from "@/utils/subtitles-html";
 import { htmlToText } from "@/utils/text";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
+import { AppPreferences } from "@/control/app-preferences";
 
 export default defineComponent({
   components: {
@@ -483,6 +487,8 @@ export default defineComponent({
       subtitlesSize: "l",
       subtitlesBg: "75",
       subtitlesHTML: false,
+
+      theme: AppPreferences.Theme,
     };
   },
   methods: {
@@ -1201,7 +1207,7 @@ export default defineComponent({
 
       const ctx = canvas.getContext("2d");
 
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = this.theme === "light" ? "#fff" : "#000";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
       if (this.animationColors === "none") {
@@ -1214,14 +1220,24 @@ export default defineComponent({
         switch (this.animationColors) {
           case "gradient":
             {
-              let r = barHeight + 25 * (i / bufferLength);
-              let g = 250 * (i / bufferLength);
-              let b = 50;
-              ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+              if (this.theme === "light") {
+                let r = Math.min(255, barHeight + 80 * (i / bufferLength));
+                let g = 250 * (i / bufferLength);
+                let b = 180;
+                ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+              } else {
+                let r = Math.min(255, barHeight + 25 * (i / bufferLength));
+                let g = 250 * (i / bufferLength);
+                let b = 50;
+                ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+              }
             }
             break;
           default:
-            ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.fillStyle =
+              this.theme === "light"
+                ? "rgba(0, 0, 0, 0.5)"
+                : "rgba(255, 255, 255, 0.5)";
         }
 
         let trueHeight = Math.floor(HEIGHT * (barHeight / 255));
@@ -1255,7 +1271,7 @@ export default defineComponent({
         if (this.subtitlesHTML) {
           const subTag = getUniqueSubtitlesLoadTag();
           this.$options.subTag = subTag;
-          sanitizeSubtitlesHTML(sub.text).then(text => {
+          sanitizeSubtitlesHTML(sub.text).then((text) => {
             if (this.$options.subTag === subTag) {
               this.subtitles = text;
             }
@@ -1281,6 +1297,10 @@ export default defineComponent({
 
     onUpdateNextEnd: function () {
       PlayerPreferences.SetNextOnEnd(this.nextend);
+    },
+
+    themeUpdated: function () {
+      this.theme = AppPreferences.Theme;
     },
   },
   mounted: function () {
@@ -1322,6 +1342,9 @@ export default defineComponent({
       this.$options.subtitlesReloadH
     );
 
+    this.$options.themeHandler = this.themeUpdated.bind(this);
+    AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
+
     this.initializeAudio();
   },
   beforeUnmount: function () {
@@ -1353,6 +1376,9 @@ export default defineComponent({
       "subtitles-update",
       this.$options.subtitlesReloadH
     );
+
+    AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
+
     KeyboardManager.RemoveHandler(this.$options.keyHandler);
   },
   watch: {
@@ -1375,8 +1401,8 @@ export default defineComponent({
 
 <style>
 .audio-player {
-  background: black;
-  color: white;
+  background: var(--player-bg-color);
+  color: var(--theme-fg-color);
 
   display: block;
   position: relative;

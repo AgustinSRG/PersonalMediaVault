@@ -207,10 +207,10 @@ export default defineComponent({
 <style>
 .player-top-bar {
   position: absolute;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--player-controls-background);
   transition: opacity 0.3s, height 0.1s, width 0.1s;
   opacity: 1;
-  color: white;
+  color: var(--theme-fg-color);
   overflow: hidden;
   height: 56px;
   top: 0;
@@ -254,7 +254,7 @@ export default defineComponent({
 }
 
 .expanded .player-title-container {
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--player-editor-background);
 }
 
 .player-min .player-title-container {

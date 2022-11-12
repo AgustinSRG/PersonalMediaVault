@@ -231,7 +231,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
   margin-right: 8px;
 }
@@ -243,7 +243,7 @@ export default defineComponent({
 }
 
 .player-volume-btn:hover {
-  color: white;
+  color: var(--theme-btn-hover-color);
 }
 
 .player-volume-btn-expand {
@@ -271,7 +271,7 @@ export default defineComponent({
 }
 
 .player-volume-bar {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--volume-bar-bg);
   height: 3px;
   position: absolute;
   top: 6px;
@@ -279,7 +279,7 @@ export default defineComponent({
 }
 
 .player-volume-current {
-  background: white;
+  background: var(--theme-fg-color);
   height: 3px;
   position: absolute;
   top: 6px;
@@ -290,7 +290,7 @@ export default defineComponent({
   position: absolute;
   top: 0;
   border-radius: 50%;
-  background: white;
+  background: var(--theme-fg-color);
   width: 15px;
   height: 15px;
 }

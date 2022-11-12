@@ -395,6 +395,33 @@ export default defineComponent({
   --switch-color: black;
   --switch-shadow-color: rgba(255, 255, 255, 0.33);
   --switch-disabled-color: lightgray;
+  --switch-enabled-color: red;
+
+  --player-bg-color: white;
+  --player-controls-background: rgba(255, 255, 255, 0.2);
+  --player-loader-background: rgba(255, 255, 255, 0.3);
+  --player-editor-background: rgba(255, 255, 255, 0.9);
+  --player-feedback-background: rgba(255, 255, 255, 0.5);
+  --player-tooltip-background: rgba(255, 255, 255, 0.75);
+  --player-menu-background: rgba(255, 255, 255, 0.8);
+
+  --player-timeline-bg: rgba(0, 0, 0, 0.25);
+  --player-timeline-buffer: rgba(0, 0, 0, 0.5);
+  --player-timeline-current: red;
+
+  --volume-bar-bg: rgba(0, 0, 0, 0.25);
+  --placeholder-no-thumbnail-color: rgba(0, 0, 0, 0.5);
+  --progress-bar-bg: rgba(0, 0, 0, 0.3);
+
+  --bg-opaque-25: rgba(255, 255, 255, 0.25);
+  --bg-opaque-50: rgba(255, 255, 255, 0.50);
+  --bg-opaque-75: rgba(255, 255, 255, 0.75);
+  --bg-opaque-100: white;
+
+  --search-input-border-color: hsl(0, 0%, 18.82%);
+  --search-input-background: white;
+  --search-input-inner-background: white;
+  --search-suggestions-background: rgba(255, 255, 255, 0.8);
 }
 
 .main-layout.dark-theme {
@@ -431,6 +458,33 @@ export default defineComponent({
   --switch-color: white;
   --switch-shadow-color: rgba(0, 0, 0, 0.33);
   --switch-disabled-color: gray;
+  --switch-enabled-color: red;
+
+  --player-bg-color: black;
+  --player-controls-background: rgba(0, 0, 0, 0.2);
+  --player-loader-background: rgba(0, 0, 0, 0.3);
+  --player-editor-background: rgba(0, 0, 0, 0.9);
+  --player-feedback-background: rgba(0, 0, 0, 0.5);
+  --player-tooltip-background: rgba(0, 0, 0, 0.75);
+  --player-menu-background: rgba(0, 0, 0, 0.8);
+
+  --player-timeline-bg: rgba(255, 255, 255, 0.25);
+  --player-timeline-buffer: rgba(255, 255, 255, 0.5);
+  --player-timeline-current: red;
+
+  --volume-bar-bg: rgba(255, 255, 255, 0.25);
+  --placeholder-no-thumbnail-color: rgba(255, 255, 255, 0.5);
+  --progress-bar-bg: rgba(255, 255, 255, 0.3);
+
+  --bg-opaque-25: rgba(0, 0, 0, 0.25);
+  --bg-opaque-50: rgba(0, 0, 0, 0.50);
+  --bg-opaque-75: rgba(0, 0, 0, 0.75);
+  --bg-opaque-100: black;
+
+  --search-input-border-color: hsl(0, 0%, 18.82%);
+  --search-input-background: hsla(0, 0%, 100%, 0.08);
+  --search-input-inner-background: hsl(0, 0%, 7%);
+  --search-suggestions-background: rgba(0, 0, 0, 0.8);
 }
 
 .sidebar-float-overlay {

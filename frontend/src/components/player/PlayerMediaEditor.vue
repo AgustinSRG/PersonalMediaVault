@@ -1519,8 +1519,8 @@ export default defineComponent({
   width: 100%;
   height: calc(100% - 57px);
   overflow: auto;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
+  background: var(--player-editor-background);
+  color: var(--theme-fg-color);
   padding: 1rem;
 }
 

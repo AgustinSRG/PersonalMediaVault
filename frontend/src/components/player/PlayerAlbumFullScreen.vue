@@ -292,7 +292,7 @@ export default defineComponent({
   max-width: 500px;
   height: 100%;
   transition: left 0.1s, visibility 0.1s;
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--player-editor-background);
   visibility: hidden;
 }
 

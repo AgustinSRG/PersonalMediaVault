@@ -681,7 +681,7 @@ export default defineComponent({
   position: absolute;
   bottom: 80px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--player-menu-background);
   padding-top: 8px;
   padding-bottom: 8px;
   max-height: calc(50% - 80px);
@@ -725,7 +725,7 @@ export default defineComponent({
 }
 
 .video-player-config .tr-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hover-color);
 }
 
 .video-player-config .td-right {
@@ -734,26 +734,5 @@ export default defineComponent({
 
 .video-player-config .check-uncheck {
   visibility: hidden;
-}
-
-/* Custom scroll bar */
-
-/* width */
-
-.video-player-config::-webkit-scrollbar {
-  width: 5px;
-  height: 3px;
-}
-
-/* Track */
-
-.video-player-config::-webkit-scrollbar-track {
-  background: #bdbdbd;
-}
-
-/* Handle */
-
-.video-player-config::-webkit-scrollbar-thumb {
-  background: #757575;
 }
 </style>

@@ -585,8 +585,8 @@ export default defineComponent({
 
 .search-result-thumb-tag {
   position: absolute;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: var(--bg-opaque-75);
+  color: var(--theme-fg-color);
   bottom: 0.5rem;
   right: 0.5rem;
   font-size: small;

@@ -290,7 +290,7 @@ export default defineComponent({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--player-loader-background);
 }
 
 .player-task-info {
@@ -320,7 +320,7 @@ export default defineComponent({
 
 .player-task-progress-bar-current {
     height: 100%;
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--progress-bar-bg);
     transition: width 0.2s;
 }
 </style>

@@ -1050,8 +1050,8 @@ export default defineComponent({
 
 <style>
 .image-player {
-  background: black;
-  color: white;
+  background: var(--player-bg-color);
+  color: var(--theme-fg-color);
 
   display: block;
   position: relative;
@@ -1108,27 +1108,6 @@ export default defineComponent({
 .player-min .image-scroller {
   top: 32px;
   bottom: 32px;
-}
-
-/* Custom scroll bar */
-
-/* width */
-
-.image-scroller::-webkit-scrollbar {
-  width: 5px;
-  height: 3px;
-}
-
-/* Track */
-
-.image-scroller::-webkit-scrollbar-track {
-  background: #bdbdbd;
-}
-
-/* Handle */
-
-.image-scroller::-webkit-scrollbar-thumb {
-  background: #757575;
 }
 
 .image-scroller img {

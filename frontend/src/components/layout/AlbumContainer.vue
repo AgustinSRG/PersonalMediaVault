@@ -771,8 +771,8 @@ export default defineComponent({
 
 .album-body-item-thumb-tag {
   position: absolute;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: var(--bg-opaque-75);
+  color: var(--theme-fg-color);
   bottom: 0.25rem;
   right: 0.25rem;
   font-size: small;
@@ -781,8 +781,8 @@ export default defineComponent({
 
 .album-body-item-thumb-pos {
   position: absolute;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: var(--bg-opaque-75);
+  color: var(--theme-fg-color);
   top: 0.25rem;
   left: 0.25rem;
   font-size: small;

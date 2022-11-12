@@ -556,7 +556,7 @@ export default defineComponent({
   position: absolute;
   bottom: 80px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--player-menu-background);
   padding-top: 8px;
   padding-bottom: 8px;
   max-height: calc(50% - 80px);
@@ -600,7 +600,7 @@ export default defineComponent({
 }
 
 .audio-player-config .tr-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hover-color);
 }
 
 .audio-player-config .td-right {
@@ -609,26 +609,5 @@ export default defineComponent({
 
 .audio-player-config .check-uncheck {
   visibility: hidden;
-}
-
-/* Custom scroll bar */
-
-/* width */
-
-.audio-player-config::-webkit-scrollbar {
-  width: 5px;
-  height: 3px;
-}
-
-/* Track */
-
-.audio-player-config::-webkit-scrollbar-track {
-  background: #bdbdbd;
-}
-
-/* Handle */
-
-.audio-player-config::-webkit-scrollbar-thumb {
-  background: #757575;
 }
 </style>

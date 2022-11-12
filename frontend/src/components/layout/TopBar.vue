@@ -495,22 +495,13 @@ export default defineComponent({
   position: relative;
 }
 
-.dark-theme .top-bar-search-input-container {
-  border: 1px solid hsl(0, 0%, 18.82%);
-  background: hsla(0, 0%, 100%, 0.08);
+.top-bar-search-input-container {
+  border: 1px solid var(--search-input-border-color);
+  background: var(--search-input-background);
 }
 
-.light-theme .top-bar-search-input-container {
-  border: 1px solid hsl(0, 0%, 18.82%);
-  background: white;
-}
-
-.light-theme .top-bar-search-input-container.focused {
-  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.1);
-}
-
-.dark-theme .top-bar-search-input-container.focused {
-  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0.1);
+.top-bar-search-input-container.focused {
+  box-shadow: 0 0 0 0.1rem var(--theme-border-color);
 }
 
 .top-bar-search-input {
@@ -523,14 +514,9 @@ export default defineComponent({
   padding: 1px 4px;
 }
 
-.dark-theme .top-bar-search-input {
-  color: white;
-  background: hsl(0, 0%, 7%);
-}
-
-.light-theme .top-bar-search-input {
-  color: black;
-  background: white;
+.top-bar-search-input {
+  color: var(--theme-fg-color);
+  background: var(--search-input-inner-background);
 }
 
 @media (max-width: 850px) {
@@ -588,12 +574,8 @@ export default defineComponent({
   overflow-y: auto;
 }
 
-.light-theme .top-bar-search-suggestions {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.dark-theme .top-bar-search-suggestions {
-  background: rgba(0, 0, 0, 0.8);
+.top-bar-search-suggestions {
+  background: var(--search-suggestions-background);
 }
 
 .top-bar-search-input-container.focused .top-bar-search-suggestions {

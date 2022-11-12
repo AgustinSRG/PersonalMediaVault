@@ -93,7 +93,7 @@ export default defineComponent({
 }
 
 .switch-button-control .switch-button.enabled {
-  background-color: red;
+  background-color: var(--switch-enabled-color);
   box-shadow: none;
 }
 

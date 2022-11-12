@@ -112,7 +112,7 @@ export default defineComponent({
 
 .player-media-change-preview-no-thumbnail {
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--placeholder-no-thumbnail-color);
 }
 
 .player-min .player-media-change-preview-no-thumbnail {
@@ -134,7 +134,7 @@ export default defineComponent({
 
 .preview-thumb-tag {
   position: absolute;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-opaque-75);
   bottom: 0.25rem;
   right: 0.25rem;
   font-size: small;

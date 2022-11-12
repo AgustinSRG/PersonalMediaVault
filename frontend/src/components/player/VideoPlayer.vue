@@ -1347,8 +1347,8 @@ export default defineComponent({
 
 <style>
 .video-player {
-  background: black;
-  color: white;
+  background: var(--player-bg-color);
+  color: var(--theme-fg-color);
 
   display: block;
   position: relative;
@@ -1399,7 +1399,7 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 56px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--player-controls-background);
   transition: opacity 0.3s;
   opacity: 1;
 }
@@ -1421,7 +1421,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
   background: transparent;
 }
 
@@ -1437,11 +1437,11 @@ export default defineComponent({
 }
 
 .player-btn:hover {
-  color: white;
+  color: var(--theme-btn-hover-color);
 }
 
 .player-btn:disabled:hover {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--theme-btn-color);
 }
 
 .player-controls-left {
@@ -1487,7 +1487,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--player-loader-background);
 }
 
 .player-lds-ring {
@@ -1509,18 +1509,18 @@ export default defineComponent({
   width: 110px;
   height: 110px;
   margin: 8px;
-  border: 8px solid #fff;
+  border: 8px solid var(--theme-fg-color);
   border-radius: 50%;
   animation: player-lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  border-color: #fff transparent transparent transparent;
+  border-color: var(--theme-fg-color) transparent transparent transparent;
 }
 
 .player-min .player-lds-ring div {
   width: 42px;
   height: 42px;
   margin: 4px;
-  border: 4px solid #fff;
-  border-color: #fff transparent transparent transparent;
+  border: 4px solid var(--theme-fg-color);
+  border-color: var(--theme-fg-color) transparent transparent transparent;
 }
 
 .player-lds-ring div:nth-child(1) {
@@ -1579,7 +1579,7 @@ export default defineComponent({
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--player-timeline-bg);
 }
 
 .player-timeline-buffer {
@@ -1587,7 +1587,7 @@ export default defineComponent({
   bottom: 0;
   left: 0;
   width: 0;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--player-timeline-buffer);
 }
 
 .player-timeline-current {
@@ -1595,7 +1595,7 @@ export default defineComponent({
   bottom: 0;
   left: 0;
   width: 0;
-  background: red;
+  background: var(--player-timeline-current);
 }
 
 .player-timeline:hover .player-timeline-back,
@@ -1608,7 +1608,7 @@ export default defineComponent({
   border-radius: 50%;
   width: 15px;
   height: 15px;
-  background: red;
+  background: var(--player-timeline-current);
   position: absolute;
   bottom: -5px;
   left: -7px;
@@ -1656,8 +1656,8 @@ export default defineComponent({
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
+  background: var(--player-feedback-background);
+  color: var(--theme-fg-color);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1672,8 +1672,8 @@ export default defineComponent({
 }
 
 .player-tooltip {
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
+  background: var(--player-tooltip-background);
+  color: var(--theme-fg-color);
   padding: 0.5rem 0.75rem;
   position: absolute;
   bottom: 80px;
@@ -1726,7 +1726,7 @@ export default defineComponent({
 
 .player-subtitles {
   display: inline;
-  color: white;
+  color: var(--theme-fg-color);
   padding: 0.5rem;
   font-weight: bold;
 }
@@ -1756,18 +1756,19 @@ export default defineComponent({
 }
 
 .player-subtitles-bg-25 {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--bg-opaque-25);
 }
 
 .player-subtitles-bg-50 {
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-opaque-50);
 }
 
 .player-subtitles-bg-75 {
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--bg-opaque-75);
 }
 
 .player-subtitles-bg-100 {
-  background: black;
+  background: var(--bg-opaque-100);
 }
+
 </style>

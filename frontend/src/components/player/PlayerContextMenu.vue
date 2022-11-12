@@ -235,7 +235,7 @@ export default defineComponent({
 <style>
 .player-context-menu {
   position: fixed;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--player-menu-background);
   overflow: auto;
   z-index: 10;
   min-width: 380px;
@@ -278,7 +278,7 @@ export default defineComponent({
 }
 
 .player-context-menu-table .tr-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hover-color);
 }
 
 .player-context-menu-table .td-right {
@@ -294,29 +294,7 @@ export default defineComponent({
   margin-right: 0.5rem;
 }
 
-/* Custom scroll bar */
-
-/* width */
-
-.player-context-menu::-webkit-scrollbar {
-  width: 5px;
-  height: 3px;
-}
-
-/* Track */
-
-.player-context-menu::-webkit-scrollbar-track {
-  background: #bdbdbd;
-}
-
-/* Handle */
-
-.player-context-menu::-webkit-scrollbar-thumb {
-  background: #757575;
-}
-
 .context-entry-title {
   font-size: small;
 }
-
 </style>
