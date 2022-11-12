@@ -1,0 +1,23 @@
+# Binary files
+
+backend/pmvd.exe
+backend/pmvd
+
+# Ignore temp files
+
+backend/temp
+backend/test.js
+
+# Ignore data folders
+
+backend/vault
+backend/version.txt
+backend/version.log
+
+# Ignore .env
+
+backend/.env
+
+# Others
+
+backend/TODO.txt
