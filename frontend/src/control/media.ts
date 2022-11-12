@@ -98,6 +98,9 @@ export class MediaController {
             return;
         }
 
+        MediaController.MediaData = null;
+        AppEvents.Emit("current-media-update", null);
+
         MediaController.Loading = true;
         AppEvents.Emit("current-media-loading", true);
 
