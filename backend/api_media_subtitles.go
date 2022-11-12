@@ -299,11 +299,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Request) {

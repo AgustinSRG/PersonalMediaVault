@@ -226,11 +226,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, tempFile string, probe_data *FFprobeMediaResult) {

@@ -251,11 +251,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
@@ -305,11 +301,7 @@ func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 type MediaAPIEditTitleBody struct {
@@ -824,13 +816,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
-
-	response.WriteHeader(200)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Request) {

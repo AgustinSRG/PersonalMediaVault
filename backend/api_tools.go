@@ -4,6 +4,8 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -155,6 +157,29 @@ func ParseRangeHeader(request *http.Request) (int64, int64) {
 	return start, end
 }
 
+// Returns API standard JSON response
+// response - HTTP response handler
+// request - HTTP request handler
+// result - JSON result
+func ReturnAPI_JSON(response http.ResponseWriter, request *http.Request, result []byte) {
+	hasher := sha256.New()
+	hasher.Write(result)
+	hash := hasher.Sum(nil)
+	etag := hex.EncodeToString(hash)
+
+	response.Header().Set("ETag", etag)
+	response.Header().Add("Cache-Control", "no-cache")
+
+	if request.Header.Get("If-None-Match") == etag {
+		response.WriteHeader(304)
+	} else {
+		response.Header().Add("Content-Type", "application/json")
+		response.WriteHeader(200)
+
+		response.Write(result)
+	}
+}
+
 // API standard error response
 type APIErrorResponse struct {
 	Code    string `json:"code"`    // Error code
@@ -163,6 +188,7 @@ type APIErrorResponse struct {
 
 // Returns API standard error message
 // response - HTTP response handler
+// request - HTTP request handler
 // status - HTTP status
 // code - Error code
 // message - Error message

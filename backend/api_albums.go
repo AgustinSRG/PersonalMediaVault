@@ -67,11 +67,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		response.Header().Add("Content-Type", "application/json")
-		response.Header().Add("Cache-Control", "no-cache")
-		response.WriteHeader(200)
-
-		response.Write(jsonResult)
+		ReturnAPI_JSON(response, request, jsonResult)
 	} else {
 		result := make([]AlbumAPIItemMinified, 0)
 
@@ -91,11 +87,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		response.Header().Add("Content-Type", "application/json")
-		response.Header().Add("Cache-Control", "no-cache")
-		response.WriteHeader(200)
-
-		response.Write(jsonResult)
+		ReturnAPI_JSON(response, request, jsonResult)
 	}
 }
 
@@ -160,11 +152,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 type CreateAlbumAPIBody struct {
@@ -225,11 +213,7 @@ func api_createAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
-	response.WriteHeader(200)
-
-	response.Write(jsonResult)
+	ReturnAPI_JSON(response, request, jsonResult)
 }
 
 func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
