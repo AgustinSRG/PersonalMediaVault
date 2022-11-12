@@ -1,6 +1,5 @@
 <template>
   <div
-    tabindex="-1"
     class="image-player player-settings-no-trap"
     :class="{
       'player-min': minPlayer,
@@ -622,6 +621,9 @@ export default defineComponent({
       if (!this.mouseInControls && this.helpTooltip && Date.now() - this.lastControlsInteraction > 2000) {
         this.helpTooltip = "";
       }
+      if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
+        this.scaleShown = false;
+      }
       if (this.helpTooltip && !this.showcontrols) {
         this.helpTooltip = "";
       }
@@ -638,6 +640,7 @@ export default defineComponent({
     leaveControls: function () {
       this.mouseInControls = false;
       this.helpTooltip = "";
+      this.scaleShown = false;
     },
 
     clickPlayer: function () {

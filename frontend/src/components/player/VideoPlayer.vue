@@ -1,6 +1,5 @@
 <template>
   <div
-    tabindex="-1"
     class="video-player player-settings-no-trap"
     :class="{
       'player-min': minPlayer,
@@ -10,7 +9,7 @@
     @mousemove="playerMouseMove"
     @click="clickPlayer"
     @mousedown="hideContext"
-    @toutchstart.passive="hideContext"
+    @touchstart.passive="hideContext"
     @dblclick="toggleFullScreen"
     @mouseleave="mouseLeavePlayer"
     @mouseup="playerMouseUp"

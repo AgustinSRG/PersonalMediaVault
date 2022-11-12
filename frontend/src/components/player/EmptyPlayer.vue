@@ -1,6 +1,5 @@
 <template>
   <div
-    tabindex="-1"
     class="empty-player"
     :class="{
       'player-min': minPlayer,
