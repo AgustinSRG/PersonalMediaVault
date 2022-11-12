@@ -6,7 +6,12 @@
     role="dialog"
     :aria-hidden="!display"
   >
-    <form @submit="submit" class="modal-dialog modal-md" role="document">
+    <form
+      v-if="display"
+      @submit="submit"
+      class="modal-dialog modal-md"
+      role="document"
+    >
       <div class="modal-header">
         <div class="modal-title no-close">
           {{ $t("The media vault is locked") }}

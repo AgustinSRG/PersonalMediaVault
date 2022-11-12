@@ -12,6 +12,7 @@
     @keydown="keyDownHandle"
   >
     <div
+      v-if="display"
       class="modal-dialog modal-sm"
       role="document"
       @click="stopPropagationEvent"

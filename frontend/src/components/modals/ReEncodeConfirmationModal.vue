@@ -9,6 +9,7 @@
     @keydown="keyDownHandle"
   >
     <form
+      v-if="display"
       @submit="submit"
       class="modal-dialog modal-md"
       role="document"
