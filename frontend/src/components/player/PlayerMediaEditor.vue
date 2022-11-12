@@ -357,6 +357,17 @@
         <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
       </button>
     </div>
+
+    <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
+    <ResolutionConfirmationModal
+      v-model:display="displayResolutionConfirmation"
+    ></ResolutionConfirmationModal>
+    <SubtitlesDeleteModal
+      v-model:display="displaySubtitlesDelete"
+    ></SubtitlesDeleteModal>
+    <ReEncodeConfirmationModal
+      v-model:display="displayReEncode"
+    ></ReEncodeConfirmationModal>
   </div>
 </template>
 
@@ -375,8 +386,19 @@ import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
+import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
+import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
+import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
+import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
+
 export default defineComponent({
-  components: { ToggleSwitch },
+  components: {
+    ToggleSwitch,
+    MediaDeleteModal,
+    ResolutionConfirmationModal,
+    ReEncodeConfirmationModal,
+    SubtitlesDeleteModal,
+  },
   name: "PlayerMediaEditor",
   emits: ["changed"],
   data: function () {
@@ -489,6 +511,14 @@ export default defineComponent({
 
       originalStartBeginning: false,
       startBeginning: false,
+
+      displayMediaDelete: false,
+
+      displayResolutionConfirmation: false,
+
+      displaySubtitlesDelete: false,
+
+      displayReEncode: false,
     };
   },
 
@@ -1509,5 +1539,4 @@ export default defineComponent({
   height: auto;
   border: solid 1px var(--theme-border-color);
 }
-
 </style>

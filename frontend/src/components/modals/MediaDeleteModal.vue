@@ -93,6 +93,10 @@ export default defineComponent({
     };
   },
   methods: {
+    show: function () {
+      this.displayStatus = true;
+    },
+
     autoFocus: function () {
       if (!this.display) {
         return;
@@ -198,6 +202,9 @@ export default defineComponent({
       this.$options.mediaUpdateH
     );
 
+    this.$options.showH = this.show.bind(this);
+    AppEvents.AddEventListener("media-delete-request", this.$options.showH);
+
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
 
     this.onMediaUpdate();
@@ -212,6 +219,8 @@ export default defineComponent({
       "current-media-update",
       this.$options.mediaUpdateH
     );
+
+    AppEvents.RemoveEventListener("media-delete-request", this.$options.showH);
 
     if (this.$options.focusTrap) {
       this.$options.focusTrap.destroy();

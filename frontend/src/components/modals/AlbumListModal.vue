@@ -73,6 +73,7 @@
         </button>
       </div>
     </div>
+    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
   </div>
 </template>
 
@@ -89,7 +90,12 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/vmodel";
 import { FocusTrap } from "../../utils/focus-trap";
 
+import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+
 export default defineComponent({
+  components: {
+    AlbumCreateModal,
+  },
   name: "AlbumListModal",
   emits: ["update:display"],
   props: {
@@ -110,6 +116,8 @@ export default defineComponent({
 
       loading: true,
       busy: false,
+
+      displayAlbumCreate: false,
     };
   },
   methods: {
@@ -163,7 +171,7 @@ export default defineComponent({
     },
 
     createAlbum: function () {
-      this.$emit("album-create", true);
+      this.displayAlbumCreate = true;
     },
 
     clickOnAlbum: function (album) {
@@ -296,6 +304,7 @@ export default defineComponent({
   },
   watch: {
     display: function () {
+      this.displayAlbumCreate = false;
       if (this.display) {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();

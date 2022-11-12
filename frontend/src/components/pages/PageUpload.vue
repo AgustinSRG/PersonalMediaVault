@@ -197,6 +197,8 @@
         </button>
       </div>
     </div>
+
+    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
   </div>
 </template>
 
@@ -212,9 +214,14 @@ import { Request } from "@/utils/request";
 import { parseTagName } from "@/utils/text";
 import { defineComponent } from "vue";
 
+import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+
 export default defineComponent({
+  components: {
+    AlbumCreateModal,
+  },
   name: "PageUpload",
-  emits: ["album-create"],
+  emits: [],
   props: {
     display: Boolean,
   },
@@ -236,6 +243,8 @@ export default defineComponent({
 
       album: -1,
       albums: [],
+
+      displayAlbumCreate: false,
     };
   },
   methods: {
@@ -244,7 +253,7 @@ export default defineComponent({
     },
 
     createAlbum: function () {
-      this.$emit("album-create");
+      this.displayAlbumCreate = true;
     },
 
     inputFileChanged: function (e) {

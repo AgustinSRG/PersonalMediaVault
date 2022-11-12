@@ -61,6 +61,10 @@
       @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
     ></AudioPlayer>
+
+    <AlbumListModal
+      v-model:display="displayAlbumList"
+    ></AlbumListModal>
   </div>
 </template>
 
@@ -79,14 +83,17 @@ import { AuthController } from "@/control/auth";
 import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 
+import AlbumListModal from "../modals/AlbumListModal.vue";
+
 export default defineComponent({
   name: "PlayerContainer",
-  emits: ["albums-open"],
+  emits: [],
   components: {
     EmptyPlayer,
     AudioPlayer,
     VideoPlayer,
     ImagePlayer,
+    AlbumListModal,
   },
   data: function () {
     return {
@@ -105,6 +112,8 @@ export default defineComponent({
       albumLoading: AlbumsController.CurrentAlbumLoading,
 
       canWrite: AuthController.CanWrite,
+
+      displayAlbumList: false,
     };
   },
   methods: {
@@ -139,7 +148,7 @@ export default defineComponent({
     },
 
     openAlbums: function () {
-      this.$emit("albums-open");
+      this.displayAlbumList = true;
     },
 
     goNext: function () {

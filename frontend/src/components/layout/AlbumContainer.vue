@@ -138,6 +138,11 @@
       @change-pos="changeMediaPos"
       @media-remove="removeMedia"
     ></AlbumContextMenu>
+    <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
+    <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+    <AlbumMovePosModal
+      v-model:display="displayAlbumMovePos"
+    ></AlbumMovePosModal>
     <LoadingOverlay v-if="loading"></LoadingOverlay>
   </div>
 </template>
@@ -159,14 +164,21 @@ import { defineComponent, nextTick } from "vue";
 import AlbumContextMenu from "./AlbumContextMenu.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
+import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
+import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
+import AlbumMovePosModal from "../modals/AlbumMovePosModal.vue";
+
 import Sortable from 'sortablejs';
 
 export default defineComponent({
   name: "AlbumContainer",
-  emits: ["album-rename", "album-delete"],
+  emits: [],
   components: {
     AlbumContextMenu,
     LoadingOverlay,
+    AlbumRenameModal,
+    AlbumDeleteModal,
+    AlbumMovePosModal,
   },
   data: function () {
     return {
@@ -194,6 +206,10 @@ export default defineComponent({
       random: false,
 
       canWrite: AuthController.CanWrite,
+
+      displayAlbumRename: false,
+      displayAlbumDelete: false,
+      displayAlbumMovePos: false,
     };
   },
   methods: {
@@ -258,7 +274,7 @@ export default defineComponent({
     },
 
     renameAlbum: function () {
-      this.$emit("album-rename");
+      this.displayAlbumRename = true;
     },
 
     renderPos: function (p) {
@@ -270,7 +286,7 @@ export default defineComponent({
     },
 
     deleteAlbum: function () {
-      this.$emit("album-delete");
+      this.displayAlbumDelete = true;
     },
 
     renderTime: function (s: number): string {

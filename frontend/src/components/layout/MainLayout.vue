@@ -33,17 +33,15 @@
       @search-open="openSearchModal"
       @help="showHelp"
     ></TopBar>
-    <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'" @albums-open="showAlbumList"></PlayerContainer>
+    <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'"></PlayerContainer>
     <PageContent
       :min="layout === 'media-split'"
-      @album-create="createAlbum"
     ></PageContent>
     <AlbumContainer
-      @album-rename="showAlbumRename"
-      @album-delete="showAlbumDelete"
+      v-if="layout === 'album'"
     ></AlbumContainer>
 
-    <BottomBar></BottomBar>
+    <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
     <div
       class="sidebar-float-overlay"
       :class="{ hidden: !displaySidebar }"
@@ -66,27 +64,7 @@
       v-model:display="displayAdvancedSettings"
     ></AdvancedSettingsModal>
 
-    <AlbumListModal
-      v-model:display="displayAlbumList"
-      @album-create="createAlbum"
-    ></AlbumListModal>
-    <AlbumCreateModal v-model:display="displayAlbumCreate" @update:display="doneCreateAlbum"></AlbumCreateModal>
-    <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
-    <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
-    <AlbumMovePosModal
-      v-model:display="displayAlbumMovePos"
-    ></AlbumMovePosModal>
-    <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
-    <ResolutionConfirmationModal
-      v-model:display="displayResolutionConfirmation"
-    ></ResolutionConfirmationModal>
-    <SubtitlesDeleteModal
-      v-model:display="displaySubtitlesDelete"
-    ></SubtitlesDeleteModal>
-    <ReEncodeConfirmationModal
-      v-model:display="displayReEncode"
-    ></ReEncodeConfirmationModal>
-
+    
     <AccountsAdminModal
       v-model:display="displayAccountAdmin"
     ></AccountsAdminModal>
@@ -132,15 +110,6 @@ import ThemeModal from "../modals/ThemeModal.vue";
 import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
 import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
 import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
-import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
-import AlbumListModal from "../modals/AlbumListModal.vue";
-import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
-import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
-import AlbumMovePosModal from "../modals/AlbumMovePosModal.vue";
-import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
-import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
-import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
-import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
 import TaskListModal from "../modals/TaskListModal.vue";
 import SearchInputModal from "../modals/SearchInputModal.vue";
@@ -202,15 +171,6 @@ export default defineComponent({
     ChangeUsernameModal,
     ChangePasswordModal,
     AdvancedSettingsModal,
-    AlbumCreateModal,
-    AlbumListModal,
-    AlbumRenameModal,
-    AlbumDeleteModal,
-    MediaDeleteModal,
-    AlbumMovePosModal,
-    ResolutionConfirmationModal,
-    ReEncodeConfirmationModal,
-    SubtitlesDeleteModal,
     AccountsAdminModal,
     TaskListModal,
     SearchInputModal,
@@ -239,27 +199,11 @@ export default defineComponent({
       displayPasswordModal: false,
       displayAdvancedSettings: false,
 
-      displayAlbumCreate: false,
-      displayAlbumList: false,
-      displayAlbumRename: false,
-      displayAlbumDelete: false,
-      displayAlbumMovePos: false,
-
-      createAlbumFromList: false,
-
-      displayMediaDelete: false,
-
-      displayResolutionConfirmation: false,
-
-      displaySubtitlesDelete: false,
-
       displayAccountAdmin: false,
 
       displayTaskList: false,
 
       displaySearchModal: false,
-
-      displayReEncode: false,
 
       displaySidebar: true,
 
@@ -329,34 +273,6 @@ export default defineComponent({
       this.displaySidebar = !this.displaySidebar;
     },
 
-    createAlbum: function (fromList: boolean) {
-      this.displayAlbumCreate = true;
-      this.createAlbumFromList = !!fromList;
-    },
-
-    doneCreateAlbum: function () {
-      if (!this.displayAlbumCreate &&  this.createAlbumFromList) {
-        this.createAlbumFromList = false;
-        this.displayAlbumList = true;
-      }
-    },
-
-    showAlbumList: function () {
-      this.displayAlbumList = true;
-    },
-
-    showAlbumRename: function () {
-      this.displayAlbumRename = true;
-    },
-
-    showAlbumDelete: function () {
-      this.displayAlbumDelete = true;
-    },
-
-    showMediaDelete: function () {
-      this.displayMediaDelete = true;
-    },
-
     hideSidebar: function () {
       this.displaySidebar = false;
     },
@@ -408,15 +324,6 @@ export default defineComponent({
         this.displayAdvancedSettings = false;
 
         this.displayAlbumCreate = false;
-        this.displayAlbumList = false;
-        this.displayAlbumRename = false;
-        this.displayAlbumDelete = false;
-
-        this.displayMediaDelete = false;
-
-        this.displayResolutionConfirmation = false;
-
-        this.displaySubtitlesDelete = false;
 
         this.displayAccountAdmin = false;
 
@@ -434,10 +341,6 @@ export default defineComponent({
 
     AppEvents.AddEventListener("albums-loading", (l: boolean) => {
       this.loadingAlbums = l;
-    });
-
-    AppEvents.AddEventListener("media-delete-request", () => {
-      this.showMediaDelete();
     });
   },
 });

@@ -163,6 +163,8 @@
         </div>
       </div>
     </div>
+
+    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
   </div>
 </template>
 
@@ -179,11 +181,14 @@ import { AmbumsAPI } from "@/api/api-albums";
 import { AlbumEntry } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
+import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+
 export default defineComponent({
   name: "PageAlbums",
-  emits: ["album-create"],
+  emits: [],
   components: {
     PageMenu,
+    AlbumCreateModal,
   },
   props: {
     display: Boolean,
@@ -211,11 +216,13 @@ export default defineComponent({
       pageSizeOptions: [],
 
       canWrite: AuthController.CanWrite,
+
+      displayAlbumCreate: false,
     };
   },
   methods: {
     createAlbum: function () {
-      this.$emit("album-create");
+      this.displayAlbumCreate = true;
     },
 
     refreshAlbums: function () {

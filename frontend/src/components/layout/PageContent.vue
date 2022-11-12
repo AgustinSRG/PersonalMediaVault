@@ -29,7 +29,6 @@
     ></PageSearch>
     <PageUpload
       :display="isDisplayed && page === 'upload'"
-      @album-create="createAlbum"
     ></PageUpload>
     <PageRandom :display="isDisplayed && page === 'random'"></PageRandom>
     <PageAdvancedSearch
@@ -37,7 +36,6 @@
     ></PageAdvancedSearch>
     <PageAlbums
       :display="isDisplayed && page === 'albums'"
-      @album-create="createAlbum"
       :min="min"
     ></PageAlbums>
   </div>
@@ -67,7 +65,7 @@ export default defineComponent({
     PageAdvancedSearch,
   },
   name: "PageContent",
-  emits: ["album-create"],
+  emits: [],
   props: {
     min: Boolean,
   },
@@ -91,10 +89,6 @@ export default defineComponent({
 
     expandPage: function () {
       AppStatus.ExpandPage();
-    },
-
-    createAlbum: function () {
-      this.$emit("album-create");
     },
 
     closePage: function () {
