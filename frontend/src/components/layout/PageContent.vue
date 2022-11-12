@@ -22,19 +22,30 @@
       </button>
     </div>
 
-    <PageHome :display="isDisplayed && page === 'home'" :min="min"></PageHome>
+    <PageHome
+      v-if="isDisplayed && page === 'home'"
+      :display="isDisplayed && page === 'home'"
+      :min="min"
+    ></PageHome>
     <PageSearch
+      v-if="isDisplayed && page === 'search'"
       :display="isDisplayed && page === 'search'"
       :min="min"
     ></PageSearch>
     <PageUpload
+      v-if="isDisplayed && page === 'upload'"
       :display="isDisplayed && page === 'upload'"
     ></PageUpload>
-    <PageRandom :display="isDisplayed && page === 'random'"></PageRandom>
+    <PageRandom
+      v-if="isDisplayed && page === 'random'"
+      :display="isDisplayed && page === 'random'"
+    ></PageRandom>
     <PageAdvancedSearch
+      v-if="isDisplayed && page === 'advsearch'"
       :display="isDisplayed && page === 'advsearch'"
     ></PageAdvancedSearch>
     <PageAlbums
+      v-if="isDisplayed && page === 'albums'"
       :display="isDisplayed && page === 'albums'"
       :min="min"
     ></PageAlbums>

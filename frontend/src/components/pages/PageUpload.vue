@@ -21,7 +21,7 @@
     <div class="upload-options-container" v-if="optionsShown">
       <div class="form-group">
         <label>{{ $t("Max number of uploads in parallel") }}:</label>
-        <select v-model="maxParallelUploads" class="form-control form-select">
+        <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
           <option :value="1">1</option>
           <option :value="2">2</option>
           <option :value="4">4</option>
@@ -196,6 +196,11 @@
           <i class="fas fa-broom"></i> {{ $t("Clear list") }}
         </button>
       </div>
+      <div class="form-group" v-if="pendingToUpload.length > 0">
+        <button type="button" class="btn btn-primary" @click="cancelAll">
+          <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
+        </button>
+      </div>
     </div>
 
     <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
@@ -203,14 +208,12 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
-import { TagsAPI } from "@/api/api-tags";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
+import { UploadController, UploadEntryMin } from "@/control/upload";
 import { copyObject } from "@/utils/objects";
-import { Request } from "@/utils/request";
 import { parseTagName } from "@/utils/text";
 import { defineComponent } from "vue";
 
@@ -228,13 +231,11 @@ export default defineComponent({
   data: function () {
     return {
       dragging: false,
-      nextId: 0,
       pendingToUpload: [],
-      uploadingCount: 0,
 
       optionsShown: false,
 
-      maxParallelUploads: 1,
+      maxParallelUploads: UploadController.MaxParallelUploads,
 
       tags: [],
       tagToAdd: "",
@@ -254,6 +255,10 @@ export default defineComponent({
 
     createAlbum: function () {
       this.displayAlbumCreate = true;
+    },
+
+    updateMaxParallelUploads: function () {
+      UploadController.MaxParallelUploads = this.maxParallelUploads;
     },
 
     inputFileChanged: function (e) {
@@ -306,70 +311,34 @@ export default defineComponent({
       }
     },
 
-    addFile: function (file) {
-      let id = this.nextId;
-      this.nextId++;
-      this.pendingToUpload.push({
-        id: id,
-        file: file,
-        name: file.name,
-        size: file.size,
-        status: "pending",
-        error: "",
-        progress: 0,
-        mid: -1,
-        busy: false,
-        lastRequest: 0,
-        album: this.album,
-        tags: this.tags.slice(),
-      });
+    addFile: function (file: File) {
+      UploadController.AddFile(file, this.album, this.tags.slice());
     },
 
-    removeFile: function (id) {
-      // Abort stuff here
-      Request.Abort("upload-media-" + id);
-      Request.Abort("check-media-encryption-" + id);
-
-      // Remove from the array
-      for (let i = 0; i < this.pendingToUpload.length; i++) {
-        if (this.pendingToUpload[i].id === id) {
-          if (this.pendingToUpload[i].status === "encrypting") {
-            this.uploadingCount--;
-          }
-
-          this.pendingToUpload.splice(i, 1);
-          return;
-        }
-      }
+    removeFile: function (id: number) {
+      UploadController.RemoveFile(id);
     },
 
     clearList: function () {
-      for (let i = 0; i < this.pendingToUpload.length; i++) {
-        const id = this.pendingToUpload[i].id;
-        Request.Abort("upload-media-" + id);
-        Request.Abort("check-media-encryption-" + id);
-        if (this.pendingToUpload[i].status === "encrypting") {
-          this.uploadingCount--;
-        }
-      }
-
-      this.pendingToUpload = [];
+      UploadController.ClearList();
     },
 
-    tryAgain: function (m) {
-      m.error = "";
-      m.progress = 0;
-      m.status = "pending";
+    cancelAll: function () {
+      UploadController.CancelAll();
     },
 
-    goToMedia: function (m) {
+    tryAgain: function (m: UploadEntryMin) {
+      UploadController.TryAgain(m.id);
+    },
+
+    goToMedia: function (m: UploadEntryMin) {
       if (m.mid < 0) {
         return;
       }
       AppStatus.ClickOnMedia(m.mid, true);
     },
 
-    renderStatus(status, p, err) {
+    renderStatus(status: string, p: number, err: string) {
       switch (status) {
         case "ready":
           return this.$t("Ready");
@@ -395,192 +364,20 @@ export default defineComponent({
             ")"
           );
         case "error":
-          return this.$t("Error") + ": " + err;
+          switch (err) {
+            case "invalid-media":
+              return this.$t("Error") + ": " + this.$t("Invalid media file provided");
+            case "access-denied":
+              return this.$t("Error") + ": " + this.$t("Access denied");
+            case "deleted":
+              return this.$t("Error") + ": " + this.$t("The media asset was deleted");
+            case "no-internet":
+              return this.$t("Error") + ": " + this.$t("Could not connect to the server");
+            default:
+              return this.$t("Error") + ": " + this.$t("Internal server error");
+          } 
         default:
           return "-";
-      }
-    },
-
-    getTitleFromFileName: function (fileName: string): string {
-      const parts = (fileName + "").split(".");
-      if (parts.length > 1) {
-        parts.pop();
-        return parts.join(".");
-      } else {
-        return fileName;
-      }
-    },
-
-    uploadMedia: function (m) {
-      this.uploadingCount++;
-
-      m.status = "uploading";
-      m.progress = 0;
-
-      Request.Pending(
-        "upload-media-" + m.id,
-        MediaAPI.UploadMedia(this.getTitleFromFileName(m.name), m.file, m.album)
-      )
-        .onUploadProgress((loaded, total) => {
-          m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
-        })
-        .onSuccess((data) => {
-          m.mid = data.media_id;
-          m.status = "encrypting";
-          m.progress = 0;
-        })
-        .onCancel(() => {
-          this.uploadingCount--;
-        })
-        .onRequestError((err) => {
-          this.uploadingCount--;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              m.error = this.$t("Invalid media file provided");
-              m.status = "error";
-            })
-            .add(401, "*", () => {
-              m.error = this.$t("Access denied");
-              m.status = "error";
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              m.error = this.$t("Access denied");
-              m.status = "error";
-            })
-            .add(500, "*", () => {
-              m.error = this.$t("Internal server error");
-              m.status = "error";
-            })
-            .add("*", "*", () => {
-              m.error = this.$t("Could not connect to the server");
-              m.status = "error";
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.uploadingCount--;
-          m.error = err.message;
-          console.error(err);
-          m.status = "error";
-        });
-    },
-
-    checkEncryptionStatus: function (m) {
-      if (m.busy) {
-        return;
-      }
-
-      m.busy = true;
-      m.lastRequest = Date.now();
-
-      Request.Pending(
-        "check-media-encryption-" + m.id,
-        MediaAPI.GetMedia(m.mid)
-      )
-        .onSuccess((media) => {
-          m.busy = false;
-          if (media.ready) {
-            if (m.tags.length > 0) {
-              m.status = "tag";
-              m.progress = m.tags.length;
-            } else {
-              m.status = "ready";
-            }
-
-            this.uploadingCount--;
-          } else {
-            m.progress = media.ready_p;
-          }
-        })
-        .onCancel(() => {
-          m.busy = false;
-        })
-        .onRequestError((err) => {
-          m.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized");
-            })
-            .add(404, "*", () => {
-              m.error = this.$t("The media asset was deleted");
-              m.status = "error";
-              this.uploadingCount--;
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          m.busy = false;
-          console.error(err);
-        });
-    },
-
-    addNextTag: function (m) {
-      if (m.busy) {
-        return;
-      }
-
-      if (m.tags.length === 0) {
-        m.status = "ready";
-        return;
-      }
-
-      m.busy = true;
-
-      const tag = m.tags[0];
-      const mediaId = m.mid;
-
-      Request.Do(TagsAPI.TagMedia(mediaId, tag))
-        .onSuccess((res) => {
-          m.tags.shift(); // Remove tag from list
-          m.progress = m.tags.length;
-          m.busy = false;
-          TagsController.AddTag(res.id, res.name);
-        })
-        .onCancel(() => {
-          m.busy = false;
-        })
-        .onRequestError((err) => {
-          m.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              m.tags.shift(); // Invalid tag name
-              m.progress = m.tags.length;
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              m.error = this.$t("Access denied");
-              m.status = "error";
-            })
-            .add(404, "*", () => {
-              m.error = this.$t("The media asset was deleted");
-              m.status = "error";
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          m.busy = false;
-          console.error(err);
-        });
-    },
-
-    tick: function () {
-      for (let pending of this.pendingToUpload) {
-        if (pending.status === "pending") {
-          if (this.uploadingCount < this.maxParallelUploads) {
-            this.uploadMedia(pending);
-          }
-        } else if (pending.status === "encrypting") {
-          if (!pending.busy && Date.now() - pending.lastRequest > 1000) {
-            this.checkEncryptionStatus(pending);
-          }
-        } else if (pending.status === "tag") {
-          if (!pending.busy) {
-            this.addNextTag(pending);
-          }
-        }
       }
     },
 
@@ -691,9 +488,38 @@ export default defineComponent({
         }
       });
     },
+
+    onPendingPush: function(m: UploadEntryMin) {
+      this.pendingToUpload.push(m);
+    },
+
+    onPendingRemove: function(i: number) {
+      this.pendingToUpload.splice(i, 1);
+    },
+
+    onPendingClear: function() {
+      this.pendingToUpload = UploadController.GetEntries();
+    },
+
+    onPendingUpdate: function (i: number, m: UploadEntryMin) {
+      this.pendingToUpload[i].status = m.status;
+      this.pendingToUpload[i].error = m.error;
+      this.pendingToUpload[i].progress = m.progress;
+      this.pendingToUpload[i].mid = m.mid;
+    },
   },
   mounted: function () {
-    this.$options.timer = setInterval(this.tick.bind(this), 500);
+    this.pendingToUpload = UploadController.GetEntries();
+
+    this.$options.onPendingPushH = this.onPendingPush.bind(this);
+    this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
+    this.$options.onPendingClearH = this.onPendingClear.bind(this);
+    this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
+
+    AppEvents.AddEventListener("upload-list-push", this.$options.onPendingPushH);
+    AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
+    AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
+    AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
 
     this.updateTagData();
     this.$options.tagUpdateH = this.updateTagData.bind(this);
@@ -704,10 +530,14 @@ export default defineComponent({
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
   },
   beforeUnmount: function () {
-    clearInterval(this.$options.timer);
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+
+    AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
+    AppEvents.RemoveEventListener("upload-list-rm", this.$options.onPendingRemoveH);
+    AppEvents.RemoveEventListener("upload-list-clear", this.$options.onPendingClearH);
+    AppEvents.RemoveEventListener("upload-list-update", this.$options.onPendingUpdateH);
 
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);

@@ -33,15 +33,20 @@
       @search-open="openSearchModal"
       @help="showHelp"
     ></TopBar>
-    <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'"></PlayerContainer>
+    <PlayerContainer
+      v-if="
+        layout === 'media-split' || layout === 'media' || layout === 'album'
+      "
+    ></PlayerContainer>
     <PageContent
+      v-if="layout === 'initial' || layout === 'media-split'"
       :min="layout === 'media-split'"
     ></PageContent>
-    <AlbumContainer
-      v-if="layout === 'album'"
-    ></AlbumContainer>
+    <AlbumContainer v-if="layout === 'album'"></AlbumContainer>
 
-    <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
+    <BottomBar
+      v-if="layout === 'media-split' || layout === 'album'"
+    ></BottomBar>
     <div
       class="sidebar-float-overlay"
       :class="{ hidden: !displaySidebar }"
@@ -64,7 +69,6 @@
       v-model:display="displayAdvancedSettings"
     ></AdvancedSettingsModal>
 
-    
     <AccountsAdminModal
       v-model:display="displayAccountAdmin"
     ></AccountsAdminModal>
@@ -73,11 +77,16 @@
 
     <SearchInputModal v-model:display="displaySearchModal"></SearchInputModal>
 
-    <HelpHubModal v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubModal>
+    <HelpHubModal
+      v-model:display="displayHelpModal"
+      @goto="onGoHelp"
+    ></HelpHubModal>
 
     <AboutModal v-model:display="displayAboutModal"></AboutModal>
 
-    <KeyboardGuideModal v-model:display="displayKeyboardHelpModal"></KeyboardGuideModal>
+    <KeyboardGuideModal
+      v-model:display="displayKeyboardHelpModal"
+    ></KeyboardGuideModal>
 
     <LogoutModal v-model:display="displayLogout"></LogoutModal>
 
@@ -414,7 +423,7 @@ export default defineComponent({
   --progress-bar-bg: rgba(0, 0, 0, 0.3);
 
   --bg-opaque-25: rgba(255, 255, 255, 0.25);
-  --bg-opaque-50: rgba(255, 255, 255, 0.50);
+  --bg-opaque-50: rgba(255, 255, 255, 0.5);
   --bg-opaque-75: rgba(255, 255, 255, 0.75);
   --bg-opaque-100: white;
 
@@ -447,8 +456,8 @@ export default defineComponent({
   --modal-bg-color: #212121;
   --bar-bg-color: #212121;
 
-  --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
-    0 8px 10px -5px rgb(0 0 0 / 40%);
+  --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%),
+    0 6px 30px 5px rgb(0 0 0 / 12%), 0 8px 10px -5px rgb(0 0 0 / 40%);
 
   --hover-color: rgba(255, 255, 255, 0.1);
   --selected-color: rgba(255, 255, 255, 0.2);
@@ -477,7 +486,7 @@ export default defineComponent({
   --progress-bar-bg: rgba(255, 255, 255, 0.3);
 
   --bg-opaque-25: rgba(0, 0, 0, 0.25);
-  --bg-opaque-50: rgba(0, 0, 0, 0.50);
+  --bg-opaque-50: rgba(0, 0, 0, 0.5);
   --bg-opaque-75: rgba(0, 0, 0, 0.75);
   --bg-opaque-100: black;
 
@@ -637,7 +646,6 @@ export default defineComponent({
   display: none;
 }
 
-
 /* Layout - AlbumContainer */
 
 .album-container {
@@ -713,5 +721,4 @@ export default defineComponent({
 .td-fit {
   width: 1px;
 }
-
 </style>
