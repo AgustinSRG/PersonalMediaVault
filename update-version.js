@@ -87,8 +87,8 @@ function main() {
     updateFile(Path.resolve(__dirname, "packages", "dpkg-deb", "build.sh"), contents => {
         return contents
             .replace(/PMV\_VERSION\_MAJOR=[0-9]+/, `PMV_VERSION_MAJOR=${MAJOR}`)
-            .replace(/PMV\_VERSION\_MINOR=[0-9]+/, `PMV_VERSION_MAJOR=${MINOR}`)
-            .replace(/PMV\_VERSION\_REVISION=[0-9]+/, `PMV_VERSION_MAJOR=${REVISION}`);
+            .replace(/PMV\_VERSION\_MINOR=[0-9]+/, `PMV_VERSION_MINOR=${MINOR}`)
+            .replace(/PMV\_VERSION\_REVISION=[0-9]+/, `PMV_VERSION_REVISION=${REVISION}`);
     });
 
     console.log("DONE!");
