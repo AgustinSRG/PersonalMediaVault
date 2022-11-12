@@ -293,9 +293,9 @@ export default defineComponent({
           this.search = this.suggestions[0].name;
           this.onSearchInput();
           event.preventDefault();
-          event.stopPropagation();
         }
       }
+      event.stopPropagation();
     },
 
     handleGlobalKey: function (event: KeyboardEvent): boolean {
