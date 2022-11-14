@@ -21,8 +21,8 @@ AppStatus.Initialize();
 
 AuthController.Initialize();
 TagsController.Initialize();
-AlbumsController.Initialize();
 MediaController.Initialize();
+AlbumsController.Initialize();
 SubtitlesController.Initialize();
 
 // Setup App

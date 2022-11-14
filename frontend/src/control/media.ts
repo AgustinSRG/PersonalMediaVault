@@ -3,6 +3,7 @@
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
+import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
@@ -109,6 +110,12 @@ export class MediaController {
         }
 
         Timeouts.Abort("media-current-load");
+        Request.Abort("media-current-load");
+
+        if (AlbumsController.CheckAlbumNextPrefetch()) {
+            return; // Pre-fetch
+        }
+
         Request.Pending("media-current-load", MediaAPI.GetMedia(MediaController.MediaId)).onSuccess(media => {
             MediaController.MediaData = media;
             AppEvents.Emit("current-media-update", MediaController.MediaData);

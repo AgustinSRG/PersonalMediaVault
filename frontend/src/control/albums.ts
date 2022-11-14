@@ -1,13 +1,14 @@
 // Albums data controller
 
 import { AmbumsAPI } from "@/api/api-albums";
+import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
 import { shuffleArray } from "@/utils/shuffle";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
-import { MediaEntry } from "./media";
+import { MediaController, MediaData, MediaEntry } from "./media";
 import { PlayerPreferences } from "./player-preferences";
 
 export interface AlbumEntry {
@@ -151,7 +152,7 @@ export class AlbumsController {
         });
     }
 
-    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string}[] {
+    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string }[] {
         const result = [];
 
         for (const album of Object.values(AlbumsController.Albums)) {
@@ -248,6 +249,7 @@ export class AlbumsController {
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
             AppEvents.Emit("album-pos-update");
+            AlbumsController.PreFetchAlbumNext();
             return;
         }
 
@@ -306,5 +308,100 @@ export class AlbumsController {
         PlayerPreferences.SetAlbumPos(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
 
         AppEvents.Emit("album-pos-update");
+        AlbumsController.PreFetchAlbumNext();
+    }
+
+    public static AvailableNextPrefetch = false;
+    public static LoadingNext = false;
+    public static NextMediaData: MediaData = null;
+    public static LoadingNextWaiting = false;
+
+    public static PreFetchAlbumNext() {
+        if (AlbumsController.CurrentNext === null || AlbumsController.CurrentNext.id === MediaController.MediaId) {
+            Timeouts.Abort("album-next-prefetch-load");
+            Request.Abort("album-next-prefetch-load");
+
+            AlbumsController.NextMediaData = null;
+            AlbumsController.LoadingNext = false;
+            AlbumsController.AvailableNextPrefetch = false;
+            if (AlbumsController.LoadingNextWaiting) {
+                AlbumsController.LoadingNextWaiting = false;
+                MediaController.Load();
+            }
+            return;
+        }
+
+        AlbumsController.NextMediaData = null;
+        AlbumsController.LoadingNext = true;
+        AlbumsController.AvailableNextPrefetch = false;
+
+        if (AuthController.Locked) {
+            return; // Vault is locked
+        }
+
+        const mediaId = AlbumsController.CurrentNext.id;
+
+        Timeouts.Abort("album-next-prefetch-load");
+        Request.Pending("album-next-prefetch-load", MediaAPI.GetMedia(mediaId)).onSuccess(media => {
+            AlbumsController.NextMediaData = media;
+            AlbumsController.LoadingNext = false;
+            AlbumsController.AvailableNextPrefetch = true;
+            AlbumsController.OnAlbumNextPrefetchDone(mediaId);
+        }).onRequestError(err => {
+            Request.ErrorHandler()
+                .add(401, "*", () => {
+                    AppEvents.Emit("unauthorized", false);
+                })
+                .add(404, "*", () => {
+                    AlbumsController.NextMediaData = null;
+                    AlbumsController.LoadingNext = false;
+                    AlbumsController.AvailableNextPrefetch = true;
+                    AlbumsController.OnAlbumNextPrefetchDone(mediaId);
+                })
+                .add("*", "*", () => {
+                    // Retry
+                    Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+                })
+                .handle(err);
+        }).onUnexpectedError(err => {
+            console.error(err);
+            // Retry
+            Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+        });
+    }
+
+    public static OnAlbumNextPrefetchDone(mid: number) {
+        if (AlbumsController.LoadingNextWaiting && MediaController.MediaId === mid) {
+            MediaController.MediaData = AlbumsController.NextMediaData;
+            AppEvents.Emit("current-media-update", MediaController.MediaData);
+
+            MediaController.Loading = false;
+            AppEvents.Emit("current-media-loading", false);
+        }
+        AlbumsController.LoadingNextWaiting = false;
+    }
+
+    public static CheckAlbumNextPrefetch(): boolean {
+        if (AlbumsController.CurrentNext === null) {
+            return false;
+        }
+
+        if (AlbumsController.CurrentNext.id !== MediaController.MediaId) {
+            return false;
+        }
+
+        if (AlbumsController.AvailableNextPrefetch) {
+            MediaController.MediaData = AlbumsController.NextMediaData;
+            AppEvents.Emit("current-media-update", MediaController.MediaData);
+
+            MediaController.Loading = false;
+            AppEvents.Emit("current-media-loading", false);
+            return true;
+        } else if (AlbumsController.LoadingNextWaiting) {
+            AlbumsController.LoadingNextWaiting = true;
+            return true;
+        } else {
+            return false;
+        }
     }
 }
