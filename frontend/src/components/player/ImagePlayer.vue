@@ -16,7 +16,14 @@
     @contextmenu="onContextMenu"
     @wheel="onMouseWheel"
   >
-    <div class="image-scroller" :class="{'cursor-hidden': !cursorShown}" @mousedown="grabScroll">
+    <div class="image-prefetch-container">
+      <img v-if="prefetchURL" :src="prefetchURL" />
+    </div>
+    <div
+      class="image-scroller"
+      :class="{ 'cursor-hidden': !cursorShown }"
+      @mousedown="grabScroll"
+    >
       <img
         v-if="imageURL"
         :src="imageURL"
@@ -260,6 +267,9 @@ import { useVModel } from "../../utils/vmodel";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
+import { AlbumsController } from "@/control/albums";
+import { AppEvents } from "@/control/app-events";
+import { MEDIA_TYPE_IMAGE } from "@/utils/consts";
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
@@ -350,6 +360,8 @@ export default defineComponent({
       scrollGrabLeft: 0,
 
       cursorShown: false,
+
+      prefetchURL: "",
     };
   },
   methods: {
@@ -620,13 +632,25 @@ export default defineComponent({
     tick() {
       this.checkPlayerSize();
       this.computeImageDimensions();
-      if (!this.mouseInControls && this.helpTooltip && Date.now() - this.lastControlsInteraction > 2000) {
+      if (
+        !this.mouseInControls &&
+        this.helpTooltip &&
+        Date.now() - this.lastControlsInteraction > 2000
+      ) {
         this.helpTooltip = "";
       }
-      if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
+      if (
+        !this.mouseInControls &&
+        this.scaleShown &&
+        Date.now() - this.lastControlsInteraction > 2000
+      ) {
         this.scaleShown = false;
       }
-      if (!this.mouseInControls && this.cursorShown && Date.now() - this.lastControlsInteraction > 2000) {
+      if (
+        !this.mouseInControls &&
+        this.cursorShown &&
+        Date.now() - this.lastControlsInteraction > 2000
+      ) {
         this.cursorShown = false;
       }
       if (this.helpTooltip && !this.showcontrols) {
@@ -684,7 +708,10 @@ export default defineComponent({
         return false;
       }
 
-      var maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+      var maxScroll = Math.max(
+        0,
+        el.scrollHeight - el.getBoundingClientRect().height
+      );
 
       if (maxScroll <= 0) {
         return false;
@@ -711,7 +738,10 @@ export default defineComponent({
         return false;
       }
 
-      var maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
+      var maxScroll = Math.max(
+        0,
+        el.scrollWidth - el.getBoundingClientRect().width
+      );
 
       if (maxScroll <= 0) {
         return false;
@@ -729,9 +759,14 @@ export default defineComponent({
     },
 
     onKeyPress: function (event: KeyboardEvent) {
-      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || (event.ctrlKey && event.key !== "+" && event.key !== "-")) {
+      if (
+        AuthController.Locked ||
+        !AppStatus.IsPlayerVisible() ||
+        !event.key ||
+        (event.ctrlKey && event.key !== "+" && event.key !== "-")
+      ) {
         return false;
-      }  
+      }
       let caught = true;
       const shifting = event.shiftKey;
       switch (event.key) {
@@ -965,6 +1000,38 @@ export default defineComponent({
         }
       }
     },
+
+    onAlbumPrefetch: function () {
+      if (
+        AlbumsController.NextMediaData &&
+        AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE
+      ) {
+        if (this.currentResolution < 0) {
+          if (AlbumsController.NextMediaData.encoded) {
+            this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.url);
+          } else {
+            this.prefetchURL = "";
+          }
+        } else {
+          if (
+            AlbumsController.NextMediaData.resolutions[
+              this.currentResolution
+            ] &&
+            AlbumsController.NextMediaData.resolutions[this.currentResolution]
+              .ready
+          ) {
+            this.prefetchURL = GetAssetURL(
+              AlbumsController.NextMediaData.resolutions[this.currentResolution]
+                .url
+            );
+          } else {
+            this.prefetchURL = "";
+          }
+        }
+      } else {
+        this.prefetchURL = "";
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -1005,6 +1072,12 @@ export default defineComponent({
 
     document.addEventListener("mousemove", this.$options.moveScrollHandler);
 
+    this.$options.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
+    AppEvents.AddEventListener(
+      "album-next-prefetch",
+      this.$options.onAlbumPrefetchH
+    );
+
     this.initializeImage();
   },
   beforeUnmount: function () {
@@ -1031,6 +1104,11 @@ export default defineComponent({
     document.removeEventListener("mouseup", this.$options.dropScrollHandler);
 
     document.removeEventListener("mousemove", this.$options.moveScrollHandler);
+
+    AppEvents.RemoveEventListener(
+      "album-next-prefetch",
+      this.$options.onAlbumPrefetchH
+    );
 
     KeyboardManager.RemoveHandler(this.$options.keyHandler);
 
@@ -1144,6 +1222,17 @@ export default defineComponent({
 
 .image-player.player-min .player-tooltip {
   bottom: 40px;
+}
+
+.image-prefetch-container {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Scroll bar */

@@ -328,6 +328,7 @@ export class AlbumsController {
                 AlbumsController.LoadingNextWaiting = false;
                 MediaController.Load();
             }
+            AppEvents.Emit("album-next-prefetch");
             return;
         }
 
@@ -371,6 +372,7 @@ export class AlbumsController {
     }
 
     public static OnAlbumNextPrefetchDone(mid: number) {
+        AppEvents.Emit("album-next-prefetch");
         if (AlbumsController.LoadingNextWaiting && MediaController.MediaId === mid) {
             MediaController.MediaData = AlbumsController.NextMediaData;
             AppEvents.Emit("current-media-update", MediaController.MediaData);
