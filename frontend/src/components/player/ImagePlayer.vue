@@ -1135,4 +1135,23 @@ export default defineComponent({
 .image-player.player-min .player-tooltip {
   bottom: 40px;
 }
+
+/* Scroll bar */
+
+.image-scroller::-webkit-scrollbar {
+  width: 5px;
+  height: 3px;
+}
+
+/* Track */
+
+.image-scroller::-webkit-scrollbar-track {
+  background: #bdbdbd;
+}
+
+/* Handle */
+
+.image-scroller::-webkit-scrollbar-thumb {
+  background: #757575;
+}
 </style>
