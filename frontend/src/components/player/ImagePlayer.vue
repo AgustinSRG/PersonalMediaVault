@@ -16,7 +16,7 @@
     @contextmenu="onContextMenu"
     @wheel="onMouseWheel"
   >
-    <div class="image-scroller" @mousedown="grabScroll">
+    <div class="image-scroller" :class="{'cursor-hidden': !cursorShown}" @mousedown="grabScroll">
       <img
         v-if="imageURL"
         :src="imageURL"
@@ -348,6 +348,8 @@ export default defineComponent({
       scrollGrabY: 0,
       scrollGrabTop: 0,
       scrollGrabLeft: 0,
+
+      cursorShown: false,
     };
   },
   methods: {
@@ -624,6 +626,9 @@ export default defineComponent({
       if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
         this.scaleShown = false;
       }
+      if (!this.mouseInControls && this.cursorShown && Date.now() - this.lastControlsInteraction > 2000) {
+        this.cursorShown = false;
+      }
       if (this.helpTooltip && !this.showcontrols) {
         this.helpTooltip = "";
       }
@@ -631,6 +636,7 @@ export default defineComponent({
 
     interactWithControls() {
       this.lastControlsInteraction = Date.now();
+      this.cursorShown = true;
     },
 
     enterControls: function () {
@@ -1098,6 +1104,10 @@ export default defineComponent({
   left: 0;
   width: 100%;
   cursor: move;
+}
+
+.image-scroller.cursor-hidden {
+  cursor: none;
 }
 
 .image-player.bg-black .image-scroller {
