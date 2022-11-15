@@ -198,6 +198,15 @@ export default defineComponent({
               this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
             }
           }
+          if (this.page < 0) {
+            this.page = 0;
+            this.load();
+            return;
+          } else if (this.page >= this.totalPages) {
+            this.page = this.totalPages - 1;
+            this.load();
+            return;
+          }
           nextTick(() => {
             const currentElem = this.$el.querySelector(
               ".search-result-item.current"

@@ -33,11 +33,7 @@
           </button>
         </div>
         <div class="search-results-msg-btn">
-          <button
-            type="button"
-            @click="clearSearch"
-            class="btn btn-primary"
-          >
+          <button type="button" @click="clearSearch" class="btn btn-primary">
             <i class="fas fa-times"></i> {{ $t("Clear search") }}
           </button>
         </div>
@@ -213,6 +209,15 @@ export default defineComponent({
             if (this.pageItems.length > 0) {
               this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
             }
+          }
+          if (this.page < 0) {
+            this.page = 0;
+            this.load();
+            return;
+          } else if (this.page >= this.totalPages) {
+            this.page = this.totalPages - 1;
+            this.load();
+            return;
           }
           nextTick(() => {
             const currentElem = this.$el.querySelector(
