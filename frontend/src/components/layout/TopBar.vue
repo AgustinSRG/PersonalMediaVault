@@ -493,11 +493,12 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   position: relative;
-}
-
-.top-bar-search-input-container {
   border: 1px solid var(--search-input-border-color);
   background: var(--search-input-background);
+}
+
+.top-bar-search-input-container:focus {
+  outline: none;
 }
 
 .top-bar-search-input-container.focused {
