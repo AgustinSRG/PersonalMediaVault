@@ -246,12 +246,10 @@ export default defineComponent({
       if (!this.display) {
         return;
       }
-      const elem = this.$el.querySelector(".auto-focus");
-      if (elem) {
-        setTimeout(() => {
-          elem.focus();
-        }, 200);
-      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+      });
     },
 
     updateResolutions: function (resolutions, imageResolutions) {

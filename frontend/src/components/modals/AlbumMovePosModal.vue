@@ -76,20 +76,17 @@ export default defineComponent({
   },
   methods: {
     autoFocus: function () {
-      const elem = this.$el.querySelector(".auto-focus");
-      if (elem) {
-        setTimeout(() => {
-          elem.focus();
-          elem.select();
-        }, 200);
-      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+        elem.select();
+      });
     },
 
     onShow: function (options: { pos: number; callback: () => void }) {
       this.currentPos = options.pos + 1;
       this.callback = options.callback;
       this.displayStatus = true;
-      this.autoFocus();
     },
 
     close: function () {
@@ -137,9 +134,7 @@ export default defineComponent({
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
+        this.autoFocus();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();

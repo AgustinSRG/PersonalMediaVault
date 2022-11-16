@@ -54,10 +54,10 @@
         </div>
       </div>
       <div class="modal-footer no-padding">
-        <button v-if="!deleting" type="submit" class="modal-footer-btn">
+        <button v-if="!deleting" type="submit" class="modal-footer-btn auto-focus">
           <i class="fas fa-plus"></i> {{ $t("Encode") }}
         </button>
-        <button v-if="deleting" type="submit" class="modal-footer-btn">
+        <button v-if="deleting" type="submit" class="modal-footer-btn auto-focus">
           <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
         </button>
       </div>
@@ -117,6 +117,16 @@ export default defineComponent({
       this.displayStatus = true;
     },
 
+    autoFocus: function () {
+      if (!this.display) {
+        return;
+      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+      });
+    },
+
     close: function () {
       this.displayStatus = false;
     },
@@ -163,9 +173,7 @@ export default defineComponent({
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
+        this.autoFocus();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();

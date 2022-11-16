@@ -24,7 +24,7 @@
         <p>{{ $t("Do you want to close your session and lock the vault?") }}</p>
       </div>
       <div class="modal-footer no-padding">
-        <button type="button" class="modal-footer-btn" @click="logout">
+        <button type="button" class="modal-footer-btn auto-focus" @click="logout">
           <i class="fas fa-sign-out-alt"></i> {{ $t("Close vault") }}
         </button>
       </div>
@@ -52,6 +52,16 @@ export default defineComponent({
   methods: {
     close: function () {
       this.displayStatus = false;
+    },
+
+    autoFocus: function () {
+      if (!this.display) {
+        return;
+      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+      });
     },
 
     stopPropagationEvent: function (e) {
@@ -84,9 +94,7 @@ export default defineComponent({
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
+        this.autoFocus();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();

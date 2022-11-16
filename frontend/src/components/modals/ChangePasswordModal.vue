@@ -110,12 +110,10 @@ export default defineComponent({
       if (!this.display) {
         return;
       }
-      const elem = this.$el.querySelector(".auto-focus");
-      if (elem) {
-        setTimeout(() => {
-          elem.focus();
-        }, 200);
-      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+      });
     },
 
     submit: function (e) {
@@ -206,9 +204,6 @@ export default defineComponent({
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
         this.autoFocus();
       } else {
         if (this.$options.focusTrap) {

@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="modal-footer no-padding">
-        <button type="submit" class="modal-footer-btn">
+        <button type="submit" class="modal-footer-btn auto-focus">
           <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
         </button>
       </div>
@@ -77,6 +77,16 @@ export default defineComponent({
     onShow: function (options) {
       this.callback = options.callback;
       this.displayStatus = true;
+    },
+
+    autoFocus: function () {
+      if (!this.display) {
+        return;
+      }
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        elem.focus();
+      });
     },
 
     close: function () {
@@ -125,9 +135,7 @@ export default defineComponent({
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
+        this.autoFocus();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();
