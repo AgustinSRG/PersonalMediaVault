@@ -63,7 +63,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumCreateModal",
-  emits: ["update:display"],
+  emits: ["update:display", "new-album"],
   props: {
     display: Boolean,
   },
@@ -123,14 +123,17 @@ export default defineComponent({
       this.busy = true;
       this.error = "";
 
-      Request.Do(AmbumsAPI.CreateAlbum(this.name))
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Album created") + ": " + this.name);
+      const albumName = this.name;
+
+      Request.Do(AmbumsAPI.CreateAlbum(albumName))
+        .onSuccess((response) => {
+          AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
           this.busy = false;
           this.name = "";
           this.close();
           AppEvents.Emit("albums-list-change");
           AlbumsController.Load();
+          this.$emit("new-album", response.album_id, albumName)
         })
         .onCancel(() => {
           this.busy = false;

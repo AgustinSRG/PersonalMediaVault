@@ -203,7 +203,7 @@
       </div>
     </div>
 
-    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
   </div>
 </template>
 
@@ -255,6 +255,10 @@ export default defineComponent({
 
     createAlbum: function () {
       this.displayAlbumCreate = true;
+    },
+
+    onNewAlbum: function (albumId) {
+      this.album = albumId;
     },
 
     updateMaxParallelUploads: function () {

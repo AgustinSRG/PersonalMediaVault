@@ -73,7 +73,7 @@
         </button>
       </div>
     </div>
-    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
   </div>
 </template>
 
@@ -172,6 +172,11 @@ export default defineComponent({
 
     createAlbum: function () {
       this.displayAlbumCreate = true;
+    },
+
+    onNewAlbum: function (albumId, albumName) {
+      this.filter = albumName;
+      this.updateAlbums();
     },
 
     clickOnAlbum: function (album) {
