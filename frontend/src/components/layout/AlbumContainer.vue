@@ -39,6 +39,16 @@
           <button
             v-if="canWrite"
             type="button"
+            :title="$t('Add media')"
+            class="album-header-btn"
+            @click="addMediaToAlbum"
+          >
+            <i class="fas fa-plus"></i>
+          </button>
+
+          <button
+            v-if="canWrite"
+            type="button"
             :title="$t('Rename')"
             class="album-header-btn"
             @click="renameAlbum"
@@ -138,6 +148,7 @@
       @change-pos="changeMediaPos"
       @media-remove="removeMedia"
     ></AlbumContextMenu>
+    <AlbumAddMediaModal v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
     <AlbumRenameModal v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-model:display="displayAlbumDelete"></AlbumDeleteModal>
     <AlbumMovePosModal
@@ -167,6 +178,7 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import AlbumRenameModal from "../modals/AlbumRenameModal.vue";
 import AlbumDeleteModal from "../modals/AlbumDeleteModal.vue";
 import AlbumMovePosModal from "../modals/AlbumMovePosModal.vue";
+import AlbumAddMediaModal from "../modals/AlbumAddMediaModal.vue";
 
 import Sortable from 'sortablejs';
 
@@ -179,6 +191,7 @@ export default defineComponent({
     AlbumRenameModal,
     AlbumDeleteModal,
     AlbumMovePosModal,
+    AlbumAddMediaModal,
   },
   data: function () {
     return {
@@ -210,6 +223,7 @@ export default defineComponent({
       displayAlbumRename: false,
       displayAlbumDelete: false,
       displayAlbumMovePos: false,
+      displayAlbumAddMedia: false,
     };
   },
   methods: {
@@ -271,6 +285,10 @@ export default defineComponent({
         AppPreferences.albumAddFav(AlbumsController.CurrentAlbum + "");
         AppEvents.Emit("snack", this.$t("Album added to favorites"));
       }
+    },
+
+    addMediaToAlbum: function () {
+      this.displayAlbumAddMedia = true;
     },
 
     renameAlbum: function () {

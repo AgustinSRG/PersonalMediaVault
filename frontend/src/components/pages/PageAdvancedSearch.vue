@@ -1,5 +1,5 @@
 <template>
-  <div class="page-inner" :class="{ hidden: !display }">
+  <div :class="{ 'page-inner': !inmodal, hidden: !display }">
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
         <label>{{ $t("Title or description must contain") }}:</label>
@@ -209,6 +209,7 @@
 
 <script lang="ts">
 import { SearchAPI } from "@/api/api-search";
+import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
@@ -223,8 +224,11 @@ import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
   name: "PageAdvancedSearch",
+  emits: ['select-media'],
   props: {
     display: Boolean,
+    inmodal: Boolean,
+    noalbum: Number,
   },
   data: function () {
     return {
@@ -287,28 +291,32 @@ export default defineComponent({
           if (this.pageItems.length >= this.pageSize) {
             this.loading = false;
             this.finished = true;
-            nextTick(() => {
-              const currentElem = this.$el.querySelector(
-                ".search-result-item.current"
-              );
-              if (currentElem) {
-                currentElem.scrollIntoView();
-              }
-            });
+            if (!this.inmodal) {
+              nextTick(() => {
+                const currentElem = this.$el.querySelector(
+                  ".search-result-item.current"
+                );
+                if (currentElem) {
+                  currentElem.scrollIntoView();
+                }
+              });
+            }
           } else if (this.page < this.totalPages - 1) {
             this.page++;
             this.load();
           } else {
             this.loading = false;
             this.finished = true;
-            nextTick(() => {
-              const currentElem = this.$el.querySelector(
-                ".search-result-item.current"
-              );
-              if (currentElem) {
-                currentElem.scrollIntoView();
-              }
-            });
+            if (!this.inmodal) {
+              nextTick(() => {
+                const currentElem = this.$el.querySelector(
+                  ".search-result-item.current"
+                );
+                if (currentElem) {
+                  currentElem.scrollIntoView();
+                }
+              });
+            }
           }
         })
         .onRequestError((err) => {
@@ -334,9 +342,22 @@ export default defineComponent({
       const filterType = this.type;
       const filterTags = this.tags.slice();
       const filterTagMode = this.tagMode;
+
+      let backlistAlbum = new Set();
+
+      if (this.noalbum >= 0 && AlbumsController.CurrentAlbumData) {
+        backlistAlbum = new Set(AlbumsController.CurrentAlbumData.list.map(a => {
+          return a.id;
+        }));
+      }
+
       for (let e of results) {
         if (this.pageItems.length >= this.pageSize) {
           return;
+        }
+
+        if (backlistAlbum.has(e.id)) {
+          continue;
         }
 
         if (filterText) {
@@ -443,7 +464,15 @@ export default defineComponent({
       if (e) {
         e.preventDefault();
       }
-      AppStatus.ClickOnMedia(mid, true);
+      if (this.inmodal) {
+        this.$emit("select-media", mid, () => {
+          this.pageItems = this.pageItems.filter(i => {
+            return mid !== i.id;
+          });
+        });
+      } else {
+        AppStatus.ClickOnMedia(mid, true);
+      }
     },
 
     getMediaURL: function (mid: number): string {
@@ -578,14 +607,16 @@ export default defineComponent({
 
     onAppStatusChanged: function () {
       this.currentMedia = AppStatus.CurrentMedia;
-      nextTick(() => {
-        const currentElem = this.$el.querySelector(
-          ".search-result-item.current"
-        );
-        if (currentElem) {
-          currentElem.scrollIntoView();
-        }
-      });
+      if (!this.inmodal) {
+        nextTick(() => {
+          const currentElem = this.$el.querySelector(
+            ".search-result-item.current"
+          );
+          if (currentElem) {
+            currentElem.scrollIntoView();
+          }
+        });
+      }
     },
 
     findCurrentMediaIndex: function (): number {

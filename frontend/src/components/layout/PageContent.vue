@@ -43,6 +43,8 @@
     <PageAdvancedSearch
       v-if="isDisplayed && page === 'advsearch'"
       :display="isDisplayed && page === 'advsearch'"
+      :inmodal="false"
+      :noalbum="-1"
     ></PageAdvancedSearch>
     <PageAlbums
       v-if="isDisplayed && page === 'albums'"
