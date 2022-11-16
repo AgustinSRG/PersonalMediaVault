@@ -5,8 +5,10 @@
         <label>{{ $t("Title or description must contain") }}:</label>
         <input
           type="text"
-          autoxomplete="off"
+          name="title-search"
+          autocomplete="off"
           maxlength="255"
+          :disabled="loading"
           v-model="textSearch"
           class="form-control form-control-full-width"
         />
@@ -15,6 +17,7 @@
         <label>{{ $t("Media type") }}:</label>
         <select
           class="form-control form-select form-control-full-width"
+          :disabled="loading"
           v-model="type"
         >
           <option :value="0">{{ $t("Any media") }}</option>
@@ -27,7 +30,7 @@
       <div class="form-group">
         <label>{{ $t("Tags") }}:</label>
       </div>
-      <div class="form-group media-tags">
+      <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
         <label v-if="tags.length === 0">{{
           $t("There are no tags yet for this filter.")
         }}</label>
@@ -37,6 +40,7 @@
             type="button"
             :title="$t('Remove tag')"
             class="media-tag-btn"
+            :disabled="loading"
             @click="removeTag(tag)"
           >
             <i class="fas fa-times"></i>
@@ -44,21 +48,46 @@
         </div>
       </div>
       <div class="form-group">
+        <select
+          class="form-control form-select form-control-full-width"
+          :disabled="loading"
+          v-model="tagMode"
+        >
+          <option :value="'all'">
+            {{ $t("Media must contain ALL of the selected tags") }}
+          </option>
+          <option :value="'any'">
+            {{ $t("Media must contain ANY of the selected tags") }}
+          </option>
+          <option :value="'none'">
+            {{ $t("Media must contain NONE of the selected tags") }}
+          </option>
+          <option :value="'untagged'">
+            {{ $t("Media must be untagged") }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group" v-if="tagMode !== 'untagged'">
         <input
           type="text"
           autocomplete="off"
           maxlength="255"
           v-model="tagToAdd"
+          :disabled="loading"
           @input="onTagAddChanged(false)"
           class="form-control"
           :placeholder="$t('Search for tags') + '...'"
         />
       </div>
-      <div class="form-group" v-if="matchingTags.length > 0">
+      <div
+        class="form-group"
+        v-if="tagMode !== 'untagged' && matchingTags.length > 0"
+      >
         <button
           v-for="mt in matchingTags"
           :key="mt.id"
           type="button"
+          :disabled="loading"
           class="btn btn-primary btn-sm btn-tag-mini"
           @click="addMatchingTag(mt)"
         >
@@ -70,6 +99,7 @@
         <label>{{ $t("Order") }}:</label>
         <select
           class="form-control form-select form-control-full-width"
+          :disabled="loading"
           v-model="order"
         >
           <option :value="'desc'">{{ $t("Show most recent") }}</option>
@@ -80,6 +110,7 @@
         <label>{{ $t("Limit results") }}:</label>
         <select
           class="form-control form-select form-control-full-width"
+          :disabled="loading"
           v-model="pageSize"
         >
           <option v-for="po in pageSizeOptions" :key="po" :value="po">
@@ -89,11 +120,7 @@
       </div>
 
       <div class="form-group">
-        <button
-          v-if="!loading"
-          type="submit"
-          class="btn btn-primary btn-mr"
-        >
+        <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
         <button
@@ -127,11 +154,7 @@
           {{ $t("Could not find any result") }}
         </div>
         <div class="search-results-msg-btn">
-          <button
-            type="button"
-            @click="startSearch()"
-            class="btn btn-primary"
-          >
+          <button type="button" @click="startSearch()" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
@@ -226,8 +249,9 @@ export default defineComponent({
       tags: [],
       tagToAdd: "",
       matchingTags: [],
+      tagMode: "all",
 
-      pageSizeOptions: [],
+      pageSizeOptions: [25, 50, 100, 150, 200, 250, 500],
     };
   },
   methods: {
@@ -309,6 +333,7 @@ export default defineComponent({
       const filterText = this.textSearch.toLowerCase();
       const filterType = this.type;
       const filterTags = this.tags.slice();
+      const filterTagMode = this.tagMode;
       for (let e of results) {
         if (this.pageItems.length >= this.pageSize) {
           return;
@@ -329,16 +354,50 @@ export default defineComponent({
           }
         }
 
-        if (filterTags.length > 0) {
-          let passesTags = true;
-          for (let tag of filterTags) {
-            if (!e.tags || !e.tags.includes(tag)) {
-              passesTags = false;
-              break;
+        if (filterTagMode === "all") {
+          if (filterTags.length > 0) {
+            let passesTags = true;
+            for (let tag of filterTags) {
+              if (!e.tags || !e.tags.includes(tag)) {
+                passesTags = false;
+                break;
+              }
+            }
+
+            if (!passesTags) {
+              continue;
             }
           }
+        } else if (filterTagMode === "none") {
+          if (filterTags.length > 0) {
+            let passesTags = true;
+            for (let tag of filterTags) {
+              if (e.tags && e.tags.includes(tag)) {
+                passesTags = false;
+                break;
+              }
+            }
 
-          if (!passesTags) {
+            if (!passesTags) {
+              continue;
+            }
+          }
+        } else if (filterTagMode === "any") {
+          if (filterTags.length > 0) {
+            let passesTags = false;
+            for (let tag of filterTags) {
+              if (!e.tags || e.tags.includes(tag)) {
+                passesTags = true;
+                break;
+              }
+            }
+
+            if (!passesTags) {
+              continue;
+            }
+          }
+        } else if (filterTagMode === "untagged") {
+          if (e.tags && e.tags.length > 0) {
             continue;
           }
         }
@@ -425,7 +484,7 @@ export default defineComponent({
     },
 
     getFirstTag: function () {
-      if (this.tags.length > 0) {
+      if (this.tagMode === "all" && this.tags.length > 0) {
         return this.getTagName(this.tags[0], this.tagData);
       } else {
         return "";
@@ -587,10 +646,6 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    for (let i = 1; i <= 20; i++) {
-      this.pageSizeOptions.push(5 * i);
-    }
-
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
