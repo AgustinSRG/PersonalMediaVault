@@ -131,7 +131,7 @@ function main() {
 
     console.log("Preparing css file...");
 
-    const allFontAwesomeLines = FS.readFileSync(Path.resolve(__dirname, FA_VERSION, "css", "all.css")).toString().split("\n");
+    const allFontAwesomeLines = FS.readFileSync(Path.resolve(__dirname, FA_VERSION, "css", "all.css")).toString().split("\n").slice(5);
 
     const entries = [];
     let buf = [];

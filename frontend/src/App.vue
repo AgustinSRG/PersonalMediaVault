@@ -111,13 +111,13 @@ export default class App extends Vue {}
 </script>
 
 <style>
-/* Font awesome (minified version) */
-
-@import "./assets/font-awesome.css";
-
 /* Base style */
 
 @import "./style/base.css";
+
+/* Font awesome (minified version) */
+
+@import "./assets/font-awesome.css";
 
 /* Custom scroll bar */
 
@@ -153,29 +153,5 @@ export default class App extends Vue {}
 @import "./style/content/tasks.css";
 @import "./style/content/upload.css";
 
-/* Player */
-
-@import "./style/player/common.css";
-
-@import "./style/player/loader.css";
-
-@import "./style/player/player-top-bar.css";
-@import "./style/player/editor.css";
-
-@import "./style/player/player-config.css";
-@import "./style/player/context-menu.css";
-@import "./style/player/change-preview.css";
-
-@import "./style/player/empty-player.css";
-
-@import "./style/player/video-player.css";
-@import "./style/player/audio-player.css";
-@import "./style/player/image-player.css";
-
-@import "./style/player/timeline.css";
-
-@import "./style/player/volume.css";
-@import "./style/player/scale.css";
-
-@import "./style/player/subtitles.css";
+/* Player style imported in PlayerContainer component (for code-split) */
 </style>
