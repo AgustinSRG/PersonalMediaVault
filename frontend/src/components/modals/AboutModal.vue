@@ -133,21 +133,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.modal-body.no-padding {
-  padding: 0;
-}
-
-.modal-title.about-modal-title {
-  display: flex;
-  justify-content: left;
-  align-items: center;
-}
-
-.about-modal-logo {
-  width: 32px;
-  height: 32px;
-  margin-right: 0.5rem;
-}
-</style>

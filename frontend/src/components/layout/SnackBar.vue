@@ -50,29 +50,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.snackbar {
-  position: fixed;
-  left: 1rem;
-  bottom: 1rem;
-  opacity: 1;
-  box-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%),
-    0 8px 10px -5px rgb(0 0 0 / 40%);
-  padding: 1rem;
-  font-weight: bold;
-  border-radius: 0.25rem;
-  user-select: none;
-  transition: bottom 0.3s, opacity 0.1s;
-  z-index: 900;
-  background: var(--bar-bg-color);
-}
-
-.snackbar.hidden {
-  transition: bottom 0.3s, opacity 0.1s, visibility 0.1s;
-  bottom: -5rem;
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-}
-</style>

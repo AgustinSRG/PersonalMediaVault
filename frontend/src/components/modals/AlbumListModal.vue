@@ -329,19 +329,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.modal-body.with-menu.limited-size {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.albums-menu-empty {
-  padding: 1rem;
-  text-align: center;
-}
-
-.albums-modal-filter {
-  padding: 0.5rem 0.25rem;
-}
-</style>

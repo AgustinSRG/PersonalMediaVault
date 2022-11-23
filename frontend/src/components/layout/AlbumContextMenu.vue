@@ -214,36 +214,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.album-body-item-options-menu {
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  padding: 0.25rem 0;
-  z-index: 110;
-}
-
-.album-body-item-options-menu {
-  background: var(--bar-bg-color);
-}
-
-.album-body-item-options-menu.hidden {
-  display: none;
-}
-
-.album-body-item-options-menu-btn {
-  cursor: pointer;
-  padding: 1rem 1rem;
-  white-space: nowrap;
-}
-
-.album-body-item-options-menu-btn i {
-  width: 24px;
-  margin-right: 0.5rem;
-}
-
-.album-body-item-options-menu-btn:hover {
-  background: var(--hover-color);
-}
-</style>

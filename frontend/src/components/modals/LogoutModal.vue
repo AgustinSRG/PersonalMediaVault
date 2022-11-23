@@ -104,9 +104,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.modal-container-logout {
-  z-index: 250;
-}
-</style>

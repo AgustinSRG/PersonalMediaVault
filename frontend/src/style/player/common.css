@@ -1,0 +1,174 @@
+/* Player controls */
+
+.player-controls {
+    position: absolute;
+    display: block;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    background-color: var(--player-controls-background);
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.player-min .player-controls {
+    height: 32px;
+}
+
+.player-controls.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.player-btn {
+    display: block;
+    width: 40px;
+    height: 40px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--theme-btn-color);
+    background: transparent;
+}
+
+.player-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.player-min .player-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+.player-btn:hover {
+    color: var(--theme-btn-hover-color);
+}
+
+.player-btn:disabled:hover {
+    color: var(--theme-btn-color);
+}
+
+.player-controls-left {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    justify-content: left;
+    padding-left: 8px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+.player-controls-right {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: auto;
+    justify-content: right;
+    padding-right: 8px;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.player-min .player-controls-right {
+    padding-right: 4px;
+}
+
+.player-controls-left .player-controls-left {
+    padding-left: 4px;
+}
+
+/* Player feedback */
+
+.player-feeback-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+@keyframes player-feedback-animation {
+    0% {
+        opacity: 1;
+        transform: scale(0.75);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+.player-feedback {
+    animation-name: player-feedback-animation;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--player-feedback-background);
+    color: var(--theme-fg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 24px;
+}
+
+.player-min .player-feedback {
+    width: 64px;
+    height: 64px;
+    font-size: 16px;
+}
+
+/* Player-tooltip */
+
+.player-tooltip {
+    background: var(--player-tooltip-background);
+    color: var(--theme-fg-color);
+    padding: 0.5rem 0.75rem;
+    position: absolute;
+    bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 50%;
+}
+
+.player-tooltip-image {
+    height: 108px;
+    padding-bottom: 0.5rem;
+}
+
+.player-min .player-tooltip-image {
+    height: 72px;
+}
+
+.player-min .player-tooltip {
+    bottom: 50px;
+}
+
+.player-helptip-left {
+    left: 8px;
+}
+
+.player-helptip-right {
+    right: 8px;
+}

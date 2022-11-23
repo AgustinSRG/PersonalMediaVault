@@ -1,0 +1,188 @@
+/* Video player */
+
+.video-player-config {
+    position: absolute;
+    bottom: 80px;
+    right: 8px;
+    background: var(--player-menu-background);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    max-height: calc(50% - 80px);
+    min-width: 240px;
+    max-width: calc(100% - 16px);
+    overflow-y: auto;
+}
+
+.player-min .video-player-config {
+    font-size: small;
+    bottom: 55px;
+}
+
+.video-player-config.hidden {
+    display: none;
+}
+
+.video-player-config table {
+    width: 100%;
+    border-spacing: 0;
+    /* Removes the cell spacing via CSS */
+    border-collapse: collapse;
+    /* Optional - if you don't want to have double border where cells touch */
+}
+
+.video-player-config table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.video-player-config .tr-button {
+    cursor: pointer;
+}
+
+.video-player-config .arrow-config {
+    margin-left: 0.5rem;
+}
+
+.video-player-config .icon-config {
+    margin-right: 0.5rem;
+    width: 24px;
+}
+
+.video-player-config .tr-button:hover {
+    background: var(--hover-color);
+}
+
+.video-player-config .td-right {
+    text-align: right;
+}
+
+.video-player-config .check-uncheck {
+    visibility: hidden;
+}
+
+/* Audio player */
+
+.audio-player-config {
+    position: absolute;
+    bottom: 80px;
+    right: 8px;
+    background: var(--player-menu-background);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    max-height: calc(50% - 80px);
+    min-width: 240px;
+    max-width: calc(100% - 16px);
+    overflow-y: auto;
+}
+
+.player-min .audio-player-config {
+    font-size: small;
+    bottom: 55px;
+}
+
+.audio-player-config.hidden {
+    display: none;
+}
+
+.audio-player-config table {
+    width: 100%;
+    border-spacing: 0;
+    /* Removes the cell spacing via CSS */
+    border-collapse: collapse;
+    /* Optional - if you don't want to have double border where cells touch */
+}
+
+.audio-player-config table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.audio-player-config .tr-button {
+    cursor: pointer;
+}
+
+.audio-player-config .arrow-config {
+    margin-left: 0.5rem;
+}
+
+.audio-player-config .icon-config {
+    margin-right: 0.5rem;
+    width: 24px;
+}
+
+.audio-player-config .tr-button:hover {
+    background: var(--hover-color);
+}
+
+.audio-player-config .td-right {
+    text-align: right;
+}
+
+.audio-player-config .check-uncheck {
+    visibility: hidden;
+}
+
+/* Image player */
+
+.image-player-config {
+    position: absolute;
+    bottom: 80px;
+    right: 8px;
+    background: var(--player-menu-background);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    max-height: calc(50% - 80px);
+    min-width: 240px;
+    max-width: calc(100% - 16px);
+    overflow-y: auto;
+}
+
+.player-min .image-player-config {
+    font-size: small;
+    bottom: 55px;
+}
+
+.image-player-config.hidden {
+    display: none;
+}
+
+.image-player-config table {
+    width: 100%;
+    border-spacing: 0;
+    /* Removes the cell spacing via CSS */
+    border-collapse: collapse;
+    /* Optional - if you don't want to have double border where cells touch */
+}
+
+.image-player-config table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.image-player-config .tr-button {
+    cursor: pointer;
+}
+
+.image-player-config .arrow-config {
+    margin-left: 0.5rem;
+}
+
+.image-player-config .icon-config {
+    margin-right: 0.5rem;
+    width: 24px;
+}
+
+.image-player-config .tr-button:hover {
+    background: var(--hover-color);
+}
+
+.image-player-config .td-right {
+    text-align: right;
+}
+
+.image-player-config .check-uncheck {
+    visibility: hidden;
+}

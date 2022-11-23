@@ -126,14 +126,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.modal-body.limited-height {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.modal-menu-item-icon .unchecked {
-  visibility: hidden;
-}
-</style>

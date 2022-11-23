@@ -1,0 +1,61 @@
+/* Bottom bar */
+
+.bottom-bar {
+    display: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+    bottom: 0;
+    height: 40px;
+    left: 0;
+    width: 100%;
+    z-index: 9;
+
+    background: var(--bar-bg-color);
+}
+
+.vault-locked .bottom-bar {
+    visibility: hidden;
+}
+
+.layout-media-split .bottom-bar,
+.layout-album .bottom-bar {
+    display: flex;
+}
+
+@media (min-width: 1000px) {
+    .bottom-bar {
+        display: none;
+    }
+
+    .layout-media-split .bottom-bar,
+    .layout-album .bottom-bar {
+        display: none;
+    }
+}
+
+.bottom-bar-option {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.bottom-bar-option i {
+    margin-right: 1rem;
+}
+
+.bottom-bar-option:hover {
+    background: var(--hover-color);
+}
+
+.bottom-bar-option.selected,
+.bottom-bar-option.selected:hover {
+    background: var(--selected-color);
+}

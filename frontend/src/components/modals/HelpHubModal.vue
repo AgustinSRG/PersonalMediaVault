@@ -128,8 +128,3 @@ export default defineComponent({
 });
 </script>
 
-<style>
-.modal-container.modal-container-corner.modal-container-help {
-  padding-right: 104px;
-}
-</style>

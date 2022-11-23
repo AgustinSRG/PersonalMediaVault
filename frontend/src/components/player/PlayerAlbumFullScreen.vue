@@ -282,31 +282,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.player-album-container {
-  position: absolute;
-  top: 0;
-  left: -500px;
-  width: 100%;
-  max-width: 500px;
-  height: 100%;
-  transition: left 0.1s, visibility 0.1s;
-  background: var(--player-editor-background);
-  visibility: hidden;
-}
-
-.player-album-container:focus {
-  outline: none;
-}
-
-.full-screen .player-album-container.expanded {
-  left: 0;
-  visibility: visible;
-  transition: left 0.1s;
-}
-
-.album-body-item-title.no-btn {
-  width: calc(100% - 114px);
-}
-</style>

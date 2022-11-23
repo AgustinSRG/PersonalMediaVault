@@ -727,9 +727,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.adv-search-form {
-  padding: 1rem;
-}
-</style>

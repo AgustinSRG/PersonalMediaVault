@@ -1,0 +1,32 @@
+/* Base and common use styles */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.one-line {
+    white-space: nowrap;
+}
+
+a,
+a:visited {
+  color: inherit;
+}

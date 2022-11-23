@@ -1,0 +1,259 @@
+/* Style for album related components */
+
+.album-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 114px;
+    border-bottom: solid 1px var(--theme-border-color);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.album-header-title {
+    width: 100%;
+    height: 57px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.album-header-controls {
+    width: 100%;
+    height: 57px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.album-post-text {
+    padding: 0 1rem;
+}
+
+.album-buttons {
+    display: flex;
+    flex-direction: row;
+    padding-left: calc(1rem - 12px);
+}
+
+.album-buttons button {
+    margin-right: 0.25rem;
+}
+
+.album-title {
+    width: calc(100% - 48px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1.2rem;
+    padding: 0 1rem;
+}
+
+.album-title i {
+    margin-right: 1rem;
+}
+
+.album-body {
+    position: absolute;
+    top: 114px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 114px);
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* Buttons */
+
+.album-header-btn {
+    display: block;
+    width: 48px;
+    height: 48px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--theme-btn-color);
+    background: transparent;
+    border-radius: 100vw;
+}
+
+.album-body-btn {
+    display: block;
+    width: 32px;
+    height: 32px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--theme-btn-color);
+    background: transparent;
+    border-radius: 100vw;
+}
+
+.album-header-btn.toggled {
+    background: var(--selected-color);
+}
+
+.album-header-btn:disabled,
+.album-body-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.album-header-btn:not(:disabled):hover,
+.album-body-btn:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}
+
+.album-body-item {
+    position: relative;
+    display: flex;
+    padding: 8px;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.album-body-item:visited {
+    color: inherit;
+}
+
+.album-body-item:hover {
+    background: var(--theme-option-hover-color);
+}
+
+.album-body-item:focus-visible {
+    outline: none;
+    text-decoration: underline;
+    background: var(--theme-option-hover-color);
+}
+
+.album-body-item.current,
+.album-body-item.current:hover {
+    background: var(--theme-option-selected-color);
+}
+
+.album-body-item-thumbnail {
+    position: relative;
+    width: 114px;
+    height: 114px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.album-body-item-thumbnail {
+    background: var(--hover-color);
+}
+
+.album-body-item-thumbnail img {
+    width: 100%;
+    height: 100%;
+}
+
+.album-body-item-thumb-tag {
+    position: absolute;
+    background: var(--bg-opaque-75);
+    color: var(--theme-fg-color);
+    bottom: 0.25rem;
+    right: 0.25rem;
+    font-size: small;
+    padding: 0.25rem;
+}
+
+.album-body-item-thumb-pos {
+    position: absolute;
+    background: var(--bg-opaque-75);
+    color: var(--theme-fg-color);
+    top: 0.25rem;
+    left: 0.25rem;
+    font-size: small;
+    padding: 0.25rem;
+}
+
+.album-body-item-title {
+    padding: 0.5rem;
+    font-size: 1.1rem;
+    width: calc(100% - 114px - 32px);
+    height: 114px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.album-body-item-options-menu {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+    z-index: 110;
+}
+
+.album-body-item-options-menu {
+    background: var(--bar-bg-color);
+}
+
+.album-body-item-options-menu.hidden {
+    display: none;
+}
+
+.album-body-item-options-menu-btn {
+    cursor: pointer;
+    padding: 1rem 1rem;
+    white-space: nowrap;
+}
+
+.album-body-item-options-menu-btn i {
+    width: 24px;
+    margin-right: 0.5rem;
+}
+
+.album-body-item-options-menu-btn:hover {
+    background: var(--hover-color);
+}
+
+.albums-menu-empty {
+    padding: 1rem;
+    text-align: center;
+}
+
+.albums-modal-filter {
+    padding: 0.5rem 0.25rem;
+}
+
+/* Player active album list (on full screen) */
+
+.player-album-container {
+    position: absolute;
+    top: 0;
+    left: -500px;
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    transition: left 0.1s, visibility 0.1s;
+    background: var(--player-editor-background);
+    visibility: hidden;
+}
+
+.player-album-container:focus {
+    outline: none;
+}
+
+.full-screen .player-album-container.expanded {
+    left: 0;
+    visibility: visible;
+    transition: left 0.1s;
+}
+
+.album-body-item-title.no-btn {
+    width: calc(100% - 114px);
+}

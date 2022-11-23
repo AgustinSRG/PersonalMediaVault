@@ -137,15 +137,15 @@
           <tr>
             <th class="text-left">{{ $t("ID") }}</th>
             <th class="text-left">{{ $t("Name") }}</th>
-            <th class="text-right td-fit"></th>
-            <th class="text-right td-fit" v-if="canWrite"></th>
+            <th class="text-right td-shrink"></th>
+            <th class="text-right td-shrink" v-if="canWrite"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="sub in subtitles" :key="sub.id">
             <td class="bold">{{ sub.id }}</td>
             <td class="bold">{{ sub.name }}</td>
-            <td class="text-right td-fit">
+            <td class="text-right td-shrink">
               <button
                 type="button"
                 class="btn btn-primary btn-xs mr-1"
@@ -154,7 +154,7 @@
                 <i class="fas fa-download"></i> {{ $t("Download") }}
               </button>
             </td>
-            <td class="text-right td-fit" v-if="canWrite">
+            <td class="text-right td-shrink" v-if="canWrite">
               <button
                 type="button"
                 class="btn btn-danger btn-xs"
@@ -1510,33 +1510,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.player-media-editor {
-  position: absolute;
-  top: 57px;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 57px);
-  overflow: auto;
-  background: var(--player-editor-background);
-  color: var(--theme-fg-color);
-  padding: 1rem;
-}
-
-.player-media-editor:focus {
-  outline: none;
-}
-
-.player-min .player-media-editor {
-  top: 32px;
-  height: calc(100% - 32px);
-}
-
-.form-group-thumbnail {
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  border: solid 1px var(--theme-border-color);
-}
-</style>

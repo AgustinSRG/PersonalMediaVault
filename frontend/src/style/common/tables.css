@@ -1,0 +1,71 @@
+/* Tables */
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid var(--theme-border-color);
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--theme-border-color);
+}
+
+.table tbody+tbody {
+    border-top: 2px solid var(--theme-border-color);
+}
+
+.table.table-vmiddle td {
+    vertical-align: middle;
+}
+
+.table-btn {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    background: transparent;
+    color: var(--theme-btn-color);
+}
+
+.table-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.table-btn:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}
+
+.td-shrink {
+    width: 1px;
+}
+
+/* Custom style for keyboard shortcuts table */
+
+.key-shortcut {
+    font-weight: bold;
+    background: var(--theme-bg-color);
+    padding: 0.35rem;
+}
+
+.keyboard-help-table td {
+    white-space: nowrap;
+}

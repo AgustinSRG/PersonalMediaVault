@@ -135,15 +135,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.key-shortcut {
-  font-weight: bold;
-  background: var(--theme-bg-color);
-  padding: 0.35rem;
-}
-
-.keyboard-help-table td {
-  white-space: nowrap;
-}
-</style>

@@ -1,0 +1,132 @@
+/* Sidebar */
+
+.side-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 240px;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: left 0.2s;
+    z-index: 12;
+
+    background: var(--bar-bg-color);
+}
+
+.side-bar:focus {
+    outline: none;
+}
+
+.vault-locked .side-bar {
+    visibility: hidden;
+}
+
+.side-bar.hidden {
+    left: -300px;
+    transition: left 0.2s, visibility 0.2s;
+    visibility: hidden;
+}
+
+.side-bar-header {
+    width: 100%;
+    height: 56px;
+    display: flex;
+    white-space: nowrap;
+    flex-direction: row;
+    align-items: center;
+}
+
+.side-bar-body {
+    height: calc(100% - 56px);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.side-bar-option {
+    width: 100%;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+.side-bar-option:visited {
+    color: inherit;
+}
+
+.side-bar-option:hover {
+    background: var(--theme-option-hover-color);
+}
+
+.side-bar-option:focus-visible {
+    outline: none;
+    text-decoration: underline;
+    background: var(--theme-option-hover-color);
+}
+
+.side-bar-option.selected,
+.side-bar-option.selected:hover {
+    background: var(--theme-option-selected-color);
+}
+
+.side-bar-option-icon {
+    width: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 1rem;
+}
+
+.side-bar-option-text {
+    width: calc(100% - 72px);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    padding-right: 1rem;
+    font-size: 1.1rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.side-bar-separator {
+    width: 100%;
+    height: 1px;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.side-bar-separator {
+    border-top: solid 1px var(--theme-border-color);
+}
+
+.sidebar-float-overlay {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    opacity: 1;
+    transition: opacity 0.2s;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 11;
+}
+
+.sidebar-float-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (min-width: 1000px) {
+    .layout-initial .sidebar-float-overlay {
+        display: none;
+    }
+}

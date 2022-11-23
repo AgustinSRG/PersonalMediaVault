@@ -1,0 +1,29 @@
+/* Player editor style */
+
+.player-media-editor {
+    position: absolute;
+    top: 57px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 57px);
+    overflow: auto;
+    background: var(--player-editor-background);
+    color: var(--theme-fg-color);
+    padding: 1rem;
+}
+
+.player-media-editor:focus {
+    outline: none;
+}
+
+.player-min .player-media-editor {
+    top: 32px;
+    height: calc(100% - 32px);
+}
+
+.form-group-thumbnail {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    border: solid 1px var(--theme-border-color);
+}

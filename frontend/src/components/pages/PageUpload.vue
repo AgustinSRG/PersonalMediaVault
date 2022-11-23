@@ -549,31 +549,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.upload-options-container {
-  border: dotted 2px var(--theme-border-color);
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.upload-box {
-  display: flex;
-
-  width: 100%;
-  height: 240px;
-
-  border: dotted 2px var(--theme-border-color);
-
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-
-  cursor: pointer;
-}
-
-.upload-box:hover,
-.upload-box.dragging {
-  background: var(--hover-color);
-}
-</style>

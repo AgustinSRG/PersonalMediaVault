@@ -1,0 +1,46 @@
+.switch-button-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: right;
+    width: 100%;
+}
+
+.switch-button-container:disabled {
+    opacity: 0.7;
+}
+
+.switch-button-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.switch-button-control .switch-button {
+    height: 16px;
+    width: 48px;
+    box-shadow: inset 0px 0px 2px 0px var(--switch-shadow-color);
+    border-radius: 16px;
+    transition: all 0.1s ease-in-out;
+    cursor: pointer;
+    background: var(--switch-disabled-color);
+}
+
+.switch-button-control .switch-button .button {
+    height: 26px;
+    width: 26px;
+    border-radius: 26px;
+    background: var(--switch-color);
+    transition: all 0.1s ease-in-out;
+    transform: translate(0, -6px);
+}
+
+.switch-button-control .switch-button.enabled {
+    background-color: var(--switch-enabled-color);
+    box-shadow: none;
+}
+
+.switch-button-control .switch-button.enabled .button {
+    background: var(--switch-color);
+    transform: translate(24px, -6px);
+}

@@ -410,25 +410,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.task-status {
-  color: gray;
-}
-
-.task-status.task-running {
-  color: lime;
-}
-
-.task-pbar-container {
-  width: 120px;
-  height: 1rem;
-  display: flex;
-  border: solid 1px var(--theme-border-color);
-}
-
-.task-pbar-current {
-  height: 100%;
-  background: lime;
-}
-</style>

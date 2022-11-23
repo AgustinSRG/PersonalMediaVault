@@ -1,0 +1,243 @@
+/* Top-bar */
+
+.top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    white-space: nowrap;
+    z-index: 10;
+
+    background: var(--bar-bg-color);
+}
+
+.top-bar:focus {
+    outline: none;
+}
+
+.vault-locked .top-bar {
+    visibility: hidden;
+}
+
+.top-bar-logo-td {
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.top-bar-search-td {
+    text-align: center;
+}
+
+.top-bar-user-td {
+    padding-right: 8px;
+    text-align: right;
+}
+
+.top-bar-title {
+    font-weight: bold;
+    font-size: 24px;
+    padding-left: 8px;
+    padding-top: 3px;
+}
+
+.top-bar-title-min {
+    font-weight: bold;
+    font-size: 24px;
+    padding-left: 8px;
+    padding-top: 3px;
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .top-bar-title {
+        display: none;
+    }
+
+    .top-bar-title-min {
+        display: initial;
+    }
+}
+
+@media (max-width: 300px) {
+    .top-bar-title-min {
+        display: none;
+    }
+}
+
+.top-bar-button {
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    background: transparent;
+    color: var(--theme-btn-color);
+}
+
+.top-bar-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.top-bar-button:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}
+
+.top-bar-center-div {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.top-bar-search-input-container {
+    height: 40px;
+    display: inline-block;
+    width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 1px solid var(--search-input-border-color);
+    background: var(--search-input-background);
+}
+
+.top-bar-search-input-container:focus {
+    outline: none;
+}
+
+.top-bar-search-input-container.focused {
+    box-shadow: 0 0 0 0.1rem var(--theme-border-color);
+}
+
+.top-bar-search-input {
+    outline: none;
+    width: calc(100% - 54px);
+    height: 38px;
+    border: none;
+    font-size: 16px;
+    margin: 0;
+    padding: 1px 4px;
+}
+
+.top-bar-search-input {
+    color: var(--theme-fg-color);
+    background: var(--search-input-inner-background);
+}
+
+@media (max-width: 850px) {
+    .top-bar-search-input-container {
+        width: 360px;
+    }
+}
+
+@media (max-width: 740px) {
+    .top-bar-search-input-container {
+        width: 240px;
+    }
+}
+
+.top-bar-button-small-version {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .top-bar-search-input-container {
+        display: none;
+    }
+
+    .top-bar-button-small-version {
+        display: inline-block;
+    }
+
+    .top-bar-button-large-version {
+        display: none;
+    }
+}
+
+.top-bar-logo-td::placeholder {
+    color: hsla(0, 100%, 100%, 0.88);
+}
+
+.top-bar-search-button {
+    width: 54px;
+    height: 40px;
+    font-size: 20px;
+}
+
+.top-bar-search-suggestions {
+    position: absolute;
+    top: calc(40px + 0.2rem);
+    left: 0;
+    width: calc(100% + 0.1rem);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s, visibility 0.1s;
+
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.top-bar-search-suggestions {
+    background: var(--search-suggestions-background);
+}
+
+.top-bar-search-input-container.focused .top-bar-search-suggestions {
+    transition: opacity 0.1s;
+    opacity: 1;
+    pointer-events: all;
+}
+
+.top-bar-search-input-container.focused .top-bar-search-suggestions {
+    box-shadow: 0 0 0 0.1rem var(--theme-border-color);
+}
+
+.top-bar-search-input-container.focused .top-bar-search-suggestions.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.top-bar-search-suggestion {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.top-bar-search-suggestion:hover {
+    background: var(--hover-color);
+}
+
+.top-bar-search-suggestion i {
+    margin-right: 0.5rem;
+}
+
+.top-bar-logo-img {
+    width: 32px;
+    height: 32px;
+}
+
+.top-bar-logo-td .top-bar-button {
+    width: 72px;
+}
+
+.top-bar-menu-btn {
+    visibility: hidden;
+}
+
+.sidebar-hidden .top-bar-menu-btn {
+    visibility: visible;
+}

@@ -195,9 +195,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.modal-container-login {
-  z-index: 301;
-}
-</style>

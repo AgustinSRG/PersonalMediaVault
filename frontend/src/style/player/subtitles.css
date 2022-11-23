@@ -1,0 +1,67 @@
+/* Style for subtitles */
+
+.player-subtitles-container {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    bottom: 70px;
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+}
+
+.player-min .player-subtitles-container {
+    bottom: 50px;
+}
+
+.player-subtitles-container.controls-hidden,
+.player-min .player-subtitles-container.controls-hidden {
+    bottom: 0;
+}
+
+.player-subtitles {
+    display: inline;
+    color: var(--theme-fg-color);
+    padding: 0.5rem;
+    font-weight: bold;
+}
+
+.player-subtitles-s {
+    font-size: 14px;
+}
+
+.player-subtitles-m {
+    font-size: 16px;
+}
+
+.player-subtitles-l {
+    font-size: 24px;
+}
+
+.player-subtitles-xl {
+    font-size: 32px;
+}
+
+.player-subtitles-xxl {
+    font-size: 48px;
+}
+
+.player-subtitles-bg-0 {
+    background: transparent;
+}
+
+.player-subtitles-bg-25 {
+    background: var(--bg-opaque-25);
+}
+
+.player-subtitles-bg-50 {
+    background: var(--bg-opaque-50);
+}
+
+.player-subtitles-bg-75 {
+    background: var(--bg-opaque-75);
+}
+
+.player-subtitles-bg-100 {
+    background: var(--bg-opaque-100);
+}

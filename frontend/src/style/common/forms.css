@@ -1,0 +1,123 @@
+/* Forms */
+
+.btn {
+    display: inline-block;
+
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--theme-fg-color);
+    background: transparent;
+    border-radius: 100vw;
+    padding: 12px 24px;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    font-size: 12px;
+}
+
+.btn-xs {
+    font-size: 10px;
+}
+
+.btn-mr {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn i {
+    margin-right: 12px;
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.btn:hover {
+    opacity: 1;
+}
+
+.btn:disabled:hover {
+    opacity: 0.7;
+}
+
+.btn-primary {
+    border: solid 1px var(--theme-border-color);
+}
+
+.btn-primary:not(:disabled):hover {
+    background: var(--hover-color);
+}
+
+.btn-danger {
+    border: solid 1px rgba(255, 0, 0, 0.1);
+}
+
+.btn-danger:not(:disabled):hover {
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.form-group {
+    padding-bottom: 0.75rem;
+}
+
+.form-group label {
+    display: block;
+    width: 100%;
+    padding-bottom: 0.3rem;
+}
+
+.form-control {
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    background-clip: padding-box;
+
+    max-width: 100%;
+
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-fg-color);
+    background: var(--input-bg-color);
+}
+
+.form-control:focus {
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-fg-color);
+    background: var(--input-bg-color);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem var(--theme-border-color);
+}
+
+.form-control-full-width {
+    width: 100%;
+}
+
+.form-control.form-textarea {
+    resize: vertical;
+    height: auto;
+}
+
+.form-error {
+    color: red;
+}
+
+.file-hidden {
+    display: none;
+}
+
+.border-top {
+    border-top: solid 1px var(--theme-border-color);
+    padding-top: 1rem;
+}
+
+.adv-search-form {
+    padding: 1rem;
+}

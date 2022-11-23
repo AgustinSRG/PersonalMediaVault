@@ -1,0 +1,74 @@
+/* Timeline */
+
+.player-timeline {
+    position: absolute;
+    height: 20px;
+    overflow: visible;
+    bottom: 56px;
+    left: 10px;
+    width: calc(100% - 20px);
+    cursor: pointer;
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.player-timeline.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.player-min .player-timeline {
+    bottom: 32px;
+}
+
+.player-timeline-back,
+.player-timeline-buffer,
+.player-timeline-current {
+    height: 3px;
+    transition: height 0.1s;
+}
+
+.player-timeline-back {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--player-timeline-bg);
+}
+
+.player-timeline-buffer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    background: var(--player-timeline-buffer);
+}
+
+.player-timeline-current {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    background: var(--player-timeline-current);
+}
+
+.player-timeline:hover .player-timeline-back,
+.player-timeline:hover .player-timeline-buffer,
+.player-timeline:hover .player-timeline-current {
+    height: 5px;
+}
+
+.player-timeline-thumb {
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    background: var(--player-timeline-current);
+    position: absolute;
+    bottom: -5px;
+    left: -7px;
+    display: none;
+}
+
+.player-timeline:hover .player-timeline-thumb {
+    display: block;
+}
