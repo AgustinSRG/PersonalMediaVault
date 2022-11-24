@@ -177,7 +177,7 @@ import { defineComponent } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController } from "@/control/auth";
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumEntry } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
@@ -253,7 +253,7 @@ export default defineComponent({
         return; // Vault is locked
       }
 
-      Request.Pending("page-albums-load", AmbumsAPI.GetAlbums())
+      Request.Pending("page-albums-load", AlbumsAPI.GetAlbums())
         .onSuccess((result) => {
           this.albumsList = result;
           this.loading = false;

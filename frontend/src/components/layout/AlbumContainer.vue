@@ -159,7 +159,7 @@
 </template>
 
 <script lang="ts">
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
@@ -441,7 +441,7 @@ export default defineComponent({
         return;
       }
       const albumId = this.albumId;
-      Request.Do(AmbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
+      Request.Do(AlbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Successfully removed from album"));
           AlbumsController.OnChangedAlbum(albumId, true);

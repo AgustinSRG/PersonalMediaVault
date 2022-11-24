@@ -2,7 +2,7 @@
 
 import { GetAPIURL, RequestParams } from "@/utils/request";
 
-export class AmbumsAPI {
+export class AlbumsAPI {
     public static GetAlbums(): RequestParams {
         return {
             method: "GET",

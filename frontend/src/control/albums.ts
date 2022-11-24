@@ -1,6 +1,6 @@
 // Albums data controller
 
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
 import { shuffleArray } from "@/utils/shuffle";
@@ -55,7 +55,7 @@ export class AlbumsController {
         }
 
         Timeouts.Abort("albums-load");
-        Request.Pending("albums-load", AmbumsAPI.GetAlbumsMin()).onSuccess(albums => {
+        Request.Pending("albums-load", AlbumsAPI.GetAlbumsMin()).onSuccess(albums => {
             AlbumsController.Albums = Object.create(null);
 
             for (const album of albums) {
@@ -118,7 +118,7 @@ export class AlbumsController {
         }
 
         Timeouts.Abort("album-current-load");
-        Request.Pending("album-current-load", AmbumsAPI.GetAlbum(AlbumsController.CurrentAlbum)).onSuccess(album => {
+        Request.Pending("album-current-load", AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum)).onSuccess(album => {
             AlbumsController.CurrentAlbumData = album;
             AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
 
@@ -207,7 +207,7 @@ export class AlbumsController {
         const albumList = AlbumsController.CurrentAlbumData.list.map(a => {
             return a.id;
         });
-        Request.Do(AmbumsAPI.SetAlbumOrder(albumId, albumList))
+        Request.Do(AlbumsAPI.SetAlbumOrder(albumId, albumList))
             .onSuccess(() => {
                 AppEvents.Emit("album-order-saved");
                 AppEvents.Emit("albums-list-change");

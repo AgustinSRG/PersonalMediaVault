@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
@@ -123,7 +123,7 @@ export default defineComponent({
 
       const albumName = this.name;
 
-      Request.Do(AmbumsAPI.CreateAlbum(albumName))
+      Request.Do(AlbumsAPI.CreateAlbum(albumName))
         .onSuccess((response) => {
           AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
           this.busy = false;

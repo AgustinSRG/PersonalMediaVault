@@ -41,7 +41,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import { Request } from "@/utils/request";
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 
@@ -81,7 +81,7 @@ export default defineComponent({
       const albumId = this.aid;
       this.busy = true;
       // Add
-      Request.Do(AmbumsAPI.AddMediaToAlbum(albumId, mid))
+      Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
         .onSuccess(() => {
           this.busy = false;
           AppEvents.Emit("snack", this.$t("Successfully added to album"));

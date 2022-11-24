@@ -118,7 +118,7 @@
 </template>
 
 <script lang="ts">
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
@@ -249,7 +249,7 @@ export default defineComponent({
 
       if (album.added) {
         // Remove
-        Request.Do(AmbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
+        Request.Do(AlbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
           .onSuccess(() => {
             this.busy = false;
             album.added = false;
@@ -274,7 +274,7 @@ export default defineComponent({
           });
       } else {
         // Add
-        Request.Do(AmbumsAPI.AddMediaToAlbum(album.id, this.mid))
+        Request.Do(AlbumsAPI.AddMediaToAlbum(album.id, this.mid))
           .onSuccess(() => {
             this.busy = false;
             album.added = true;

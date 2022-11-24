@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { AmbumsAPI } from "@/api/api-albums";
+import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
@@ -132,7 +132,7 @@ export default defineComponent({
 
       const albumId = this.currentAlbum;
 
-      Request.Do(AmbumsAPI.RenameAlbum(albumId, this.name))
+      Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Album renamed") + ": " + this.name);
           this.busy = false;
