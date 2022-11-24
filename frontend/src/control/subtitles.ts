@@ -81,13 +81,13 @@ export class SubtitlesController {
                 })
                 .add("*", "*", () => {
                     // Retry
-                    Timeouts.Set("subtitles-load", 1500, MediaController.Load);
+                    Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
                 })
                 .handle(err);
         }).onUnexpectedError(err => {
             console.error(err);
             // Retry
-            Timeouts.Set("media-current-load", 1500, MediaController.Load);
+            Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
         });
     }
 

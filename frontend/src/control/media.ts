@@ -63,6 +63,9 @@ export interface MediaData {
     }[],
 
     force_start_beginning: boolean,
+
+    img_notes: boolean,
+    img_notes_url: string,
 }
 
 export class MediaController {

@@ -1,5 +1,6 @@
 // Media API
 
+import { ImageNote } from "@/control/img-notes";
 import { GetAPIURL, RequestParams } from "@/utils/request";
 
 export class MediaAPI {
@@ -55,6 +56,14 @@ export class MediaAPI {
             json: {
                 force_start_beginning: forceStartBeginning,
             },
+        };
+    }
+
+    public static SetNotes(id: number, notes: ImageNote[]): RequestParams {
+        return {
+            method: "POST",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(id + "") + "/edit/notes"),
+            json: notes,
         };
     }
 

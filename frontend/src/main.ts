@@ -11,6 +11,7 @@ import { AlbumsController } from './control/albums';
 import { MediaController } from './control/media';
 import { SubtitlesController } from './control/subtitles';
 import { KeyboardManager } from './control/keyboard';
+import { ImageNotesController } from './control/img-notes';
 
 AppPreferences.LoadPreferences();
 PlayerPreferences.LoadPreferences();
@@ -24,6 +25,7 @@ TagsController.Initialize();
 MediaController.Initialize();
 AlbumsController.Initialize();
 SubtitlesController.Initialize();
+ImageNotesController.Initialize();
 
 // Setup App
 
