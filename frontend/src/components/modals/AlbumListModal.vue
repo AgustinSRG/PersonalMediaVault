@@ -30,8 +30,8 @@
         <i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...
       </div>
 
-      <div class="modal-body with-menu limited-size" v-if="!loading">
-        <div class="albums-modal-filter">
+      <div class="modal-body with-menu" v-if="!loading">
+        <div class="albums-modal-filter" v-if="!canWrite">
           <input
             type="text"
             autocomplete="off"
@@ -41,7 +41,24 @@
             :placeholder="$t('Filter by name') + '...'"
           />
         </div>
-        <table class="modal-menu">
+        <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
+          <input
+            type="text"
+            autocomplete="off"
+            @input="updateAlbums"
+            v-model="filter"
+            class="form-control"
+            :placeholder="$t('Filter by name') + '...'"
+          />
+          <button v-if="!editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to edit mode')">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+           <button v-if="editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to view mode')">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="albums-list-table-container">
+        <table class="modal-menu" v-if="editMode">
           <tr v-if="albums.length === 0">
             <td colspan="2" class="albums-menu-empty">
               {{ $t("No albums found") }}
@@ -65,9 +82,32 @@
             </td>
           </tr>
         </table>
+         <table class="modal-menu" v-if="!editMode">
+          <tr v-if="albums.length === 0">
+            <td colspan="2" class="albums-menu-empty">
+              {{ $t("No albums found") }}
+            </td>
+          </tr>
+          <tr
+            v-for="a in albums"
+            :key="a.id"
+            class="modal-menu-item"
+            tabindex="0"
+            @click="goToAlbum(a)"
+            @keydown="clickOnEnter"
+          >
+            <td class="modal-menu-item-icon">
+              <i  class="fas fa-list-ol"></i>
+            </td>
+            <td class="modal-menu-item-title">
+              {{ a.name }}
+            </td>
+          </tr>
+        </table>
+        </div>
       </div>
 
-      <div class="modal-footer no-padding" v-if="!loading">
+      <div class="modal-footer no-padding" v-if="!loading && editMode">
         <button type="button" @click="createAlbum" class="modal-footer-btn">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
@@ -118,6 +158,10 @@ export default defineComponent({
       busy: false,
 
       displayAlbumCreate: false,
+
+      editMode: AuthController.CanWrite,
+      canWrite: AuthController.CanWrite,
+      editModeChanged: false,
     };
   },
   methods: {
@@ -139,6 +183,12 @@ export default defineComponent({
         .onSuccess((result) => {
           this.mediaAlbums = result;
           this.loading = false;
+          this.canWrite = AuthController.CanWrite;
+          if (!this.canWrite) {
+            this.editMode = false;
+          } else if (!this.editModeChanged) {
+            this.editMode = true;
+          }
           this.updateAlbums();
         })
         .onRequestError((err) => {
@@ -176,6 +226,17 @@ export default defineComponent({
 
     onNewAlbum: function (albumId, albumName) {
       this.filter = albumName;
+      this.updateAlbums();
+    },
+
+    goToAlbum: function (album) {
+      this.close();
+      AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
+    },
+
+    changeEditMode: function() {
+      this.editMode = !this.editMode;
+      this.editModeChanged = true;
       this.updateAlbums();
     },
 
@@ -257,6 +318,9 @@ export default defineComponent({
         .map((a: any) => {
           a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
           return a;
+        })
+        .filter(a => {
+          return this.editMode || a.added;
         })
         .sort((a, b) => {
           if (a.nameLowerCase < b.nameLowerCase) {

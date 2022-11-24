@@ -289,6 +289,20 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    public static ClickOnAlbumByMedia(albumId: number, mediaId: number) {
+        AppStatus.CurrentAlbum = albumId;
+        AppStatus.CurrentMedia = mediaId;
+        AppStatus.CurrentSearch = "";
+
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "left";
+
+        AppStatus.OnStatusUpdate();
+    }
+
     public static ClickOnAlbumWithList(albumId: number, list: number[]) {
         AppStatus.CurrentAlbum = albumId;
 

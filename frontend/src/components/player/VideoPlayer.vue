@@ -174,7 +174,6 @@
 
       <div class="player-controls-right">
         <button
-          v-if="canwrite"
           type="button"
           :title="$t('Manage albums')"
           class="player-btn"
