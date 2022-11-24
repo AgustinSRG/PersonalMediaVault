@@ -14,6 +14,8 @@ import (
 type ImageNote struct {
 	XPosition int    `json:"x"`
 	YPosition int    `json:"y"`
+	Width     int    `json:"w"`
+	Height    int    `json:"h"`
 	Text      string `json:"text"`
 }
 

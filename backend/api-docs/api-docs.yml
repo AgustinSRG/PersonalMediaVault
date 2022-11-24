@@ -671,6 +671,14 @@ paths:
                   type: number
                   format: int32
                   description: "Y Coordinate of the notes"
+                w:
+                  type: number
+                  format: int32
+                  description: "Width of the notes"
+                h:
+                  type: number
+                  format: int32
+                  description: "Height of the notes"
                 text:
                   type: string
                   description: "Text of the notes"
