@@ -75,10 +75,10 @@
 }
 
 .modal-xl {
-    width: 1140px;
+    width: 1200px;
 }
 
-@media (max-width: 1240px) {
+@media (max-width: 1300px) {
     .modal-xl {
         width: calc(100% - 1rem);
     }
