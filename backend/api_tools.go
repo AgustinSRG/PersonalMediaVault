@@ -410,3 +410,40 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 
 	return encrypted_file, nil
 }
+
+func EncryptAssetData(data []byte, key []byte) (string, error) {
+	encrypted_file := GetTemporalFileName("pma", true)
+
+	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+
+	if err != nil {
+
+		return "", err
+	}
+
+	err = ws.Initialize(int64(len(data)), key)
+
+	if err != nil {
+		ws.Close()
+
+		os.Remove(encrypted_file)
+
+		return "", err
+	}
+
+	err = ws.Write(data)
+
+	if err != nil {
+		LogError(err)
+
+		ws.Close()
+
+		os.Remove(encrypted_file)
+
+		return "", err
+	}
+
+	ws.Close()
+
+	return encrypted_file, nil
+}

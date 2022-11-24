@@ -445,6 +445,13 @@ paths:
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+              img_notes:
+                type: boolean
+                description: "True if the image has notes"
+              img_notes_url:
+                type: string
+                description: "URL to fetch the image notes from"
+                example: "/assets/b/0/0/notes.json"
                 
   "/api/media/{id}/albums":
     get:
@@ -612,12 +619,61 @@ paths:
           format: int64
           description: Media ID
         - in: body
-          name: description
+          name: configuration
           schema:
             properties:
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/media/{id}/edit/notes":
+    post:
+      summary: Sets the image notes.
+      description: Updates the image notes file for a media asset.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID (Write access required)
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: array of notes
+          schema:
+            type: array
+            items:
+              properties:
+                x:
+                  type: number
+                  format: int32
+                  description: "X Coordinate of the notes"
+                y:
+                  type: number
+                  format: int32
+                  description: "Y Coordinate of the notes"
+                text:
+                  type: string
+                  description: "Text of the notes"
       responses:
         400:
           description: Bad request.

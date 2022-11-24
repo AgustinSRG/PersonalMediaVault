@@ -1,4 +1,4 @@
-// Media thumbnail update (by the user)
+// Media subtitles API
 
 package main
 

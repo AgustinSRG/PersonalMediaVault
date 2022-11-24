@@ -105,6 +105,9 @@ type MediaAPIMetaResponse struct {
 	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
 
 	ForceStartBeginning bool `json:"force_start_beginning"`
+
+	HasImageNotes bool   `json:"img_notes"`
+	ImageNotesURL string `json:"img_notes_url"`
 }
 
 func api_getMedia(response http.ResponseWriter, request *http.Request) {
@@ -194,6 +197,14 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	} else {
 		result.VideoPreviewsInterval = 0
 		result.VideoPreviews = ""
+	}
+
+	if meta.HasImageNotes {
+		result.HasImageNotes = true
+		result.ImageNotesURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ImageNotesAsset) + "/notes.json" + "?token=" + MakeAssetToken(media_id, meta.ImageNotesAsset)
+	} else {
+		result.HasImageNotes = false
+		result.ImageNotesURL = ""
 	}
 
 	resolutions := make([]MediaAPIMetaResolution, 0)
