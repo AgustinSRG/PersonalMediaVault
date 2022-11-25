@@ -1,0 +1,32 @@
+/* Image notes style */
+
+.image-notes-container {
+    position: absolute;
+}
+
+.image-notes-container.edit-active {
+    cursor: text;
+}
+
+.image-notes {
+    position: absolute;
+}
+
+.image-notes-container.edit-active .image-notes {
+    cursor: move;
+    border: solid 2px var(--theme-border-color);
+    background: var(--player-controls-background);
+}
+
+.image-notes-container.edit-active .image-notes.selected {
+    background: var(--player-feedback-background);
+}
+
+.image-notes.creating {
+    border: solid 2px var(--theme-border-color);
+    background: var(--player-controls-background);
+}
+
+.image-notes-container.add-active .image-notes {
+    pointer-events: none;
+}

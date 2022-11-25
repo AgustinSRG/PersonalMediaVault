@@ -37,6 +37,15 @@
           left: imageLeft,
         }"
       />
+
+      <ImageNotes
+        :editing="notesEditMode"
+        :contextopen="contextMenuShown"
+        :width="imageWidth"
+        :height="imageHeight"
+        :top="imageTop"
+        :left="imageLeft"
+      ></ImageNotes>
     </div>
 
     <div class="player-loader" v-if="loading">
@@ -244,6 +253,8 @@
       @update:fit="onUserFitUpdated"
       :url="imageURL"
       v-model:controls="showControls"
+      :canwrite="canwrite"
+      v-model:notesedit="notesEditMode"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -256,6 +267,7 @@ import ScaleControl from "./ScaleControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerEncodingPending from "./PlayerEncodingPending.vue";
+import ImageNotes from "./ImageNotes.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
@@ -282,6 +294,7 @@ export default defineComponent({
     PlayerTopBar,
     PlayerContextMenu,
     PlayerEncodingPending,
+    ImageNotes,
   },
   name: "ImagePlayer",
   emits: [
@@ -361,6 +374,8 @@ export default defineComponent({
       cursorShown: false,
 
       prefetchURL: "",
+
+      notesEditMode: false,
     };
   },
   methods: {

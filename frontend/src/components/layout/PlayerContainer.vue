@@ -277,4 +277,6 @@ export default defineComponent({
 
 @import "@/style/player/subtitles.css";
 
+@import "@/style/player/image-notes.css";
+
 </style>

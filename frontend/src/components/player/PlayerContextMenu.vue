@@ -67,7 +67,29 @@
         </td>
       </tr>
 
-      <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="download">
+      <tr
+        v-if="type === 'image' && canwrite"
+        class="tr-button"
+        tabindex="0"
+        @click="toggleNotes"
+        @keydown="clickOnEnter"
+      >
+        <td>
+          <i class="fas fa-pencil-alt icon-config"></i>
+          <span class="context-entry-title">{{ $t("Notes edit mode") }}</span>
+        </td>
+        <td class="td-right">
+          <i class="fas fa-check" :class="{ 'check-uncheck': !notesedit }"></i>
+        </td>
+      </tr>
+
+      <tr
+        v-if="url"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="download"
+      >
         <td>
           <i class="fas fa-download icon-config"></i>
           <span class="context-entry-title">{{ $t("Download") }}</span>
@@ -75,7 +97,13 @@
         <td class="td-right"></td>
       </tr>
 
-      <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="refreshMedia">
+      <tr
+        v-if="url"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="refreshMedia"
+      >
         <td>
           <i class="fas fa-sync-alt icon-config"></i>
           <span class="context-entry-title">{{ $t("Refresh") }}</span>
@@ -93,7 +121,14 @@ import { useVModel } from "../../utils/vmodel";
 
 export default defineComponent({
   name: "PlayerContextMenu",
-  emits: ["update:shown", "update:loop", "update:controls", "update:fit", "close"],
+  emits: [
+    "update:shown",
+    "update:loop",
+    "update:controls",
+    "update:fit",
+    "update:notesedit",
+    "close",
+  ],
   props: {
     shown: Boolean,
     type: String,
@@ -105,6 +140,8 @@ export default defineComponent({
     loop: Boolean,
     fit: Boolean,
     controls: Boolean,
+    notesedit: Boolean,
+    canwrite: Boolean,
   },
   setup(props) {
     return {
@@ -112,6 +149,7 @@ export default defineComponent({
       loopState: useVModel(props, "loop"),
       fitState: useVModel(props, "fit"),
       controlsState: useVModel(props, "controls"),
+      notesState: useVModel(props, "notesedit"),
     };
   },
   data: function () {
@@ -140,6 +178,12 @@ export default defineComponent({
 
     toggleFit: function () {
       this.fitState = !this.fitState;
+      this.shownState = false;
+      this.$emit("close");
+    },
+
+    toggleNotes: function () {
+      this.notesState = !this.notesState;
       this.shownState = false;
       this.$emit("close");
     },
