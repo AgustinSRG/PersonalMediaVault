@@ -10,6 +10,7 @@
       v-for="note in notes"
       :key="note.id"
       class="image-notes"
+      tabindex="0"
       :class="{ selected: selectedNotes === note.id }"
       :style="{
         top: mapDim(note.y, 0, realHeight, imageHeight),
@@ -70,7 +71,11 @@
         @touchstart.passive="startResizeNotes(note, $event, 'br')"
       ></div>
 
-      <div class="image-notes-hover" v-if="!editing">{{note.text}}</div>
+      <div
+        class="image-notes-hover"
+        v-if="!editing"
+        v-html="escapeText(note.text)"
+      ></div>
 
       <div
         class="image-notes-text-edit"
@@ -124,10 +129,9 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
-import { isTouchDevice } from "../../utils/touch";
 import { ImageNote, ImageNotesController } from "@/control/img-notes";
 import { AppEvents } from "@/control/app-events";
+import { escapeHTML } from "@/utils/text";
 
 export default defineComponent({
   name: "ImageNotes",
@@ -180,11 +184,6 @@ export default defineComponent({
       resizeStartX: 0,
       resizeStartY: 0,
       resizeMode: "",
-
-      textEditX: 0,
-      textEditY: 0,
-      textEditW: 0,
-      textEditH: 0,
     };
   },
 
@@ -201,6 +200,10 @@ export default defineComponent({
           Math.max(minDim, Math.round((dim * maxDim) / imgDim))
         ) + "px"
       );
+    },
+
+    escapeText: function (txt: string): string {
+      return escapeHTML(txt).replace(/\n/g, "<br>");
     },
 
     startAdding: function (e) {
