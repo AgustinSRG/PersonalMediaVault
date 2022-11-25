@@ -19,8 +19,13 @@ export interface ImageNote {
 function parseImageNotes(json: string): ImageNote[] {
     let o: any;
     try {
-        o = JSON.parse(json);
+        if (typeof json === "string") {
+            o = JSON.parse(json);
+        } else {
+            o = json;
+        }
     } catch (ex) {
+        console.error(ex);
         return [];
     }
     if (o && Array.isArray(o)) {
@@ -69,7 +74,7 @@ export class ImageNotesController {
         ImageNotesController.Load();
     }
 
-    public static GetNewId() {
+    public static GetNewId(): number {
         ImageNotesController.NextId++;
         return ImageNotesController.NextId;
     }
@@ -116,6 +121,7 @@ export class ImageNotesController {
         }).onSuccess(jsonNotes => {
             ImageNotesController.Notes = parseImageNotes(jsonNotes);
             AppEvents.Emit("img-notes-update");
+            console.log(ImageNotesController.Notes);
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
@@ -154,7 +160,6 @@ export class ImageNotesController {
     private static Saving = false;
 
     public static SaveNotes() {
-        return;
         if (ImageNotesController.Saving) {
             ImageNotesController.PendingSave = true;
             return;
@@ -235,7 +240,11 @@ export class ImageNotesController {
 
         const actualNote = ImageNotesController.Notes[noteIndex];
 
-        if (actualNote.id === note.id && actualNote.x === note.x && actualNote.y === note.y && actualNote.w === note.w && actualNote.h === note.h && actualNote.text === note.text) {
+        if (note.id !== actualNote.id) {
+            return;
+        }
+
+        if (actualNote.x === note.x && actualNote.y === note.y && actualNote.w === note.w && actualNote.h === note.h && actualNote.text === note.text) {
             return; // Nothing changed
         }
 
@@ -254,12 +263,20 @@ export class ImageNotesController {
     }
 
 
-    public static RemoveNote(noteIndex: number) {
-        if (noteIndex < 0 || noteIndex >= ImageNotesController.Notes.length) {
+    public static RemoveNote(note: ImageNote) {
+        let noteIndex = -1;
+        for (let i = 0; i < ImageNotesController.Notes.length; i++) {
+            if (ImageNotesController.Notes[i].id === note.id) {
+                noteIndex = i;
+                break;
+            }
+        }
+
+        if (noteIndex === -1) {
             return;
         }
 
-        ImageNotesController.Notes.slice(noteIndex, 1);
+        ImageNotesController.Notes.splice(noteIndex, 1);
 
         AppEvents.Emit("img-notes-rm", noteIndex);
 

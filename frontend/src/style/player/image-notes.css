@@ -10,6 +10,8 @@
 
 .image-notes {
     position: absolute;
+    display: flex;
+    border: solid 2px var(--theme-border-color);
 }
 
 .image-notes-container.edit-active .image-notes {
@@ -20,6 +22,7 @@
 
 .image-notes-container.edit-active .image-notes.selected {
     background: var(--player-feedback-background);
+    z-index: 2;
 }
 
 .image-notes.creating {
@@ -99,4 +102,35 @@
     height: var(--resize-size);
     width: var(--resize-size);
     cursor: se-resize;
+}
+
+.image-notes-text-edit {
+    cursor: default;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 4px;
+    width: calc(100% - 8px);
+    min-width: 10rem;
+    background: var(--player-editor-background);
+    padding: 0.25rem;
+}
+
+.image-notes-text-edit:focus {
+    outline: none;
+}
+
+.image-notes-hover {
+    display: none;
+}
+
+.image-notes:hover .image-notes-hover, .image-notes:focus .image-notes-hover {
+    display: block;
+    background: var(--player-editor-background);
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 4px;
+    width: calc(100% - 8px);
+    padding: 0.5rem;
+    height: auto;
+    text-align: center;
 }

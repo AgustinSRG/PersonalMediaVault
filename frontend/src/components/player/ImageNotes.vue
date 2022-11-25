@@ -19,6 +19,7 @@
       }"
       @mousedown="clickOnNotes(note, $event)"
       @touchstart.passive="clickOnNotes(note, $event)"
+      :title="note.text"
     >
       <div
         v-if="editing"
@@ -68,6 +69,45 @@
         @mousedown="startResizeNotes(note, $event, 'br')"
         @touchstart.passive="startResizeNotes(note, $event, 'br')"
       ></div>
+
+      <div class="image-notes-hover" v-if="!editing">{{note.text}}</div>
+
+      <div
+        class="image-notes-text-edit"
+        v-if="editing && !moving && !resizing && selectedNotes === note.id"
+        tabindex="-1"
+        @dblclick="stopPropagationEvent"
+        @keydown="stopPropagationEvent"
+        @click="stopPropagationEvent"
+        @mousedown="stopPropagationEvent"
+        @touchstart.passive="stopPropagationEvent"
+        @contextmenu="stopPropagationEvent"
+      >
+        <div class="form-group">
+          <textarea
+            class="form-control form-textarea form-control-full-width"
+            :placeholder="$t('Type the notes text') + '...'"
+            v-model="note.text"
+            @change="saveNote(note)"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <button
+            type="button"
+            class="btn btn-primary btn-xs btn-mr"
+            @click="saveNote(note)"
+          >
+            <i class="fas fa-check"></i> {{ $t("Save") }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger btn-xs"
+            @click="deleteNote(note)"
+          >
+            <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+          </button>
+        </div>
+      </div>
     </div>
     <div
       v-if="adding"
@@ -140,6 +180,11 @@ export default defineComponent({
       resizeStartX: 0,
       resizeStartY: 0,
       resizeMode: "",
+
+      textEditX: 0,
+      textEditY: 0,
+      textEditW: 0,
+      textEditH: 0,
     };
   },
 
@@ -153,7 +198,7 @@ export default defineComponent({
       return (
         Math.min(
           maxDim,
-          Math.max(minDim, Math.floor((dim * maxDim) / imgDim))
+          Math.max(minDim, Math.round((dim * maxDim) / imgDim))
         ) + "px"
       );
     },
@@ -191,14 +236,14 @@ export default defineComponent({
         0,
         Math.min(
           this.imageWidth - 32,
-          Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
         )
       );
       const trueY = Math.max(
         0,
         Math.min(
           this.imageHeight - 32,
-          Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
         )
       );
 
@@ -238,6 +283,8 @@ export default defineComponent({
           ImageNotesController.ModifyNote(this.selectedNotesData);
         }
       }
+
+      console.log(this.notes);
     },
 
     mouseMove: function (e) {
@@ -259,14 +306,14 @@ export default defineComponent({
           this.imageWidth,
           Math.max(
             0,
-            Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
           )
         );
         const trueY = Math.min(
           this.imageHeight,
           Math.max(
             0,
-            Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
           )
         );
 
@@ -291,14 +338,14 @@ export default defineComponent({
           this.imageWidth,
           Math.max(
             0,
-            Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
           )
         );
         const trueY = Math.min(
           this.imageHeight,
           Math.max(
             0,
-            Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
           )
         );
 
@@ -333,14 +380,14 @@ export default defineComponent({
           this.imageWidth,
           Math.max(
             0,
-            Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
           )
         );
         const trueY = Math.min(
           this.imageHeight,
           Math.max(
             0,
-            Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
           )
         );
 
@@ -404,6 +451,9 @@ export default defineComponent({
       if (!this.editing) {
         return;
       }
+      if (this.moving || this.resizing) {
+        return;
+      }
       if ((e.which || e.button) !== 1) {
         return;
       }
@@ -424,14 +474,14 @@ export default defineComponent({
         0,
         Math.min(
           this.imageWidth,
-          Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
         )
       );
       const trueY = Math.max(
         0,
         Math.min(
           this.imageHeight,
-          Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
         )
       );
 
@@ -449,6 +499,9 @@ export default defineComponent({
       if (!this.editing) {
         return;
       }
+      if (this.moving || this.resizing) {
+        return;
+      }
       if ((e.which || e.button) !== 1) {
         return;
       }
@@ -469,14 +522,14 @@ export default defineComponent({
         0,
         Math.min(
           this.imageWidth,
-          Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
         )
       );
       const trueY = Math.max(
         0,
         Math.min(
           this.imageHeight,
-          Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
         )
       );
 
@@ -489,6 +542,18 @@ export default defineComponent({
 
       this.resizeStartX = trueX;
       this.resizeStartY = trueY;
+    },
+
+    saveNote: function (note) {
+      ImageNotesController.ModifyNote(note);
+      this.selectedNotes = -1;
+      this.selectedNotesData = "";
+    },
+
+    deleteNote: function (note) {
+      ImageNotesController.RemoveNote(note);
+      this.selectedNotes = -1;
+      this.selectedNotesData = "";
     },
 
     onNotesUpdate: function () {
@@ -509,13 +574,10 @@ export default defineComponent({
     },
 
     onNotesChange: function (i: number, note: ImageNote) {
-      this.notes[i] = {
-        x: note.x,
-        y: note.y,
-        w: note.w,
-        h: note.h,
-        text: note.text,
-      };
+      this.notes[i].x = note.x;
+      this.notes[i].y = note.y;
+      this.notes[i].w = note.w;
+      this.notes[i].h = note.h;
     },
 
     onNotesRemove: function (i: number) {
@@ -528,6 +590,10 @@ export default defineComponent({
         this.realWidth = bounds.width;
         this.realHeight = bounds.height;
       });
+    },
+
+    stopPropagationEvent: function (e) {
+      e.stopPropagation();
     },
   },
 
