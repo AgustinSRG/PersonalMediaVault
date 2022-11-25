@@ -30,3 +30,73 @@
 .image-notes-container.add-active .image-notes {
     pointer-events: none;
 }
+
+.image-notes .resize {
+    position: absolute;
+    --resize-size: 8px;
+    --resize-pos: -4px;
+}
+
+.image-notes .resize-left {
+    top: 0;
+    left: var(--resize-pos);
+    height: 100%;
+    width: var(--resize-size);
+    cursor: w-resize;
+}
+
+.image-notes .resize-right {
+    top: 0;
+    right: var(--resize-pos);
+    height: 100%;
+    width: var(--resize-size);
+    cursor: e-resize;
+}
+
+.image-notes .resize-top {
+    top: var(--resize-pos);
+    right: 0;
+    height: var(--resize-size);
+    width: 100%;
+    cursor: n-resize;
+}
+
+.image-notes .resize-bottom {
+    bottom: var(--resize-pos);
+    right: 0;
+    height: var(--resize-size);
+    width: 100%;
+    cursor: n-resize;
+}
+
+.image-notes .resize-corner-top-left {
+    top: var(--resize-pos);
+    left: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: nw-resize;
+}
+
+.image-notes .resize-corner-top-right {
+    top: var(--resize-pos);
+    right: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: ne-resize;
+}
+
+.image-notes .resize-corner-bottom-left {
+    bottom: var(--resize-pos);
+    left: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: sw-resize;
+}
+
+.image-notes .resize-corner-bottom-right {
+    bottom: var(--resize-pos);
+    right: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: se-resize;
+}

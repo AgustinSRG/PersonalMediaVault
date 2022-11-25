@@ -19,7 +19,56 @@
       }"
       @mousedown="clickOnNotes(note, $event)"
       @touchstart.passive="clickOnNotes(note, $event)"
-    ></div>
+    >
+      <div
+        v-if="editing"
+        class="resize resize-left"
+        @mousedown="startResizeNotes(note, $event, 'l')"
+        @touchstart.passive="startResizeNotes(note, $event, 'l')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-top"
+        @mousedown="startResizeNotes(note, $event, 't')"
+        @touchstart.passive="startResizeNotes(note, $event, 't')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-right"
+        @mousedown="startResizeNotes(note, $event, 'r')"
+        @touchstart.passive="startResizeNotes(note, $event, 'r')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-bottom"
+        @mousedown="startResizeNotes(note, $event, 'b')"
+        @touchstart.passive="startResizeNotes(note, $event, 'b')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-corner-top-left"
+        @mousedown="startResizeNotes(note, $event, 'tl')"
+        @touchstart.passive="startResizeNotes(note, $event, 'tl')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-corner-top-right"
+        @mousedown="startResizeNotes(note, $event, 'tr')"
+        @touchstart.passive="startResizeNotes(note, $event, 'tr')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-corner-bottom-left"
+        @mousedown="startResizeNotes(note, $event, 'bl')"
+        @touchstart.passive="startResizeNotes(note, $event, 'bl')"
+      ></div>
+      <div
+        v-if="editing"
+        class="resize resize-corner-bottom-right"
+        @mousedown="startResizeNotes(note, $event, 'br')"
+        @touchstart.passive="startResizeNotes(note, $event, 'br')"
+      ></div>
+    </div>
     <div
       v-if="adding"
       class="image-notes creating"
@@ -82,6 +131,15 @@ export default defineComponent({
       moveOriginalY: 0,
       moveStartX: 0,
       moveStartY: 0,
+
+      resizing: false,
+      resizeOriginalX: 0,
+      resizeOriginalY: 0,
+      resizeOriginalW: 0,
+      resizeOriginalH: 0,
+      resizeStartX: 0,
+      resizeStartY: 0,
+      resizeMode: "",
     };
   },
 
@@ -155,7 +213,7 @@ export default defineComponent({
     },
 
     mouseDrop: function () {
-      if (!this.adding && !this.moving) {
+      if (!this.adding && !this.moving && !this.resizing) {
         return;
       }
       if (this.adding) {
@@ -174,10 +232,16 @@ export default defineComponent({
           ImageNotesController.ModifyNote(this.selectedNotesData);
         }
       }
+      if (this.resizing) {
+        this.resizing = false;
+        if (this.selectedNotesData) {
+          ImageNotesController.ModifyNote(this.selectedNotesData);
+        }
+      }
     },
 
     mouseMove: function (e) {
-      if (!this.adding && !this.moving) {
+      if (!this.adding && !this.moving && !this.resizing) {
         return;
       }
       const bounds = this.$el.getBoundingClientRect();
@@ -241,16 +305,95 @@ export default defineComponent({
         const diffX = this.moveStartX - trueX;
         this.selectedNotesData.x = Math.max(0, this.moveOriginalX - diffX);
 
-        if (this.selectedNotesData.x + this.selectedNotesData.w > this.imageWidth) {
-            this.selectedNotesData.x = Math.max(0, this.imageWidth - this.selectedNotesData.w);
+        if (
+          this.selectedNotesData.x + this.selectedNotesData.w >
+          this.imageWidth
+        ) {
+          this.selectedNotesData.x = Math.max(
+            0,
+            this.imageWidth - this.selectedNotesData.w
+          );
         }
 
         const diffY = this.moveStartY - trueY;
         this.selectedNotesData.y = Math.max(0, this.moveOriginalY - diffY);
 
-        if (this.selectedNotesData.y + this.selectedNotesData.h > this.imageHeight) {
-            this.selectedNotesData.y = Math.max(0, this.imageHeight - this.selectedNotesData.h);
+        if (
+          this.selectedNotesData.y + this.selectedNotesData.h >
+          this.imageHeight
+        ) {
+          this.selectedNotesData.y = Math.max(
+            0,
+            this.imageHeight - this.selectedNotesData.h
+          );
         }
+      }
+      if (this.resizing && this.selectedNotesData) {
+        const trueX = Math.min(
+          this.imageWidth,
+          Math.max(
+            0,
+            Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+          )
+        );
+        const trueY = Math.min(
+          this.imageHeight,
+          Math.max(
+            0,
+            Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+          )
+        );
+
+        const diffX = this.resizeStartX - trueX;
+        const diffY = this.resizeStartY - trueY;
+
+        let x1 = this.resizeOriginalX;
+        let y1 = this.resizeOriginalY;
+        let x2 = x1 + this.resizeOriginalW;
+        let y2 = y1 + this.resizeOriginalH;
+
+        switch (this.resizeMode) {
+          case "t":
+            y1 -= diffY;
+            break;
+          case "b":
+            y2 -= diffY;
+            break;
+          case "l":
+            x1 -= diffX;
+            break;
+          case "r":
+            x2 -= diffX;
+            break;
+          case "tl":
+            y1 -= diffY;
+            x1 -= diffX;
+            break;
+          case "tr":
+            y1 -= diffY;
+            x2 -= diffX;
+            break;
+          case "bl":
+            y2 -= diffY;
+            x1 -= diffX;
+            break;
+          case "br":
+            y2 -= diffY;
+            x2 -= diffX;
+            break;
+        }
+
+        x1 = Math.min(this.imageHeight, Math.max(0, x1));
+        x2 = Math.min(this.imageHeight, Math.max(0, x2));
+
+        y1 = Math.min(this.imageHeight, Math.max(0, y1));
+        y2 = Math.min(this.imageHeight, Math.max(0, y2));
+
+        this.selectedNotesData.x = Math.min(x1, x2);
+        this.selectedNotesData.y = Math.min(y1, y2);
+
+        this.selectedNotesData.w = Math.max(32, Math.abs(x1 - x2));
+        this.selectedNotesData.h = Math.max(32, Math.abs(y1 - y2));
       }
     },
 
@@ -297,6 +440,55 @@ export default defineComponent({
       this.moveStartY = trueY;
       this.moveOriginalX = notes.x;
       this.moveOriginalY = notes.y;
+    },
+
+    startResizeNotes: function (notes, e, resizeMode) {
+      if (this.contextopen) {
+        return;
+      }
+      if (!this.editing) {
+        return;
+      }
+      if ((e.which || e.button) !== 1) {
+        return;
+      }
+      e.stopPropagation();
+      this.selectedNotes = notes.id;
+      this.selectedNotesData = notes;
+      const bounds = this.$el.getBoundingClientRect();
+      let x: number;
+      let y: number;
+      if (e.touches && e.touches.length > 0) {
+        x = e.touches[0].pageX;
+        y = e.touches[0].pageY;
+      } else {
+        x = e.pageX;
+        y = e.pageY;
+      }
+      const trueX = Math.max(
+        0,
+        Math.min(
+          this.imageWidth,
+          Math.floor(((x - bounds.left) * this.imageWidth) / bounds.width)
+        )
+      );
+      const trueY = Math.max(
+        0,
+        Math.min(
+          this.imageHeight,
+          Math.floor(((y - bounds.top) * this.imageHeight) / bounds.height)
+        )
+      );
+
+      this.resizing = true;
+      this.resizeMode = resizeMode;
+      this.resizeOriginalX = notes.x;
+      this.resizeOriginalY = notes.y;
+      this.resizeOriginalW = notes.w;
+      this.resizeOriginalH = notes.h;
+
+      this.resizeStartX = trueX;
+      this.resizeStartY = trueY;
     },
 
     onNotesUpdate: function () {
