@@ -598,6 +598,10 @@ export default defineComponent({
     stopPropagationEvent: function (e) {
       e.stopPropagation();
     },
+
+    onNotesSaved: function () {
+      AppEvents.Emit("snack", this.$t("Image notes have been saved"));
+    },
   },
 
   mounted: function () {
@@ -631,6 +635,12 @@ export default defineComponent({
     document.addEventListener("touchmove", this.$options.mouseMoveH);
 
     this.onNotesUpdate();
+
+    this.$options.onNotesSavedH = this.onNotesSaved.bind(this);
+    AppEvents.AddEventListener(
+      "image-notes-saved",
+      this.$options.onNotesSavedH
+    );
   },
 
   beforeUnmount: function () {
@@ -649,6 +659,11 @@ export default defineComponent({
     document.removeEventListener("touchend", this.$options.mouseDropH);
     document.removeEventListener("mousemove", this.$options.mouseMoveH);
     document.removeEventListener("touchmove", this.$options.mouseMoveH);
+
+    AppEvents.RemoveEventListener(
+      "image-notes-saved",
+      this.$options.onNotesSavedH
+    );
   },
 
   watch: {

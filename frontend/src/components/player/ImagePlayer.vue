@@ -39,6 +39,7 @@
       />
 
       <ImageNotes
+        v-if="currentResolution < 0"
         :editing="notesEditMode"
         :contextopen="contextMenuShown"
         :width="imageWidth"

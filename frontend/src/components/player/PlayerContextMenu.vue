@@ -76,7 +76,7 @@
       >
         <td>
           <i class="fas fa-pencil-alt icon-config"></i>
-          <span class="context-entry-title">{{ $t("Notes edit mode") }}</span>
+          <span class="context-entry-title">{{ $t("Edit image notes") }}</span>
         </td>
         <td class="td-right">
           <i class="fas fa-check" :class="{ 'check-uncheck': !notesedit }"></i>

@@ -174,6 +174,8 @@ export class ImageNotesController {
                 ImageNotesController.Saving = false;
                 if (ImageNotesController.PendingSave) {
                     ImageNotesController.SaveNotes();
+                } else {
+                    AppEvents.Emit("image-notes-saved");
                 }
             })
             .onCancel(() => {
