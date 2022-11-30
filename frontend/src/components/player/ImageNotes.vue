@@ -76,10 +76,10 @@
         v-if="!editing"
         v-html="escapeText(note.text)"
         :class="{
-          'top': note.y < imageHeight / 2,
-          'left': note.x < imageWidth / 2,
-          'bottom': note.y >= imageHeight / 2,
-          'right': note.x >= imageWidth / 2,
+          top: note.y < imageHeight / 2,
+          left: note.x < imageWidth / 2,
+          bottom: note.y >= imageHeight / 2,
+          right: note.x >= imageWidth / 2,
         }"
       ></div>
 
@@ -96,7 +96,10 @@
       >
         <div class="form-group">
           <textarea
-            class="form-control form-textarea form-control-full-width"
+            class="
+              form-control form-textarea form-control-full-width
+              auto-focus
+            "
             :placeholder="$t('Type the notes text') + '...'"
             v-model="note.text"
             @change="saveNote(note)"
@@ -266,6 +269,15 @@ export default defineComponent({
       this.addH = 32;
     },
 
+    autoFocus: function () {
+      nextTick(() => {
+        const editElement = this.$el.querySelector(".auto-focus");
+        if (editElement) {
+          editElement.focus();
+        }
+      });
+    },
+
     mouseDrop: function () {
       if (!this.adding && !this.moving && !this.resizing) {
         return;
@@ -285,12 +297,14 @@ export default defineComponent({
         if (this.selectedNotesData) {
           ImageNotesController.ModifyNote(this.selectedNotesData);
         }
+        this.autoFocus();
       }
       if (this.resizing) {
         this.resizing = false;
         if (this.selectedNotesData) {
           ImageNotesController.ModifyNote(this.selectedNotesData);
         }
+        this.autoFocus();
       }
 
       console.log(this.notes);
