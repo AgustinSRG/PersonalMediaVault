@@ -75,6 +75,12 @@
         class="image-notes-hover"
         v-if="!editing"
         v-html="escapeText(note.text)"
+        :class="{
+          'top': note.y < imageHeight / 2,
+          'left': note.x < imageWidth / 2,
+          'bottom': note.y >= imageHeight / 2,
+          'right': note.x >= imageWidth / 2,
+        }"
       ></div>
 
       <div

@@ -130,12 +130,26 @@
     display: block;
     background: var(--player-editor-background);
     position: absolute; 
-    top: 100%;
-    left: 4px;
     width: auto;
     white-space: nowrap;
     min-width: fit-content;
     padding: 0.5rem;
     height: auto;
     text-align: center;
+}
+
+.image-notes-hover.top {
+    top: 100%;
+}
+
+.image-notes-hover.bottom {
+    bottom: 100%;
+}
+
+.image-notes-hover.left {
+    left: 50%;
+}
+
+.image-notes-hover.right {
+    right: 50%;
 }
