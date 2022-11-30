@@ -147,9 +147,9 @@
 }
 
 .image-notes-hover.left {
-    left: 50%;
+    left: 0;
 }
 
 .image-notes-hover.right {
-    right: 50%;
+    right: 0;
 }
