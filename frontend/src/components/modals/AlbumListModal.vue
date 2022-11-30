@@ -36,6 +36,7 @@
             type="text"
             autocomplete="off"
             @input="updateAlbums"
+            :disabled="busy"
             v-model="filter"
             class="form-control form-control-full-width"
             :placeholder="$t('Filter by name') + '...'"
@@ -46,6 +47,7 @@
             type="text"
             autocomplete="off"
             @input="updateAlbums"
+            :disabled="busy"
             v-model="filter"
             class="form-control"
             :placeholder="$t('Filter by name') + '...'"
@@ -213,6 +215,9 @@ export default defineComponent({
     },
 
     close: function () {
+      if (this.busy) {
+        return;
+      }
       this.displayStatus = false;
     },
 

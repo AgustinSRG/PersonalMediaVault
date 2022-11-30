@@ -115,6 +115,9 @@ export default defineComponent({
     },
 
     close: function () {
+      if (this.busy) {
+        return;
+      }
       this.displayStatus = false;
     },
 
