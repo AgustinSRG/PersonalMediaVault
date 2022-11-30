@@ -171,6 +171,7 @@ export class PlayerPreferences {
     }
 
     public static GetInitialTime(mid: number) {
+        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []); // Update
         for (const entry of PlayerPreferences.PlayTimeCache) {
             if (entry.mid === mid) {
                 const time = entry.time;
@@ -187,7 +188,7 @@ export class PlayerPreferences {
 
     public static SetInitialTime(mid: number, time: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = PlayerPreferences.PlayTimeCache.filter(e => {
+        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter(e => {
             return e.mid !== mid;
         });
 
@@ -205,7 +206,7 @@ export class PlayerPreferences {
 
     public static ClearInitialTime(mid: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = PlayerPreferences.PlayTimeCache.filter(e => {
+        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter(e => {
             return e.mid !== mid;
         });
 
@@ -213,6 +214,7 @@ export class PlayerPreferences {
     }
 
     public static GetAlbumPos(id: number): number {
+        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []);
         for (const entry of PlayerPreferences.AlbumCurrentCache) {
             if (entry.id === id) {
                 const pos = entry.pos;
@@ -228,7 +230,7 @@ export class PlayerPreferences {
     }
 
     public static SetAlbumPos(id: number, pos: number) {
-        PlayerPreferences.AlbumCurrentCache = PlayerPreferences.AlbumCurrentCache.filter(e => {
+        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []).filter(e => {
             return e.id !== id;
         });
 
