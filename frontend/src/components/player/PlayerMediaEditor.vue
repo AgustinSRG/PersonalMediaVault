@@ -298,12 +298,12 @@
         </tbody>
       </table>
     </div>
-    <div class="form-group border-top" v-if="canWrite">
+    <div  class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Extra media configuration") }}:</label>
     </div>
-    <div class="table-responsive" v-if="canWrite">
+    <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
       <table class="table">
-        <tr>
+        <tr v-if="type === 2 || type === 3">
           <td class="">
             {{
               $t("Reset time to the beginning every time the media reloads?")
@@ -315,7 +315,7 @@
         </tr>
       </table>
     </div>
-    <div class="form-group" v-if="canWrite">
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <button
         type="button"
         class="btn btn-primary"
