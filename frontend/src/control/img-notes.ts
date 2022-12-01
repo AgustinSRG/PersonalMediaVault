@@ -5,6 +5,7 @@ import { GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
+import { BusyStateController } from "./busy-state";
 import { MediaController } from "./media";
 
 export interface ImageNote {
@@ -166,12 +167,14 @@ export class ImageNotesController {
         }
 
         ImageNotesController.Saving = true;
+        BusyStateController.SetBusy("image-notes-save");
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
         Request.Pending("notes-save", MediaAPI.SetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess(() => {
                 ImageNotesController.Saving = false;
+                BusyStateController.RemoveBusy("image-notes-save");
                 if (ImageNotesController.PendingSave) {
                     ImageNotesController.SaveNotes();
                 } else {
@@ -181,9 +184,11 @@ export class ImageNotesController {
             .onCancel(() => {
                 ImageNotesController.Saving = false;
                 ImageNotesController.PendingSave = false;
+                BusyStateController.RemoveBusy("image-notes-save");
             })
             .onRequestError((err) => {
                 ImageNotesController.Saving = false;
+                BusyStateController.RemoveBusy("image-notes-save");
                 Request.ErrorHandler()
                     .add(401, "*", () => {
                         AppEvents.Emit("unauthorized");
@@ -206,6 +211,7 @@ export class ImageNotesController {
                 console.error(err);
                 ImageNotesController.Saving = false;
                 ImageNotesController.PendingSave = false;
+                BusyStateController.RemoveBusy("image-notes-save");
             });
     }
 

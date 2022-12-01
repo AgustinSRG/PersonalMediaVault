@@ -306,8 +306,6 @@ export default defineComponent({
         }
         this.autoFocus();
       }
-
-      console.log(this.notes);
     },
 
     mouseMove: function (e) {
@@ -594,6 +592,10 @@ export default defineComponent({
         h: note.h,
         text: note.text,
       });
+
+      this.selectedNotes = note.id;
+      this.selectedNotesData = this.notes[this.notes.length - 1];
+      this.autoFocus();
     },
 
     onNotesChange: function (i: number, note: ImageNote) {
