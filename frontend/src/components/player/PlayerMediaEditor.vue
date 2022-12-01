@@ -57,6 +57,7 @@
           type="button"
           :title="$t('Remove tag')"
           class="media-tag-btn"
+          :disabled="busy"
           @click="removeTag(tag)"
         >
           <i class="fas fa-times"></i>
@@ -71,6 +72,7 @@
           autocomplete="off"
           maxlength="255"
           v-model="tagToAdd"
+          :disabled="busy"
           @input="onTagAddChanged"
           class="form-control"
         />
@@ -149,6 +151,7 @@
               <button
                 type="button"
                 class="btn btn-primary btn-xs mr-1"
+                :disabled="busy"
                 @click="downloadSubtitles(sub)"
               >
                 <i class="fas fa-download"></i> {{ $t("Download") }}
@@ -281,6 +284,7 @@
                 v-if="!res.enabled"
                 type="button"
                 class="btn btn-primary btn-xs"
+                :disabled="busy"
                 @click="addResolution(res)"
               >
                 <i class="fas fa-plus"></i> {{ $t("Encode") }}
@@ -289,6 +293,7 @@
                 v-if="res.enabled"
                 type="button"
                 class="btn btn-danger btn-xs"
+                :disabled="busy"
                 @click="deleteResolution(res)"
               >
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
@@ -298,7 +303,10 @@
         </tbody>
       </table>
     </div>
-    <div  class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
+    <div
+      class="form-group border-top"
+      v-if="canWrite && (type === 2 || type === 3)"
+    >
       <label>{{ $t("Extra media configuration") }}:</label>
     </div>
     <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
@@ -310,7 +318,7 @@
             }}
           </td>
           <td class="text-right">
-            <toggle-switch v-model:val="startBeginning"></toggle-switch>
+            <toggle-switch v-model:val="startBeginning" :disabled="busy"></toggle-switch>
           </td>
         </tr>
       </table>
@@ -628,7 +636,10 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.ChangeMediaThumbnail(mediaId, file))
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.ChangeMediaThumbnail(mediaId, file)
+      )
         .onSuccess((res) => {
           AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
           this.busy = false;
@@ -687,7 +698,10 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.ChangeMediaTitle(mediaId, this.title))
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.ChangeMediaTitle(mediaId, this.title)
+      )
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Successfully changed title"));
           this.busy = false;
@@ -742,7 +756,10 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.ChangeMediaDescription(mediaId, this.desc))
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.ChangeMediaDescription(mediaId, this.desc)
+      )
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Successfully changed description"));
           this.busy = false;
@@ -795,7 +812,10 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.ChangeExtraParams(mediaId, this.startBeginning)
+      )
         .onSuccess(() => {
           AppEvents.Emit(
             "snack",
@@ -853,7 +873,7 @@ export default defineComponent({
 
           const mediaId = AppStatus.CurrentMedia;
 
-          Request.Do(MediaAPI.EncodeMedia(mediaId))
+          Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
             .onSuccess(() => {
               AppEvents.Emit(
                 "snack",
@@ -924,7 +944,7 @@ export default defineComponent({
       const mediaId = AppStatus.CurrentMedia;
       const tagName = this.getTagName(tag, this.tagData);
 
-      Request.Do(TagsAPI.UntagMedia(mediaId, tag))
+      Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
         .onSuccess(() => {
           AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
           this.busy = false;
@@ -986,7 +1006,7 @@ export default defineComponent({
       const mediaId = AppStatus.CurrentMedia;
       const tag = this.tagToAdd;
 
-      Request.Do(TagsAPI.TagMedia(mediaId, tag))
+      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
         .onSuccess((res) => {
           AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
           this.busy = false;
@@ -1044,7 +1064,7 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(TagsAPI.TagMedia(mediaId, tag))
+      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
         .onSuccess((res) => {
           AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
           this.busy = false;
@@ -1159,7 +1179,10 @@ export default defineComponent({
 
           const mediaId = AppStatus.CurrentMedia;
 
-          Request.Do(MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+          Request.Pending(
+            "media-editor-busy",
+            MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps)
+          )
             .onSuccess((result) => {
               AppEvents.Emit(
                 "snack",
@@ -1226,7 +1249,8 @@ export default defineComponent({
 
           const mediaId = AppStatus.CurrentMedia;
 
-          Request.Do(
+          Request.Pending(
+            "media-editor-busy",
             MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps)
           )
             .onSuccess(() => {
@@ -1325,7 +1349,7 @@ export default defineComponent({
 
       const mediaId = AppStatus.CurrentMedia;
 
-      Request.Do(MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
+      Request.Pending("media-editor-busy", MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
         .onSuccess((res) => {
           AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
           this.busy = false;
@@ -1400,7 +1424,7 @@ export default defineComponent({
           const mediaId = AppStatus.CurrentMedia;
           const id = sub.id;
 
-          Request.Do(MediaAPI.RemoveSubtitles(mediaId, id))
+          Request.Pending("media-editor-busy", MediaAPI.RemoveSubtitles(mediaId, id))
             .onSuccess(() => {
               AppEvents.Emit(
                 "snack",
@@ -1507,6 +1531,8 @@ export default defineComponent({
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);
     }
+
+    Request.Abort("media-editor-busy");
   },
 });
 </script>
