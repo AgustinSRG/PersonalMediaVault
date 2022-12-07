@@ -211,9 +211,11 @@ func ValidateSubtitlesFile(file string) bool {
 // originalFileDuration - Original video duration (seconds)
 // tempPath - Temporal path to use for the encoding
 // resolution - Resolution for re-scaling
+// originalWidth - Original width
+// originalHeight - Original height
 // config - User configuration
 // The encoded file will be tempfile/video.mp4
-func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, resolution *UserConfigResolution, originalWidth int32, originalHeight int32, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -235,9 +237,46 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 		videoFilter += "fps=" + fmt.Sprint(resolution.Fps) + ","
 	}
 
-	videoFilter += "scale=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
-		":force_original_aspect_ratio=decrease,pad=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
-		":(ow-iw)/2:(oh-ih)/2"
+	// Resize
+
+	var width = originalWidth
+	var height = originalHeight
+
+	resWidth := resolution.Width
+
+	if resWidth%2 != 0 {
+		resWidth++
+	}
+
+	resHeight := resolution.Height
+
+	if resHeight%2 != 0 {
+		resHeight++
+	}
+
+	if width > height {
+		proportionalHeight := int32(math.Ceil((float64(height)*float64(resWidth)/float64(width))/2) * 2)
+
+		if proportionalHeight > resolution.Height {
+			width = int32(math.Ceil((float64(width)*float64(resHeight)/float64(height))/2) * 2)
+			height = resHeight
+		} else {
+			width = resWidth
+			height = proportionalHeight
+		}
+	} else {
+		proportionalWidth := int32(math.Ceil((float64(width)*float64(resHeight)/float64(height))/2) * 2)
+
+		if proportionalWidth > resolution.Width {
+			height = int32(math.Ceil((float64(height)*float64(resWidth)/float64(width))/2) * 2)
+			width = resWidth
+		} else {
+			height = resHeight
+			width = proportionalWidth
+		}
+	}
+
+	videoFilter += "scale=" + fmt.Sprint(width) + ":" + fmt.Sprint(height)
 
 	args = append(args, "-vf", videoFilter)
 
