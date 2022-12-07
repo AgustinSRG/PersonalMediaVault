@@ -39,7 +39,6 @@
       />
 
       <ImageNotes
-        v-if="currentResolution < 0"
         :editing="notesEditMode"
         :contextopen="contextMenuShown"
         :width="imageWidth"
@@ -951,8 +950,8 @@ export default defineComponent({
             this.imageURL = GetAssetURL(res.url);
             this.imagePending = false;
             this.imagePendingTask = 0;
-            this.width = res.width;
-            this.height = res.height;
+            this.width = this.metadata.width;
+            this.height = this.metadata.height;
             this.setupAutoNextTimer();
           } else {
             this.imageURL = "";

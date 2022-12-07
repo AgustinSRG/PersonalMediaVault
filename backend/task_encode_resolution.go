@@ -283,7 +283,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	} else if probe_data.Type == MediaTypeImage {
 		encoded_temp = path.Join(tempFolder, "image.png")
 		encoded_ext = "png"
-		cmd = MakeFFMpegEncodeToPNGCommand(originalTemp, probe_data.Format, tempFolder, &resolution, userConfig)
+		cmd = MakeFFMpegEncodeToPNGCommand(originalTemp, probe_data.Format, tempFolder, &resolution, probe_data.Width, probe_data.Height, userConfig)
 	} else {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)

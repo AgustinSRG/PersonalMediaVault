@@ -302,11 +302,37 @@ export default defineComponent({
         );
       } else {
         let resData = this.metadata.resolutions[res];
+
+        let width = this.metadata.width;
+        let height = this.metadata.height;
+
+        if (width > height) {
+          const proportionalHeight = Math.round(height * resData.width / width);
+
+          if (proportionalHeight > resData.height) {
+            width = Math.round(width * resData.height / height);
+            height = resData.height
+          } else {
+            width = resData.width
+            height = proportionalHeight
+          }
+        } else {
+          const proportionalWidth = Math.round(width * resData.height / height);
+
+          if (proportionalWidth > resData.width) {
+            height = Math.round(height * resData.width / width);
+            width = resData.width
+          } else {
+            width = proportionalWidth
+            height = resData.height
+          }
+        }
+
         if (resData) {
           return (
-            resData.width +
+            width +
             "x" +
-            resData.height +
+            height +
             "" +
             (resData.ready ? "" : "(" + this.$t("Pending") + ")")
           );

@@ -212,7 +212,7 @@ func ValidateSubtitlesFile(file string) bool {
 // tempPath - Temporal path to use for the encoding
 // resolution - Resolution for re-scaling
 // config - User configuration
-// The endoded file will be tempfile/video.mp4
+// The encoded file will be tempfile/video.mp4
 func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -258,7 +258,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 // originalFileDuration - Original video duration (seconds)
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
-// The endoded file will be tempfile/video.mp4
+// The encoded file will be tempfile/video.mp4
 func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, width int32, height int32, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -295,7 +295,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 // originalFileFormat - Original file format
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
-// The endoded file will be tempfile/audio.mp3
+// The encoded file will be tempfile/audio.mp3
 func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -326,9 +326,11 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 // originalFileFormat - Original file format
 // tempPath - Temporal path to use for the encoding
 // resolution - Resolution for re-scaling
+// originalWidth - Original width
+// originalHeight - Original height
 // config - User configuration
-// The endoded file will be tempfile/image.png
-func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, config *UserConfig) *exec.Cmd {
+// The encoded file will be tempfile/image.png
+func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, resolution *UserConfigResolution, originalWidth int32, originalHeight int32, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -343,11 +345,35 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
-	// Video filter
-	videoFilter := "scale=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
-		":force_original_aspect_ratio=decrease,format=rgba,pad=" + fmt.Sprint(resolution.Width) + ":" + fmt.Sprint(resolution.Height) +
-		":(ow-iw)/2:(oh-ih)/2:color=#00000000"
-	args = append(args, "-pix_fmt", "rgba", "-vf", videoFilter)
+	// Resize
+
+	var width = originalWidth
+	var height = originalHeight
+
+	if width > height {
+		proportionalHeight := int32(math.Round(float64(height) * float64(resolution.Width) / float64(width)))
+
+		if proportionalHeight > resolution.Height {
+			width = int32(math.Round(float64(width) * float64(resolution.Height) / float64(height)))
+			height = resolution.Height
+		} else {
+			width = resolution.Width
+			height = proportionalHeight
+		}
+	} else {
+		proportionalWidth := int32(math.Round(float64(width) * float64(resolution.Height) / float64(height)))
+
+		if proportionalWidth > resolution.Width {
+			height = int32(math.Round(float64(height) * float64(resolution.Width) / float64(width)))
+			width = resolution.Width
+		} else {
+			height = resolution.Height
+			width = proportionalWidth
+		}
+	}
+
+	videoFilter := "scale=" + fmt.Sprint(width) + ":" + fmt.Sprint(height)
+	args = append(args, "-vf", videoFilter)
 
 	// Setting for image
 	args = append(args, "-vframes", "1", "-an")
@@ -365,7 +391,7 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 // originalFileFormat - Original file format
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
-// The endoded file will be tempfile/image.png
+// The encoded file will be tempfile/image.png
 func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileFormat string, tempPath string, config *UserConfig) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
