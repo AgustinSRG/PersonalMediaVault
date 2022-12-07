@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -229,6 +230,18 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 			resolutions = append(resolutions, r)
 		}
 	}
+
+	sort.Slice(resolutions, func(i, j int) bool {
+		areaI := resolutions[i].Width * resolutions[i].Height
+		areaJ := resolutions[j].Width * resolutions[j].Height
+		if areaI > areaJ {
+			return true
+		} else if areaI > areaJ {
+			return false
+		} else {
+			return resolutions[i].Fps > resolutions[j].Fps
+		}
+	})
 
 	result.Resolutions = resolutions
 
