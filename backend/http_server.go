@@ -124,6 +124,7 @@ func RunHTTPServer(port string, bindAddr string) {
 	// Media API
 	router.HandleFunc("/api/media/{mid:[0-9]+}", api_getMedia).Methods("GET")
 	router.HandleFunc("/api/media/{mid:[0-9]+}/albums", api_getMediaAlbums).Methods("GET")
+	router.HandleFunc("/api/media/{mid:[0-9]+}/size_stats", api_getMediaSizeStats).Methods("GET")
 
 	router.HandleFunc("/api/upload", api_uploadMedia).Methods("POST")
 

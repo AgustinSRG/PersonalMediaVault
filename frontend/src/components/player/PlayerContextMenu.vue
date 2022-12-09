@@ -102,6 +102,20 @@
         class="tr-button"
         tabindex="0"
         @keydown="clickOnEnter"
+        @click="openStats"
+      >
+        <td>
+          <i class="fas fa-bars-progress icon-config"></i>
+          <span class="context-entry-title">{{ $t("Size Statistics") }}</span>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+
+      <tr
+        v-if="url"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
         @click="refreshMedia"
       >
         <td>
@@ -211,6 +225,12 @@ export default defineComponent({
     },
 
     hide: function () {
+      this.shownState = false;
+      this.$emit("close");
+    },
+
+    openStats: function () {
+      this.$emit("stats");
       this.shownState = false;
       this.$emit("close");
     },

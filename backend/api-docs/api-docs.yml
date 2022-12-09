@@ -488,6 +488,65 @@ paths:
               type: number
               format: int64
               description: Album ID
+              
+  "/api/media/{id}/size_stats":
+    get:
+      summary: Gets the size stats of a media asset
+      description: Gets the size stats of a media asset
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Size stats
+          schema:
+            properties:
+              meta_size:
+                type: number
+                format: int64
+                description: "Size of the metadata (In bytes)"
+              assets:
+                type: array
+                description: "Stats of the assets"
+                items:
+                  properties:
+                    id:
+                      type: number
+                      format: int64
+                      description: "Asset ID"
+                    type:
+                      type: string
+                      enum:
+                        - s
+                        - m
+                      description: "Type of asset. Can be 's' (Single file) or 'm' (Multi file)"
+                    name:
+                      type: string
+                      description: "Descriptive name of the asset"
+                      example: "ORIGINAL"
+                    size:
+                      type: number
+                      format: int64
+                      description: "Asset size (Bytes)"
   
   "/api/media/{id}/edit/title":
     post:

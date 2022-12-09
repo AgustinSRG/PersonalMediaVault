@@ -35,7 +35,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -63,7 +63,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			LogError(err)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -83,7 +83,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			LogError(err)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -119,7 +119,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -148,7 +148,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -196,7 +196,7 @@ func api_createAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -209,7 +209,7 @@ func api_createAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -243,7 +243,7 @@ func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -297,7 +297,7 @@ func api_renameAlbum(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -355,7 +355,7 @@ func api_setAlbumList(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -408,7 +408,7 @@ func api_albumAddMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

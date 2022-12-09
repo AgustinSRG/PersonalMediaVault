@@ -202,6 +202,7 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 
 	if err != nil {
 		LogError(err)
+		response.Header().Add("Cache-Control", "no-cache")
 		response.WriteHeader(500)
 		return
 	}

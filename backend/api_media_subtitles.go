@@ -75,7 +75,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -91,7 +91,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -108,7 +108,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			f.Close()
 			WipeTemporalFile(tempFile)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -128,7 +128,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			f.Close()
 			WipeTemporalFile(tempFile)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -164,7 +164,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -187,7 +187,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -238,7 +238,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		os.Remove(srt_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -276,7 +276,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -295,7 +295,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -340,7 +340,7 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -379,7 +379,7 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

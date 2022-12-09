@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -142,7 +143,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -271,7 +272,171 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
+type AssetSizeAPIResponse struct {
+	Id   uint64 `json:"id"`
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Size int64  `json:"size"`
+}
+
+type MediaSizeAPIResponse struct {
+	MetaSize  int64                  `json:"meta_size"`
+	AssetSize []AssetSizeAPIResponse `json:"assets"`
+}
+
+func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		response.WriteHeader(401)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.ReadMetadata(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if meta == nil {
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	metaSize, err := media.GetMetadataSize()
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	var result MediaSizeAPIResponse
+
+	result.MetaSize = metaSize
+	result.AssetSize = make([]AssetSizeAPIResponse, 0)
+
+	if meta.OriginalReady {
+		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+			Id:   meta.OriginalAsset,
+			Type: ASSET_SINGLE_FILE,
+			Name: "ORIGINAL",
+			Size: 0,
+		})
+	}
+
+	if meta.ThumbnailReady {
+		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+			Id:   meta.ThumbnailAsset,
+			Type: ASSET_SINGLE_FILE,
+			Name: "THUMBNAIL",
+			Size: 0,
+		})
+	}
+
+	if meta.PreviewsReady {
+		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+			Id:   meta.PreviewsAsset,
+			Type: ASSET_MULTI_FILE,
+			Name: "VIDEO_PREVIEWS",
+			Size: 0,
+		})
+	}
+
+	if meta.Resolutions != nil {
+		for i := 0; i < len(meta.Resolutions); i++ {
+			result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+				Id:   meta.Resolutions[i].Asset,
+				Type: ASSET_SINGLE_FILE,
+				Name: fmt.Sprintf("RESIZED_%vx%v:%v", meta.Resolutions[i].Width, meta.Resolutions[i].Height, meta.Resolutions[i].Fps),
+				Size: 0,
+			})
+		}
+	}
+
+	if meta.Subtitles != nil {
+		for i := 0; i < len(meta.Subtitles); i++ {
+			result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+				Id:   meta.Subtitles[i].Asset,
+				Type: ASSET_SINGLE_FILE,
+				Name: fmt.Sprintf("SUBTITLES_%v", strings.ToUpper(meta.Subtitles[i].Id)),
+				Size: 0,
+			})
+		}
+	}
+
+	if meta.HasImageNotes {
+		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+			Id:   meta.ImageNotesAsset,
+			Type: ASSET_SINGLE_FILE,
+			Name: "IMG_NOTES",
+			Size: 0,
+		})
+	}
+
+	for i := 0; i < len(result.AssetSize); i++ {
+		found, asset_path, asset_lock := media.AcquireAsset(result.AssetSize[i].Id, result.AssetSize[i].Type)
+
+		if !found {
+			continue
+		}
+
+		asset_lock.StartRead() // Start reading the asset
+
+		stats, err := os.Stat(asset_path)
+
+		if err != nil {
+			asset_lock.EndRead()
+			continue
+		}
+
+		asset_lock.EndRead()
+
+		result.AssetSize[i].Size = stats.Size()
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	// Response
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -300,7 +465,7 @@ func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -321,7 +486,7 @@ func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -383,7 +548,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -403,7 +568,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -467,7 +632,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -487,7 +652,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -546,7 +711,7 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -566,7 +731,7 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -611,7 +776,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -682,7 +847,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -752,7 +917,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -814,7 +979,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -836,7 +1001,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -889,7 +1054,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -939,7 +1104,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -984,7 +1149,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -1006,7 +1171,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 				GetVault().media.ReleaseMediaResource(media_id)
 
-				response.WriteHeader(500)
+				ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 				return
 			}
 		}
@@ -1020,7 +1185,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -1033,7 +1198,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -1044,7 +1209,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -1057,7 +1222,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

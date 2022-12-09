@@ -34,7 +34,7 @@ func api_getAccounts(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -92,7 +92,7 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		LogError(err)
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -101,7 +101,7 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -150,7 +150,7 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		LogError(err)
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -159,7 +159,7 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

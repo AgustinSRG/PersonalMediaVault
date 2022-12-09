@@ -30,6 +30,7 @@
       @update:fullscreen="onUpdateFullScreen"
       v-model:showcontrols="showControls"
       @albums-open="openAlbums"
+      @stats-open="openStats"
     ></ImagePlayer>
     <VideoPlayer
       v-if="mdata && mdata.type === 2"
@@ -45,6 +46,7 @@
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
+      @stats-open="openStats"
     ></VideoPlayer>
     <AudioPlayer
       v-if="mdata && mdata.type === 3"
@@ -60,11 +62,15 @@
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
+      @stats-open="openStats"
     ></AudioPlayer>
 
-    <AlbumListModal
-      v-model:display="displayAlbumList"
-    ></AlbumListModal>
+    <AlbumListModal v-model:display="displayAlbumList"></AlbumListModal>
+
+    <SizeStatsModal
+      :mid="mid"
+      v-model:display="displaySizeStats"
+    ></SizeStatsModal>
   </div>
 </template>
 
@@ -84,6 +90,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 
 import AlbumListModal from "../modals/AlbumListModal.vue";
+import SizeStatsModal from "../modals/SizeStatsModal.vue";
 
 export default defineComponent({
   name: "PlayerContainer",
@@ -94,6 +101,7 @@ export default defineComponent({
     VideoPlayer,
     ImagePlayer,
     AlbumListModal,
+    SizeStatsModal,
   },
   data: function () {
     return {
@@ -114,6 +122,7 @@ export default defineComponent({
       canWrite: AuthController.CanWrite,
 
       displayAlbumList: false,
+      displaySizeStats: false,
     };
   },
   methods: {
@@ -149,6 +158,10 @@ export default defineComponent({
 
     openAlbums: function () {
       this.displayAlbumList = true;
+    },
+
+    openStats: function () {
+      this.displaySizeStats = true;
     },
 
     goNext: function () {
@@ -252,7 +265,6 @@ export default defineComponent({
 </script>
 
 <style>
-
 @import "@/style/player/common.css";
 
 @import "@/style/player/loader.css";
@@ -278,5 +290,4 @@ export default defineComponent({
 @import "@/style/player/subtitles.css";
 
 @import "@/style/player/image-notes.css";
-
 </style>

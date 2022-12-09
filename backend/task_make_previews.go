@@ -475,7 +475,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	asset_id := metaToWrite.NextAssetID
 	metaToWrite.NextAssetID++
 
-	found, asset_path, asset_lock = media.AcquireAsset(asset_id, ASSET_MUTI_FILE)
+	found, asset_path, asset_lock = media.AcquireAsset(asset_id, ASSET_MULTI_FILE)
 
 	if !found {
 		LogTaskError(task.definition.Id, "Error: Cound not find asset to write")

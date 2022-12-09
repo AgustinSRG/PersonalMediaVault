@@ -308,7 +308,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
-	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_MUTI_FILE)
+	found, asset_path, asset_lock := media.AcquireAsset(asset_id, ASSET_MULTI_FILE)
 
 	if !found {
 		GetVault().media.ReleaseMediaResource(media_id)
@@ -354,7 +354,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -371,7 +371,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

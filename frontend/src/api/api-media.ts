@@ -29,6 +29,13 @@ export class MediaAPI {
         };
     }
 
+    public static GetMediaSizeStats(id: number): RequestParams {
+        return {
+            method: "GET",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(id + "") + "/size_stats"),
+        };
+    }
+
     public static ChangeMediaTitle(id: number, title: string): RequestParams {
         return {
             method: "POST",

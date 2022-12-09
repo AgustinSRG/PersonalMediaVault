@@ -249,6 +249,22 @@ func (media *MediaAsset) ReadMetadata(key []byte) (*MediaMetadata, error) {
 	return media.readData(key)
 }
 
+// Gets the size of the metadata file (in bytes)
+func (media *MediaAsset) GetMetadataSize() (int64, error) {
+	media.lock.StartRead() // Request read
+	defer media.lock.EndRead()
+
+	file := path.Join(media.path, "meta.pmv")
+
+	stats, err := os.Stat(file)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return stats.Size(), nil
+}
+
 // Starts a write operation and reads the metadata, returning it
 // key - Vault decryption key
 func (media *MediaAsset) StartWrite(key []byte) (*MediaMetadata, error) {
@@ -317,13 +333,13 @@ func (media *MediaAsset) CancelWrite() {
 
 // Types of media asset files
 const (
-	ASSET_MUTI_FILE   = "m" // File containing multiple encrypted files (similar to tar)
+	ASSET_MULTI_FILE  = "m" // File containing multiple encrypted files (similar to tar)
 	ASSET_SINGLE_FILE = "s" // File containing a single chunked encrypted file
 )
 
 // Resolves the path of an asset file
 // asset_id - Asset file ID
-// asset_type - Asset type (ASSET_MUTI_FILE or ASSET_SINGLE_FILE)
+// asset_type - Asset type (ASSET_MULTI_FILE or ASSET_SINGLE_FILE)
 // Returns the path to the file
 func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string {
 	return path.Join(media.path, asset_type+"_"+fmt.Sprint(asset_id)+".pma")
@@ -331,7 +347,7 @@ func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string
 
 // Acquires an asset file, creating a read/write lock for it
 // asset_id - Asset file ID
-// asset_type - Asset type (ASSET_MUTI_FILE or ASSET_SINGLE_FILE)
+// asset_type - Asset type (ASSET_MULTI_FILE or ASSET_SINGLE_FILE)
 // Returns:
 //  1 - True if the asset was acquired, false if the asset was deleted
 //  2 - The full path to the asset file

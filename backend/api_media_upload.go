@@ -32,7 +32,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	userConfig, err := GetVault().config.Read(session.key)
 
 	if err != nil {
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -54,7 +54,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -83,7 +83,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -99,7 +99,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 			f.Close()
 			WipeTemporalFile(tempFile)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -119,7 +119,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 			f.Close()
 			WipeTemporalFile(tempFile)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 	}
@@ -148,7 +148,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 		WipeTemporalFile(tempFile)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -157,7 +157,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if media == nil {
 		WipeTemporalFile(tempFile)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -170,7 +170,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 		WipeTemporalFile(tempFile)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -185,7 +185,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 		WipeTemporalFile(tempFile)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -222,7 +222,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

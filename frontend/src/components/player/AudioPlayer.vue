@@ -361,6 +361,7 @@
       :y="contextMenuY"
       v-model:loop="loop"
       :url="audioURL"
+      @stats="openStats"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -404,7 +405,14 @@ export default defineComponent({
     PlayerEncodingPending,
   },
   name: "AudioPlayer",
-  emits: ["gonext", "goprev", "ended", "update:fullscreen", "albums-open"],
+  emits: [
+    "gonext",
+    "goprev",
+    "ended",
+    "update:fullscreen",
+    "albums-open",
+    "stats-open",
+  ],
   props: {
     mid: Number,
     metadata: Object,
@@ -499,6 +507,10 @@ export default defineComponent({
 
     manageAlbums: function () {
       this.$emit("albums-open");
+    },
+
+    openStats: function () {
+      this.$emit("stats-open");
     },
 
     hideContext: function (e) {

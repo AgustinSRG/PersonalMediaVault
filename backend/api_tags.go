@@ -25,7 +25,7 @@ func api_getTags(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -43,7 +43,7 @@ func api_getTags(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -93,7 +93,7 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -109,7 +109,7 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 
 			GetVault().media.ReleaseMediaResource(p.Media)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -123,7 +123,7 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				LogError(err)
 
-				response.WriteHeader(500)
+				ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 				return
 			}
 		} else {
@@ -142,7 +142,7 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -183,7 +183,7 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		response.WriteHeader(500)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
@@ -199,7 +199,7 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 
 			GetVault().media.ReleaseMediaResource(p.Media)
 
-			response.WriteHeader(500)
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
 		}
 
@@ -213,7 +213,7 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				LogError(err)
 
-				response.WriteHeader(500)
+				ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 				return
 			}
 		} else {

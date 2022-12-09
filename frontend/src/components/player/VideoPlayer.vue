@@ -365,6 +365,7 @@
       :y="contextMenuY"
       v-model:loop="loop"
       :url="videoURL"
+      @stats="openStats"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -389,7 +390,10 @@ import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { htmlToText } from "@/utils/text";
 import { AppEvents } from "@/control/app-events";
-import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtitles-html";
+import {
+  getUniqueSubtitlesLoadTag,
+  sanitizeSubtitlesHTML,
+} from "@/utils/subtitles-html";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
@@ -404,7 +408,14 @@ export default defineComponent({
     PlayerEncodingPending,
   },
   name: "VideoPlayer",
-  emits: ["gonext", "goprev", "ended", "update:fullscreen", "albums-open"],
+  emits: [
+    "gonext",
+    "goprev",
+    "ended",
+    "update:fullscreen",
+    "albums-open",
+    "stats-open",
+  ],
   props: {
     mid: Number,
     metadata: Object,
@@ -499,6 +510,10 @@ export default defineComponent({
 
     manageAlbums: function () {
       this.$emit("albums-open");
+    },
+
+    openStats: function () {
+      this.$emit("stats-open");
     },
 
     hideContext: function (e) {
@@ -606,7 +621,11 @@ export default defineComponent({
         return;
       }
 
-      if (typeof videoElement.duration !== "number" || isNaN(videoElement.duration) || !isFinite(videoElement.duration)) {
+      if (
+        typeof videoElement.duration !== "number" ||
+        isNaN(videoElement.duration) ||
+        !isFinite(videoElement.duration)
+      ) {
         return;
       }
 
@@ -627,7 +646,12 @@ export default defineComponent({
     onVideoTimeUpdate: function () {
       if (this.loading) return;
       const videoElement = this.getVideoElement();
-      if (!videoElement || typeof videoElement.currentTime !== "number" || isNaN(videoElement.currentTime) || !isFinite(videoElement.currentTime)) {
+      if (
+        !videoElement ||
+        typeof videoElement.currentTime !== "number" ||
+        isNaN(videoElement.currentTime) ||
+        !isFinite(videoElement.currentTime)
+      ) {
         return;
       }
       this.currentTime = videoElement.currentTime;
@@ -1223,7 +1247,7 @@ export default defineComponent({
         if (this.subtitlesHTML) {
           const subTag = getUniqueSubtitlesLoadTag();
           this.$options.subTag = subTag;
-          sanitizeSubtitlesHTML(sub.text).then(text => {
+          sanitizeSubtitlesHTML(sub.text).then((text) => {
             if (this.$options.subTag === subTag) {
               this.subtitles = text;
             }

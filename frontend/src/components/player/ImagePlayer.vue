@@ -255,6 +255,7 @@
       v-model:controls="showControls"
       :canwrite="canwrite"
       v-model:notesedit="notesEditMode"
+      @stats="openStats"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -303,6 +304,7 @@ export default defineComponent({
     "update:fullscreen",
     "update:showcontrols",
     "albums-open",
+    "stats-open",
   ],
   props: {
     mid: Number,
@@ -388,6 +390,10 @@ export default defineComponent({
 
     manageAlbums: function () {
       this.$emit("albums-open");
+    },
+
+    openStats: function () {
+      this.$emit("stats-open");
     },
 
     grabScroll: function (e) {
