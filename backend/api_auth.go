@@ -104,7 +104,7 @@ func api_handleAuthLogout(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 

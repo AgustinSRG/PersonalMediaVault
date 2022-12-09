@@ -116,7 +116,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
@@ -295,7 +295,7 @@ func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) 
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
@@ -447,7 +447,7 @@ func api_getMediaAlbums(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
@@ -501,12 +501,12 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -585,12 +585,12 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -669,12 +669,12 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -744,12 +744,12 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -866,12 +866,12 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -1012,12 +1012,12 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -1117,12 +1117,12 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.write {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 

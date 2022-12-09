@@ -27,7 +27,7 @@ func api_getUsername(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
@@ -53,12 +53,12 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
 	if !session.root {
-		response.WriteHeader(403)
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
@@ -127,7 +127,7 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
-		response.WriteHeader(401)
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
 		return
 	}
 
