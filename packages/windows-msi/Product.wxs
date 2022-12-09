@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
     <!-- Use * to generate product ID on every build -->
-    <Product Id="*" Name="PersonalMediaVault" Version="1.2.1.0" Language="1033" Manufacturer="asanrom" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
+    <Product Id="*" Name="PersonalMediaVault" Version="1.2.2.0" Language="1033" Manufacturer="asanrom" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
 
         <Package Compressed="yes" InstallScope="perMachine" Manufacturer="AgustinSRG" Description="Web application to store and visualize media files (video, audio and pictures), meant to be run on a personal server or computer." Platform="x64" />
 
