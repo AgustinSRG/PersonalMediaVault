@@ -314,7 +314,6 @@ export class AlbumsController {
     public static AvailableNextPrefetch = false;
     public static LoadingNext = false;
     public static NextMediaData: MediaData = null;
-    public static LoadingNextWaiting = false;
 
     public static PreFetchAlbumNext() {
         if (AlbumsController.CurrentNext === null || AlbumsController.CurrentNext.id === MediaController.MediaId) {
@@ -324,10 +323,6 @@ export class AlbumsController {
             AlbumsController.NextMediaData = null;
             AlbumsController.LoadingNext = false;
             AlbumsController.AvailableNextPrefetch = false;
-            if (AlbumsController.LoadingNextWaiting) {
-                AlbumsController.LoadingNextWaiting = false;
-                MediaController.Load();
-            }
             AppEvents.Emit("album-next-prefetch");
             return;
         }
@@ -347,7 +342,7 @@ export class AlbumsController {
             AlbumsController.NextMediaData = media;
             AlbumsController.LoadingNext = false;
             AlbumsController.AvailableNextPrefetch = true;
-            AlbumsController.OnAlbumNextPrefetchDone(mediaId);
+            AppEvents.Emit("album-next-prefetch", mediaId);
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
@@ -357,7 +352,7 @@ export class AlbumsController {
                     AlbumsController.NextMediaData = null;
                     AlbumsController.LoadingNext = false;
                     AlbumsController.AvailableNextPrefetch = true;
-                    AlbumsController.OnAlbumNextPrefetchDone(mediaId);
+                    AppEvents.Emit("album-next-prefetch", mediaId);
                 })
                 .add("*", "*", () => {
                     // Retry
@@ -369,18 +364,6 @@ export class AlbumsController {
             // Retry
             Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
         });
-    }
-
-    public static OnAlbumNextPrefetchDone(mid: number) {
-        AppEvents.Emit("album-next-prefetch");
-        if (AlbumsController.LoadingNextWaiting && MediaController.MediaId === mid) {
-            MediaController.MediaData = AlbumsController.NextMediaData;
-            AppEvents.Emit("current-media-update", MediaController.MediaData);
-
-            MediaController.Loading = false;
-            AppEvents.Emit("current-media-loading", false);
-        }
-        AlbumsController.LoadingNextWaiting = false;
     }
 
     public static CheckAlbumNextPrefetch(): boolean {
@@ -398,9 +381,6 @@ export class AlbumsController {
 
             MediaController.Loading = false;
             AppEvents.Emit("current-media-loading", false);
-            return true;
-        } else if (AlbumsController.LoadingNextWaiting) {
-            AlbumsController.LoadingNextWaiting = true;
             return true;
         } else {
             return false;
