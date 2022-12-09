@@ -76,10 +76,10 @@
         v-if="!editing"
         v-html="escapeText(note.text)"
         :class="{
-          top: note.y < imageHeight / 2,
-          left: note.x < imageWidth / 2,
-          bottom: note.y >= imageHeight / 2,
-          right: note.x >= imageWidth / 2,
+          top: (note.y + (note.h / 2)) < imageHeight / 2,
+          left: (note.x + (note.w / 2)) < imageWidth / 2,
+          bottom: (note.y + (note.h / 2)) >= imageHeight / 2,
+          right: (note.x + (note.w / 2)) >= imageWidth / 2,
         }"
       ></div>
 
