@@ -21,7 +21,11 @@
     <div class="upload-options-container" v-if="optionsShown">
       <div class="form-group">
         <label>{{ $t("Max number of uploads in parallel") }}:</label>
-        <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
+        <select
+          v-model="maxParallelUploads"
+          @change="updateMaxParallelUploads"
+          class="form-control form-select"
+        >
           <option :value="1">1</option>
           <option :value="2">2</option>
           <option :value="4">4</option>
@@ -133,7 +137,16 @@
         </thead>
         <tbody>
           <tr v-for="m in pendingToUpload" :key="m.id">
-            <td class="bold">{{ m.name }}</td>
+            <td v-if="m.status !== 'ready'" class="bold">{{ m.name }}</td>
+            <td v-if="m.status === 'ready'" class="bold">
+              <a
+                @click="goToMedia(m, $event)"
+                :href="getMediaURL(m.mid)"
+                target="_blank"
+                rel="noopener noreferrer"
+                >{{ m.name }}</a
+              >
+            </td>
             <td>{{ renderSize(m.size) }}</td>
             <td>{{ renderStatus(m.status, m.progress, m.error) }}</td>
             <td class="text-right one-line">
@@ -203,7 +216,10 @@
       </div>
     </div>
 
-    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
+    <AlbumCreateModal
+      v-model:display="displayAlbumCreate"
+      @new-album="onNewAlbum"
+    ></AlbumCreateModal>
   </div>
 </template>
 
@@ -214,6 +230,7 @@ import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { UploadController, UploadEntryMin } from "@/control/upload";
 import { copyObject } from "@/utils/objects";
+import { GenerateURIQuery } from "@/utils/request";
 import { parseTagName } from "@/utils/text";
 import { defineComponent } from "vue";
 
@@ -335,7 +352,10 @@ export default defineComponent({
       UploadController.TryAgain(m.id);
     },
 
-    goToMedia: function (m: UploadEntryMin) {
+    goToMedia: function (m: UploadEntryMin, e?: MouseEvent) {
+      if (e) {
+        e.preventDefault();
+      }
       if (m.mid < 0) {
         return;
       }
@@ -370,16 +390,24 @@ export default defineComponent({
         case "error":
           switch (err) {
             case "invalid-media":
-              return this.$t("Error") + ": " + this.$t("Invalid media file provided");
+              return (
+                this.$t("Error") + ": " + this.$t("Invalid media file provided")
+              );
             case "access-denied":
               return this.$t("Error") + ": " + this.$t("Access denied");
             case "deleted":
-              return this.$t("Error") + ": " + this.$t("The media asset was deleted");
+              return (
+                this.$t("Error") + ": " + this.$t("The media asset was deleted")
+              );
             case "no-internet":
-              return this.$t("Error") + ": " + this.$t("Could not connect to the server");
+              return (
+                this.$t("Error") +
+                ": " +
+                this.$t("Could not connect to the server")
+              );
             default:
               return this.$t("Error") + ": " + this.$t("Internal server error");
-          } 
+          }
         default:
           return "-";
       }
@@ -493,15 +521,15 @@ export default defineComponent({
       });
     },
 
-    onPendingPush: function(m: UploadEntryMin) {
+    onPendingPush: function (m: UploadEntryMin) {
       this.pendingToUpload.push(m);
     },
 
-    onPendingRemove: function(i: number) {
+    onPendingRemove: function (i: number) {
       this.pendingToUpload.splice(i, 1);
     },
 
-    onPendingClear: function() {
+    onPendingClear: function () {
       this.pendingToUpload = UploadController.GetEntries();
     },
 
@@ -510,6 +538,18 @@ export default defineComponent({
       this.pendingToUpload[i].error = m.error;
       this.pendingToUpload[i].progress = m.progress;
       this.pendingToUpload[i].mid = m.mid;
+    },
+
+    getMediaURL: function (mid: number): string {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.host +
+        window.location.pathname +
+        GenerateURIQuery({
+          media: mid + "",
+        })
+      );
     },
   },
   mounted: function () {
@@ -520,10 +560,22 @@ export default defineComponent({
     this.$options.onPendingClearH = this.onPendingClear.bind(this);
     this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
 
-    AppEvents.AddEventListener("upload-list-push", this.$options.onPendingPushH);
-    AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
-    AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
-    AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
+    AppEvents.AddEventListener(
+      "upload-list-push",
+      this.$options.onPendingPushH
+    );
+    AppEvents.AddEventListener(
+      "upload-list-rm",
+      this.$options.onPendingRemoveH
+    );
+    AppEvents.AddEventListener(
+      "upload-list-clear",
+      this.$options.onPendingClearH
+    );
+    AppEvents.AddEventListener(
+      "upload-list-update",
+      this.$options.onPendingUpdateH
+    );
 
     this.updateTagData();
     this.$options.tagUpdateH = this.updateTagData.bind(this);
@@ -538,10 +590,22 @@ export default defineComponent({
 
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
 
-    AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
-    AppEvents.RemoveEventListener("upload-list-rm", this.$options.onPendingRemoveH);
-    AppEvents.RemoveEventListener("upload-list-clear", this.$options.onPendingClearH);
-    AppEvents.RemoveEventListener("upload-list-update", this.$options.onPendingUpdateH);
+    AppEvents.RemoveEventListener(
+      "upload-list-push",
+      this.$options.onPendingPushH
+    );
+    AppEvents.RemoveEventListener(
+      "upload-list-rm",
+      this.$options.onPendingRemoveH
+    );
+    AppEvents.RemoveEventListener(
+      "upload-list-clear",
+      this.$options.onPendingClearH
+    );
+    AppEvents.RemoveEventListener(
+      "upload-list-update",
+      this.$options.onPendingUpdateH
+    );
 
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);
