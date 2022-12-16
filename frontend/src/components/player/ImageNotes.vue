@@ -85,6 +85,12 @@
 
       <div
         class="image-notes-text-edit"
+        :class="{
+          top: (note.y + (note.h / 2)) < imageHeight / 2,
+          left: (note.x + (note.w / 2)) < imageWidth / 2,
+          bottom: (note.y + (note.h / 2)) >= imageHeight / 2,
+          right: (note.x + (note.w / 2)) >= imageWidth / 2,
+        }"
         v-if="editing && !moving && !resizing && selectedNotes === note.id"
         tabindex="-1"
         @dblclick="stopPropagationEvent"

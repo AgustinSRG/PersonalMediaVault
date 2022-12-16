@@ -110,12 +110,26 @@
 .image-notes-text-edit {
     cursor: default;
     position: absolute;
-    top: calc(100% + 0.5rem);
-    left: 4px;
     width: calc(100% - 8px);
     min-width: 10rem;
     background: var(--player-editor-background);
     padding: 0.25rem;
+}
+
+.image-notes-text-edit.top {
+    top: calc(100% + 0.5rem);
+}
+
+.image-notes-text-edit.bottom {
+    bottom: calc(100% + 0.5rem);
+}
+
+.image-notes-text-edit.left {
+    left: 4px;
+}
+
+.image-notes-text-edit.right {
+    right: 4px;
 }
 
 .image-notes-text-edit:focus {
