@@ -105,6 +105,11 @@
     height: auto;
 }
 
+textarea.form-control::-webkit-resizer {
+    background: var(--input-bg-color);
+    color: var(--theme-fg-color);
+}
+
 .form-error {
     color: red;
 }
