@@ -88,6 +88,18 @@
               </td>
             </tr>
             <tr>
+              <td>{{ $t("Skip to the next time slice") }}</td>
+              <td>
+                <span class="key-shortcut">J</span>
+              </td>
+            </tr>
+            <tr>
+              <td>{{ $t("Go back to the beginning of the time slice") }}</td>
+              <td>
+                <span class="key-shortcut">B</span>
+              </td>
+            </tr>
+            <tr>
               <td>{{ $t("Go to the beginning of the video / audio") }}</td>
               <td>
                 <span class="key-shortcut">{{ $t("Home") }}</span>

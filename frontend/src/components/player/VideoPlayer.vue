@@ -1038,6 +1038,9 @@ export default defineComponent({
       if (time < this.duration) {
         this.ended = false;
       }
+
+      this.updateSubtitles();
+      this.updateCurrentTimeSlice();
     },
 
     onKeyPress: function (event: KeyboardEvent): boolean {
@@ -1160,6 +1163,18 @@ export default defineComponent({
             } else {
               AppEvents.Emit("snack", this.$t("Loop disabled"));
             }
+          }
+          break;
+        case "b":
+        case "B":
+          if (this.currentTimeSlice) {
+            this.setTime(this.currentTimeSlice.start);
+          }
+          break;
+        case "j":
+        case "J":
+          if (this.currentTimeSlice) {
+            this.setTime(this.currentTimeSlice.end);
           }
           break;
         default:
@@ -1323,7 +1338,11 @@ export default defineComponent({
     },
 
     updateCurrentTimeSlice: function () {
-      if (this.currentTimeSlice && this.sliceLoop && this.currentTime >= this.currentTimeSlice.end) {
+      if (
+        this.currentTimeSlice &&
+        this.sliceLoop &&
+        this.currentTime >= this.currentTimeSlice.end
+      ) {
         this.setTime(this.currentTimeSlice.start, false);
         return;
       }
