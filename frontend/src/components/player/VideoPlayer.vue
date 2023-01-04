@@ -308,7 +308,13 @@
         :style="{ width: getTimelineBarWidth(currentTime, duration) }"
       ></div>
 
-      <div v-for="ts in timeSlices" :key="ts" class="player-timeline-split" :class="{'start-split': ts.start <= 0}" :style="{ left: getTimelineBarWidth(ts.start, duration) }"></div>
+      <div
+        v-for="ts in timeSlices"
+        :key="ts"
+        class="player-timeline-split"
+        :class="{ 'start-split': ts.start <= 0 }"
+        :style="{ left: getTimelineBarWidth(ts.start, duration) }"
+      ></div>
 
       <div
         class="player-timeline-thumb"
@@ -329,7 +335,9 @@
         />
       </div>
       <div class="player-tooltip-text">{{ tooltipText }}</div>
-      <div v-if="tooltipTimeSlice" class="player-tooltip-text">{{ tooltipTimeSlice }}</div>
+      <div v-if="tooltipTimeSlice" class="player-tooltip-text">
+        {{ tooltipTimeSlice }}
+      </div>
     </div>
 
     <VideoPlayerConfig
@@ -654,6 +662,7 @@ export default defineComponent({
       ) {
         videoElement.currentTime = Math.min(this.currentTime, this.duration);
         this.updateSubtitles();
+        this.updateCurrentTimeSlice();
       }
 
       videoElement.playbackRate = this.speed;

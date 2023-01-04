@@ -311,6 +311,13 @@
         :style="{ width: getTimelineBarWidth(currentTime, duration) }"
       ></div>
       <div
+        v-for="ts in timeSlices"
+        :key="ts"
+        class="player-timeline-split"
+        :class="{ 'start-split': ts.start <= 0 }"
+        :style="{ left: getTimelineBarWidth(ts.start, duration) }"
+      ></div>
+      <div
         class="player-timeline-thumb"
         :style="{ left: getTimelineThumbLeft(currentTime, duration) }"
       ></div>
@@ -322,6 +329,9 @@
       :style="{ left: tooltipX + 'px' }"
     >
       <div class="player-tooltip-text">{{ tooltipText }}</div>
+      <div v-if="tooltipTimeSlice" class="player-tooltip-text">
+        {{ tooltipTimeSlice }}
+      </div>
     </div>
 
     <AudioPlayerConfig
@@ -376,7 +386,11 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
-import { renderTimeSeconds } from "../../utils/time-utils";
+import {
+  findTimeSlice,
+  normalizeTimeSlices,
+  renderTimeSeconds,
+} from "../../utils/time-utils";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -455,6 +469,7 @@ export default defineComponent({
       // Timeline tooltip
       tooltipShown: false,
       tooltipText: "",
+      tooltipTimeSlice: "",
       tooltipX: 0,
       tooltipEventX: 0,
 
@@ -493,6 +508,12 @@ export default defineComponent({
       subtitlesSize: "l",
       subtitlesBg: "75",
       subtitlesHTML: false,
+
+      timeSlices: [],
+      currentTimeSlice: null,
+      currentTimeSliceName: "",
+      currentTimeSliceStart: 0,
+      currentTimeSliceEnd: 0,
 
       theme: AppPreferences.Theme,
     };
@@ -598,6 +619,7 @@ export default defineComponent({
       ) {
         audioElement.currentTime = Math.min(this.currentTime, this.duration);
         this.updateSubtitles();
+        this.updateCurrentTimeSlice();
       }
 
       audioElement.playbackRate = this.speed;
@@ -620,6 +642,7 @@ export default defineComponent({
       }
 
       this.updateSubtitles();
+      this.updateCurrentTimeSlice();
     },
     onCanPlay: function () {
       this.loading = false;
@@ -902,6 +925,7 @@ export default defineComponent({
 
       this.tooltipShown = true;
       this.tooltipText = this.renderTime(time);
+      this.tooltipTimeSlice = this.findTimeSliceName(time);
       this.tooltipEventX = x;
 
       nextTick(this.tick.bind(this));
@@ -1073,6 +1097,22 @@ export default defineComponent({
         return;
       }
       this.canSaveTime = !this.metadata.force_start_beginning;
+      this.timeSlices = normalizeTimeSlices(
+        (this.metadata.time_slices || []).sort((a, b) => {
+          if (a.time < b.time) {
+            return -1;
+          } else if (a.time > b.time) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }),
+        this.metadata.duration
+      );
+      this.currentTimeSlice = null;
+      this.currentTimeSliceName = "";
+      this.currentTimeSliceStart = 0;
+      this.currentTimeSliceEnd = 0;
       this.currentTime = this.canSaveTime
         ? PlayerPreferences.GetInitialTime(this.mid)
         : 0;
@@ -1303,6 +1343,30 @@ export default defineComponent({
     onUpdateSubHTML: function () {
       PlayerPreferences.SetSubtitlesHTML(this.subtitlesHTML);
       this.reloadSubtitles();
+    },
+
+    findTimeSliceName: function (time: number) {
+      const slice = findTimeSlice(this.timeSlices, time);
+      if (slice) {
+        return slice.name;
+      } else {
+        return "";
+      }
+    },
+
+    updateCurrentTimeSlice: function () {
+      const slice = findTimeSlice(this.timeSlices, this.currentTime);
+      if (slice) {
+        this.currentTimeSlice = slice;
+        this.currentTimeSliceName = slice.name;
+        this.currentTimeSliceStart = slice.start;
+        this.currentTimeSliceEnd = slice.end;
+      } else {
+        this.currentTimeSlice = null;
+        this.currentTimeSliceName = "";
+        this.currentTimeSliceStart = 0;
+        this.currentTimeSliceEnd = 0;
+      }
     },
 
     onUpdateNextEnd: function () {
