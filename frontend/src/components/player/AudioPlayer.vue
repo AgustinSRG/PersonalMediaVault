@@ -168,10 +168,11 @@
           @leave="leaveTooltip('volume')"
         ></VolumeControl>
 
-        <div class="player-time-label-container" v-if="!minPlayer">
+        <div class="player-time-label-container" :class="{'in-album': !!next || !!prev}" v-if="!minPlayer">
           <span
             >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
           >
+          <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{currentTimeSliceName}}</span>
         </div>
       </div>
 

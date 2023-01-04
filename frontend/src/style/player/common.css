@@ -55,7 +55,7 @@
 .player-controls-left {
     display: flex;
     align-items: center;
-    width: 100%;
+    width: calc(100% - 128px);
     height: 100%;
     justify-content: left;
     padding-left: 8px;
@@ -77,12 +77,36 @@
     right: 0;
 }
 
+.player-min .player-controls-left {
+    width: calc(100% - 76px);
+}
+
 .player-min .player-controls-right {
     padding-right: 4px;
 }
 
 .player-controls-left .player-controls-left {
     padding-left: 4px;
+}
+
+.player-time-label-container {
+    max-width: calc(100% - 160px - 40px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-time-label-container.in-album {
+    max-width: calc(100%  - 160px - 40px - 40px - 40px);
+}
+
+
+.player-min .player-time-label-container .times-slice-name {
+    display: none;
+}
+
+.player-min .player-time-label-container .separator {
+    font-family: monospace;
 }
 
 /* Player feedback */
