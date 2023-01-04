@@ -91,9 +91,9 @@ export function findSubtitlesEntry(subtitles: SubtitlesEntry[], time: number): S
         }
     }
 
-    if (time >= subtitles[low].start && time <= subtitles[low].end) {
+    if (subtitles[low] && time >= subtitles[low].start && time <= subtitles[low].end) {
         return subtitles[low];
-    } else if (low > 0 && time >= subtitles[low - 1].start && time <= subtitles[low - 1].end) {
+    } else if (subtitles[low - 1] && low > 0 && time >= subtitles[low - 1].start && time <= subtitles[low - 1].end) {
         return subtitles[low - 1];
     } else {
         return null;
