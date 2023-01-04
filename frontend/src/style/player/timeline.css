@@ -23,7 +23,8 @@
 
 .player-timeline-back,
 .player-timeline-buffer,
-.player-timeline-current {
+.player-timeline-current,
+.player-timeline-split {
     height: 3px;
     transition: height 0.1s;
 }
@@ -52,9 +53,26 @@
     background: var(--player-timeline-current);
 }
 
+.player-timeline-split {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: var(--player-timeline-split);
+}
+
+.player-min .player-timeline-split {
+    width: 1px;
+}
+
+.player-timeline-split.start-split {
+    visibility: hidden;
+}
+
 .player-timeline:hover .player-timeline-back,
 .player-timeline:hover .player-timeline-buffer,
-.player-timeline:hover .player-timeline-current {
+.player-timeline:hover .player-timeline-current,
+.player-timeline:hover .player-timeline-split {
     height: 5px;
 }
 

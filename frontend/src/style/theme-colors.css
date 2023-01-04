@@ -47,6 +47,7 @@
     --player-timeline-bg: rgba(0, 0, 0, 0.25);
     --player-timeline-buffer: rgba(0, 0, 0, 0.5);
     --player-timeline-current: red;
+    --player-timeline-split: white;
 
     --volume-bar-bg: rgba(0, 0, 0, 0.25);
     --placeholder-no-thumbnail-color: rgba(0, 0, 0, 0.5);
@@ -110,6 +111,7 @@
     --player-timeline-bg: rgba(255, 255, 255, 0.25);
     --player-timeline-buffer: rgba(255, 255, 255, 0.5);
     --player-timeline-current: red;
+    --player-timeline-split: rgba(0, 0, 0, 0.5);
 
     --volume-bar-bg: rgba(255, 255, 255, 0.25);
     --placeholder-no-thumbnail-color: rgba(255, 255, 255, 0.5);

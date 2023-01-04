@@ -104,3 +104,56 @@ export function parseTimeSlices(text: string): { time: number, name: string, }[]
 
     return res.slice(0, 1024);
 }
+
+export function normalizeTimeSlices(time_slices: { time: number, name: string, }[], duration: number): { start: number, end: number, name: string }[] {
+    const res: { start: number, end: number, name: string }[] = [];
+
+    for (let i = 0; i < time_slices.length; i++) {
+        const name = time_slices[i].name;
+        const start = time_slices[i].time;
+        let end = duration;
+
+        if (i < (time_slices.length - 1)) {
+            end = time_slices[i + 1].time;
+        }
+
+        res.push({
+            name: name,
+            start: start,
+            end: end,
+        });
+    }
+
+    return res;
+}
+
+export function findTimeSlice(time_slices: { start: number, end: number, name: string }[], time: number): { start: number, end: number, name: string } {
+    if (time_slices.length === 0) {
+        return null;
+    }
+
+    let low = 0
+    let high = time_slices.length - 1
+
+    while (low <= high) {
+        const m = (low + high) >> 1;
+        const v = time_slices[m].start;
+
+        if (v < time) {
+            low = m + 1
+        } else if (v > time) {
+            high = m - 1
+        } else {
+            low = m
+			high = m - 1
+        }
+    }
+
+    if (time_slices[low] && time >= time_slices[low].start && time <= time_slices[low].end) {
+        return time_slices[low];
+    } else if (time_slices[low - 1] && low > 0 && time >= time_slices[low - 1].start && time <= time_slices[low - 1].end) {
+        return time_slices[low - 1];
+    } else {
+        return null;
+    }
+}
