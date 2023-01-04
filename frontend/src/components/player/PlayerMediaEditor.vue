@@ -234,6 +234,30 @@
         <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
       </button>
     </div>
+
+    <div class="form-group border-top" v-if="type === 2 || type === 3">
+      <label>{{ $t("Time slices") }}:</label>
+      <textarea
+        v-model="timeSlices"
+        :readonly="!canWrite"
+        class="form-control form-control-full-width form-textarea"
+        :placeholder="'00:00:00 A\n00:01:00 B'"
+        rows="5"
+        :disabled="busy"
+      ></textarea>
+    </div>
+
+    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="busy || originalTimeSlices === timeSlices"
+        @click="changeTimeSlices"
+      >
+        <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
+      </button>
+    </div>
+
     <div
       class="form-group border-top"
       v-if="canWrite && (type === 2 || type === 1)"
@@ -405,6 +429,7 @@ import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
+import { parseTimeSlices, renderTimeSlices } from "@/utils/time-utils";
 
 export default defineComponent({
   components: {
@@ -425,6 +450,9 @@ export default defineComponent({
 
       desc: "",
       originalDesc: "",
+
+      timeSlices: "",
+      originalTimeSlices: "",
 
       tags: [],
       tagToAdd: "",
@@ -570,6 +598,9 @@ export default defineComponent({
           url: a.url,
         };
       });
+
+      this.originalTimeSlices = renderTimeSlices(MediaController.MediaData.time_slices);
+      this.timeSlices = this.originalTimeSlices;
 
       this.updateResolutions(MediaController.MediaData.resolutions || []);
     },
@@ -771,6 +802,65 @@ export default defineComponent({
           AppEvents.Emit("snack", this.$t("Successfully changed description"));
           this.busy = false;
           this.originalDesc = this.desc;
+          this.$emit("changed");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Bad request"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    changeTimeSlices: function () {
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      const slices = parseTimeSlices(this.timeSlices);
+
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.ChangeTimeSlices(mediaId, slices)
+      )
+        .onSuccess(() => {
+          AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
+          this.busy = false;
+          this.originalTimeSlices = renderTimeSlices(slices);
+          this.timeSlices = this.originalTimeSlices;
           this.$emit("changed");
         })
         .onCancel(() => {

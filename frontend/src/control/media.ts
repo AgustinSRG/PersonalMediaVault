@@ -62,6 +62,11 @@ export interface MediaData {
         url: string;
     }[],
 
+    time_slices: {
+        time: number,
+        name: string,
+    }[],
+
     force_start_beginning: boolean,
 
     img_notes: boolean,

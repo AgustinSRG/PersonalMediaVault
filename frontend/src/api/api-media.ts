@@ -66,6 +66,14 @@ export class MediaAPI {
         };
     }
 
+    public static ChangeTimeSlices(id: number, time_slices: { time: number, name: string, }[]): RequestParams {
+        return {
+            method: "POST",
+            url: GetAPIURL("/api/media/" + encodeURIComponent(id + "") + "/edit/time_slices"),
+            json: time_slices,
+        };
+    }
+
     public static SetNotes(id: number, notes: ImageNote[]): RequestParams {
         return {
             method: "POST",

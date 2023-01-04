@@ -39,3 +39,68 @@ export function renderTimeSeconds(s: number): string {
 
     return r;
 }
+
+export function parseTimeSeconds(str: string): number {
+    const parts = (str || "").trim().split(":");
+
+    let h = 0;
+    let m = 0;
+    let s = 0;
+
+    if (parts.length > 2) {
+        h = parseInt(parts[0], 10) || 0;
+        m = parseInt(parts[1], 10) || 0;
+        s = parseInt(parts[2], 10) || 0;
+    } else if (parts.length > 1) {
+        m = parseInt(parts[0], 10) || 0;
+        s = parseInt(parts[1], 10) || 0;
+    } else {
+        s = parseInt(parts[0], 10) || 0;
+    }
+
+    return (h * 3600) + (m * 60) + s;
+}
+
+export function renderTimeSlices(time_slices: { time: number, name: string, }[]): string {
+    return (time_slices || []).map(t => {
+        return renderTimeSeconds(t.time) + " " + t.name;
+    }).join("\n");
+}
+
+export function parseTimeSlices(text: string): { time: number, name: string, }[] {
+    const res: { time: number, name: string, }[] = [];
+
+    const lines = text.split("\n");
+
+    for (const line of lines) {
+        const trimLine = line.trim();
+        if (!trimLine) {
+            continue;
+        }
+
+        const spaceIndex = trimLine.indexOf(" ");
+
+        let timeStr = "";
+        let sliceName = "";
+
+        if (spaceIndex >= 0) {
+            timeStr = trimLine.substring(0, spaceIndex);
+            sliceName = trimLine.substring(spaceIndex + 1).substring(0, 80).trim();
+        } else {
+            timeStr = trimLine;
+        }
+
+        const timeSeconds = parseTimeSeconds(timeStr);
+
+        if (isNaN(timeSeconds) || !isFinite(timeSeconds) || timeSeconds < 0) {
+            continue;
+        }
+
+        res.push({
+            time: timeSeconds,
+            name: sliceName,
+        })
+    }
+
+    return res.slice(0, 1024);
+}
