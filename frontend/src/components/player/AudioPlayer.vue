@@ -1093,13 +1093,13 @@ export default defineComponent({
         case "b":
         case "B":
           if (this.currentTimeSlice) {
-            this.setTime(this.currentTimeSlice.start)
+            this.setTime(this.currentTimeSlice.start, true)
           }
           break;
         case "j":
         case "J":
           if (this.currentTimeSlice) {
-            this.setTime(this.currentTimeSlice.end)
+            this.setTime(this.currentTimeSlice.end, true)
           }
           break;
         default:
