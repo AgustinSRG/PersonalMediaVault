@@ -452,6 +452,18 @@ paths:
                 type: string
                 description: "URL to fetch the image notes from"
                 example: "/assets/b/0/0/notes.json"
+              time_slices:
+                type: array
+                description: "Timeline splits, for videos and audios"
+                items:
+                  properties:
+                    time:
+                      type: number
+                      format: double
+                      description: "Start of the time slice, in seconds"
+                    name:
+                      type: string
+                      description: "Name of the time slice"
                 
   "/api/media/{id}/albums":
     get:
@@ -684,6 +696,52 @@ paths:
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          
+  "/api/media/{id}/edit/time_slices":
+    post:
+      summary: Modifies timeline slices.
+      description: Modifies timeline slices.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID (Write access required)
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: configuration
+          schema:
+             type: array
+             description: "Timeline splits, for videos and audios"
+             items:
+                properties:
+                  time:
+                    type: number
+                    format: double
+                    description: "Start of the time slice, in seconds"
+                  name:
+                    type: string
+                    description: "Name of the time slice"
       responses:
         400:
           description: Bad request.

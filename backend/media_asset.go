@@ -72,7 +72,13 @@ type MediaSubtitle struct {
 	Asset uint64 `json:"asset"` // ID of the asset file (MediaAssetFile) where the subtitles are stored
 }
 
-// Conatins the metadata of a media asset
+// Contains data of a time split (for videos/audios)
+type MediaSplit struct {
+	Time float64 `json:"time"` // Time in seconds of the split
+	Name string  `json:"name"` // Name of the chapter that starts at this time
+}
+
+// Contains the metadata of a media asset
 type MediaMetadata struct {
 	Id uint64 `json:"id"` // Media ID
 
@@ -87,7 +93,7 @@ type MediaMetadata struct {
 	Height        int32   `json:"height"`   // Height (px)
 	Fps           int32   `json:"fps"`      // Frames per second
 
-	UploadTimestamp int64 `json:"upload_time"` // Upload timestamp (unix millis)
+	UploadTimestamp int64 `json:"upload_time"` // Upload timestamp (unix milliseconds)
 
 	NextAssetID uint64 `json:"next_asset_id"` // Id to give to the next asset file
 
@@ -102,6 +108,7 @@ type MediaMetadata struct {
 
 	Resolutions []MediaResolution `json:"resolutions"` // List of extra resolutions (not original)
 	Subtitles   []MediaSubtitle   `json:"subtitles"`   // List of subtitle files
+	Splits      []MediaSplit      `json:"time_splits"` // List of time splits
 
 	PreviewsReady    bool    `json:"previews_ready"`    // True if timeline previews are ready to be displayed
 	PreviewsTask     uint64  `json:"previews_task"`     // ID of the task that must create the video previews (only if PreviewsReady = false)
@@ -114,7 +121,7 @@ type MediaMetadata struct {
 	ImageNotesAsset uint64 `json:"img_notes_asset"` // Asset where the image notes are stored
 }
 
-// Creates a new media asset. Creates the folder and stoires the initial metadata.
+// Creates a new media asset. Creates the folder and stores the initial metadata.
 // Used in the upload process
 // key - Vault encryption key
 // media_type - Type of media
@@ -155,6 +162,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		ThumbnailAsset:    0,
 		Resolutions:       make([]MediaResolution, 0),
 		Subtitles:         make([]MediaSubtitle, 0),
+		Splits:            make([]MediaSplit, 0),
 		PreviewsReady:     false,
 		PreviewsInterval:  0,
 		PreviewsAsset:     0,
@@ -228,6 +236,10 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 
 		if mp.Subtitles == nil {
 			mp.Subtitles = make([]MediaSubtitle, 0)
+		}
+
+		if mp.Splits == nil {
+			mp.Splits = make([]MediaSplit, 0)
 		}
 
 		return &mp, nil

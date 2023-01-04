@@ -448,3 +448,13 @@ func EncryptAssetData(data []byte, key []byte) (string, error) {
 
 	return encrypted_file, nil
 }
+
+func LimitStringSize(str string, size int) string {
+	if len(str) <= size {
+		return str
+	} else if size > 0 {
+		return str[:size]
+	} else {
+		return ""
+	}
+}

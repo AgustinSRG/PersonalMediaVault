@@ -77,6 +77,11 @@ type MediaAPIMetaSubtitle struct {
 	Url  string `json:"url"`
 }
 
+type MediaAPIMetaTimeSplit struct {
+	Time float64 `json:"time"`
+	Name string  `json:"name"`
+}
+
 type MediaAPIMetaResponse struct {
 	Id   uint64    `json:"id"`
 	Type MediaType `json:"type"`
@@ -107,6 +112,8 @@ type MediaAPIMetaResponse struct {
 	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
 
 	ForceStartBeginning bool `json:"force_start_beginning"`
+
+	TimeSlices []MediaAPIMetaTimeSplit `json:"time_slices"`
 
 	HasImageNotes bool   `json:"img_notes"`
 	ImageNotesURL string `json:"img_notes_url"`
@@ -264,6 +271,21 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	result.Subtitles = subtitles
 
 	result.ForceStartBeginning = meta.ForceStartBeginning
+
+	timeSlices := make([]MediaAPIMetaTimeSplit, 0)
+
+	if meta.Splits != nil {
+		for i := 0; i < len(meta.Splits); i++ {
+			var s MediaAPIMetaTimeSplit
+
+			s.Time = meta.Splits[i].Time
+			s.Name = meta.Splits[i].Name
+
+			timeSlices = append(timeSlices, s)
+		}
+	}
+
+	result.TimeSlices = timeSlices
 
 	// Response
 
@@ -723,6 +745,95 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 	}
 
 	meta.ForceStartBeginning = p.ForceStartBeginning
+
+	err = media.EndWrite(meta, session.key, false)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
+}
+
+func api_editMediaTimelineSplices(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if !session.write {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p []MediaAPIMetaTimeSplit
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	if p == nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	timeSplits := make([]MediaSplit, 0)
+
+	for i := 0; i < len(p) && i < 1024; i++ {
+		timeSplits = append(timeSplits, MediaSplit{
+			Time: p[i].Time,
+			Name: LimitStringSize(p[i].Name, 80),
+		})
+	}
+
+	meta.Splits = timeSplits
 
 	err = media.EndWrite(meta, session.key, false)
 
