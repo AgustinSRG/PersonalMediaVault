@@ -372,6 +372,8 @@
       v-model:loop="loop"
       :url="audioURL"
       @stats="openStats"
+      v-model:sliceloop="sliceLoop"
+      :hasslices="timeSlices && timeSlices.length > 0"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -479,6 +481,8 @@ export default defineComponent({
 
       loop: false,
       nextend: false,
+
+      sliceLoop: false,
 
       volume: 1,
       muted: false,
@@ -935,6 +939,7 @@ export default defineComponent({
     },
 
     setTime: function (time: number, save: boolean) {
+      this.currentTimeSlice = null;
       time = Math.max(0, time);
       time = Math.min(time, this.duration);
 
@@ -1113,6 +1118,7 @@ export default defineComponent({
       this.currentTimeSliceName = "";
       this.currentTimeSliceStart = 0;
       this.currentTimeSliceEnd = 0;
+      this.sliceLoop = false;
       this.currentTime = this.canSaveTime
         ? PlayerPreferences.GetInitialTime(this.mid)
         : 0;
@@ -1355,6 +1361,10 @@ export default defineComponent({
     },
 
     updateCurrentTimeSlice: function () {
+      if (this.currentTimeSlice && this.sliceLoop && this.currentTime >= this.currentTimeSlice.end) {
+        this.setTime(this.currentTimeSlice.start, false);
+        return;
+      }
       const slice = findTimeSlice(this.timeSlices, this.currentTime);
       if (slice) {
         this.currentTimeSlice = slice;

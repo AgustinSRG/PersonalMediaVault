@@ -84,6 +84,22 @@
       </tr>
 
       <tr
+        v-if="(type === 'video' || type === 'audio') && hasslices"
+        class="tr-button"
+        tabindex="0"
+        @click="toggleSliceLoop"
+        @keydown="clickOnEnter"
+      >
+        <td>
+          <i class="fas fa-repeat icon-config"></i>
+          <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
+        </td>
+        <td class="td-right">
+          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceloop }"></i>
+        </td>
+      </tr>
+
+      <tr
         v-if="url"
         class="tr-button"
         tabindex="0"
@@ -141,6 +157,7 @@ export default defineComponent({
     "update:controls",
     "update:fit",
     "update:notesedit",
+    "update:sliceloop",
     "close",
   ],
   props: {
@@ -154,6 +171,10 @@ export default defineComponent({
     loop: Boolean,
     fit: Boolean,
     controls: Boolean,
+
+    sliceloop: Boolean,
+    hasslices: Boolean,
+
     notesedit: Boolean,
     canwrite: Boolean,
   },
@@ -164,6 +185,7 @@ export default defineComponent({
       fitState: useVModel(props, "fit"),
       controlsState: useVModel(props, "controls"),
       notesState: useVModel(props, "notesedit"),
+      sliceLoopState: useVModel(props, "sliceloop"),
     };
   },
   data: function () {
@@ -186,6 +208,12 @@ export default defineComponent({
 
     toggleLoop: function () {
       this.loopState = !this.loopState;
+      this.shownState = false;
+      this.$emit("close");
+    },
+
+    toggleSliceLoop: function () {
+      this.sliceLoopState = !this.sliceLoopState;
       this.shownState = false;
       this.$emit("close");
     },
