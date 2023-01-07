@@ -122,7 +122,6 @@ export class ImageNotesController {
         }).onSuccess(jsonNotes => {
             ImageNotesController.Notes = parseImageNotes(jsonNotes);
             AppEvents.Emit("img-notes-update");
-            console.log(ImageNotesController.Notes);
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {

@@ -248,8 +248,6 @@ export default defineComponent({
         y = e.pageY;
       }
 
-      console.log(bounds);
-
       const trueX = Math.max(
         0,
         Math.min(
