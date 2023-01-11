@@ -86,6 +86,9 @@ export function parseTimeSlices(text: string): { time: number, name: string, }[]
         if (spaceIndex >= 0) {
             timeStr = trimLine.substring(0, spaceIndex);
             sliceName = trimLine.substring(spaceIndex + 1).substring(0, 80).trim();
+            if (sliceName.startsWith("-")) {
+                sliceName = sliceName.substring(1).trim();
+            }
         } else {
             timeStr = trimLine;
         }
