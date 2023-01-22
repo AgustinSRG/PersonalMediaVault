@@ -298,6 +298,7 @@ export default defineComponent({
                 );
                 if (currentElem) {
                   currentElem.scrollIntoView();
+                  currentElem.focus();
                 }
               });
             }
@@ -314,6 +315,7 @@ export default defineComponent({
                 );
                 if (currentElem) {
                   currentElem.scrollIntoView();
+                  currentElem.focus();
                 }
               });
             }
@@ -614,6 +616,7 @@ export default defineComponent({
           );
           if (currentElem) {
             currentElem.scrollIntoView();
+            currentElem.focus();
           }
         });
       }
