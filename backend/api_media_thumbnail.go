@@ -224,6 +224,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	}
 
 	// Change metadata
+	hasAssetToRemove := meta.ThumbnailReady
 	assetToRemove := meta.ThumbnailAsset
 	meta.ThumbnailReady = true
 	meta.ThumbnailAsset = thumb_asset
@@ -241,17 +242,19 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	}
 
 	// Remove old asset
-	success, asset_path, asset_lock = media.AcquireAsset(assetToRemove, ASSET_SINGLE_FILE)
+	if hasAssetToRemove {
+		success, asset_path, asset_lock = media.AcquireAsset(assetToRemove, ASSET_SINGLE_FILE)
 
-	if success {
-		asset_lock.RequestWrite()
-		asset_lock.StartWrite()
+		if success {
+			asset_lock.RequestWrite()
+			asset_lock.StartWrite()
 
-		os.Remove(asset_path)
+			os.Remove(asset_path)
 
-		asset_lock.EndWrite()
+			asset_lock.EndWrite()
 
-		media.ReleaseAsset(assetToRemove)
+			media.ReleaseAsset(assetToRemove)
+		}
 	}
 
 	// Release media
