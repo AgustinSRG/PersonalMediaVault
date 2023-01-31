@@ -165,11 +165,17 @@
           @leave="leaveTooltip('volume')"
         ></VolumeControl>
 
-        <div class="player-time-label-container" :class="{'in-album': !!next || !!prev}" v-if="!minPlayer">
+        <div
+          class="player-time-label-container"
+          :class="{ 'in-album': !!next || !!prev }"
+          v-if="!minPlayer"
+        >
           <span
             >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
           >
-          <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{currentTimeSliceName}}</span>
+          <span v-if="currentTimeSlice" class="times-slice-name"
+            ><b class="separator"> - </b>{{ currentTimeSliceName }}</span
+          >
         </div>
       </div>
 
@@ -1369,6 +1375,35 @@ export default defineComponent({
     onUpdateNextEnd: function () {
       PlayerPreferences.SetNextOnEnd(this.nextend);
     },
+
+    handleMediaSessionEvent: function (event: {
+      action: string;
+      fastSeek: boolean;
+      seekTime: number;
+      seekOffset: number;
+    }) {
+      if (!event || !event.action) {
+        return;
+      }
+      switch (event.action) {
+        case "play":
+          this.play();
+          break;
+        case "pause":
+          this.pause();
+          break;
+        case "nexttrack":
+          if (this.next) {
+            this.goNext();
+          }
+          break;
+        case "previoustrack":
+          if (this.prev) {
+            this.goPrev();
+          }
+          break;
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -1409,6 +1444,13 @@ export default defineComponent({
     );
 
     this.initializeVideo();
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+    }
   },
   beforeUnmount: function () {
     this.videoURL = "";
@@ -1443,6 +1485,13 @@ export default defineComponent({
       this.$options.subtitlesReloadH
     );
     KeyboardManager.RemoveHandler(this.$options.keyHandler);
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+    }
   },
   watch: {
     rtick: function () {

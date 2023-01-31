@@ -1402,6 +1402,35 @@ export default defineComponent({
     themeUpdated: function () {
       this.theme = AppPreferences.Theme;
     },
+
+    handleMediaSessionEvent: function (event: {
+      action: string;
+      fastSeek: boolean;
+      seekTime: number;
+      seekOffset: number;
+    }) {
+      if (!event || !event.action) {
+        return;
+      }
+      switch (event.action) {
+        case "play":
+          this.play();
+          break;
+        case "pause":
+          this.pause();
+          break;
+        case "nexttrack":
+          if (this.next) {
+            this.goNext();
+          }
+          break;
+        case "previoustrack":
+          if (this.prev) {
+            this.goPrev();
+          }
+          break;
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -1446,6 +1475,13 @@ export default defineComponent({
     AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
 
     this.initializeAudio();
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+    }
   },
   beforeUnmount: function () {
     this.audioURL = "";
@@ -1480,6 +1516,13 @@ export default defineComponent({
     AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
 
     KeyboardManager.RemoveHandler(this.$options.keyHandler);
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+    }
   },
   watch: {
     rtick: function () {

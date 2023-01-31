@@ -1052,6 +1052,29 @@ export default defineComponent({
         this.prefetchURL = "";
       }
     },
+
+    handleMediaSessionEvent: function (event: {
+      action: string;
+      fastSeek: boolean;
+      seekTime: number;
+      seekOffset: number;
+    }) {
+      if (!event || !event.action) {
+        return;
+      }
+      switch (event.action) {
+        case "nexttrack":
+          if (this.next) {
+            this.goNext();
+          }
+          break;
+        case "previoustrack":
+          if (this.prev) {
+            this.goPrev();
+          }
+          break;
+      }
+    },
   },
   mounted: function () {
     // Load player preferences
@@ -1099,6 +1122,11 @@ export default defineComponent({
     );
 
     this.initializeImage();
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+    }
   },
   beforeUnmount: function () {
     this.imageURL = "";
@@ -1135,6 +1163,11 @@ export default defineComponent({
     if (this.$options.autoNextTimer) {
       clearTimeout(this.$options.autoNextTimer);
       this.$options.autoNextTimer = null;
+    }
+
+    if (window.navigator && window.navigator.mediaSession) {
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
     }
   },
   watch: {

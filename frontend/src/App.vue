@@ -11,6 +11,7 @@ import { AlbumsController } from "./control/albums";
 import { AppEvents } from "./control/app-events";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
+import { GetAssetURL } from "./utils/request";
 
 @Options({
   components: {
@@ -86,10 +87,30 @@ import { MediaController } from "./control/media";
         }
       }
     },
+
+    updateMediaMetadata: function () {
+      if (!window.navigator || !window.navigator.mediaSession) {
+        return;
+      }
+      if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+        window.navigator.mediaSession.metadata = new MediaMetadata({
+          title: MediaController.MediaData.title,
+          album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
+          artwork: MediaController.MediaData.thumbnail ? [{src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpg'}] : undefined,
+        });
+      } else {
+        window.navigator.mediaSession.metadata = null;
+      }
+    },
+
+    updateAppStatus: function () {
+      this.updateTitle();
+      this.updateMediaMetadata();
+    },
   },
   mounted: function () {
-    this.updateTitle();
-    this.$options.updateH = this.updateTitle.bind(this);
+    this.updateAppStatus();
+    this.$options.updateH = this.updateAppStatus.bind(this);
 
     AppEvents.AddEventListener("app-status-update", this.$options.updateH);
     AppEvents.AddEventListener("current-album-update", this.$options.updateH);
