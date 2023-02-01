@@ -66,12 +66,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Backup tool for Personal Media Vault.")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ProgramWelcome",
+			Other: "Backup tool for Personal Media Vault.",
+		},
+	})
+	fmt.Println(msg)
 
-	fmt.Println("Fetching metadata from: " + vaultPath)
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "FetchNotice",
+			Other: "Fetching metadata from: {{.Path}}",
+		},
+		TemplateData: map[string]interface{}{
+			"Path": vaultPath,
+		},
+	})
+	fmt.Println(msg)
 
 	if !CheckFileExists(path.Join(vaultPath, "credentials.json")) {
-		fmt.Println("Could not find a vault in the specified path")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultNotFoundError",
+				Other: "Could not find a vault in the specified path",
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -93,21 +114,39 @@ func main() {
 	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "tag_list.pmv"))
 	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "user_config.pmv"))
 
-	fmt.Println("Initializing backup...")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "InitializeNotice",
+			Other: "Initializing backup...",
+		},
+	})
+	fmt.Println(msg)
 
 	progressInt := int64(0)
 	prevProgress := int64(0)
 
 	statFilesCopied := 0
 
-	fmt.Print("Making backup...")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "MakeNotice",
+			Other: "Making backup...",
+		},
+	})
+	fmt.Println(msg)
 
 	for i := 0; i < len(totalEntries); i++ {
 
 		copied, err := backupFile(totalEntries[i])
 
 		if err != nil {
-			fmt.Println("Backup failed.")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "BackupFailed",
+					Other: "Backup failed!",
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 			return
 		}
@@ -119,10 +158,28 @@ func main() {
 		progressInt = int64(i+1) * 100 / int64(len(totalEntries))
 		if prevProgress != progressInt {
 			prevProgress = progressInt
-			fmt.Print("\rMaking backup... (" + fmt.Sprint(prevProgress) + "%)")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "BackupProgress",
+					Other: "Making backup... ({{.Percent}}%)",
+				},
+				TemplateData: map[string]interface{}{
+					"Percent": fmt.Sprint(progressInt),
+				},
+			})
+			fmt.Print("\r" + msg)
 		}
 	}
 
 	fmt.Print("\n")
-	fmt.Println("Backup done. Total files copied: " + fmt.Sprint(statFilesCopied))
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "BackupDone",
+			Other: "Backup done. Total files copied: {{.FileCount}}",
+		},
+		TemplateData: map[string]interface{}{
+			"FileCount": fmt.Sprint(statFilesCopied),
+		},
+	})
+	fmt.Println(msg)
 }

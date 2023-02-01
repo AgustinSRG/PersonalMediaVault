@@ -1,3 +1,47 @@
+[BackupDone]
+hash = "sha1-109722ca7fe82ce01ec9a102f90efd2469df74f3"
+other = "Copia de seguridad completada. Número de archivos nuevos copiados: {{.FileCount}}"
+
+[BackupFailed]
+hash = "sha1-c894768353128628d1e2c812a8cdecdb1810f1e4"
+other = "¡La copia de seguridad ha fallado!"
+
+[BackupProgress]
+hash = "sha1-1464105a52352f4c05f5e203791a9a0c5fe1c794"
+other = "Creando copia de seguridad... ({{.Percent}}%)"
+
+[Error]
+hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
+other = "Error: {{.Message}}"
+
+[ErrorCopyFile]
+hash = "sha1-0e6111ea1aa9549bff828bfffaddc0c9232918bd"
+other = "Error copiando el archivo {{.File}} | Error: {{.Message}}"
+
+[ErrorFetchFile]
+hash = "sha1-316f7aeb0d46593d7ff59e74e970bedc41d924c3"
+other = "Error obteniendo información del archivo {{.File}} | Error: {{.Message}}"
+
+[ErrorNotRegularFile]
+hash = "sha1-d7badd343243c5bb77627e2e71254cb365bd7a2b"
+other = "{{.File}} no es un fichero"
+
+[ErrorReadPath]
+hash = "sha1-655a5ae5ba4b1ddfc3dfff44e2f8841ce1e71807"
+other = "Error accediendo al directorio {{.Path}} | Error: {{.Message}}"
+
+[FetchNotice]
+hash = "sha1-3bf220d0de646037641bfabf6795cdab3c29775e"
+other = "Extrayendo metadatos de: {{.Path}}"
+
+[InitializeNotice]
+hash = "sha1-c17156c98ada8a559819cf57e5b0997f3b95d995"
+other = "Inicializando copia de seguridad..."
+
+[MakeNotice]
+hash = "sha1-aca99d7d39a3215a1e0a3868fd8a9d10989f257d"
+other = "Creando copia de seguridad..."
+
 [PathError]
 hash = "sha1-9e7a2817625214ec7fc1b0bdd26c5e5b41863a85"
 other = "La ruta no existe: {{.Path}}"
@@ -9,3 +53,7 @@ other = "Uso del comando: pmv-backup </ruta/de/galería> </ruta/copia/de/segurid
 [ProgramWelcome]
 hash = "sha1-df69330ffb2a276629bbd93feae80825a052907d"
 other = "Herramienta de creación de copias de seguridad de su galería multimedia."
+
+[VaultNotFoundError]
+hash = "sha1-f4697133f6137e4d9320d98671bc9eaf8e2a3e91"
+other = "No se encontró ninguna galería en la ruta seleccionada"

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 // Backup entry
@@ -30,7 +32,17 @@ func findBackupEntries(vaultPath string, backupPath string, relativePath string)
 	readInfo, err := os.ReadDir(pathToRead)
 
 	if err != nil {
-		fmt.Println("\nError reading path " + pathToRead + " | Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ErrorReadPath",
+				Other: "Error reading path {{.Path}} | Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Path":    pathToRead,
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println("\n" + msg)
 		return make([]BackupEntry, 0)
 	}
 
@@ -59,7 +71,17 @@ func backupFile(entry BackupEntry) (copied bool, err error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return false, nil // File was deleted / never existed
 		} else {
-			fmt.Println("\nError fetching info of " + entry.original + " | Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorFetchFile",
+					Other: "Error fetching info of {{.File}} | Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File":    entry.original,
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println("\n" + msg)
 			return false, err
 		}
 	}
@@ -73,7 +95,16 @@ func backupFile(entry BackupEntry) (copied bool, err error) {
 		if errors.Is(err, os.ErrNotExist) {
 			fileInfoBackup = nil
 		} else {
-			fmt.Println("\nError: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println("\n" + msg)
 			return false, err
 		}
 	}
@@ -83,7 +114,17 @@ func backupFile(entry BackupEntry) (copied bool, err error) {
 		_, err = CopyFile(entry.original, entry.backupFile)
 
 		if err != nil {
-			fmt.Println("\nError copying file " + entry.original + " | Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorCopyFile",
+					Other: "Error copying file {{.File}} | Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File":    entry.original,
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println("\n" + msg)
 			return false, err
 		}
 

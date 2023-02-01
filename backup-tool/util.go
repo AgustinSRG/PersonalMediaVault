@@ -4,9 +4,10 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const (
@@ -22,7 +23,16 @@ func CopyFile(src, dst string) (int64, error) {
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ErrorNotRegularFile",
+				Other: "{{.File}} is not a regular file",
+			},
+			TemplateData: map[string]interface{}{
+				"File": src,
+			},
+		})
+		return 0, errors.New(msg)
 	}
 
 	source, err := os.Open(src)
