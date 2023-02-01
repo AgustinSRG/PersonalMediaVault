@@ -1,3 +1,6 @@
 pmv-backup
 pmv-backup.exe
 vault
+locales-update.bat
+locales-done.bat
+translate.*.toml

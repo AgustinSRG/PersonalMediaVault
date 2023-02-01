@@ -1,0 +1,11 @@
+[PathError]
+hash = "sha1-9e7a2817625214ec7fc1b0bdd26c5e5b41863a85"
+other = "La ruta no existe: {{.Path}}"
+
+[ProgramUsage]
+hash = "sha1-1976759ecd4bfc24c7f62b90705229b61c39f942"
+other = "Uso del comando: pmv-backup </ruta/de/galería> </ruta/copia/de/seguridad>"
+
+[ProgramWelcome]
+hash = "sha1-df69330ffb2a276629bbd93feae80825a052907d"
+other = "Herramienta de creación de copias de seguridad de su galería multimedia."

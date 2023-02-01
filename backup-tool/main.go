@@ -6,15 +6,32 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 func main() {
+	// Initialize
+	InitializeInternationalizationFramework()
+
 	// Parse arguments
 	args := os.Args
 
 	if len(args) != 3 {
-		fmt.Println("Backup tool for Personal Media Vault.")
-		fmt.Println("Usage: pmv-backup </path/to/vault> </path/to/backup>")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ProgramWelcome",
+				Other: "Backup tool for Personal Media Vault.",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ProgramUsage",
+				Other: "Usage: pmv-backup </path/to/vault> </path/to/backup>",
+			},
+		})
+		fmt.Println(msg)
 		return
 	}
 
@@ -22,12 +39,30 @@ func main() {
 	backupPath := args[2]
 
 	if !CheckFileExists(vaultPath) {
-		fmt.Println("Path does not exists: " + vaultPath)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "PathError",
+				Other: "Path does not exist: {{.Path}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Path": vaultPath,
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	if !CheckFileExists(backupPath) {
-		fmt.Println("Path does not exists: " + backupPath)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "PathError",
+				Other: "Path does not exist: {{.Path}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Path": backupPath,
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 

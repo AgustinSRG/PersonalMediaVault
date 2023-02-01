@@ -1,0 +1,3 @@
+PathError = "Path does not exist: {{.Path}}"
+ProgramUsage = "Usage: pmv-backup </path/to/vault> </path/to/backup>"
+ProgramWelcome = "Backup tool for Personal Media Vault."
