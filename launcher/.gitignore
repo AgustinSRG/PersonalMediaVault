@@ -7,6 +7,11 @@ laucher.exe
 
 main-res.syso
 
+locales-update.bat
+locales-done.bat
+
+translate.*.toml
+
 # Ignore temp files
 
 temp

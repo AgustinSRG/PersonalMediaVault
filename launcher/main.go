@@ -12,12 +12,15 @@ import (
 	"strings"
 
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const VERSION = "1.2.3"
 
 // Program entry point
 func main() {
+	InitializeInternationalizationFramework()
+
 	// Read arguments
 	args := os.Args
 
@@ -52,7 +55,16 @@ func main() {
 
 	err := child_process_manager.InitalizeChildProcessManager()
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 	defer child_process_manager.DisposeChildProcessManager()

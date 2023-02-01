@@ -1,0 +1,3 @@
+[Error]
+hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
+other = "Error: {{.Message}}"
