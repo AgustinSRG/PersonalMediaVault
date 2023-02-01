@@ -69,9 +69,15 @@ func main() {
 
 	for i := 0; i < len(totalEntries); i++ {
 
-		c := backupFile(totalEntries[i])
+		copied, err := backupFile(totalEntries[i])
 
-		if c {
+		if err != nil {
+			fmt.Println("Backup failed.")
+			os.Exit(1)
+			return
+		}
+
+		if copied {
 			statFilesCopied++
 		}
 

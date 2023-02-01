@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -51,12 +52,16 @@ func findBackupEntries(vaultPath string, backupPath string, relativePath string)
 	return result
 }
 
-func backupFile(entry BackupEntry) bool {
+func backupFile(entry BackupEntry) (copied bool, err error) {
 	fileInfo, err := os.Stat(entry.original)
 
 	if err != nil {
-		fmt.Println("\nError fetching info of " + entry.original + " | Error: " + err.Error())
-		return false
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil // File was deleted / never existed
+		} else {
+			fmt.Println("\nError fetching info of " + entry.original + " | Error: " + err.Error())
+			return false, err
+		}
 	}
 
 	// Make sure folder exists
@@ -65,7 +70,12 @@ func backupFile(entry BackupEntry) bool {
 	fileInfoBackup, err := os.Stat(entry.backupFile)
 
 	if err != nil {
-		fileInfoBackup = nil
+		if errors.Is(err, os.ErrNotExist) {
+			fileInfoBackup = nil
+		} else {
+			fmt.Println("\nError: " + err.Error())
+			return false, err
+		}
 	}
 
 	if fileInfoBackup == nil || fileInfo.ModTime().UnixMilli() > fileInfoBackup.ModTime().UnixMilli() {
@@ -74,11 +84,11 @@ func backupFile(entry BackupEntry) bool {
 
 		if err != nil {
 			fmt.Println("\nError copying file " + entry.original + " | Error: " + err.Error())
-			return false
+			return false, err
 		}
 
-		return true
+		return true, nil
 	} else {
-		return false
+		return false, nil
 	}
 }
