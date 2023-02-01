@@ -5,6 +5,11 @@
 		}
 	],
 	"settings": {
-		"files.exclude": {},
+		"files.exclude": {
+			"temp": true,
+			"vault": true,
+			"pmvd": true,
+			"pmvd.exe": true
+		},
 	}
 }

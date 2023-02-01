@@ -5,6 +5,9 @@
 		}
 	],
 	"settings": {
-		"files.exclude": {},
+		"files.exclude": {
+			"pmv-backup": true,
+			"pmv-backup.exe": true
+		},
 	}
 }
