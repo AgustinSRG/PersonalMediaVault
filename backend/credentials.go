@@ -96,7 +96,7 @@ func InitializeCredentialsPath(base_path string) {
 
 		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
 
-		var username string = ""
+		var username string = os.Getenv("PMV_INIT_SET_USER")
 
 		for username == "" {
 			fmt.Print("Enter Username: ")
@@ -120,7 +120,7 @@ func InitializeCredentialsPath(base_path string) {
 			}
 		}
 
-		var password string
+		var password string = os.Getenv("PMV_INIT_SET_PASSWORD")
 		var password_repeat string
 
 		for password == "" || password != password_repeat {
@@ -179,7 +179,7 @@ func InitializeCredentialsPath(base_path string) {
 }
 
 // Initialization
-// Loads the creadentials file
+// Loads the credentials file
 // or creates a new one if there is not one
 func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 	manager.file = path.Join(base_path, "credentials.json")
