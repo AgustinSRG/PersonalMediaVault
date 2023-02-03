@@ -12,6 +12,8 @@ locales-done.bat
 
 translate.*.toml
 
+lang
+
 # Ignore temp files
 
 temp

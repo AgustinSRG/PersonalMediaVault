@@ -4,9 +4,10 @@ package main
 
 import (
 	"embed"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
-	"github.com/jeandeaual/go-locale"
 	"github.com/naoina/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -17,7 +18,6 @@ import (
 var LocaleFS embed.FS
 var Localizer *i18n.Localizer
 
-// Load internationalization framework
 func InitializeInternationalizationFramework() {
 	// Available languages
 	availableLanguages := map[string]bool{
@@ -26,9 +26,17 @@ func InitializeInternationalizationFramework() {
 	}
 
 	// Get language
-	lang := os.Getenv("LANGUAGE")
+	lang := os.Getenv("PMV_LANGUAGE")
 	if lang == "" {
-		lang, _ = locale.GetLanguage() // Default system language
+		ex, err := os.Executable()
+		if err == nil {
+			langFilePath := filepath.Join(filepath.Dir(ex), "lang")
+			langBytes, err := ioutil.ReadFile(langFilePath)
+
+			if err == nil {
+				lang = string(langBytes)
+			}
+		}
 	}
 
 	defaultLang, err := language.Parse(lang)
