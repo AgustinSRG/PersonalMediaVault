@@ -12,9 +12,11 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
+	"golang.org/x/term"
 )
 
 type VaultController struct {
@@ -46,17 +48,97 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 	vc.logFilePath = ""
 
 	if !fileExists(path.Join(vaultPath, "credentials.json")) {
+		// Ask for initial credentials
+		reader := bufio.NewReader(os.Stdin)
+
+		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
+
+		var username string = ""
+
+		for username == "" {
+			fmt.Print("Enter Username: ")
+			readUsername, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			username = strings.TrimSpace(readUsername)
+
+			if username == "" {
+				fmt.Println("Username cannot be blank.")
+				continue
+			}
+
+			if len(username) > 255 {
+				fmt.Println("Username cannot be longer than 255 characters.")
+				username = ""
+				continue
+			}
+		}
+
+		var password string = ""
+		var password_repeat string = ""
+
+		for password == "" || password != password_repeat {
+			fmt.Print("Enter Password: ")
+			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			password = strings.TrimSpace(string(bytePassword))
+
+			if password == "" {
+				fmt.Println("Password cannot be blank.")
+				continue
+			}
+
+			if len(password) > 255 {
+				fmt.Println("Password cannot be longer than 255 characters.")
+				password = ""
+				continue
+			}
+
+			fmt.Print("\n")
+
+			fmt.Print("Repeat Password: ")
+			bytePassword, err = term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				os.Exit(1)
+			}
+
+			fmt.Print("\n")
+
+			password_repeat = strings.TrimSpace(string(bytePassword))
+
+			if password != password_repeat {
+				fmt.Println("Passwords do not match.")
+			}
+		}
+
 		// Run initialize sequence
 		cmd := exec.Command(BACKEND_BIN, "--init", "--skip-lock", "--vault-path", vaultPath)
 
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, "PMV_INIT_SET_USER="+username, "PMV_INIT_SET_PASSWORD="+password)
+
 		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		cmd.Stdin = os.Stdin
+		cmd.Stdout = nil
+		cmd.Stdin = nil
 
 		err := cmd.Run()
 
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
+
+		if cmd.ProcessState.ExitCode() == 0 {
+			fmt.Println("Vault initialized successfully!")
+		} else {
 			os.Exit(1)
 		}
 	}

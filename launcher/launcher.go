@@ -40,7 +40,7 @@ func detectLauncherPaths() {
 		BACKEND_BIN = path.Join("/usr/bin", getBinaryFileName("pmvd"))
 
 		if !fileExists(BACKEND_BIN) {
-			BACKEND_BIN = path.Join("../backend", getBinaryFileName("pmvd"))
+			BACKEND_BIN = path.Join("..", "backend", getBinaryFileName("pmvd"))
 
 			if !fileExists(BACKEND_BIN) {
 				fmt.Println("Error: Could not find the backend binary (pmvd)")

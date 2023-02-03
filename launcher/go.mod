@@ -7,6 +7,7 @@ require (
 	github.com/naoina/toml v0.1.1
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/nightlyone/lockfile v1.0.0
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/text v0.4.0
 )
 

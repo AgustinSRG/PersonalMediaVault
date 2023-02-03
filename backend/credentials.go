@@ -100,13 +100,13 @@ func InitializeCredentialsPath(base_path string) {
 
 		for username == "" {
 			fmt.Print("Enter Username: ")
-			username, err = reader.ReadString('\n')
+			readUsername, err := reader.ReadString('\n')
 			if err != nil {
 				fmt.Println("Error: " + err.Error())
 				os.Exit(1)
 			}
 
-			username = strings.TrimSpace(username)
+			username = strings.TrimSpace(readUsername)
 
 			if username == "" {
 				fmt.Println("Username cannot be blank.")
@@ -121,7 +121,7 @@ func InitializeCredentialsPath(base_path string) {
 		}
 
 		var password string = os.Getenv("PMV_INIT_SET_PASSWORD")
-		var password_repeat string
+		var password_repeat string = os.Getenv("PMV_INIT_SET_PASSWORD")
 
 		for password == "" || password != password_repeat {
 			fmt.Print("Enter Password: ")
