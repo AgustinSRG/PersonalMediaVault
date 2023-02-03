@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 var (
@@ -43,9 +45,27 @@ func detectLauncherPaths() {
 			BACKEND_BIN = path.Join("..", "backend", getBinaryFileName("pmvd"))
 
 			if !fileExists(BACKEND_BIN) {
-				fmt.Println("Error: Could not find the backend binary (pmvd)")
-				fmt.Println("Seems like some required files are missing.")
-				fmt.Println("In order to fix this error, you could re-install PersonalMediaVault.")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorBackendBin",
+						Other: "Error: Could not find the backend binary (pmvd)",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "FilesMissing",
+						Other: "Seems like some required files are missing.",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ReinstallFix",
+						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		}
@@ -59,12 +79,30 @@ func detectLauncherPaths() {
 		BACKUP_BIN = path.Join("/usr/bin", getBinaryFileName("pmv-backup"))
 
 		if !fileExists(BACKUP_BIN) {
-			BACKUP_BIN = path.Join("../backup-tool", getBinaryFileName("pmv-backup"))
+			BACKUP_BIN = path.Join("..", "backup-tool", getBinaryFileName("pmv-backup"))
 
 			if !fileExists(BACKUP_BIN) {
-				fmt.Println("Error: Could not find the backup tool binary (pmv-backup)")
-				fmt.Println("Seems like some required files are missing.")
-				fmt.Println("In order to fix this error, you could re-install PersonalMediaVault.")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorBackupBin",
+						Other: "Error: Could not find the backup tool binary (pmv-backup)",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "FilesMissing",
+						Other: "Seems like some required files are missing.",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ReinstallFix",
+						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		}
@@ -81,9 +119,27 @@ func detectLauncherPaths() {
 			FFMPEG_BIN = path.Join("/ffmpeg/bin/", getBinaryFileName("ffmpeg"))
 
 			if !fileExists(FFMPEG_BIN) {
-				fmt.Println("Error: Could not find the ffmpeg binary (ffmpeg)")
-				fmt.Println("Seems like some required files are missing.")
-				fmt.Println("In order to fix this error, you could re-install PersonalMediaVault.")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorCodecBin",
+						Other: "Error: Could not find the ffmpeg binary (ffmpeg)",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "FilesMissing",
+						Other: "Seems like some required files are missing.",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ReinstallFix",
+						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		}
@@ -100,9 +156,27 @@ func detectLauncherPaths() {
 			FFPROBE_BIN = path.Join("/ffmpeg/bin/", getBinaryFileName("ffprobe"))
 
 			if !fileExists(FFPROBE_BIN) {
-				fmt.Println("Error: Could not find the ffprobe binary (ffprobe)")
-				fmt.Println("Seems like some required files are missing.")
-				fmt.Println("In order to fix this error, you could re-install PersonalMediaVault.")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorProbeBin",
+						Other: "Error: Could not find the ffprobe binary (ffprobe)",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "FilesMissing",
+						Other: "Seems like some required files are missing.",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ReinstallFix",
+						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		}
@@ -117,9 +191,27 @@ func detectLauncherPaths() {
 			FRONTEND_PATH = "../frontend/dist"
 
 			if !folderExists(FRONTEND_PATH) {
-				fmt.Println("Error: Could not find the frontend package directory")
-				fmt.Println("Seems like some required files are missing.")
-				fmt.Println("In order to fix this error, you could re-install PersonalMediaVault.")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorFrontMissing",
+						Other: "Error: Could not find the frontend package directory",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "FilesMissing",
+						Other: "Seems like some required files are missing.",
+					},
+				})
+				fmt.Println(msg)
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ReinstallFix",
+						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		}

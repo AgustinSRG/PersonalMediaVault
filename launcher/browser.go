@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 func openBrowser(port int, ssl bool) {
@@ -26,7 +28,16 @@ func openBrowser(port int, ssl bool) {
 		}
 	}
 
-	fmt.Println("Launching browser: " + url)
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "LaunchingBrowser",
+			Other: "Launching browser: {{.URL}}",
+		},
+		TemplateData: map[string]interface{}{
+			"URL": url,
+		},
+	})
+	fmt.Println(msg)
 
 	// Open the browser
 	var err error
@@ -42,6 +53,15 @@ func openBrowser(port int, ssl bool) {
 	}
 
 	if err != nil {
-		fmt.Println("Error: could not open browser: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ErrorBrowser",
+				Other: "Error: could not open browser: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 	}
 }

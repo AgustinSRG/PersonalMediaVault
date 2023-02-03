@@ -65,3 +65,19 @@ func checkYesNoAnswer(answer string) bool {
 
 	return strings.HasPrefix(answer, strings.ToLower(yesPrefix))
 }
+
+func checkNegativeAnswer(answer string) bool {
+	answer = strings.ToLower(answer)
+	if answer == "n" {
+		return true
+	}
+
+	noPrefix, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "NoPrefix",
+			Other: "n",
+		},
+	})
+
+	return strings.HasPrefix(answer, strings.ToLower(noPrefix))
+}

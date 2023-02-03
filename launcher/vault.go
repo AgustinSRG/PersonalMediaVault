@@ -16,6 +16,7 @@ import (
 	"time"
 
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/term"
 )
 
@@ -51,27 +52,61 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 		// Ask for initial credentials
 		reader := bufio.NewReader(os.Stdin)
 
-		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultNotFoundCreateOne",
+				Other: "Vault does not exists. Please provide a set of credentials to create one.",
+			},
+		})
+
+		fmt.Println(msg)
 
 		var username string = ""
 
 		for username == "" {
-			fmt.Print("Enter Username: ")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "EnterUsername",
+					Other: "Enter Username",
+				},
+			})
+			fmt.Print(msg + ": ")
 			readUsername, err := reader.ReadString('\n')
 			if err != nil {
-				fmt.Println("Error: " + err.Error())
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "Error",
+						Other: "Error: {{.Message}}",
+					},
+					TemplateData: map[string]interface{}{
+						"Message": err.Error(),
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 
 			username = strings.TrimSpace(readUsername)
 
 			if username == "" {
-				fmt.Println("Username cannot be blank.")
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorUsernameBlank",
+						Other: "Username cannot be blank.",
+					},
+				})
+				fmt.Println(msg)
 				continue
 			}
 
 			if len(username) > 255 {
-				fmt.Println("Username cannot be longer than 255 characters.")
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorUsernameTooLong",
+						Other: "Username cannot be longer than 255 characters.",
+					},
+				})
+				fmt.Println(msg)
 				username = ""
 				continue
 			}
@@ -81,32 +116,74 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 		var password_repeat string = ""
 
 		for password == "" || password != password_repeat {
-			fmt.Print("Enter Password: ")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "EnterPassword",
+					Other: "Enter Password",
+				},
+			})
+			fmt.Print(msg + ": ")
 			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				fmt.Println("Error: " + err.Error())
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "Error",
+						Other: "Error: {{.Message}}",
+					},
+					TemplateData: map[string]interface{}{
+						"Message": err.Error(),
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 
 			password = strings.TrimSpace(string(bytePassword))
 
 			if password == "" {
-				fmt.Println("Password cannot be blank.")
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorPasswordBlank",
+						Other: "Password cannot be blank.",
+					},
+				})
+				fmt.Println(msg)
 				continue
 			}
 
 			if len(password) > 255 {
-				fmt.Println("Password cannot be longer than 255 characters.")
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorPasswordTooLong",
+						Other: "Password cannot be longer than 255 characters.",
+					},
+				})
+				fmt.Println(msg)
 				password = ""
 				continue
 			}
 
 			fmt.Print("\n")
 
-			fmt.Print("Repeat Password: ")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "RepeatPassword",
+					Other: "Repeat Password",
+				},
+			})
+			fmt.Print(msg + ": ")
 			bytePassword, err = term.ReadPassword(int(syscall.Stdin))
 			if err != nil {
-				fmt.Println("Error: " + err.Error())
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "Error",
+						Other: "Error: {{.Message}}",
+					},
+					TemplateData: map[string]interface{}{
+						"Message": err.Error(),
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 
@@ -115,7 +192,13 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 			password_repeat = strings.TrimSpace(string(bytePassword))
 
 			if password != password_repeat {
-				fmt.Println("Passwords do not match.")
+				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorPasswordNotMatching",
+						Other: "Passwords do not match.",
+					},
+				})
+				fmt.Println(msg)
 			}
 		}
 
@@ -132,12 +215,27 @@ func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherCon
 		err := cmd.Run()
 
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
 		if cmd.ProcessState.ExitCode() == 0 {
-			fmt.Println("Vault initialized successfully!")
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "VaultInitialized",
+					Other: "Vault initialized successfully!",
+				},
+			})
+			fmt.Println(msg)
 		} else {
 			os.Exit(1)
 		}
@@ -155,27 +253,88 @@ func (vc *VaultController) PrintStatus() {
 		bindAddr = "[::1]"
 	}
 
-	fmt.Println("Vault path: " + vc.vaultPath)
-	fmt.Println("Vault listening address: " + bindAddr + ":" + port)
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultPath",
+			Other: "Vault path: {{.Path}}",
+		},
+		TemplateData: map[string]interface{}{
+			"Path": vc.vaultPath,
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultListeningAddress",
+			Other: "Vault listening address: {{.Address}}",
+		},
+		TemplateData: map[string]interface{}{
+			"Address": bindAddr + ":" + port,
+		},
+	})
+	fmt.Println(msg)
 
 	if vc.launchConfig.hasSSL() {
-		fmt.Println("SSL: Enabled")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLEnabled",
+				Other: "SSL: Enabled",
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("SSL: Disabled")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLDisabled",
+				Other: "SSL: Disabled",
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	if vc.started {
-		fmt.Println("Status: Started")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "StatusStarted",
+				Other: "Status: Started",
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("Status: Stopped")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "StatusStopped",
+				Other: "Status: Stopped",
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	if vc.errorMessage != "" {
-		fmt.Println("Error: " + vc.errorMessage)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": vc.errorMessage,
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	if vc.logFilePath != "" {
-		fmt.Println("Log file: " + vc.logFilePath)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LogFile",
+				Other: "Log file: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": vc.logFilePath,
+			},
+		})
+		fmt.Println(msg)
 	}
 }
 
@@ -184,36 +343,84 @@ func (vc *VaultController) Start() bool {
 	defer vc.lock.Unlock()
 
 	if vc.started {
-		fmt.Println("Vault is already started. Use 'browser' to open it in the browser.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultAlreadyStarted",
+				Other: "Vault is already started. Use 'browser' to open it in the browser.",
+			},
+		})
+		fmt.Println(msg)
 		return false
 	}
 
 	if CheckVaultLocked(path.Join(vc.vaultPath, "vault.lock")) {
-		fmt.Println("Seems like the vault is being used by another process.")
-		fmt.Println("Openning the vault by multiple processes could be dangerous for the vault integrity.")
-		fmt.Print("Procceed? (y/n): ")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultBeingUsed",
+				Other: "Seems like the vault is being used by another process",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "OpenMultipleRisk",
+				Other: "Opening the vault by multiple processes could be dangerous for the vault integrity.",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Proceed",
+				Other: "Proceed?",
+			},
+		})
+		ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "YesNo",
+				Other: "y/n",
+			},
+		})
+		fmt.Print(msg + " (" + ynMsg + "): ")
 
 		ans, err := vc.consoleReader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
 		ans = strings.TrimSpace(ans)
 
-		if strings.HasPrefix(strings.ToLower(ans), "y") {
+		if checkYesNoAnswer(ans) {
 			os.Remove(path.Join(vc.vaultPath, "vault.lock"))
 		} else {
 			return false
 		}
 	}
 
-	// Make logfile
+	// Make log file
 
 	logFilePath, err := getLogFileName()
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -221,7 +428,16 @@ func (vc *VaultController) Start() bool {
 
 	logFile, err := os.Create(logFilePath)
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -242,7 +458,13 @@ func (vc *VaultController) Start() bool {
 
 	// Run backend
 
-	fmt.Println("Starting vault...")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "StartingVault",
+			Other: "Starting vault...",
+		},
+	})
+	fmt.Println(msg)
 
 	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag)
 
@@ -266,7 +488,16 @@ func (vc *VaultController) Start() bool {
 	err = cmd.Start()
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -339,12 +570,33 @@ func (vc *VaultController) WaitForStart() bool {
 
 	if hasErr {
 		if errMsg != "" {
-			fmt.Println("Error: " + errMsg)
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": errMsg,
+				},
+			})
+			fmt.Println(msg)
 		} else {
-			fmt.Println("Could not start the vault. Check logs for details")
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "VaultStartError",
+					Other: "Could not start the vault. Check logs for details",
+				},
+			})
+			fmt.Println(msg)
 		}
 	} else {
-		fmt.Println("Vault successfully started")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultStartedSuccessfully",
+				Other: "Vault successfully started.",
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	return !hasErr
@@ -355,11 +607,23 @@ func (vc *VaultController) Stop() bool {
 	defer vc.lock.Unlock()
 
 	if !vc.started || vc.backendProcess == nil {
-		fmt.Println("Vault is already stopped.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultAlreadyStopped",
+				Other: "Vault is already stopped.",
+			},
+		})
+		fmt.Println(msg)
 		return false
 	}
 
-	fmt.Println("Stopping vault...")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultStopping",
+			Other: "Stopping vault...",
+		},
+	})
+	fmt.Println(msg)
 
 	vc.backendProcess.Kill()
 
@@ -383,7 +647,13 @@ func (vc *VaultController) WaitForStop() {
 		}
 	}
 
-	fmt.Println("Vault successfully stopped")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultStoppedSuccessfully",
+			Other: "Vault successfully stopped.",
+		},
+	})
+	fmt.Println(msg)
 }
 
 func (vc *VaultController) WaitForProcess() {
@@ -408,11 +678,32 @@ func (vc *VaultController) WaitForProcess() {
 		if state.ExitCode() == 0 {
 			vc.errorMessage = ""
 		} else if state.ExitCode() == 4 {
-			vc.errorMessage = "Vault is locked by another process. Cannot start."
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorVaultLocked",
+					Other: "Vault is locked by another process. Cannot start.",
+				},
+			})
+			vc.errorMessage = msg
 		} else if state.ExitCode() == 5 {
-			vc.errorMessage = "Cannot listen to port " + fmt.Sprint(vc.launchConfig.Port) + ". Probably there is another proccess listening on that port."
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorPortBusy",
+					Other: "Cannot listen to port {{.Port}}. Probably there is another process listening on that port.",
+				},
+				TemplateData: map[string]interface{}{
+					"Port": fmt.Sprint(vc.launchConfig.Port),
+				},
+			})
+			vc.errorMessage = msg
 		} else if state.ExitCode() == 6 {
-			vc.errorMessage = "Invalid SSL keypair provided. Please fix it with 'ssl-setup'."
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorInvalidKeyPair",
+					Other: "Invalid SSL key pair provided. Please fix it with 'ssl-setup'.",
+				},
+			})
+			vc.errorMessage = msg
 		} else {
 			vc.errorMessage = ""
 		}
@@ -440,24 +731,60 @@ func (vc *VaultController) Clean() {
 	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 	}
 }
 
 func (vc *VaultController) Backup(p string) {
-	fmt.Println("You are going to create a backup of the vault in the following location:")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "AboutToCreateBackup",
+			Other: "You are going to create a backup of the vault in the following location:",
+		},
+	})
+	fmt.Println(msg)
 	fmt.Println(p)
-	fmt.Print("Procceed? (y/n): ")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "Proceed",
+			Other: "Proceed?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
 
 	ans, err := vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	ans = strings.TrimSpace(ans)
 
-	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+	if !checkYesNoAnswer(ans) {
 		return
 	}
 
@@ -474,32 +801,91 @@ func (vc *VaultController) Backup(p string) {
 	err = cmd.Run()
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 	}
 }
 
 func (vc *VaultController) SetupSSL() bool {
-	fmt.Print("Do you want to setup SSL for your vault? (y/n): ")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "SetupSSLAsk",
+			Other: "Do you want to setup SSL for your vault?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
 
 	ans, err := vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	ans = strings.TrimSpace(ans)
 
-	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+	if !checkYesNoAnswer(ans) {
 		return false
 	}
 
-	fmt.Println("Type the absolute path in your file system to the SSL CERTIFICATE file you want to use.")
-	fmt.Println("Make sure it is correct and it is in PEM format.")
-	fmt.Print("Certificate file: ")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypeCertificatePath",
+			Other: "Type the absolute path in your file system to the SSL CERTIFICATE file you want to use.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "EnsurePEM",
+			Other: "Make sure it is correct and it is in PEM format.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "CertificateFile",
+			Other: "Certificate file",
+		},
+	})
+	fmt.Print(msg + ": ")
 
 	ans, err = vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -507,13 +893,42 @@ func (vc *VaultController) SetupSSL() bool {
 
 	certFile := ans
 
-	fmt.Println("Type the absolute path in your file system to the SSL PRIVATE KEY file you want to use.")
-	fmt.Println("Make sure it is correct and it is in PEM format.")
-	fmt.Print("Private key file: ")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypePrivateKeyPath",
+			Other: "Type the absolute path in your file system to the SSL PRIVATE KEY file you want to use",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "EnsurePEM",
+			Other: "Make sure it is correct and it is in PEM format.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "PrivateKeyFile",
+			Other: "Private key file",
+		},
+	})
+	fmt.Print(msg + ": ")
 
 	ans, err = vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -523,27 +938,96 @@ func (vc *VaultController) SetupSSL() bool {
 
 	fmt.Println("")
 	if certFile == "" {
-		fmt.Println("SSL certificate file: " + "(Not Set)")
+		notSetMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "NotSet",
+				Other: "(Not Set)",
+			},
+		})
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLCertFile",
+				Other: "SSL certificate file: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": notSetMsg,
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("SSL certificate file: " + certFile)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLCertFile",
+				Other: "SSL certificate file: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": certFile,
+			},
+		})
+		fmt.Println(msg)
 	}
 	if keyFile == "" {
-		fmt.Println("SSL key file: " + "(Not Set)")
+		notSetMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "NotSet",
+				Other: "(Not Set)",
+			},
+		})
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLkeyFile",
+				Other: "SSL key file: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": notSetMsg,
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("SSL key file: " + keyFile)
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLkeyFile",
+				Other: "SSL key file: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": keyFile,
+			},
+		})
+		fmt.Println(msg)
 	}
 
-	fmt.Print("Is this correct? (y/n): ")
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "IsCorrectAsk",
+			Other: "Is this correct?",
+		},
+	})
+	ynMsg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
 
 	ans, err = vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	ans = strings.TrimSpace(ans)
 
-	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+	if !checkYesNoAnswer(ans) {
 		return false
 	}
 
@@ -563,31 +1047,73 @@ func (vc *VaultController) SetupSSL() bool {
 	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		return false
 	} else {
-		fmt.Println("Changes in configuration successfully saved.")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
 		return true
 	}
 }
 
 func (vc *VaultController) disableSSL() bool {
 	if !vc.launchConfig.hasSSL() {
-		fmt.Println("SSL is not enabled for this vault.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SSLNotEnabled",
+				Other: "SSL is not enabled for this vault.",
+			},
+		})
+		fmt.Println(msg)
 		return false
 	}
 
-	fmt.Print("Do you want to disable SSL for your vault? (y/n): ")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "DisableSSLAsk",
+			Other: "Do you want to disable SSL for your vault?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
 
 	ans, err := vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	ans = strings.TrimSpace(ans)
 
-	if !strings.HasPrefix(strings.ToLower(ans), "y") {
+	if !checkYesNoAnswer(ans) {
 		return false
 	}
 
@@ -601,10 +1127,25 @@ func (vc *VaultController) disableSSL() bool {
 	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		return false
 	} else {
-		fmt.Println("Changes in configuration successfully saved.")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
 		return true
 	}
 }
@@ -613,18 +1154,45 @@ func (vc *VaultController) SetSecureTempDelete(d bool) bool {
 	vc.launchConfig.SecureTempDelete = d
 
 	if d {
-		fmt.Println("Secure deletion of temp files is now ENABLED.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SecureDeleteEnabled",
+				Other: "Secure deletion of temp files is now ENABLED.",
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("Secure deletion of temp files is now DISABLED.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "SecureDeleteDisabled",
+				Other: "Secure deletion of temp files is now DISABLED.",
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		return false
 	} else {
-		fmt.Println("Changes in configuration successfully saved.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
 		return true
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 func readNextCommand(reader *bufio.Reader, vaultPathAbs string, vc *VaultController) {
@@ -17,7 +19,16 @@ func readNextCommand(reader *bufio.Reader, vaultPathAbs string, vc *VaultControl
 
 	ans, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -61,59 +72,152 @@ func runCommand(cmdText string, vc *VaultController) {
 		openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
 	case "port", "p":
 		if len(args) == 1 {
-			fmt.Println("Listening port: " + fmt.Sprint(vc.launchConfig.Port))
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ListeningPort",
+					Other: "Listening port: {{.Port}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Port": fmt.Sprint(vc.launchConfig.Port),
+				},
+			})
+			fmt.Println(msg)
 		} else if len(args) == 2 {
 			p, err := strconv.Atoi(args[1])
 
 			if err != nil || p <= 0 {
-				fmt.Println("Usage: port [p] - Sets the listening port")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorPortUsage",
+						Other: "Usage: port [p] - Sets the listening port",
+					},
+				})
+				fmt.Println(msg)
 			} else {
 				vc.launchConfig.Port = p
 				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 				if err != nil {
-					fmt.Println("Error: " + err.Error())
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "Error",
+							Other: "Error: {{.Message}}",
+						},
+						TemplateData: map[string]interface{}{
+							"Message": err.Error(),
+						},
+					})
+					fmt.Println(msg)
 				} else {
-					fmt.Println("Listening port changed: " + fmt.Sprint(vc.launchConfig.Port))
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "ListeningPortChanged",
+							Other: "LListening port changed: {{.Port}}",
+						},
+						TemplateData: map[string]interface{}{
+							"Port": fmt.Sprint(vc.launchConfig.Port),
+						},
+					})
+					fmt.Println(msg)
 					askRestart(vc)
 				}
 			}
 		} else {
-			fmt.Println("Usage: port [p] - Sets the listening port")
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorPortUsage",
+					Other: "Usage: port [p] - Sets the listening port",
+				},
+			})
+			fmt.Println(msg)
 		}
 	case "local", "localhost", "l":
 		if len(args) == 1 {
 			if vc.launchConfig.Local {
-				fmt.Println("Listening mode: Local (localhost)")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ListeningModeLocal",
+						Other: "Listening mode: Local",
+					},
+				})
+				fmt.Println(msg + " (localhost)")
 			} else {
-				fmt.Println("Listening mode: All interfaces ([::])")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ListeningModeAll",
+						Other: "Listening mode: All interfaces",
+					},
+				})
+				fmt.Println(msg + " ([::])")
 			}
 		} else if len(args) == 2 {
-			if strings.HasPrefix(strings.ToLower(args[1]), "y") {
+			if checkYesNoAnswer(args[1]) {
 				vc.launchConfig.Local = true
 				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 				if err != nil {
-					fmt.Println("Error: " + err.Error())
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "Error",
+							Other: "Error: {{.Message}}",
+						},
+						TemplateData: map[string]interface{}{
+							"Message": err.Error(),
+						},
+					})
+					fmt.Println(msg)
 				} else {
-					fmt.Println("Listening mode changed: Local (localhost)")
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "ListeningModeLocal",
+							Other: "Listening mode: Local",
+						},
+					})
+					fmt.Println(msg + " (localhost)")
 					askRestart(vc)
 				}
-			} else if strings.HasPrefix(strings.ToLower(args[1]), "n") {
+			} else if checkNegativeAnswer(args[1]) {
 				vc.launchConfig.Local = false
 				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
 
 				if err != nil {
-					fmt.Println("Error: " + err.Error())
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "Error",
+							Other: "Error: {{.Message}}",
+						},
+						TemplateData: map[string]interface{}{
+							"Message": err.Error(),
+						},
+					})
+					fmt.Println(msg)
 				} else {
-					fmt.Println("Listening mode changed: All interfaces ([::])")
+					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+						DefaultMessage: &i18n.Message{
+							ID:    "ListeningModeAll",
+							Other: "Listening mode: All interfaces",
+						},
+					})
+					fmt.Println(msg + " ([::])")
 					askRestart(vc)
 				}
 			} else {
-				fmt.Println("Usage: local [y/n] - Sets local listening mode")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorLocalUsage",
+						Other: "Usage: local [y/n] - Sets local listening mode",
+					},
+				})
+				fmt.Println(msg)
 			}
 		} else {
-			fmt.Println("Usage: local [y/n] - Sets local listening mode")
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorLocalUsage",
+					Other: "Usage: local [y/n] - Sets local listening mode",
+				},
+			})
+			fmt.Println(msg)
 		}
 	case "clean", "c":
 		if vc.Stop() {
@@ -129,23 +233,83 @@ func runCommand(cmdText string, vc *VaultController) {
 		if len(args) == 2 {
 			ap, err := filepath.Abs(args[1])
 			if err != nil {
-				fmt.Println("Usage: backup [path] - Makes a backup of the vault in the specified path")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorBackupUsage",
+						Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
+					},
+				})
+				fmt.Println(msg)
 			} else {
 				vc.Backup(ap)
 			}
 		} else {
-			fmt.Println("Usage: backup [path] - Makes a backup of the vault in the specified path")
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorBackupUsage",
+					Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
+				},
+			})
+			fmt.Println(msg)
 		}
 	case "ssl-check", "ssl":
 		if vc.launchConfig.SSL_Cert == "" {
-			fmt.Println("SSL certificate file: " + "(Not Set)")
+			notSetMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "NotSet",
+					Other: "(Not Set)",
+				},
+			})
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SSLCertFile",
+					Other: "SSL certificate file: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": notSetMsg,
+				},
+			})
+			fmt.Println(msg)
 		} else {
-			fmt.Println("SSL certificate file: " + vc.launchConfig.SSL_Cert)
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SSLCertFile",
+					Other: "SSL certificate file: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": vc.launchConfig.SSL_Cert,
+				},
+			})
+			fmt.Println(msg)
 		}
 		if vc.launchConfig.SSL_Key == "" {
-			fmt.Println("SSL key file: " + "(Not Set)")
+			notSetMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "NotSet",
+					Other: "(Not Set)",
+				},
+			})
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SSLkeyFile",
+					Other: "SSL key file: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": notSetMsg,
+				},
+			})
+			fmt.Println(msg)
 		} else {
-			fmt.Println("SSL key file: " + vc.launchConfig.SSL_Key)
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "SSLkeyFile",
+					Other: "SSL key file: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": vc.launchConfig.SSL_Key,
+				},
+			})
+			fmt.Println(msg)
 		}
 	case "ssl-setup":
 		if vc.SetupSSL() {
@@ -155,8 +319,11 @@ func runCommand(cmdText string, vc *VaultController) {
 		if vc.disableSSL() {
 			askRestart(vc)
 		}
-	case "secdel", "secure-delete":
+	case "sec-del", "secdel", "secure-delete":
 		if len(args) == 2 {
+			if checkYesNoAnswer(args[1]) {
+				args[1] = "y"
+			}
 			switch args[1] {
 			case "y", "on", "yes", "1", "true":
 				if vc.SetSecureTempDelete(true) {
@@ -167,10 +334,22 @@ func runCommand(cmdText string, vc *VaultController) {
 					askRestart(vc)
 				}
 			default:
-				fmt.Println("Usage: secdel [y/n]")
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorSecDelUsage",
+						Other: "Usage: sec-del [y/n]",
+					},
+				})
+				fmt.Println(msg)
 			}
 		} else {
-			fmt.Println("Usage: secdel [y/n]")
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorSecDelUsage",
+					Other: "Usage: sec-del [y/n]",
+				},
+			})
+			fmt.Println(msg)
 		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
@@ -180,40 +359,225 @@ func runCommand(cmdText string, vc *VaultController) {
 		}
 		os.Exit(0)
 	default:
-		fmt.Println("Unrecognized command: '" + cmdKey + "'. Use 'help' to get the command list.")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "UnrecognizedCommand",
+				Other: "Unrecognized command: '{{.Command}}'. Use 'help' to get the command list.",
+			},
+			TemplateData: map[string]interface{}{
+				"Command": cmdKey,
+			},
+		})
+		fmt.Println(msg)
 	}
 }
 
 func askRestart(vc *VaultController) {
-	fmt.Print("Restart the vault? (y/n): ")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "RestartVaultAsk",
+			Other: "Restart the vault?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
 
 	ans, err := vc.consoleReader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
 	ans = strings.TrimSpace(ans)
 
-	if strings.HasPrefix(strings.ToLower(ans), "y") {
+	if checkYesNoAnswer(ans) {
 		runCommand("restart", vc)
 	}
 }
 
 func printCommandList() {
-	fmt.Println("    help          - Prints command list")
-	fmt.Println("    exit          - Closes the vault and exits the program")
-	fmt.Println("    start         - Starts the vault")
-	fmt.Println("    stop          - Stops the vault")
-	fmt.Println("    restart       - Restarts the vault")
-	fmt.Println("    browser       - Opens the vault using the default browser")
-	fmt.Println("    status        - Prints current status and configuration")
-	fmt.Println("    clean         - Restarts the vault and cleans inconsistent files")
-	fmt.Println("    port [p]      - Sets the listening port")
-	fmt.Println("    local [y/n]   - Sets local listening mode")
-	fmt.Println("    ssl           - Prints ssl configuration (if any)")
-	fmt.Println("    ssl-setup     - Setups SSL to use HTTPS for accessing your vault")
-	fmt.Println("    ssl-disable   - Disables SSL (use regular HTTP)")
-	fmt.Println("    secdel [y/n]  - Enables / disables secure deletion of temp files")
-	fmt.Println("    backup [path] - Makes a backup of the vault in the specified path")
+	manList := make([]string, 0)
+
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandHelp",
+			Other: "help - Prints command list",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandExit",
+			Other: "exit - Closes the vault and exits the program",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandStart",
+			Other: "start - Starts the vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandStop",
+			Other: "stop - Stops the vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandRestart",
+			Other: "restart - Restarts the vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandBrowser",
+			Other: "browser - Opens the vault using the default browser",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandStatus",
+			Other: "status - Prints current status and configuration",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandClean",
+			Other: "clean - Restarts the vault and cleans inconsistent files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandPort",
+			Other: "port [p] - Sets the listening port",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandLocal",
+			Other: "local [y/n] - Sets local listening mode",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSL",
+			Other: "ssl - Prints ssl configuration (if any)",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSLSetup",
+			Other: "ssl-setup - Setups SSL to use HTTPS for accessing your vault",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSSLDisable",
+			Other: "ssl-disable - Disables SSL (use regular HTTP)",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandSecDel",
+			Other: "sec-del [y/n] - Enables / disables secure deletion of temp files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandBackup",
+			Other: "backup [path] - Makes a backup of the vault in the specified path",
+		},
+	})
+	manList = append(manList, msg)
+}
+
+func prepareCommandManualList(manList []string) string {
+	// Check the largest key
+
+	largestKeyLength := 0
+
+	for i := 0; i < len(manList); i++ {
+		parts := strings.Split(manList[i], " - ")
+
+		if len(parts) < 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+
+		if len(key) > largestKeyLength {
+			largestKeyLength = len(key)
+		}
+	}
+
+	// Prepare string
+
+	result := ""
+	first := true
+
+	for i := 0; i < len(manList); i++ {
+		parts := strings.Split(manList[i], " - ")
+
+		if len(parts) < 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+
+		for len(key) < largestKeyLength {
+			key = key + " "
+		}
+
+		if !first {
+			result += "\n"
+		} else {
+			first = false
+		}
+
+		result += "    " + key + " - " + strings.TrimSpace(strings.Join(parts[1:], " - "))
+	}
+
+	return result
 }

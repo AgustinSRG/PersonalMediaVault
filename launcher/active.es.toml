@@ -8,7 +8,7 @@ other = "Se ha configurado la dirección de escucha: {{.Address}}"
 
 [Description]
 hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
-other = "Lanza una galería multimedia con una línea de comandos intecativa para configurarla."
+other = "Lanza una galería multimedia con una línea de comandos interactiva para configurarla."
 
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
@@ -28,7 +28,7 @@ other = "Abrir la galería por múltiples procesos a la vez puede dañarla."
 
 [PMV]
 hash = "sha1-329576ba43390f299d2f3a33107bf3946d01c321"
-other = "Galería Multimedia Personal"
+other = "PersonalMediaVault"
 
 [PortNumber]
 hash = "sha1-38da348defed220a6b2eaad9f83bf7c1ec5f51b9"
