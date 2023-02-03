@@ -43,7 +43,16 @@ func main() {
 		userhome, err := os.UserHomeDir()
 
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
@@ -74,7 +83,16 @@ func main() {
 	absolutePath, err := filepath.Abs(vaultPath)
 
 	if err != nil {
-		fmt.Println("Error: " + err.Error())
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
 		os.Exit(1)
 	}
 
@@ -88,7 +106,16 @@ func main() {
 		fmt.Print("Vault folder does not exists, do you want to create it? (y/n): ")
 		ans, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
@@ -97,7 +124,16 @@ func main() {
 		if strings.HasPrefix(strings.ToLower(ans), "y") {
 			err = os.MkdirAll(vaultPath, FOLDER_PERMISSION)
 			if err != nil {
-				fmt.Println("Error: " + err.Error())
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "Error",
+						Other: "Error: {{.Message}}",
+					},
+					TemplateData: map[string]interface{}{
+						"Message": err.Error(),
+					},
+				})
+				fmt.Println(msg)
 				os.Exit(1)
 			}
 		} else {
@@ -115,7 +151,16 @@ func main() {
 
 		ans, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
@@ -137,7 +182,16 @@ func main() {
 
 		ans, err = reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 
@@ -156,7 +210,16 @@ func main() {
 		err = writeLauncherConfig(launcherConfigFile, launcherConfig)
 
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 	}
@@ -174,7 +237,16 @@ func main() {
 
 		ans, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Error: " + err.Error())
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
 			os.Exit(1)
 		}
 

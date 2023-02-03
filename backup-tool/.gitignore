@@ -4,3 +4,4 @@ vault
 locales-update.bat
 locales-done.bat
 translate.*.toml
+lang
