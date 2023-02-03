@@ -464,6 +464,9 @@ func (vc *VaultController) Backup(p string) {
 	// Backup
 	cmd := exec.Command(BACKUP_BIN, vc.vaultPath, p)
 
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)
+
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
