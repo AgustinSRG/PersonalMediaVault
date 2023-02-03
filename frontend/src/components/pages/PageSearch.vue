@@ -214,7 +214,7 @@ export default defineComponent({
             this.page = 0;
             this.load();
             return;
-          } else if (this.page >= this.totalPages) {
+          } else if (this.page >= this.totalPages && this.totalPages > 0) {
             this.page = this.totalPages - 1;
             this.load();
             return;
