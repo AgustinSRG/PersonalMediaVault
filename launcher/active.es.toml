@@ -1,3 +1,67 @@
+[ChoosePort]
+hash = "sha1-c8eac3a602fe7b454e2a5a1b761799e76a88b006"
+other = "Por favor, elija un puerto de escucha para el servidor."
+
+[ConfiguredAddress]
+hash = "sha1-c32c05b370532551d1b26c1e617cea135646a22d"
+other = "Se ha configurado la dirección de escucha: {{.Address}}"
+
+[Description]
+hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
+other = "Lanza una galería multimedia con una línea de comandos intecativa para configurarla."
+
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
 other = "Error: {{.Message}}"
+
+[LocalHostBindAsk]
+hash = "sha1-04bd246908a413953a5955753cf49e05e1915e7b"
+other = "¿Desea establecer el servidor en modo de escucha local?"
+
+[LocalHostBindDesc]
+hash = "sha1-8584583bdf47d9a32d476cd4fe1ddc722c9797c0"
+other = "si selecciona no, el servidor se pondrá a la escucha en todas las interfaces de red"
+
+[OpenMultipleRisk]
+hash = "sha1-69f386aec6d48d7a80d3d0c66b6e63594a413617"
+other = "Abrir la galería por múltiples procesos a la vez puede dañarla."
+
+[PMV]
+hash = "sha1-329576ba43390f299d2f3a33107bf3946d01c321"
+other = "Galería Multimedia Personal"
+
+[PortNumber]
+hash = "sha1-38da348defed220a6b2eaad9f83bf7c1ec5f51b9"
+other = "Puerto de escucha"
+
+[Proceed]
+hash = "sha1-2c98cee876be9de391671fbed658c605ae0dfbc1"
+other = "¿Continuar?"
+
+[Usage]
+hash = "sha1-397dfe7f0fa0d928527493a24b99d44463fbff4d"
+other = "Uso del comando: pmv [RUTA]"
+
+[VaultBeingUsed]
+hash = "sha1-d57a4ed560825c9f357b71b197f341482c09e7f7"
+other = "Al parecer esta galería ya está abierta por otro proceso"
+
+[VaultNotFoundCreateAsk]
+hash = "sha1-72c81e59382986c819a7fdbf69a628aa6be52bdb"
+other = "No existe el directorio para la galería, ¿Desea crearlo?"
+
+[VaultPath]
+hash = "sha1-970fc31f28c30482d07fc9079b945c90e9d969bc"
+other = "Directorio de la galería: {{.Path}}"
+
+[Version]
+hash = "sha1-2da600bf9404843107a9531694f654e5662959e0"
+other = "Versión"
+
+[YesNo]
+hash = "sha1-4564b7be7e4aa13e727e17280870edc63e87f8ce"
+other = "s/n"
+
+[YesPrefix]
+hash = "sha1-95cb0bfd2977c761298d9624e4b4d4c72a39974a"
+other = "s"

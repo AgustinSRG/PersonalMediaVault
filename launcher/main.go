@@ -98,12 +98,33 @@ func main() {
 
 	printVersion()
 
-	fmt.Println("Vault path: " + absolutePath)
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultPath",
+			Other: "Vault path: {{.Path}}",
+		},
+		TemplateData: map[string]interface{}{
+			"Path": absolutePath,
+		},
+	})
+	fmt.Println(msg)
 
 	reader := bufio.NewReader(os.Stdin)
 
 	if !folderExists(vaultPath) {
-		fmt.Print("Vault folder does not exists, do you want to create it? (y/n): ")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultNotFoundCreateAsk",
+				Other: "Vault folder does not exists, do you want to create it?",
+			},
+		})
+		ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "YesNo",
+				Other: "y/n",
+			},
+		})
+		fmt.Print(msg + " (" + ynMsg + "): ")
 		ans, err := reader.ReadString('\n')
 		if err != nil {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -121,7 +142,7 @@ func main() {
 
 		ans = strings.TrimSpace(ans)
 
-		if strings.HasPrefix(strings.ToLower(ans), "y") {
+		if checkYesNoAnswer(ans) {
 			err = os.MkdirAll(vaultPath, FOLDER_PERMISSION)
 			if err != nil {
 				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -146,8 +167,20 @@ func main() {
 	launcherConfig := readLauncherConfig(launcherConfigFile)
 
 	for launcherConfig.Port <= 0 {
-		fmt.Println("Please, choose a port for the backend to listen.")
-		fmt.Print("Port number [80]: ")
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ChoosePort",
+				Other: "Please, choose a port for the backend to listen.",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "PortNumber",
+				Other: "Port number",
+			},
+		})
+		fmt.Print(msg + " [80]: ")
 
 		ans, err := reader.ReadString('\n')
 		if err != nil {
@@ -178,7 +211,26 @@ func main() {
 			continue
 		}
 
-		fmt.Print("Do you want to bind to localhost? (y/n) (by selecting no, it will bind all network interfaces): ")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LocalHostBindAsk",
+				Other: "Do you want to bind to localhost?",
+			},
+		})
+		msg2, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LocalHostBindDesc",
+				Other: "by selecting no, it will bind all network interface",
+			},
+		})
+		ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "YesNo",
+				Other: "y/n",
+			},
+		})
+
+		fmt.Print(msg + " (" + ynMsg + ") (" + msg2 + "): ")
 
 		ans, err = reader.ReadString('\n')
 		if err != nil {
@@ -201,7 +253,7 @@ func main() {
 			ans = "y"
 		}
 
-		if strings.HasPrefix(strings.ToLower(ans), "y") {
+		if checkYesNoAnswer(ans) {
 			launcherConfig.Local = true
 		} else {
 			launcherConfig.Local = false
@@ -225,15 +277,57 @@ func main() {
 	}
 
 	if launcherConfig.Local {
-		fmt.Println("Configured listening address as localhost:" + fmt.Sprint(launcherConfig.Port))
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfiguredAddress",
+				Other: "Configured listening address as {{.Address}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Address": "localhost:" + fmt.Sprint(launcherConfig.Port),
+			},
+		})
+		fmt.Println(msg)
 	} else {
-		fmt.Println("Configured listening address as [::]:" + fmt.Sprint(launcherConfig.Port))
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfiguredAddress",
+				Other: "Configured listening address as {{.Address}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Address": "[::]:" + fmt.Sprint(launcherConfig.Port),
+			},
+		})
+		fmt.Println(msg)
 	}
 
 	if CheckVaultLocked(path.Join(vaultPath, "vault.lock")) {
-		fmt.Println("Seems like the vault is being used by another process.")
-		fmt.Println("Openning the vault by multiple processes could be dangerous for the vault integrity.")
-		fmt.Print("Procceed? (y/n): ")
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VaultBeingUsed",
+				Other: "Seems like the vault is being used by another process",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "OpenMultipleRisk",
+				Other: "Opening the vault by multiple processes could be dangerous for the vault integrity.",
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Proceed",
+				Other: "Proceed?",
+			},
+		})
+		ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "YesNo",
+				Other: "y/n",
+			},
+		})
+		fmt.Print(msg + " (" + ynMsg + "): ")
 
 		ans, err := reader.ReadString('\n')
 		if err != nil {
@@ -252,7 +346,7 @@ func main() {
 
 		ans = strings.TrimSpace(ans)
 
-		if strings.HasPrefix(strings.ToLower(ans), "y") {
+		if checkYesNoAnswer(ans) {
 			os.Remove(path.Join(vaultPath, "vault.lock"))
 		} else {
 			return
@@ -277,8 +371,20 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println("Usage: pmv [PATH]")
-	fmt.Println("Launches a vault with an interactive command line to manage it.")
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "Usage",
+			Other: "Usage: pmv [PATH]",
+		},
+	})
+	fmt.Println(msg)
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "Description",
+			Other: "Launches a vault with an interactive command line to manage it.",
+		},
+	})
+	fmt.Println(msg)
 }
 
 func printVersion() {
@@ -290,8 +396,20 @@ func printVersion() {
 	fmt.Println("- | |      | |  | |    \\  /")
 	fmt.Println("- |_|      |_|  |_|     \\/")
 	fmt.Println("---------------------------------------------------")
-	fmt.Println("- Personal Media Vault")
-	fmt.Println("- Version " + VERSION)
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "PMV",
+			Other: "Personal Media Vault",
+		},
+	})
+	fmt.Println("- " + msg)
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "Version",
+			Other: "Version",
+		},
+	})
+	fmt.Println("- " + msg + " " + VERSION)
 	fmt.Println("- https://github.com/AgustinSRG/PersonalMediaVault")
 	fmt.Println("---------------------------------------------------")
 }

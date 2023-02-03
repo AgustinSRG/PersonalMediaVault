@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/naoina/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -56,4 +57,20 @@ func InitializeInternationalizationFramework() {
 
 	Localizer = i18n.NewLocalizer(bundle, lang)
 	Language = lang
+}
+
+func checkYesNoAnswer(answer string) bool {
+	answer = strings.ToLower(answer)
+	if answer == "y" {
+		return true
+	}
+
+	yesPrefix, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesPrefix",
+			Other: "y",
+		},
+	})
+
+	return strings.HasPrefix(answer, strings.ToLower(yesPrefix))
 }
