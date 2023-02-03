@@ -16,6 +16,7 @@ import (
 //go:embed active.*.toml
 
 var LocaleFS embed.FS
+var Language = "en"
 var Localizer *i18n.Localizer
 
 func InitializeInternationalizationFramework() {
@@ -43,6 +44,7 @@ func InitializeInternationalizationFramework() {
 
 	if err != nil || !availableLanguages[lang] {
 		defaultLang = language.English
+		lang = "en"
 	}
 
 	// Create bundle
@@ -53,4 +55,5 @@ func InitializeInternationalizationFramework() {
 	bundle.LoadMessageFileFS(LocaleFS, "active."+lang+".toml")
 
 	Localizer = i18n.NewLocalizer(bundle, lang)
+	Language = lang
 }

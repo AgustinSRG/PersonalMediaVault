@@ -43,6 +43,7 @@ func InitializeInternationalizationFramework() {
 
 	if err != nil || !availableLanguages[lang] {
 		defaultLang = language.English
+		lang = "en"
 	}
 
 	// Create bundle
