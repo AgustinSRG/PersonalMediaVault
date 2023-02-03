@@ -4,11 +4,10 @@ package main
 
 import (
 	"embed"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/jeandeaual/go-locale"
 	"github.com/naoina/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -30,15 +29,7 @@ func InitializeInternationalizationFramework() {
 	// Get language
 	lang := os.Getenv("PMV_LANGUAGE")
 	if lang == "" {
-		ex, err := os.Executable()
-		if err == nil {
-			langFilePath := filepath.Join(filepath.Dir(ex), "lang")
-			langBytes, err := ioutil.ReadFile(langFilePath)
-
-			if err == nil {
-				lang = string(langBytes)
-			}
-		}
+		lang, _ = locale.GetLanguage() // Default system language
 	}
 
 	defaultLang, err := language.Parse(lang)

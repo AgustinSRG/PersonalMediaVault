@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/AgustinSRG/go-child-process-manager v0.0.0-20220826105200-10030c425244
+	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/naoina/toml v0.1.1
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/nightlyone/lockfile v1.0.0
