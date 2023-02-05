@@ -1,6 +1,18 @@
+[AboutToCreateBackup]
+hash = "sha1-6891f27ae9aec33b9adee2be1d72df5c71a72403"
+other = "Se va a crear una copia de seguridad de la galería multimedia en el directorio:"
+
+[CertificateFile]
+hash = "sha1-38059f1a5dbf538d37104a7baa5526a728694df5"
+other = "Fichero de certificado"
+
 [ChoosePort]
 hash = "sha1-c8eac3a602fe7b454e2a5a1b761799e76a88b006"
 other = "Por favor, elija un puerto de escucha para el servidor."
+
+[ConfigChangesSaved]
+hash = "sha1-97bc6a6aaad6d03f18cd235176e32a066716974e"
+other = "Los cambios en la configuración se han guardado correctamente."
 
 [ConfiguredAddress]
 hash = "sha1-c32c05b370532551d1b26c1e617cea135646a22d"
@@ -10,9 +22,125 @@ other = "Se ha configurado la dirección de escucha: {{.Address}}"
 hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
 other = "Lanza una galería multimedia con una línea de comandos interactiva para configurarla."
 
+[DisableSSLAsk]
+hash = "sha1-bed20db79e8f5de88053154ab90df34aaacfc1b2"
+other = "¿Desea deshabilitar SSL en su galería multimedia?"
+
+[EnsurePEM]
+hash = "sha1-4c458fee9fb497107f49f4abbdd19206bb16048e"
+other = "Asegúrese de que se encuentre en formato PEM."
+
+[EnterPassword]
+hash = "sha1-21ae00b975ec8967a36310716cbb3afcd0d9b889"
+other = "Escriba una contraseña"
+
+[EnterUsername]
+hash = "sha1-a2b836bf26d426fcb5d048d22d36af2bdf04fbc1"
+other = "Escriba el nombre de usuario"
+
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
 other = "Error: {{.Message}}"
+
+[ErrorBackendBin]
+hash = "sha1-6fefea0cd5618f45a8c1c2f63e29e8e4737d6f77"
+other = "Error: No se pudo encontrar el binario del servidor (pmvd)"
+
+[ErrorBackupBin]
+hash = "sha1-8b9e0d563e76ea1308549eb89510c77e063dabcf"
+other = "Error: No se pudo encontrar el binario de copias de seguridad (pmv-backup)"
+
+[ErrorBackupUsage]
+hash = "sha1-d1b976aaeb974ef95196c148b25dbc586aa94ee8"
+other = "Uso: backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
+
+[ErrorBrowser]
+hash = "sha1-da7c1fd0c0d54733790f8123554431eadd886b76"
+other = "Error: No se pudo abrir el navegador: {{.Message}}"
+
+[ErrorCodecBin]
+hash = "sha1-4407ffe7f09c4d50f4be960bcc7a88dd9ca0251e"
+other = "Error: No se pudo encontrar el binario codificador multimedia (ffmpeg)"
+
+[ErrorFrontMissing]
+hash = "sha1-4eee2930e12911f18c2949f40487432159bf6d63"
+other = "Error: No se pudo encontrar la interfaz de usuario"
+
+[ErrorInvalidKeyPair]
+hash = "sha1-595aa75a597d4c9e514117a7132adc4d59ee3ab6"
+other = "El par de claves SSL no es correcto. Puede arreglarlo con 'ssl-setup'."
+
+[ErrorLocalUsage]
+hash = "sha1-9c2861ada182b97f428ec7d4461bd92b35dd78bd"
+other = "Uso: local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
+
+[ErrorPasswordBlank]
+hash = "sha1-f70cc9bdd80a4c433918161f3079e1595e09de70"
+other = "La contraseña no puede dejarse vacía."
+
+[ErrorPasswordNotMatching]
+hash = "sha1-f7c3cd475924dc45e184f50dd91e9e4da76c740b"
+other = "Las contraseñas no coinciden."
+
+[ErrorPasswordTooLong]
+hash = "sha1-9fa42c60acaf63ccb213d8976d36e6c7b8dfc570"
+other = "La contraseña no puede exceder los 255 caracteres."
+
+[ErrorPortBusy]
+hash = "sha1-f87f669fe2df413cdd9d1009e0bdb5d27288d977"
+other = "No se puede establecer la escucha en el puerto {{.Port}}. Probablemente haya otro proceso escuchando en ese puerto."
+
+[ErrorPortUsage]
+hash = "sha1-b1995f95bf3a3edb05b9ae27ce45a7dcf09d333b"
+other = "Uso: port [p] - Establece el puerto de escucha del servidor"
+
+[ErrorProbeBin]
+hash = "sha1-46902e3d2b6426a50b3b4819a1b622f473617c77"
+other = "Error: No se pudo encontrar el binario de análisis multimedia (ffprobe)"
+
+[ErrorSecDelUsage]
+hash = "sha1-906676a0ee2327e4ba99fd0fce44c060fed5bc96"
+other = "Uso: sec-del [s/n]"
+
+[ErrorUsernameBlank]
+hash = "sha1-f8972d2e27e924acd24bb202834eba57fb6842d3"
+other = "El nombre de usuario no puede dejarse vacío."
+
+[ErrorUsernameTooLong]
+hash = "sha1-8ccd85dcf096c25f1370964c38cd510b18ce62e0"
+other = "El nombre de usuario no puede exceder los 255 caracteres"
+
+[ErrorVaultLocked]
+hash = "sha1-0550fd491c58c2bb31d1548b30b274bbceb41dca"
+other = "La galería está siendo usada por otro proceso. No es posible iniciarla."
+
+[FilesMissing]
+hash = "sha1-5146c6f0ff117b56eda7ed8fb74f1d8f3e68109d"
+other = "Al parecer, algunos ficheros requeridos no se encuentran disponibles."
+
+[IsCorrectAsk]
+hash = "sha1-164c44420e37f2305abebafb345c35c606844849"
+other = "¿Es correcto?"
+
+[LaunchingBrowser]
+hash = "sha1-0f69faf6b9d12049d2b7e13ce56bbe4e4dea745a"
+other = "Abriendo navegador: {{.URL}}"
+
+[ListeningModeAll]
+hash = "sha1-dabd9cf1f73c8a9ba44742e575fb21fc941a1b4e"
+other = "Modo de escucha: Todas las interfaces de red"
+
+[ListeningModeLocal]
+hash = "sha1-b2ab56463b85bf769c9bd1ac0d5f431b2168d324"
+other = "Modo de escucha: Local"
+
+[ListeningPort]
+hash = "sha1-88966c74336bc79c7a5635355b0ddaf47d49b5c7"
+other = "Puerto de escucha: {{.Port}}"
+
+[ListeningPortChanged]
+hash = "sha1-1a48a33f67ce51c9f17b944510846b9de40e00b4"
+other = "Se ha cambiado el puerto de escucha: {{.Port}}"
 
 [LocalHostBindAsk]
 hash = "sha1-04bd246908a413953a5955753cf49e05e1915e7b"
@@ -21,6 +149,78 @@ other = "¿Desea establecer el servidor en modo de escucha local?"
 [LocalHostBindDesc]
 hash = "sha1-8584583bdf47d9a32d476cd4fe1ddc722c9797c0"
 other = "si selecciona no, el servidor se pondrá a la escucha en todas las interfaces de red"
+
+[LogFile]
+hash = "sha1-cf17e7fdee1c20b4f3d976516bdcc121cf229f9c"
+other = "Fichero de log: {{.File}}"
+
+[ManualCommandBackup]
+hash = "sha1-95d4e25c102b2241378287acb639ca244140dd49"
+other = "backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
+
+[ManualCommandBrowser]
+hash = "sha1-e9d23a48574b81db3810d616f47d3ab437c7c72c"
+other = "browser - Abre la interfaz de la galería con el navegador por defecto"
+
+[ManualCommandClean]
+hash = "sha1-9a97529b69cdf678da1b85db17e8bc2d84bb0cad"
+other = "clean - Reinicia la galería, eliminado los ficheros inconsistentes"
+
+[ManualCommandExit]
+hash = "sha1-af66fb1a6c9ed64b6c16bb0d1a7892fe103ab667"
+other = "exit - Detiene la galería. Tras esto el programa se cierra."
+
+[ManualCommandHelp]
+hash = "sha1-9dc978bce9c8e65aef780f9b19bf34a14a43c92d"
+other = "help - Imprime la lista de comandos"
+
+[ManualCommandLocal]
+hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
+other = "local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
+
+[ManualCommandPort]
+hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
+other = "port [p] - Establece el puerto de escucha"
+
+[ManualCommandRestart]
+hash = "sha1-c96e956f8731fc808db8df4da2735a316ad8c083"
+other = "restart - Reinicia la galería"
+
+[ManualCommandSSL]
+hash = "sha1-65dcb4a53970d373d2c2b78a93eabe115611e5a4"
+other = "ssl - Imprime la configuración de SSL"
+
+[ManualCommandSSLDisable]
+hash = "sha1-5a906f75e0fa42efdb447595ce4ee988abf83621"
+other = "ssl-disable - Deshabilita SSL (usar HTTP)"
+
+[ManualCommandSSLSetup]
+hash = "sha1-9b81ce72cf1612a31d57f7f3e2f11f5951d9de73"
+other = "ssl-setup - Establece la configuración SSL para usar HTTPS para acceder a la galería"
+
+[ManualCommandSecDel]
+hash = "sha1-e850c5fc4d039a0aa3510a7565eef8822e1415af"
+other = "sec-del [s/n] - Habilita o deshabilita el modo seguro de eliminación de ficheros temporales"
+
+[ManualCommandStart]
+hash = "sha1-a4e6deed79b44503bb9eda2584b5f535b36e81b1"
+other = "start - Inicia la galería"
+
+[ManualCommandStatus]
+hash = "sha1-f749ffa139fbf476f9f24924a2df0aa0cacb4b72"
+other = "status - Imprime el estado y configuración actuales"
+
+[ManualCommandStop]
+hash = "sha1-de89dd21acbf5126b2b70dba92e4457450340f8d"
+other = "stop - Detiene la galería"
+
+[NoPrefix]
+hash = "sha1-d1854cae891ec7b29161ccaf79a24b00c274bdaa"
+other = "n"
+
+[NotSet]
+hash = "sha1-bf721d95b998497000ecfdce1556752b2671e960"
+other = "(No establecido)"
 
 [OpenMultipleRisk]
 hash = "sha1-69f386aec6d48d7a80d3d0c66b6e63594a413617"
@@ -34,25 +234,133 @@ other = "PersonalMediaVault"
 hash = "sha1-38da348defed220a6b2eaad9f83bf7c1ec5f51b9"
 other = "Puerto de escucha"
 
+[PrivateKeyFile]
+hash = "sha1-7d3fee2dc52eb57a6957945b4df8ad2b04e67787"
+other = "Fichero de clave privada"
+
 [Proceed]
 hash = "sha1-2c98cee876be9de391671fbed658c605ae0dfbc1"
 other = "¿Continuar?"
+
+[ReinstallFix]
+hash = "sha1-af654759af2f56f02808b818081e715e9d49f8c7"
+other = "Para solucionar este error, es necesario reinstalar PersonalMediaVault."
+
+[RepeatPassword]
+hash = "sha1-bab9bc458f38d4d574e5baa63c72341db6ddaa30"
+other = "Repita la contraseña"
+
+[RestartVaultAsk]
+hash = "sha1-6f4e4bb91fbe51f136ec9aa5c37ca5306a4d42eb"
+other = "¿Reiniciar la galería?"
+
+[SSLCertFile]
+hash = "sha1-7cafd0033937cfc73d4fb79cb08549e691e4d985"
+other = "Certificado SSL: {{.File}}"
+
+[SSLDisabled]
+hash = "sha1-58a80c6c2313a668ce085b7bf02b1722986f7360"
+other = "SSL: Deshabilitado"
+
+[SSLEnabled]
+hash = "sha1-5bc314b01887864645e0e00a4d6cd44affd0a9e9"
+other = "SSL: Habilitado"
+
+[SSLNotEnabled]
+hash = "sha1-b8aa8a75acd0d86746b93d9e9438ebd58467f7ca"
+other = "La galería no tiene SSL habilitado."
+
+[SSLkeyFile]
+hash = "sha1-c90259e834f5f2b6f7d090ff91d27b29693ecbe3"
+other = "Clave privada SSL: {{.File}}"
+
+[SecureDeleteDisabled]
+hash = "sha1-943ff12ec1921bc1fef74ae1f522202c3e403fea"
+other = "El modo seguro de eliminación de ficheros temporales se encuentra DESHABILITADO."
+
+[SecureDeleteEnabled]
+hash = "sha1-d4af8a592ae5d10b69a7c7a9dba9d4bce04fa60c"
+other = "El modo seguro de eliminación de ficheros temporales se encuentra HABILITADO."
+
+[SetupSSLAsk]
+hash = "sha1-6e571b8dfbbb06d36e5de07edee2dc533b159ce5"
+other = "¿Desea habilitar SSL para su galería multimedia?"
+
+[StartingVault]
+hash = "sha1-6e387e6766f3f1387b0923d51ad65cd83df7f177"
+other = "Iniciando galería multimedia..."
+
+[StatusStarted]
+hash = "sha1-1df80a1e155469cd73e21b54c06972c133c158f0"
+other = "Estado: Iniciada"
+
+[StatusStopped]
+hash = "sha1-ab8da73d6c6e7b96222fe3ffea572ae5cb91c4c8"
+other = "Estado: Detenida"
+
+[TypeCertificatePath]
+hash = "sha1-15096d1b5894cda0f1f1002dcdebcf4ccee65639"
+other = "Escriba la ruta absoluta del certificado SSL que desea usar."
+
+[TypePrivateKeyPath]
+hash = "sha1-2eb9f45faf4b0b41ea878709f2c8b3bfeb65b719"
+other = "Escriba la ruta absoluta de la clave privada SSL que desea usar."
+
+[UnrecognizedCommand]
+hash = "sha1-0e0e01cd69a6a9fdcbf8f1a7959ea2e6ef9c0ed4"
+other = "No se reconoce el comando: '{{.Command}}'. Escriba 'help' para obtener la lista de comandos."
 
 [Usage]
 hash = "sha1-397dfe7f0fa0d928527493a24b99d44463fbff4d"
 other = "Uso del comando: pmv [RUTA]"
 
+[VaultAlreadyStarted]
+hash = "sha1-e1d74ae0c0718587740c0a238ce6ee7526710785"
+other = "La galería ya está iniciada. Escriba 'browser' para abrirla con su navegador por defecto."
+
+[VaultAlreadyStopped]
+hash = "sha1-a98e1565acaaedcece87a95b440311238d305bf9"
+other = "La galería se encuentra detenida."
+
 [VaultBeingUsed]
 hash = "sha1-d57a4ed560825c9f357b71b197f341482c09e7f7"
 other = "Al parecer esta galería ya está abierta por otro proceso"
+
+[VaultInitialized]
+hash = "sha1-48477ca8d1c61362d9bd871c1864508042a5c41e"
+other = "¡La galería se ha creado con éxito!"
+
+[VaultListeningAddress]
+hash = "sha1-5061b78ae130614024c888c986d317eec241f332"
+other = "Dirección de escucha de la galería: {{.Address}}"
 
 [VaultNotFoundCreateAsk]
 hash = "sha1-72c81e59382986c819a7fdbf69a628aa6be52bdb"
 other = "No existe el directorio para la galería, ¿Desea crearlo?"
 
+[VaultNotFoundCreateOne]
+hash = "sha1-11ebe7aa9d4f93fdb3d2b9ef1552cfa31aef6b7a"
+other = "No existe una galería en el directorio. Por favor, escriba los credenciales para crear un usuario."
+
 [VaultPath]
 hash = "sha1-970fc31f28c30482d07fc9079b945c90e9d969bc"
 other = "Directorio de la galería: {{.Path}}"
+
+[VaultStartError]
+hash = "sha1-e704f404fdd5a8eccaab02d3e712ddd0342e2604"
+other = "No se pudo iniciar la galería. Compruebe los ficheros de log para más detalles"
+
+[VaultStartedSuccessfully]
+hash = "sha1-a1c5bf5634820f37a1e66c63b976aea6203e396e"
+other = "La galería multimedia se ha iniciado."
+
+[VaultStoppedSuccessfully]
+hash = "sha1-b86f2e92f54ad2ee53cddff06014e4d39a3e8cc4"
+other = "La galería multimedia se ha detenido."
+
+[VaultStopping]
+hash = "sha1-56f5ff5ae9408820df6a9273dc11bb9840ce93ea"
+other = "Deteniendo la galería..."
 
 [Version]
 hash = "sha1-2da600bf9404843107a9531694f654e5662959e0"

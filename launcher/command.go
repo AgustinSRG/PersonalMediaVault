@@ -112,7 +112,7 @@ func runCommand(cmdText string, vc *VaultController) {
 					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 						DefaultMessage: &i18n.Message{
 							ID:    "ListeningPortChanged",
-							Other: "LListening port changed: {{.Port}}",
+							Other: "Listening port changed: {{.Port}}",
 						},
 						TemplateData: map[string]interface{}{
 							"Port": fmt.Sprint(vc.launchConfig.Port),
