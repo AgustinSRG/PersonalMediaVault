@@ -76,7 +76,8 @@ function main() {
 
     updateFile(Path.resolve(__dirname, "packages", "windows-msi", "make-wix.bat"), contents => {
         return contents
-            .replace(/PersonalMediaVault\-[0-9]+\.[0-9]+\.[0-9]+\-x64\.msi/, `PersonalMediaVault-${VERSION}-x64.msi`);
+            .replace(/PersonalMediaVault\-[0-9]+\.[0-9]+\.[0-9]+\-x64\.msi/, `PersonalMediaVault-${VERSION}-x64.msi`)
+            .replace(/PersonalMediaVault\-[0-9]+\.[0-9]+\.[0-9]+\-x64\-es\.msi/, `PersonalMediaVault-${VERSION}-x64-es.msi`);
     });
 
     updateFile(Path.resolve(__dirname, "packages", "windows-msi", "Product.wxs"), contents => {
