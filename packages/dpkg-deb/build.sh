@@ -1,4 +1,4 @@
-+#!/bin/bash
+#!/bin/bash
 
 PMV_VERSION_MAJOR=1
 PMV_VERSION_MINOR=3
