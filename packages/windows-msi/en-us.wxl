@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+	<String Id="LanguageID">1033</String>
+
+    <String Id="ProgramPackageDescription">Web application to store and visualize media files (video, audio and pictures), meant to be run on a personal server or computer.</String>
+    <String Id="ShortCutDescription">Personal Media Vault</String>
+    <String Id="OpenWithMessage">Open with	PersonalMediaVault</String>
+    <String Id="InstallTitle">Install PersonalMediaVault</String>
+    <String Id="UninstallMessage">Uninstall PersonalMediaVault</String>
+    <String Id="UninstallDescription">Uninstalls PersonalMediaVault from your system</String>
+    <String Id="DowngradeMsg">A later version of PersonalMediaVault is already installed. Setup will now exit.</String>
+</WixLocalization>
