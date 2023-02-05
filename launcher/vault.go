@@ -250,7 +250,7 @@ func (vc *VaultController) PrintStatus() {
 	bindAddr := "[::]"
 
 	if vc.launchConfig.Local {
-		bindAddr = "[::1]"
+		bindAddr = "localhost"
 	}
 
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{

@@ -531,6 +531,8 @@ func printCommandList() {
 		},
 	})
 	manList = append(manList, msg)
+
+	fmt.Println(prepareCommandManualList(manList))
 }
 
 func prepareCommandManualList(manList []string) string {
