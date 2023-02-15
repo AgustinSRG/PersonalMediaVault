@@ -33,6 +33,8 @@
       @loadedmetadata="onLoadMetaData"
       @waiting="onWaitForBuffer(true)"
       @playing="onWaitForBuffer(false)"
+      @play="onPlay"
+      @pause="onPause"
     ></video>
 
     <div class="player-feeback-container">
@@ -920,6 +922,14 @@ export default defineComponent({
       this.interactWithControls();
     },
 
+    onPlay: function () {
+      this.playing = true;
+    },
+
+    onPause: function () {
+      this.playing = false;
+    },
+
     toggleFullScreen: function () {
       if (!this.fullscreen) {
         openFullscreen();
@@ -1446,10 +1456,22 @@ export default defineComponent({
     this.initializeVideo();
 
     if (window.navigator && window.navigator.mediaSession) {
-      navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler(
+        "play",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "pause",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "nexttrack",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "previoustrack",
+        this.handleMediaSessionEvent.bind(this)
+      );
     }
   },
   beforeUnmount: function () {

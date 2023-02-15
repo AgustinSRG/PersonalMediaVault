@@ -32,8 +32,8 @@
       @loadedmetadata="onLoadMetaData"
       @waiting="onWaitForBuffer(true)"
       @playing="onWaitForBuffer(false)"
-      @play="setupAudioRenderer"
-      @pause="clearAudioRenderer"
+      @play="onPlay"
+      @pause="onPause"
     ></audio>
 
     <canvas v-if="audioURL"></canvas>
@@ -168,11 +168,17 @@
           @leave="leaveTooltip('volume')"
         ></VolumeControl>
 
-        <div class="player-time-label-container" :class="{'in-album': !!next || !!prev}" v-if="!minPlayer">
+        <div
+          class="player-time-label-container"
+          :class="{ 'in-album': !!next || !!prev }"
+          v-if="!minPlayer"
+        >
           <span
             >{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span
           >
-          <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{currentTimeSliceName}}</span>
+          <span v-if="currentTimeSlice" class="times-slice-name"
+            ><b class="separator"> - </b>{{ currentTimeSliceName }}</span
+          >
         </div>
       </div>
 
@@ -844,6 +850,16 @@ export default defineComponent({
       this.interactWithControls();
     },
 
+    onPlay: function () {
+      this.playing = true;
+      this.setupAudioRenderer();
+    },
+
+    onPause: function () {
+      this.playing = false;
+      this.clearAudioRenderer();
+    },
+
     toggleFullScreen: function () {
       if (!this.fullscreen) {
         openFullscreen();
@@ -1093,13 +1109,13 @@ export default defineComponent({
         case "b":
         case "B":
           if (this.currentTimeSlice) {
-            this.setTime(this.currentTimeSlice.start, true)
+            this.setTime(this.currentTimeSlice.start, true);
           }
           break;
         case "j":
         case "J":
           if (this.currentTimeSlice) {
-            this.setTime(this.currentTimeSlice.end, true)
+            this.setTime(this.currentTimeSlice.end, true);
           }
           break;
         default:
@@ -1377,7 +1393,11 @@ export default defineComponent({
     },
 
     updateCurrentTimeSlice: function () {
-      if (this.currentTimeSlice && this.sliceLoop && this.currentTime >= this.currentTimeSlice.end) {
+      if (
+        this.currentTimeSlice &&
+        this.sliceLoop &&
+        this.currentTime >= this.currentTimeSlice.end
+      ) {
         this.setTime(this.currentTimeSlice.start, false);
         return;
       }
@@ -1477,10 +1497,22 @@ export default defineComponent({
     this.initializeAudio();
 
     if (window.navigator && window.navigator.mediaSession) {
-      navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
-      navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+      navigator.mediaSession.setActionHandler(
+        "play",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "pause",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "nexttrack",
+        this.handleMediaSessionEvent.bind(this)
+      );
+      navigator.mediaSession.setActionHandler(
+        "previoustrack",
+        this.handleMediaSessionEvent.bind(this)
+      );
     }
   },
   beforeUnmount: function () {
