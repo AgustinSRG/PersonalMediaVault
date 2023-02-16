@@ -735,6 +735,7 @@ export default defineComponent({
         if (videoElement) {
           videoElement.currentTime = 0;
         }
+        this.play();
       } else {
         this.pause();
         this.ended = true;
@@ -1213,6 +1214,10 @@ export default defineComponent({
           if (this.currentTimeSlice) {
             this.setTime(this.currentTimeSlice.end, true);
           }
+          break;
+        case "C":
+        case "c":
+          this.userControls = !this.userControls;
           break;
         default:
           caught = false;
