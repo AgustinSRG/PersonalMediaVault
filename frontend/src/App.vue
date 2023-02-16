@@ -96,7 +96,7 @@ import { GetAssetURL } from "./utils/request";
         window.navigator.mediaSession.metadata = new MediaMetadata({
           title: MediaController.MediaData.title,
           album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
-          artwork: MediaController.MediaData.thumbnail ? [{src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpg'}] : undefined,
+          artwork: MediaController.MediaData.thumbnail ? [{src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg'}] : undefined,
         });
       } else {
         window.navigator.mediaSession.metadata = null;
