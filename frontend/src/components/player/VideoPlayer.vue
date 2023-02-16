@@ -123,7 +123,7 @@
           type="button"
           :title="$t('Play')"
           class="player-btn player-play-btn"
-          @click="togglePlay"
+          @click="togglePlayImmediate"
           @mouseenter="enterTooltip('play')"
           @mouseleave="leaveTooltip('play')"
         >
@@ -134,7 +134,7 @@
           type="button"
           :title="$t('Pause')"
           class="player-btn player-play-btn"
-          @click="togglePlay"
+          @click="togglePlayImmediate"
           @mouseenter="enterTooltip('pause')"
           @mouseleave="leaveTooltip('pause')"
         >
@@ -847,6 +847,22 @@ export default defineComponent({
       this.helpTooltip = "";
     },
 
+    togglePlayImmediate() {
+      if (this.$options.togglePlayDelayTimeout) {
+        clearTimeout(this.$options.togglePlayDelayTimeout);
+        this.$options.togglePlayDelayTimeout = null;
+      }
+      if (this.playing) {
+        this.feedback = "pause";
+        this.pause();
+      } else {
+        this.feedback = "play";
+        this.play();
+      }
+
+      this.displayConfig = false;
+    },
+
     togglePlay() {
       if (this.playing) {
         if (this.$options.togglePlayDelayTimeout) {
@@ -1089,7 +1105,7 @@ export default defineComponent({
         case " ":
         case "K":
         case "k":
-          this.togglePlay();
+          this.togglePlayImmediate();
           break;
         case "ArrowUp":
           this.changeVolume(Math.min(1, this.volume + 0.05));
