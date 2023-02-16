@@ -12,6 +12,10 @@
     transition: opacity 0.1s;
 }
 
+.player-context-menu:focus {
+    outline: none;
+}
+
 .player-min .player-context-menu {
     min-width: fit-content;
 }
