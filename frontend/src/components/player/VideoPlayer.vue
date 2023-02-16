@@ -3,7 +3,7 @@
     class="video-player player-settings-no-trap"
     :class="{
       'player-min': minPlayer,
-      'no-controls': !showControls,
+      'no-controls': !showControls || !usercontrols,
       'full-screen': fullscreen,
     }"
     @mousemove="playerMouseMove"
@@ -74,7 +74,7 @@
 
     <div
       class="player-subtitles-container"
-      :class="{ 'controls-hidden': !showControls }"
+      :class="{ 'controls-hidden': !showControls || !usercontrols }"
     >
       <div
         class="player-subtitles"
@@ -98,7 +98,7 @@
 
     <div
       class="player-controls"
-      :class="{ hidden: !showControls }"
+      :class="{ hidden: !showControls || !usercontrols }"
       @click="clickControls"
       @dblclick="stopPropagationEvent"
       @mouseenter="enterControls"
@@ -298,7 +298,7 @@
 
     <div
       class="player-timeline"
-      :class="{ hidden: !showControls }"
+      :class="{ hidden: !showControls || !usercontrols }"
       @mouseenter="enterControls"
       @mouseleave="mouseLeaveTimeline"
       @mousemove="mouseMoveTimeline"
@@ -371,7 +371,7 @@
       v-if="metadata"
       :mid="mid"
       :metadata="metadata"
-      :shown="showControls"
+      :shown="showControls && usercontrols"
       :fullscreen="fullscreen"
       v-model:expanded="expandedTitle"
       v-model:albumexpanded="expandedAlbum"
@@ -389,6 +389,7 @@
       @stats="openStats"
       v-model:sliceloop="sliceLoop"
       :hasslices="timeSlices && timeSlices.length > 0"
+      v-model:controls="userControls"
     ></PlayerContextMenu>
   </div>
 </template>
@@ -455,10 +456,13 @@ export default defineComponent({
     inalbum: Boolean,
 
     canwrite: Boolean,
+
+    usercontrols: Boolean,
   },
   setup(props) {
     return {
       fullScreen: useVModel(props, "fullscreen"),
+      userControls: useVModel(props, "usercontrols"),
     };
   },
   data: function () {

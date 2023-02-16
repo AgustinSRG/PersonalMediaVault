@@ -35,6 +35,23 @@
           <i class="fas fa-check" :class="{ 'check-uncheck': !loop }"></i>
         </td>
       </tr>
+
+      <tr
+        v-if="(type === 'video' || type === 'audio') && hasslices"
+        class="tr-button"
+        tabindex="0"
+        @click="toggleSliceLoop"
+        @keydown="clickOnEnter"
+      >
+        <td>
+          <i class="fas fa-repeat icon-config"></i>
+          <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
+        </td>
+        <td class="td-right">
+          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceloop }"></i>
+        </td>
+      </tr>
+
       <tr
         v-if="type === 'image'"
         class="tr-button"
@@ -52,7 +69,7 @@
       </tr>
 
       <tr
-        v-if="type === 'image'"
+        v-if="type === 'image' || type === 'video'"
         class="tr-button"
         tabindex="0"
         @keydown="clickOnEnter"
@@ -80,22 +97,6 @@
         </td>
         <td class="td-right">
           <i class="fas fa-check" :class="{ 'check-uncheck': !notesedit }"></i>
-        </td>
-      </tr>
-
-      <tr
-        v-if="(type === 'video' || type === 'audio') && hasslices"
-        class="tr-button"
-        tabindex="0"
-        @click="toggleSliceLoop"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-repeat icon-config"></i>
-          <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceloop }"></i>
         </td>
       </tr>
 

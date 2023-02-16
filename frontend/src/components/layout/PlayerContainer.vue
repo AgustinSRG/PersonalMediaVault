@@ -45,6 +45,7 @@
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
+      v-model:usercontrols="showControls"
       @albums-open="openAlbums"
       @stats-open="openStats"
     ></VideoPlayer>
