@@ -9,7 +9,7 @@ export function GetAPIURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
         return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
-        return "." + path;
+        return location.protocol + "//" + location.host + path;
     }
 }
 
@@ -17,7 +17,7 @@ export function GetAssetURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
         return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
-        return "." + path;
+        return location.protocol + "//" + location.host + path;
     }
 }
 
