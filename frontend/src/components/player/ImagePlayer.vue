@@ -851,6 +851,7 @@ export default defineComponent({
         case " ":
         case "K":
         case "k":
+        case "Enter":
           this.toggleFit();
           this.scaleShown = true;
           this.helpTooltip = "scale";

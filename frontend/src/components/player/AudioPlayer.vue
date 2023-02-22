@@ -1013,6 +1013,7 @@ export default defineComponent({
         case " ":
         case "K":
         case "k":
+        case "Enter":
           this.togglePlay();
           break;
         case "ArrowUp":

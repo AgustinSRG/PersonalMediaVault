@@ -1110,6 +1110,7 @@ export default defineComponent({
         case " ":
         case "K":
         case "k":
+        case "Enter":
           this.togglePlayImmediate();
           break;
         case "ArrowUp":
