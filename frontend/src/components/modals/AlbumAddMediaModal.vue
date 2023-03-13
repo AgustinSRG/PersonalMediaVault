@@ -10,7 +10,7 @@
   >
     <div
       v-if="display"
-      class="modal-dialog modal-xl"
+      class="modal-dialog modal-xl modal-height-100"
       role="document"
       @click="stopPropagationEvent"
     >

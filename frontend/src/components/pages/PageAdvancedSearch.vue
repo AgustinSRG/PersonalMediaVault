@@ -6,75 +6,78 @@
         <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch"
           class="form-control form-control-full-width" />
       </div>
-      <div class="form-group">
-        <label>{{ $t("Media type") }}:</label>
-        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type">
-          <option :value="0">{{ $t("Any media") }}</option>
-          <option :value="1">{{ $t("Images") }}</option>
-          <option :value="2">{{ $t("Videos") }}</option>
-          <option :value="3">{{ $t("Audios") }}</option>
-        </select>
-      </div>
 
-      <div class="form-group">
-        <label>{{ $t("Tags") }}:</label>
-      </div>
-      <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
-        <label v-if="tags.length === 0">{{
-          $t("There are no tags yet for this filter.")
-        }}</label>
-        <div v-for="tag in tags" :key="tag" class="media-tag">
-          <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-          <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading"
-            @click="removeTag(tag)">
-            <i class="fas fa-times"></i>
+      <div v-if="advancedSearch">
+        <div class="form-group">
+          <label>{{ $t("Media type") }}:</label>
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type">
+            <option :value="0">{{ $t("Any media") }}</option>
+            <option :value="1">{{ $t("Images") }}</option>
+            <option :value="2">{{ $t("Videos") }}</option>
+            <option :value="3">{{ $t("Audios") }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>{{ $t("Tags") }}:</label>
+        </div>
+        <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
+          <label v-if="tags.length === 0">{{
+            $t("There are no tags yet for this filter.")
+          }}</label>
+          <div v-for="tag in tags" :key="tag" class="media-tag">
+            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading"
+              @click="removeTag(tag)">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
+            <option :value="'all'">
+              {{ $t("Media must contain ALL of the selected tags") }}
+            </option>
+            <option :value="'any'">
+              {{ $t("Media must contain ANY of the selected tags") }}
+            </option>
+            <option :value="'none'">
+              {{ $t("Media must contain NONE of the selected tags") }}
+            </option>
+            <option :value="'untagged'">
+              {{ $t("Media must be untagged") }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group" v-if="tagMode !== 'untagged'">
+          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading"
+            @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
+        </div>
+        <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
+          <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading"
+            class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
+            <i class="fas fa-plus"></i> {{ mt.name }}
           </button>
         </div>
-      </div>
-      <div class="form-group">
-        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
-          <option :value="'all'">
-            {{ $t("Media must contain ALL of the selected tags") }}
-          </option>
-          <option :value="'any'">
-            {{ $t("Media must contain ANY of the selected tags") }}
-          </option>
-          <option :value="'none'">
-            {{ $t("Media must contain NONE of the selected tags") }}
-          </option>
-          <option :value="'untagged'">
-            {{ $t("Media must be untagged") }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group" v-if="tagMode !== 'untagged'">
-        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading"
-          @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
-      </div>
-      <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
-        <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading"
-          class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
-          <i class="fas fa-plus"></i> {{ mt.name }}
-        </button>
+
+        <div class="form-group">
+          <label>{{ $t("Order") }}:</label>
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order">
+            <option :value="'desc'">{{ $t("Show most recent") }}</option>
+            <option :value="'asc'">{{ $t("Show oldest") }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ $t("Limit results") }}:</label>
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="pageSize">
+            <option v-for="po in pageSizeOptions" :key="po" :value="po">
+              {{ po }} {{ $t("results max") }}
+            </option>
+          </select>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>{{ $t("Order") }}:</label>
-        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order">
-          <option :value="'desc'">{{ $t("Show most recent") }}</option>
-          <option :value="'asc'">{{ $t("Show oldest") }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ $t("Limit results") }}:</label>
-        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="pageSize">
-          <option v-for="po in pageSizeOptions" :key="po" :value="po">
-            {{ po }} {{ $t("results max") }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
+      <div class="">
         <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
@@ -82,6 +85,12 @@
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{
             cssProgress(progress)
           }})
+        </button>
+        <button v-if="!advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
+          <i class="fas fa-cog"></i> {{ $t("More options") }}
+        </button>
+        <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
+          <i class="fas fa-cog"></i> {{ $t("Less options") }}
         </button>
         <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
           <i class="fas fa-times"></i> {{ $t("Cancel") }}
@@ -171,6 +180,8 @@ export default defineComponent({
       started: false,
       finished: true,
 
+      advancedSearch: false,
+
       tagData: {},
       tags: [],
       tagToAdd: "",
@@ -259,6 +270,10 @@ export default defineComponent({
           // Retry
           Timeouts.Set("page-advsearch-load", 1500, this.$options.loadH);
         });
+    },
+
+    toggleAdvancedSearch: function () {
+      this.advancedSearch = !this.advancedSearch;
     },
 
     filterElements: function (results: MediaEntry[]) {
@@ -602,6 +617,7 @@ export default defineComponent({
     },
   },
   mounted: function () {
+    this.advancedSearch = !this.inmodal;
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
