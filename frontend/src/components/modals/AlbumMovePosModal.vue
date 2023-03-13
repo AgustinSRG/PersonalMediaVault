@@ -5,7 +5,6 @@
     tabindex="-1"
     role="dialog"
     :aria-hidden="!display"
-    @click="close"
     @keydown="keyDownHandle"
   >
     <form
