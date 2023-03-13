@@ -164,7 +164,7 @@
       </div>
     </div>
 
-    <AlbumCreateModal v-model:display="displayAlbumCreate"></AlbumCreateModal>
+    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
   </div>
 </template>
 
@@ -223,6 +223,10 @@ export default defineComponent({
   methods: {
     createAlbum: function () {
       this.displayAlbumCreate = true;
+    },
+
+    onNewAlbum: function (albumId: number) {
+      AppStatus.ClickOnAlbum(albumId);
     },
 
     refreshAlbums: function () {
