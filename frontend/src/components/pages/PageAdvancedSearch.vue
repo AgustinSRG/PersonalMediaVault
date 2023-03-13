@@ -3,23 +3,12 @@
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
         <label>{{ $t("Title or description must contain") }}:</label>
-        <input
-          type="text"
-          name="title-search"
-          autocomplete="off"
-          maxlength="255"
-          :disabled="loading"
-          v-model="textSearch"
-          class="form-control form-control-full-width"
-        />
+        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch"
+          class="form-control form-control-full-width" />
       </div>
       <div class="form-group">
         <label>{{ $t("Media type") }}:</label>
-        <select
-          class="form-control form-select form-control-full-width"
-          :disabled="loading"
-          v-model="type"
-        >
+        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type">
           <option :value="0">{{ $t("Any media") }}</option>
           <option :value="1">{{ $t("Images") }}</option>
           <option :value="2">{{ $t("Videos") }}</option>
@@ -36,23 +25,14 @@
         }}</label>
         <div v-for="tag in tags" :key="tag" class="media-tag">
           <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-          <button
-            type="button"
-            :title="$t('Remove tag')"
-            class="media-tag-btn"
-            :disabled="loading"
-            @click="removeTag(tag)"
-          >
+          <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading"
+            @click="removeTag(tag)">
             <i class="fas fa-times"></i>
           </button>
         </div>
       </div>
       <div class="form-group">
-        <select
-          class="form-control form-select form-control-full-width"
-          :disabled="loading"
-          v-model="tagMode"
-        >
+        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
           <option :value="'all'">
             {{ $t("Media must contain ALL of the selected tags") }}
           </option>
@@ -68,51 +48,26 @@
         </select>
       </div>
       <div class="form-group" v-if="tagMode !== 'untagged'">
-        <input
-          type="text"
-          autocomplete="off"
-          maxlength="255"
-          v-model="tagToAdd"
-          :disabled="loading"
-          @input="onTagAddChanged(false)"
-          class="form-control"
-          :placeholder="$t('Search for tags') + '...'"
-        />
+        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading"
+          @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
       </div>
-      <div
-        class="form-group"
-        v-if="tagMode !== 'untagged' && matchingTags.length > 0"
-      >
-        <button
-          v-for="mt in matchingTags"
-          :key="mt.id"
-          type="button"
-          :disabled="loading"
-          class="btn btn-primary btn-sm btn-tag-mini"
-          @click="addMatchingTag(mt)"
-        >
+      <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
+        <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading"
+          class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
           <i class="fas fa-plus"></i> {{ mt.name }}
         </button>
       </div>
 
       <div class="form-group">
         <label>{{ $t("Order") }}:</label>
-        <select
-          class="form-control form-select form-control-full-width"
-          :disabled="loading"
-          v-model="order"
-        >
+        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order">
           <option :value="'desc'">{{ $t("Show most recent") }}</option>
           <option :value="'asc'">{{ $t("Show oldest") }}</option>
         </select>
       </div>
       <div class="form-group">
         <label>{{ $t("Limit results") }}:</label>
-        <select
-          class="form-control form-select form-control-full-width"
-          :disabled="loading"
-          v-model="pageSize"
-        >
+        <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="pageSize">
           <option v-for="po in pageSizeOptions" :key="po" :value="po">
             {{ po }} {{ $t("results max") }}
           </option>
@@ -123,32 +78,19 @@
         <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
-        <button
-          v-if="loading"
-          type="button"
-          class="btn btn-primary btn-mr"
-          disabled
-        >
+        <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
           <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{
             cssProgress(progress)
           }})
         </button>
-        <button
-          v-if="loading"
-          type="button"
-          class="btn btn-primary btn-mr"
-          @click="cancel"
-        >
+        <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
           <i class="fas fa-times"></i> {{ $t("Cancel") }}
         </button>
       </div>
     </form>
 
     <div class="search-results">
-      <div
-        v-if="!loading && started && pageItems.length === 0"
-        class="search-results-msg-display"
-      >
+      <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
         <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
         <div class="search-results-msg-text">
           {{ $t("Could not find any result") }}
@@ -160,24 +102,11 @@
         </div>
       </div>
 
-      <div
-        v-if="!loading && pageItems.length > 0"
-        class="search-results-final-display"
-      >
-        <a
-          v-for="(item, i) in pageItems"
-          :key="i"
-          class="search-result-item clickable"
-          :class="{ current: currentMedia == item.id }"
-          @click="goToMedia(item.id, $event)"
-          :href="getMediaURL(item.id)"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div
-            class="search-result-thumb"
-            :title="item.title || $t('Untitled')"
-          >
+      <div v-if="!loading && pageItems.length > 0" class="search-results-final-display">
+        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable"
+          :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)"
+          target="_blank" rel="noopener noreferrer">
+          <div class="search-result-thumb" :title="item.title || $t('Untitled')">
             <div class="search-result-thumb-inner">
               <div v-if="!item.thumbnail" class="no-thumb">
                 <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -185,15 +114,8 @@
                 <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                 <i v-else class="fas fa-ban"></i>
               </div>
-              <img
-                v-if="item.thumbnail"
-                :src="getThumbnail(item.thumbnail)"
-                :alt="item.title || $t('Untitled')"
-              />
-              <div
-                class="search-result-thumb-tag"
-                v-if="item.type === 2 || item.type === 3"
-              >
+              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" />
+              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                 {{ renderTime(item.duration) }}
               </div>
             </div>
@@ -429,7 +351,7 @@ export default defineComponent({
       }
     },
 
-    startSearch: function (event) {
+    startSearch: function (event?: Event) {
       if (event) {
         event.preventDefault();
       }
@@ -701,6 +623,10 @@ export default defineComponent({
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
     this.updateTagData();
+
+    if (this.inmodal) {
+      this.startSearch();
+    }
   },
   beforeUnmount: function () {
     Timeouts.Abort("page-advsearch-load");
@@ -726,6 +652,11 @@ export default defineComponent({
   watch: {
     display: function () {
       this.load();
+      if (this.display && this.inmodal) {
+        this.startSearch();
+      } else if (this.inmodal) {
+        this.cancel();
+      }
     },
   },
 });
