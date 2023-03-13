@@ -102,7 +102,7 @@
       class="file-hidden"
       @change="inputFileChanged"
       name="media-upload"
-      multiple="multiple"
+      multiple
     />
     <div
       class="upload-box"
@@ -209,7 +209,7 @@
           <i class="fas fa-broom"></i> {{ $t("Clear list") }}
         </button>
       </div>
-      <div class="form-group" v-if="pendingToUpload.length > 0">
+      <div class="form-group" v-if="countCancellable > 0">
         <button type="button" class="btn btn-primary" @click="cancelAll">
           <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
         </button>
@@ -249,6 +249,7 @@ export default defineComponent({
     return {
       dragging: false,
       pendingToUpload: [],
+      countCancellable: 0,
 
       optionsShown: false,
 
@@ -523,21 +524,38 @@ export default defineComponent({
 
     onPendingPush: function (m: UploadEntryMin) {
       this.pendingToUpload.push(m);
+      this.updateCountCancellable(this.pendingToUpload);
     },
 
     onPendingRemove: function (i: number) {
       this.pendingToUpload.splice(i, 1);
+      this.updateCountCancellable(this.pendingToUpload);
     },
 
     onPendingClear: function () {
       this.pendingToUpload = UploadController.GetEntries();
+      this.updateCountCancellable(this.pendingToUpload);
     },
 
     onPendingUpdate: function (i: number, m: UploadEntryMin) {
+      let mustUpdate = (this.pendingToUpload[i].status !== m.status)
       this.pendingToUpload[i].status = m.status;
       this.pendingToUpload[i].error = m.error;
       this.pendingToUpload[i].progress = m.progress;
       this.pendingToUpload[i].mid = m.mid;
+      if (mustUpdate) {
+        this.updateCountCancellable(this.pendingToUpload);
+      }
+    },
+
+    updateCountCancellable: function (list: UploadEntryMin[]) {
+      let count = 0;
+      for (let l of list) {
+        if (l.status !== "ready" && l.status !== "error") {
+          count++;
+        }
+      }
+      this.countCancellable = count;
     },
 
     getMediaURL: function (mid: number): string {
@@ -554,6 +572,7 @@ export default defineComponent({
   },
   mounted: function () {
     this.pendingToUpload = UploadController.GetEntries();
+    this.updateCountCancellable(this.pendingToUpload);
 
     this.$options.onPendingPushH = this.onPendingPush.bind(this);
     this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
