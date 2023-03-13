@@ -10,7 +10,7 @@
     display: flex;
 
     width: 100%;
-    height: 240px;
+    height: 140px;
 
     border: dotted 2px var(--theme-border-color);
 
@@ -24,4 +24,94 @@
 .upload-box:hover,
 .upload-box.dragging {
     background: var(--hover-color);
+}
+
+.upload-list {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.upload-list-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+}
+
+.upload-list-item-top {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.upload-list-item-bottom {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.upload-list-item-file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0.5rem;
+}
+
+.upload-list-item-file-size {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0.5rem;
+    text-align: right;
+}
+
+.upload-list-item-status {
+    width: calc(100% - 64px - 0.5rem);
+    padding: 0.25rem;
+}
+
+.upload-list-item-status-bar {
+    height: calc(32px + 0.5rem);
+    width: 100%;
+    border: solid 1px var(--theme-border-color);
+    padding: 0.1rem;
+    position: relative;
+}
+
+.upload-list-item-status-bar-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.1rem;
+}
+
+.upload-list-item-status-bar-current {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--progress-bar-bg);
+    transition: width 0.2s;
+}
+
+.upload-list-item-status-bar-current.success {
+    background: var(--progress-bar-bg-success);
+}
+
+.upload-list-item-status-bar-current.error {
+    background: var(--progress-bar-bg-error);
+}
+
+.upload-list-item-right {
+    display: flex;
+    width: calc(64px + 0.5rem);
+    padding: 0.25rem;
+    justify-content: right;
+    align-items: center;
 }

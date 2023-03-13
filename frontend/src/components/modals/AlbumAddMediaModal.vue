@@ -39,6 +39,7 @@
           :inmodal="true"
           :fixedalbum="aid"
           @change-to-search="changeToSearch"
+          @media-go="close"
         ></PageUpload>
       </div>
     </div>

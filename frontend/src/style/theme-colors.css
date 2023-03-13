@@ -52,6 +52,8 @@
     --volume-bar-bg: rgba(0, 0, 0, 0.25);
     --placeholder-no-thumbnail-color: rgba(0, 0, 0, 0.5);
     --progress-bar-bg: rgba(0, 0, 0, 0.3);
+    --progress-bar-bg-success: rgba(0, 255, 0, 0.3);
+    --progress-bar-bg-error: rgba(255, 0, 0, 0.3);
 
     --bg-opaque-25: rgba(255, 255, 255, 0.25);
     --bg-opaque-50: rgba(255, 255, 255, 0.5);
@@ -116,6 +118,8 @@
     --volume-bar-bg: rgba(255, 255, 255, 0.25);
     --placeholder-no-thumbnail-color: rgba(255, 255, 255, 0.5);
     --progress-bar-bg: rgba(255, 255, 255, 0.3);
+    --progress-bar-bg-success: rgba(0, 255, 0, 0.3);
+    --progress-bar-bg-error: rgba(255, 0, 0, 0.3);
 
     --bg-opaque-25: rgba(0, 0, 0, 0.25);
     --bg-opaque-50: rgba(0, 0, 0, 0.5);

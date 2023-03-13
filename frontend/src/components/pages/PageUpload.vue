@@ -1,39 +1,20 @@
 <template>
   <div class="page-inner page-inner-padded" :class="{ hidden: !display }">
     <div class="form-group">
-      <button
-        v-if="!optionsShown"
-        @click="showOptions(true)"
-        type="button"
-        class="btn btn-primary btn-mr"
-      >
+      <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
       </button>
-      <button
-        v-if="optionsShown"
-        @click="showOptions(false)"
-        type="button"
-        class="btn btn-primary btn-mr"
-      >
+      <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
       </button>
-      <button
-        v-if="inmodal"
-        @click="changeToSearch"
-        type="button"
-        class="btn btn-primary btn-mr"
-      >
+      <button v-if="inmodal" @click="changeToSearch" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-search"></i> {{ $t("Search") }}
       </button>
     </div>
     <div class="upload-options-container" v-if="optionsShown">
       <div class="form-group">
         <label>{{ $t("Max number of uploads in parallel") }}:</label>
-        <select
-          v-model="maxParallelUploads"
-          @change="updateMaxParallelUploads"
-          class="form-control form-select"
-        >
+        <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
           <option :value="1">1</option>
           <option :value="2">2</option>
           <option :value="4">4</option>
@@ -41,9 +22,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label
-          >{{ $t("Select an album to add the uploaded media into") }}:</label
-        >
+        <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
         <select v-model="album" :disabled="inmodal" class="form-control form-select">
           <option :value="-1">--</option>
           <option v-for="a in albums" :key="a.id" :value="a.id">
@@ -57,20 +36,13 @@
         </button>
       </div>
       <div class="form-group">
-        <label
-          >{{ $t("Tags to automatically add to the uploaded media") }}:</label
-        >
+        <label>{{ $t("Tags to automatically add to the uploaded media") }}:</label>
       </div>
       <div class="form-group media-tags">
         <label v-if="tags.length === 0">({{ $t("none") }})</label>
         <div v-for="tag in tags" :key="tag" class="media-tag">
           <div class="media-tag-name">{{ tag }}</div>
-          <button
-            type="button"
-            :title="$t('Remove tag')"
-            class="media-tag-btn"
-            @click="removeTag(tag)"
-          >
+          <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -78,23 +50,12 @@
       <form @submit="addTag">
         <div class="form-group">
           <label>{{ $t("Tag to add") }}:</label>
-          <input
-            type="text"
-            autocomplete="off"
-            maxlength="255"
-            v-model="tagToAdd"
-            @input="onTagAddChanged(false)"
-            class="form-control"
-          />
+          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" @input="onTagAddChanged(false)"
+            class="form-control" />
         </div>
         <div class="form-group" v-if="matchingTags.length > 0">
-          <button
-            v-for="mt in matchingTags"
-            :key="mt.id"
-            type="button"
-            class="btn btn-primary btn-sm btn-tag-mini"
-            @click="addTagByName(mt.name)"
-          >
+          <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini"
+            @click="addTagByName(mt.name)">
             <i class="fas fa-plus"></i> {{ mt.name }}
           </button>
         </div>
@@ -105,113 +66,66 @@
         </div>
       </form>
     </div>
-    <input
-      type="file"
-      class="file-hidden"
-      @change="inputFileChanged"
-      name="media-upload"
-      multiple
-    />
-    <div
-      class="upload-box"
-      :class="{ dragging: dragging }"
-      tabindex="0"
-      @click="clickToSelect"
-      @dragover="dragOver"
-      @dragenter="dragEnter"
-      @dragstart="dragEnter"
-      @dragend="dragLeave"
-      @dragleave="dragLeave"
-      @drop="onDrop"
-      @keydown="clickOnEnter"
-    >
+    <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
+    <div class="upload-box" :class="{ dragging: dragging }" tabindex="0" @click="clickToSelect" @dragover="dragOver"
+      @dragenter="dragEnter" @dragstart="dragEnter" @dragend="dragLeave" @dragleave="dragLeave" @drop="onDrop"
+      @keydown="clickOnEnter">
       <div class="upload-box-hint">
         {{ $t("Drop file here or click to open the file selection dialog.") }}
       </div>
     </div>
 
-    <div
-      class="upload-table table-responsive"
-      v-if="pendingToUpload.length > 0"
-    >
-      <table class="table table-vmiddle">
-        <thead>
-          <tr>
-            <th class="text-left">{{ $t("File") }}</th>
-            <th class="text-left">{{ $t("Size") }}</th>
-            <th class="text-left">{{ $t("Status") }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="m in pendingToUpload" :key="m.id">
-            <td v-if="m.status !== 'ready'" class="bold">{{ m.name }}</td>
-            <td v-if="m.status === 'ready'" class="bold">
-              <a
-                @click="goToMedia(m, $event)"
-                :href="getMediaURL(m.mid)"
-                target="_blank"
-                rel="noopener noreferrer"
-                >{{ m.name }}</a
-              >
-            </td>
-            <td>{{ renderSize(m.size) }}</td>
-            <td>{{ renderStatus(m.status, m.progress, m.error) }}</td>
-            <td class="text-right one-line">
-              <button
-                v-if="
-                  m.status === 'pending' ||
-                  m.status === 'uploading' ||
-                  m.status === 'encrypting' ||
-                  m.status === 'tag'
-                "
-                type="button"
-                class="table-btn"
-                :title="$t('Cancel upload')"
-                @click="removeFile(m.id)"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-              <button
-                v-if="m.status === 'ready'"
-                type="button"
-                class="table-btn"
-                :title="$t('View media')"
-                @click="goToMedia(m)"
-              >
-                <i class="fas fa-eye"></i>
-              </button>
-              <button
-                v-if="m.status === 'ready'"
-                type="button"
-                class="table-btn"
-                :title="$t('Done')"
-                @click="removeFile(m.id)"
-              >
-                <i class="fas fa-check"></i>
-              </button>
-              <button
-                v-if="m.status === 'error'"
-                type="button"
-                class="table-btn"
-                :title="$t('Try again')"
-                @click="tryAgain(m)"
-              >
-                <i class="fas fa-rotate"></i>
-              </button>
-              <button
-                v-if="m.status === 'error'"
-                type="button"
-                class="table-btn"
-                :title="$t('Remove')"
-                @click="removeFile(m.id)"
-              >
-                <i class="fas fa-times"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="upload-list">
+      <div v-for="m in pendingToUpload" :key="m.id" class="upload-list-item">
+        <div class="upload-list-item-top">
+          <div class="upload-list-item-file-name">
+            <span v-if="m.status !== 'ready'" class="bold">{{ m.name }}</span>
+            <a v-if="m.status === 'ready'" class="bold" @click="goToMedia(m, $event)" :href="getMediaURL(m.mid)"
+              target="_blank" rel="noopener noreferrer">{{
+                m.name }}</a>
+          </div>
+          <div class="upload-list-item-file-size">
+            <span>{{ renderSize(m.size) }}</span>
+          </div>
+        </div>
+        <div class="upload-list-item-bottom">
+          <div class="upload-list-item-status">
+            <div class="upload-list-item-status-bar">
+              <div class="upload-list-item-status-bar-current" :class="{error: m.status === 'error', success: m.status === 'ready'}" :style="{ width: cssProgress(m.status, m.progress) }"></div>
+              <div class="upload-list-item-status-bar-text">{{ renderStatus(m.status, m.progress, m.error) }}</div>
+            </div>
+          </div>
+          <div class="upload-list-item-right">
+            <button v-if="
+              m.status === 'pending' ||
+              m.status === 'uploading' ||
+              m.status === 'encrypting' ||
+              m.status === 'tag'
+            " type="button" class="table-btn" :title="$t('Cancel upload')" @click="removeFile(m.id)">
+              <i class="fas fa-times"></i>
+            </button>
+            <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('View media')"
+              @click="goToMedia(m)">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('Done')"
+              @click="removeFile(m.id)">
+              <i class="fas fa-check"></i>
+            </button>
+            <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Try again')"
+              @click="tryAgain(m)">
+              <i class="fas fa-rotate"></i>
+            </button>
+            <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Remove')"
+              @click="removeFile(m.id)">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-table table-responsive" v-if="pendingToUpload.length > 0">
       <div class="form-group" v-if="pendingToUpload.length > 0">
         <button type="button" class="btn btn-primary" @click="clearList">
           <i class="fas fa-broom"></i> {{ $t("Clear list") }}
@@ -224,10 +138,7 @@
       </div>
     </div>
 
-    <AlbumCreateModal
-      v-model:display="displayAlbumCreate"
-      @new-album="onNewAlbum"
-    ></AlbumCreateModal>
+    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
   </div>
 </template>
 
@@ -249,7 +160,7 @@ export default defineComponent({
     AlbumCreateModal,
   },
   name: "PageUpload",
-  emits: ['change-to-search'],
+  emits: ['change-to-search', 'media-go'],
   props: {
     display: Boolean,
     inmodal: Boolean,
@@ -375,6 +286,7 @@ export default defineComponent({
         return;
       }
       AppStatus.ClickOnMedia(m.mid, true);
+      this.$emit("media-go");
     },
 
     renderStatus(status: string, p: number, err: string) {
@@ -426,6 +338,22 @@ export default defineComponent({
         default:
           return "-";
       }
+    },
+
+    cssProgress: function (status: string, p: number) {
+      switch (status) {
+        case "uploading":
+          return Math.round(p * 50 / 100) + "%";
+        case "encrypting":
+          return Math.round(50 + (p * 50 / 100)) + "%";
+        case "ready":
+        case "error":
+        case "tag":
+          return "100%";
+        default:
+          return "0";
+      }
+
     },
 
     clickOnEnter: function (event) {
