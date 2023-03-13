@@ -10,7 +10,7 @@
   >
     <div
       v-if="display"
-      class="modal-dialog modal-xl"
+      class="modal-dialog modal-xl modal-height-100"
       role="document"
       @click="stopPropagationEvent"
     >
@@ -28,7 +28,7 @@
       <div v-if="loading" class="modal-body">
         <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
       </div>
-      <div v-if="!loading" class="">
+      <div v-if="!loading" class="modal-body no-padding">
         <div class="table-responsive">
           <table class="table">
             <thead>
