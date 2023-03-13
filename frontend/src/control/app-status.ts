@@ -4,6 +4,7 @@
 
 import { getParameterByName } from "@/utils/cookie";
 import { GenerateURIQuery } from "@/utils/request";
+import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { PlayerPreferences } from "./player-preferences";
 
@@ -172,7 +173,15 @@ export class AppStatus {
 
     public static UpdateURL() {
         if (AppStatus.CurrentAlbum >= 0 && AppStatus.CurrentMedia < 0) {
-            return;
+            if (AlbumsController.Loading) {
+                return;
+            }
+            if (AlbumsController.CurrentAlbum !== AppStatus.CurrentAlbum) {
+                return;
+            }
+            if (AlbumsController.CurrentAlbumData.list.length > 0) {
+                return;
+            }
         }
 
         if (history.pushState) {

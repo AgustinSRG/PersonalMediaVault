@@ -126,6 +126,7 @@ export class AlbumsController {
             AppEvents.Emit("current-album-loading", false);
 
             AlbumsController.UpdateAlbumCurrentPos();
+            AppStatus.UpdateURL();
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
