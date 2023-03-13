@@ -5,7 +5,9 @@
 import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@/utils/request";
+import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
+import { MediaController } from "./media";
 import { TagsController } from "./tags";
 
 const TICK_DELAY_MS = 500;
@@ -236,6 +238,9 @@ export class UploadController {
                 m.status = "encrypting";
                 m.progress = 0;
                 AppEvents.Emit("upload-list-update", index, m);
+                if (m.album !== -1) {
+                    AlbumsController.OnChangedAlbum(m.album);
+                }
             })
             .onCancel(() => {
                 UploadController.UploadingCount--;
@@ -302,6 +307,14 @@ export class UploadController {
 
                     AppEvents.Emit("upload-list-update", index, m);
 
+                    if (MediaController.MediaId === m.mid) {
+                        MediaController.OnMediaChanged()
+                    }
+
+                    if (m.album !== -1) {
+                        AlbumsController.OnChangedAlbum(m.album);
+                    }
+
                     UploadController.UploadingCount--;
                 } else {
                     m.progress = media.ready_p;
@@ -341,6 +354,9 @@ export class UploadController {
             m.status = "ready";
             AppEvents.Emit("upload-list-update", index, m);
             UploadController.CheckEmptyList();
+            if (MediaController.MediaId === m.mid) {
+                MediaController.OnMediaChanged()
+            }
             return;
         }
 

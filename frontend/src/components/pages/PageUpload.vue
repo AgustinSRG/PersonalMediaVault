@@ -5,7 +5,7 @@
         v-if="!optionsShown"
         @click="showOptions(true)"
         type="button"
-        class="btn btn-primary"
+        class="btn btn-primary btn-mr"
       >
         <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
       </button>
@@ -13,9 +13,17 @@
         v-if="optionsShown"
         @click="showOptions(false)"
         type="button"
-        class="btn btn-primary"
+        class="btn btn-primary btn-mr"
       >
         <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
+      </button>
+      <button
+        v-if="inmodal"
+        @click="changeToSearch"
+        type="button"
+        class="btn btn-primary btn-mr"
+      >
+        <i class="fas fa-search"></i> {{ $t("Search") }}
       </button>
     </div>
     <div class="upload-options-container" v-if="optionsShown">
@@ -36,14 +44,14 @@
         <label
           >{{ $t("Select an album to add the uploaded media into") }}:</label
         >
-        <select v-model="album" class="form-control form-select">
+        <select v-model="album" :disabled="inmodal" class="form-control form-select">
           <option :value="-1">--</option>
           <option v-for="a in albums" :key="a.id" :value="a.id">
             {{ a.name }}
           </option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" v-if="!inmodal">
         <button type="button" @click="createAlbum" class="btn btn-primary">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
@@ -241,9 +249,11 @@ export default defineComponent({
     AlbumCreateModal,
   },
   name: "PageUpload",
-  emits: [],
+  emits: ['change-to-search'],
   props: {
     display: Boolean,
+    inmodal: Boolean,
+    fixedalbum: Number,
   },
   data: function () {
     return {
@@ -269,6 +279,10 @@ export default defineComponent({
   methods: {
     clickToSelect: function () {
       this.$el.querySelector(".file-hidden").click();
+    },
+
+    changeToSearch: function () {
+      this.$emit("change-to-search");
     },
 
     createAlbum: function () {
@@ -520,6 +534,10 @@ export default defineComponent({
           return 1;
         }
       });
+
+      if (this.inmodal) {
+        this.album = this.fixedalbum;
+      }
     },
 
     onPendingPush: function (m: UploadEntryMin) {

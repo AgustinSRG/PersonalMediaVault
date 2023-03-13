@@ -115,6 +115,7 @@ export default defineComponent({
 
       if (this.tid <= 0) {
         this.status = "nonready";
+        Timeouts.Set(this.pendingId, 1000, this.refreshMedia.bind(this));
         return;
       }
 

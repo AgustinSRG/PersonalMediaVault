@@ -14,20 +14,32 @@
       @click="stopPropagationEvent"
     >
       <div class="modal-header">
-        <div class="modal-title">
+        <div class="modal-title" v-if="!isUpload">
           {{ $t("Search media to add to the album") }}
+        </div>
+        <div class="modal-title" v-if="isUpload">
+          {{ $t("Upload media to add to the album") }}
         </div>
         <button class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body no-padding">
+      <div class="modal-body no-padding" v-if="!isUpload">
         <PageAdvancedSearch
           :display="true"
           :inmodal="true"
           :noalbum="aid"
           @select-media="selectMedia"
+          @change-to-upload="changeToUpload"
         ></PageAdvancedSearch>
+      </div>
+      <div class="modal-body no-padding" v-if="isUpload">
+        <PageUpload
+          :display="true"
+          :inmodal="true"
+          :fixedalbum="aid"
+          @change-to-search="changeToSearch"
+        ></PageUpload>
       </div>
     </div>
   </div>
@@ -39,6 +51,7 @@ import { useVModel } from "../../utils/vmodel";
 import { FocusTrap } from "../../utils/focus-trap";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
+import PageUpload from "@/components/pages/PageUpload.vue";
 import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
@@ -47,6 +60,7 @@ import { AlbumsController } from "@/control/albums";
 export default defineComponent({
   components: {
     PageAdvancedSearch,
+    PageUpload,
   },
   name: "AlbumAddMediaModal",
   emits: ["update:display"],
@@ -62,11 +76,21 @@ export default defineComponent({
   data: function () {
     return {
       busy: false,
+
+      isUpload: false,
     };
   },
   methods: {
     close: function () {
       this.displayStatus = false;
+    },
+
+    changeToUpload: function () {
+      this.isUpload = true;
+    },
+
+    changeToSearch: function () {
+      this.isUpload = false;
     },
 
     stopPropagationEvent: function (e) {

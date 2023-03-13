@@ -92,6 +92,9 @@
         <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
           <i class="fas fa-cog"></i> {{ $t("Less options") }}
         </button>
+        <button v-if="inmodal" type="button" class="btn btn-primary btn-mr" @click="changeToUpload">
+          <i class="fas fa-upload"></i> {{ $t("Upload") }}
+        </button>
         <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
           <i class="fas fa-times"></i> {{ $t("Cancel") }}
         </button>
@@ -155,7 +158,7 @@ import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
   name: "PageAdvancedSearch",
-  emits: ['select-media'],
+  emits: ['select-media', 'change-to-upload'],
   props: {
     display: Boolean,
     inmodal: Boolean,
@@ -274,6 +277,10 @@ export default defineComponent({
 
     toggleAdvancedSearch: function () {
       this.advancedSearch = !this.advancedSearch;
+    },
+
+    changeToUpload: function () {
+      this.$emit("change-to-upload");
     },
 
     filterElements: function (results: MediaEntry[]) {
