@@ -25,6 +25,7 @@
       webkit-playsinline
       x-webkit-airplay="allow"
       :muted="muted"
+      :loop="loop"
       :volume.prop="volume"
       :playbackRate.prop="speed"
       @ended="onEnded"
@@ -537,6 +538,9 @@ export default defineComponent({
       currentTimeSliceName: "",
       currentTimeSliceStart: 0,
       currentTimeSliceEnd: 0,
+
+      waitingTimestamp: 0,
+      isWaiting: false,
     };
   },
   methods: {
@@ -722,21 +726,21 @@ export default defineComponent({
         );
       }
     },
-    onWaitForBuffer: function (b) {
-      this.loading = b;
+    onWaitForBuffer: function (b: boolean) {
+      if (b) {
+        this.isWaiting = true;
+        this.waitingTimestamp = Date.now();
+      } else {
+        this.loading = false;
+        this.isWaiting = false;
+      }
     },
     onEnded: function () {
       this.loading = false;
       if (this.canSaveTime) {
         PlayerPreferences.SetInitialTime(this.mid, 0);
       }
-      if (this.loop) {
-        const videoElement = this.getVideoElement();
-        if (videoElement) {
-          videoElement.currentTime = 0;
-        }
-        this.play();
-      } else {
+      if (!this.loop) {
         this.pause();
         this.ended = true;
         if (this.nextend) {
@@ -788,6 +792,10 @@ export default defineComponent({
     },
 
     tick() {
+      if (!this.loading && this.isWaiting && Date.now() - this.waitingTimestamp > 1000) {
+        this.loading = true;
+      }
+
       this.checkPlayerSize();
 
       if (
