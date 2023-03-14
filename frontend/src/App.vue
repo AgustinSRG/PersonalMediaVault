@@ -11,6 +11,7 @@ import { AlbumsController } from "./control/albums";
 import { AppEvents } from "./control/app-events";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
+import { UploadEntryMin } from "./control/upload";
 import { GetAssetURL } from "./utils/request";
 
 @Options({
@@ -107,6 +108,14 @@ import { GetAssetURL } from "./utils/request";
       this.updateTitle();
       this.updateMediaMetadata();
     },
+
+    onUploadFinished: function (i, m: UploadEntryMin) {
+      if (m.status === "ready") {
+        AppEvents.Emit("snack", this.$t("Successfully uploaded") + ": " + m.name);
+      } else if (m.status === "error") {
+        AppEvents.Emit("snack", this.$t("Error uploading file") + ": " + m.name);
+      }
+    },
   },
   mounted: function () {
     this.updateAppStatus();
@@ -115,6 +124,9 @@ import { GetAssetURL } from "./utils/request";
     AppEvents.AddEventListener("app-status-update", this.$options.updateH);
     AppEvents.AddEventListener("current-album-update", this.$options.updateH);
     AppEvents.AddEventListener("current-media-update", this.$options.updateH);
+
+    this.$options.uploadDoneH = this.onUploadFinished.bind(this);
+    AppEvents.AddEventListener("upload-list-update", this.$options.uploadDoneH);
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("app-status-update", this.$options.updateH);
@@ -126,6 +138,7 @@ import { GetAssetURL } from "./utils/request";
       "current-media-update",
       this.$options.updateH
     );
+    AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
   },
 })
 export default class App extends Vue {}

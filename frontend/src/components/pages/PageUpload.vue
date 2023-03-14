@@ -75,8 +75,17 @@
       </div>
     </div>
 
+    <div class="upload-filter-menu">
+      <a href="javascript:;" @click="updateSelectedState('pending')" class="upload-filter-menu-item"
+        :class="{ selected: this.selectedState === 'pending' }">{{ $t("Pending") }} ({{ countPending }})</a>
+      <a href="javascript:;" @click="updateSelectedState('ready')" class="upload-filter-menu-item"
+        :class="{ selected: this.selectedState === 'ready' }">{{ $t("Ready") }} ({{ countReady }})</a>
+      <a href="javascript:;" @click="updateSelectedState('error')" class="upload-filter-menu-item"
+        :class="{ selected: this.selectedState === 'error' }">{{ $t("Error") }} ({{ countError }})</a>
+    </div>
+
     <div class="upload-list">
-      <div v-for="m in pendingToUpload" :key="m.id" class="upload-list-item">
+      <div v-for="m in filteredEntries" :key="m.id" class="upload-list-item">
         <div class="upload-list-item-top">
           <div class="upload-list-item-file-name">
             <span v-if="m.status !== 'ready'" class="bold">{{ m.name }}</span>
@@ -91,7 +100,9 @@
         <div class="upload-list-item-bottom">
           <div class="upload-list-item-status">
             <div class="upload-list-item-status-bar">
-              <div class="upload-list-item-status-bar-current" :class="{error: m.status === 'error', success: m.status === 'ready'}" :style="{ width: cssProgress(m.status, m.progress) }"></div>
+              <div class="upload-list-item-status-bar-current"
+                :class="{ error: m.status === 'error', success: m.status === 'ready' }"
+                :style="{ width: cssProgress(m.status, m.progress) }"></div>
               <div class="upload-list-item-status-bar-text">{{ renderStatus(m.status, m.progress, m.error) }}</div>
             </div>
           </div>
@@ -155,6 +166,10 @@ import { defineComponent } from "vue";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 
+const STATE_FILTER_PENDING = ['pending', 'uploading', 'encrypting', 'tag'];
+const STATE_FILTER_READY = ['ready'];
+const STATE_FILTER_ERROR = ['error'];
+
 export default defineComponent({
   components: {
     AlbumCreateModal,
@@ -185,11 +200,45 @@ export default defineComponent({
       albums: [],
 
       displayAlbumCreate: false,
+
+      countPending: 0,
+      countReady: 0,
+      countError: 0,
+
+      stateFilter: STATE_FILTER_PENDING.slice(),
+      selectedState: 'pending',
+
+      filteredEntries: [],
     };
   },
   methods: {
     clickToSelect: function () {
       this.$el.querySelector(".file-hidden").click();
+    },
+
+    updateSelectedState: function (s: string) {
+      this.selectedState = s;
+      switch (s) {
+        case "ready":
+          this.stateFilter = STATE_FILTER_READY.slice();
+          break;
+        case "error":
+          this.stateFilter = STATE_FILTER_ERROR.slice();
+          break;
+        default:
+          this.stateFilter = STATE_FILTER_PENDING.slice();
+      }
+      this.updateFilteredEntries();
+    },
+
+    updateFilteredEntries: function () {
+      this.filteredEntries = this.pendingToUpload.filter((e: UploadEntryMin) => {
+        return this.stateFilter.includes(e.status);
+      });
+
+      if (this.selectedState !== 'pending') {
+        this.filteredEntries = this.filteredEntries.reverse();
+      }
     },
 
     changeToSearch: function () {
@@ -260,6 +309,7 @@ export default defineComponent({
 
     addFile: function (file: File) {
       UploadController.AddFile(file, this.album, this.tags.slice());
+      this.updateSelectedState("pending");
     },
 
     removeFile: function (id: number) {
@@ -353,7 +403,6 @@ export default defineComponent({
         default:
           return "0";
       }
-
     },
 
     clickOnEnter: function (event) {
@@ -471,16 +520,34 @@ export default defineComponent({
     onPendingPush: function (m: UploadEntryMin) {
       this.pendingToUpload.push(m);
       this.updateCountCancellable(this.pendingToUpload);
+
+      if (this.stateFilter.includes(m.status)) {
+        if (this.selectedState === "pending") {
+          this.filteredEntries.push(m);
+        } else {
+          this.filteredEntries.unshift(m);
+        }
+      }
     },
 
     onPendingRemove: function (i: number) {
-      this.pendingToUpload.splice(i, 1);
+      const removed = this.pendingToUpload.splice(i, 1)[0];
       this.updateCountCancellable(this.pendingToUpload);
+
+      if (removed) {
+        for (let j = 0; j < this.filteredEntries.length; j++) {
+          if (this.filteredEntries[j].id === removed.id) {
+            this.filteredEntries.splice(j, 1);
+            break;
+          }
+        }
+      }
     },
 
     onPendingClear: function () {
       this.pendingToUpload = UploadController.GetEntries();
       this.updateCountCancellable(this.pendingToUpload);
+      this.updateFilteredEntries();
     },
 
     onPendingUpdate: function (i: number, m: UploadEntryMin) {
@@ -492,16 +559,54 @@ export default defineComponent({
       if (mustUpdate) {
         this.updateCountCancellable(this.pendingToUpload);
       }
+
+      let found = false;
+
+      for (let j = 0; j < this.filteredEntries.length; j++) {
+        if (this.filteredEntries[j].id === m.id) {
+          found = true;
+          if (mustUpdate && !this.stateFilter.includes(m.status)) {
+            this.filteredEntries.splice(j, 1);
+          } else {
+            this.filteredEntries[j].status = m.status;
+            this.filteredEntries[j].error = m.error;
+            this.filteredEntries[j].progress = m.progress;
+            this.filteredEntries[j].mid = m.mid;
+          }
+        }
+      }
+
+      if (!found && mustUpdate && this.stateFilter.includes(m.status)) {
+        if (this.selectedState === "pending") {
+          this.filteredEntries.push(m);
+        } else {
+          this.filteredEntries.unshift(m);
+        }
+      }
     },
 
     updateCountCancellable: function (list: UploadEntryMin[]) {
       let count = 0;
+      let countPending = 0;
+      let countReady = 0;
+      let countError = 0;
       for (let l of list) {
         if (l.status !== "ready" && l.status !== "error") {
           count++;
         }
+
+        if (STATE_FILTER_PENDING.includes(l.status)) {
+          countPending++;
+        } else if (STATE_FILTER_READY.includes(l.status)) {
+          countReady++;
+        } else if (STATE_FILTER_ERROR.includes(l.status)) {
+          countError++;
+        }
       }
       this.countCancellable = count;
+      this.countPending = countPending;
+      this.countReady = countReady;
+      this.countError = countError;
     },
 
     getMediaURL: function (mid: number): string {
@@ -519,6 +624,7 @@ export default defineComponent({
   mounted: function () {
     this.pendingToUpload = UploadController.GetEntries();
     this.updateCountCancellable(this.pendingToUpload);
+    this.updateFilteredEntries();
 
     this.$options.onPendingPushH = this.onPendingPush.bind(this);
     this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
