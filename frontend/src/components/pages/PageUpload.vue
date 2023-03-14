@@ -1,5 +1,5 @@
 <template>
-  <div class="page-inner page-inner-padded" :class="{ hidden: !display }">
+  <div class="page-inner-padded" :class="{ 'page-inner': !inmodal, hidden: !display }">
     <div class="form-group">
       <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
