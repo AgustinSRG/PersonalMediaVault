@@ -21,6 +21,8 @@ This is a personal project developed with the goal of making a media management 
  - Automated thumbnail generation.
  - Subtitles support for videos and audios.
  - Video timeline previews.
+ - Video timeline slices.
+ - Image annotations.
 
 ## Installation
 
@@ -32,18 +34,18 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Hash | Hash alg. | Download |
 |---|---|---|---|---|
-| 1.3.0 | amd64 | `dd6da8ef05b0f67b53b733a9ddc9953070ab457912712349121a2d4ef9a2f23d` | SHA256 | [Google Drive](https://drive.google.com/file/d/1EIKCVJPVfVwi3WoSxGM8GpXzcXHslvlD/view?usp=sharing) / [Mega](https://mega.nz/file/0WNzHBxZ#GFYtskyVWom3BQ9g1bO2CoH4t3gjW4iuxr4CL7FUpCo) |
+| 1.4.0 | amd64 | `c8aa689ca14a3fb9ba60d7b0e8ca72628761c56e5e47926e38c09b4be2722eab` | SHA256 | [Google Drive](https://drive.google.com/file/d/1R_jg_R_OfgGjQ9b6iscTVHI5-qp-GIJA/view?usp=sharing) / [Mega](https://mega.nz/file/1OVXmQ6C#G4fmbBwITOrtdVKuqKebY3xcTj7UHCpj_vJ73O6MgvM) |
 
 Download it, and check its integrity using:
 
 ```sh
-sh256sum ./personalmediavault_1.3-0.deb
+sh256sum ./personalmediavault_1.4-0.deb
 ```
 
 Then, install it using `apt`:
 
 ```sh
-sudo apt install ./personalmediavault_1.3-0.deb
+sudo apt install ./personalmediavault_1.4-0.deb
 ```
 
 After the installation, the binary files will be available in `/usr/bin`, and the frontend files will be available in `/usr/lib/pmv/www`.
@@ -62,15 +64,15 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Language | Hash | Download |
 |---|---|---|---|---|
-| 1.3.0 | x64 | English | SHA256: `C4FF22702D5BB2A7D2E27C755D49DDBF394557F6ED60059858CF792A5EBE2EDD` | [Google Drive](https://drive.google.com/file/d/10tHrtuu-4Uh9IIgpF4_g8_q5ShfbdoJm/view?usp=sharing) / [Mega](https://mega.nz/file/dH8xHRDD#omw5ESyNVokqZBckmv7EqL_uP2JhsesxHDKxxaFiyb4) |
-| 1.3.0 | x64 | Spanish | SHA256: `CFFAEC0C0374F33450F9DC640CEEB969641CF734D67EEA7B71B46C3A1EF9F020` | [Google Drive](https://drive.google.com/file/d/1ZILesG64dJauCqZnaPKfrJZLzlofgbM2/view?usp=sharing) / [Mega](https://mega.nz/file/IeNFlTTJ#pAvQt5dStrw4nwoXbrnsw0Ud6619oaC6D960pUj_31c) |
+| 1.4.0 | x64 | English | SHA256: `ECE88AC87FDC6AA8A6BB0CB4B49B69255405A87E77E51E5733624F791FA010F5` | [Google Drive](https://drive.google.com/file/d/119TuQYNsPfYLl7mWDodt6K4V16w9ygrF/view?usp=sharing) / [Mega](https://mega.nz/file/sfd3DArC#Iy70eYN_CKN9rPkr0ql_rZ1mgVCjHPuZcy8QmF5nuyc) |
+| 1.4.0 | x64 | Spanish | SHA256: `C971C73FCB47A581B6AAB3B1B4BB8FC688DE366F44091CF71AB6FED445EA90EE` | [Google Drive](https://drive.google.com/file/d/1wL2aojreD_WjjoB4Ny-W2k09BZj3S1wo/view?usp=sharing) / [Mega](https://mega.nz/file/MDUCQISY#-wdnwMOkWq7L6rNTvWe6LuBanDtYvxkk7QCnqE5JGDA) |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
 
 When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
 
 ```ps1
-Get-FileHash -Path "PersonalMediaVault-1.3.0-x64.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-1.4.0-x64.msi" -Algorithm SHA256
 ```
 
 After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.

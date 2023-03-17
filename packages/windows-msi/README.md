@@ -4,10 +4,10 @@ Windows MSI installer for PersonalMediaVault
 
 ## Requirements
 
-- [Golang](https://go.dev/) - 1.17
-- [NodeJS](https://nodejs.org/) - Last Stable version
-- [WiX Toolset](https://wixtoolset.org/documentation/manual/v3/overview/alltools.html)
-- [FFMpeg](https://ffmpeg.org/)
+- [Golang](https://go.dev/) - Last stable version
+- [NodeJS](https://nodejs.org/) - Last stable version
+- [WiX ToolSet](https://wixtoolset.org/documentation/manual/v3/overview/alltools.html)
+- [FFmpeg](https://ffmpeg.org/)
 
 ## Building
 

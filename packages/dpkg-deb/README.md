@@ -4,8 +4,8 @@ This is a script to create a DEB package for apt-based Linux distributions.
 
 ## Requirements
 
-- [Golang](https://go.dev/) - 1.17
-- [NodeJS](https://nodejs.org/) - Last Stable version
+- [Golang](https://go.dev/) - Last stable version
+- [NodeJS](https://nodejs.org/) - Last stable version
 
 ## Building
 
