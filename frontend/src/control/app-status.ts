@@ -217,6 +217,20 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    public static GoToPageNoSplit(page: string) {
+        AppStatus.CurrentPage = page;
+
+        AppStatus.CurrentAlbum = -1;
+        AppStatus.CurrentMedia = -1;
+        AppStatus.ListSplitMode = false;
+
+        AppStatus.UpdateLayout();
+
+        AppStatus.CurrentFocus = "right";
+
+        AppStatus.OnStatusUpdate();
+    }
+
     public static ExpandPage() {
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;

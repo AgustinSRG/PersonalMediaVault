@@ -207,7 +207,7 @@ export default defineComponent({
       if (e) {
         e.preventDefault();
       }
-      AppStatus.GoToPage(p);
+      AppStatus.GoToPageNoSplit(p);
       nextTick(() => {
         this.$emit("skip-to-content");
       });

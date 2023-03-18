@@ -53,7 +53,7 @@
               v-for="s in suggestions"
               :key="s.key"
               class="top-bar-search-suggestion"
-              @click="selectSearch(s)"
+              @click="clickSearch(s)"
             >
               <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
               <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
@@ -189,6 +189,11 @@ export default defineComponent({
           this.$options.focusTrap.deactivate();
         }
       }, 100);
+    },
+
+    clickSearch: function (s) {
+      this.blurSearch();
+      this.selectSearch(s);
     },
 
     selectSearch: function (s) {
