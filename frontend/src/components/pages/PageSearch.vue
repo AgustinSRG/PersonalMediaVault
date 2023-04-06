@@ -226,7 +226,6 @@ export default defineComponent({
             );
             if (currentElem) {
               currentElem.scrollIntoView();
-              currentElem.focus();
             }
           });
           this.onCurrentMediaChanged();
@@ -285,7 +284,6 @@ export default defineComponent({
         );
         if (currentElem) {
           currentElem.scrollIntoView();
-          currentElem.focus();
         }
       });
       this.onCurrentMediaChanged();
