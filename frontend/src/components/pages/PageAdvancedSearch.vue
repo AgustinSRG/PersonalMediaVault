@@ -3,8 +3,7 @@
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
         <label>{{ $t("Title or description must contain") }}:</label>
-        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch"
-          class="form-control form-control-full-width" />
+        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch" class="form-control form-control-full-width" />
       </div>
 
       <div v-if="advancedSearch">
@@ -27,8 +26,7 @@
           }}</label>
           <div v-for="tag in tags" :key="tag" class="media-tag">
             <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading"
-              @click="removeTag(tag)">
+            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading" @click="removeTag(tag)">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -50,12 +48,10 @@
           </select>
         </div>
         <div class="form-group" v-if="tagMode !== 'untagged'">
-          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading"
-            @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
+          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading" @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
         </div>
         <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
-          <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading"
-            class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
+          <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading" class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
             <i class="fas fa-plus"></i> {{ mt.name }}
           </button>
         </div>
@@ -115,9 +111,7 @@
       </div>
 
       <div v-if="!loading && pageItems.length > 0" class="search-results-final-display">
-        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable"
-          :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)"
-          target="_blank" rel="noopener noreferrer">
+        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
           <div class="search-result-thumb" :title="item.title || $t('Untitled')">
             <div class="search-result-thumb-inner">
               <div v-if="!item.thumbnail" class="no-thumb">
@@ -237,6 +231,7 @@ export default defineComponent({
                   currentElem.focus();
                 }
               });
+              this.onCurrentMediaChanged();
             }
           } else if (this.page < this.totalPages - 1) {
             this.page++;
@@ -254,6 +249,7 @@ export default defineComponent({
                   currentElem.focus();
                 }
               });
+              this.onCurrentMediaChanged();
             }
           }
         })
@@ -563,6 +559,7 @@ export default defineComponent({
             currentElem.focus();
           }
         });
+        this.onCurrentMediaChanged();
       }
     },
 
@@ -573,6 +570,31 @@ export default defineComponent({
         }
       }
       return -1;
+    },
+
+    onCurrentMediaChanged: function () {
+      if (!this.inmodal) {
+        const i = this.findCurrentMediaIndex();
+        AlbumsController.OnPageLoad(i, this.pageItems.length, 0, 1);
+      }
+    },
+
+    nextMedia: function () {
+      const i = this.findCurrentMediaIndex();
+      if (i !== -1 && i < this.pageItems.length - 1) {
+        this.goToMedia(this.pageItems[i + 1].id);
+      } else if (i === -1 && this.pageItems.length > 0) {
+        this.goToMedia(this.pageItems[0].id);
+      }
+    },
+
+    prevMedia: function () {
+      const i = this.findCurrentMediaIndex();
+      if (i !== -1 && i > 0) {
+        this.goToMedia(this.pageItems[i - 1].id);
+      } else if (i === -1 && this.pageItems.length > 0) {
+        this.goToMedia(this.pageItems[0].id);
+      }
     },
 
     handleGlobalKey: function (event: KeyboardEvent): boolean {
@@ -605,22 +627,12 @@ export default defineComponent({
       }
 
       if (event.key === "ArrowLeft") {
-        const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i > 0) {
-          this.goToMedia(this.pageItems[i - 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        }
+        this.prevMedia();
         return true;
       }
 
       if (event.key === "ArrowRight") {
-        const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i < this.pageItems.length - 1) {
-          this.goToMedia(this.pageItems[i + 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        }
+        this.nextMedia();
         return true;
       }
 
@@ -628,7 +640,7 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.advancedSearch = !this.inmodal;
+    this.advancedSearch = false;
     this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
     KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
@@ -644,6 +656,12 @@ export default defineComponent({
       "app-status-update",
       this.$options.statusChangeH
     );
+
+    this.$options.nextMediaH = this.nextMedia.bind(this);
+    AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+
+    this.$options.prevMediaH = this.prevMedia.bind(this);
+    AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
 
     this.$options.tagUpdateH = this.updateTagData.bind(this);
 
@@ -668,6 +686,9 @@ export default defineComponent({
       this.$options.statusChangeH
     );
 
+    AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
+    AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
+
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 
     if (this.$options.findTagTimeout) {
@@ -675,6 +696,10 @@ export default defineComponent({
     }
 
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+
+    if (!this.inmodal) {
+      AlbumsController.OnPageUnload();
+    }
   },
   watch: {
     display: function () {

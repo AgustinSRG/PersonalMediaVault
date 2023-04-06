@@ -502,6 +502,7 @@ export default defineComponent({
     AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
     AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+    AlbumsController.OnPageUnload();
   },
   watch: {
     display: function () {
