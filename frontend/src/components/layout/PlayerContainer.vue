@@ -6,6 +6,8 @@
       :status="status"
       :rtick="tick"
       :prev="prev"
+      :pageprev="hasPagePrev"
+      :pagenext="hasPageNext"
       :next="next"
       :inalbum="isInAlbum"
       :albumloading="albumLoading"
@@ -22,6 +24,8 @@
       :rtick="tick"
       :prev="prev"
       :next="next"
+      :pageprev="hasPagePrev"
+      :pagenext="hasPageNext"
       :inalbum="isInAlbum"
       :canwrite="canWrite"
       @gonext="goNext"
@@ -39,6 +43,8 @@
       :rtick="tick"
       :prev="prev"
       :next="next"
+      :pageprev="hasPagePrev"
+      :pagenext="hasPageNext"
       :inalbum="isInAlbum"
       :canwrite="canWrite"
       @gonext="goNext"
@@ -56,6 +62,8 @@
       :rtick="tick"
       :prev="prev"
       :next="next"
+      :pageprev="hasPagePrev"
+      :pagenext="hasPageNext"
       :inalbum="isInAlbum"
       :canwrite="canWrite"
       @gonext="goNext"
@@ -124,6 +132,9 @@ export default defineComponent({
 
       displayAlbumList: false,
       displaySizeStats: false,
+
+      hasPagePrev: AlbumsController.HasPagePrev,
+      hasPageNext: AlbumsController.HasPageNext,
     };
   },
   methods: {
@@ -168,12 +179,16 @@ export default defineComponent({
     goNext: function () {
       if (this.next) {
         AppStatus.ClickOnMedia(this.next.id, false);
+      } else if (this.hasPageNext) {
+        AppEvents.Emit("page-media-nav-next");
       }
     },
 
     goPrev: function () {
       if (this.prev) {
         AppStatus.ClickOnMedia(this.prev.id, false);
+      } else if (this.hasPagePrev) {
+        AppEvents.Emit("page-media-nav-prev");
       }
     },
 
@@ -181,6 +196,11 @@ export default defineComponent({
       this.prev = AlbumsController.CurrentPrev;
       this.next = AlbumsController.CurrentNext;
       this.isInAlbum = AppStatus.CurrentAlbum >= 0;
+    },
+
+    onPagePosUpdate: function () {
+      this.hasPagePrev = AlbumsController.HasPagePrev;
+      this.hasPageNext = AlbumsController.HasPageNext;
     },
 
     updateAuthInfo: function () {
@@ -223,6 +243,9 @@ export default defineComponent({
     this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
     AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
 
+    this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+    AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+
     this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
     AppEvents.AddEventListener(
@@ -247,6 +270,7 @@ export default defineComponent({
     );
 
     AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+    AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
 
     AppEvents.RemoveEventListener(
       "auth-status-changed",

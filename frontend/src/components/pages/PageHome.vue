@@ -128,6 +128,7 @@ import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { KeyboardManager } from "@/control/keyboard";
+import { AlbumsController } from "@/control/albums";
 
 export default defineComponent({
   name: "PageHome",
@@ -216,6 +217,7 @@ export default defineComponent({
               currentElem.focus();
             }
           });
+          this.onCurrentMediaChanged();
         })
         .onRequestError((err) => {
           Request.ErrorHandler()
@@ -264,6 +266,12 @@ export default defineComponent({
           currentElem.focus();
         }
       });
+      this.onCurrentMediaChanged();
+    },
+
+    onCurrentMediaChanged: function() {
+      const i = this.findCurrentMediaIndex();
+      AlbumsController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
     },
 
     onSearchParamsChanged: function () {
@@ -343,6 +351,34 @@ export default defineComponent({
       return -1;
     },
 
+    nextMedia: function () {
+      const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i < this.pageItems.length - 1) {
+          this.goToMedia(this.pageItems[i + 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        } else if (i === this.pageItems.length - 1) {
+          if (this.page < this.totalPages - 1) {
+            this.switchMediaOnLoad = "next";
+            this.changePage(this.page + 1);
+          }
+        }
+    },
+
+    prevMedia: function() {
+      const i = this.findCurrentMediaIndex();
+        if (i !== -1 && i > 0) {
+          this.goToMedia(this.pageItems[i - 1].id);
+        } else if (i === -1 && this.pageItems.length > 0) {
+          this.goToMedia(this.pageItems[0].id);
+        } else if (i === 0) {
+          if (this.page > 0) {
+            this.switchMediaOnLoad = "prev";
+            this.changePage(this.page - 1);
+          }
+        }
+    },
+
     handleGlobalKey: function (event: KeyboardEvent): boolean {
       if (
         AuthController.Locked ||
@@ -383,32 +419,12 @@ export default defineComponent({
       }
 
       if (event.key === "ArrowLeft") {
-        const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i > 0) {
-          this.goToMedia(this.pageItems[i - 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        } else if (i === 0) {
-          if (this.page > 0) {
-            this.switchMediaOnLoad = "prev";
-            this.changePage(this.page - 1);
-          }
-        }
+        this.prevMedia();
         return true;
       }
 
       if (event.key === "ArrowRight") {
-        const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i < this.pageItems.length - 1) {
-          this.goToMedia(this.pageItems[i + 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        } else if (i === this.pageItems.length - 1) {
-          if (this.page < this.totalPages - 1) {
-            this.switchMediaOnLoad = "next";
-            this.changePage(this.page + 1);
-          }
-        }
+        this.nextMedia()
         return true;
       }
 
@@ -430,6 +446,12 @@ export default defineComponent({
       this.$options.statusChangeH
     );
 
+    this.$options.nextMediaH = this.nextMedia.bind(this);
+    AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+
+    this.$options.prevMediaH = this.prevMedia.bind(this);
+    AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
+
     for (let i = 1; i <= 20; i++) {
       this.pageSizeOptions.push(5 * i);
     }
@@ -447,7 +469,10 @@ export default defineComponent({
       "app-status-update",
       this.$options.statusChangeH
     );
+    AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
+    AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+    AlbumsController.OnPageUnload();
   },
   watch: {
     display: function () {

@@ -586,6 +586,10 @@ export default defineComponent({
         return false;
       }
 
+      if (this.inmodal) {
+        return false;
+      }
+
       if (event.key === "Home") {
         if (this.pageItems.length > 0) {
           this.goToMedia(this.pageItems[0].id);

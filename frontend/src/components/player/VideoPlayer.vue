@@ -107,8 +107,8 @@
     >
       <div class="player-controls-left">
         <button
-          v-if="!!next || !!prev"
-          :disabled="!prev"
+          v-if="!!next || !!prev || pageprev || pagenext"
+          :disabled="!prev && !pageprev"
           type="button"
           :title="$t('Previous')"
           class="player-btn"
@@ -143,8 +143,8 @@
         </button>
 
         <button
-          v-if="!!next || !!prev"
-          :disabled="!next"
+          v-if="!!next || !!prev || pageprev || pagenext"
+          :disabled="!next && !pagenext"
           type="button"
           :title="$t('Next')"
           class="player-btn"
@@ -456,6 +456,9 @@ export default defineComponent({
     prev: Object,
     inalbum: Boolean,
 
+    pagenext: Boolean,
+    pageprev: Boolean,
+
     canwrite: Boolean,
 
     usercontrols: Boolean,
@@ -627,13 +630,13 @@ export default defineComponent({
     },
 
     goNext: function () {
-      if (this.next) {
+      if (this.next || this.pagenext) {
         this.$emit("gonext");
       }
     },
 
     goPrev: function () {
-      if (this.prev) {
+      if (this.prev || this.pageprev) {
         this.$emit("goprev");
       }
     },
@@ -1141,7 +1144,7 @@ export default defineComponent({
           break;
         case "ArrowRight":
           if (shifting || event.altKey) {
-            if (this.next) {
+            if (this.next || this.pagenext) {
               this.goNext();
             } else {
               caught = false;
@@ -1152,7 +1155,7 @@ export default defineComponent({
           break;
         case "ArrowLeft":
           if (shifting || event.altKey) {
-            if (this.prev) {
+            if (this.prev || this.pageprev) {
               this.goPrev();
             } else {
               caught = false;
@@ -1186,14 +1189,14 @@ export default defineComponent({
           }
           break;
         case "PageDown":
-          if (this.prev) {
+          if (this.prev || this.pageprev) {
             this.goPrev();
           } else {
             caught = false;
           }
           break;
         case "PageUp":
-          if (this.next) {
+          if (this.next || this.pagenext) {
             this.goNext();
           } else {
             caught = false;
@@ -1437,12 +1440,12 @@ export default defineComponent({
           this.pause();
           break;
         case "nexttrack":
-          if (this.next) {
+          if (this.next || this.pagenext) {
             this.goNext();
           }
           break;
         case "previoustrack":
-          if (this.prev) {
+          if (this.prev || this.pageprev) {
             this.goPrev();
           }
           break;
