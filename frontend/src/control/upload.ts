@@ -238,9 +238,6 @@ export class UploadController {
                 m.status = "encrypting";
                 m.progress = 0;
                 AppEvents.Emit("upload-list-update", index, m);
-                if (m.album !== -1) {
-                    AlbumsController.OnChangedAlbum(m.album);
-                }
             })
             .onCancel(() => {
                 UploadController.UploadingCount--;
@@ -306,6 +303,10 @@ export class UploadController {
                     }
 
                     AppEvents.Emit("upload-list-update", index, m);
+
+                    if (m.album !== -1) {
+                        AlbumsController.OnChangedAlbum(m.album, true);
+                    }
 
                     if (MediaController.MediaId === m.mid) {
                         MediaController.OnMediaChanged()
