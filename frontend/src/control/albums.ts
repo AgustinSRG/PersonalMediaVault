@@ -393,8 +393,8 @@ export class AlbumsController {
 
     public static OnPageLoad(currentMediaIndex: number, pageSize: number, page: number, totalPages: number) {
         if (currentMediaIndex >= 0) {
-            AlbumsController.HasPagePrev = currentMediaIndex > 0 || page > 0;
-            AlbumsController.HasPageNext = currentMediaIndex < pageSize - 1 || page < totalPages - 1;
+            AlbumsController.HasPagePrev = (currentMediaIndex > 0) || (page > 0);
+            AlbumsController.HasPageNext = (currentMediaIndex < pageSize - 1) || (page < totalPages - 1);
           } else {
             AlbumsController.HasPagePrev = false
             AlbumsController.HasPageNext = false;
