@@ -52,6 +52,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create destination path if not found
+
+	os.MkdirAll(backupPath, FOLDER_PERMISSION)
+
 	if !CheckFileExists(backupPath) {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
@@ -66,6 +70,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Welcome
+
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "ProgramWelcome",
@@ -73,6 +79,8 @@ func main() {
 		},
 	})
 	fmt.Println(msg)
+
+	// Fetch vault metadata
 
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
@@ -96,13 +104,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Find files to check
+
 	totalEntries := make([]BackupEntry, 0)
-
-	mediaFiles := findBackupEntries(vaultPath, backupPath, "./media")
-	totalEntries = append(totalEntries, mediaFiles...)
-
-	tagFiles := findBackupEntries(vaultPath, backupPath, "./tags")
-	totalEntries = append(totalEntries, tagFiles...)
 
 	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "main.index"))
 
@@ -114,18 +118,60 @@ func main() {
 	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "tag_list.pmv"))
 	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "user_config.pmv"))
 
+	tagFiles := findBackupEntries(vaultPath, backupPath, "./tags")
+	totalEntries = append(totalEntries, tagFiles...)
+
+	mediaFiles := findBackupEntries(vaultPath, backupPath, "./media")
+	totalEntries = append(totalEntries, mediaFiles...)
+
+	resetLineOverWrite()
+
+	// Initialize backup (check files to be copied)
+
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "InitializeNotice",
 			Other: "Initializing backup...",
 		},
 	})
-	fmt.Println(msg)
+	fmt.Print(msg)
+
+	work, err := initializeBackupWork(totalEntries)
+
+	fmt.Print("\n")
+
+	if err != nil {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+		return
+	}
+
+	// Copy files
+
+	bytesCopied := int64(0)
+	bytesToCopy := work.totalSize
+
+	realBytesCopied := int64(0)
 
 	progressInt := int64(0)
 	prevProgress := int64(0)
 
+	if bytesToCopy < 1 {
+		bytesToCopy = 1
+	}
+
 	statFilesCopied := 0
+
+	resetLineOverWrite()
 
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
@@ -133,11 +179,11 @@ func main() {
 			Other: "Making backup...",
 		},
 	})
-	fmt.Println(msg)
+	fmt.Print(msg)
 
-	for i := 0; i < len(totalEntries); i++ {
+	for i := 0; i < len(work.entries); i++ {
 
-		copied, err := backupFile(totalEntries[i])
+		copied, err := backupFile(work.entries[i], progressInt, i+1, len(work.entries))
 
 		if err != nil {
 			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
@@ -151,34 +197,43 @@ func main() {
 			return
 		}
 
+		bytesCopied += work.entries[i].size
+
 		if copied {
 			statFilesCopied++
+			realBytesCopied += work.entries[i].size
 		}
 
-		progressInt = int64(i+1) * 100 / int64(len(totalEntries))
+		progressInt = bytesCopied * 100 / bytesToCopy
 		if prevProgress != progressInt {
 			prevProgress = progressInt
-			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 				DefaultMessage: &i18n.Message{
 					ID:    "BackupProgress",
-					Other: "Making backup... ({{.Percent}}%)",
+					Other: "Making backup... ({{.Percent}}%) ({{.Current}} / {{.Total}})",
 				},
 				TemplateData: map[string]interface{}{
 					"Percent": fmt.Sprint(progressInt),
+					"Current": fmt.Sprint(i + 1),
+					"Total":   fmt.Sprint(len(work.entries)),
 				},
 			})
-			fmt.Print("\r" + msg)
+			printLineOverWrite(msg)
 		}
 	}
 
+	// Done
+
 	fmt.Print("\n")
+
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "BackupDone",
-			Other: "Backup done. Total files copied: {{.FileCount}}",
+			Other: "Backup done. Total files copied: {{.FileCount}} ({{.Size}})",
 		},
 		TemplateData: map[string]interface{}{
 			"FileCount": fmt.Sprint(statFilesCopied),
+			"Size":      formatBytes(realBytesCopied),
 		},
 	})
 	fmt.Println(msg)

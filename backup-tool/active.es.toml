@@ -1,14 +1,18 @@
+[BackupCopyProgress]
+hash = "sha1-5811f2260d9b0501bc4655803567f53e0fef8599"
+other = "Copiando archivos... ({{.Percent}}%) ({{.Current}} / {{.Total}}) - {{.File}} ({{.PercentFile}}%)"
+
 [BackupDone]
-hash = "sha1-109722ca7fe82ce01ec9a102f90efd2469df74f3"
-other = "Copia de seguridad completada. Número de archivos nuevos copiados: {{.FileCount}}"
+hash = "sha1-73f26757f30c3c81ef01a1e448468161b3b79ceb"
+other = "Copia de seguridad lista. Total de archivos copiados: {{.FileCount}} ({{.Size}})"
 
 [BackupFailed]
 hash = "sha1-c894768353128628d1e2c812a8cdecdb1810f1e4"
 other = "¡La copia de seguridad ha fallado!"
 
 [BackupProgress]
-hash = "sha1-1464105a52352f4c05f5e203791a9a0c5fe1c794"
-other = "Creando copia de seguridad... ({{.Percent}}%)"
+hash = "sha1-c3b3202e87a0ab426adcac54587bb902c6a929c1"
+other = "Copiando archivos... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
 
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
@@ -24,7 +28,7 @@ other = "Error obteniendo información del archivo {{.File}} | Error: {{.Message
 
 [ErrorNotRegularFile]
 hash = "sha1-d7badd343243c5bb77627e2e71254cb365bd7a2b"
-other = "{{.File}} no es un fichero"
+other = "{{.File}} no es un archivo"
 
 [ErrorReadPath]
 hash = "sha1-655a5ae5ba4b1ddfc3dfff44e2f8841ce1e71807"
@@ -37,6 +41,10 @@ other = "Extrayendo metadatos de: {{.Path}}"
 [InitializeNotice]
 hash = "sha1-c17156c98ada8a559819cf57e5b0997f3b95d995"
 other = "Inicializando copia de seguridad..."
+
+[InitializeProgress]
+hash = "sha1-aace60c8794b69ff83120922dddf66b98356c98d"
+other = "Inicializando copia de seguridad... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
 
 [MakeNotice]
 hash = "sha1-aca99d7d39a3215a1e0a3868fd8a9d10989f257d"
