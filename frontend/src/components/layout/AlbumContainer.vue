@@ -367,7 +367,7 @@ export default defineComponent({
         this.contextShown = true;
         this.contextIndex = i;
 
-        var targetRect = event.target.getBoundingClientRect();
+        const targetRect = event.target.getBoundingClientRect();
 
         this.contextX = targetRect.left + targetRect.width;
 
@@ -582,7 +582,7 @@ export default defineComponent({
 
     // Sortable
     if (!isTouchDevice()) {
-      var element = this.$el.querySelector(".album-body");
+      const element = this.$el.querySelector(".album-body");
       this.$options.sortable = Sortable.create(element, {
         onUpdate: this.onUpdateSortable.bind(this),
         disabled: !this.canWrite,

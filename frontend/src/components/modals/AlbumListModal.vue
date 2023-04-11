@@ -314,8 +314,8 @@ export default defineComponent({
     },
 
     updateAlbums: function () {
-      var mid = AppStatus.CurrentMedia;
-      var filter = (this.filter + "").toLowerCase();
+      const mid = AppStatus.CurrentMedia;
+      const filter = (this.filter + "").toLowerCase();
       this.albums = AlbumsController.GetAlbumsListCopy()
         .filter((a) => {
           return !filter || a.nameLowerCase.indexOf(filter) >= 0;

@@ -315,9 +315,9 @@ export default defineComponent({
     },
 
     updateLoadingFiller: function () {
-      var filler = [];
+      const filler = [];
 
-      for (var i = 0; i < this.pageSize; i++) {
+      for (let i = 0; i < this.pageSize; i++) {
         filler.push(i);
       }
 

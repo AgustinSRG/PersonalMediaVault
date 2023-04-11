@@ -725,13 +725,13 @@ export default defineComponent({
         return false;
       }
 
-      var el = this.$el.querySelector(".image-scroller");
+      const el = this.$el.querySelector(".image-scroller");
 
       if (!el) {
         return false;
       }
 
-      var maxScroll = Math.max(
+      const maxScroll = Math.max(
         0,
         el.scrollHeight - el.getBoundingClientRect().height
       );
@@ -755,13 +755,13 @@ export default defineComponent({
       if (this.fit) {
         return false;
       }
-      var el = this.$el.querySelector(".image-scroller");
+      const el = this.$el.querySelector(".image-scroller");
 
       if (!el) {
         return false;
       }
 
-      var maxScroll = Math.max(
+      const maxScroll = Math.max(
         0,
         el.scrollWidth - el.getBoundingClientRect().width
       );

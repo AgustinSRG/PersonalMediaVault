@@ -162,15 +162,15 @@ export default defineComponent({
       ) {
         return;
       }
-      var offset = this.$el.getBoundingClientRect();
+      const offset = this.$el.getBoundingClientRect();
 
-      var offsetX = offset.left + 8 + (this.min ? 24 : 40);
+      const offsetX = offset.left + 8 + (this.min ? 24 : 40);
 
       if (x < offsetX) {
         this.changeScale(0);
       } else {
-        var p = x - offsetX;
-        var vol = Math.min(1, p / this.width);
+        const p = x - offsetX;
+        const vol = Math.min(1, p / this.width);
         this.changeScale(vol);
       }
     },

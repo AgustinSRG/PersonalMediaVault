@@ -324,7 +324,7 @@ export default defineComponent({
 
       this.total = albumsList.length;
 
-      var pageSize = Math.max(1, this.pageSize);
+      const pageSize = Math.max(1, this.pageSize);
 
       this.totalPages = Math.floor(this.total / pageSize);
 
@@ -334,7 +334,7 @@ export default defineComponent({
 
       this.page = Math.max(0, Math.min(this.page, this.totalPages - 1));
 
-      var skip = pageSize * this.page;
+      const skip = pageSize * this.page;
 
       this.pageItems = albumsList.slice(skip, skip + this.pageSize);
     },
@@ -384,9 +384,9 @@ export default defineComponent({
     },
 
     updateLoadingFiller: function () {
-      var filler = [];
+      const filler = [];
 
-      for (var i = 0; i < this.pageSize; i++) {
+      for (let i = 0; i < this.pageSize; i++) {
         filler.push(i);
       }
 
