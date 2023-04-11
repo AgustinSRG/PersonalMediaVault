@@ -26,6 +26,7 @@
       :muted="muted"
       :volume.prop="volume"
       :playbackRate.prop="speed"
+      autoplay
       @ended="onEnded"
       @timeupdate="onVideoTimeUpdate"
       @canplay="onCanPlay"
