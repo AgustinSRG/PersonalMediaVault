@@ -26,7 +26,6 @@
       :muted="muted"
       :volume.prop="volume"
       :playbackRate.prop="speed"
-      autoplay
       @ended="onEnded"
       @timeupdate="onVideoTimeUpdate"
       @canplay="onCanPlay"
@@ -463,6 +462,8 @@ export default defineComponent({
       playing: false,
       loading: true,
 
+      autoPlayApplied: false,
+
       audioURL: "",
       audioPending: false,
       audioPendingTask: 0,
@@ -661,10 +662,14 @@ export default defineComponent({
     },
     onCanPlay: function () {
       this.loading = false;
-      if (!this.playing) {
+      if (this.autoPlayApplied) {
         return;
       }
-      var promise = this.getAudioElement().play();
+      const player = this.getAudioElement();
+      if (!player) {
+        return;
+      }
+      const promise = player.play();
       if (promise) {
         promise.catch(
           function () {
@@ -673,6 +678,7 @@ export default defineComponent({
           }.bind(this)
         );
       }
+      this.autoPlayApplied = true;
     },
     onWaitForBuffer: function (b) {
       this.loading = b;
@@ -1568,6 +1574,7 @@ export default defineComponent({
       this.subtitles = "";
       this.subtitlesStart = -1;
       this.subtitlesEnd = -1;
+      this.autoPlayApplied = false;
       this.initializeAudio();
     },
     audioURL: function () {

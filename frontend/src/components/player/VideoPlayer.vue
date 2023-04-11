@@ -28,7 +28,6 @@
       :loop="loop"
       :volume.prop="volume"
       :playbackRate.prop="speed"
-      autoplay
       @ended="onEnded"
       @timeupdate="onVideoTimeUpdate"
       @canplay="onCanPlay"
@@ -475,6 +474,8 @@ export default defineComponent({
       playing: false,
       loading: true,
 
+      autoPlayApplied: false,
+
       videoURL: "",
       videoPending: false,
       videoPendingTask: 0,
@@ -713,7 +714,7 @@ export default defineComponent({
     },
     onCanPlay: function () {
       this.loading = false;
-      if (!this.playing) {
+      if (this.autoPlayApplied) {
         return;
       }
       var player = this.getVideoElement();
@@ -729,6 +730,7 @@ export default defineComponent({
           }.bind(this)
         );
       }
+      this.autoPlayApplied = true;
     },
     onWaitForBuffer: function (b: boolean) {
       if (b) {
@@ -1560,6 +1562,7 @@ export default defineComponent({
       this.subtitles = "";
       this.subtitlesStart = -1;
       this.subtitlesEnd = -1;
+      this.autoPlayApplied = false;
       this.initializeVideo();
     },
     videoURL: function () {
