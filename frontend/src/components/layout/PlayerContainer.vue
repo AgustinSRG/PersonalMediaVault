@@ -258,6 +258,12 @@ export default defineComponent({
       "current-album-loading",
       this.$options.albumLoadingH
     );
+
+    this.$options.goPrevH = this.goPrev.bind(this);
+    AppEvents.AddEventListener("media-go-prev", this.$options.goPrevH);
+
+    this.$options.goNextH = this.goNext.bind(this);
+    AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
@@ -281,6 +287,9 @@ export default defineComponent({
       "current-album-loading",
       this.$options.albumLoadingH
     );
+
+    AppEvents.RemoveEventListener("media-go-prev", this.$options.goPrevH);
+    AppEvents.RemoveEventListener("media-go-next", this.$options.goNextH);
 
     if (this.$options.focusTrap) {
       this.$options.focusTrap.destroy();

@@ -37,7 +37,7 @@
 }
 
 .bottom-bar-option {
-    width: 50%;
+    width: 25%;
     height: 100%;
     display: flex;
     justify-content: center;
@@ -58,4 +58,14 @@
 .bottom-bar-option.selected,
 .bottom-bar-option.selected:hover {
     background: var(--selected-color);
+}
+
+@media(max-width: 500px) {
+    .bottom-bar-option span {
+        display: none;
+    }
+
+    .bottom-bar-option i {
+        margin-right: 0;
+    }
 }

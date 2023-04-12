@@ -1,13 +1,21 @@
 <template>
   <div class="bottom-bar">
     <div
+      class="bottom-bar-option bottom-bar-option-list"
+      tabindex="0"
+      @click="goPrev"
+      @keydown="clickOnEnter"
+    >
+      <i class="fas fa-backward-step"></i><span> {{ $t("Previous") }}</span>
+    </div>
+    <div
       class="bottom-bar-option bottom-bar-option-media"
       :class="{ selected: focus === 'left' }"
       tabindex="0"
       @click="clickLeft"
       @keydown="clickOnEnter"
     >
-      <i class="fas fa-photo-film"></i> {{ $t("Media") }}
+      <i class="fas fa-photo-film"></i><span> {{ $t("Media") }}</span>
     </div>
     <div
       class="bottom-bar-option bottom-bar-option-list"
@@ -16,7 +24,15 @@
       @click="clickRight"
       @keydown="clickOnEnter"
     >
-      <i class="fas fa-list"></i> {{ $t("List") }}
+      <i class="fas fa-list"></i><span> {{ $t("List") }}</span>
+    </div>
+    <div
+      class="bottom-bar-option bottom-bar-option-list"
+      tabindex="0"
+      @click="goNext"
+      @keydown="clickOnEnter"
+    >
+      <i class="fas fa-forward-step"></i><span> {{ $t("Next") }}</span>
     </div>
   </div>
 </template>
@@ -44,6 +60,14 @@ export default defineComponent({
 
     clickRight: function () {
       AppStatus.FocusRight();
+    },
+
+    goNext: function () {
+      AppEvents.Emit("media-go-next");
+    },
+
+    goPrev: function () {
+      AppEvents.Emit("media-go-prev");
     },
 
     clickOnEnter: function (event) {
