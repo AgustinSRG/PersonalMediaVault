@@ -1,6 +1,6 @@
 <template>
   <div class="video-player player-settings-no-trap" :class="{
-    'player-min': minPlayer,
+    'player-min': min,
     'no-controls': !showControls || !usercontrols,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
@@ -59,9 +59,9 @@
           <i class="fas fa-forward-step"></i>
         </button>
 
-        <VolumeControl ref="volumeControl" :min="minPlayer" :width="minPlayer ? 50 : 80" v-model:muted="muted" v-model:volume="volume" v-model:expanded="volumeShown" @update:volume="onUserVolumeUpdated" @update:muted="onUserMutedUpdated" @enter="enterTooltip('volume')" @leave="leaveTooltip('volume')"></VolumeControl>
+        <VolumeControl ref="volumeControl" :min="min" :width="min ? 50 : 80" v-model:muted="muted" v-model:volume="volume" v-model:expanded="volumeShown" @update:volume="onUserVolumeUpdated" @update:muted="onUserMutedUpdated" @enter="enterTooltip('volume')" @leave="leaveTooltip('volume')"></VolumeControl>
 
-        <div class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }" v-if="!minPlayer">
+        <div class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }" v-if="!min">
           <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
           <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{ currentTimeSliceName }}</span>
         </div>
@@ -214,6 +214,8 @@ export default defineComponent({
     canwrite: Boolean,
 
     usercontrols: Boolean,
+
+    min: Boolean,
   },
   setup(props) {
     return {
@@ -234,7 +236,6 @@ export default defineComponent({
 
       canSaveTime: true,
 
-      minPlayer: false,
       displayConfig: false,
 
       currentTime: 0,
@@ -537,24 +538,10 @@ export default defineComponent({
       this.displayConfig = false;
     },
 
-    checkPlayerSize() {
-      const rect = this.$el.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
-
-      if (width < 480 || height < 360) {
-        this.minPlayer = true;
-      } else {
-        this.minPlayer = false;
-      }
-    },
-
     tick() {
       if (!this.loading && this.isWaiting && Date.now() - this.waitingTimestamp > 1000) {
         this.loading = true;
       }
-
-      this.checkPlayerSize();
 
       if (
         this.showControls &&

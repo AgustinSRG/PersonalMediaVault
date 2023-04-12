@@ -1,51 +1,23 @@
 <template>
-  <div
-    class="image-player player-settings-no-trap"
-    :class="{
-      'player-min': minPlayer,
-      'no-controls': !showcontrols,
-      'full-screen': fullscreen,
-      'bg-black': background === 'black',
-      'bg-white': background === 'white',
-    }"
-    @mousemove="playerMouseMove"
-    @click="clickPlayer"
-    @dblclick="toggleFullScreen"
-    @mouseleave="mouseLeavePlayer"
-    @touchmove="playerMouseMove"
-    @contextmenu="onContextMenu"
-    @wheel="onMouseWheel"
-  >
+  <div class="image-player player-settings-no-trap" :class="{
+    'player-min': min,
+    'no-controls': !showcontrols,
+    'full-screen': fullscreen,
+    'bg-black': background === 'black',
+    'bg-white': background === 'white',
+  }" @mousemove="playerMouseMove" @click="clickPlayer" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @touchmove="playerMouseMove" @contextmenu="onContextMenu" @wheel="onMouseWheel">
     <div class="image-prefetch-container">
       <img v-if="prefetchURL" :src="prefetchURL" />
     </div>
-    <div
-      class="image-scroller"
-      :class="{ 'cursor-hidden': !cursorShown }"
-      @mousedown="grabScroll"
-    >
-      <img
-        v-if="imageURL"
-        :src="imageURL"
-        :key="rtick"
-        @load="onImageLoaded"
-        @error="onImageLoaded"
-        :style="{
-          width: imageWidth,
-          height: imageHeight,
-          top: imageTop,
-          left: imageLeft,
-        }"
-      />
+    <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
+      <img v-if="imageURL" :src="imageURL" :key="rtick" @load="onImageLoaded" @error="onImageLoaded" :style="{
+        width: imageWidth,
+        height: imageHeight,
+        top: imageTop,
+        left: imageLeft,
+      }" />
 
-      <ImageNotes
-        :editing="notesEditMode"
-        :contextopen="contextMenuShown"
-        :width="imageWidth"
-        :height="imageHeight"
-        :top="imageTop"
-        :left="imageLeft"
-      ></ImageNotes>
+      <ImageNotes :editing="notesEditMode" :contextopen="contextMenuShown" :width="imageWidth" :height="imageHeight" :top="imageTop" :left="imageLeft"></ImageNotes>
     </div>
 
     <div class="player-loader" v-if="loading">
@@ -57,32 +29,11 @@
       </div>
     </div>
 
-    <PlayerEncodingPending
-      v-if="!loading && !imageURL && imagePending"
-      :mid="mid"
-      :tid="imagePendingTask"
-      :res="currentResolution"
-    ></PlayerEncodingPending>
+    <PlayerEncodingPending v-if="!loading && !imageURL && imagePending" :mid="mid" :tid="imagePendingTask" :res="currentResolution"></PlayerEncodingPending>
 
-    <div
-      class="player-controls"
-      :class="{ hidden: !showcontrols }"
-      @click="clickControls"
-      @dblclick="stopPropagationEvent"
-      @mouseenter="enterControls"
-      @mouseleave="leaveControls"
-    >
+    <div class="player-controls" :class="{ hidden: !showcontrols }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
       <div class="player-controls-left">
-        <button
-          v-if="!!next || !!prev || pageprev || pagenext"
-          :disabled="!prev && !pageprev"
-          type="button"
-          :title="$t('Previous')"
-          class="player-btn"
-          @click="goPrev"
-          @mouseenter="enterTooltip('prev')"
-          @mouseleave="leaveTooltip('prev')"
-        >
+        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!prev && !pageprev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
           <i class="fas fa-backward-step"></i>
         </button>
 
@@ -90,173 +41,63 @@
           <i class="fas fa-play"></i>
         </button>
 
-        <button
-          v-if="!!next || !!prev || pageprev || pagenext"
-          :disabled="!next && !pagenext"
-          type="button"
-          :title="$t('Next')"
-          class="player-btn"
-          @click="goNext"
-          @mouseenter="enterTooltip('next')"
-          @mouseleave="leaveTooltip('next')"
-        >
+        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!next && !pagenext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
           <i class="fas fa-forward-step"></i>
         </button>
 
-        <ScaleControl
-          ref="scaleControl"
-          :min="minPlayer"
-          :width="minPlayer ? 70 : 100"
-          v-model:fit="fit"
-          v-model:scale="scale"
-          v-model:expanded="scaleShown"
-          @update:scale="onUserScaleUpdated"
-          @update:fit="onUserFitUpdated"
-          @enter="enterTooltip('scale')"
-          @leave="leaveTooltip('scale')"
-        ></ScaleControl>
+        <ScaleControl ref="scaleControl" :min="min" :width="min ? 70 : 100" v-model:fit="fit" v-model:scale="scale" v-model:expanded="scaleShown" @update:scale="onUserScaleUpdated" @update:fit="onUserFitUpdated" @enter="enterTooltip('scale')" @leave="leaveTooltip('scale')"></ScaleControl>
       </div>
 
       <div class="player-controls-right">
-        <button
-          type="button"
-          :title="$t('Manage albums')"
-          class="player-btn"
-          @click="manageAlbums"
-          @mouseenter="enterTooltip('albums')"
-          @mouseleave="leaveTooltip('albums')"
-        >
+        <button type="button" :title="$t('Manage albums')" class="player-btn" @click="manageAlbums" @mouseenter="enterTooltip('albums')" @mouseleave="leaveTooltip('albums')">
           <i class="fas fa-list-ol"></i>
         </button>
 
-        <button
-          type="button"
-          :title="$t('Player Configuration')"
-          class="player-btn player-settings-no-trap"
-          @click="showConfig"
-          @mouseenter="enterTooltip('config')"
-          @mouseleave="leaveTooltip('config')"
-        >
+        <button type="button" :title="$t('Player Configuration')" class="player-btn player-settings-no-trap" @click="showConfig" @mouseenter="enterTooltip('config')" @mouseleave="leaveTooltip('config')">
           <i class="fas fa-cog"></i>
         </button>
 
-        <button
-          v-if="!fullscreen"
-          type="button"
-          :title="$t('Full screen')"
-          class="player-btn player-expand-btn"
-          @click="toggleFullScreen"
-          @mouseenter="enterTooltip('full-screen')"
-          @mouseleave="leaveTooltip('full-screen')"
-        >
+        <button v-if="!fullscreen" type="button" :title="$t('Full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen')" @mouseleave="leaveTooltip('full-screen')">
           <i class="fas fa-expand"></i>
         </button>
-        <button
-          v-if="fullscreen"
-          type="button"
-          :title="$t('Exit full screen')"
-          class="player-btn player-expand-btn"
-          @click="toggleFullScreen"
-          @mouseenter="enterTooltip('full-screen-exit')"
-          @mouseleave="leaveTooltip('full-screen-exit')"
-        >
+        <button v-if="fullscreen" type="button" :title="$t('Exit full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen-exit')" @mouseleave="leaveTooltip('full-screen-exit')">
           <i class="fas fa-compress"></i>
         </button>
       </div>
     </div>
 
-    <div
-      v-if="prev && helpTooltip === 'prev'"
-      class="player-tooltip player-helptip-left"
-    >
-      <PlayerMediaChangePreview
-        :media="prev"
-        :next="false"
-      ></PlayerMediaChangePreview>
+    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-helptip-left">
+      <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
     </div>
 
-    <div
-      v-if="next && helpTooltip === 'next'"
-      class="player-tooltip player-helptip-left"
-    >
-      <PlayerMediaChangePreview
-        :media="next"
-        :next="true"
-      ></PlayerMediaChangePreview>
+    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-helptip-left">
+      <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
     </div>
 
-    <div
-      v-if="helpTooltip === 'scale'"
-      class="player-tooltip player-helptip-left"
-    >
+    <div v-if="helpTooltip === 'scale'" class="player-tooltip player-helptip-left">
       {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
     </div>
 
-    <div
-      v-if="!displayConfig && helpTooltip === 'config'"
-      class="player-tooltip player-helptip-right"
-    >
+    <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-helptip-right">
       {{ $t("Player Configuration") }}
     </div>
 
-    <div
-      v-if="!displayConfig && helpTooltip === 'albums'"
-      class="player-tooltip player-helptip-right"
-    >
+    <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-helptip-right">
       {{ $t("Manage albums") }}
     </div>
 
-    <div
-      v-if="helpTooltip === 'full-screen'"
-      class="player-tooltip player-helptip-right"
-    >
+    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-helptip-right">
       {{ $t("Full screen") }}
     </div>
-    <div
-      v-if="helpTooltip === 'full-screen-exit'"
-      class="player-tooltip player-helptip-right"
-    >
+    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-helptip-right">
       {{ $t("Exit full screen") }}
     </div>
 
-    <ImagePlayerConfig
-      v-model:shown="displayConfig"
-      v-model:resolution="currentResolution"
-      v-model:background="background"
-      @update:resolution="onResolutionUpdated"
-      @update:background="onBackgroundChanged"
-      @update-autonext="setupAutoNextTimer"
-      :rtick="internalTick"
-      :metadata="metadata"
-      @enter="enterControls"
-      @leave="leaveControls"
-    ></ImagePlayerConfig>
+    <ImagePlayerConfig v-model:shown="displayConfig" v-model:resolution="currentResolution" v-model:background="background" @update:resolution="onResolutionUpdated" @update:background="onBackgroundChanged" @update-autonext="setupAutoNextTimer" :rtick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls"></ImagePlayerConfig>
 
-    <PlayerTopBar
-      v-if="metadata"
-      :mid="mid"
-      :metadata="metadata"
-      :shown="showcontrols"
-      :fullscreen="fullscreen"
-      v-model:expanded="expandedTitle"
-      v-model:albumexpanded="expandedAlbum"
-      :inalbum="inalbum"
-      @clickplayer="clickControls"
-    ></PlayerTopBar>
+    <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showcontrols" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumexpanded="expandedAlbum" :inalbum="inalbum" @clickplayer="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu
-      type="image"
-      v-model:shown="contextMenuShown"
-      :x="contextMenuX"
-      :y="contextMenuY"
-      v-model:fit="fit"
-      @update:fit="onUserFitUpdated"
-      :url="imageURL"
-      v-model:controls="showControls"
-      :canwrite="canwrite"
-      v-model:notesedit="notesEditMode"
-      @stats="openStats"
-    ></PlayerContextMenu>
+    <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControls" :canwrite="canwrite" v-model:notesedit="notesEditMode" @stats="openStats"></PlayerContextMenu>
   </div>
 </template>
 
@@ -323,6 +164,8 @@ export default defineComponent({
     pageprev: Boolean,
 
     canwrite: Boolean,
+
+    min: Boolean,
   },
   setup(props) {
     return {
@@ -342,7 +185,6 @@ export default defineComponent({
       width: 0,
       height: 0,
 
-      minPlayer: false,
       displayConfig: false,
 
       imageTop: "0",
@@ -640,20 +482,7 @@ export default defineComponent({
       this.displayConfig = false;
     },
 
-    checkPlayerSize() {
-      const rect = this.$el.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
-
-      if (width < 480 || height < 360) {
-        this.minPlayer = true;
-      } else {
-        this.minPlayer = false;
-      }
-    },
-
     tick() {
-      this.checkPlayerSize();
       this.computeImageDimensions();
       if (
         !this.mouseInControls &&
@@ -1039,7 +868,7 @@ export default defineComponent({
         } else {
           if (
             AlbumsController.NextMediaData.resolutions[
-              this.currentResolution
+            this.currentResolution
             ] &&
             AlbumsController.NextMediaData.resolutions[this.currentResolution]
               .ready

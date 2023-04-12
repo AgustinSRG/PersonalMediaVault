@@ -16,6 +16,7 @@
       @goprev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
+      :min="minPlayer"
     ></EmptyPlayer>
     <ImagePlayer
       v-if="mdata && mdata.type === 1"
@@ -35,6 +36,7 @@
       v-model:showcontrols="showControls"
       @albums-open="openAlbums"
       @stats-open="openStats"
+      :min="minPlayer"
     ></ImagePlayer>
     <VideoPlayer
       v-if="mdata && mdata.type === 2"
@@ -54,6 +56,7 @@
       v-model:usercontrols="showControls"
       @albums-open="openAlbums"
       @stats-open="openStats"
+      :min="minPlayer"
     ></VideoPlayer>
     <AudioPlayer
       v-if="mdata && mdata.type === 3"
@@ -72,6 +75,7 @@
       @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
       @stats-open="openStats"
+      :min="minPlayer"
     ></AudioPlayer>
 
     <AlbumListModal v-model:display="displayAlbumList"></AlbumListModal>
@@ -135,6 +139,8 @@ export default defineComponent({
 
       hasPagePrev: AlbumsController.HasPagePrev,
       hasPageNext: AlbumsController.HasPageNext,
+
+      minPlayer: false,
     };
   },
   methods: {
@@ -225,6 +231,18 @@ export default defineComponent({
     focusLost: function () {
       closeFullscreen();
     },
+
+    checkPlayerSize() {
+      const rect = this.$el.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      if (width < 480 || height < 360) {
+        this.minPlayer = true;
+      } else {
+        this.minPlayer = false;
+      }
+    },
   },
   mounted: function () {
     this.$options.loadingH = this.updateLoading.bind(this);
@@ -234,6 +252,9 @@ export default defineComponent({
       this.$el,
       this.focusLost.bind(this)
     );
+
+    this.$options.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
+    this.checkPlayerSize();
 
     this.updateStatus();
 
@@ -294,6 +315,8 @@ export default defineComponent({
     if (this.$options.focusTrap) {
       this.$options.focusTrap.destroy();
     }
+
+    clearInterval(this.$options.timer);
   },
 });
 </script>
