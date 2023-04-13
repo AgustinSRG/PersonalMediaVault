@@ -1,43 +1,22 @@
 <template>
   <div class="bottom-bar">
-    <div
-      class="bottom-bar-option bottom-bar-option-list"
-      tabindex="0"
-      @click="goPrev"
-      @keydown="clickOnEnter"
-    >
+    <div class="bottom-bar-option bottom-bar-option-list" :class="{ disabled: !prev && !hasPagePrev }" tabindex="0" @click="goPrev" @keydown="clickOnEnter">
       <i class="fas fa-backward-step"></i><span> {{ $t("Previous") }}</span>
     </div>
-    <div
-      class="bottom-bar-option bottom-bar-option-media"
-      :class="{ selected: focus === 'left' }"
-      tabindex="0"
-      @click="clickLeft"
-      @keydown="clickOnEnter"
-    >
+    <div class="bottom-bar-option bottom-bar-option-media" :class="{ selected: focus === 'left' }" tabindex="0" @click="clickLeft" @keydown="clickOnEnter">
       <i class="fas fa-photo-film"></i><span> {{ $t("Media") }}</span>
     </div>
-    <div
-      class="bottom-bar-option bottom-bar-option-list"
-      :class="{ selected: focus === 'right' }"
-      tabindex="0"
-      @click="clickRight"
-      @keydown="clickOnEnter"
-    >
+    <div class="bottom-bar-option bottom-bar-option-list" :class="{ selected: focus === 'right' }" tabindex="0" @click="clickRight" @keydown="clickOnEnter">
       <i class="fas fa-list"></i><span> {{ $t("List") }}</span>
     </div>
-    <div
-      class="bottom-bar-option bottom-bar-option-list"
-      tabindex="0"
-      @click="goNext"
-      @keydown="clickOnEnter"
-    >
+    <div class="bottom-bar-option bottom-bar-option-list" :class="{ disabled: !next && !hasPageNext }" tabindex="0" @click="goNext" @keydown="clickOnEnter">
       <i class="fas fa-forward-step"></i><span> {{ $t("Next") }}</span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { defineComponent } from "vue";
@@ -47,11 +26,27 @@ export default defineComponent({
   data: function () {
     return {
       focus: AppStatus.CurrentFocus,
+
+      prev: AlbumsController.CurrentPrev,
+      next: AlbumsController.CurrentNext,
+
+      hasPagePrev: AlbumsController.HasPagePrev,
+      hasPageNext: AlbumsController.HasPageNext,
     };
   },
   methods: {
     onStatusUpdate: function () {
       this.focus = AppStatus.CurrentFocus;
+    },
+
+    onAlbumPosUpdate: function () {
+      this.prev = AlbumsController.CurrentPrev;
+      this.next = AlbumsController.CurrentNext;
+    },
+
+    onPagePosUpdate: function () {
+      this.hasPagePrev = AlbumsController.HasPagePrev;
+      this.hasPageNext = AlbumsController.HasPageNext;
     },
 
     clickLeft: function () {
@@ -84,12 +79,21 @@ export default defineComponent({
       "app-status-update",
       this.$options.updateStatusH
     );
+
+    this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
+    AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+
+    this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+    AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(
       "app-status-update",
       this.$options.updateStatusH
     );
+
+    AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+    AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
   },
 });
 </script>

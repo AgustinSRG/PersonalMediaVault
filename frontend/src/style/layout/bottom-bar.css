@@ -45,19 +45,25 @@
     white-space: nowrap;
     font-size: 1.1rem;
     cursor: pointer;
+    user-select: none;
 }
 
 .bottom-bar-option i {
     margin-right: 1rem;
 }
 
-.bottom-bar-option:hover {
+.bottom-bar-option:not(.disabled):hover {
     background: var(--hover-color);
 }
 
 .bottom-bar-option.selected,
 .bottom-bar-option.selected:hover {
     background: var(--selected-color);
+}
+
+.bottom-bar-option.disabled {
+    cursor: default;
+    opacity: 0.5;
 }
 
 @media(max-width: 500px) {
