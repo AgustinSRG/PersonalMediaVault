@@ -2,15 +2,20 @@
 
 import { GetApiURL, RequestParams } from "@/utils/request";
 
+export interface MediaTag {
+    id: number;
+    name: string;
+}
+
 export class TagsAPI {
-    public static GetTags(): RequestParams {
+    public static GetTags(): RequestParams<MediaTag[]> {
         return {
             method: "GET",
             url: GetApiURL("/api/tags"),
         };
     }
 
-    public static TagMedia(media: number, tagName: string): RequestParams {
+    public static TagMedia(media: number, tagName: string): RequestParams<MediaTag> {
         return {
             method: "POST",
             url: GetApiURL("/api/tags/add"),
@@ -21,7 +26,7 @@ export class TagsAPI {
         };
     }
 
-    public static UntagMedia(media: number, tagId: number): RequestParams {
+    public static UntagMedia(media: number, tagId: number): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/tags/remove"),

@@ -46,14 +46,15 @@ export function GenerateURIQuery(params: any): string {
     return result;
 }
 
-export interface RequestParams {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export interface RequestParams<Return_Type = any> {
     method: "GET" | "POST";
     url: string;
     json?: any;
     form?: FormData;
 }
 
-export class Request {
+export class Request<Return_Type = any> {
 
     public static pending: { [key: string]: Request } = {};
 
@@ -61,35 +62,35 @@ export class Request {
         return new RequestErrorHandler();
     }
 
-    public static Do(params: RequestParams): Request {
+    public static Do<Return_Type = any>(params: RequestParams<Return_Type>): Request<Return_Type> {
         if (params.method == "POST") {
             if (params.form) {
-                return Request.PostFormData(null, params.url, params.form);
+                return Request.PostFormData<Return_Type>(null, params.url, params.form);
             } else {
-                return Request.PostJSON(null, params.url, params.json || {});
+                return Request.PostJSON<Return_Type>(null, params.url, params.json || {});
             }
         } else {
-            return Request.Get(null, params.url);
+            return Request.Get<Return_Type>(null, params.url);
         }
     }
 
-    public static Pending(key: string, params: RequestParams): Request {
+    public static Pending<Return_Type = any>(key: string, params: RequestParams<Return_Type>): Request<Return_Type> {
         if (params.method == "POST") {
             if (params.form) {
-                return Request.PostFormData(key, params.url, params.form);
+                return Request.PostFormData<Return_Type>(key, params.url, params.form);
             } else {
-                return Request.PostJSON(key, params.url, params.json || {});
+                return Request.PostJSON<Return_Type>(key, params.url, params.json || {});
             }
         } else {
-            return Request.Get(key, params.url);
+            return Request.Get<Return_Type>(key, params.url);
         }
     }
 
-    public static Get(key: string, url: string): Request {
+    public static Get<Return_Type = any>(key: string, url: string): Request<Return_Type> {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
-        const r = new Request(url, controller);
+        const r = new Request<Return_Type>(url, controller);
 
         if (key) {
             Request.pending[key] = r;
@@ -127,11 +128,11 @@ export class Request {
         return r;
     }
 
-    public static PostJSON(key: string, url: string, json: any): Request {
+    public static PostJSON<Return_Type = any>(key: string, url: string, json: any): Request<Return_Type> {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
-        const r = new Request(url, controller);
+        const r = new Request<Return_Type>(url, controller);
 
         if (key) {
             Request.pending[key] = r;
@@ -170,11 +171,11 @@ export class Request {
         return r;
     }
 
-    public static PostFormData(key: string, url: string, form: FormData): Request {
+    public static PostFormData<Return_Type = any>(key: string, url: string, form: FormData): Request<Return_Type> {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
-        const r = new Request(url, controller);
+        const r = new Request<Return_Type>(url, controller);
 
         if (key) {
             Request.pending[key] = r;
@@ -246,7 +247,7 @@ export class Request {
         this._onUploadProgress = function () { };
     }
 
-    public onSuccess(fn: (response: any) => void): Request {
+    public onSuccess(fn: (response: Return_Type) => void): Request {
         this._onSuccess = fn;
         return this;
     }

@@ -3,8 +3,72 @@
 import { ImageNote } from "@/control/img-notes";
 import { GetApiURL, RequestParams } from "@/utils/request";
 
+export interface MediaListItem {
+    id: number;
+    type: 0 | 1 | 2 | 3;
+    title: string;
+    description: string;
+    tags: number[];
+    thumbnail: string;
+    duration: number;
+}
+
+export interface MediaData {
+    id: number;
+    type: 0 | 1 | 2 | 3;
+    title: string;
+    description: string;
+    tags: number[];
+    upload_time: number;
+    thumbnail: string;
+    duration: number;
+    width: number;
+    height: number;
+    fps: number;
+    ready: boolean;
+    ready_p: number;
+    encoded: boolean;
+    task: number;
+    url: string;
+    video_previews: string;
+    video_previews_interval: number;
+    resolutions: MediaResolution[];
+    subtitles: MediaSubtitle[];
+    force_start_beginning: boolean;
+    img_notes: boolean;
+    img_notes_url: string;
+    time_slices: {
+        time: number;
+        name: string;
+    }[];
+}
+
+export interface MediaResolution {
+    width: number;
+    height: number;
+    fps: number;
+    ready: boolean;
+    task: number;
+    url: string;
+}
+
+export interface MediaSubtitle {
+    id: string;
+    name: string;
+    url: string;
+}
+
+export interface MediaSizeStats {
+    meta_size: number;
+    assets: {
+        id: number;
+        type: "s" | "m";
+        name: string;
+        size: number;
+    }[];
+}
 export class MediaAPI {
-    public static UploadMedia(title: string, file: File, album: number): RequestParams {
+    public static UploadMedia(title: string, file: File, album: number): RequestParams<{ media_id: number }> {
         const form = new FormData();
         form.append("file", file);
 
@@ -15,28 +79,28 @@ export class MediaAPI {
         };
     }
 
-    public static GetMedia(id: number): RequestParams {
+    public static GetMedia(id: number): RequestParams<MediaData> {
         return {
             method: "GET",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "")),
         };
     }
 
-    public static GetMediaAlbums(id: number): RequestParams {
+    public static GetMediaAlbums(id: number): RequestParams<number[]> {
         return {
             method: "GET",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/albums"),
         };
     }
 
-    public static GetMediaSizeStats(id: number): RequestParams {
+    public static GetMediaSizeStats(id: number): RequestParams<MediaSizeStats> {
         return {
             method: "GET",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/size_stats"),
         };
     }
 
-    public static ChangeMediaTitle(id: number, title: string): RequestParams {
+    public static ChangeMediaTitle(id: number, title: string): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/title"),
@@ -46,7 +110,7 @@ export class MediaAPI {
         };
     }
 
-    public static ChangeMediaDescription(id: number, description: string): RequestParams {
+    public static ChangeMediaDescription(id: number, description: string): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/description"),
@@ -56,7 +120,7 @@ export class MediaAPI {
         };
     }
 
-    public static ChangeExtraParams(id: number, forceStartBeginning: boolean): RequestParams {
+    public static ChangeExtraParams(id: number, forceStartBeginning: boolean): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/extra"),
@@ -66,7 +130,7 @@ export class MediaAPI {
         };
     }
 
-    public static ChangeTimeSlices(id: number, time_slices: { time: number, name: string, }[]): RequestParams {
+    public static ChangeTimeSlices(id: number, time_slices: { time: number, name: string, }[]): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/time_slices"),
@@ -74,7 +138,7 @@ export class MediaAPI {
         };
     }
 
-    public static SetNotes(id: number, notes: ImageNote[]): RequestParams {
+    public static SetNotes(id: number, notes: ImageNote[]): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/notes"),
@@ -82,7 +146,7 @@ export class MediaAPI {
         };
     }
 
-    public static ChangeMediaThumbnail(id: number, thumbnail: File): RequestParams {
+    public static ChangeMediaThumbnail(id: number, thumbnail: File): RequestParams<{ url: string }> {
         const form = new FormData();
         form.append("file", thumbnail);
         return {
@@ -92,22 +156,21 @@ export class MediaAPI {
         };
     }
 
-    public static EncodeMedia(id: number): RequestParams {
+    public static EncodeMedia(id: number): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/encode"),
         };
     }
 
-    public static DeleteMedia(id: number): RequestParams {
+    public static DeleteMedia(id: number): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/delete"),
         };
     }
 
-
-    public static AddResolution(id: number, width: number, height: number, fps: number): RequestParams {
+    public static AddResolution(id: number, width: number, height: number, fps: number): RequestParams<MediaResolution> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/add"),
@@ -119,7 +182,7 @@ export class MediaAPI {
         };
     }
 
-    public static RemoveResolution(id: number, width: number, height: number, fps: number): RequestParams {
+    public static RemoveResolution(id: number, width: number, height: number, fps: number): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/remove"),
@@ -131,7 +194,7 @@ export class MediaAPI {
         };
     }
 
-    public static SetSubtitles(mediaId: number, id: string, name: string, srt: File): RequestParams {
+    public static SetSubtitles(mediaId: number, id: string, name: string, srt: File): RequestParams<MediaSubtitle> {
         const form = new FormData();
         form.append("file", srt);
         return {
@@ -141,7 +204,7 @@ export class MediaAPI {
         };
     }
 
-    public static RemoveSubtitles(mediaId: number, id: string): RequestParams {
+    public static RemoveSubtitles(mediaId: number, id: string): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/remove?id=" + encodeURIComponent(id)),

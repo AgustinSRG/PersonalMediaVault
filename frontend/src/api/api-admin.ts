@@ -3,7 +3,7 @@
 import { GetApiURL, RequestParams } from "@/utils/request";
 
 export class AdminAPI {
-    public static ListAccounts(): RequestParams {
+    public static ListAccounts(): RequestParams<{ username: string, write: boolean }[]> {
         return {
             method: "GET",
             url: GetApiURL("/api/admin/accounts"),
