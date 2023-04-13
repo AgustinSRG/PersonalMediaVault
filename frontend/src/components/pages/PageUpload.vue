@@ -1,5 +1,5 @@
 <template>
-  <div class="page-inner-padded" :class="{ 'page-inner': !inmodal, hidden: !display }">
+  <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }">
     <div class="form-group">
       <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
@@ -7,7 +7,7 @@
       <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
       </button>
-      <button v-if="inmodal" @click="changeToSearch" type="button" class="btn btn-primary btn-mr">
+      <button v-if="inModal" @click="changeToSearch" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-search"></i> {{ $t("Search") }}
       </button>
     </div>
@@ -23,14 +23,14 @@
       </div>
       <div class="form-group">
         <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
-        <select v-model="album" :disabled="inmodal" class="form-control form-select">
+        <select v-model="album" :disabled="inModal" class="form-control form-select">
           <option :value="-1">--</option>
           <option v-for="a in albums" :key="a.id" :value="a.id">
             {{ a.name }}
           </option>
         </select>
       </div>
-      <div class="form-group" v-if="!inmodal">
+      <div class="form-group" v-if="!inModal">
         <button type="button" @click="createAlbum" class="btn btn-primary">
           <i class="fas fa-plus"></i> {{ $t("Create album") }}
         </button>
@@ -178,8 +178,8 @@ export default defineComponent({
   emits: ['change-to-search', 'media-go'],
   props: {
     display: Boolean,
-    inmodal: Boolean,
-    fixedalbum: Number,
+    inModal: Boolean,
+    fixedAlbum: Number,
   },
   data: function () {
     return {
@@ -512,8 +512,8 @@ export default defineComponent({
         }
       });
 
-      if (this.inmodal) {
-        this.album = this.fixedalbum;
+      if (this.inModal) {
+        this.album = this.fixedAlbum;
       }
     },
 

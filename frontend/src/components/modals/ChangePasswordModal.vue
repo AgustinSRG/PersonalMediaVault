@@ -82,7 +82,7 @@ import { AccountAPI } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({

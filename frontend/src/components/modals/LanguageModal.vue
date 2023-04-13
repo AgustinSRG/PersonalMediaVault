@@ -50,7 +50,7 @@
 <script lang="ts">
 import { AppPreferences } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import { AppEvents } from "@/control/app-events";
 

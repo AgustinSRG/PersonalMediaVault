@@ -27,7 +27,7 @@
           <b>{{ $t("Auto next") }}</b>
         </td>
         <td class="td-right">
-          <ToggleSwitch v-model:val="nextendState"></ToggleSwitch>
+          <ToggleSwitch v-model:val="nextEndState"></ToggleSwitch>
         </td>
       </tr>
       <tr
@@ -56,7 +56,7 @@
           <b>{{ $t("Animation style") }}</b>
         </td>
         <td class="td-right">
-          {{ renderAnimStyle(animcolors) }}
+          {{ renderAnimStyle(animColors) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -73,7 +73,7 @@
           <b>{{ $t("Subtitles") }}</b>
         </td>
         <td class="td-right">
-          {{ renderSubtitle(subtitles, rtick) }}
+          {{ renderSubtitle(subtitles, rTick) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -89,7 +89,7 @@
           <b>{{ $t("Subtitles") }} ({{ $t("Size") }})</b>
         </td>
         <td class="td-right">
-          {{ renderSubtitleSize(subsize) }}
+          {{ renderSubtitleSize(subSize) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -106,7 +106,7 @@
           <b>{{ $t("Subtitles") }} ({{ $t("Background") }})</b>
         </td>
         <td class="td-right">
-          {{ renderSubtitleBackground(subbg) }}
+          {{ renderSubtitleBackground(subBackground) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -119,7 +119,7 @@
           <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
         </td>
         <td class="td-right">
-          <ToggleSwitch v-model:val="subhtmlState"></ToggleSwitch>
+          <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
         </td>
       </tr>
     </table>
@@ -178,7 +178,7 @@
         <td>
           <i
             class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== animcolors }"
+            :class="{ 'check-uncheck': s !== animColors }"
           ></i>
           {{ renderAnimStyle(s) }}
         </td>
@@ -210,7 +210,7 @@
             class="fas fa-check icon-config"
             :class="{ 'check-uncheck': '' !== subtitles }"
           ></i>
-          {{ renderSubtitle("", rtick) }}
+          {{ renderSubtitle("", rTick) }}
         </td>
         <td class="td-right"></td>
       </tr>
@@ -233,7 +233,7 @@
       </tr>
     </table>
 
-    <table v-if="page === 'subsizes'">
+    <table v-if="page === 'subSizes'">
       <tr
         class="tr-button"
         tabindex="0"
@@ -257,7 +257,7 @@
         <td>
           <i
             class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== subsize }"
+            :class="{ 'check-uncheck': s !== subSize }"
           ></i>
           {{ renderSubtitleSize(s) }}
         </td>
@@ -265,7 +265,7 @@
       </tr>
     </table>
 
-    <table v-if="page === 'subbg'">
+    <table v-if="page === 'subBackground'">
       <tr
         class="tr-button"
         tabindex="0"
@@ -289,7 +289,7 @@
         <td>
           <i
             class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== subbg }"
+            :class="{ 'check-uncheck': s !== subBackground }"
           ></i>
           {{ renderSubtitleBackground(s) }}
         </td>
@@ -303,7 +303,7 @@
 import { PlayerPreferences } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 
@@ -313,12 +313,12 @@ export default defineComponent({
   emits: [
     "update:shown",
     "update:loop",
-    "update:nextend",
+    "update:nextEnd",
     "update:speed",
-    "update:animcolors",
-    "update:subsize",
-    "update:subbg",
-    "update:subhtml",
+    "update:animColors",
+    "update:subSize",
+    "update:subBackground",
+    "update:subHTML",
     "enter",
     "leave",
   ],
@@ -326,24 +326,24 @@ export default defineComponent({
     shown: Boolean,
     metadata: Object,
     loop: Boolean,
-    nextend: Boolean,
+    nextEnd: Boolean,
     speed: Number,
-    animcolors: String,
-    subsize: String,
-    subbg: String,
-    subhtml: Boolean,
-    rtick: Number,
+    animColors: String,
+    subSize: String,
+    subBackground: String,
+    subHTML: Boolean,
+    rTick: Number,
   },
   setup(props) {
     return {
       shownState: useVModel(props, "shown"),
       loopState: useVModel(props, "loop"),
-      nextendState: useVModel(props, "nextend"),
+      nextEndState: useVModel(props, "nextEnd"),
       speedState: useVModel(props, "speed"),
-      animColorsState: useVModel(props, "animcolors"),
-      subsizeState: useVModel(props, "subsize"),
-      subbgState: useVModel(props, "subbg"),
-      subhtmlState: useVModel(props, "subhtml"),
+      animColorsState: useVModel(props, "animColors"),
+      subSizeState: useVModel(props, "subSize"),
+      subBackgroundState: useVModel(props, "subBackground"),
+      subHTMLState: useVModel(props, "subHTML"),
     };
   },
   data: function () {
@@ -402,12 +402,12 @@ export default defineComponent({
     },
 
     goToSubSizes: function () {
-      this.page = "subsizes";
+      this.page = "subSizes";
       this.focus();
     },
 
     goToSubBackgrounds: function () {
-      this.page = "subbg";
+      this.page = "subBackground";
       this.focus();
     },
 
@@ -458,7 +458,7 @@ export default defineComponent({
     },
 
     updateSubtitleSize: function (s: string) {
-      this.subsizeState = s;
+      this.subSizeState = s;
       PlayerPreferences.SetSubtitlesSize(s);
     },
 
@@ -478,12 +478,12 @@ export default defineComponent({
     },
 
     updateSubtitleBackground: function (s: string) {
-      this.subbgState = s;
+      this.subBackgroundState = s;
       PlayerPreferences.SetSubtitlesBackground(s);
     },
 
-    renderSubtitle: function (subId: string, rtick: number) {
-      if (rtick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
+    renderSubtitle: function (subId: string, rTick: number) {
+      if (rTick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
         return this.$t("No subtitles");
       }
 

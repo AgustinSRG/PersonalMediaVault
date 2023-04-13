@@ -77,7 +77,7 @@ export class PlayerPreferences {
 
         PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
 
-        PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-autonext", 0);
+        PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-auto-next", 0);
         PlayerPreferences.NextOnEnd = LocalStorage.Get("player-pref-next-end", true);
 
         PlayerPreferences.SelectedSubtitles = LocalStorage.Get("player-pref-subtitles", "");
@@ -278,7 +278,7 @@ export class PlayerPreferences {
 
     public static SetImageAutoNext(s: number) {
         PlayerPreferences.ImageAutoNext = s;
-        LocalStorage.Set("player-pref-img-autonext", s);
+        LocalStorage.Set("player-pref-img-auto-next", s);
     }
 
     public static SetNextOnEnd(s: boolean) {

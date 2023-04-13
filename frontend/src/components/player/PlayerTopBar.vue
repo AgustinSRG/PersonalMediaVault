@@ -3,9 +3,9 @@
     class="player-top-bar"
     :class="{
       hidden: !shown,
-      'with-album': inalbum,
-      'album-expand': albumexpanded,
-      expanded: expanded && !albumexpanded,
+      'with-album': inAlbum,
+      'album-expand': albumExpanded,
+      expanded: expanded && !albumExpanded,
     }"
     tabindex="-1"
     @click="clickTopBar"
@@ -13,7 +13,7 @@
     @contextmenu="stopPropagationEvent"
     @keydown="onKeyDown"
   >
-    <div v-if="!albumexpanded" class="player-title-container">
+    <div v-if="!albumExpanded" class="player-title-container">
       <div class="player-title-left">
         <button
           type="button"
@@ -51,7 +51,7 @@
     </div>
 
     <PlayerAlbumFullScreen
-      :expanded="albumexpanded"
+      :expanded="albumExpanded"
       @close="closeAlbum"
     ></PlayerAlbumFullScreen>
     <PlayerMediaEditor
@@ -65,7 +65,7 @@
 <script lang="ts">
 import { MediaController } from "@/control/media";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import PlayerMediaEditor from "./PlayerMediaEditor.vue";
 import { AuthController } from "@/control/auth";
@@ -77,22 +77,22 @@ export default defineComponent({
     PlayerAlbumFullScreen,
     PlayerMediaEditor,
   },
-  emits: ["update:expanded", "update:albumexpanded", "clickplayer"],
+  emits: ["update:expanded", "update:albumExpanded", "click-player"],
   props: {
     mid: Number,
     metadata: Object,
 
-    inalbum: Boolean,
+    inAlbum: Boolean,
 
     shown: Boolean,
     fullscreen: Boolean,
     expanded: Boolean,
-    albumexpanded: Boolean,
+    albumExpanded: Boolean,
   },
   setup(props) {
     return {
       expandedState: useVModel(props, "expanded"),
-      albumexpandedState: useVModel(props, "albumexpanded"),
+      albumExpandedState: useVModel(props, "albumExpanded"),
     };
   },
   data: function () {
@@ -103,11 +103,11 @@ export default defineComponent({
   methods: {
     clickTopBar: function (e) {
       e.stopPropagation();
-      this.$emit("clickplayer");
+      this.$emit("click-player");
     },
 
     expandTitle: function () {
-      this.albumexpandedState = false;
+      this.albumExpandedState = false;
       this.expandedState = true;
     },
 
@@ -120,12 +120,12 @@ export default defineComponent({
     },
 
     expandAlbum: function () {
-      this.albumexpandedState = true;
+      this.albumExpandedState = true;
       this.expandedState = false;
     },
 
     closeAlbum: function () {
-      this.albumexpandedState = false;
+      this.albumExpandedState = false;
     },
 
     close: function () {
@@ -138,7 +138,7 @@ export default defineComponent({
     },
 
     onKeyDown: function (e) {
-      if (!this.expanded && !this.albumexpanded) {
+      if (!this.expanded && !this.albumExpanded) {
         return;
       }
       e.stopPropagation();
@@ -163,7 +163,7 @@ export default defineComponent({
   },
   watch: {
     fullscreen: function () {
-      this.albumexpandedState = false;
+      this.albumExpandedState = false;
     },
 
     expanded: function () {
@@ -183,8 +183,8 @@ export default defineComponent({
       }
     },
 
-    albumexpanded: function () {
-      if (this.albumexpanded) {
+    albumExpanded: function () {
+      if (this.albumExpanded) {
          nextTick(() => {
             const el = this.$el.querySelector(".player-album-container");
             if (el) {

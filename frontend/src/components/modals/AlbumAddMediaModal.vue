@@ -27,8 +27,8 @@
       <div class="modal-body no-padding" v-if="!isUpload">
         <PageAdvancedSearch
           :display="true"
-          :inmodal="true"
-          :noalbum="aid"
+          :inModal="true"
+          :noAlbum="aid"
           @select-media="selectMedia"
           @change-to-upload="changeToUpload"
         ></PageAdvancedSearch>
@@ -36,8 +36,8 @@
       <div class="modal-body no-padding" v-if="isUpload">
         <PageUpload
           :display="true"
-          :inmodal="true"
-          :fixedalbum="aid"
+          :inModal="true"
+          :fixedAlbum="aid"
           @change-to-search="changeToSearch"
           @media-go="close"
         ></PageUpload>
@@ -48,7 +48,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";

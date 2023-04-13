@@ -50,7 +50,6 @@
     <div
       v-show="!loading && albumData"
       class="album-body"
-      @scroll.passive="closeOptionsMenu"
     >
       <div
         v-for="(item, i) in albumList"

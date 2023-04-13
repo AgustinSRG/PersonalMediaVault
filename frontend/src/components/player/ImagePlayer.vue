@@ -1,7 +1,7 @@
 <template>
   <div class="image-player player-settings-no-trap" :class="{
     'player-min': min,
-    'no-controls': !showcontrols,
+    'no-controls': !showControls,
     'full-screen': fullscreen,
     'bg-black': background === 'black',
     'bg-white': background === 'white',
@@ -10,14 +10,14 @@
       <img v-if="prefetchURL" :src="prefetchURL" />
     </div>
     <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
-      <img v-if="imageURL" :src="imageURL" :key="rtick" @load="onImageLoaded" @error="onImageLoaded" :style="{
+      <img v-if="imageURL" :src="imageURL" :key="rTick" @load="onImageLoaded" @error="onImageLoaded" :style="{
         width: imageWidth,
         height: imageHeight,
         top: imageTop,
         left: imageLeft,
       }" />
 
-      <ImageNotes :editing="notesEditMode" :contextopen="contextMenuShown" :width="imageWidth" :height="imageHeight" :top="imageTop" :left="imageLeft"></ImageNotes>
+      <ImageNotes :editing="notesEditMode" :contextOpen="contextMenuShown" :width="imageWidth" :height="imageHeight" :top="imageTop" :left="imageLeft"></ImageNotes>
     </div>
 
     <div class="player-loader" v-if="loading">
@@ -31,9 +31,9 @@
 
     <PlayerEncodingPending v-if="!loading && !imageURL && imagePending" :mid="mid" :tid="imagePendingTask" :res="currentResolution"></PlayerEncodingPending>
 
-    <div class="player-controls" :class="{ hidden: !showcontrols }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
+    <div class="player-controls" :class="{ hidden: !showControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
       <div class="player-controls-left">
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!prev && !pageprev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
           <i class="fas fa-backward-step"></i>
         </button>
 
@@ -41,7 +41,7 @@
           <i class="fas fa-play"></i>
         </button>
 
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!next && !pagenext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
           <i class="fas fa-forward-step"></i>
         </button>
 
@@ -66,38 +66,38 @@
       </div>
     </div>
 
-    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-helptip-left">
+    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-helptip-left">
+    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="helpTooltip === 'scale'" class="player-tooltip player-helptip-left">
+    <div v-if="helpTooltip === 'scale'" class="player-tooltip player-help-tip-left">
       {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
     </div>
 
-    <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-helptip-right">
+    <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
       {{ $t("Player Configuration") }}
     </div>
 
-    <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-helptip-right">
+    <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
       {{ $t("Manage albums") }}
     </div>
 
-    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
       {{ $t("Full screen") }}
     </div>
-    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
       {{ $t("Exit full screen") }}
     </div>
 
-    <ImagePlayerConfig v-model:shown="displayConfig" v-model:resolution="currentResolution" v-model:background="background" @update:resolution="onResolutionUpdated" @update:background="onBackgroundChanged" @update-autonext="setupAutoNextTimer" :rtick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls"></ImagePlayerConfig>
+    <ImagePlayerConfig v-model:shown="displayConfig" v-model:resolution="currentResolution" v-model:background="background" @update:resolution="onResolutionUpdated" @update:background="onBackgroundChanged" @update-auto-next="setupAutoNextTimer" :rTick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls"></ImagePlayerConfig>
 
-    <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showcontrols" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumexpanded="expandedAlbum" :inalbum="inalbum" @clickplayer="clickControls"></PlayerTopBar>
+    <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControls" :canwrite="canwrite" v-model:notesedit="notesEditMode" @stats="openStats"></PlayerContextMenu>
+    <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControlsState" :canWrite="canWrite" v-model:notesEdit="notesEditMode" @stats="openStats"></PlayerContextMenu>
   </div>
 </template>
 
@@ -116,13 +116,13 @@ import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { MEDIA_TYPE_IMAGE } from "@/utils/consts";
+import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
@@ -140,37 +140,37 @@ export default defineComponent({
   },
   name: "ImagePlayer",
   emits: [
-    "gonext",
-    "goprev",
+    "go-next",
+    "go-prev",
     "update:fullscreen",
-    "update:showcontrols",
+    "update:showControls",
     "albums-open",
     "stats-open",
   ],
   props: {
     mid: Number,
     metadata: Object,
-    rtick: Number,
+    rTick: Number,
 
-    showcontrols: Boolean,
+    showControls: Boolean,
 
     fullscreen: Boolean,
 
     next: Object,
     prev: Object,
-    inalbum: Boolean,
+    inAlbum: Boolean,
 
-    pagenext: Boolean,
-    pageprev: Boolean,
+    pageNext: Boolean,
+    pagePrev: Boolean,
 
-    canwrite: Boolean,
+    canWrite: Boolean,
 
     min: Boolean,
   },
   setup(props) {
     return {
-      fullScreen: useVModel(props, "fullscreen"),
-      showControls: useVModel(props, "showcontrols"),
+      fullScreenState: useVModel(props, "fullscreen"),
+      showControlsState: useVModel(props, "showControls"),
     };
   },
   data: function () {
@@ -432,14 +432,14 @@ export default defineComponent({
     },
 
     goNext: function () {
-      if (this.next || this.pagenext) {
-        this.$emit("gonext");
+      if (this.next || this.pageNext) {
+        this.$emit("go-next");
       }
     },
 
     goPrev: function () {
-      if (this.prev || this.pageprev) {
-        this.$emit("goprev");
+      if (this.prev || this.pagePrev) {
+        this.$emit("go-prev");
       }
     },
 
@@ -505,7 +505,7 @@ export default defineComponent({
       ) {
         this.cursorShown = false;
       }
-      if (this.helpTooltip && !this.showcontrols) {
+      if (this.helpTooltip && !this.showControls) {
         this.helpTooltip = "";
       }
     },
@@ -638,7 +638,7 @@ export default defineComponent({
           break;
         case "ArrowRight":
           if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
-            if (this.next || this.pagenext) {
+            if (this.next || this.pageNext) {
               this.goNext();
             } else {
               caught = false;
@@ -647,7 +647,7 @@ export default defineComponent({
           break;
         case "ArrowLeft":
           if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
-            if (this.prev || this.pageprev) {
+            if (this.prev || this.pagePrev) {
               this.goPrev();
             } else {
               caught = false;
@@ -712,17 +712,17 @@ export default defineComponent({
           break;
         case "C":
         case "c":
-          this.showControls = !this.showControls;
+          this.showControlsState = !this.showControlsState;
           break;
         case "PageDown":
-          if (this.prev || this.pageprev) {
+          if (this.prev || this.pagePrev) {
             this.goPrev();
           } else {
             caught = false;
           }
           break;
         case "PageUp":
-          if (this.next || this.pagenext) {
+          if (this.next || this.pageNext) {
             this.goNext();
           } else {
             caught = false;
@@ -822,7 +822,7 @@ export default defineComponent({
         return;
       }
 
-      if (!this.next && !this.pagenext) {
+      if (!this.next && !this.pageNext) {
         return;
       }
 
@@ -897,12 +897,12 @@ export default defineComponent({
       }
       switch (event.action) {
         case "nexttrack":
-          if (this.next || this.pagenext) {
+          if (this.next || this.pageNext) {
             this.goNext();
           }
           break;
         case "previoustrack":
-          if (this.prev || this.pageprev) {
+          if (this.prev || this.pagePrev) {
             this.goPrev();
           }
           break;
@@ -1004,7 +1004,7 @@ export default defineComponent({
     }
   },
   watch: {
-    rtick: function () {
+    rTick: function () {
       this.internalTick++;
       this.expandedTitle = false;
       this.initializeImage();
@@ -1017,7 +1017,7 @@ export default defineComponent({
     next: function () {
       this.setupAutoNextTimer();
     },
-    pagenext: function () {
+    pageNext: function () {
       this.setupAutoNextTimer();
     },
   },

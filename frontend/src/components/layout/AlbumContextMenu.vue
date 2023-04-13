@@ -20,7 +20,7 @@
     @dblclick="stopPropagationEvent"
   >
     <div
-      v-if="mindex > 0"
+      v-if="mediaIndex > 0"
       tabindex="0"
       @click="moveMediaUp"
       @keydown="clickOnEnter"
@@ -29,7 +29,7 @@
       <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
     </div>
     <div
-      v-if="mindex < mlength - 1"
+      v-if="mediaIndex < albumLength - 1"
       tabindex="0"
       @keydown="clickOnEnter"
       @click="moveMediaDown"
@@ -59,7 +59,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
@@ -68,8 +68,8 @@ export default defineComponent({
   props: {
     shown: Boolean,
 
-    mindex: Number,
-    mlength: Number,
+    mediaIndex: Number,
+    albumLength: Number,
 
     x: Number,
     y: Number,
@@ -98,22 +98,22 @@ export default defineComponent({
     },
 
     moveMediaUp: function () {
-      this.$emit("move-up", this.mindex);
+      this.$emit("move-up", this.mediaIndex);
       this.hide();
     },
 
     moveMediaDown: function () {
-      this.$emit("move-down", this.mindex);
+      this.$emit("move-down", this.mediaIndex);
       this.hide();
     },
 
     changePosition: function () {
-      this.$emit("change-pos", this.mindex);
+      this.$emit("change-pos", this.mediaIndex);
       this.hide();
     },
 
     removeMedia: function () {
-      this.$emit("media-remove", this.mindex);
+      this.$emit("media-remove", this.mediaIndex);
       this.hide();
     },
 

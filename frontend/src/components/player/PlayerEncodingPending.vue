@@ -6,7 +6,7 @@
       <div></div>
       <div></div>
     </div>
-    <div v-if="status === 'nonready'" class="player-task-info">
+    <div v-if="status === 'not-ready'" class="player-task-info">
       <div class="player-task-info-row">
         <span>{{
           $t(
@@ -51,7 +51,7 @@
       </div>
 
       <div class="player-task-info-row" v-if="progress > 0">
-        <span>{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}: {{renderTime(estimatedReaminingTime)}}</span>
+        <span>{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}: {{renderTime(estimatedRemainingTime)}}</span>
       </div>
       <div class="player-task-info-row" v-if="progress > 0">
         <div class="player-task-progress-bar">
@@ -87,7 +87,7 @@ export default defineComponent({
       stageNumber: -1,
       stageProgress: 0,
       startTime: 0,
-      estimatedReaminingTime: 0,
+      estimatedRemainingTime: 0,
 
       pendingId: "",
     };
@@ -106,7 +106,7 @@ export default defineComponent({
       this.stage = "";
       this.stageNumber = -1;
       this.startTime = 0;
-      this.estimatedReaminingTime = 0;
+      this.estimatedRemainingTime = 0;
     },
 
     checkTask: function () {
@@ -114,7 +114,7 @@ export default defineComponent({
       Request.Abort(this.pendingId);
 
       if (this.tid <= 0) {
-        this.status = "nonready";
+        this.status = "not-ready";
         Timeouts.Set(this.pendingId, 1000, this.refreshMedia.bind(this));
         return;
       }
@@ -127,7 +127,7 @@ export default defineComponent({
             this.startTime = task.stage_start;
             this.stage = task.stage;
 
-            this.estimatedReaminingTime =
+            this.estimatedRemainingTime =
               (((task.time_now - task.stage_start) / task.stage_progress) *
                 100 -
                 (task.time_now - task.stage_start)) /
@@ -204,13 +204,13 @@ export default defineComponent({
             ) {
               this.refreshMedia();
             } else {
-              this.status = "nonready";
+              this.status = "not-ready";
             }
           } else {
             if (media.encoded) {
               this.refreshMedia();
             } else {
-              this.status = "nonready";
+              this.status = "not-ready";
             }
           }
         })

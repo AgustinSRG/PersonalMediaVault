@@ -120,7 +120,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({

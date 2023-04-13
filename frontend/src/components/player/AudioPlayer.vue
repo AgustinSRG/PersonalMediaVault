@@ -8,7 +8,7 @@
 
     <canvas v-if="audioURL"></canvas>
 
-    <div class="player-feeback-container">
+    <div class="player-feedback-container">
       <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
         <div><i class="fas fa-play"></i></div>
       </div>
@@ -46,7 +46,7 @@
 
     <div class="player-controls" :class="{ hidden: !showControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
       <div class="player-controls-left">
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!prev && !pageprev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
           <i class="fas fa-backward-step"></i>
         </button>
 
@@ -57,7 +57,7 @@
           <i class="fas fa-pause"></i>
         </button>
 
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!next && !pagenext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
           <i class="fas fa-forward-step"></i>
         </button>
 
@@ -87,37 +87,37 @@
       </div>
     </div>
 
-    <div v-if="helpTooltip === 'play'" class="player-tooltip player-helptip-left">
+    <div v-if="helpTooltip === 'play'" class="player-tooltip player-help-tip-left">
       {{ $t("Play") }}
     </div>
-    <div v-if="helpTooltip === 'pause'" class="player-tooltip player-helptip-left">
+    <div v-if="helpTooltip === 'pause'" class="player-tooltip player-help-tip-left">
       {{ $t("Pause") }}
     </div>
 
-    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-helptip-left">
+    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-helptip-left">
+    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="helpTooltip === 'volume'" class="player-tooltip player-helptip-left">
+    <div v-if="helpTooltip === 'volume'" class="player-tooltip player-help-tip-left">
       {{ $t("Volume") }} ({{ muted ? $t("Muted") : renderVolume(volume) }})
     </div>
 
-    <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-helptip-right">
+    <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
       {{ $t("Player Configuration") }}
     </div>
 
-    <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-helptip-right">
+    <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
       {{ $t("Manage albums") }}
     </div>
 
-    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
       {{ $t("Full screen") }}
     </div>
-    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
       {{ $t("Exit full screen") }}
     </div>
 
@@ -136,11 +136,11 @@
       </div>
     </div>
 
-    <AudioPlayerConfig v-model:shown="displayConfig" v-model:speed="speed" v-model:loop="loop" v-model:nextend="nextend" v-model:animcolors="animationColors" v-model:subsize="subtitlesSize" v-model:subbg="subtitlesBg" v-model:subhtml="subtitlesHTML" :rtick="internalTick" :metadata="metadata" @update:animcolors="onUpdateAnimColors" @update:subhtml="onUpdateSubHTML" @update:nextend="onUpdateNextEnd" @enter="enterControls" @leave="leaveControls"></AudioPlayerConfig>
+    <AudioPlayerConfig v-model:shown="displayConfig" v-model:speed="speed" v-model:loop="loop" v-model:nextEnd="nextEnd" v-model:animColors="animationColors" v-model:subSize="subtitlesSize" v-model:subBackground="subtitlesBg" v-model:subHTML="subtitlesHTML" :rTick="internalTick" :metadata="metadata" @update:animColors="onUpdateAnimColors" @update:subHTML="onUpdateSubHTML" @update:nextEnd="onUpdateNextEnd" @enter="enterControls" @leave="leaveControls"></AudioPlayerConfig>
 
-    <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumexpanded="expandedAlbum" :inalbum="inalbum" @clickplayer="clickControls"></PlayerTopBar>
+    <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceloop="sliceLoop" :hasslices="timeSlices && timeSlices.length > 0"></PlayerContextMenu>
+    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0"></PlayerContextMenu>
   </div>
 </template>
 
@@ -163,7 +163,7 @@ import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import {
@@ -188,8 +188,8 @@ export default defineComponent({
   },
   name: "AudioPlayer",
   emits: [
-    "gonext",
-    "goprev",
+    "go-next",
+    "go-prev",
     "ended",
     "update:fullscreen",
     "albums-open",
@@ -198,24 +198,24 @@ export default defineComponent({
   props: {
     mid: Number,
     metadata: Object,
-    rtick: Number,
+    rTick: Number,
 
     fullscreen: Boolean,
 
     next: Object,
     prev: Object,
-    inalbum: Boolean,
+    inAlbum: Boolean,
 
-    pagenext: Boolean,
-    pageprev: Boolean,
+    pageNext: Boolean,
+    pagePrev: Boolean,
 
-    canwrite: Boolean,
+    canWrite: Boolean,
 
     min: Boolean,
   },
   setup(props) {
     return {
-      fullScreen: useVModel(props, "fullscreen"),
+      fullScreenState: useVModel(props, "fullscreen"),
     };
   },
   data: function () {
@@ -252,7 +252,7 @@ export default defineComponent({
       mouseInControls: false,
 
       loop: false,
-      nextend: false,
+      nextEnd: false,
 
       sliceLoop: false,
 
@@ -280,7 +280,7 @@ export default defineComponent({
 
       subtitles: "",
       subtitlesStart: -1,
-      suntitlesEnd: -1,
+      subtitlesEnd: -1,
       subtitlesSize: "l",
       subtitlesBg: "75",
       subtitlesHTML: false,
@@ -343,14 +343,14 @@ export default defineComponent({
     },
 
     goNext: function () {
-      if (this.next || this.pagenext) {
-        this.$emit("gonext");
+      if (this.next || this.pageNext) {
+        this.$emit("go-next");
       }
     },
 
     goPrev: function () {
-      if (this.prev || this.pageprev) {
-        this.$emit("goprev");
+      if (this.prev || this.pagePrev) {
+        this.$emit("go-prev");
       }
     },
 
@@ -456,7 +456,7 @@ export default defineComponent({
       } else {
         this.pause();
         this.ended = true;
-        if (this.nextend) {
+        if (this.nextEnd) {
           this.goNext();
         }
       }
@@ -622,11 +622,11 @@ export default defineComponent({
       } else {
         closeFullscreen();
       }
-      this.fullScreen = !this.fullScreen;
+      this.fullScreenState = !this.fullScreenState;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {
-        this.fullScreen = false;
+        this.fullScreenState = false;
       }
     },
     stopPropagationEvent: function (e) {
@@ -792,7 +792,7 @@ export default defineComponent({
           break;
         case "ArrowRight":
           if (shifting || event.altKey) {
-            if (this.next || this.pagenext) {
+            if (this.next || this.pageNext) {
               this.goNext();
             } else {
               caught = false;
@@ -803,7 +803,7 @@ export default defineComponent({
           break;
         case "ArrowLeft":
           if (shifting || event.altKey) {
-            if (this.prev || this.pageprev) {
+            if (this.prev || this.pagePrev) {
               this.goPrev();
             } else {
               caught = false;
@@ -837,14 +837,14 @@ export default defineComponent({
           }
           break;
         case "PageDown":
-          if (this.prev || this.pageprev) {
+          if (this.prev || this.pagePrev) {
             this.goPrev();
           } else {
             caught = false;
           }
           break;
         case "PageUp":
-          if (this.next || this.pagenext) {
+          if (this.next || this.pageNext) {
             this.goNext();
           } else {
             caught = false;
@@ -913,7 +913,7 @@ export default defineComponent({
         : 0;
       this.duration = 0;
       this.speed = 1;
-      this.loop = AppStatus.CurrentAlbum < 0 || !this.nextend;
+      this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
       this.loading = true;
       this.playing = true;
       this.clearAudioRenderer();
@@ -1173,7 +1173,7 @@ export default defineComponent({
     },
 
     onUpdateNextEnd: function () {
-      PlayerPreferences.SetNextOnEnd(this.nextend);
+      PlayerPreferences.SetNextOnEnd(this.nextEnd);
     },
 
     themeUpdated: function () {
@@ -1197,12 +1197,12 @@ export default defineComponent({
           this.pause();
           break;
         case "nexttrack":
-          if (this.next || this.pagenext) {
+          if (this.next || this.pageNext) {
             this.goNext();
           }
           break;
         case "previoustrack":
-          if (this.prev || this.pageprev) {
+          if (this.prev || this.pagePrev) {
             this.goPrev();
           }
           break;
@@ -1217,7 +1217,7 @@ export default defineComponent({
     this.subtitlesSize = PlayerPreferences.SubtitlesSize;
     this.subtitlesBg = PlayerPreferences.SubtitlesBackground;
     this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
-    this.nextend = PlayerPreferences.NextOnEnd;
+    this.nextEnd = PlayerPreferences.NextOnEnd;
 
     this.$options.keyHandler = this.onKeyPress.bind(this);
     KeyboardManager.AddHandler(this.$options.keyHandler, 100);
@@ -1314,7 +1314,7 @@ export default defineComponent({
     }
   },
   watch: {
-    rtick: function () {
+    rTick: function () {
       this.internalTick++;
       this.expandedTitle = false;
       this.subtitles = "";

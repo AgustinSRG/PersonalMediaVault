@@ -1,76 +1,76 @@
 <template>
   <div class="player-container" tabindex="-1">
     <EmptyPlayer
-      v-if="!mdata || mdata.type === 0"
+      v-if="!mediaData || mediaData.type === 0"
       :mid="mid"
       :status="status"
-      :rtick="tick"
+      :rTick="tick"
       :prev="prev"
-      :pageprev="hasPagePrev"
-      :pagenext="hasPageNext"
+      :pagePrev="hasPagePrev"
+      :pageNext="hasPageNext"
       :next="next"
-      :inalbum="isInAlbum"
-      :albumloading="albumLoading"
-      :canwrite="canWrite"
-      @gonext="goNext"
-      @goprev="goPrev"
+      :inAlbum="isInAlbum"
+      :albumLoading="albumLoading"
+      :canWrite="canWrite"
+      @go-next="goNext"
+      @go-prev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
       :min="minPlayer"
     ></EmptyPlayer>
     <ImagePlayer
-      v-if="mdata && mdata.type === 1"
+      v-if="mediaData && mediaData.type === 1"
       :mid="mid"
-      :metadata="mdata"
-      :rtick="tick"
+      :metadata="mediaData"
+      :rTick="tick"
       :prev="prev"
       :next="next"
-      :pageprev="hasPagePrev"
-      :pagenext="hasPageNext"
-      :inalbum="isInAlbum"
-      :canwrite="canWrite"
-      @gonext="goNext"
-      @goprev="goPrev"
+      :pagePrev="hasPagePrev"
+      :pageNext="hasPageNext"
+      :inAlbum="isInAlbum"
+      :canWrite="canWrite"
+      @go-next="goNext"
+      @go-prev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
-      v-model:showcontrols="showControls"
+      v-model:showControls="showControls"
       @albums-open="openAlbums"
       @stats-open="openStats"
       :min="minPlayer"
     ></ImagePlayer>
     <VideoPlayer
-      v-if="mdata && mdata.type === 2"
+      v-if="mediaData && mediaData.type === 2"
       :mid="mid"
-      :metadata="mdata"
-      :rtick="tick"
+      :metadata="mediaData"
+      :rTick="tick"
       :prev="prev"
       :next="next"
-      :pageprev="hasPagePrev"
-      :pagenext="hasPageNext"
-      :inalbum="isInAlbum"
-      :canwrite="canWrite"
-      @gonext="goNext"
-      @goprev="goPrev"
+      :pagePrev="hasPagePrev"
+      :pageNext="hasPageNext"
+      :inAlbum="isInAlbum"
+      :canWrite="canWrite"
+      @go-next="goNext"
+      @go-prev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
-      v-model:usercontrols="showControls"
+      v-model:userControls="showControls"
       @albums-open="openAlbums"
       @stats-open="openStats"
       :min="minPlayer"
     ></VideoPlayer>
     <AudioPlayer
-      v-if="mdata && mdata.type === 3"
+      v-if="mediaData && mediaData.type === 3"
       :mid="mid"
-      :metadata="mdata"
-      :rtick="tick"
+      :metadata="mediaData"
+      :rTick="tick"
       :prev="prev"
       :next="next"
-      :pageprev="hasPagePrev"
-      :pagenext="hasPageNext"
-      :inalbum="isInAlbum"
-      :canwrite="canWrite"
-      @gonext="goNext"
-      @goprev="goPrev"
+      :pagePrev="hasPagePrev"
+      :pageNext="hasPageNext"
+      :inAlbum="isInAlbum"
+      :canWrite="canWrite"
+      @go-next="goNext"
+      @go-prev="goPrev"
       v-model:fullscreen="fullScreen"
       @update:fullscreen="onUpdateFullScreen"
       @albums-open="openAlbums"
@@ -122,7 +122,7 @@ export default defineComponent({
       status: "loading",
       loading: MediaController.Loading,
       mid: MediaController.MediaId,
-      mdata: MediaController.MediaData,
+      mediaData: MediaController.MediaData,
 
       fullScreen: false,
       showControls: true,
@@ -146,8 +146,8 @@ export default defineComponent({
   methods: {
     updateMedia: function () {
       this.mid = MediaController.MediaId;
-      if (MediaController.MediaData !== this.mdata) {
-        this.mdata = MediaController.MediaData;
+      if (MediaController.MediaData !== this.mediaData) {
+        this.mediaData = MediaController.MediaData;
         this.tick++;
       }
       this.updateStatus();
@@ -165,7 +165,7 @@ export default defineComponent({
     updateStatus: function () {
       if (this.loading) {
         this.status = "loading";
-      } else if (this.mdata) {
+      } else if (this.mediaData) {
         this.status = "200";
       } else if (this.mid === -1) {
         this.status = "none";

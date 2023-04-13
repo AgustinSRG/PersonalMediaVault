@@ -42,7 +42,7 @@
             type="text"
             name="confirmation"
             autocomplete="off"
-            v-model="confimation"
+            v-model="confirmation"
             :disabled="busy"
             maxlength="255"
             class="form-control form-control-full-width auto-focus"
@@ -65,7 +65,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
@@ -79,7 +79,7 @@ export default defineComponent({
       currentAlbum: -1,
       oldName: "",
 
-      confimation: "",
+      confirmation: "",
 
       busy: false,
       error: "",
@@ -126,7 +126,7 @@ export default defineComponent({
         return;
       }
 
-      if (this.confimation.toLowerCase() !== "confirm") {
+      if (this.confirmation.toLowerCase() !== "confirm") {
         this.error = this.$t(
           "You must type 'confirm' in order to confirm the deletion of the album"
         );
@@ -145,7 +145,7 @@ export default defineComponent({
             this.$t("Album deleted") + ": " + this.oldName
           );
           this.busy = false;
-          this.confimation = "";
+          this.confirmation = "";
           this.close();
           AlbumsController.OnChangedAlbum(albumId);
         })
@@ -210,7 +210,7 @@ export default defineComponent({
     display: function () {
       if (this.display) {
         this.error = "";
-        this.confimation = "";
+        this.confirmation = "";
         if (this.$options.focusTrap) {
           this.$options.focusTrap.activate();
         }

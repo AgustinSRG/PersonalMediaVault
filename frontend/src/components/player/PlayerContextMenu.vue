@@ -37,7 +37,7 @@
       </tr>
 
       <tr
-        v-if="(type === 'video' || type === 'audio') && hasslices"
+        v-if="(type === 'video' || type === 'audio') && hasSlices"
         class="tr-button"
         tabindex="0"
         @click="toggleSliceLoop"
@@ -48,7 +48,7 @@
           <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
         </td>
         <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceloop }"></i>
+          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceLoop }"></i>
         </td>
       </tr>
 
@@ -85,7 +85,7 @@
       </tr>
 
       <tr
-        v-if="type === 'image' && canwrite"
+        v-if="type === 'image' && canWrite"
         class="tr-button"
         tabindex="0"
         @click="toggleNotes"
@@ -96,7 +96,7 @@
           <span class="context-entry-title">{{ $t("Edit image notes") }}</span>
         </td>
         <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !notesedit }"></i>
+          <i class="fas fa-check" :class="{ 'check-uncheck': !notesEdit }"></i>
         </td>
       </tr>
 
@@ -148,7 +148,7 @@
 <script lang="ts">
 import { MediaController } from "@/control/media";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
   name: "PlayerContextMenu",
@@ -157,8 +157,8 @@ export default defineComponent({
     "update:loop",
     "update:controls",
     "update:fit",
-    "update:notesedit",
-    "update:sliceloop",
+    "update:notesEdit",
+    "update:sliceLoop",
     "close",
   ],
   props: {
@@ -173,11 +173,11 @@ export default defineComponent({
     fit: Boolean,
     controls: Boolean,
 
-    sliceloop: Boolean,
-    hasslices: Boolean,
+    sliceLoop: Boolean,
+    hasSlices: Boolean,
 
-    notesedit: Boolean,
-    canwrite: Boolean,
+    notesEdit: Boolean,
+    canWrite: Boolean,
   },
   setup(props) {
     return {
@@ -185,8 +185,8 @@ export default defineComponent({
       loopState: useVModel(props, "loop"),
       fitState: useVModel(props, "fit"),
       controlsState: useVModel(props, "controls"),
-      notesState: useVModel(props, "notesedit"),
-      sliceLoopState: useVModel(props, "sliceloop"),
+      notesState: useVModel(props, "notesEdit"),
+      sliceLoopState: useVModel(props, "sliceLoop"),
     };
   },
   data: function () {

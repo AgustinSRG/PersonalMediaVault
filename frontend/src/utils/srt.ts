@@ -37,7 +37,7 @@ function parseDurationSRT(duration: string): number {
     return result;
 }
 
-function replaceSRTHTMLFormat(text: string): string {
+function replaceSRT_HTMLFormat(text: string): string {
     return text.replace(/[\n\r]+/g, " ").replace(/\{\\an[0-9]\}/g, "").replace(/\}\}/g, "<").replace(/\}\}/g, ">");
 }
 
@@ -52,7 +52,7 @@ export function parseSRT(srt: string): SubtitlesEntry[] {
         } else {
             if (lineBuffer.length >= 3) {
                 const durationLineParts = lineBuffer[1].split("-->");
-                const text = replaceSRTHTMLFormat(lineBuffer.slice(2).join("\n")).trim();
+                const text = replaceSRT_HTMLFormat(lineBuffer.slice(2).join("\n")).trim();
 
                 const start = parseDurationSRT(durationLineParts[0]);
                 const end = parseDurationSRT(durationLineParts[1] || durationLineParts[0]);

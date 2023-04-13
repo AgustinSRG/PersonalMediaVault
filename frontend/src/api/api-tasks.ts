@@ -1,6 +1,6 @@
 // Tasks API
 
-import { GetAPIURL, RequestParams } from "@/utils/request";
+import { GetApiURL, RequestParams } from "@/utils/request";
 
 export interface TaskStatus {
     id: number;
@@ -22,21 +22,21 @@ export class TasksAPI {
     public static GetTasks(): RequestParams {
         return {
             method: "GET",
-            url: GetAPIURL("/api/tasks"),
+            url: GetApiURL("/api/tasks"),
         };
     }
 
     public static GetTask(id: number): RequestParams {
         return {
             method: "GET",
-            url: GetAPIURL("/api/tasks/" + encodeURIComponent(id)),
+            url: GetApiURL("/api/tasks/" + encodeURIComponent(id)),
         };
     }
 
     public static KillTask(id: number): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/tasks/" + encodeURIComponent(id) + "/kill"),
+            url: GetApiURL("/api/tasks/" + encodeURIComponent(id) + "/kill"),
         };
     }
 }

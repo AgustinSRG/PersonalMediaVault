@@ -23,7 +23,7 @@
           <b>{{ $t("Quality") }}</b>
         </td>
         <td class="td-right">
-          {{ renderResolution(resolution, rtick) }}
+          {{ renderResolution(resolution, rTick) }}
           <i class="fas fa-chevron-right arrow-config"></i>
         </td>
       </tr>
@@ -47,7 +47,7 @@
       <tr
         class="tr-button"
         tabindex="0"
-        @click="goToAutonext"
+        @click="goToAutoNext"
         @keydown="clickOnEnter"
       >
         <td>
@@ -84,7 +84,7 @@
             class="fas fa-check icon-config"
             :class="{ 'check-uncheck': -1 !== resolution }"
           ></i>
-          {{ renderResolution(-1, rtick) }}
+          {{ renderResolution(-1, rTick) }}
         </td>
         <td class="td-right"></td>
       </tr>
@@ -101,7 +101,7 @@
             class="fas fa-check icon-config"
             :class="{ 'check-uncheck': i !== resolution }"
           ></i>
-          {{ renderResolution(i, rtick) }}
+          {{ renderResolution(i, rTick) }}
         </td>
         <td class="td-right"></td>
       </tr>
@@ -137,7 +137,7 @@
         <td class="td-right"></td>
       </tr>
     </table>
-    <table v-if="page === 'autotext'">
+    <table v-if="page === 'auto-next'">
       <tr
         class="tr-button"
         tabindex="0"
@@ -174,7 +174,7 @@
 <script lang="ts">
 import { PlayerPreferences } from "@/control/player-preferences";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
@@ -183,7 +183,7 @@ export default defineComponent({
     "update:shown",
     "update:resolution",
     "update:background",
-    "update-autonext",
+    "update-auto-next",
     "enter",
     "leave",
   ],
@@ -192,7 +192,7 @@ export default defineComponent({
     metadata: Object,
     resolution: Number,
     background: String,
-    rtick: Number,
+    rTick: Number,
   },
   setup(props) {
     return {
@@ -222,7 +222,7 @@ export default defineComponent({
     changeAutoNext: function (b) {
       this.autoNext = b;
       PlayerPreferences.SetImageAutoNext(b);
-      this.$emit("update-autonext");
+      this.$emit("update-auto-next");
     },
 
     enterConfig: function () {
@@ -258,8 +258,8 @@ export default defineComponent({
       this.focus();
     },
 
-    goToAutonext: function () {
-      this.page = "autotext";
+    goToAutoNext: function () {
+      this.page = "auto-next";
       this.focus();
     },
 
@@ -286,8 +286,8 @@ export default defineComponent({
       }
     },
 
-    renderResolution: function (res: number, rtick: number) {
-      if (rtick < 0 || !this.metadata) {
+    renderResolution: function (res: number, rTick: number) {
+      if (rTick < 0 || !this.metadata) {
         return this.$t("Unknown");
       }
       if (res < 0) {
@@ -400,7 +400,7 @@ export default defineComponent({
         }
       }
     },
-    rtick: function () {
+    rTick: function () {
       this.updateResolutions();
     },
   },

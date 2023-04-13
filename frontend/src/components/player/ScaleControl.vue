@@ -39,7 +39,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({

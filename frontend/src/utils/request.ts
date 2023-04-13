@@ -5,7 +5,7 @@
 import { AuthController } from "@/control/auth";
 import axios, { AxiosError } from "axios";
 
-export function GetAPIURL(path: string): string {
+export function GetApiURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
         return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {

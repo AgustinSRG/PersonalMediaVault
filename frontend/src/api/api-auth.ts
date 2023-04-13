@@ -1,12 +1,12 @@
 // Authentication API
 
-import { GetAPIURL, RequestParams } from "@/utils/request";
+import { GetApiURL, RequestParams } from "@/utils/request";
 
 export class AuthAPI {
     public static Login(username: string, password: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/auth/login"),
+            url: GetApiURL("/api/auth/login"),
             json: {
                 username: username,
                 password: password,
@@ -17,7 +17,7 @@ export class AuthAPI {
     public static Logout(): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/auth/logout"),
+            url: GetApiURL("/api/auth/logout"),
         };
     }
 }

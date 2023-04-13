@@ -129,7 +129,7 @@ import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";

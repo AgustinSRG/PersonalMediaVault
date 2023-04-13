@@ -56,10 +56,10 @@
                     :class="{ 'task-running': t.running }"
                   ></i>
                 </td>
-                <td class="task-pbar-td one-line td-shrink">
-                  <div class="task-pbar-container" v-if="t.running">
+                <td class="task-progress-bar-td one-line td-shrink">
+                  <div class="task-progress-bar-container" v-if="t.running">
                     <div
-                      class="task-pbar-current"
+                      class="task-progress-bar-current"
                       :style="{
                         width: getGlobalProgress(t.stage, t.stage_progress),
                       }"
@@ -106,7 +106,7 @@ import { GenerateURIQuery, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time-utils";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
@@ -323,7 +323,7 @@ export default defineComponent({
 
         const progressPercent = this.getProgressPercent(p);
 
-        const estimatedReaminingTime =
+        const estimatedRemainingTime =
           (((now - ts) / p) * 100 - (now - ts)) / 1000;
 
         let txt =
@@ -337,12 +337,12 @@ export default defineComponent({
           ": " +
           progressPercent;
 
-        if (estimatedReaminingTime > 0) {
+        if (estimatedRemainingTime > 0) {
           txt +=
             " | " +
             this.$t("Remaining time (estimated)") +
             ": " +
-            renderTimeSeconds(estimatedReaminingTime);
+            renderTimeSeconds(estimatedRemainingTime);
         }
 
         return txt;

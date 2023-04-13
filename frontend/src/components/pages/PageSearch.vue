@@ -355,7 +355,7 @@ export default defineComponent({
     },
 
     goAdvancedSearch: function () {
-      AppStatus.GoToPage("advsearch");
+      AppStatus.GoToPage("adv-search");
     },
 
     renderTime: function (s: number): string {

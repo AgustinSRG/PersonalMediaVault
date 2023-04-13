@@ -55,7 +55,7 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import { Timeouts } from "@/utils/timeout";
 import { Request } from "@/utils/request";

@@ -41,10 +41,10 @@
       :display="isDisplayed && page === 'random'"
     ></PageRandom>
     <PageAdvancedSearch
-      v-if="isDisplayed && page === 'advsearch'"
-      :display="isDisplayed && page === 'advsearch'"
-      :inmodal="false"
-      :noalbum="-1"
+      v-if="isDisplayed && page === 'adv-search'"
+      :display="isDisplayed && page === 'adv-search'"
+      :inModal="false"
+      :noAlbum="-1"
     ></PageAdvancedSearch>
     <PageAlbums
       v-if="isDisplayed && page === 'albums'"
@@ -114,7 +114,7 @@ export default defineComponent({
           return this.$t("Home");
         case "search":
           return this.$t("Search results") + ": " + s;
-        case "advsearch":
+        case "adv-search":
           return this.$t("Advanced search");
         case "upload":
           return this.$t("Upload media");
@@ -132,7 +132,7 @@ export default defineComponent({
         case "home":
           return "fas fa-home";
         case "search":
-        case "advsearch":
+        case "adv-search":
           return "fas fa-search";
         case "upload":
           return "fas fa-upload";

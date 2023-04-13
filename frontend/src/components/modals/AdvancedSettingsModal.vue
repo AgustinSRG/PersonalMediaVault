@@ -136,7 +136,7 @@ import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 

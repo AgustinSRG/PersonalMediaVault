@@ -1,19 +1,19 @@
 // Account API
 
-import { GetAPIURL, RequestParams } from "@/utils/request";
+import { GetApiURL, RequestParams } from "@/utils/request";
 
 export class AccountAPI {
     public static GetUsername(): RequestParams {
         return {
             method: "GET",
-            url: GetAPIURL("/api/account/username"),
+            url: GetApiURL("/api/account/username"),
         };
     }
 
     public static ChangeUsername(username: string, password: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/account/username"),
+            url: GetApiURL("/api/account/username"),
             json: {
                 username: username,
                 password: password,
@@ -24,7 +24,7 @@ export class AccountAPI {
     public static ChangePassword(password: string, newPassword: string): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/account/password"),
+            url: GetApiURL("/api/account/password"),
             json: {
                 old_password: password,
                 password: newPassword,

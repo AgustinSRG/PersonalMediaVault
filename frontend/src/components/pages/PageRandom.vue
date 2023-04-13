@@ -296,7 +296,7 @@ export default defineComponent({
     },
 
     goAdvancedSearch: function () {
-      AppStatus.GoToPage("advsearch");
+      AppStatus.GoToPage("adv-search");
     },
 
     findCurrentMediaIndex: function (): number {

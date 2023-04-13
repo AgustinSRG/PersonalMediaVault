@@ -4,7 +4,7 @@
     'full-screen': fullscreen,
   }" @dblclick="toggleFullScreen">
 
-    <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumloading)">
+    <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumLoading)">
       <div class="player-lds-ring">
         <div></div>
         <div></div>
@@ -18,7 +18,7 @@
       <div class="player-error">{{ $t('Media asset does not exist or was removed from the vault') }}</div>
     </div>
 
-    <div class="player-error-container" v-if="status === 'none' && !albumloading">
+    <div class="player-error-container" v-if="status === 'none' && !albumLoading">
       <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
       <div class="player-info">{{ $t('The album is empty') }}</div>
       <div class="player-info">{{ $t('Browse the vault in order to add media to it') }}</div>
@@ -26,7 +26,7 @@
 
     <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls">
       <div class="player-controls-left">
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!prev && !pageprev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
           <i class="fas fa-backward-step"></i>
         </button>
 
@@ -34,7 +34,7 @@
           <i class="fas fa-play"></i>
         </button>
 
-        <button v-if="!!next || !!prev || pageprev || pagenext" :disabled="!next && !pagenext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
+        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
           <i class="fas fa-forward-step"></i>
         </button>
       </div>
@@ -50,23 +50,23 @@
       </div>
     </div>
 
-    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-helptip-left">
+    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-helptip-left">
+    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
       <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
     </div>
 
-    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
       {{ $t("Full screen") }}
     </div>
-    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-helptip-right">
+    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
       {{ $t("Exit full screen") }}
     </div>
 
 
-    <PlayerTopBar :mid="mid" :metadata="null" :shown="true" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumexpanded="expandedAlbum" :inalbum="inalbum"></PlayerTopBar>
+    <PlayerTopBar :mid="mid" :metadata="null" :shown="true" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum"></PlayerTopBar>
   </div>
 </template>
 
@@ -77,7 +77,7 @@ import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { KeyboardManager } from "@/control/keyboard";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
@@ -88,31 +88,31 @@ export default defineComponent({
     PlayerTopBar,
   },
   name: "EmptyPlayer",
-  emits: ["gonext", "goprev", "update:fullscreen"],
+  emits: ["go-next", "go-prev", "update:fullscreen"],
   props: {
     mid: Number,
     status: String,
 
-    albumloading: Boolean,
+    albumLoading: Boolean,
 
     fullscreen: Boolean,
 
-    rtick: Number,
+    rTick: Number,
 
     next: Object,
     prev: Object,
-    inalbum: Boolean,
+    inAlbum: Boolean,
 
-    pagenext: Boolean,
-    pageprev: Boolean,
+    pageNext: Boolean,
+    pagePrev: Boolean,
 
-    canwrite: Boolean,
+    canWrite: Boolean,
 
     min: Boolean,
   },
   setup(props) {
     return {
-      fullScreen: useVModel(props, "fullscreen"),
+      fullScreenState: useVModel(props, "fullscreen"),
     };
   },
   data: function () {
@@ -135,14 +135,14 @@ export default defineComponent({
     },
 
     goNext: function () {
-      if (this.next || this.pagenext) {
-        this.$emit("gonext");
+      if (this.next || this.pageNext) {
+        this.$emit("go-next");
       }
     },
 
     goPrev: function () {
-      if (this.prev || this.pageprev) {
-        this.$emit("goprev");
+      if (this.prev || this.pagePrev) {
+        this.$emit("go-prev");
       }
     },
 
@@ -160,11 +160,11 @@ export default defineComponent({
       } else {
         closeFullscreen();
       }
-      this.fullScreen = !this.fullScreen;
+      this.fullScreenState = !this.fullScreenState;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {
-        this.fullScreen = false;
+        this.fullScreenState = false;
       }
     },
     stopPropagationEvent: function (e) {
@@ -187,7 +187,7 @@ export default defineComponent({
           break;
         case "PageDown":
         case "ArrowLeft":
-          if (this.prev || this.pageprev) {
+          if (this.prev || this.pagePrev) {
             this.goPrev();
           } else {
             caught = false;
@@ -195,7 +195,7 @@ export default defineComponent({
           break;
         case "PageUp":
         case "ArrowRight":
-          if (this.next || this.pagenext) {
+          if (this.next || this.pageNext) {
             this.goNext();
           } else {
             caught = false;
@@ -252,7 +252,7 @@ export default defineComponent({
     KeyboardManager.RemoveHandler(this.$options.keyHandler);
   },
   watch: {
-    rtick: function () {
+    rTick: function () {
       this.expandedTitle = false;
     },
   },

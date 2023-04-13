@@ -111,7 +111,7 @@
 
 /* Player feedback */
 
-.player-feeback-container {
+.player-feedback-container {
     position: absolute;
     top: 0;
     left: 0;
@@ -189,10 +189,10 @@
     bottom: 50px;
 }
 
-.player-helptip-left {
+.player-help-tip-left {
     left: 8px;
 }
 
-.player-helptip-right {
+.player-help-tip-right {
     right: 8px;
 }

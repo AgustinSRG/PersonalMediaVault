@@ -8,14 +8,14 @@
   color: lime;
 }
 
-.task-pbar-container {
+.task-progress-bar-container {
   width: 120px;
   height: 1rem;
   display: flex;
   border: solid 1px var(--theme-border-color);
 }
 
-.task-pbar-current {
+.task-progress-bar-current {
   height: 100%;
   background: lime;
 }

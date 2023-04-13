@@ -1,4 +1,4 @@
-// Consts
+// Constants
 
 export const MEDIA_TYPE_DELETED = 0;
 export const MEDIA_TYPE_IMAGE = 1;

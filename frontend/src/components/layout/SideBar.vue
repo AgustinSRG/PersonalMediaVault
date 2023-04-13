@@ -4,7 +4,7 @@
     :class="{ hidden: !display }"
     @click="stopPropagationEvent"
     tabindex="-1"
-    :role="initialayout ? '' : 'dialog'"
+    :role="initialLayout ? '' : 'dialog'"
     :aria-hidden="!display"
   >
     <div class="side-bar-header">
@@ -96,10 +96,10 @@
 
       <a
         class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'advsearch' }"
+        :class="{ selected: album < 0 && page === 'adv-search' }"
         :title="$t('Advanced search')"
-        @click="goToPage('advsearch', $event)"
-        :href="getPageURL('advsearch')"
+        @click="goToPage('adv-search', $event)"
+        :href="getPageURL('adv-search')"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -152,7 +152,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { GenerateURIQuery } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/vmodel";
+import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
@@ -162,7 +162,7 @@ export default defineComponent({
   emits: ["update:display", "skip-to-content"],
   props: {
     display: Boolean,
-    initialayout: Boolean,
+    initialLayout: Boolean,
   },
   setup(props) {
     return {
@@ -338,7 +338,7 @@ export default defineComponent({
     },
 
     lostFocus: function () {
-      if (!this.initialayout) {
+      if (!this.initialLayout) {
         this.close();
       }
     },

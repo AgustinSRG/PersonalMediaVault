@@ -48,7 +48,7 @@ export default defineComponent({
     getThumbnail(thumb: string) {
       return GetAssetURL(thumb);
     },
-    upodateData: function () {
+    updateData: function () {
       if (this.media) {
         this.type = this.media.type;
         this.thumbnail = this.media.thumbnail;
@@ -64,12 +64,12 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.upodateData();
+    this.updateData();
   },
   beforeUnmount: function () {},
   watch: {
     media: function () {
-      this.upodateData();
+      this.updateData();
     },
   },
 });

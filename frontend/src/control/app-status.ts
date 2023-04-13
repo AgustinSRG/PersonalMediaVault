@@ -69,7 +69,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && (["home", "search", "random", "albums", "upload", "advsearch"].includes(page))) {
+        if (page && (["home", "search", "random", "albums", "upload", "adv-search"].includes(page))) {
             AppStatus.CurrentPage = page;
         } else {
             AppStatus.CurrentPage = "home";
@@ -83,7 +83,7 @@ export class AppStatus {
             AppStatus.CurrentSearch = "";
         }
 
-        const searchParams = getParameterByName("sparams");
+        const searchParams = getParameterByName("sp");
 
         if (searchParams) {
             AppStatus.SearchParams = searchParams;
@@ -161,7 +161,7 @@ export class AppStatus {
         }
 
         if (AppStatus.SearchParams) {
-            params["sparams"] = AppStatus.SearchParams;
+            params["sp"] = AppStatus.SearchParams;
         }
 
         if (AppStatus.ListSplitMode) {
@@ -185,10 +185,10 @@ export class AppStatus {
         }
 
         if (history.pushState) {
-            const newurl = AppStatus.GetCurrentURL();
+            const newURL = AppStatus.GetCurrentURL();
             // Update URL
-            if (newurl !== location.href) {
-                window.history.pushState({ path: newurl }, '', newurl);
+            if (newURL !== location.href) {
+                window.history.pushState({ path: newURL }, '', newURL);
             }
         }
     }
@@ -367,7 +367,7 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static CloseAbum() {
+    public static CloseAlbum() {
         AppStatus.CurrentFocus = "left";
         AppStatus.CurrentAlbum = -1;
         AppStatus.UpdateLayout();

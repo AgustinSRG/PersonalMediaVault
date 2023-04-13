@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'page-inner': !inmodal, hidden: !display }">
+  <div :class="{ 'page-inner': !inModal, hidden: !display }">
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
         <label>{{ $t("Title or description must contain") }}:</label>
@@ -88,7 +88,7 @@
         <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
           <i class="fas fa-cog"></i> {{ $t("Less options") }}
         </button>
-        <button v-if="inmodal" type="button" class="btn btn-primary btn-mr" @click="changeToUpload">
+        <button v-if="inModal" type="button" class="btn btn-primary btn-mr" @click="changeToUpload">
           <i class="fas fa-upload"></i> {{ $t("Upload") }}
         </button>
         <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
@@ -155,8 +155,8 @@ export default defineComponent({
   emits: ['select-media', 'change-to-upload'],
   props: {
     display: Boolean,
-    inmodal: Boolean,
-    noalbum: Number,
+    inModal: Boolean,
+    noAlbum: Number,
   },
   data: function () {
     return {
@@ -190,8 +190,8 @@ export default defineComponent({
   },
   methods: {
     load: function () {
-      Timeouts.Abort("page-advsearch-load");
-      Request.Abort("page-advsearch-load");
+      Timeouts.Abort("page-adv-search-load");
+      Request.Abort("page-adv-search-load");
 
       if (!this.display || this.finished) {
         return;
@@ -204,7 +204,7 @@ export default defineComponent({
       }
 
       Request.Pending(
-        "page-advsearch-load",
+        "page-adv-search-load",
         SearchAPI.Search(
           this.getFirstTag(),
           this.order,
@@ -221,7 +221,7 @@ export default defineComponent({
           if (this.pageItems.length >= this.pageSize) {
             this.loading = false;
             this.finished = true;
-            if (!this.inmodal) {
+            if (!this.inModal) {
               nextTick(() => {
                 const currentElem = this.$el.querySelector(
                   ".search-result-item.current"
@@ -238,7 +238,7 @@ export default defineComponent({
           } else {
             this.loading = false;
             this.finished = true;
-            if (!this.inmodal) {
+            if (!this.inModal) {
               nextTick(() => {
                 const currentElem = this.$el.querySelector(
                   ".search-result-item.current"
@@ -258,14 +258,14 @@ export default defineComponent({
             })
             .add("*", "*", () => {
               // Retry
-              Timeouts.Set("page-advsearch-load", 1500, this.$options.loadH);
+              Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
             })
             .handle(err);
         })
         .onUnexpectedError((err) => {
           console.error(err);
           // Retry
-          Timeouts.Set("page-advsearch-load", 1500, this.$options.loadH);
+          Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
         });
     },
 
@@ -285,7 +285,7 @@ export default defineComponent({
 
       let backlistAlbum = new Set();
 
-      if (this.noalbum >= 0 && AlbumsController.CurrentAlbumData) {
+      if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
         backlistAlbum = new Set(AlbumsController.CurrentAlbumData.list.map(a => {
           return a.id;
         }));
@@ -382,15 +382,15 @@ export default defineComponent({
     },
 
     cancel: function () {
-      Timeouts.Abort("page-advsearch-load");
-      Request.Abort("page-advsearch-load");
+      Timeouts.Abort("page-adv-search-load");
+      Request.Abort("page-adv-search-load");
       this.loading = false;
       this.finished = true;
     },
 
     resetSearch: function () {
-      Timeouts.Abort("page-advsearch-load");
-      Request.Abort("page-advsearch-load");
+      Timeouts.Abort("page-adv-search-load");
+      Request.Abort("page-adv-search-load");
       this.pageItems = [];
       this.page = 0;
       this.totalPages = 0;
@@ -404,7 +404,7 @@ export default defineComponent({
       if (e) {
         e.preventDefault();
       }
-      if (this.inmodal) {
+      if (this.inModal) {
         this.$emit("select-media", mid, () => {
           this.pageItems = this.pageItems.filter(i => {
             return mid !== i.id;
@@ -547,7 +547,7 @@ export default defineComponent({
 
     onAppStatusChanged: function () {
       this.currentMedia = AppStatus.CurrentMedia;
-      if (!this.inmodal) {
+      if (!this.inModal) {
         nextTick(() => {
           const currentElem = this.$el.querySelector(
             ".search-result-item.current"
@@ -570,7 +570,7 @@ export default defineComponent({
     },
 
     onCurrentMediaChanged: function () {
-      if (!this.inmodal) {
+      if (!this.inModal) {
         const i = this.findCurrentMediaIndex();
         AlbumsController.OnPageLoad(i, this.pageItems.length, 0, 1);
       }
@@ -605,7 +605,7 @@ export default defineComponent({
         return false;
       }
 
-      if (this.inmodal) {
+      if (this.inModal) {
         return false;
       }
 
@@ -666,13 +666,13 @@ export default defineComponent({
 
     this.updateTagData();
 
-    if (this.inmodal) {
+    if (this.inModal) {
       this.startSearch();
     }
   },
   beforeUnmount: function () {
-    Timeouts.Abort("page-advsearch-load");
-    Request.Abort("page-advsearch-load");
+    Timeouts.Abort("page-adv-search-load");
+    Request.Abort("page-adv-search-load");
 
     AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
     AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
@@ -694,16 +694,16 @@ export default defineComponent({
 
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
 
-    if (!this.inmodal) {
+    if (!this.inModal) {
       AlbumsController.OnPageUnload();
     }
   },
   watch: {
     display: function () {
       this.load();
-      if (this.display && this.inmodal) {
+      if (this.display && this.inModal) {
         this.startSearch();
-      } else if (this.inmodal) {
+      } else if (this.inModal) {
         this.cancel();
       }
     },

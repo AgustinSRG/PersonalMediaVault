@@ -1,4 +1,4 @@
-// Array suffle
+// Array shuffle
 
 "use strict";
 

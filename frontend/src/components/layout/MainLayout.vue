@@ -23,7 +23,7 @@
     >
     <SideBar
       v-model:display="displaySidebar"
-      :initialayout="layout === 'initial'"
+      :initialLayout="layout === 'initial'"
       @skip-to-content="skipToMainContent"
     ></SideBar>
     <TopBar

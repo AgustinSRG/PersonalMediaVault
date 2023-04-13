@@ -159,7 +159,7 @@ export default defineComponent({
 
     editing: Boolean,
 
-    contextopen: Boolean,
+    contextOpen: Boolean,
   },
 
   data: function () {
@@ -222,7 +222,7 @@ export default defineComponent({
     },
 
     startAdding: function (e) {
-      if (this.contextopen) {
+      if (this.contextOpen) {
         return;
       }
       if ((e.which || e.button) !== 1) {
@@ -470,7 +470,7 @@ export default defineComponent({
     },
 
     clickOnNotes: function (notes, e) {
-      if (this.contextopen) {
+      if (this.contextOpen) {
         return;
       }
       if (!this.editing) {
@@ -518,7 +518,7 @@ export default defineComponent({
     },
 
     startResizeNotes: function (notes, e, resizeMode) {
-      if (this.contextopen) {
+      if (this.contextOpen) {
         return;
       }
       if (!this.editing) {

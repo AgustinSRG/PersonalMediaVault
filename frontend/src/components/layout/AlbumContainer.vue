@@ -139,8 +139,8 @@
     </div>
     <AlbumContextMenu
       v-model:shown="contextShown"
-      :mindex="contextIndex"
-      :mlength="albumList.length"
+      :mediaIndex="contextIndex"
+      :albumLength="albumList.length"
       :x="contextX"
       :y="contextY"
       @move-up="moveMediaUp"
@@ -256,7 +256,7 @@ export default defineComponent({
     },
 
     closePage: function () {
-      AppStatus.CloseAbum();
+      AppStatus.CloseAlbum();
     },
 
     toggleLoop: function () {

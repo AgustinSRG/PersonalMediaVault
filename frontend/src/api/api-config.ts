@@ -1,6 +1,6 @@
 // Config API
 
-import { GetAPIURL, RequestParams } from "@/utils/request";
+import { GetApiURL, RequestParams } from "@/utils/request";
 
 export interface VaultUserConfig {
     max_tasks: number,
@@ -20,14 +20,14 @@ export class ConfigAPI {
     public static GetConfig(): RequestParams {
         return {
             method: "GET",
-            url: GetAPIURL("/api/config"),
+            url: GetApiURL("/api/config"),
         };
     }
 
     public static SetConfig(config: VaultUserConfig): RequestParams {
         return {
             method: "POST",
-            url: GetAPIURL("/api/config"),
+            url: GetApiURL("/api/config"),
             json: config,
         };
     }
