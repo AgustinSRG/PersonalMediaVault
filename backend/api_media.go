@@ -247,7 +247,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		areaJ := resolutions[j].Width * resolutions[j].Height
 		if areaI > areaJ {
 			return true
-		} else if areaI > areaJ {
+		} else if areaI < areaJ {
 			return false
 		} else {
 			return resolutions[i].Fps > resolutions[j].Fps

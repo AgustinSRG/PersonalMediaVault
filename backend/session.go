@@ -71,7 +71,11 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 	sm.lock.Unlock()
 
 	// Call task manager to start pending tasks
-	sm.vault.tasks.OnNewSession(&newSession)
+	err := sm.vault.tasks.OnNewSession(&newSession)
+
+	if err != nil {
+		LogError(err)
+	}
 
 	return sessionId
 }
@@ -93,7 +97,7 @@ func (sm *SessionManager) CloseSession(session_id string) bool {
 
 // Clear expired sessions, check once each 5 minutes
 func (sm *SessionManager) RunSessionChecker() {
-	for true {
+	for {
 		time.Sleep(5 * time.Minute)
 
 		sm.ClearExpiredSessions()

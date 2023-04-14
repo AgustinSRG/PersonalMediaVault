@@ -459,8 +459,13 @@ func api_albumRemoveMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Start Write
 	album_found, err := GetVault().albums.RemoveMediaFromAlbum(album_id, p.Id, session.key)
+
+	if err != nil {
+		LogError(err)
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", err.Error())
+		return
+	}
 
 	if album_found {
 		response.WriteHeader(200)

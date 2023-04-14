@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -121,7 +120,7 @@ func (tm *TaskManager) Initialize(base_path string, vault *Vault) error {
 
 	if _, err := os.Stat(file); err == nil {
 		// exists
-		b, err := ioutil.ReadFile(file)
+		b, err := os.ReadFile(file)
 
 		if err != nil {
 			return err
@@ -205,7 +204,7 @@ func (tm *TaskManager) SavePendingTasks() error {
 	tFile := GetTemporalFileName("json", true)
 
 	// Write file
-	err = ioutil.WriteFile(tFile, jsonData, FILE_PERMISSION)
+	err = os.WriteFile(tFile, jsonData, FILE_PERMISSION)
 	if err != nil {
 		return err
 	}

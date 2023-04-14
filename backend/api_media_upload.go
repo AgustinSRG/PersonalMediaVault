@@ -196,7 +196,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if albumIdQuery != "" {
 		album_id, err := strconv.ParseUint(albumIdQuery, 10, 64)
 
-		if err == nil && album_id >= 0 {
+		if err == nil && album_id > 0 {
 			GetVault().albums.AddMediaToAlbum(album_id, media_id, session.key)
 		}
 	}

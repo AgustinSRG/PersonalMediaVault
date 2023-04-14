@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -54,7 +53,7 @@ func (mm *MediaAssetsManager) Initialize(base_path string) {
 func (mm *MediaAssetsManager) readData() (*MediaAssetManagerData, error) {
 	if _, err := os.Stat(mm.data_file); err == nil {
 		// Load file
-		bJSON, err := ioutil.ReadFile(mm.data_file)
+		bJSON, err := os.ReadFile(mm.data_file)
 
 		if err != nil {
 			return nil, err
@@ -110,7 +109,7 @@ func (mm *MediaAssetsManager) NextMediaId() (uint64, error) {
 
 	tmpFile := GetTemporalFileName("json", true)
 
-	err = ioutil.WriteFile(tmpFile, jsonData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, jsonData, FILE_PERMISSION)
 
 	if err != nil {
 		return 0, err

@@ -175,7 +175,19 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if fileSeek > 0 {
-		s.Seek(fileSeek, 0)
+		_, err := s.Seek(fileSeek, 0)
+		if err != nil {
+			// Seek error
+			s.Close()
+
+			asset_lock.EndRead()
+			media.ReleaseAsset(asset_id)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			LogError(err)
+			response.WriteHeader(500)
+			return
+		}
 	}
 
 	// Send response

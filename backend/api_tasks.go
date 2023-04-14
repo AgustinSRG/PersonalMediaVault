@@ -93,5 +93,4 @@ func api_killTask(response http.ResponseWriter, request *http.Request) {
 	GetVault().tasks.KillTask(task_id)
 
 	response.WriteHeader(200)
-	return
 }

@@ -10,7 +10,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
+	"io"
 )
 
 type FileEncryptionMethod uint16
@@ -152,7 +152,7 @@ func decryptFileContents(data []byte, key []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		result, err := ioutil.ReadAll(r)
+		result, err := io.ReadAll(r)
 		if err != nil {
 			return nil, err
 		}

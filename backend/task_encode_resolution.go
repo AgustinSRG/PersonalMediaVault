@@ -121,12 +121,6 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		return
 	}
 
-	ext := meta.OriginalExtension
-
-	if ext == "" {
-		ext = "avi"
-	}
-
 	originalTemp := path.Join(tempFolder, "original")
 
 	f, err := os.OpenFile(originalTemp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)

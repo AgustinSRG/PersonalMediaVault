@@ -120,7 +120,6 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	GetVault().sessions.ChangeUsername(session.user, p.Username)
 
 	response.WriteHeader(200)
-	return
 }
 
 func api_changePassword(response http.ResponseWriter, request *http.Request) {
@@ -183,5 +182,4 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.WriteHeader(200)
-	return
 }

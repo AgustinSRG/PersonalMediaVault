@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -66,7 +65,7 @@ func (uc *UserConfigManager) Initialize(base_path string) {
 func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 	if _, err := os.Stat(uc.file); err == nil {
 		// Load file
-		b, err := ioutil.ReadFile(uc.file)
+		b, err := os.ReadFile(uc.file)
 
 		if err != nil {
 			return nil, err
@@ -126,7 +125,7 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 
 	tmpFile := GetTemporalFileName("pmv", true)
 
-	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
 	if err != nil {
 		return err

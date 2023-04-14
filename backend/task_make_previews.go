@@ -4,7 +4,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
@@ -123,12 +122,6 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
 		return
-	}
-
-	ext := meta.OriginalExtension
-
-	if ext == "" {
-		ext = "avi"
 	}
 
 	originalTemp := path.Join(tempFolder, "original")
@@ -391,7 +384,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 	for i := 0; i < len(imagesSorted); i++ {
 		// Read image file
-		bytesImage, err := ioutil.ReadFile(imagesSorted[i].file)
+		bytesImage, err := os.ReadFile(imagesSorted[i].file)
 
 		if err != nil {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())

@@ -57,11 +57,21 @@ func TestCredentialsManager(t *testing.T) {
 
 	err = cred.SaveCredentials()
 
+	if err != nil {
+		t.Error(err)
+		panic(err)
+	}
+
 	// Create new manager (simulate restart)
 
 	var cred2 VaultCredentialsManager
 
-	cred2.Initialize(test_path_base)
+	err = cred2.Initialize(test_path_base)
+
+	if err != nil {
+		t.Error(err)
+		panic(err)
+	}
 
 	// Check password
 

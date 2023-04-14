@@ -40,13 +40,26 @@ func SetUnencryptedTempFilesPath(unencryptedTempPath string) {
 	unencrypted_temp_files_path = unencryptedTempPath
 
 	// Create path if not exists
-	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+	err := os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+
+	if err != nil {
+		LogError(err)
+	}
 }
 
 // Clears vault temp path
 func ClearTemporalFilesPath() {
-	os.RemoveAll(temp_files_path)
-	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+	err := os.RemoveAll(temp_files_path)
+
+	if err != nil {
+		LogError(err)
+	}
+
+	err = os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+
+	if err != nil {
+		LogError(err)
+	}
 }
 
 // Clears all unencrypted temp files
@@ -172,7 +185,12 @@ func WipeTemporalFile(file string) {
 			bytesToWrite = fileSize - bytesWritten
 		}
 
-		f.Write(fileChunk[:bytesToWrite])
+		_, err = f.Write(fileChunk[:bytesToWrite])
+
+		if err != nil {
+			LogError(err)
+			return
+		}
 
 		bytesWritten += bytesToWrite
 	}

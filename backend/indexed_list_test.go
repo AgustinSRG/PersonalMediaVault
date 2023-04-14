@@ -84,7 +84,7 @@ func TestIndexedList(t *testing.T) {
 
 	// Try adding duplicate value
 
-	success, index, err = f.AddValue(2)
+	success, _, err = f.AddValue(2)
 
 	if err != nil {
 		t.Error(err)
@@ -135,6 +135,10 @@ func TestIndexedList(t *testing.T) {
 	// Open again for reading
 
 	f, err = OpenIndexedListForReading(test_file)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Count
 
@@ -190,7 +194,7 @@ func TestIndexedList(t *testing.T) {
 
 	// Search (not found)
 
-	found, index, err = f.BinarySearch(4)
+	found, _, err = f.BinarySearch(4)
 
 	if err != nil {
 		t.Error(err)

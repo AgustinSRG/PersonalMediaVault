@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -189,7 +188,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 
 	tmpFile := GetTemporalFileName("pmv", true)
 
-	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
 	if err != nil {
 		return err
@@ -210,7 +209,7 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 	file := path.Join(media.path, "meta.pmv")
 	if _, err := os.Stat(file); err == nil {
 		// Load file
-		b, err := ioutil.ReadFile(file)
+		b, err := os.ReadFile(file)
 
 		if err != nil {
 			return nil, err
@@ -319,7 +318,7 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock b
 
 	tmpFile := GetTemporalFileName("pmv", true)
 
-	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
 	if err != nil {
 		return err

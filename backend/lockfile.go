@@ -42,9 +42,5 @@ func TryLockVault(base_path string) bool {
 
 	err = f.TryLock()
 
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -106,7 +105,7 @@ func (tm *VaultTagManager) Initialize(base_path string) error {
 func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 	if _, err := os.Stat(tm.tag_list_file); err == nil {
 		// Load file
-		b, err := ioutil.ReadFile(tm.tag_list_file)
+		b, err := os.ReadFile(tm.tag_list_file)
 
 		if err != nil {
 			return nil, err
@@ -183,7 +182,7 @@ func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 
 	tmpFile := GetTemporalFileName("pmv", true)
 
-	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
 	if err != nil {
 		return err

@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -58,7 +57,7 @@ func (am *VaultAlbumsManager) Initialize(base_path string) {
 func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 	if _, err := os.Stat(am.albums_file); err == nil {
 		// Load file
-		b, err := ioutil.ReadFile(am.albums_file)
+		b, err := os.ReadFile(am.albums_file)
 
 		if err != nil {
 			return nil, err
@@ -139,7 +138,7 @@ func (am *VaultAlbumsManager) EndWrite(data *VaultAlbumsData, key []byte) error 
 
 	tmpFile := GetTemporalFileName("pmv", true)
 
-	err = ioutil.WriteFile(tmpFile, encData, FILE_PERMISSION)
+	err = os.WriteFile(tmpFile, encData, FILE_PERMISSION)
 
 	if err != nil {
 		return err

@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -188,7 +187,7 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 
 	if _, err := os.Stat(manager.file); err == nil {
 		// exists
-		b, err := ioutil.ReadFile(manager.file)
+		b, err := os.ReadFile(manager.file)
 
 		if err != nil {
 			return err
@@ -219,8 +218,17 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		manager.SetRootCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
-		manager.SaveCredentials()
+		err2 := manager.SetRootCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
+
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = manager.SaveCredentials()
+
+		if err2 != nil {
+			return err2
+		}
 	} else {
 		return err
 	}
@@ -250,8 +258,17 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		manager.SetRootCredentials(user, password, key)
-		manager.SaveCredentials()
+		err2 := manager.SetRootCredentials(user, password, key)
+
+		if err2 != nil {
+			return err2
+		}
+
+		err2 = manager.SaveCredentials()
+
+		if err2 != nil {
+			return err2
+		}
 	} else {
 		return err
 	}
@@ -414,7 +431,7 @@ func (manager *VaultCredentialsManager) SaveCredentials() error {
 	tFile := GetTemporalFileName("json", true)
 
 	// Write file
-	err = ioutil.WriteFile(tFile, jsonData, FILE_PERMISSION)
+	err = os.WriteFile(tFile, jsonData, FILE_PERMISSION)
 	if err != nil {
 		return err
 	}

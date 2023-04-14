@@ -106,7 +106,6 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.WriteHeader(200)
-	return
 }
 
 type ApiAdminDeleteAccountBody struct {
@@ -166,7 +165,6 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 	GetVault().sessions.RemoveUserSessions(p.Username)
 
 	response.WriteHeader(200)
-	return
 }
 
 var (

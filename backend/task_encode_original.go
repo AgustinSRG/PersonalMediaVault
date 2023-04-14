@@ -15,6 +15,7 @@ import (
 //   - Videos (mp4)
 //   - Audios (mp3)
 //   - Images (png)
+//
 // If the original file extension is already set to the expected one, no need to encode
 // After encoding, the original file is replaced
 func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
@@ -94,12 +95,6 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
 		return
-	}
-
-	ext := meta.OriginalExtension
-
-	if ext == "" {
-		ext = "avi"
 	}
 
 	originalTemp := path.Join(tempFolder, "original")
