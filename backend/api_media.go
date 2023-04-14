@@ -216,9 +216,10 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.ImageNotesURL = ""
 	}
 
-	resolutions := make([]MediaAPIMetaResolution, 0)
+	var resolutions []MediaAPIMetaResolution
 
 	if meta.Resolutions != nil {
+		resolutions = make([]MediaAPIMetaResolution, len(meta.Resolutions))
 		for i := 0; i < len(meta.Resolutions); i++ {
 			var r MediaAPIMetaResolution
 
@@ -235,8 +236,10 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 				r.Task = meta.Resolutions[i].TaskId
 			}
 
-			resolutions = append(resolutions, r)
+			resolutions[i] = r
 		}
+	} else {
+		resolutions = make([]MediaAPIMetaResolution, 0)
 	}
 
 	sort.Slice(resolutions, func(i, j int) bool {
@@ -253,9 +256,11 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	result.Resolutions = resolutions
 
-	subtitles := make([]MediaAPIMetaSubtitle, 0)
+	var subtitles []MediaAPIMetaSubtitle
 
 	if meta.Subtitles != nil {
+		subtitles = make([]MediaAPIMetaSubtitle, len(meta.Subtitles))
+
 		for i := 0; i < len(meta.Subtitles); i++ {
 			var s MediaAPIMetaSubtitle
 
@@ -264,25 +269,31 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt" + "?token=" + MakeAssetToken(media_id, meta.Subtitles[i].Asset)
 
-			subtitles = append(subtitles, s)
+			subtitles[i] = s
 		}
+	} else {
+		subtitles = make([]MediaAPIMetaSubtitle, 0)
 	}
 
 	result.Subtitles = subtitles
 
 	result.ForceStartBeginning = meta.ForceStartBeginning
 
-	timeSlices := make([]MediaAPIMetaTimeSplit, 0)
+	var timeSlices []MediaAPIMetaTimeSplit
 
 	if meta.Splits != nil {
+		timeSlices = make([]MediaAPIMetaTimeSplit, len(meta.Splits))
+
 		for i := 0; i < len(meta.Splits); i++ {
 			var s MediaAPIMetaTimeSplit
 
 			s.Time = meta.Splits[i].Time
 			s.Name = meta.Splits[i].Name
 
-			timeSlices = append(timeSlices, s)
+			timeSlices[i] = s
 		}
+	} else {
+		timeSlices = make([]MediaAPIMetaTimeSplit, 0)
 	}
 
 	result.TimeSlices = timeSlices
@@ -898,7 +909,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	// Check for unnatended encoded assets
+	// Check for unattended encoded assets
 
 	// Check original
 
@@ -908,7 +919,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		task_info := GetVault().tasks.GetTaskInfo(meta.OriginalTask)
 
 		if task_info == nil {
-			// Task crashed or was never spawned, meka a new one
+			// Task crashed or was never spawned, make a new one
 
 			meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
 		}

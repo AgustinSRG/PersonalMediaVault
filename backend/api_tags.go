@@ -29,13 +29,15 @@ func api_getTags(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	result := make([]TagListAPIItem, 0)
+	result := make([]TagListAPIItem, len(tag_list.Tags))
+
+	i := 0
 
 	for key, val := range tag_list.Tags {
-		result = append(result, TagListAPIItem{
+		result[i] = TagListAPIItem{
 			Id:   key,
 			Name: val,
-		})
+		}
 	}
 
 	jsonResult, err := json.Marshal(result)

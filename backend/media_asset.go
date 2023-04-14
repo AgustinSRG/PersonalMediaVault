@@ -361,9 +361,10 @@ func (media *MediaAsset) GetAssetPath(asset_id uint64, asset_type string) string
 // asset_id - Asset file ID
 // asset_type - Asset type (ASSET_MULTI_FILE or ASSET_SINGLE_FILE)
 // Returns:
-//  1 - True if the asset was acquired, false if the asset was deleted
-//  2 - The full path to the asset file
-//  3 - The lock to control access to the file
+//
+//	1 - True if the asset was acquired, false if the asset was deleted
+//	2 - The full path to the asset file
+//	3 - The lock to control access to the file
 func (media *MediaAsset) AcquireAsset(asset_id uint64, asset_type string) (bool, string, *ReadWriteLock) {
 	media.mu.Lock()
 	defer media.mu.Unlock()
@@ -455,7 +456,7 @@ func (media *MediaAsset) deleteAll() {
 		locks[i].Unlock()
 	}
 
-	// Now, delete evrything
+	// Now, delete everything
 
 	media.lock.RequestWrite()
 	media.lock.StartWrite()

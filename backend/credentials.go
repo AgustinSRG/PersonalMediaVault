@@ -604,13 +604,13 @@ func (manager *VaultCredentialsManager) GetAccountsInfo() []ApiAdminAccountEntry
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
-	result := make([]ApiAdminAccountEntry, 0)
+	result := make([]ApiAdminAccountEntry, len(manager.credentials.Accounts))
 
 	for i := 0; i < len(manager.credentials.Accounts); i++ {
-		result = append(result, ApiAdminAccountEntry{
+		result[i] = ApiAdminAccountEntry{
 			Username: manager.credentials.Accounts[i].User,
 			Write:    manager.credentials.Accounts[i].Write,
-		})
+		}
 	}
 
 	return result

@@ -40,7 +40,9 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if request.URL.Query().Get("mode") != "min" {
-		result := make([]AlbumAPIItem, 0)
+		result := make([]AlbumAPIItem, len(albums.Albums))
+
+		i := 0
 
 		for album_id, album := range albums.Albums {
 			thumbnail := ""
@@ -50,12 +52,14 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 				thumbnail = media_info.Thumbnail
 			}
 
-			result = append(result, AlbumAPIItem{
+			result[i] = AlbumAPIItem{
 				Id:        album_id,
 				Name:      album.Name,
 				Size:      len(album.List),
 				Thumbnail: thumbnail,
-			})
+			}
+
+			i++
 		}
 
 		jsonResult, err := json.Marshal(result)
@@ -69,13 +73,17 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 
 		ReturnAPI_JSON(response, request, jsonResult)
 	} else {
-		result := make([]AlbumAPIItemMinified, 0)
+		result := make([]AlbumAPIItemMinified, len(albums.Albums))
+
+		i := 0
 
 		for album_id, album := range albums.Albums {
-			result = append(result, AlbumAPIItemMinified{
+			result[i] = AlbumAPIItemMinified{
 				Id:   album_id,
 				Name: album.Name,
-			})
+			}
+
+			i++
 		}
 
 		jsonResult, err := json.Marshal(result)
@@ -135,10 +143,10 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		Name: album.Name,
 	}
 
-	list := make([]*MediaListAPIItem, 0)
+	list := make([]*MediaListAPIItem, len(album.List))
 
 	for i := 0; i < len(album.List); i++ {
-		list = append(list, GetMediaMinInfo(album.List[i], session))
+		list[i] = GetMediaMinInfo(album.List[i], session)
 	}
 
 	result.List = list
