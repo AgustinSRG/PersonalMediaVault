@@ -42,7 +42,11 @@ func InitializeInternationalizationFramework() {
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 
 	// Add locale file
-	bundle.LoadMessageFileFS(LocaleFS, "active."+lang+".toml")
+	_, err = bundle.LoadMessageFileFS(LocaleFS, "active."+lang+".toml")
+
+	if err != nil {
+		panic(err)
+	}
 
 	Localizer = i18n.NewLocalizer(bundle, lang)
 }

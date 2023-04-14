@@ -54,9 +54,9 @@ func main() {
 
 	// Create destination path if not found
 
-	os.MkdirAll(backupPath, FOLDER_PERMISSION)
+	err := os.MkdirAll(backupPath, FOLDER_PERMISSION)
 
-	if !CheckFileExists(backupPath) {
+	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "PathError",

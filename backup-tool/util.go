@@ -143,7 +143,21 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 	}
 
 	// Make sure folder exists
-	os.MkdirAll(entry.backupPath, FOLDER_PERMISSION)
+	err = os.MkdirAll(entry.backupPath, FOLDER_PERMISSION)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println("\n" + msg)
+		return false, err
+	}
 
 	fileInfoBackup, err := os.Stat(entry.backupFile)
 
