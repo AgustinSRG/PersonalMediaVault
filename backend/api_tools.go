@@ -32,7 +32,7 @@ var (
 
 // Initailizes secret to sign JWT tokens for assets
 func InitAssetJWTSecret() {
-	rand.Read(ASSET_JWT_SECRET)
+	rand.Read(ASSET_JWT_SECRET) //nolint:errcheck
 }
 
 // Validates asset JWT
@@ -117,8 +117,10 @@ func GetSessionFromRequest(request *http.Request) *ActiveSession {
 // Parses range header from request
 // request - HTTP request
 // Returns:
-//  1 - Start index
-//  2 - Ending index
+//
+//	1 - Start index
+//	2 - Ending index
+//
 // Note: -1 in the index means not set
 func ParseRangeHeader(request *http.Request) (int64, int64) {
 	rangeHeader := request.Header.Get("Range")
@@ -176,7 +178,7 @@ func ReturnAPI_JSON(response http.ResponseWriter, request *http.Request, result 
 		response.Header().Add("Content-Type", "application/json")
 		response.WriteHeader(200)
 
-		response.Write(result)
+		response.Write(result) //nolint:errcheck
 	}
 }
 
@@ -210,7 +212,7 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 	response.Header().Add("Content-Type", "application/json")
 	response.Header().Add("Cache-Control", "no-cache")
 	response.WriteHeader(status)
-	response.Write(jsonRes)
+	response.Write(jsonRes) //nolint:errcheck
 }
 
 // Gets client IP address

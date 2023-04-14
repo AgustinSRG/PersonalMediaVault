@@ -27,7 +27,10 @@ func SetTempFilesPath(tempPath string) {
 	temp_files_path = tempPath
 
 	// Create path if not exists
-	os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+	err := os.MkdirAll(temp_files_path, FOLDER_PERMISSION)
+	if err != nil {
+		LogError(err)
+	}
 
 	// Create unique prefix for each execution
 	timeNow := time.Now().UTC().UnixMilli()
@@ -64,7 +67,12 @@ func ClearTemporalFilesPath() {
 
 // Clears all unencrypted temp files
 func ClearUnencryptedTempFilesPath() {
-	os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+	err := os.MkdirAll(unencrypted_temp_files_path, FOLDER_PERMISSION)
+
+	if err != nil {
+		LogError(err)
+		return
+	}
 
 	entries, err := os.ReadDir(unencrypted_temp_files_path)
 

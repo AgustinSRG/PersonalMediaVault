@@ -395,5 +395,5 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	response.WriteHeader(200)
 
-	response.Write(d)
+	response.Write(d) //nolint:errcheck
 }

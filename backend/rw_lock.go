@@ -87,7 +87,7 @@ func (lock *ReadWriteLock) StartWrite() {
 		// Lock 2 times, so it's always blocking until other thread unlocks it
 		lock.write_wait_sem.Lock()
 
-		lock.write_wait_sem.Unlock()
+		lock.write_wait_sem.Unlock() //nolint:staticcheck
 	}
 }
 
@@ -139,7 +139,7 @@ func (lock *ReadWriteLock) StartRead() {
 		// Lock 2 times to ensure blocking until the write thread releases it
 		readLock.Lock()
 
-		readLock.Unlock()
+		readLock.Unlock() //nolint:staticcheck
 	}
 }
 

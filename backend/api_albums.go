@@ -463,7 +463,7 @@ func api_albumRemoveMedia(response http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		LogError(err)
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", err.Error())
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 

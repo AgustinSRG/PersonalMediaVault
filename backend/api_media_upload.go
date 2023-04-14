@@ -197,7 +197,16 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		album_id, err := strconv.ParseUint(albumIdQuery, 10, 64)
 
 		if err == nil && album_id > 0 {
-			GetVault().albums.AddMediaToAlbum(album_id, media_id, session.key)
+			_, err = GetVault().albums.AddMediaToAlbum(album_id, media_id, session.key)
+
+			if err != nil {
+				LogError(err)
+
+				WipeTemporalFile(tempFile)
+
+				ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+				return
+			}
 		}
 	}
 

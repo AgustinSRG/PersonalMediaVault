@@ -68,7 +68,7 @@ func GenerateFingerprint() string {
 	now := time.Now().UnixMilli()
 
 	binary.BigEndian.PutUint64(data[:8], uint64(now))
-	rand.Read(data[8:])
+	rand.Read(data[8:]) //nolint:errcheck
 
 	return hex.EncodeToString(data)
 }
@@ -202,7 +202,11 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 
 		if manager.credentials.VaultFingerprint == "" {
 			manager.credentials.VaultFingerprint = GenerateFingerprint()
-			manager.SaveCredentials()
+			err = manager.SaveCredentials()
+
+			if err != nil {
+				return err
+			}
 		}
 
 		if manager.credentials.Accounts == nil {
@@ -213,7 +217,7 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 
 		// Create a random key
 		key := make([]byte, 32)
-		rand.Read(key)
+		rand.Read(key) //nolint:errcheck
 
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
@@ -253,7 +257,7 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 
 		// Create a random key
 		key := make([]byte, 32)
-		rand.Read(key)
+		rand.Read(key) //nolint:errcheck
 
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
@@ -292,7 +296,7 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 
 	// Random salt
 	manager.credentials.Salt = make([]byte, 16)
-	rand.Read(manager.credentials.Salt)
+	rand.Read(manager.credentials.Salt) //nolint:errcheck
 
 	// Store ecrypted key
 	pwBytes := []byte(password)
@@ -346,7 +350,7 @@ func (manager *VaultCredentialsManager) SetAccountCredentials(user string, passw
 
 	// Random salt
 	manager.credentials.Accounts[accountIndex].Salt = make([]byte, 16)
-	rand.Read(manager.credentials.Accounts[accountIndex].Salt)
+	rand.Read(manager.credentials.Accounts[accountIndex].Salt) //nolint:errcheck
 
 	// Store ecrypted key
 	pwBytes := []byte(password)

@@ -76,7 +76,7 @@ func main() {
 		fmt.Println(msg)
 		os.Exit(1)
 	}
-	defer child_process_manager.DisposeChildProcessManager()
+	defer child_process_manager.DisposeChildProcessManager() //nolint:errcheck
 
 	detectLauncherPaths()
 
@@ -204,6 +204,10 @@ func main() {
 		}
 
 		p, err := strconv.ParseInt(ans, 10, 64)
+
+		if err != nil {
+			continue
+		}
 
 		launcherConfig.Port = int(p)
 
@@ -365,7 +369,7 @@ func main() {
 
 	// Read commands
 
-	for true {
+	for {
 		readNextCommand(reader, absolutePath, &vaultController)
 	}
 }

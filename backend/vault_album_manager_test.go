@@ -37,7 +37,7 @@ func TestVaultAlbumManager(t *testing.T) {
 	// Generate a random key
 
 	key := make([]byte, 32)
-	rand.Read(key)
+	rand.Read(key) //nolint:errcheck
 
 	// Initialize new albums manager
 

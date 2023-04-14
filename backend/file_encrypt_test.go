@@ -11,7 +11,7 @@ import (
 func TestFileEncryption(t *testing.T) {
 	// Generate random key
 	key := make([]byte, 32)
-	rand.Read(key)
+	rand.Read(key) //nolint:errcheck
 
 	var original []byte
 	var encrypted []byte
@@ -35,7 +35,7 @@ func TestFileEncryption(t *testing.T) {
 
 	// Test with medium size data slice
 	original = make([]byte, 1024)
-	rand.Read(original)
+	rand.Read(original) //nolint:errcheck
 	encrypted, err = encryptFileContents(original, AES256_ZIP, key)
 	if err != nil {
 		t.Error(err)
@@ -51,7 +51,7 @@ func TestFileEncryption(t *testing.T) {
 
 	// Test with big size data slice
 	original = make([]byte, 1024*1024)
-	rand.Read(original)
+	rand.Read(original) //nolint:errcheck
 	encrypted, err = encryptFileContents(original, AES256_ZIP, key)
 	if err != nil {
 		t.Error(err)

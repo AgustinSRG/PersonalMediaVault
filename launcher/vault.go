@@ -483,7 +483,21 @@ func (vc *VaultController) Start() bool {
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
 
-	child_process_manager.ConfigureCommand(cmd)
+	err = child_process_manager.ConfigureCommand(cmd)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
 
 	err = cmd.Start()
 
@@ -502,7 +516,21 @@ func (vc *VaultController) Start() bool {
 	}
 
 	// Add process as a child process
-	child_process_manager.AddChildProcess(cmd.Process)
+	err = child_process_manager.AddChildProcess(cmd.Process)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
 
 	vc.started = true
 	vc.errorMessage = ""
@@ -625,7 +653,7 @@ func (vc *VaultController) Stop() bool {
 	})
 	fmt.Println(msg)
 
-	vc.backendProcess.Kill()
+	vc.backendProcess.Kill() //nolint:errcheck
 
 	return true
 }

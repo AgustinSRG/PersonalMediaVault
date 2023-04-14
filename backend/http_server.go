@@ -191,7 +191,7 @@ func RunHTTPServer(port string, bindAddr string) {
 		router.Use(corsHeadInsecure)
 	}
 
-	mime.AddExtensionType(".js", "text/javascript")
+	mime.AddExtensionType(".js", "text/javascript") //nolint:errcheck
 
 	router.Use(cacheTTLAdd)
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))

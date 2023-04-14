@@ -180,7 +180,7 @@ func main() {
 			fmt.Println("Error: " + err.Error())
 			os.Exit(1)
 		}
-		defer child_process_manager.DisposeChildProcessManager()
+		defer child_process_manager.DisposeChildProcessManager() //nolint:errcheck
 
 		if _, err := os.Stat(options.ffmpegPath); err != nil {
 			fmt.Println("Error: Could not find 'ffmpeg' at specified location: " + options.ffmpegPath)

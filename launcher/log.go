@@ -21,7 +21,11 @@ func getLogFileName() (string, error) {
 	logsFolder := path.Join(userhome, ".pmv", "logs")
 
 	if !folderExists(logsFolder) {
-		os.MkdirAll(logsFolder, FOLDER_PERMISSION)
+		err = os.MkdirAll(logsFolder, FOLDER_PERMISSION)
+
+		if err != nil {
+			return "", err
+		}
 	}
 
 	// Remove files if there are too many

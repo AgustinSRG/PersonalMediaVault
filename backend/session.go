@@ -52,7 +52,7 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 // Returns the session ID
 func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool) string {
 	sessionBytes := make([]byte, 32)
-	rand.Read(sessionBytes)
+	rand.Read(sessionBytes) //nolint:errcheck
 	sessionId := hex.EncodeToString(sessionBytes)
 
 	sm.lock.Lock()

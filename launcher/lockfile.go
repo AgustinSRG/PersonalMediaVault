@@ -21,7 +21,7 @@ func CheckVaultLocked(file string) bool {
 		return true
 	}
 
-	f.Unlock()
+	err = f.Unlock()
 
-	return false
+	return err != nil
 }

@@ -653,7 +653,7 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	}
 
 	// Add process as a child process
-	child_process_manager.AddChildProcess(cmd.Process)
+	child_process_manager.AddChildProcess(cmd.Process) //nolint:errcheck
 
 	// Read stderr line by line
 
@@ -704,7 +704,7 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 			shouldKill := progress_reporter(out_duration * 100 / input_duration)
 
 			if shouldKill {
-				cmd.Process.Kill()
+				cmd.Process.Kill() //nolint:errcheck
 			}
 		}
 	}
@@ -731,9 +731,10 @@ type ExtractedSubtitlesFile struct {
 // originalFilePath - Original media path
 // probedata - Media properties
 // Returns:
-//  1 - error
-//  2 - Temporal path created, where the files where stored
-//  3 - List of files
+//
+//	1 - error
+//	2 - Temporal path created, where the files where stored
+//	3 - List of files
 func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedSubtitlesFile) {
 	result := make([]ExtractedSubtitlesFile, 0)
 	addedMap := make(map[string]bool)

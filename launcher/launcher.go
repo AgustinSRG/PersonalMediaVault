@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -219,7 +218,7 @@ func detectLauncherPaths() {
 }
 
 func readLauncherConfig(file string) LauncherConfig {
-	b, err := ioutil.ReadFile(file)
+	b, err := os.ReadFile(file)
 
 	if err != nil {
 		return LauncherConfig{
@@ -234,7 +233,14 @@ func readLauncherConfig(file string) LauncherConfig {
 	}
 
 	// Parse
-	json.Unmarshal(b, &config)
+	err = json.Unmarshal(b, &config)
+
+	if err != nil {
+		return LauncherConfig{
+			Port:  0,
+			Local: true,
+		}
+	}
 
 	return config
 }
@@ -248,7 +254,7 @@ func writeLauncherConfig(file string, config LauncherConfig) error {
 	}
 
 	// Write file
-	err = ioutil.WriteFile(file, jsonData, FILE_PERMISSION)
+	err = os.WriteFile(file, jsonData, FILE_PERMISSION)
 	if err != nil {
 		return err
 	}

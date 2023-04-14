@@ -38,7 +38,7 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 		// Compress the data
 		var b bytes.Buffer
 		w := zlib.NewWriter(&b)
-		w.Write(data)
+		w.Write(data) //nolint:errcheck
 		w.Close()
 		finalData := b.Bytes()
 
@@ -51,7 +51,7 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 
 		// Generate IV
 		iv := make([]byte, 16)
-		rand.Read(iv)
+		rand.Read(iv) //nolint:errcheck
 
 		// Include IV into the header
 		copy(header[4:20], iv)
@@ -79,7 +79,7 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 
 		// Generate IV
 		iv := make([]byte, 16)
-		rand.Read(iv)
+		rand.Read(iv) //nolint:errcheck
 
 		// Include IV into the header
 		copy(header[4:20], iv)

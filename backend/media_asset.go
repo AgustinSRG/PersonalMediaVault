@@ -452,7 +452,7 @@ func (media *MediaAsset) deleteAll() {
 
 	for i := 0; i < len(locks); i++ {
 		locks[i].Lock()
-		locks[i].Unlock()
+		locks[i].Unlock() //nolint:staticcheck
 	}
 
 	// Now, delete everything

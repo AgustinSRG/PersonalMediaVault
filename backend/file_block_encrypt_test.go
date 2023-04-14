@@ -22,7 +22,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 	test_file := path.Join(test_path_base, "test_block_file_enc.pmv")
 	size := int64(48 * 1024 * 1024)
 	key := make([]byte, 32)
-	rand.Read(key)
+	rand.Read(key) //nolint:errcheck
 
 	// Write file
 	ws, err := CreateFileBlockEncryptWriteStream(test_file)
