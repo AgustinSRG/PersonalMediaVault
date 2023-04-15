@@ -46,6 +46,10 @@ other = "Inicializando copia de seguridad..."
 hash = "sha1-aace60c8794b69ff83120922dddf66b98356c98d"
 other = "Inicializando copia de seguridad... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
 
+[LockError]
+hash = "sha1-7c8516e4790e2a4d8145b93b3168382973186c7f"
+other = "La ruta tiene un fichero de bloqueo. Cierre la galería o elimine el archivo vault.lock"
+
 [MakeNotice]
 hash = "sha1-aca99d7d39a3215a1e0a3868fd8a9d10989f257d"
 other = "Creando copia de seguridad..."

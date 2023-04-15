@@ -70,6 +70,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	if CheckFileExists(path.Join(backupPath, "vault.lock")) {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LockError",
+				Other: "The destination path has a lock file. Close the vault or remove the vault.lock file.",
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
 	// Welcome
 
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
