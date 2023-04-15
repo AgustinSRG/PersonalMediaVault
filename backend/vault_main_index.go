@@ -15,7 +15,7 @@ type VaultMainIndex struct {
 
 // Resource given when a write operation is requested
 type VaultIndexWriteResource struct {
-	file *IndexedListFile // Reference to the openned file
+	file *IndexedListFile // Reference to the opened file
 	path string           // Path to a temp file where changes are pre-made
 }
 
@@ -139,4 +139,31 @@ func (vmi *VaultMainIndex) StartRead() (*IndexedListFile, error) {
 func (vmi *VaultMainIndex) EndRead(fd *IndexedListFile) {
 	fd.Close()
 	vmi.lock.EndRead()
+}
+
+// Removes element from main index
+// media_id - ID of the media file
+func (vmi *VaultMainIndex) RemoveElement(media_id uint64) error {
+	r, err := vmi.StartWrite()
+
+	if err != nil {
+		return err
+	}
+
+	removed, _, err := r.file.RemoveValue(media_id)
+
+	if err != nil {
+		vmi.CancelWrite(r)
+		return err
+	}
+
+	if !removed {
+		// Was not tagged, no change
+		vmi.CancelWrite(r)
+		return nil
+	}
+
+	err = vmi.EndWrite(r)
+
+	return err
 }

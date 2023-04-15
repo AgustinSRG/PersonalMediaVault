@@ -145,12 +145,19 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 	for i := 0; i < len(page_items); i++ {
 		mediaInfo := GetMediaMinInfo(page_items[i], session)
 
-		if mediaInfo.Type == MediaTypeDeleted && tagToSearch != "" {
-			// Remove inconsistency
-			err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
+		if mediaInfo.Type == MediaTypeDeleted {
+			if tagToSearch != "" {
+				err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
 
-			if err != nil {
-				LogError(err)
+				if err != nil {
+					LogError(err)
+				}
+			} else {
+				err = GetVault().index.RemoveElement(page_items[i])
+
+				if err != nil {
+					LogError(err)
+				}
 			}
 		}
 
