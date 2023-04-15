@@ -51,7 +51,13 @@ func RecoverVaultAssets(vault *Vault) {
 					if !exists {
 						// Remove directory
 						LogInfo("Found missing asset: Media folder not indexed 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_id) + "' (adding)")
-						index.file.AddValue(media_id)
+						_, _, err = index.file.AddValue(media_id)
+
+						if err != nil {
+							vault.index.CancelWrite(index)
+							LogError(err)
+							os.Exit(1)
+						}
 					}
 				}
 
@@ -59,5 +65,10 @@ func RecoverVaultAssets(vault *Vault) {
 		}
 	}
 
-	vault.index.EndWrite(index)
+	err = vault.index.EndWrite(index)
+
+	if err != nil {
+		LogError(err)
+		os.Exit(1)
+	}
 }
