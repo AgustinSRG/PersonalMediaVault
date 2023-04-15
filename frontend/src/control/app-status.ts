@@ -210,6 +210,8 @@ export class AppStatus {
             AppStatus.ListSplitMode = true;
         }
 
+        AppStatus.SearchParams = "";
+
         AppStatus.UpdateLayout();
 
         AppStatus.CurrentFocus = "right";
@@ -223,6 +225,7 @@ export class AppStatus {
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
         AppStatus.ListSplitMode = false;
+        AppStatus.SearchParams = "";
 
         AppStatus.UpdateLayout();
 
@@ -265,6 +268,8 @@ export class AppStatus {
             if (AppStatus.CurrentMedia >= 0) {
                 AppStatus.ListSplitMode = true;
             }
+
+            AppStatus.SearchParams = "";
 
             AppStatus.UpdateLayout();
 
