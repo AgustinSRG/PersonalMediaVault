@@ -23,6 +23,7 @@ type BackendOptions struct {
 	initialize bool
 	clean      bool
 	fix        bool
+	recover    bool
 
 	// Port + Bind
 	port     string
@@ -147,6 +148,8 @@ func main() {
 			i++
 		} else if arg == "--fix-consistency" {
 			options.fix = true
+		} else if arg == "--recover" {
+			options.recover = true
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
@@ -227,6 +230,11 @@ func main() {
 			ClearUnencryptedTempFilesPath()
 		}
 
+		if options.recover {
+			LogInfo("Recovering assets...")
+			RecoverVaultAssets(&vault)
+		}
+
 		if options.fix {
 			LogInfo("Fixing vault consistency...")
 			FixVaultConsistency(&vault)
@@ -234,7 +242,7 @@ func main() {
 
 		// Create and run HTTP server
 		RunHTTPServer(options.port, options.bindAddr)
-	} else if options.clean || options.fix {
+	} else if options.clean || options.fix || options.recover {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath)
 
@@ -250,6 +258,11 @@ func main() {
 		if options.clean {
 			LogInfo("Cleaning unencrypted temporal files...")
 			ClearUnencryptedTempFilesPath()
+		}
+
+		if options.recover {
+			LogInfo("Recovering assets...")
+			RecoverVaultAssets(&vault)
 		}
 
 		if options.fix {
@@ -282,6 +295,7 @@ func printHelp() {
 	fmt.Println("    DEBUG OPTIONS:")
 	fmt.Println("        --skip-lock                Ignores vault lockfile.")
 	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
+	fmt.Println("        --recover                  Recovers non-indexed media assets.")
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --log-requests             Enables logging requests to standard output.")
 	fmt.Println("        --cors-insecure            Allows all CORS requests (insecure, for development).")
