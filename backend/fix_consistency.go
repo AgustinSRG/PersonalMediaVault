@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
@@ -31,7 +32,18 @@ func FixVaultConsistency(vault *Vault) {
 				media_ids := fetchMediaIds(path.Join(vault.path, "media", dirs[i].Name()))
 
 				for j := 0; j < len(media_ids); j++ {
-					exists, _, err := index.BinarySearch(media_ids[j])
+					media_id := media_ids[j]
+
+					prefixByte := byte(media_id % 256)
+					prefixByteHex := hex.EncodeToString([]byte{prefixByte})
+
+					if dirs[i].Name() != prefixByteHex {
+						LogInfo("Found inconsistency: Media folder prefix invalid 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_id) + "' (removing)")
+						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
+						continue
+					}
+
+					exists, _, err := index.BinarySearch(media_id)
 
 					if err != nil {
 						vault.index.EndRead(index)
@@ -41,8 +53,8 @@ func FixVaultConsistency(vault *Vault) {
 
 					if !exists {
 						// Remove directory
-						LogInfo("Found inconsistency: Media folder not indexed 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_ids[j]) + "' (removing)")
-						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_ids[j])))
+						LogInfo("Found inconsistency: Media folder not indexed 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_id) + "' (removing)")
+						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
 					}
 				}
 
