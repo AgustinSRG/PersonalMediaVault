@@ -772,6 +772,30 @@ func (vc *VaultController) Clean() {
 	}
 }
 
+func (vc *VaultController) RecoverAssets() {
+	// Recover
+	cmd := exec.Command(BACKEND_BIN, "--recover", "--skip-lock", "--vault-path", vc.vaultPath)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+	}
+}
+
 func (vc *VaultController) Backup(p string) {
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{

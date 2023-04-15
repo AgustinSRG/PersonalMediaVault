@@ -182,6 +182,10 @@ other = "local [s/n] - Establece el modo de escucha (local o todas las interface
 hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
 other = "port [p] - Establece el puerto de escucha"
 
+[ManualCommandRecover]
+hash = "sha1-10eacde6ce9ff014f6702f018d4473b343f94617"
+other = "recover - Reinicia la galería, re-indexando los elementos perdidos, presentes en el directorio"
+
 [ManualCommandRestart]
 hash = "sha1-c96e956f8731fc808db8df4da2735a316ad8c083"
 other = "restart - Reinicia la galería"

@@ -219,11 +219,21 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
-	case "clean", "c":
+	case "clean":
 		if vc.Stop() {
 			vc.WaitForStop()
 		}
 		vc.Clean()
+		if vc.Start() {
+			if vc.WaitForStart() {
+				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+			}
+		}
+	case "recover":
+		if vc.Stop() {
+			vc.WaitForStop()
+		}
+		vc.RecoverAssets()
 		if vc.Start() {
 			if vc.WaitForStart() {
 				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
@@ -472,6 +482,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandClean",
 			Other: "clean - Restarts the vault and cleans inconsistent files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandRecover",
+			Other: "recover - Restarts the vault and recovers any non-indexed media found in the vault directory",
 		},
 	})
 	manList = append(manList, msg)
