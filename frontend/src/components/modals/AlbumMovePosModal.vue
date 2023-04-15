@@ -1,43 +1,18 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @keydown="keyDownHandle"
-  >
-    <form
-      v-if="display"
-      @submit="submit"
-      class="modal-dialog modal-md"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Change position") }}
         </div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label>{{ $t("Position in the album") }}:</label>
-          <input
-            type="text"
-            name="album-position"
-            autocomplete="off"
-            v-model.number="currentPos"
-            maxlength="255"
-            class="form-control form-control-full-width auto-focus"
-          />
+          <input type="text" name="album-position" autocomplete="off" v-model.number="currentPos" maxlength="255" class="form-control form-control-full-width auto-focus" />
         </div>
       </div>
       <div class="modal-footer no-padding">
@@ -77,8 +52,10 @@ export default defineComponent({
     autoFocus: function () {
       nextTick(() => {
         const elem = this.$el.querySelector(".auto-focus");
-        elem.focus();
-        elem.select();
+        if (elem) {
+          elem.focus();
+          elem.select();
+        }
       });
     },
 

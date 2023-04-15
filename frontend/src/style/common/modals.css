@@ -1,5 +1,14 @@
 /* Modals */
 
+@keyframes modal-show-animation {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .modal-container {
     position: fixed;
     top: 0;
@@ -17,6 +26,9 @@
     transition: opacity 0.2s;
     opacity: 1;
 
+    animation-name: modal-show-animation;
+    animation-duration: 0.2s;
+
     overflow: auto;
 }
 
@@ -30,6 +42,7 @@
 .modal-container.no-transition,
 .modal-container.no-transition.hidden {
     transition: none;
+    animation-name: none;
 }
 
 .modal-container:focus {

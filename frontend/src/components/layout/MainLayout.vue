@@ -1,100 +1,52 @@
 <template>
-  <div
-    class="main-layout"
-    :class="{
-      'light-theme': theme !== 'dark',
-      'dark-theme': theme === 'dark',
-      'layout-initial': layout === 'initial',
-      'layout-album': layout === 'album',
-      'layout-media-split': layout === 'media-split',
-      'layout-media': layout === 'media',
-      'sidebar-hidden': !displaySidebar,
-      'focus-left': focus === 'left',
-      'focus-right': focus === 'right',
-      'vault-locked': locked,
-    }"
-  >
-    <a
-      v-if="!locked"
-      href="javascript:;"
-      @click="skipToMainContent"
-      class="skip-to-main-content"
-      >{{ $t("Skip to main content") }}</a
-    >
-    <SideBar
-      v-model:display="displaySidebar"
-      :initialLayout="layout === 'initial'"
-      @skip-to-content="skipToMainContent"
-    ></SideBar>
-    <TopBar
-      @logout="logout"
-      @settings="showSettings"
-      @menu="toggleSidebar"
-      @search-open="openSearchModal"
-      @help="showHelp"
-    ></TopBar>
-    <PlayerContainer
-      v-if="
-        layout === 'media-split' || layout === 'media' || layout === 'album'
-      "
-    ></PlayerContainer>
-    <PageContent
-      v-if="layout === 'initial' || layout === 'media-split'"
-      :min="layout === 'media-split'"
-    ></PageContent>
+  <div class="main-layout" :class="{
+    'light-theme': theme !== 'dark',
+    'dark-theme': theme === 'dark',
+    'layout-initial': layout === 'initial',
+    'layout-album': layout === 'album',
+    'layout-media-split': layout === 'media-split',
+    'layout-media': layout === 'media',
+    'sidebar-hidden': !displaySidebar,
+    'focus-left': focus === 'left',
+    'focus-right': focus === 'right',
+    'vault-locked': locked,
+  }">
+    <a v-if="!locked" href="javascript:;" @click="skipToMainContent" class="skip-to-main-content">{{ $t("Skip to main content") }}</a>
+    <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
+    <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar" @search-open="openSearchModal" @help="showHelp"></TopBar>
+    <PlayerContainer v-if="
+      layout === 'media-split' || layout === 'media' || layout === 'album'
+    "></PlayerContainer>
+    <PageContent v-if="layout === 'initial' || layout === 'media-split'" :min="layout === 'media-split'"></PageContent>
     <AlbumContainer v-if="layout === 'album'"></AlbumContainer>
 
-    <BottomBar
-      v-if="layout === 'media-split' || layout === 'album'"
-    ></BottomBar>
-    <div
-      class="sidebar-float-overlay"
-      :class="{ hidden: !displaySidebar }"
-      @click="hideSidebar"
-    ></div>
+    <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
+    <div class="sidebar-float-overlay" :class="{ hidden: !displaySidebar }" @click="hideSidebar"></div>
 
-    <SettingsModal
-      v-model:display="displaySettings"
-      @goto="onGoSettings"
-    ></SettingsModal>
-    <LanguageModal v-model:display="displayLang"></LanguageModal>
-    <ThemeModal v-model:display="displayTheme"></ThemeModal>
-    <ChangeUsernameModal
-      v-model:display="displayUsernameModal"
-    ></ChangeUsernameModal>
-    <ChangePasswordModal
-      v-model:display="displayPasswordModal"
-    ></ChangePasswordModal>
-    <AdvancedSettingsModal
-      v-model:display="displayAdvancedSettings"
-    ></AdvancedSettingsModal>
+    <SettingsModal v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsModal>
+    <LanguageModal v-if="displayLang" v-model:display="displayLang"></LanguageModal>
+    <ThemeModal v-if="displayTheme" v-model:display="displayTheme"></ThemeModal>
+    <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
+    <ChangePasswordModal v-if="displayPasswordModal" v-model:display="displayPasswordModal"></ChangePasswordModal>
+    <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
 
-    <AccountsAdminModal
-      v-model:display="displayAccountAdmin"
-    ></AccountsAdminModal>
+    <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
-    <TaskListModal v-model:display="displayTaskList"></TaskListModal>
+    <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
 
-    <SearchInputModal v-model:display="displaySearchModal"></SearchInputModal>
+    <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
 
-    <HelpHubModal
-      v-model:display="displayHelpModal"
-      @goto="onGoHelp"
-    ></HelpHubModal>
+    <HelpHubModal v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubModal>
 
-    <AboutModal v-model:display="displayAboutModal"></AboutModal>
+    <AboutModal v-if="displayAboutModal" v-model:display="displayAboutModal"></AboutModal>
 
-    <KeyboardGuideModal
-      v-model:display="displayKeyboardHelpModal"
-    ></KeyboardGuideModal>
+    <KeyboardGuideModal v-if="displayKeyboardHelpModal" v-model:display="displayKeyboardHelpModal"></KeyboardGuideModal>
 
-    <LogoutModal v-model:display="displayLogout"></LogoutModal>
+    <LogoutModal v-if="displayLogout" v-model:display="displayLogout"></LogoutModal>
 
-    <LoadingOverlay
-      :display="locked || loadingAuth || loadingTags || loadingAlbums"
-      :fixed="true"
-    ></LoadingOverlay>
-    <LoginModal :display="locked && !loadingAuth"></LoginModal>
+    <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums" :fixed="true"></LoadingOverlay>
+
+    <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
 
     <SnackBar></SnackBar>
   </div>
@@ -107,24 +59,11 @@ import TopBar from "./TopBar.vue";
 import BottomBar from "./BottomBar.vue";
 import SideBar from "./SideBar.vue";
 import SnackBar from "./SnackBar.vue";
+
 import LoadingOverlay from "./LoadingOverlay.vue";
 import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
-import LoginModal from "../modals/LoginModal.vue";
-import LogoutModal from "../modals/LogoutModal.vue";
-import SettingsModal from "../modals/SettingsModal.vue";
-import LanguageModal from "../modals/LanguageModal.vue";
-import ThemeModal from "../modals/ThemeModal.vue";
-import ChangeUsernameModal from "../modals/ChangeUsernameModal.vue";
-import ChangePasswordModal from "../modals/ChangePasswordModal.vue";
-import AdvancedSettingsModal from "../modals/AdvancedSettingsModal.vue";
-import AccountsAdminModal from "../modals/AccountsAdminModal.vue";
-import TaskListModal from "../modals/TaskListModal.vue";
-import SearchInputModal from "../modals/SearchInputModal.vue";
-import HelpHubModal from "../modals/HelpHubModal.vue";
-import AboutModal from "../modals/AboutModal.vue";
-import KeyboardGuideModal from "../modals/KeyboardGuideModal.vue";
 
 import { AuthController } from "../../control/auth";
 import { TagsController } from "../../control/tags";
@@ -134,33 +73,105 @@ import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 
 const PlayerContainer = defineAsyncComponent({
-  // the loader function
   loader: () => import("@/components/layout/PlayerContainer.vue"),
-
-  // A component to use while the async component is loading
   loadingComponent: PlayerContainerLoader,
-  // Delay before showing the loading component. Default: 200ms.
   delay: 200,
 });
 
 const AlbumContainer = defineAsyncComponent({
-  // the loader function
   loader: () => import("@/components/layout/AlbumContainer.vue"),
-
-  // A component to use while the async component is loading
   loadingComponent: AlbumContainerLoader,
-  // Delay before showing the loading component. Default: 200ms.
   delay: 200,
 });
 
 const PageContent = defineAsyncComponent({
-  // the loader function
   loader: () => import("@/components/layout/PageContent.vue"),
-
-  // A component to use while the async component is loading
   loadingComponent: PageContentLoader,
-  // Delay before showing the loading component. Default: 200ms.
   delay: 200,
+});
+
+const LoginModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/LoginModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const LogoutModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/LogoutModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const SettingsModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/SettingsModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const LanguageModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/LanguageModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const ThemeModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/ThemeModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const ChangeUsernameModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/ChangeUsernameModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const ChangePasswordModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/ChangePasswordModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const AdvancedSettingsModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/AdvancedSettingsModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const AccountsAdminModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/AccountsAdminModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const TaskListModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/TaskListModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const SearchInputModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/SearchInputModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const HelpHubModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/HelpHubModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const AboutModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/AboutModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const KeyboardGuideModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/KeyboardGuideModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
 });
 
 export default defineComponent({
@@ -192,8 +203,10 @@ export default defineComponent({
   data: function () {
     return {
       theme: AppPreferences.Theme,
+
       locked: AuthController.Locked,
       loadingAuth: AuthController.Loading,
+
       layout: AppStatus.CurrentLayout,
       focus: AppStatus.CurrentFocus,
 
@@ -308,18 +321,17 @@ export default defineComponent({
         skipTo.focus();
       }
     },
-  },
-  mounted: function () {
-    AppEvents.AddEventListener("theme-changed", () => {
-      this.theme = AppPreferences.Theme;
-    });
 
-    AppEvents.AddEventListener("app-status-update", () => {
+    onThemeChanged: function () {
+      this.theme = AppPreferences.Theme;
+    },
+
+    onAppStatusUpdate: function () {
       this.layout = AppStatus.CurrentLayout;
       this.focus = AppStatus.CurrentFocus;
-    });
+    },
 
-    AppEvents.AddEventListener("auth-status-changed", (locked: boolean) => {
+    onAuthStatusChanged: function (locked: boolean) {
       this.locked = locked;
 
       if (this.locked) {
@@ -338,19 +350,46 @@ export default defineComponent({
 
         this.displaySearchModal = false;
       }
-    });
+    },
 
-    AppEvents.AddEventListener("auth-status-loading", (l: boolean) => {
+    onAuthStatusLoading: function (l: boolean) {
       this.loadingAuth = l;
-    });
+    },
 
-    AppEvents.AddEventListener("tags-loading", (l: boolean) => {
+    onTagsLoading: function (l: boolean) {
       this.loadingTags = l;
-    });
+    },
 
-    AppEvents.AddEventListener("albums-loading", (l: boolean) => {
+    onAlbumsLoading: function (l: boolean) {
       this.loadingAlbums = l;
-    });
+    },
+  },
+  mounted: function () {
+    this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
+    AppEvents.AddEventListener("theme-changed", this.$options.onThemeChangedH);
+
+    this.$options.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
+    AppEvents.AddEventListener("app-status-update", this.$options.onAppStatusUpdateH);
+
+    this.$options.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
+    AppEvents.AddEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
+
+    this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
+    AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+
+    this.$options.onTagsLoadingH = this.onTagsLoading.bind(this);
+    AppEvents.AddEventListener("tags-loading", this.$options.onTagsLoadingH);
+
+    this.$options.onAlbumsLoadingH = this.onAlbumsLoading.bind(this);
+    AppEvents.AddEventListener("albums-loading", this.$options.onAlbumsLoadingH);
+  },
+  beforeUnmount: function () {
+    AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
+    AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
+    AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
+    AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+    AppEvents.RemoveEventListener("tags-loading", this.$options.onTagsLoadingH);
+    AppEvents.RemoveEventListener("albums-loading", this.$options.onAlbumsLoadingH);
   },
 });
 </script>

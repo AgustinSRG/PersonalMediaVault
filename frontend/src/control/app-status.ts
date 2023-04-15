@@ -179,7 +179,7 @@ export class AppStatus {
             if (AlbumsController.CurrentAlbum !== AppStatus.CurrentAlbum) {
                 return;
             }
-            if (AlbumsController.CurrentAlbumData.list.length > 0) {
+            if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {
                 return;
             }
         }

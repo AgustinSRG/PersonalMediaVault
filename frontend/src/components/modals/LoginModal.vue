@@ -85,7 +85,7 @@
 import { AuthAPI } from "@/api/api-auth";
 import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
   name: "LoginModal",
@@ -108,12 +108,12 @@ export default defineComponent({
       if (!this.display) {
         return;
       }
-      const elem = this.$el.querySelector(".auto-focus");
-      if (elem) {
-        setTimeout(() => {
+      nextTick(() => {
+        const elem = this.$el.querySelector(".auto-focus");
+        if (elem) {
           elem.focus();
-        }, 200);
-      }
+        }
+      });
     },
 
     submit: function (e) {

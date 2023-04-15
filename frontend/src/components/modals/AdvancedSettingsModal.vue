@@ -248,7 +248,9 @@ export default defineComponent({
       }
       nextTick(() => {
         const elem = this.$el.querySelector(".auto-focus");
-        elem.focus();
+        if (elem) {
+          elem.focus();
+        }
       });
     },
 
