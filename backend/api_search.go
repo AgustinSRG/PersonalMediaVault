@@ -231,6 +231,7 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 	tagToSearch := ParseTagName(request.URL.Query().Get("tag"))
 
 	var page_items []uint64
+	var tag_id uint64
 
 	if tagToSearch == "" {
 		// Default search, use main index
@@ -258,7 +259,7 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 	} else {
 		// Search by tag
 
-		page_items, err = GetVault().tags.RandomTaggedMedia(tagToSearch, session.key, seed, pageSize)
+		page_items, tag_id, err = GetVault().tags.RandomTaggedMedia(tagToSearch, session.key, seed, pageSize)
 
 		if err != nil {
 			LogError(err)
@@ -273,7 +274,25 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 	page_items_meta := make([]*MediaListAPIItem, len(page_items))
 
 	for i := 0; i < len(page_items); i++ {
-		page_items_meta[i] = GetMediaMinInfo(page_items[i], session)
+		mediaInfo := GetMediaMinInfo(page_items[i], session)
+
+		if mediaInfo.Type == MediaTypeDeleted {
+			if tagToSearch != "" {
+				err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
+
+				if err != nil {
+					LogError(err)
+				}
+			} else {
+				err = GetVault().index.RemoveElement(page_items[i])
+
+				if err != nil {
+					LogError(err)
+				}
+			}
+		}
+
+		page_items_meta[i] = mediaInfo
 	}
 
 	// Send response

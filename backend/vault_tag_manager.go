@@ -545,24 +545,24 @@ func (tm *VaultTagManager) ListTaggedMedia(tag_name string, key []byte, skip int
 // key - Vault decryption key
 // seed - Seed for the random number generator
 // limit - Number of items to return
-// Returns the list of media files (identifiers)
-func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed int64, limit int64) ([]uint64, error) {
+// Returns the list of media files (identifiers) and the tag ID
+func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed int64, limit int64) ([]uint64, uint64, error) {
 	tagList, err := tm.ReadList(key)
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	found, tag_id := tagList.FindTag(tag_name)
 
 	if !found {
-		return make([]uint64, 0), nil
+		return make([]uint64, 0), 0, nil
 	}
 
 	indexFile, err := tm.AcquireIndexFile(tag_id)
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	defer tm.ReleaseIndexFile(tag_id, false, key)
@@ -570,7 +570,7 @@ func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed i
 	f, err := indexFile.StartRead()
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var values []uint64
@@ -579,10 +579,10 @@ func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed i
 
 	if err != nil {
 		indexFile.EndRead(f)
-		return nil, err
+		return nil, 0, err
 	}
 
 	indexFile.EndRead(f)
 
-	return values, nil
+	return values, tag_id, nil
 }
