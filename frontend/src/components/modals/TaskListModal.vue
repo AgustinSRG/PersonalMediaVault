@@ -1,27 +1,9 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-xl modal-height-100"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Tasks") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -51,32 +33,20 @@
               </tr>
               <tr v-for="t in tasks" :key="t.id">
                 <td class="one-line td-shrink">
-                  <i
-                    class="fas fa-circle task-status"
-                    :class="{ 'task-running': t.running }"
-                  ></i>
+                  <i class="fas fa-circle task-status" :class="{ 'task-running': t.running }"></i>
                 </td>
                 <td class="task-progress-bar-td one-line td-shrink">
                   <div class="task-progress-bar-container" v-if="t.running">
-                    <div
-                      class="task-progress-bar-current"
-                      :style="{
-                        width: getGlobalProgress(t.stage, t.stage_progress),
-                      }"
-                    ></div>
+                    <div class="task-progress-bar-current" :style="{
+                      width: getGlobalProgress(t.stage, t.stage_progress),
+                    }"></div>
                   </div>
                 </td>
                 <td class="bold one-line td-shrink">
                   {{ renderType(t.type) }}
                 </td>
                 <td class="bold one-line td-shrink">
-                  <a
-                    @click="goToMedia(t.media_id, $event)"
-                    :href="getMediaURL(t.media_id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >{{ t.media_id }}</a
-                  >
+                  <a @click="goToMedia(t.media_id, $event)" :href="getMediaURL(t.media_id)" target="_blank" rel="noopener noreferrer">{{ t.media_id }}</a>
                 </td>
                 <td class="one-line">
                   {{
@@ -381,6 +351,13 @@ export default defineComponent({
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
+
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     Timeouts.Abort("admin-tasks");

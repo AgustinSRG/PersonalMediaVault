@@ -94,6 +94,10 @@ export default defineComponent({
     this.$options.showH = this.onShow.bind(this);
     AppEvents.AddEventListener("album-user-request-pos", this.$options.showH);
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    if (this.display) {
+        this.$options.focusTrap.activate();
+        this.autoFocus();
+      }
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(

@@ -1,18 +1,6 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-xl modal-height-100"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title" v-if="!isUpload">
           {{ $t("Search media to add to the album") }}
@@ -25,22 +13,10 @@
         </button>
       </div>
       <div class="modal-body no-padding" v-if="!isUpload">
-        <PageAdvancedSearch
-          :display="true"
-          :inModal="true"
-          :noAlbum="aid"
-          @select-media="selectMedia"
-          @change-to-upload="changeToUpload"
-        ></PageAdvancedSearch>
+        <PageAdvancedSearch :display="true" :inModal="true" :noAlbum="aid" @select-media="selectMedia" @change-to-upload="changeToUpload"></PageAdvancedSearch>
       </div>
       <div class="modal-body no-padding" v-if="isUpload">
-        <PageUpload
-          :display="true"
-          :inModal="true"
-          :fixedAlbum="aid"
-          @change-to-search="changeToSearch"
-          @media-go="close"
-        ></PageUpload>
+        <PageUpload :display="true" :inModal="true" :fixedAlbum="aid" @change-to-search="changeToSearch" @media-go="close"></PageUpload>
       </div>
     </div>
   </div>
@@ -135,6 +111,12 @@ export default defineComponent({
   },
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {

@@ -1,19 +1,6 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-lg"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title about-modal-title">
           <img class="about-modal-logo" src="@/assets/favicon.png" alt="PMV" />
@@ -109,6 +96,12 @@ export default defineComponent({
   },
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {

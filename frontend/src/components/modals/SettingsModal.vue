@@ -1,42 +1,19 @@
 <template>
-  <div
-    class="modal-container modal-container-corner no-transition"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-sm"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent">
       <div class="modal-header-corner">
         <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
       </div>
       <div class="modal-body with-menu">
         <table class="modal-menu">
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('theme')"
-          >
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('theme')">
             <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
             <td class="modal-menu-item-title">
               {{ $t("Change theme (Dark / Light)") }}
             </td>
           </tr>
 
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('lang')"
-          >
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('lang')">
             <td class="modal-menu-item-icon">
               <i class="fas fa-language"></i>
             </td>
@@ -45,51 +22,28 @@
             </td>
           </tr>
 
-          <tr
-            v-if="isRoot"
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('username')"
-          >
+          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
             <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
             <td class="modal-menu-item-title">
               {{ $t("Change username") }}
             </td>
           </tr>
 
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('password')"
-          >
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
             <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
             <td class="modal-menu-item-title">
               {{ $t("Change password") }}
             </td>
           </tr>
 
-          <tr
-            v-if="isRoot"
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('admin')"
-          >
+          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
             <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
             <td class="modal-menu-item-title">
               {{ $t("Administrate accounts") }}
             </td>
           </tr>
 
-          <tr
-            v-if="isRoot"
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('tasks')"
-          >
+          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
             <td class="modal-menu-item-icon">
               <i class="fas fa-bars-progress"></i>
             </td>
@@ -98,13 +52,7 @@
             </td>
           </tr>
 
-          <tr
-            v-if="isRoot"
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="clickOnOption('advanced')"
-          >
+          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('advanced')">
             <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
             <td class="modal-menu-item-title">
               {{ $t("Advanced settings") }}
@@ -185,6 +133,13 @@ export default defineComponent({
     );
 
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(

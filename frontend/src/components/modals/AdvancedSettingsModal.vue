@@ -435,6 +435,13 @@ export default defineComponent({
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
+    if (this.display) {
+        this.error = "";
+        this.$options.focusTrap.activate();
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
   },
   beforeUnmount: function () {
     Timeouts.Abort("advanced-settings");

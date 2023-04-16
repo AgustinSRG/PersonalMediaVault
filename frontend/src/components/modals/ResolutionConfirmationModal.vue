@@ -1,20 +1,6 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <form
-      v-if="display"
-      @submit="submit"
-      class="modal-dialog modal-md"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title" v-if="deleting">
           {{ $t("Delete extra resolution") }}
@@ -22,12 +8,7 @@
         <div class="modal-title" v-if="!deleting">
           {{ $t("Encode to extra resolution") }}
         </div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -158,6 +139,11 @@ export default defineComponent({
     this.$options.showH = this.onShow.bind(this);
     AppEvents.AddEventListener("resolution-confirmation", this.$options.showH);
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      this.autoFocus();
+    }
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener(

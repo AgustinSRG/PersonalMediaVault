@@ -1,19 +1,6 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-lg"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Keyboard shortcuts") }}
@@ -202,18 +189,14 @@
             <tr>
               <td>{{ $t("Scroll image to the left") }}</td>
               <td>
-                <span class="key-shortcut"
-                  >{{ $t("Shift") }} + {{ $t("Home") }}</span
-                >
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Home") }}</span>
               </td>
             </tr>
 
             <tr>
               <td>{{ $t("Scroll image to the right") }}</td>
               <td>
-                <span class="key-shortcut"
-                  >{{ $t("Shift") }} + {{ $t("End") }}</span
-                >
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("End") }}</span>
               </td>
             </tr>
 
@@ -241,18 +224,14 @@
             <tr>
               <td>{{ $t("Go to next") }}</td>
               <td>
-                <span class="key-shortcut"
-                  >{{ $t("Shift") }} + {{ $t("Right arrow") }}</span
-                >
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Right arrow") }}</span>
               </td>
             </tr>
 
             <tr>
               <td>{{ $t("Go to previous") }}</td>
               <td>
-                <span class="key-shortcut"
-                  >{{ $t("Shift") }} + {{ $t("Left arrow") }}</span
-                >
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Left arrow") }}</span>
               </td>
             </tr>
 
@@ -340,6 +319,12 @@ export default defineComponent({
   },
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {

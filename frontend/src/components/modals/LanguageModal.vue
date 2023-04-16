@@ -1,41 +1,18 @@
 <template>
-  <div
-    class="modal-container modal-container-corner no-transition"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-md"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
       <div class="modal-header-corner">
         <div class="modal-header-corner-title">{{ $t("Choose your language") }}</div>
       </div>
       <div class="modal-body with-menu limited-height">
         <table class="modal-menu">
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="changeLocale('en')"
-          >
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('en')">
             <td class="modal-menu-item-icon">
               <i class="fas fa-check" :class="{ unchecked: lang !== 'en' }"></i>
             </td>
             <td class="modal-menu-item-title">English ({{ $t("Default") }})</td>
           </tr>
-          <tr
-            class="modal-menu-item"
-            tabindex="0"
-            @keydown="clickOnEnter"
-            @click="changeLocale('es')"
-          >
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('es')">
             <td class="modal-menu-item-icon">
               <i class="fas fa-check" :class="{ unchecked: lang !== 'es' }"></i>
             </td>
@@ -102,6 +79,12 @@ export default defineComponent({
   },
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     if (this.$options.focusTrap) {

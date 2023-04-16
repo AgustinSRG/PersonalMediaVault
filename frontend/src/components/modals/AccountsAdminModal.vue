@@ -1,26 +1,9 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-lg"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Administrate accounts") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -45,11 +28,7 @@
                   <td v-if="!a.write">{{ $t("Read only") }}</td>
                   <td v-if="a.write">{{ $t("Read / Write") }}</td>
                   <td class="text-right">
-                    <button
-                      type="button"
-                      class="btn btn-danger btn-xs"
-                      @click="askDeleteAccount(a.username)"
-                    >
+                    <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
                       <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                     </button>
                   </td>
@@ -62,46 +41,22 @@
         <form @submit="submit" class="border-top">
           <div class="form-group">
             <label>{{ $t("Account name") }}:</label>
-            <input
-              type="text"
-              autocomplete="off"
-              v-model="accountUsername"
-              :disabled="busy"
-              maxlength="255"
-              class="form-control form-control-full-width"
-            />
+            <input type="text" autocomplete="off" v-model="accountUsername" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
           </div>
 
           <div class="form-group">
             <label>{{ $t("Account password") }}:</label>
-            <input
-              type="password"
-              autocomplete="off"
-              v-model="accountPassword"
-              :disabled="busy"
-              maxlength="255"
-              class="form-control form-control-full-width"
-            />
+            <input type="password" autocomplete="off" v-model="accountPassword" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
           </div>
 
           <div class="form-group">
             <label>{{ $t("Account password") }} ({{ $t("Again") }}):</label>
-            <input
-              type="password"
-              autocomplete="off"
-              v-model="accountPassword2"
-              :disabled="busy"
-              maxlength="255"
-              class="form-control form-control-full-width"
-            />
+            <input type="password" autocomplete="off" v-model="accountPassword2" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
           </div>
 
           <div class="form-group">
             <label>{{ $t("Account type") }}:</label>
-            <select
-              v-model="accountWrite"
-              class="form-control form-select form-control-full-width"
-            >
+            <select v-model="accountWrite" class="form-control form-select form-control-full-width">
               <option :value="false">{{ $t("Read only") }}</option>
               <option :value="true">{{ $t("Read / Write") }}</option>
             </select>
@@ -110,11 +65,7 @@
           <div class="form-group form-error">{{ error }}</div>
 
           <div class="form-group">
-            <button
-              type="submit"
-              :disabled="busy"
-              class="btn btn-primary"
-            >
+            <button type="submit" :disabled="busy" class="btn btn-primary">
               <i class="fas fa-plus"></i> {{ $t("Create account") }}
             </button>
           </div>
@@ -122,9 +73,7 @@
       </div>
     </div>
 
-    <AccountDeleteModal
-      v-model:display="displayAccountDelete"
-    ></AccountDeleteModal>
+    <AccountDeleteModal v-model:display="displayAccountDelete"></AccountDeleteModal>
   </div>
 </template>
 
@@ -349,6 +298,15 @@ export default defineComponent({
   mounted: function () {
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
+
+    if (this.display) {
+      this.error = "";
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+      this.displayAccountDelete = false;
+    }
   },
   beforeUnmount: function () {
     Timeouts.Abort("admin-accounts");

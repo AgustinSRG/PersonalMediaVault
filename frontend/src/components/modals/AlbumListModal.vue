@@ -1,27 +1,9 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @click="close"
-    @keydown="keyDownHandle"
-  >
-    <div
-      v-if="display"
-      class="modal-dialog modal-sm"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Albums") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -32,80 +14,50 @@
 
       <div class="modal-body with-menu" v-if="!loading">
         <div class="albums-modal-filter" v-if="!canWrite">
-          <input
-            type="text"
-            autocomplete="off"
-            @input="updateAlbums"
-            :disabled="busy"
-            v-model="filter"
-            class="form-control form-control-full-width"
-            :placeholder="$t('Filter by name') + '...'"
-          />
+          <input type="text" autocomplete="off" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control form-control-full-width" :placeholder="$t('Filter by name') + '...'" />
         </div>
         <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
-          <input
-            type="text"
-            autocomplete="off"
-            @input="updateAlbums"
-            :disabled="busy"
-            v-model="filter"
-            class="form-control"
-            :placeholder="$t('Filter by name') + '...'"
-          />
+          <input type="text" autocomplete="off" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control" :placeholder="$t('Filter by name') + '...'" />
           <button v-if="!editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to edit mode')">
             <i class="fas fa-pencil-alt"></i>
           </button>
-           <button v-if="editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to view mode')">
+          <button v-if="editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to view mode')">
             <i class="fas fa-eye"></i>
           </button>
         </div>
         <div class="albums-list-table-container">
-        <table class="modal-menu" v-if="editMode">
-          <tr v-if="albums.length === 0">
-            <td colspan="2" class="albums-menu-empty">
-              {{ $t("No albums found") }}
-            </td>
-          </tr>
-          <tr
-            v-for="a in albums"
-            :key="a.id"
-            class="modal-menu-item"
-            tabindex="0"
-            @click="clickOnAlbum(a)"
-            @keydown="clickOnEnter"
-          >
-            <td class="modal-menu-item-icon">
-              <i v-if="busy" class="fa fa-spinner fa-spin"></i>
-              <i v-else-if="a.added" class="far fa-square-check"></i>
-              <i v-else class="far fa-square"></i>
-            </td>
-            <td class="modal-menu-item-title">
-              {{ a.name }}
-            </td>
-          </tr>
-        </table>
-         <table class="modal-menu" v-if="!editMode">
-          <tr v-if="albums.length === 0">
-            <td colspan="2" class="albums-menu-empty">
-              {{ $t("No albums found") }}
-            </td>
-          </tr>
-          <tr
-            v-for="a in albums"
-            :key="a.id"
-            class="modal-menu-item"
-            tabindex="0"
-            @click="goToAlbum(a)"
-            @keydown="clickOnEnter"
-          >
-            <td class="modal-menu-item-icon">
-              <i  class="fas fa-list-ol"></i>
-            </td>
-            <td class="modal-menu-item-title">
-              {{ a.name }}
-            </td>
-          </tr>
-        </table>
+          <table class="modal-menu" v-if="editMode">
+            <tr v-if="albums.length === 0">
+              <td colspan="2" class="albums-menu-empty">
+                {{ $t("No albums found") }}
+              </td>
+            </tr>
+            <tr v-for="a in albums" :key="a.id" class="modal-menu-item" tabindex="0" @click="clickOnAlbum(a)" @keydown="clickOnEnter">
+              <td class="modal-menu-item-icon">
+                <i v-if="busy" class="fa fa-spinner fa-spin"></i>
+                <i v-else-if="a.added" class="far fa-square-check"></i>
+                <i v-else class="far fa-square"></i>
+              </td>
+              <td class="modal-menu-item-title">
+                {{ a.name }}
+              </td>
+            </tr>
+          </table>
+          <table class="modal-menu" v-if="!editMode">
+            <tr v-if="albums.length === 0">
+              <td colspan="2" class="albums-menu-empty">
+                {{ $t("No albums found") }}
+              </td>
+            </tr>
+            <tr v-for="a in albums" :key="a.id" class="modal-menu-item" tabindex="0" @click="goToAlbum(a)" @keydown="clickOnEnter">
+              <td class="modal-menu-item-icon">
+                <i class="fas fa-list-ol"></i>
+              </td>
+              <td class="modal-menu-item-title">
+                {{ a.name }}
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
 
@@ -239,7 +191,7 @@ export default defineComponent({
       AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
     },
 
-    changeEditMode: function() {
+    changeEditMode: function () {
       this.editMode = !this.editMode;
       this.editModeChanged = true;
       this.updateAlbums();
@@ -366,6 +318,13 @@ export default defineComponent({
 
     this.updateAlbums();
     this.load();
+
+    if (this.display) {
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
