@@ -3,43 +3,20 @@
     <form @submit="changeTitle">
       <div class="form-group">
         <label>{{ $t("Title") }}:</label>
-        <input
-          type="text"
-          autocomplete="off"
-          :readonly="!canWrite"
-          maxlength="255"
-          :disabled="busy"
-          v-model="title"
-          class="form-control form-control-full-width"
-        />
+        <input type="text" autocomplete="off" :readonly="!canWrite" maxlength="255" :disabled="busy" v-model="title" class="form-control form-control-full-width" />
       </div>
       <div class="form-group" v-if="canWrite">
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :disabled="busy || !title || originalTitle === title"
-        >
+        <button type="submit" class="btn btn-primary" :disabled="busy || !title || originalTitle === title">
           <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
         </button>
       </div>
     </form>
     <div class="form-group border-top">
       <label>{{ $t("Description") }}:</label>
-      <textarea
-        v-model="desc"
-        :readonly="!canWrite"
-        class="form-control form-control-full-width form-textarea"
-        rows="3"
-        :disabled="busy"
-      ></textarea>
+      <textarea v-model="desc" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" rows="3" :disabled="busy"></textarea>
     </div>
     <div class="form-group" v-if="canWrite">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy || originalDesc === desc"
-        @click="changeDescription"
-      >
+      <button type="button" class="btn btn-primary" :disabled="busy || originalDesc === desc" @click="changeDescription">
         <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
       </button>
     </div>
@@ -52,14 +29,7 @@
       }}</label>
       <div v-for="tag in tags" :key="tag" class="media-tag">
         <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-        <button
-          v-if="canWrite"
-          type="button"
-          :title="$t('Remove tag')"
-          class="media-tag-btn"
-          :disabled="busy"
-          @click="removeTag(tag)"
-        >
+        <button v-if="canWrite" type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="busy" @click="removeTag(tag)">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -67,34 +37,15 @@
     <form @submit="addTag" v-if="canWrite">
       <div class="form-group">
         <label>{{ $t("Tag to add") }}:</label>
-        <input
-          type="text"
-          autocomplete="off"
-          maxlength="255"
-          v-model="tagToAdd"
-          :disabled="busy"
-          @input="onTagAddChanged"
-          class="form-control"
-        />
+        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="busy" @input="onTagAddChanged" class="form-control tag-to-add" />
       </div>
       <div class="form-group" v-if="matchingTags.length > 0">
-        <button
-          v-for="mt in matchingTags"
-          :key="mt.id"
-          type="button"
-          class="btn btn-primary btn-sm btn-tag-mini"
-          :disabled="busy"
-          @click="addMatchingTag(mt.name)"
-        >
+        <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" :disabled="busy" @click="addMatchingTag(mt.name)">
           <i class="fas fa-plus"></i> {{ mt.name }}
         </button>
       </div>
       <div class="form-group">
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :disabled="busy || !tagToAdd"
-        >
+        <button type="submit" class="btn btn-primary" :disabled="busy || !tagToAdd">
           <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
         </button>
       </div>
@@ -106,26 +57,11 @@
       <label v-if="!thumbnail">{{
         $t("No thumbnail set for this media")
       }}</label>
-      <img
-        v-if="thumbnail"
-        :src="getThumbnail(thumbnail)"
-        :alt="originalTitle"
-        class="form-group-thumbnail"
-      />
+      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail" />
     </div>
     <div class="form-group" v-if="canWrite">
-      <input
-        type="file"
-        class="file-hidden"
-        @change="inputFileChanged"
-        name="thumbnail-upload"
-      />
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy"
-        @click="uploadThumbnail"
-      >
+      <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
+      <button type="button" class="btn btn-primary" :disabled="busy" @click="uploadThumbnail">
         <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
       </button>
     </div>
@@ -148,21 +84,12 @@
             <td class="bold">{{ sub.id }}</td>
             <td class="bold">{{ sub.name }}</td>
             <td class="text-right td-shrink">
-              <button
-                type="button"
-                class="btn btn-primary btn-xs mr-1"
-                :disabled="busy"
-                @click="downloadSubtitles(sub)"
-              >
+              <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadSubtitles(sub)">
                 <i class="fas fa-download"></i> {{ $t("Download") }}
               </button>
             </td>
             <td class="text-right td-shrink" v-if="canWrite">
-              <button
-                type="button"
-                class="btn btn-danger btn-xs"
-                @click="removeSubtitles(sub)"
-              >
+              <button type="button" class="btn btn-danger btn-xs" @click="removeSubtitles(sub)">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
               </button>
             </td>
@@ -172,116 +99,56 @@
     </div>
 
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <label
-        >{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label
-      >
-      <input
-        type="file"
-        class="file-hidden srt-file-hidden"
-        @change="srtFileChanged"
-        name="srt-upload"
-        accept=".srt"
-      />
-      <button
-        v-if="!srtFileName"
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy"
-        @click="selectSRTFile"
-      >
+      <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
+      <input type="file" class="file-hidden srt-file-hidden" @change="srtFileChanged" name="srt-upload" accept=".srt" />
+      <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
         <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
       </button>
 
-      <button
-        v-if="srtFileName"
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy"
-        @click="selectSRTFile"
-      >
+      <button v-if="srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
         <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
       </button>
     </div>
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Subtitles identifier") }}:</label>
-      <input
-        type="text"
-        autocomplete="off"
-        maxlength="255"
-        :disabled="busy"
-        v-model="srtId"
-        class="form-control"
-      />
+      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtId" class="form-control" />
     </div>
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Subtitles name") }}:</label>
-      <input
-        type="text"
-        autocomplete="off"
-        maxlength="255"
-        :disabled="busy"
-        v-model="srtName"
-        class="form-control"
-      />
+      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtName" class="form-control" />
     </div>
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy || !srtId || !srtName || !srtFile"
-        @click="addSubtitles"
-      >
+      <button type="button" class="btn btn-primary" :disabled="busy || !srtId || !srtName || !srtFile" @click="addSubtitles">
         <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
       </button>
     </div>
 
     <div class="form-group border-top" v-if="type === 2 || type === 3">
       <label>{{ $t("Time slices") }}:</label>
-      <textarea
-        v-model="timeSlices"
-        :readonly="!canWrite"
-        class="form-control form-control-full-width form-textarea"
-        :placeholder="'00:00:00 A\n00:01:00 B'"
-        rows="5"
-        :disabled="busy"
-      ></textarea>
+      <textarea v-model="timeSlices" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" :placeholder="'00:00:00 A\n00:01:00 B'" rows="5" :disabled="busy"></textarea>
     </div>
 
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy || originalTimeSlices === timeSlices"
-        @click="changeTimeSlices"
-      >
+      <button type="button" class="btn btn-primary" :disabled="busy || originalTimeSlices === timeSlices" @click="changeTimeSlices">
         <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
       </button>
     </div>
 
-    <div
-      class="form-group border-top"
-      v-if="canWrite && (type === 2 || type === 1)"
-    >
-      <label v-if="type === 2"
-        >{{
-          $t(
-            "Extra resolutions for videos. These resolutions can be used for slow connections or small screens"
-          )
-        }}:</label
-      >
-      <label v-if="type === 1"
-        >{{
-          $t(
-            "Extra resolutions for images. These resolutions can be used for slow connections or small screens"
-          )
-        }}:</label
-      >
+    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
+      <label v-if="type === 2">{{
+        $t(
+          "Extra resolutions for videos. These resolutions can be used for slow connections or small screens"
+        )
+      }}:</label>
+      <label v-if="type === 1">{{
+        $t(
+          "Extra resolutions for images. These resolutions can be used for slow connections or small screens"
+        )
+      }}:</label>
     </div>
 
     <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
-      <label v-if="type === 1"
-        >{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label
-      >
+      <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
       <label v-if="type === 2">
         {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps
       </label>
@@ -308,22 +175,10 @@
               {{ res.width }}x{{ res.height }}, {{ res.fps }} fps
             </td>
             <td class="text-right">
-              <button
-                v-if="!res.enabled"
-                type="button"
-                class="btn btn-primary btn-xs"
-                :disabled="busy"
-                @click="addResolution(res)"
-              >
+              <button v-if="!res.enabled" type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="addResolution(res)">
                 <i class="fas fa-plus"></i> {{ $t("Encode") }}
               </button>
-              <button
-                v-if="res.enabled"
-                type="button"
-                class="btn btn-danger btn-xs"
-                :disabled="busy"
-                @click="deleteResolution(res)"
-              >
+              <button v-if="res.enabled" type="button" class="btn btn-danger btn-xs" :disabled="busy" @click="deleteResolution(res)">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
               </button>
             </td>
@@ -331,10 +186,7 @@
         </tbody>
       </table>
     </div>
-    <div
-      class="form-group border-top"
-      v-if="canWrite && (type === 2 || type === 3)"
-    >
+    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Extra media configuration") }}:</label>
     </div>
     <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
@@ -346,21 +198,13 @@
             }}
           </td>
           <td class="text-right">
-            <toggle-switch
-              v-model:val="startBeginning"
-              :disabled="busy"
-            ></toggle-switch>
+            <toggle-switch v-model:val="startBeginning" :disabled="busy"></toggle-switch>
           </td>
         </tr>
       </table>
     </div>
     <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy || originalStartBeginning === startBeginning"
-        @click="changeExtraParams"
-      >
+      <button type="button" class="btn btn-primary" :disabled="busy || originalStartBeginning === startBeginning" @click="changeExtraParams">
         <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
       </button>
     </div>
@@ -372,12 +216,7 @@
       }}</label>
     </div>
     <div class="form-group" v-if="canWrite">
-      <button
-        type="button"
-        class="btn btn-primary"
-        :disabled="busy"
-        @click="encodeMedia"
-      >
+      <button type="button" class="btn btn-primary" :disabled="busy" @click="encodeMedia">
         <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
       </button>
     </div>
@@ -387,26 +226,15 @@
       }}</label>
     </div>
     <div class="form-group" v-if="canWrite">
-      <button
-        type="button"
-        class="btn btn-danger"
-        :disabled="busy"
-        @click="deleteMedia"
-      >
+      <button type="button" class="btn btn-danger" :disabled="busy" @click="deleteMedia">
         <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
       </button>
     </div>
 
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
-    <ResolutionConfirmationModal
-      v-model:display="displayResolutionConfirmation"
-    ></ResolutionConfirmationModal>
-    <SubtitlesDeleteModal
-      v-model:display="displaySubtitlesDelete"
-    ></SubtitlesDeleteModal>
-    <ReEncodeConfirmationModal
-      v-model:display="displayReEncode"
-    ></ReEncodeConfirmationModal>
+    <ResolutionConfirmationModal v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
+    <SubtitlesDeleteModal v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
+    <ReEncodeConfirmationModal v-model:display="displayReEncode"></ReEncodeConfirmationModal>
   </div>
 </template>
 
@@ -422,7 +250,7 @@ import { TagsController } from "@/control/tags";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/constants";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
@@ -1114,6 +942,13 @@ export default defineComponent({
           this.findTags();
           TagsController.AddTag(res.id, res.name);
           this.$emit("changed");
+          nextTick(() => {
+            const elemFocus = this.$el.querySelector(".tag-to-add");
+
+            if (elemFocus) {
+              elemFocus.focus();
+            }
+          });
         })
         .onCancel(() => {
           this.busy = false;

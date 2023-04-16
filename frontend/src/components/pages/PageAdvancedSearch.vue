@@ -48,7 +48,7 @@
           </select>
         </div>
         <div class="form-group" v-if="tagMode !== 'untagged'">
-          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading" @input="onTagAddChanged(false)" class="form-control" :placeholder="$t('Search for tags') + '...'" />
+          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading" @input="onTagAddChanged(false)" @keydown="onTagAddKeyDown" class="form-control" :placeholder="$t('Search for tags') + '...'" />
         </div>
         <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
           <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading" class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
@@ -483,7 +483,23 @@ export default defineComponent({
       this.onTagAddChanged(true);
     },
 
-    onTagAddChanged: function (forced: boolean) {
+    onTagAddKeyDown: function (e: KeyboardEvent) {
+      if (e.key !== "Enter") {
+        return;
+      }
+
+      e.preventDefault();
+
+      this.onTagAddChanged(true);
+
+      if (this.matchingTags.length > 0) {
+        this.addMatchingTag(this.matchingTags[0]);
+        this.tagToAdd = "";
+        this.onTagAddChanged(true);
+      }
+    },
+
+    onTagAddChanged: function (forced?: boolean) {
       if (forced) {
         if (this.$options.findTagTimeout) {
           clearTimeout(this.$options.findTagTimeout);
