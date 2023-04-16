@@ -38,6 +38,8 @@ func api_getTags(response http.ResponseWriter, request *http.Request) {
 			Id:   key,
 			Name: val,
 		}
+
+		i++
 	}
 
 	jsonResult, err := json.Marshal(result)
@@ -89,6 +91,11 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 	// Add to index
 
 	tagName := ParseTagName(p.Tag)
+
+	if len(tagName) == 0 || len(tagName) > 255 {
+		ReturnAPIError(response, 400, "INVALID_NAME", "Invalid tag name provided")
+		return
+	}
 
 	tag_id, err := GetVault().tags.TagMedia(p.Media, tagName, session.key)
 
