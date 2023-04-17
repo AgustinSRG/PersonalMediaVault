@@ -58,6 +58,13 @@
               {{ $t("Advanced settings") }}
             </td>
           </tr>
+
+          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('batch')">
+            <td class="modal-menu-item-icon"><i class="fas fa-list"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("Batch operation") }}
+            </td>
+          </tr>
         </table>
       </div>
     </div>

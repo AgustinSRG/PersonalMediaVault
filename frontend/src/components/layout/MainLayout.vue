@@ -29,6 +29,7 @@
     <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
     <ChangePasswordModal v-if="displayPasswordModal" v-model:display="displayPasswordModal"></ChangePasswordModal>
     <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
+    <BatchOperationModal v-if="displayBatchOperation" v-model:display="displayBatchOperation"></BatchOperationModal>
 
     <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
@@ -174,6 +175,12 @@ const KeyboardGuideModal = defineAsyncComponent({
   delay: 1000,
 });
 
+const BatchOperationModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/BatchOperationModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
 export default defineComponent({
   components: {
     TopBar,
@@ -197,6 +204,7 @@ export default defineComponent({
     HelpHubModal,
     AboutModal,
     KeyboardGuideModal,
+    BatchOperationModal,
     SnackBar,
   },
   name: "MainLayout",
@@ -220,6 +228,7 @@ export default defineComponent({
       displayUsernameModal: false,
       displayPasswordModal: false,
       displayAdvancedSettings: false,
+      displayBatchOperation: false,
 
       displayAccountAdmin: false,
 
@@ -270,6 +279,9 @@ export default defineComponent({
           break;
         case "advanced":
           this.displayAdvancedSettings = true;
+          break;
+        case "batch":
+          this.displayBatchOperation = true;
           break;
         case "tasks":
           this.displayTaskList = true;
@@ -343,6 +355,7 @@ export default defineComponent({
         this.displayUsernameModal = false;
         this.displayPasswordModal = false;
         this.displayAdvancedSettings = false;
+        this.displayBatchOperation = false;
 
         this.displayAlbumCreate = false;
 

@@ -1,0 +1,30 @@
+/* Batch operation style */
+
+.batch-progress-bar {
+    height: calc(32px + 0.5rem);
+    width: 100%;
+    border: solid 1px var(--theme-border-color);
+    padding: 0.1rem;
+    position: relative;
+}
+
+.batch-progress-bar-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.1rem;
+}
+
+.batch-progress-bar-current {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--progress-bar-bg);
+    transition: width 0.2s;
+}

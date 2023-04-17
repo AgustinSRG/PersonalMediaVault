@@ -57,6 +57,18 @@ export class TagsController {
         });
     }
 
+    public static FindTag(name: string): number {
+        const tags = Object.values(TagsController.Tags);
+
+        for (const tag of tags) {
+            if (tag.name === name) {
+                return tag.id;
+            }
+        }
+
+        return -1;
+    }
+
     public static AddTag(id: number, name: string) {
         // Remove any other tag with that name
         const tags = Object.values(TagsController.Tags);
