@@ -25,7 +25,7 @@
   
   .search-result-item:focus-visible {
     outline: none;
-    border: solid 1px var(--theme-fg-color);
+    opacity: 0.7;
   }
   
   .search-result-item.current {
