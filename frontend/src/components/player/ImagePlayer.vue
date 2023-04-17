@@ -543,11 +543,11 @@ export default defineComponent({
       } else {
         closeFullscreen();
       }
-      this.fullScreen = !this.fullScreen;
+      this.fullScreenState = !this.fullScreenState;
     },
     onExitFullScreen: function () {
       if (!document.fullscreenElement) {
-        this.fullScreen = false;
+        this.fullScreenState = false;
       }
     },
     stopPropagationEvent: function (e) {
