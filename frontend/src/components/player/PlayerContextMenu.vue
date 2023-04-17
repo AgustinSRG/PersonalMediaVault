@@ -100,6 +100,21 @@
         </td>
       </tr>
 
+
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @click="showTags"
+        @keydown="clickOnEnter"
+      >
+        <td>
+          <i class="fas fa-tag icon-config"></i>
+          <span class="context-entry-title">{{ $t("Tags") }}</span>
+        </td>
+        <td class="td-right">
+        </td>
+      </tr>
+
       <tr
         v-if="url"
         class="tr-button"
@@ -159,6 +174,8 @@ export default defineComponent({
     "update:fit",
     "update:notesEdit",
     "update:sliceLoop",
+    "open-tags",
+    "stats",
     "close",
   ],
   props: {
@@ -239,6 +256,12 @@ export default defineComponent({
 
     refreshMedia: function () {
       MediaController.Load();
+      this.shownState = false;
+      this.$emit("close");
+    },
+
+    showTags: function () {
+      this.$emit("open-tags");
       this.shownState = false;
       this.$emit("close");
     },

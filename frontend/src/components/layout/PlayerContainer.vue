@@ -1,13 +1,15 @@
 <template>
   <div class="player-container" tabindex="-1">
     <EmptyPlayer v-if="!mediaData || mediaData.type === 0" :mid="mid" :status="status" :rTick="tick" :prev="prev" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :next="next" :inAlbum="isInAlbum" :albumLoading="albumLoading" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" :min="minPlayer"></EmptyPlayer>
-    <ImagePlayer v-if="mediaData && mediaData.type === 1" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:showControls="showControls" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></ImagePlayer>
-    <VideoPlayer v-if="mediaData && mediaData.type === 2" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:userControls="showControls" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></VideoPlayer>
-    <AudioPlayer v-if="mediaData && mediaData.type === 3" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></AudioPlayer>
+    <ImagePlayer v-if="mediaData && mediaData.type === 1" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:showControls="showControls" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" :min="minPlayer"></ImagePlayer>
+    <VideoPlayer v-if="mediaData && mediaData.type === 2" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:userControls="showControls" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" :min="minPlayer"></VideoPlayer>
+    <AudioPlayer v-if="mediaData && mediaData.type === 3" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" :min="minPlayer"></AudioPlayer>
 
     <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
     <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
+
+    <TagListModal v-if="displayTagList" v-model:display="displayTagList"></TagListModal>
   </div>
 </template>
 
@@ -60,6 +62,12 @@ const SizeStatsModal = defineAsyncComponent({
   delay: 1000,
 });
 
+const TagListModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/TagListModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
 export default defineComponent({
   name: "PlayerContainer",
   emits: [],
@@ -70,6 +78,7 @@ export default defineComponent({
     ImagePlayer,
     AlbumListModal,
     SizeStatsModal,
+    TagListModal,
   },
   data: function () {
     return {
@@ -91,6 +100,7 @@ export default defineComponent({
 
       displayAlbumList: false,
       displaySizeStats: false,
+      displayTagList: false,
 
       hasPagePrev: AlbumsController.HasPagePrev,
       hasPageNext: AlbumsController.HasPageNext,
@@ -135,6 +145,10 @@ export default defineComponent({
 
     openStats: function () {
       this.displaySizeStats = true;
+    },
+
+    openTags: function () {
+      this.displayTagList = true;
     },
 
     goNext: function () {

@@ -37,7 +37,7 @@
     <form @submit="addTag" v-if="canWrite">
       <div class="form-group">
         <label>{{ $t("Tag to add") }}:</label>
-        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="busy" @input="onTagAddChanged" class="form-control tag-to-add" />
+        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="busy" @input="onTagAddChanged" @keydown="onTagAddKeyDown" class="form-control tag-to-add" />
       </div>
       <div class="form-group" v-if="matchingTags.length > 0">
         <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" :disabled="busy" @click="addMatchingTag(mt.name)">
@@ -1092,6 +1092,19 @@ export default defineComponent({
           }
         })
         .slice(0, 10);
+    },
+
+    onTagAddKeyDown: function (e: KeyboardEvent) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.addTag();
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        this.findTags();
+        if (this.matchingTags.length > 0) {
+          this.tagToAdd = this.matchingTags[0].name;
+        }
+      }
     },
 
     addResolution: function (r) {

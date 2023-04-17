@@ -143,7 +143,7 @@
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls && userControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="video" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="videoURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" v-model:controls="userControlsState"></PlayerContextMenu>
+    <PlayerContextMenu type="video" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="videoURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" v-model:controls="userControlsState" @open-tags="openTags"></PlayerContextMenu>
   </div>
 </template>
 
@@ -196,6 +196,7 @@ export default defineComponent({
     "update:fullscreen",
     "albums-open",
     "stats-open",
+    "tags-open",
   ],
   props: {
     mid: Number,
@@ -315,6 +316,10 @@ export default defineComponent({
 
     openStats: function () {
       this.$emit("stats-open");
+    },
+
+    openTags: function () {
+      this.$emit("tags-open");
     },
 
     hideContext: function (e) {
@@ -849,6 +854,10 @@ export default defineComponent({
         case "A":
         case "a":
           this.manageAlbums();
+          break;
+        case "t":
+        case "T":
+          this.openTags();
           break;
         case "S":
         case "s":
