@@ -123,6 +123,12 @@
               </td>
             </tr>
             <tr>
+              <td>{{ $t("Toggle slice loop") }}</td>
+              <td>
+                <span class="key-shortcut">X</span>
+              </td>
+            </tr>
+            <tr>
               <td>{{ $t("Toggle full screen") }}</td>
               <td>
                 <span class="key-shortcut">F</span>
@@ -218,6 +224,13 @@
               <td>{{ $t("Add current media to an album") }}</td>
               <td>
                 <span class="key-shortcut">A</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td>{{ $t("Show media tags") }}</td>
+              <td>
+                <span class="key-shortcut">T</span>
               </td>
             </tr>
 

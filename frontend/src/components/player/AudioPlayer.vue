@@ -4,7 +4,7 @@
     'no-controls': !showControls,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
-    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" crossorigin="anonymous" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></audio>
+    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" :loop="loop && !sliceLoop" crossorigin="anonymous" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></audio>
 
     <canvas v-if="audioURL"></canvas>
 
@@ -449,16 +449,19 @@ export default defineComponent({
       this.loading = b;
     },
     onEnded: function () {
+      this.loading = false;
+      if (
+        this.currentTimeSlice &&
+        this.sliceLoop
+      ) {
+        this.setTime(this.currentTimeSlice.start, false);
+        this.play();
+        return;
+      }
       if (this.canSaveTime) {
         PlayerPreferences.SetInitialTime(this.mid, 0);
       }
-      this.loading = false;
-      if (this.loop) {
-        const audioElement = this.getAudioElement();
-        if (audioElement) {
-          this.getAudioElement().currentTime = 0;
-        }
-      } else {
+      if (!this.loop) {
         this.pause();
         this.ended = true;
         if (this.nextEnd) {
@@ -857,6 +860,15 @@ export default defineComponent({
             this.goNext();
           } else {
             caught = false;
+          }
+          break;
+        case "X":
+        case "x":
+          this.sliceLoop = !this.sliceLoop;
+          if (this.sliceLoop) {
+            AppEvents.Emit("snack", this.$t("Slice loop enabled"));
+          } else {
+            AppEvents.Emit("snack", this.$t("Slice loop disabled"));
           }
           break;
         case "l":

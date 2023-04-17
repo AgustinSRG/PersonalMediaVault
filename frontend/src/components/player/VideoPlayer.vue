@@ -4,7 +4,7 @@
     'no-controls': !showControls || !userControls,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
-    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted" :loop="loop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></video>
+    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></video>
 
     <div class="player-feedback-container">
       <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
@@ -501,6 +501,14 @@ export default defineComponent({
     },
     onEnded: function () {
       this.loading = false;
+      if (
+        this.currentTimeSlice &&
+        this.sliceLoop
+      ) {
+        this.setTime(this.currentTimeSlice.start, false);
+        this.play();
+        return;
+      }
       if (this.canSaveTime) {
         PlayerPreferences.SetInitialTime(this.mid, 0);
       }
@@ -951,6 +959,15 @@ export default defineComponent({
             this.goNext();
           } else {
             caught = false;
+          }
+          break;
+        case "X":
+        case "x":
+          this.sliceLoop = !this.sliceLoop;
+          if (this.sliceLoop) {
+            AppEvents.Emit("snack", this.$t("Slice loop enabled"));
+          } else {
+            AppEvents.Emit("snack", this.$t("Slice loop disabled"));
           }
           break;
         case "l":
