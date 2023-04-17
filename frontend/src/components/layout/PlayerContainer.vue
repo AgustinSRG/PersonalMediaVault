@@ -1,109 +1,64 @@
 <template>
   <div class="player-container" tabindex="-1">
-    <EmptyPlayer
-      v-if="!mediaData || mediaData.type === 0"
-      :mid="mid"
-      :status="status"
-      :rTick="tick"
-      :prev="prev"
-      :pagePrev="hasPagePrev"
-      :pageNext="hasPageNext"
-      :next="next"
-      :inAlbum="isInAlbum"
-      :albumLoading="albumLoading"
-      :canWrite="canWrite"
-      @go-next="goNext"
-      @go-prev="goPrev"
-      v-model:fullscreen="fullScreen"
-      @update:fullscreen="onUpdateFullScreen"
-      :min="minPlayer"
-    ></EmptyPlayer>
-    <ImagePlayer
-      v-if="mediaData && mediaData.type === 1"
-      :mid="mid"
-      :metadata="mediaData"
-      :rTick="tick"
-      :prev="prev"
-      :next="next"
-      :pagePrev="hasPagePrev"
-      :pageNext="hasPageNext"
-      :inAlbum="isInAlbum"
-      :canWrite="canWrite"
-      @go-next="goNext"
-      @go-prev="goPrev"
-      v-model:fullscreen="fullScreen"
-      @update:fullscreen="onUpdateFullScreen"
-      v-model:showControls="showControls"
-      @albums-open="openAlbums"
-      @stats-open="openStats"
-      :min="minPlayer"
-    ></ImagePlayer>
-    <VideoPlayer
-      v-if="mediaData && mediaData.type === 2"
-      :mid="mid"
-      :metadata="mediaData"
-      :rTick="tick"
-      :prev="prev"
-      :next="next"
-      :pagePrev="hasPagePrev"
-      :pageNext="hasPageNext"
-      :inAlbum="isInAlbum"
-      :canWrite="canWrite"
-      @go-next="goNext"
-      @go-prev="goPrev"
-      v-model:fullscreen="fullScreen"
-      @update:fullscreen="onUpdateFullScreen"
-      v-model:userControls="showControls"
-      @albums-open="openAlbums"
-      @stats-open="openStats"
-      :min="minPlayer"
-    ></VideoPlayer>
-    <AudioPlayer
-      v-if="mediaData && mediaData.type === 3"
-      :mid="mid"
-      :metadata="mediaData"
-      :rTick="tick"
-      :prev="prev"
-      :next="next"
-      :pagePrev="hasPagePrev"
-      :pageNext="hasPageNext"
-      :inAlbum="isInAlbum"
-      :canWrite="canWrite"
-      @go-next="goNext"
-      @go-prev="goPrev"
-      v-model:fullscreen="fullScreen"
-      @update:fullscreen="onUpdateFullScreen"
-      @albums-open="openAlbums"
-      @stats-open="openStats"
-      :min="minPlayer"
-    ></AudioPlayer>
+    <EmptyPlayer v-if="!mediaData || mediaData.type === 0" :mid="mid" :status="status" :rTick="tick" :prev="prev" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :next="next" :inAlbum="isInAlbum" :albumLoading="albumLoading" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" :min="minPlayer"></EmptyPlayer>
+    <ImagePlayer v-if="mediaData && mediaData.type === 1" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:showControls="showControls" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></ImagePlayer>
+    <VideoPlayer v-if="mediaData && mediaData.type === 2" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:userControls="showControls" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></VideoPlayer>
+    <AudioPlayer v-if="mediaData && mediaData.type === 3" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" @albums-open="openAlbums" @stats-open="openStats" :min="minPlayer"></AudioPlayer>
 
-    <AlbumListModal v-model:display="displayAlbumList"></AlbumListModal>
+    <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
-    <SizeStatsModal
-      :mid="mid"
-      v-model:display="displaySizeStats"
-    ></SizeStatsModal>
+    <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
   </div>
 </template>
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { MediaController } from "@/control/media";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
-import EmptyPlayer from "@/components/player/EmptyPlayer.vue";
-import AudioPlayer from "@/components/player/AudioPlayer.vue";
-import VideoPlayer from "@/components/player/VideoPlayer.vue";
-import ImagePlayer from "@/components/player/ImagePlayer.vue";
+import LoadingOverlay from "./LoadingOverlay.vue";
+
+const EmptyPlayer = defineAsyncComponent({
+  loader: () => import("@/components/player/EmptyPlayer.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const AudioPlayer = defineAsyncComponent({
+  loader: () => import("@/components/player/AudioPlayer.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+})
+
+const VideoPlayer = defineAsyncComponent({
+  loader: () => import("@/components/player/VideoPlayer.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+})
+
+const ImagePlayer = defineAsyncComponent({
+  loader: () => import("@/components/player/ImagePlayer.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+})
+
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 
-import AlbumListModal from "../modals/AlbumListModal.vue";
-import SizeStatsModal from "../modals/SizeStatsModal.vue";
+const AlbumListModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/AlbumListModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
+
+const SizeStatsModal = defineAsyncComponent({
+  loader: () => import("@/components/modals/SizeStatsModal.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 1000,
+});
 
 export default defineComponent({
   name: "PlayerContainer",

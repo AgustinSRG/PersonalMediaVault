@@ -57,16 +57,48 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { defineComponent } from "vue";
+import { defineAsyncComponent, defineComponent } from "vue";
 
-import PageHome from "../pages/PageHome.vue";
-import PageSearch from "../pages/PageSearch.vue";
-import PageUpload from "../pages/PageUpload.vue";
-import PageRandom from "../pages/PageRandom.vue";
-import PageAlbums from "../pages/PageAlbums.vue";
-import PageAdvancedSearch from "../pages/PageAdvancedSearch.vue";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
+
+import LoadingOverlay from "./LoadingOverlay.vue";
+
+const PageHome = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageHome.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const PageSearch = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageSearch.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const PageUpload = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageUpload.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const PageRandom = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageRandom.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const PageAlbums = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageAlbums.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
+
+const PageAdvancedSearch = defineAsyncComponent({
+  loader: () => import("@/components/pages/PageAdvancedSearch.vue"),
+  loadingComponent: LoadingOverlay,
+  delay: 200,
+});
 
 export default defineComponent({
   components: {
