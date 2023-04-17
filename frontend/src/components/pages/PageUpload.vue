@@ -7,9 +7,6 @@
       <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
         <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
       </button>
-      <button v-if="inModal" @click="changeToSearch" type="button" class="btn btn-primary btn-mr">
-        <i class="fas fa-search"></i> {{ $t("Search") }}
-      </button>
     </div>
     <div class="upload-options-container" v-if="optionsShown">
       <div class="form-group">
@@ -175,7 +172,7 @@ export default defineComponent({
     AlbumCreateModal,
   },
   name: "PageUpload",
-  emits: ['change-to-search', 'media-go'],
+  emits: ['media-go'],
   props: {
     display: Boolean,
     inModal: Boolean,
@@ -239,10 +236,6 @@ export default defineComponent({
       if (this.selectedState !== 'pending') {
         this.filteredEntries = this.filteredEntries.reverse();
       }
-    },
-
-    changeToSearch: function () {
-      this.$emit("change-to-search");
     },
 
     createAlbum: function () {

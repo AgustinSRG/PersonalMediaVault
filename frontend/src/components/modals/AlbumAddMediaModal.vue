@@ -12,11 +12,13 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      <div class="modal-body no-padding" v-if="!isUpload">
-        <PageAdvancedSearch :display="true" :inModal="true" :noAlbum="aid" @select-media="selectMedia" @change-to-upload="changeToUpload"></PageAdvancedSearch>
-      </div>
-      <div class="modal-body no-padding" v-if="isUpload">
-        <PageUpload :display="true" :inModal="true" :fixedAlbum="aid" @change-to-search="changeToSearch" @media-go="close"></PageUpload>
+      <div class="modal-body no-padding">
+        <div class="modal-top-menu items-2">
+          <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"><i class="fas fa-search"></i> {{ $t("Search") }}</a>
+          <a href="javascript:;" @click="changeToUpload" class="modal-top-menu-item" :class="{ selected: isUpload }"><i class="fas fa-upload"></i> {{ $t("Upload") }}</a>
+        </div>
+        <PageAdvancedSearch v-if="!isUpload" :display="true" :inModal="true" :noAlbum="aid" @select-media="selectMedia"></PageAdvancedSearch>
+        <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
       </div>
     </div>
   </div>
