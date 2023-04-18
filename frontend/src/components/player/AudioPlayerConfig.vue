@@ -512,9 +512,9 @@ export default defineComponent({
       if (e.ctrlKey) {
         return;
       }
-      e.stopPropagation();
       if (e.key === "Escape") {
         this.close();
+        e.stopPropagation();
       }
     },
   },
