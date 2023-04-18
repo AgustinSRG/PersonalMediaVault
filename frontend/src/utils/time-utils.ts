@@ -11,7 +11,7 @@ export function renderTimeSeconds(s: number): string {
         hours = Math.floor(s / 3600);
         s = s % 3600;
     }
-    if (s > 60) {
+    if (s >= 60) {
         minutes = Math.floor(s / 60);
         s = s % 60;
     }
