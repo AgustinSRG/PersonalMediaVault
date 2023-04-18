@@ -262,7 +262,10 @@ export class AppStatus {
         AppStatus.CurrentSearch = search;
 
         if (AppStatus.CurrentSearch) {
-            AppStatus.CurrentPage = "search";
+            if (AppStatus.CurrentPage !== "random") {
+                AppStatus.CurrentPage = "search";
+            }
+
             AppStatus.CurrentAlbum = -1;
 
             if (AppStatus.CurrentMedia >= 0) {
