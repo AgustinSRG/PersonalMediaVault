@@ -839,7 +839,11 @@ export default defineComponent({
 
       this.$options.autoNextTimer = setTimeout(() => {
         this.$options.autoNextTimer = null;
-        this.goNext();
+        if (this.displayConfig) {
+          this.setupAutoNextTimer();
+        } else {
+          this.goNext();
+        }
       }, ms);
     },
 
