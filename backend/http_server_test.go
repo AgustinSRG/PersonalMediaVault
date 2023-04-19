@@ -4,8 +4,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -18,43 +16,6 @@ func GetTestServer() (*httptest.Server, error) {
 		return nil, err
 	}
 	return httptest.NewServer(apiRouter), nil
-}
-
-func LoginTest(server *httptest.Server) (session string, fingerprint string, e error) {
-	body, err := json.Marshal(LoginAPIBody{
-		Username: VAULT_DEFAULT_USER,
-		Password: VAULT_DEFAULT_PASSWORD,
-	})
-
-	if err != nil {
-		return "", "", err
-	}
-
-	statusCode, bodyResponseBytes, err := DoTestRequest(server, "POST", "/api/auth/login", body, "")
-
-	if err != nil {
-		return "", "", err
-	}
-
-	if statusCode != 200 {
-		return "", "", errors.New("Authentication failed")
-	}
-
-	bodyResponse := LoginAPIResponse{}
-
-	err = json.Unmarshal(bodyResponseBytes, &bodyResponse)
-
-	if err != nil {
-		return "", "", err
-	}
-
-	return bodyResponse.SessionId, bodyResponse.VaultFingerprint, nil
-}
-
-func LogoutTest(server *httptest.Server, session string) (e error) {
-	_, _, err := DoTestRequest(server, "POST", "/api/auth/logout", nil, session)
-
-	return err
 }
 
 func DoTestRequest(server *httptest.Server, method string, path string, body []byte, session string) (statusCode int, bodyResponse []byte, e error) {
@@ -72,7 +33,7 @@ func DoTestRequest(server *httptest.Server, method string, path string, body []b
 		bodyReader = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest("POST", apiURL, bodyReader)
+	req, err := http.NewRequest(method, apiURL, bodyReader)
 
 	if err != nil {
 		return 0, nil, err

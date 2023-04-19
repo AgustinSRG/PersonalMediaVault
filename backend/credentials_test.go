@@ -17,7 +17,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Initalize credentials
@@ -28,7 +28,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Unlock
@@ -37,7 +37,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if key == nil {
@@ -50,7 +50,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Save
@@ -59,7 +59,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Create new manager (simulate restart)
@@ -70,7 +70,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Check password
@@ -91,7 +91,7 @@ func TestCredentialsManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if otherKey == nil {

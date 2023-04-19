@@ -16,7 +16,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	test_file := path.Join(test_path_base, "test_block_file_enc.pmv")
@@ -29,14 +29,14 @@ func TestFileBlockEncrypt(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = ws.Initialize(size, key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	buf := make([]byte, 269*1024)
@@ -49,14 +49,14 @@ func TestFileBlockEncrypt(t *testing.T) {
 		err = ws.Write(buf)
 		if err != nil {
 			t.Error(err)
-			panic(err)
+			return
 		}
 	}
 
 	err = ws.Close()
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Read file
@@ -65,7 +65,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if rs.file_size != size {
@@ -87,7 +87,7 @@ func TestFileBlockEncrypt(t *testing.T) {
 
 		if err != nil {
 			t.Error(err)
-			panic(err)
+			return
 		}
 
 		if n != len(buf) {

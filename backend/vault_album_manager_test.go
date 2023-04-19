@@ -31,7 +31,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Generate a random key
@@ -52,14 +52,14 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	added, err := tm.AddMediaToAlbum(album_id, 1, key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !added {
@@ -70,7 +70,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !added {
@@ -81,7 +81,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !added {
@@ -92,7 +92,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if albums.Albums[album_id] == nil {
@@ -111,7 +111,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !removed {
@@ -122,7 +122,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if albums.Albums[album_id] == nil {
@@ -141,7 +141,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !renamed {
@@ -152,21 +152,21 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	album3, err := tm.CreateAlbum("Album3", key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	added, err = tm.AddMediaToAlbum(album2, 1, key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !added {
@@ -177,7 +177,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !added {
@@ -188,7 +188,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if albums.Albums[album_id] == nil {

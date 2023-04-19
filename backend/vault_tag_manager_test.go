@@ -17,7 +17,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Generate a random key
@@ -33,7 +33,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	// Tests start here
@@ -43,28 +43,28 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	_, err = tm.TagMedia(2, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	_, err = tm.TagMedia(3, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	list, _, _, err := tm.ListTaggedMedia("tag_example", key, 0, 100, false)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if len(list) != 3 || list[0] != 1 || list[1] != 2 || list[2] != 3 {
@@ -75,7 +75,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !check {
@@ -86,7 +86,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !check {
@@ -97,7 +97,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if !check {
@@ -108,7 +108,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if check {
@@ -119,21 +119,21 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	_, err = tm.TagMedia(6, "tag_2", key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	tagList, err := tm.ReadList(key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	found, tag_example := tagList.FindTag("tag_example")
@@ -152,14 +152,14 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	check, err = tm.CheckMediaTag(2, "tag_example", key)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if check {
@@ -170,7 +170,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if len(list) != 3 || list[0] != 1 || list[1] != 3 || list[2] != 6 {
@@ -181,7 +181,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if len(list) != 1 || list[0] != 6 {

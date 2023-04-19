@@ -31,49 +31,49 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.Initialize(5)
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.PutFile([]byte(fileContents1))
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.PutFile([]byte(fileContents2))
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.PutFile([]byte(fileContents3))
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.PutFile([]byte(fileContents4))
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	err = file.PutFile([]byte(fileContents5))
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	file.Close()
@@ -84,7 +84,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if rf.file_count != 5 {
@@ -97,7 +97,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if string(b) != fileContents1 {
@@ -108,7 +108,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if string(b) != fileContents2 {
@@ -119,7 +119,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if string(b) != fileContents3 {
@@ -130,7 +130,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if string(b) != fileContents4 {
@@ -141,7 +141,7 @@ func TestMultiFilePack(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		panic(err)
+		return
 	}
 
 	if string(b) != fileContents5 {
