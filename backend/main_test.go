@@ -16,6 +16,7 @@ import (
 
 var vaultMutex = &sync.Mutex{}
 var testVaultInitialized = false
+var testVaultKey []byte
 
 var apiRouter *mux.Router
 
@@ -60,8 +61,10 @@ func InitializeTestVault() error {
 
 	SetFFMPEGBinaries(ffmpegPath, ffprobePath) // Set FFMPEG paths
 
-	SetDebugLogEnabled(true)   // Log debug mode
-	SetRequestLogEnabled(true) // Log requests
+	if os.Getenv("DEBUG") == "YES" {
+		SetDebugLogEnabled(true)   // Log debug mode
+		SetRequestLogEnabled(true) // Log requests
+	}
 
 	SetTempFilesPath(path.Join("test-vault", "temp"))
 
@@ -80,7 +83,17 @@ func InitializeTestVault() error {
 
 	SetUnencryptedTempFilesPath("temp")
 
+	ClearUnencryptedTempFilesPath()
+
 	apiRouter = RunHTTPServer("", "", true)
+
+	key, _, err := vault.credentials.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
+
+	if err != nil {
+		return err
+	}
+
+	testVaultKey = key
 
 	return nil
 }
@@ -150,15 +163,21 @@ func TestAPIIntegration(t *testing.T) {
 		wg.Done()
 	})
 
-	wg.Add(1)
-	t.Run("Tasks API", func(t *testing.T) {
-		Tasks_API_Test(server, session, t)
-		wg.Done()
-	})
-
 	// Wait for API tests to finish before logging out
 
 	wg.Wait()
+
+	// Wait for tasks to finish
+
+	wg2 := sync.WaitGroup{}
+
+	wg2.Add(1)
+	t.Run("Tasks API", func(t *testing.T) {
+		Tasks_API_Test(server, session, t)
+		wg2.Done()
+	})
+
+	wg2.Wait()
 
 	// Logout
 

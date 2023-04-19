@@ -9,9 +9,16 @@ import (
 )
 
 func TestIndexedList(t *testing.T) {
-	test_path_base := "./temp"
+	err := InitializeTestVault()
 
-	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	test_path_base := path.Join(temp_files_path, "unit")
+
+	err = os.MkdirAll(test_path_base, FOLDER_PERMISSION)
 
 	if err != nil {
 		t.Error(err)

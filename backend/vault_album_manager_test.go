@@ -3,8 +3,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"os"
 	"testing"
 )
 
@@ -23,11 +21,7 @@ func compareAlbumLists(list1 []uint64, list2 []uint64) bool {
 }
 
 func TestVaultAlbumManager(t *testing.T) {
-	test_path_base := "./temp"
-
-	SetTempFilesPath(test_path_base)
-
-	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
+	err := InitializeTestVault()
 
 	if err != nil {
 		t.Error(err)
@@ -36,14 +30,11 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	// Generate a random key
 
-	key := make([]byte, 32)
-	rand.Read(key) //nolint:errcheck
+	key := testVaultKey
 
 	// Initialize new albums manager
 
-	var tm VaultAlbumsManager
-
-	tm.Initialize(test_path_base)
+	var tm *VaultAlbumsManager = GetVault().albums
 
 	// Tests start here
 	//////////////////////////
@@ -229,6 +220,4 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	//////////////////////////
 	// Tests end here
-
-	ClearTemporalFilesPath() // Remove all files
 }

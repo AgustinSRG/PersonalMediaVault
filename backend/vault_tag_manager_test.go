@@ -3,17 +3,11 @@
 package main
 
 import (
-	"crypto/rand"
-	"os"
 	"testing"
 )
 
 func TestVaultTagManager(t *testing.T) {
-	test_path_base := "./temp"
-
-	SetTempFilesPath(test_path_base)
-
-	err := os.MkdirAll(test_path_base, FOLDER_PERMISSION)
+	err := InitializeTestVault()
 
 	if err != nil {
 		t.Error(err)
@@ -22,19 +16,11 @@ func TestVaultTagManager(t *testing.T) {
 
 	// Generate a random key
 
-	key := make([]byte, 32)
-	rand.Read(key) //nolint:errcheck
+	key := testVaultKey
 
 	// Initialize new tag manager
 
-	var tm VaultTagManager
-
-	err = tm.Initialize(test_path_base)
-
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	var tm *VaultTagManager = GetVault().tags
 
 	// Tests start here
 	//////////////////////////
@@ -190,6 +176,4 @@ func TestVaultTagManager(t *testing.T) {
 
 	//////////////////////////
 	// Tests end here
-
-	ClearTemporalFilesPath() // Remove all files
 }

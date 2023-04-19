@@ -45,7 +45,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Check invalid session
 
-	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/account/username", nil, "random_invalid_session")
+	statusCode, _, err = DoTestRequest(server, "GET", "/api/account/username", nil, "random_invalid_session")
 
 	if err != nil {
 		t.Error(err)
@@ -68,7 +68,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	statusCode, bodyResponseBytes, err = DoTestRequest(server, "POST", "/api/account/username", body, session)
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/account/username", body, session)
 
 	if err != nil {
 		t.Error(err)
@@ -91,7 +91,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	statusCode, bodyResponseBytes, err = DoTestRequest(server, "POST", "/api/account/password", body, session)
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/account/password", body, session)
 
 	if err != nil {
 		t.Error(err)
