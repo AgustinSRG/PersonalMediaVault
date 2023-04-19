@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func AccountAPITest(server *httptest.Server, session string, t *testing.T) {
+func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Check get username API
 	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/account/username", nil, session)
 

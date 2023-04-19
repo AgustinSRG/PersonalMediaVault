@@ -105,7 +105,7 @@ func encryptFileContents(data []byte, method FileEncryptionMethod, key []byte) (
 	return result, nil
 }
 
-// Decripts file contents
+// Decrypts file contents
 // data - Cipher text
 // key - Decryption key
 // Returns the original file data

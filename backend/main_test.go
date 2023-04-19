@@ -110,7 +110,49 @@ func TestAPIIntegration(t *testing.T) {
 
 	wg.Add(1)
 	t.Run("Account API", func(t *testing.T) {
-		AccountAPITest(server, session, t)
+		Account_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Admin API", func(t *testing.T) {
+		Admin_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Media API", func(t *testing.T) {
+		Media_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Tags API", func(t *testing.T) {
+		Tags_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Search API", func(t *testing.T) {
+		Search_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Albums API", func(t *testing.T) {
+		Albums_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Config API", func(t *testing.T) {
+		Config_API_Test(server, session, t)
+		wg.Done()
+	})
+
+	wg.Add(1)
+	t.Run("Tasks API", func(t *testing.T) {
+		Tasks_API_Test(server, session, t)
 		wg.Done()
 	})
 
