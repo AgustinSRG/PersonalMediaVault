@@ -3,7 +3,7 @@ module github.com/AgustinSRG/PersonalMediaVault/backend
 go 1.20
 
 require (
-	github.com/AgustinSRG/go-child-process-manager v1.0.0
+	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0

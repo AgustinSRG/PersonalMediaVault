@@ -25,7 +25,7 @@ func InitializeTestVault() error {
 		return nil
 	}
 
-	err := child_process_manager.InitalizeChildProcessManager()
+	err := child_process_manager.InitializeChildProcessManager()
 
 	if err != nil {
 		return err

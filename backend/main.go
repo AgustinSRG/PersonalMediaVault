@@ -178,7 +178,7 @@ func main() {
 	}
 
 	if options.daemon {
-		err := child_process_manager.InitalizeChildProcessManager()
+		err := child_process_manager.InitializeChildProcessManager()
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
 			os.Exit(1)
