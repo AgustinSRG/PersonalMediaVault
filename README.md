@@ -32,9 +32,9 @@ Depending on the operating system you are using, there are multiple installation
 
 For apt-compatible Linux distributions, we provide a DEB package:
 
-| Version | Arch | Hash | Hash alg. | Download |
+| Version | Arch | Download | Hash | Hash alg.  |
 |---|---|---|---|---|
-| 1.4.1 | amd64 | `482d45619a2f8765e03b2bbefc4f2761296f25b6e773e894adbfe37831836dd3` | SHA256 | [Google Drive](https://drive.google.com/file/d/1P5LEZe1U9rX324NbLnns7tRZE4m5sv94/view?usp=sharing) / [Mega](https://mega.nz/file/BCllAKKQ#QxSCx1nfT51U9vOvbXDVxaFOJtJoRfVttiZDUgeItAk) |
+| 1.4.1 | amd64 | [Drive](https://drive.google.com/file/d/1P5LEZe1U9rX324NbLnns7tRZE4m5sv94/view?usp=sharing) <br /> [Mega](https://mega.nz/file/BCllAKKQ#QxSCx1nfT51U9vOvbXDVxaFOJtJoRfVttiZDUgeItAk) | `482d45619a2f8765e03b2bbefc4f2761296f25b6e773e894adbfe37831836dd3` | SHA256 |
 
 Download it, and check its integrity using:
 
@@ -62,10 +62,10 @@ You can change the language the launcher uses setting the `PMV_LANGUAGE` environ
 
 For Windows, we provide a MSI installer:
 
-| Version | Arch | Language | Hash | Download |
+| Version | Arch | Language | Download | Hash |
 |---|---|---|---|---|
-| 1.4.1 | x64 | English | SHA256: `CEBD1248E8BFE6B1FAA17AE72D4333BE9A5A04F7AF92FED7EB6EC6598FE484B8` | [Google Drive](https://drive.google.com/file/d/1PvEq_f3vNbrlTHZ4GkN2mnwS2LrCM4_P/view?usp=sharing) / [Mega](https://mega.nz/file/8D9BXC6I#72ggc-vJY9omr0jpBYlBeMsbwq6MTZaw6BN4CjVSs8g) |
-| 1.4.1 | x64 | Spanish | SHA256: `5E64B8269AF05380BFBE5ADBEA1AB61C733BAC184A49ED1EA329238CEFBF9364` | [Google Drive](https://drive.google.com/file/d/1volAqFbWA9KyFlrJWviKnEi6spidgE9S/view?usp=sharing) / [Mega](https://mega.nz/file/IX0DyAwI#hTFdBhgD9cKV2kLYhhr97u6Lvkc2GYAsLFV108S5724) |
+| 1.4.1 | x64 | English | [Drive](https://drive.google.com/file/d/1PvEq_f3vNbrlTHZ4GkN2mnwS2LrCM4_P/view?usp=sharing) <br /> [Mega](https://mega.nz/file/8D9BXC6I#72ggc-vJY9omr0jpBYlBeMsbwq6MTZaw6BN4CjVSs8g) | SHA256: `CEBD1248E8BFE6B1FAA17AE72D4333BE9A5A04F7AF92FED7EB6EC6598FE484B8` |
+| 1.4.1 | x64 | Spanish | [Drive](https://drive.google.com/file/d/1volAqFbWA9KyFlrJWviKnEi6spidgE9S/view?usp=sharing) <br /> [Mega](https://mega.nz/file/IX0DyAwI#hTFdBhgD9cKV2kLYhhr97u6Lvkc2GYAsLFV108S5724) | SHA256: `5E64B8269AF05380BFBE5ADBEA1AB61C733BAC184A49ED1EA329238CEFBF9364` |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
 
