@@ -62,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err := child_process_manager.InitalizeChildProcessManager()
+	err := child_process_manager.InitializeChildProcessManager()
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
