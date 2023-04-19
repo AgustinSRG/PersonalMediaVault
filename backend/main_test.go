@@ -25,6 +25,8 @@ func InitializeTestVault() error {
 		return nil
 	}
 
+	os.RemoveAll("test-vault") // Remove test vault before starting
+
 	err := child_process_manager.InitializeChildProcessManager()
 
 	if err != nil {
