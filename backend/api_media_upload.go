@@ -247,6 +247,10 @@ func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, te
 		return
 	}
 
+	if thumbnail == "" {
+		return
+	}
+
 	// Encrypt the thumbnail
 
 	thumb_encrypted_file, err := EncryptAssetFile(thumbnail, session.key)
