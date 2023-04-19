@@ -8,6 +8,7 @@
 		"files.exclude": {
 			"temp": true,
 			"vault": true,
+			"test-vault": true,
 			"pmvd": true,
 			"pmvd.exe": true
 		},

@@ -86,7 +86,9 @@ func cacheTTLAdd(next http.Handler) http.Handler {
 // NOTE: This method locks the thread forever, run with coroutine: go RunHTTPServer(p, b)
 // port - Port to listen
 // bindAddr - Bind address
-func RunHTTPServer(port string, bindAddr string) {
+// isTest - True for testing, false for actual server
+// Returns the router
+func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	router := mux.NewRouter()
 
 	// Logging middleware
@@ -98,7 +100,9 @@ func RunHTTPServer(port string, bindAddr string) {
 	}
 
 	// Initialize tokens
-	InitAssetJWTSecret()
+	if !isTest {
+		InitAssetJWTSecret()
+	}
 
 	// API routes
 
@@ -179,6 +183,12 @@ func RunHTTPServer(port string, bindAddr string) {
 	router.HandleFunc("/api/tasks/{id:[0-9]+}", api_getTask).Methods("GET")
 	router.HandleFunc("/api/tasks/{id:[0-9]+}/kill", api_killTask).Methods("POST")
 
+	// Is Test?
+
+	if isTest {
+		return router
+	}
+
 	// Static frontend
 
 	frontend_path := os.Getenv("FRONTEND_PATH")
@@ -208,6 +218,8 @@ func RunHTTPServer(port string, bindAddr string) {
 		// Regular HTTP
 		runHTTPServer(port, bindAddr, router)
 	}
+
+	return nil
 }
 
 // Runs Secure HTTPS server listener

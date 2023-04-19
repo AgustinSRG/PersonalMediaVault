@@ -15,6 +15,7 @@ test.js
 # Ignore data folders
 
 vault
+test-vault
 version.txt
 version.log
 

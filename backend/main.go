@@ -241,7 +241,7 @@ func main() {
 		}
 
 		// Create and run HTTP server
-		RunHTTPServer(options.port, options.bindAddr)
+		RunHTTPServer(options.port, options.bindAddr, false)
 	} else if options.clean || options.fix || options.recover {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath)

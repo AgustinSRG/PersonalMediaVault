@@ -11,6 +11,8 @@ backend/test.js
 # Ignore data folders
 
 backend/vault
+backend/test-vault
+backend/test-assets
 backend/version.txt
 backend/version.log
 
