@@ -117,4 +117,61 @@ func Admin_API_Test(server *httptest.Server, session string, t *testing.T) {
 	if statusCode != 200 {
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
+
+	// Delete the account
+
+	body, err = json.Marshal(ApiAdminDeleteAccountBody{
+		Username: "user2",
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/admin/accounts/delete", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	// List accounts
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/admin/accounts", nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	response = make([]ApiAdminAccountEntry, 0)
+
+	err = json.Unmarshal(bodyResponseBytes, &response)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	foundAccount = false
+
+	for i := 0; i < len(response); i++ {
+		if response[i].Username == "user2" {
+			foundAccount = true
+			break
+		}
+	}
+
+	if foundAccount {
+		t.Errorf("The account was not deleted after calling the delete API")
+	}
 }

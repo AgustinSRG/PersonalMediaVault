@@ -110,8 +110,6 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 
 type ApiAdminDeleteAccountBody struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
-	Write    bool   `json:"write"`
 }
 
 func api_deleteAccount(response http.ResponseWriter, request *http.Request) {

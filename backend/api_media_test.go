@@ -14,71 +14,158 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"sync"
+	"reflect"
+	"strconv"
 	"testing"
 	"time"
 )
 
 func Media_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Upload media and wait for it to be ready
-	wg := sync.WaitGroup{}
 
-	var videoId uint64
-	var audioId uint64
-	var imageId uint64
-	var isError bool = false
-
-	wg.Add(1)
-	t.Run("Upload video", func(t *testing.T) {
+	t.Run("Video", func(t *testing.T) {
 		mid, err := UploadTestMedia(server, session, MediaTypeVideo, "Test video", "")
 
 		if err != nil {
 			t.Error(err)
-			isError = true
+			return
 		}
 
-		videoId = mid
-
-		wg.Done()
+		_TestUploadedMedia(server, session, t, mid)
 	})
 
-	wg.Add(1)
-	t.Run("Upload audio", func(t *testing.T) {
+	t.Run("Audio", func(t *testing.T) {
 		mid, err := UploadTestMedia(server, session, MediaTypeAudio, "Test audio", "")
 
 		if err != nil {
 			t.Error(err)
-			isError = true
+			return
 		}
 
-		audioId = mid
-
-		wg.Done()
+		_TestUploadedMedia(server, session, t, mid)
 	})
 
-	wg.Add(1)
-	t.Run("Upload image", func(t *testing.T) {
+	t.Run("Image", func(t *testing.T) {
 		mid, err := UploadTestMedia(server, session, MediaTypeImage, "Test image", "")
 
 		if err != nil {
 			t.Error(err)
-			isError = true
+			return
 		}
 
-		imageId = mid
+		_TestUploadedMedia(server, session, t, mid)
+	})
+}
 
-		wg.Done()
+func _TestFetchMetadata(server *httptest.Server, session string, t *testing.T, mediaId uint64, res *MediaAPIMetaResponse) error {
+	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId)), nil, session)
+
+	if err != nil {
+		return err
+	}
+
+	if statusCode != 200 {
+		return ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200")
+	}
+
+	return json.Unmarshal(bodyResponseBytes, &res)
+}
+
+func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, mediaId uint64) {
+	// Get metadata
+
+	meta := MediaAPIMetaResponse{}
+
+	err := _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// Test size stats
+
+	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/size_stats", nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	res1 := MediaSizeAPIResponse{}
+
+	err = json.Unmarshal(bodyResponseBytes, &res1)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	foundOriginal := false
+
+	for i := 0; i < len(res1.AssetSize); i++ {
+		if res1.AssetSize[i].Name == "ORIGINAL" {
+			foundOriginal = true
+			break
+		}
+	}
+
+	if !foundOriginal {
+		t.Errorf("Original asset not found in the size stats list")
+	}
+
+	// Get original
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.Url, nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	// Get thumbnail (if any)
+
+	if meta.Thumbnail != "" {
+		statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", meta.Thumbnail, nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		thumbContentType := http.DetectContentType(bodyResponseBytes)
+
+		if thumbContentType != "image/jpeg" {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(thumbContentType), "image/jpeg"))
+		}
+	}
+
+	// Change title
+
+	newTitle := "New test media title - " + fmt.Sprint(mediaId)
+
+	body, err := json.Marshal(MediaAPIEditTitleBody{
+		Title: newTitle,
 	})
 
-	wg.Wait()
-
-	if isError {
+	if err != nil {
+		t.Error(err)
 		return
 	}
 
-	// Delete media
-
-	statusCode, _, err := DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(videoId))+"/delete", nil, session)
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/title", body, session)
 
 	if err != nil {
 		t.Error(err)
@@ -89,7 +176,31 @@ func Media_API_Test(server *httptest.Server, session string, t *testing.T) {
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(audioId))+"/delete", nil, session)
+	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if meta.Title != newTitle {
+		t.Error(ErrorMismatch("Title", meta.Title, newTitle))
+	}
+
+	// Change description
+
+	newDescription := "New test media description - " + fmt.Sprint(mediaId)
+
+	body, err = json.Marshal(MediaAPIEditDescriptionBody{
+		Description: newDescription,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/description", body, session)
 
 	if err != nil {
 		t.Error(err)
@@ -100,7 +211,721 @@ func Media_API_Test(server *httptest.Server, session string, t *testing.T) {
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(imageId))+"/delete", nil, session)
+	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if meta.Description != newDescription {
+		t.Error(ErrorMismatch("Description", meta.Title, newTitle))
+	}
+
+	// Change extra data
+
+	body, err = json.Marshal(MediaAPIEditExtraParams{
+		ForceStartBeginning: true,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/extra", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !meta.ForceStartBeginning {
+		t.Error(ErrorMismatch("ForceStartBeginning", fmt.Sprint(meta.ForceStartBeginning), fmt.Sprint(true)))
+	}
+
+	// Time slices
+
+	if meta.Type == MediaTypeAudio || meta.Type == MediaTypeVideo {
+		newTimeSlices := []MediaAPIMetaTimeSplit{
+			{Time: 0, Name: "Slice 1"},
+			{Time: 5, Name: "Slice 2"},
+		}
+
+		body, err = json.Marshal(newTimeSlices)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/time_slices", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if !reflect.DeepEqual(meta.TimeSlices, newTimeSlices) {
+			t.Error(ErrorMismatch("TimeSlices", fmt.Sprint(meta.TimeSlices), fmt.Sprint(newTimeSlices)))
+		}
+	}
+
+	// Image notes
+
+	if meta.Type == MediaTypeImage {
+		newNotes := []ImageNote{
+			{
+				XPosition: 0,
+				YPosition: 0,
+				Width:     100,
+				Height:    100,
+				Text:      "Note 1",
+			},
+			{
+				XPosition: 7,
+				YPosition: 7,
+				Width:     777,
+				Height:    777,
+				Text:      "Note 2",
+			},
+		}
+
+		body, err = json.Marshal(newNotes)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/notes", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if !meta.HasImageNotes {
+			t.Error(ErrorMismatch("HasImageNotes", fmt.Sprint(meta.HasImageNotes), fmt.Sprint(true)))
+		}
+
+		if meta.ImageNotesURL != "" {
+			statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.ImageNotesURL, nil, session)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if statusCode != 200 {
+				t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+			}
+
+			metaNotes := make([]ImageNote, 0)
+
+			err = json.Unmarshal(bodyResponseBytes, &metaNotes)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if !reflect.DeepEqual(metaNotes, newNotes) {
+				t.Error(ErrorMismatch("Notes", fmt.Sprint(metaNotes), fmt.Sprint(newNotes)))
+			}
+		} else {
+			t.Errorf("ImageNotesURL is empty")
+		}
+	}
+
+	// Change thumbnail
+
+	client := server.Client()
+
+	newThumbnail, err := os.ReadFile(path.Join("test-assets", "test-image.png"))
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	var b bytes.Buffer
+
+	writer := multipart.NewWriter(&b)
+
+	part, err := writer.CreateFormFile("file", "new-thumbnail.png")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = part.Write(newThumbnail)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	writer.Close()
+
+	apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/thumbnail")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req, err := http.NewRequest("POST", apiURL, &b)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req.Header.Set("x-session-token", session)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	bodyData, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	res2 := ThumbnailAPIResponse{}
+
+	err = json.Unmarshal(bodyData, &res2)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	thumbContentType := http.DetectContentType(bodyResponseBytes)
+
+	if thumbContentType != "image/jpeg" {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(thumbContentType), "image/jpeg"))
+	}
+
+	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if meta.Thumbnail == "" {
+		t.Errorf("Metadata has no thumbnail")
+	}
+
+	// Subtitles
+
+	if meta.Type == MediaTypeVideo || meta.Type == MediaTypeAudio {
+		newSubtitles, err := os.ReadFile(path.Join("test-assets", "test-subrip.srt"))
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		var b bytes.Buffer
+
+		writer := multipart.NewWriter(&b)
+
+		part, err := writer.CreateFormFile("file", "test-subrip.srt")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err = part.Write(newSubtitles)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		writer.Close()
+
+		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/set")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req, err := http.NewRequest("POST", apiURL+"?id=en&name=English", &b)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req.Header.Set("x-session-token", session)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := client.Do(req)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer resp.Body.Close()
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		bodyData, err := io.ReadAll(resp.Body)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		res2 := SubtitlesAPIResponse{}
+
+		err = json.Unmarshal(bodyData, &res2)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		if !reflect.DeepEqual(newSubtitles, bodyResponseBytes) {
+			t.Errorf("Subtitles content mismatch")
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Subtitles) != 1 {
+			t.Error(ErrorMismatch("len(Subtitles)", fmt.Sprint(len(meta.Subtitles)), fmt.Sprint(1)))
+		}
+
+		if meta.Subtitles[0].Id != "en" || meta.Subtitles[0].Name != "English" {
+			t.Error(ErrorMismatch("len(Subtitles)", meta.Subtitles[0].Id+"/"+meta.Subtitles[0].Name, "en/English"))
+		}
+
+		// Delete the subtitles
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/remove?id=en", nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Subtitles) != 0 {
+			t.Error(ErrorMismatch("len(Subtitles)", fmt.Sprint(len(meta.Subtitles)), fmt.Sprint(0)))
+		}
+	}
+
+	// Extra resolutions
+
+	if meta.Type == MediaTypeImage || meta.Type == MediaTypeVideo {
+		testResolution := ApiMediaResolutionBody{
+			Width:  256,
+			Height: 144,
+			Fps:    30,
+		}
+
+		if meta.Type == MediaTypeImage {
+			testResolution.Fps = 1
+		}
+
+		body, err = json.Marshal(testResolution)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/resolution/add", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Resolutions) != 1 {
+			t.Error(ErrorMismatch("len(Resolutions)", fmt.Sprint(len(meta.Resolutions)), "1"))
+			return
+		}
+
+		if meta.Resolutions[0].Width != testResolution.Width || meta.Resolutions[0].Height != testResolution.Height || meta.Resolutions[0].Fps != testResolution.Fps {
+			t.Errorf("Added resolution does not match the existing one")
+		}
+
+		for !meta.Resolutions[0].Ready {
+			if meta.Resolutions[0].Task > 0 {
+				statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/tasks/"+fmt.Sprint(meta.Resolutions[0].Task), nil, session)
+
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				if statusCode == 200 {
+					taskInfo := TaskListInfoEntry{}
+
+					err = json.Unmarshal(bodyResponseBytes, &taskInfo)
+
+					if err != nil {
+						t.Error(err)
+						return
+					}
+				} else if statusCode != 404 {
+					t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200/404"))
+				}
+			}
+
+			time.Sleep(100 * time.Millisecond)
+
+			err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if len(meta.Resolutions) != 1 {
+				t.Error(ErrorMismatch("len(Resolutions)", fmt.Sprint(len(meta.Resolutions)), "1"))
+				return
+			}
+		}
+
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.Resolutions[0].Url, nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/resolution/remove", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Resolutions) != 0 {
+			t.Error(ErrorMismatch("len(Resolutions)", fmt.Sprint(len(meta.Resolutions)), "0"))
+			return
+		}
+	}
+
+	// Re-Encode
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/encode", nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	for !meta.Encoded {
+		if meta.Task > 0 {
+			statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/tasks/"+fmt.Sprint(meta.Task), nil, session)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if statusCode == 200 {
+				taskInfo := TaskListInfoEntry{}
+
+				err = json.Unmarshal(bodyResponseBytes, &taskInfo)
+
+				if err != nil {
+					t.Error(err)
+					return
+				}
+			} else if statusCode != 404 {
+				t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200/404"))
+			}
+		}
+
+		time.Sleep(100 * time.Millisecond)
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	}
+
+	// HEAD request to asset
+
+	statusCode, originalAssetBytes, err := DoTestRequest(server, "GET", meta.Url, nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	statusCode, resHead, _, err := DoTestRangeRequest(server, "HEAD", meta.Url, "")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	assetBytes, err := strconv.ParseInt(resHead.Get("Content-Length"), 10, 64)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if assetBytes != int64(len(originalAssetBytes)) {
+		t.Error(ErrorMismatch("HeadContentLength", fmt.Sprint(assetBytes), fmt.Sprint(len(originalAssetBytes))))
+	}
+
+	// Range request (0-X)
+
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=0-31")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 206 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "206"))
+	}
+
+	if resHead.Get("Content-Length") != "32" {
+		t.Error(ErrorMismatch("Content-Length", resHead.Get("Content-Length"), "32"))
+	}
+
+	expectedContentRange := "bytes " + fmt.Sprint(0) + "-" + fmt.Sprint(31) + "/" + fmt.Sprint(assetBytes)
+
+	if resHead.Get("Content-Range") != expectedContentRange {
+		t.Error(ErrorMismatch("Content-Range", resHead.Get("Content-Range"), expectedContentRange))
+	}
+
+	if !reflect.DeepEqual(bodyResponseBytes, originalAssetBytes[0:32]) {
+		t.Errorf("Asset bytes mismatch")
+	}
+
+	// Range request (X-Y)
+
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=32-63")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 206 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "206"))
+	}
+
+	if resHead.Get("Content-Length") != "32" {
+		t.Error(ErrorMismatch("Content-Length", resHead.Get("Content-Length"), "32"))
+	}
+
+	expectedContentRange = "bytes " + fmt.Sprint(32) + "-" + fmt.Sprint(63) + "/" + fmt.Sprint(assetBytes)
+
+	if resHead.Get("Content-Range") != expectedContentRange {
+		t.Error(ErrorMismatch("Content-Range", resHead.Get("Content-Range"), expectedContentRange))
+	}
+
+	if !reflect.DeepEqual(bodyResponseBytes, originalAssetBytes[32:64]) {
+		t.Errorf("Asset bytes mismatch")
+	}
+
+	// Range request (X-)
+
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=32-")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 206 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "206"))
+	}
+
+	if resHead.Get("Content-Length") != fmt.Sprint(assetBytes-32) {
+		t.Error(ErrorMismatch("Content-Length", resHead.Get("Content-Length"), fmt.Sprint(assetBytes-32)))
+	}
+
+	expectedContentRange = "bytes " + fmt.Sprint(32) + "-" + fmt.Sprint(assetBytes-1) + "/" + fmt.Sprint(assetBytes)
+
+	if resHead.Get("Content-Range") != expectedContentRange {
+		t.Error(ErrorMismatch("Content-Range", resHead.Get("Content-Range"), expectedContentRange))
+	}
+
+	if !reflect.DeepEqual(bodyResponseBytes, originalAssetBytes[32:]) {
+		t.Errorf("Asset bytes mismatch")
+	}
+
+	// Range request (-Y)
+
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=-32")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 206 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "206"))
+	}
+
+	if resHead.Get("Content-Length") != fmt.Sprint(32) {
+		t.Error(ErrorMismatch("Content-Length", resHead.Get("Content-Length"), "32"))
+	}
+
+	expectedContentRange = "bytes " + fmt.Sprint(assetBytes-32) + "-" + fmt.Sprint(assetBytes-1) + "/" + fmt.Sprint(assetBytes)
+
+	if resHead.Get("Content-Range") != expectedContentRange {
+		t.Error(ErrorMismatch("Content-Range", resHead.Get("Content-Range"), expectedContentRange))
+	}
+
+	if !reflect.DeepEqual(bodyResponseBytes, originalAssetBytes[assetBytes-32:]) {
+		t.Error(ErrorMismatch("Content-Length", fmt.Sprint(bodyResponseBytes), fmt.Sprint(originalAssetBytes[assetBytes-32:])))
+	}
+
+	// Finish: Delete media
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/delete", nil, session)
 
 	if err != nil {
 		t.Error(err)
