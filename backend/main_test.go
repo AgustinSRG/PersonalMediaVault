@@ -61,8 +61,11 @@ func InitializeTestVault() error {
 
 	SetFFMPEGBinaries(ffmpegPath, ffprobePath) // Set FFMPEG paths
 
-	if os.Getenv("DEBUG") == "YES" {
-		SetDebugLogEnabled(true)   // Log debug mode
+	if os.Getenv("LOG_DEBUG") == "YES" {
+		SetDebugLogEnabled(true) // Log debug mode
+	}
+
+	if os.Getenv("LOG_REQUESTS") == "YES" {
 		SetRequestLogEnabled(true) // Log requests
 	}
 

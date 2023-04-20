@@ -59,7 +59,7 @@ func CreateReadWriteLock() *ReadWriteLock {
 }
 
 // Request a write operation
-// This locks the resorce from writting
+// This locks the resource from writing
 // Only one write thread is allowed
 func (lock *ReadWriteLock) RequestWrite() {
 	lock.write_sem.Lock()

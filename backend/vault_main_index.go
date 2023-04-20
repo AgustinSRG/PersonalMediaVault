@@ -89,7 +89,7 @@ func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 
 	vmi.lock.StartWrite()
 
-	// Move temp file to original apth
+	// Move temp file to original path
 	err := os.Rename(res.path, vmi.file)
 
 	vmi.lock.EndWrite()
@@ -135,7 +135,7 @@ func (vmi *VaultMainIndex) StartRead() (*IndexedListFile, error) {
 }
 
 // Ends read operation
-// fd - Openned file (it closes it)
+// fd - Opened file (it closes it)
 func (vmi *VaultMainIndex) EndRead(fd *IndexedListFile) {
 	fd.Close()
 	vmi.lock.EndRead()
