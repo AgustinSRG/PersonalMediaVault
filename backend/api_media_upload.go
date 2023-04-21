@@ -550,7 +550,7 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 		meta.OriginalEncoded = false
 		meta.OriginalExtension = ext
 		meta.OriginalAsset = original_asset
-		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil, true)
 	}
 
 	if meta.Type == MediaTypeVideo {
@@ -558,7 +558,7 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 		meta.PreviewsReady = false
 		meta.PreviewsAsset = 0
 		meta.PreviewsInterval = 0
-		meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil)
+		meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 	}
 
 	// Other resolutions
@@ -571,7 +571,7 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 					Width:  userConfig.Resolutions[i].Width,
 					Height: userConfig.Resolutions[i].Height,
 					Fps:    userConfig.Resolutions[i].Fps,
-				})
+				}, false)
 
 				// Save resolution
 
@@ -597,7 +597,7 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 					Width:  userConfig.ImageResolutions[i].Width,
 					Height: userConfig.ImageResolutions[i].Height,
 					Fps:    1,
-				})
+				}, false)
 
 				// Save resolution
 

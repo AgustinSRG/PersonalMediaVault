@@ -38,14 +38,16 @@ func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string) {
 
 // Result of FFPROBE (media description)
 type FFprobeMediaResult struct {
-	Type       MediaType // Type of media (video, audio, image)
-	Format     string    // File format
-	Duration   float64   // Duration
-	Width      int32     // Width (px)
-	Height     int32     // Height (px)
-	Fps        int32     // Frames per second
-	Encoded    bool      // True if already encoded to the expected format
-	EncodedExt string    // Extension of the encoded file
+	Type         MediaType // Type of media (video, audio, image)
+	Format       string    // File format
+	Duration     float64   // Duration
+	Width        int32     // Width (px)
+	Height       int32     // Height (px)
+	Fps          int32     // Frames per second
+	Encoded      bool      // True if already encoded to the expected format
+	EncodedExt   string    // Extension of the encoded file
+	CanCopyAudio bool      // True if the audio stream can be copied
+	CanCopyVideo bool      // True if the video stream can be copied
 }
 
 // Parses frame rate from string returned by ffprobe
@@ -141,24 +143,31 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			}
 
 			encoded := validateFormatNameVideo(format)
+			canCopyVideo := true
 
 			if videoStream.CodecName != "h264" {
 				encoded = false
+				canCopyVideo = false
 			}
+
+			canCopyAudio := true
 
 			if audioStream != nil && audioStream.CodecName != "aac" {
 				encoded = false
+				canCopyAudio = false
 			}
 
 			result := FFprobeMediaResult{
-				Type:       MediaTypeVideo,
-				Format:     format,
-				Duration:   duration.Seconds(),
-				Width:      int32(videoStream.Width),
-				Height:     int32(videoStream.Height),
-				Fps:        ParseFrameRate(videoStream.AvgFrameRate),
-				Encoded:    encoded,
-				EncodedExt: "mp4",
+				Type:         MediaTypeVideo,
+				Format:       format,
+				Duration:     duration.Seconds(),
+				Width:        int32(videoStream.Width),
+				Height:       int32(videoStream.Height),
+				Fps:          ParseFrameRate(videoStream.AvgFrameRate),
+				Encoded:      encoded,
+				EncodedExt:   "mp4",
+				CanCopyVideo: canCopyVideo,
+				CanCopyAudio: canCopyAudio,
 			}
 
 			return &result, nil
@@ -297,8 +306,10 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 // originalFileDuration - Original video duration (seconds)
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
+// canCopyVideo - True if video stream can be copied
+// canCopyAudio - True if audio stream can be copied
 // The encoded file will be tempfile/video.mp4
-func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, width int32, height int32, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, width int32, height int32, tempPath string, config *UserConfig, canCopyVideo bool, canCopyAudio bool) *exec.Cmd {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -319,10 +330,27 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	// Fix odd dimensions
 	if (width%2 != 0) || (height%2 != 0) {
 		args = append(args, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2")
+		canCopyVideo = false
+	}
+
+	var vCodec string
+
+	if canCopyVideo {
+		vCodec = "copy"
+	} else {
+		vCodec = "libx264"
+	}
+
+	var aCodec string
+
+	if canCopyAudio {
+		aCodec = "copy"
+	} else {
+		aCodec = "aac"
 	}
 
 	// MP4
-	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
+	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", vCodec, "-acodec", aCodec, tempPath+"/video.mp4")
 
 	cmd.Args = args
 

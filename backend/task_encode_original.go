@@ -243,7 +243,17 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	if probe_data.Type == MediaTypeVideo {
 		encoded_temp = path.Join(tempFolder, "video.mp4")
 		encoded_ext = "mp4"
-		cmd = MakeFFMpegEncodeToMP4OriginalCommand(originalTemp, probe_data.Format, probe_data.Duration, probe_data.Width, probe_data.Height, tempFolder, userConfig)
+		cmd = MakeFFMpegEncodeToMP4OriginalCommand(
+			originalTemp,
+			probe_data.Format,
+			probe_data.Duration,
+			probe_data.Width,
+			probe_data.Height,
+			tempFolder,
+			userConfig,
+			task.definition.FirstTimeEncoding && probe_data.CanCopyVideo,
+			task.definition.FirstTimeEncoding && probe_data.CanCopyAudio,
+		)
 	} else if probe_data.Type == MediaTypeAudio {
 		encoded_temp = path.Join(tempFolder, "audio.mp3")
 		encoded_ext = "mp3"

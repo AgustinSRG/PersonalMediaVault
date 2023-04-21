@@ -921,11 +921,11 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		if task_info == nil {
 			// Task crashed or was never spawned, make a new one
 
-			meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+			meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil, false)
 		}
 	} else if meta.OriginalReady && meta.OriginalEncoded {
 		meta.OriginalEncoded = false
-		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil)
+		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil, false)
 	}
 
 	// Check previews
@@ -936,9 +936,9 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		task_info := GetVault().tasks.GetTaskInfo(meta.PreviewsTask)
 
 		if task_info == nil {
-			// Task crashed or was never spawned, meka a new one
+			// Task crashed or was never spawned, make a new one
 
-			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil)
+			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 		}
 	}
 
@@ -950,13 +950,13 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 				task_info := GetVault().tasks.GetTaskInfo(meta.Resolutions[i].TaskId)
 
 				if task_info == nil {
-					// Task crashed or was never spawned, meka a new one
+					// Task crashed or was never spawned, make a new one
 
 					meta.Resolutions[i].TaskId = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_RESOLUTION, &UserConfigResolution{
 						Width:  meta.Resolutions[i].Width,
 						Height: meta.Resolutions[i].Height,
 						Fps:    meta.Resolutions[i].Fps,
-					})
+					}, false)
 				}
 			}
 		}
@@ -1078,7 +1078,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		Width:  p.Width,
 		Height: p.Height,
 		Fps:    p.Fps,
-	})
+	}, false)
 
 	// Save resolution
 

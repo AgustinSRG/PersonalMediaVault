@@ -42,7 +42,7 @@ type ActiveTask struct {
 // Task status data
 type TaskStatus struct {
 	Stage      string  `json:"stage"`          // Name of the stage
-	StageStart int64   `json:"stage_start"`    // Timestamp (Unix millis) of stage start
+	StageStart int64   `json:"stage_start"`    // Timestamp (Unix milliseconds) of stage start
 	Progress   float64 `json:"stage_progress"` // Stage progress (0-100)
 
 	lock *sync.Mutex // Lock to control acess to status data
@@ -50,7 +50,7 @@ type TaskStatus struct {
 
 // Get task status
 // Returns (1) Stage name
-// Returns (2) Timestamp (Unix millis) of stage start
+// Returns (2) Timestamp (Unix milliseconds) of stage start
 // Returns (3) Stage progress (0-100)
 func (s *TaskStatus) Get() (string, int64, float64) {
 	s.lock.Lock()
@@ -91,10 +91,11 @@ const (
 
 // Task definition data
 type TaskDefinition struct {
-	Id         uint64                `json:"id"`         // Task ID
-	MediaId    uint64                `json:"media_id"`   // Media file ID
-	Type       TaskDefinitionType    `json:"type"`       // Task type
-	Resolution *UserConfigResolution `json:"resolution"` // Resolution data
+	Id                uint64                `json:"id"`             // Task ID
+	MediaId           uint64                `json:"media_id"`       // Media file ID
+	Type              TaskDefinitionType    `json:"type"`           // Task type
+	Resolution        *UserConfigResolution `json:"resolution"`     // Resolution data
+	FirstTimeEncoding bool                  `json:"first_time_enc"` // First time media is encoded
 }
 
 // Pending tasks data
@@ -307,22 +308,24 @@ func (tm *TaskManager) RunPendingTasks() {
 }
 
 // Creates a task
-// session - Session that cretaes the task
+// session - Session that creates the task
 // media_id - Media file ID
 // task_type - Task type
 // resolution - Resolution data (if task requires it)
+// firstTimeEncoding - True only for the first time the media is encoded after upload
 // Returns the Id of the new task
-func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_type TaskDefinitionType, resolution *UserConfigResolution) uint64 {
+func (tm *TaskManager) AddTask(session *ActiveSession, media_id uint64, task_type TaskDefinitionType, resolution *UserConfigResolution, firstTimeEncoding bool) uint64 {
 	tm.lock.Lock()
 
 	tm.pending_tasks.NextId++
 	task_id := tm.pending_tasks.NextId
 
 	task_definition := TaskDefinition{
-		Id:         task_id,
-		MediaId:    media_id,
-		Type:       task_type,
-		Resolution: resolution,
+		Id:                task_id,
+		MediaId:           media_id,
+		Type:              task_type,
+		Resolution:        resolution,
+		FirstTimeEncoding: firstTimeEncoding,
 	}
 
 	task := ActiveTask{
@@ -435,8 +438,8 @@ type TaskListInfoEntry struct {
 	Resolution *UserConfigResolution `json:"resolution"` // Resolution data
 
 	Stage      string  `json:"stage"`          // Name of current stage
-	StageStart int64   `json:"stage_start"`    // Stage start timestamp (unix millis)
-	Now        int64   `json:"time_now"`       // Server time (unix millis)
+	StageStart int64   `json:"stage_start"`    // Stage start timestamp (unix milliseconds)
+	Now        int64   `json:"time_now"`       // Server time (unix milliseconds)
 	Progress   float64 `json:"stage_progress"` // Stage progress (0-100)
 }
 

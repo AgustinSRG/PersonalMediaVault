@@ -350,7 +350,7 @@ paths:
               upload_time:
                 type: number
                 format: int64
-                description: "Upload timestamp (server time, Unix millis)"
+                description: "Upload timestamp (server time, Unix milliseconds)"
               thumbnail:
                 type: string
                 description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
@@ -2192,11 +2192,11 @@ definitions:
         stage_start:
           type: number
           format: int64
-          description: Stage start timestamp (Unix millis)
+          description: Stage start timestamp (Unix milliseconds)
         time_now:
           type: number
           format: int64
-          description: Current server time (Unix millis)
+          description: Current server time (Unix milliseconds)
         stage_progress:
           type: number
           format: double
