@@ -82,7 +82,7 @@ func Search_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	searchTag, err = Tags_API_Test_TagMedia(server, session, t, media3, "search_tag")
+	_, err = Tags_API_Test_TagMedia(server, session, t, media3, "search_tag")
 
 	if err != nil {
 		t.Error(err)

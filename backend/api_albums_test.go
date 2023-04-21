@@ -15,6 +15,11 @@ func Albums_API_Test_Create_Album(server *httptest.Server, session string, t *te
 		Name: name,
 	})
 
+	if err != nil {
+		t.Error(err)
+		return 0, err
+	}
+
 	statusCode, bodyResponseBytes, err := DoTestRequest(server, "POST", "/api/albums", body, session)
 
 	if err != nil {
@@ -138,6 +143,11 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 	body, err := json.Marshal(RenameAlbumAPIBody{
 		Name: album2Name,
 	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/rename", body, session)
 
@@ -265,6 +275,11 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 		Id: media2,
 	})
 
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/add", body, session)
 
 	if err != nil {
@@ -312,6 +327,11 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 		Id: media3,
 	})
 
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/remove", body, session)
 
 	if err != nil {
@@ -358,6 +378,11 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 	body, err = json.Marshal(AlbumSetListAPIBody{
 		List: []uint64{media3, media2, media1},
 	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/set", body, session)
 

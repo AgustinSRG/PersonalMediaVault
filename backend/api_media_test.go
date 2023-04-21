@@ -120,7 +120,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Get original
 
-	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.Url, nil, session)
+	statusCode, _, err = DoTestRequest(server, "GET", meta.Url, nil, session)
 
 	if err != nil {
 		t.Error(err)
@@ -692,7 +692,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			}
 		}
 
-		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.Resolutions[0].Url, nil, session)
+		statusCode, _, err = DoTestRequest(server, "GET", meta.Resolutions[0].Url, nil, session)
 
 		if err != nil {
 			t.Error(err)
