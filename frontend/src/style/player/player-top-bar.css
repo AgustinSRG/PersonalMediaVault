@@ -3,11 +3,14 @@
 .player-top-bar {
     position: absolute;
     background-color: var(--player-controls-background);
-    transition: opacity 0.3s, height 0.1s, width 0.1s;
+    transition: opacity 0.3s;
     opacity: 1;
     color: var(--theme-fg-color);
     overflow: hidden;
+
     height: 56px;
+    --initial-top-bat-height: 56px;
+
     top: 0;
     left: 0;
     width: 100%;
@@ -19,6 +22,7 @@
 
 .player-min .player-top-bar {
     height: 32px;
+    --initial-top-bat-height: 32px;
 }
 
 .player-top-bar.album-expand,
@@ -28,9 +32,36 @@
     height: 100%;
 }
 
+@keyframes player-top-bar-expand {
+    0% {
+        height: var(--initial-top-bat-height);
+    }
+
+    100% {
+        height: 100%;
+    }
+}
+
+@keyframes player-top-bar-contract {
+    0% {
+        height: 100%;
+    }
+
+    100% {
+        height: var(--initial-top-bat-height);
+    }
+}
+
+.player-top-bar.contracting {
+    animation-name: player-top-bar-contract;
+    animation-duration: 0.1s;
+}
+
 .player-top-bar.expanded,
 .player-min .player-top-bar.expanded {
     width: 100%;
+    animation-name: player-top-bar-expand;
+    animation-duration: 0.1s;
     height: 100%;
 }
 

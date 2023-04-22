@@ -6,6 +6,7 @@
       'with-album': inAlbum,
       'album-expand': albumExpanded,
       expanded: expanded && !albumExpanded,
+      contracting: clickedContract,
     }"
     tabindex="-1"
     @click="clickTopBar"
@@ -64,12 +65,15 @@
 
 <script lang="ts">
 import { MediaController } from "@/control/media";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
-import PlayerMediaEditor from "./PlayerMediaEditor.vue";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
+
+const PlayerMediaEditor = defineAsyncComponent({
+  loader: () => import("./PlayerMediaEditor.vue"),
+});
 
 export default defineComponent({
   name: "PlayerTopBar",
@@ -98,6 +102,8 @@ export default defineComponent({
   data: function () {
     return {
       dirty: false,
+
+      clickedContract: false,
     };
   },
   methods: {
@@ -167,6 +173,7 @@ export default defineComponent({
     },
 
     expanded: function () {
+      this.clickedContract = !this.expanded;
       if (this.expanded) {
         nextTick(() => {
             const el = this.$el.querySelector(".player-media-editor");
@@ -184,6 +191,7 @@ export default defineComponent({
     },
 
     albumExpanded: function () {
+      this.clickedContract = false;
       if (this.albumExpanded) {
          nextTick(() => {
             const el = this.$el.querySelector(".player-album-container");

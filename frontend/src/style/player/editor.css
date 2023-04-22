@@ -1,5 +1,15 @@
 /* Player editor style */
 
+@keyframes player-media-editor-anim {
+    0% {
+        visibility: hidden;
+    }
+
+    100% {
+        visibility: visible;
+    }
+}
+
 .player-media-editor {
     position: absolute;
     top: 57px;
@@ -10,6 +20,8 @@
     background: var(--player-editor-background);
     color: var(--theme-fg-color);
     padding: 1rem;
+    animation-name: player-media-editor-anim;
+    animation-duration: 0.1s;
 }
 
 .player-media-editor:focus {
