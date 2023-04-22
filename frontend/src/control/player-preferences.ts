@@ -41,6 +41,8 @@ export class PlayerPreferences {
     public static SubtitlesBackground = "75";
     public static SubtitlesHTML = false;
 
+    public static SelectedAudioTrack = "";
+
     public static PlayerTogglePlayDelay = 250;
 
     public static LoadPreferences() {
@@ -86,6 +88,8 @@ export class PlayerPreferences {
         PlayerPreferences.SubtitlesHTML = LocalStorage.Get("player-pref-subtitles-html", false);
 
         PlayerPreferences.PlayerTogglePlayDelay = LocalStorage.Get("player-pref-toggle-delay", 250);
+
+        PlayerPreferences.SelectedAudioTrack = LocalStorage.Get("player-pref-audio-track", "");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -289,6 +293,11 @@ export class PlayerPreferences {
     public static SetSubtitles(s: string) {
         PlayerPreferences.SelectedSubtitles = s;
         LocalStorage.Set("player-pref-subtitles", s);
+    }
+
+    public static SetAudioTrack(s: string) {
+        PlayerPreferences.SelectedAudioTrack = s;
+        LocalStorage.Set("player-pref-audio-track", s);
     }
 
     public static SetSubtitlesSize(s: string) {

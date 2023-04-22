@@ -61,6 +61,22 @@
         </td>
       </tr>
       <tr
+        v-if="metadata.audios && metadata.audios.length > 0"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goToAudios"
+      >
+        <td>
+          <i class="fas fa-headphones icon-config"></i>
+          <b>{{ $t("Audio") }}</b>
+        </td>
+        <td class="td-right">
+          {{ renderAudio(audioTrack, rTick) }}
+          <i class="fas fa-chevron-right arrow-config"></i>
+        </td>
+      </tr>
+      <tr
         v-if="metadata.subtitles && metadata.subtitles.length > 0"
         class="tr-button"
         tabindex="0"
@@ -211,6 +227,53 @@
             :class="{ 'check-uncheck': i !== resolution }"
           ></i>
           {{ renderResolution(i, rTick) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+    </table>
+
+    <table v-if="page === 'audios'">
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="goBack"
+      >
+        <td>
+          <i class="fas fa-chevron-left icon-config"></i>
+          <b>{{ $t("Audio") }}</b>
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeAudioTrack('')"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': '' !== audioTrack }"
+          ></i>
+          {{ renderAudio("", rTick) }}
+        </td>
+        <td class="td-right"></td>
+      </tr>
+      <tr
+        v-for="aud in metadata.audios"
+        :key="aud.id"
+        class="tr-button"
+        tabindex="0"
+        @keydown="clickOnEnter"
+        @click="changeAudioTrack(aud.id)"
+      >
+        <td>
+          <i
+            class="fas fa-check icon-config"
+            :class="{ 'check-uncheck': aud.id !== audioTrack }"
+          ></i>
+          {{ aud.name }}
         </td>
         <td class="td-right"></td>
       </tr>
@@ -381,6 +444,7 @@ export default defineComponent({
     "update:subSize",
     "update:subBackground",
     "update:subHTML",
+    "update:audioTrack",
     "enter",
     "leave",
   ],
@@ -395,6 +459,7 @@ export default defineComponent({
     subBackground: String,
     subHTML: Boolean,
     rTick: Number,
+    audioTrack: String,
   },
   setup(props) {
     return {
@@ -406,6 +471,7 @@ export default defineComponent({
       subSizeState: useVModel(props, "subSize"),
       subBackgroundState: useVModel(props, "subBackground"),
       subHTMLState: useVModel(props, "subHTML"),
+      audioTrackState: useVModel(props, "audioTrack"),
     };
   },
   data: function () {
@@ -436,6 +502,11 @@ export default defineComponent({
       this.subtitles = s;
       PlayerPreferences.SetSubtitles(s);
       SubtitlesController.OnSubtitlesChanged();
+    },
+
+    changeAudioTrack: function (s) {
+      this.audioTrackState = s;
+      PlayerPreferences.SetAudioTrack(s);
     },
 
     focus: function () {
@@ -477,6 +548,11 @@ export default defineComponent({
 
     goToSubtitles: function () {
       this.page = "subtitles";
+      this.focus();
+    },
+
+    goToAudios: function () {
+      this.page = "audios";
       this.focus();
     },
 
@@ -550,6 +626,20 @@ export default defineComponent({
       }
 
       return this.$t("No subtitles");
+    },
+
+    renderAudio: function (audioId: string, rTick: number) {
+      if (rTick < 0 || !this.metadata || !this.metadata.audios || !audioId) {
+        return "(" + this.$t("From video") + ")";
+      }
+
+      for (let aud of this.metadata.audios) {
+        if (aud.id === audioId) {
+          return aud.name;
+        }
+      }
+
+      return "(" + this.$t("From video") + ")";
     },
 
     renderSubtitleSize: function (s: string) {

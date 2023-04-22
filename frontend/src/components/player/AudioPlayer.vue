@@ -402,8 +402,6 @@ export default defineComponent({
         this.updateSubtitles();
         this.updateCurrentTimeSlice();
       }
-
-      audioElement.playbackRate = this.speed;
     },
     onAudioTimeUpdate: function () {
       if (this.loading) return;

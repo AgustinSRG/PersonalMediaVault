@@ -33,6 +33,14 @@
     pointer-events: none;
 }
 
+.video-player audio {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .video-player.no-controls {
     cursor: none;
 }

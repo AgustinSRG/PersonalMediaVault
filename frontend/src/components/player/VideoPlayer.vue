@@ -4,7 +4,10 @@
     'no-controls': !showControls || !userControls,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
-    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></video>
+
+    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></video>
+
+    <audio v-if="audioTrackURL" :src="audioTrackURL" :key="rTick" playsinline webkit-playsinline :muted="muted || !audioTrackURL" :volume.prop="volume" :playbackRate.prop="speed" @loadedmetadata="onAudioLoadMetadata" @canplay="onAudioCanPlay"></audio>
 
     <div class="player-feedback-container">
       <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
@@ -28,18 +31,18 @@
 
     <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls || !userControls }">
       <div class="player-subtitles" v-if="subtitles" v-html="subtitles" :class="{
-        'player-subtitles-s': subtitlesSize === 's',
-        'player-subtitles-m': subtitlesSize === 'm',
-        'player-subtitles-l': subtitlesSize === 'l',
-        'player-subtitles-xl': subtitlesSize === 'xl',
-        'player-subtitles-xxl': subtitlesSize === 'xxl',
+          'player-subtitles-s': subtitlesSize === 's',
+          'player-subtitles-m': subtitlesSize === 'm',
+          'player-subtitles-l': subtitlesSize === 'l',
+          'player-subtitles-xl': subtitlesSize === 'xl',
+          'player-subtitles-xxl': subtitlesSize === 'xxl',
 
-        'player-subtitles-bg-0': subtitlesBg === '0',
-        'player-subtitles-bg-25': subtitlesBg === '25',
-        'player-subtitles-bg-50': subtitlesBg === '50',
-        'player-subtitles-bg-75': subtitlesBg === '75',
-        'player-subtitles-bg-100': subtitlesBg === '100',
-      }"></div>
+          'player-subtitles-bg-0': subtitlesBg === '0',
+          'player-subtitles-bg-25': subtitlesBg === '25',
+          'player-subtitles-bg-50': subtitlesBg === '50',
+          'player-subtitles-bg-75': subtitlesBg === '75',
+          'player-subtitles-bg-100': subtitlesBg === '100',
+        }"></div>
     </div>
 
     <div class="player-controls" :class="{ hidden: !showControls || !userControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
@@ -139,7 +142,7 @@
       </div>
     </div>
 
-    <VideoPlayerConfig v-model:shown="displayConfig" v-model:speed="speed" v-model:loop="loop" v-model:nextEnd="nextEnd" v-model:resolution="currentResolution" v-model:subSize="subtitlesSize" v-model:subBackground="subtitlesBg" v-model:subHTML="subtitlesHTML" @update:resolution="onResolutionUpdated" @update:subHTML="onUpdateSubHTML" @update:nextEnd="onUpdateNextEnd" :rTick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls"></VideoPlayerConfig>
+    <VideoPlayerConfig v-model:shown="displayConfig" v-model:speed="speed" v-model:loop="loop" v-model:nextEnd="nextEnd" v-model:resolution="currentResolution" v-model:subSize="subtitlesSize" v-model:subBackground="subtitlesBg" v-model:subHTML="subtitlesHTML" @update:resolution="onResolutionUpdated" @update:subHTML="onUpdateSubHTML" @update:nextEnd="onUpdateNextEnd" :rTick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls" v-model:audioTrack="audioTrack" @update:audioTrack="onUpdateAudioTrack"></VideoPlayerConfig>
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls && userControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
@@ -292,6 +295,9 @@ export default defineComponent({
       subtitlesBg: "75",
       subtitlesHTML: false,
 
+      audioTrack: PlayerPreferences.SelectedAudioTrack,
+      audioTrackURL: "",
+
       timeSlices: [],
       currentTimeSlice: null,
       currentTimeSliceName: "",
@@ -421,6 +427,32 @@ export default defineComponent({
 
     /* Player events */
 
+    onAudioLoadMetadata: function () {
+      const audioElement = this.$el.querySelector("audio");
+      if (!audioElement) {
+        return;
+      }
+
+      if (
+        typeof audioElement.duration !== "number" ||
+        isNaN(audioElement.duration) ||
+        !isFinite(audioElement.duration)
+      ) {
+        return;
+      }
+
+      const duration = audioElement.duration;
+
+      if (
+        typeof this.currentTime === "number" &&
+        !isNaN(this.currentTime) &&
+        isFinite(this.currentTime) &&
+        this.currentTime >= 0
+      ) {
+        audioElement.currentTime = Math.min(this.currentTime, duration);
+      }
+    },
+
     onLoadMetaData: function () {
       const videoElement = this.getVideoElement();
       if (!videoElement) {
@@ -447,8 +479,6 @@ export default defineComponent({
         this.updateSubtitles();
         this.updateCurrentTimeSlice();
       }
-
-      videoElement.playbackRate = this.speed;
     },
     onVideoTimeUpdate: function () {
       if (this.loading) return;
@@ -469,6 +499,23 @@ export default defineComponent({
       }
       this.updateSubtitles();
       this.updateCurrentTimeSlice();
+
+      const audioElement = this.$el.querySelector("audio");
+      if (audioElement) {
+        const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
+
+        if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
+          audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
+        }
+
+        if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
+          if (videoElement.paused) {
+            audioElement.pause();
+          } else {
+            audioElement.play();
+          }
+        }
+      }
     },
     onCanPlay: function () {
       this.loading = false;
@@ -481,15 +528,45 @@ export default defineComponent({
       }
       const promise = player.play();
       if (promise) {
-        promise.catch(
-          function () {
-            this.playing = false;
-            this.requiresRefresh = true;
-          }.bind(this)
-        );
+        promise.catch(() => {
+          this.playing = false;
+          this.requiresRefresh = true;
+        });
       }
       this.autoPlayApplied = true;
     },
+
+    onAudioCanPlay: function () {
+      const audioElement = this.$el.querySelector("audio");
+      if (!audioElement) {
+        return;
+      }
+      const videoElement = this.getVideoElement();
+      if (!videoElement) {
+        return;
+      }
+
+      const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
+
+      if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
+        audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
+      }
+
+      if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
+        if (videoElement.paused) {
+          audioElement.pause();
+        } else {
+          const promise = audioElement.play();
+
+          if (promise) {
+            promise.catch(() => {
+              this.pause();
+            });
+          }
+        }
+      }
+    },
+
     onWaitForBuffer: function (b: boolean) {
       if (b) {
         this.isWaiting = true;
@@ -1044,6 +1121,7 @@ export default defineComponent({
       this.loading = true;
       this.playing = true;
       this.setVideoURL();
+      this.onUpdateAudioTrack();
     },
 
     onClearURL: function () {
@@ -1180,6 +1258,22 @@ export default defineComponent({
         this.currentTimeSliceStart = 0;
         this.currentTimeSliceEnd = 0;
       }
+    },
+
+    onUpdateAudioTrack: function () {
+      if (!this.audioTrack || !this.metadata || !this.metadata.audios) {
+        this.audioTrackURL = "";
+        return;
+      }
+
+      for (let audio of this.metadata.audios) {
+        if (audio.id === this.audioTrack) {
+          this.audioTrackURL = GetAssetURL(audio.url);
+          return;
+        }
+      }
+
+      this.audioTrackURL = "";
     },
 
     onUpdateSubHTML: function () {
