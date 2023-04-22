@@ -778,7 +778,7 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 		return errors.New("Invalid media file"), "", nil
 	}
 
-	subtitleStreams := data.GetStreams(ffprobe.STREAM_SUBTITLE)
+	subtitleStreams := data.GetStreams(ffprobe.StreamSubtitle)
 
 	tmpFolder, err := GetTemporalFolder(false)
 
@@ -847,6 +847,126 @@ func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaR
 
 	// Setting the stream map
 	args = append(args, "-map", "0:s:"+fmt.Sprint(streamIndex))
+
+	// Output
+	args = append(args, dest)
+
+	cmd.Args = args
+
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Extracted audio file (.mp3)
+type ExtractedAudioFile struct {
+	Id   string // Language identifier
+	Name string // Name (for display)
+	file string // File path
+}
+
+// Extracts audio tracks from media file (usually .mkv)
+// originalFilePath - Original media path
+// probedata - Media properties
+// Returns:
+//
+//	1 - error
+//	2 - Temporal path created, where the files where stored
+//	3 - List of files
+func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedAudioFile) {
+	result := make([]ExtractedAudioFile, 0)
+	addedMap := make(map[string]bool)
+
+	LogDebug("[FFPROBE] Probing " + originalFilePath)
+	data, err := ffprobe.GetProbeData(originalFilePath, 5*time.Second)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	if data.Format == nil {
+		return errors.New("Invalid media file"), "", nil
+	}
+
+	audioStreams := data.GetStreams(ffprobe.StreamAudio)
+
+	tmpFolder, err := GetTemporalFolder(false)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	err = os.MkdirAll(tmpFolder, FOLDER_PERMISSION)
+
+	if err != nil {
+		return err, "", nil
+	}
+
+	if len(audioStreams) > 1 {
+		for i := 0; i < len(audioStreams); i++ {
+			stream := audioStreams[i]
+
+			if stream.Disposition.Default != 0 {
+				continue
+			}
+
+			lang := stream.Tags.Language
+
+			if lang == "" {
+				continue
+			}
+
+			if addedMap[lang] {
+				continue
+			}
+
+			srtPath := path.Join(tmpFolder, lang+".mp3")
+
+			LogDebug("Extracting audio track file for lang: " + lang)
+
+			err = ExtractAudioFromMedia(originalFilePath, probedata, srtPath, i)
+
+			if err != nil {
+				LogError(err)
+				continue
+			}
+
+			entry := ExtractedAudioFile{
+				Id:   lang,
+				Name: strings.ToUpper(lang),
+				file: srtPath,
+			}
+
+			result = append(result, entry)
+			addedMap[lang] = true
+		}
+	}
+
+	return nil, tmpFolder, result
+}
+
+// Extracts audio track from a media file (usually .mkv)
+// originalFilePath - Original media path
+// probedata - Media properties
+// dest - Destination for the audio file
+// streamIndex - Audio stream index
+func ExtractAudioFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
+	cmd := exec.Command(FFMPEG_BINARY_PATH)
+
+	args := make([]string, 1)
+
+	args[0] = FFMPEG_BINARY_PATH
+
+	args = append(args, "-y") // Overwrite
+
+	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+
+	// Setting the stream map
+	args = append(args, "-vn", "-map", "0:a:"+fmt.Sprint(streamIndex))
 
 	// Output
 	args = append(args, dest)

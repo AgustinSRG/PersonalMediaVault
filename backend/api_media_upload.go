@@ -214,8 +214,11 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 	go func() {
 		BackgroundTaskGenerateThumbnail(session, media_id, tempFile, probe_data)
-		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
+
 		BackgroundTaskSaveOriginal(session, media_id, tempFile, ext, probe_data, userConfig)
+
+		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
+		BackgroundTaskExtractAudios(session, media_id, tempFile, probe_data)
 
 		WipeTemporalFile(tempFile)
 	}()
@@ -443,6 +446,127 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 		// Change metadata
 		if meta.FindSubtitle(files[i].Id) == -1 {
 			meta.AddSubtitle(files[i].Id, files[i].Name, srt_asset)
+		}
+
+		// Save
+		err = media.EndWrite(meta, session.key, false)
+
+		if err != nil {
+			LogError(err)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		GetVault().media.ReleaseMediaResource(media_id)
+	}
+
+	WipeTemporalPath(tmpPath) // Remove temp path for subtitles
+}
+
+func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFile string, probe_data *FFprobeMediaResult) {
+	if probe_data.Type != MediaTypeVideo {
+		return // Not applicable
+	}
+
+	err, tmpPath, files := ExtractAudioTracks(tempFile, probe_data)
+
+	if err != nil {
+		LogError(err)
+
+		return
+	}
+
+	for i := 0; i < len(files); i++ {
+		// Encrypt the MP3 file
+
+		mp3_encrypted_file, err := EncryptAssetFile(files[i].file, session.key)
+
+		if err != nil {
+			LogError(err)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		// Put the subtitles into the media assets
+
+		media := GetVault().media.AcquireMediaResource(media_id)
+
+		if media == nil {
+			os.Remove(mp3_encrypted_file)
+			WipeTemporalPath(tmpPath)
+			return
+		}
+
+		meta, err := media.StartWrite(session.key)
+
+		if err != nil {
+			LogError(err)
+
+			os.Remove(mp3_encrypted_file)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		if meta == nil {
+			media.CancelWrite()
+			os.Remove(mp3_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		audio_asset := meta.NextAssetID
+		meta.NextAssetID++
+
+		success, asset_path, asset_lock := media.AcquireAsset(audio_asset, ASSET_SINGLE_FILE)
+
+		if !success {
+			media.CancelWrite()
+			os.Remove(mp3_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		asset_lock.RequestWrite()
+		asset_lock.StartWrite()
+
+		// Move temp file
+		err = os.Rename(mp3_encrypted_file, asset_path)
+
+		asset_lock.EndWrite()
+
+		media.ReleaseAsset(audio_asset)
+
+		if err != nil {
+			LogError(err)
+
+			media.CancelWrite()
+			os.Remove(mp3_encrypted_file)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			WipeTemporalPath(tmpPath)
+
+			return
+		}
+
+		// Change metadata
+		if meta.FindAudioTrack(files[i].Id) == -1 {
+			meta.AddAudioTrack(files[i].Id, files[i].Name, audio_asset)
 		}
 
 		// Save
