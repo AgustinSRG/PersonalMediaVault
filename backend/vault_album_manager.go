@@ -280,7 +280,7 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 // album_id - Album ID
 // name - Album name
 // key - Vault encryption key
-// Returns true if sucess
+// Returns true if success
 func (am *VaultAlbumsManager) RenameAlbum(album_id uint64, name string, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 

@@ -607,6 +607,137 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		}
 	}
 
+	// Audio tracks
+
+	if meta.Type == MediaTypeVideo {
+		newAudio, err := os.ReadFile(path.Join("test-assets", "test-audio.mp3"))
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		var b bytes.Buffer
+
+		writer := multipart.NewWriter(&b)
+
+		part, err := writer.CreateFormFile("file", "audio.mp3")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err = part.Write(newAudio)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		writer.Close()
+
+		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/set")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req, err := http.NewRequest("POST", apiURL+"?id=en&name=English", &b)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req.Header.Set("x-session-token", session)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := client.Do(req)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer resp.Body.Close()
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		bodyData, err := io.ReadAll(resp.Body)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		res2 := AudioTrackAPIResponse{}
+
+		err = json.Unmarshal(bodyData, &res2)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		if !reflect.DeepEqual(newAudio, bodyResponseBytes) {
+			t.Errorf("Audios content mismatch")
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Audios) != 1 {
+			t.Error(ErrorMismatch("len(Audios)", fmt.Sprint(len(meta.Audios)), fmt.Sprint(1)))
+		}
+
+		if meta.Audios[0].Id != "en" || meta.Audios[0].Name != "English" {
+			t.Error(ErrorMismatch("Audios", meta.Audios[0].Id+"/"+meta.Audios[0].Name, "en/English"))
+		}
+
+		// Delete the audio
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/remove?id=en", nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Audios) != 0 {
+			t.Error(ErrorMismatch("len(Audios)", fmt.Sprint(len(meta.Audios)), fmt.Sprint(0)))
+		}
+	}
+
 	// Extra resolutions
 
 	if meta.Type == MediaTypeImage || meta.Type == MediaTypeVideo {

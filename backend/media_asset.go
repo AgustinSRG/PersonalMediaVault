@@ -77,6 +77,13 @@ type MediaSplit struct {
 	Name string  `json:"name"` // Name of the chapter that starts at this time
 }
 
+// Contains data of an audio track
+type MediaAudioTrack struct {
+	Id    string `json:"id"`    // ID of the track (language ISO)
+	Name  string `json:"name"`  // Name of the track
+	Asset uint64 `json:"asset"` // ID of the asset file (MediaAssetFile) where the audio is stored
+}
+
 // Contains the metadata of a media asset
 type MediaMetadata struct {
 	Id uint64 `json:"id"` // Media ID
@@ -105,9 +112,10 @@ type MediaMetadata struct {
 	ThumbnailReady bool   `json:"thumb_ready"` // True if the thumbnail is ready to be displayed
 	ThumbnailAsset uint64 `json:"thumb_asset"` // ID of the asset file (MediaAssetFile) where the thumbnail is stored
 
-	Resolutions []MediaResolution `json:"resolutions"` // List of extra resolutions (not original)
-	Subtitles   []MediaSubtitle   `json:"subtitles"`   // List of subtitle files
-	Splits      []MediaSplit      `json:"time_splits"` // List of time splits
+	Resolutions []MediaResolution `json:"resolutions"`  // List of extra resolutions (not original)
+	Subtitles   []MediaSubtitle   `json:"subtitles"`    // List of subtitle files
+	Splits      []MediaSplit      `json:"time_splits"`  // List of time splits
+	AudioTracks []MediaAudioTrack `json:"audio_tracks"` // List of audio tracks
 
 	PreviewsReady    bool    `json:"previews_ready"`    // True if timeline previews are ready to be displayed
 	PreviewsTask     uint64  `json:"previews_task"`     // ID of the task that must create the video previews (only if PreviewsReady = false)
@@ -161,6 +169,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		ThumbnailAsset:    0,
 		Resolutions:       make([]MediaResolution, 0),
 		Subtitles:         make([]MediaSubtitle, 0),
+		AudioTracks:       make([]MediaAudioTrack, 0),
 		Splits:            make([]MediaSplit, 0),
 		PreviewsReady:     false,
 		PreviewsInterval:  0,
@@ -235,6 +244,10 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 
 		if mp.Subtitles == nil {
 			mp.Subtitles = make([]MediaSubtitle, 0)
+		}
+
+		if mp.AudioTracks == nil {
+			mp.AudioTracks = make([]MediaAudioTrack, 0)
 		}
 
 		if mp.Splits == nil {
@@ -562,4 +575,43 @@ func (meta *MediaMetadata) AddSubtitle(id string, name string, asset uint64) {
 		Asset: asset,
 	}
 	meta.Subtitles = append(meta.Subtitles, sub)
+}
+
+// Finds an audio track in the audios array
+// id - Track ID (language ISO)
+func (meta *MediaMetadata) FindAudioTrack(id string) int {
+	for i := 0; i < len(meta.AudioTracks); i++ {
+		if meta.AudioTracks[i].Id == id {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// Removes an audio track given the index
+// index - Track index in the array
+func (meta *MediaMetadata) RemoveAudioTrack(index int) {
+	newTracks := make([]MediaAudioTrack, 0)
+
+	for i := 0; i < len(meta.AudioTracks); i++ {
+		if i != index {
+			newTracks = append(newTracks, meta.AudioTracks[i])
+		}
+	}
+
+	meta.AudioTracks = newTracks
+}
+
+// Adds a track entry
+// id - Track ID
+// name - Display name
+// asset - Asset file ID containing the track
+func (meta *MediaMetadata) AddAudioTrack(id string, name string, asset uint64) {
+	track := MediaAudioTrack{
+		Id:    id,
+		Name:  name,
+		Asset: asset,
+	}
+	meta.AudioTracks = append(meta.AudioTracks, track)
 }

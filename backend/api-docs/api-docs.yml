@@ -442,6 +442,23 @@ paths:
                       type: string
                       description: "SRT file URL"
                       example: "/assets/b/0/0/subrip.srt"
+              audios:
+                type: array
+                description: Available extra audios (for videos)
+                items:
+                  properties:
+                    id:
+                      type: string
+                      description: "Audio track ID"
+                      example: "es"
+                    name:
+                      type: string
+                      description: "Audio track name"
+                      example: "Spanish"
+                    url:
+                      type: string
+                      description: "Audio file URL"
+                      example: "/assets/b/0/0/audio.mp3"
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
@@ -1168,6 +1185,120 @@ paths:
           type: string
           required: true
           description: "ID for the subtitles. Example: es"
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+
+  "/api/media/{id}/audios/set":
+    post:
+      summary: Sets audio track
+      description: Add an extra audio track to a video
+      tags:
+        - media
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID (Write access required)
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID for the audio track. Example: es"
+        - in: query
+          name: name
+          type: string
+          required: true
+          description: "Name for the audio track. Example: Spanish"
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_AUDIO - Invalid audio file provided
+                    * INVALID_ID - Invalid track ID
+                    * INVALID_NAME - Invalid track name
+                    * NOT_SUPPORTED - This API only applies to videos
+                enum:
+                  - INVALID_AUDIO
+                  - INVALID_ID
+                  - INVALID_NAME
+                  - NOT_SUPPORTED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          schema:
+            properties:
+              id:
+                type: string
+                description: "Audio track ID"
+                example: "es"
+              name:
+                type: string
+                description: "Audio track name"
+                example: "Spanish"
+              url:
+                type: string
+                description: "Audio file URL"
+                example: "/assets/b/0/0/audio.mp3"
+
+  "/api/media/{id}/audios/remove":
+    post:
+      summary: Removes audio track
+      description: Removes audio track
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: "x-session-token"
+          type: string
+          description: Current session ID (Write access required)
+          required: true
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID for the audio track. Example: es"
       responses:
         400:
           description: Bad request.

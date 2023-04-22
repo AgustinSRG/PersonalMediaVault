@@ -77,6 +77,12 @@ type MediaAPIMetaSubtitle struct {
 	Url  string `json:"url"`
 }
 
+type MediaAPIMetaAudio struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
 type MediaAPIMetaTimeSplit struct {
 	Time float64 `json:"time"`
 	Name string  `json:"name"`
@@ -110,6 +116,8 @@ type MediaAPIMetaResponse struct {
 	Resolutions []MediaAPIMetaResolution `json:"resolutions"`
 
 	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
+
+	Audios []MediaAPIMetaAudio `json:"audios"`
 
 	ForceStartBeginning bool `json:"force_start_beginning"`
 
@@ -171,16 +179,20 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	result.Tags = meta.Tags
 	result.UploadTimestamp = meta.UploadTimestamp
 
+	result.Duration = meta.MediaDuration
+	result.Width = meta.Width
+	result.Height = meta.Height
+	result.Fps = meta.Fps
+
+	// Thumbnail
+
 	if meta.ThumbnailReady {
 		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, meta.ThumbnailAsset)
 	} else {
 		result.Thumbnail = ""
 	}
 
-	result.Duration = meta.MediaDuration
-	result.Width = meta.Width
-	result.Height = meta.Height
-	result.Fps = meta.Fps
+	// Original
 
 	if meta.OriginalReady && meta.OriginalEncoded {
 		result.Ready = true
@@ -200,6 +212,8 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Url = ""
 	}
 
+	// Video previews
+
 	if meta.PreviewsReady {
 		result.VideoPreviewsInterval = meta.PreviewsInterval
 		result.VideoPreviews = "/assets/p/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.PreviewsAsset) + "/preview_{INDEX}.jpg" + "?token=" + MakeAssetToken(media_id, meta.PreviewsAsset)
@@ -208,6 +222,8 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.VideoPreviews = ""
 	}
 
+	// Image notes
+
 	if meta.HasImageNotes {
 		result.HasImageNotes = true
 		result.ImageNotesURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ImageNotesAsset) + "/notes.json" + "?token=" + MakeAssetToken(media_id, meta.ImageNotesAsset)
@@ -215,6 +231,8 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.HasImageNotes = false
 		result.ImageNotesURL = ""
 	}
+
+	// Resolutions
 
 	var resolutions []MediaAPIMetaResolution
 
@@ -256,6 +274,8 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	result.Resolutions = resolutions
 
+	// Subtitles
+
 	var subtitles []MediaAPIMetaSubtitle
 
 	if meta.Subtitles != nil {
@@ -277,7 +297,34 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	result.Subtitles = subtitles
 
+	// Audios
+
+	var audios []MediaAPIMetaAudio
+
+	if meta.Subtitles != nil {
+		audios = make([]MediaAPIMetaAudio, len(meta.AudioTracks))
+
+		for i := 0; i < len(meta.AudioTracks); i++ {
+			var s MediaAPIMetaAudio
+
+			s.Id = meta.AudioTracks[i].Id
+			s.Name = meta.AudioTracks[i].Name
+
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.AudioTracks[i].Asset) + "/audio.mp3" + "?token=" + MakeAssetToken(media_id, meta.AudioTracks[i].Asset)
+
+			audios[i] = s
+		}
+	} else {
+		audios = make([]MediaAPIMetaAudio, 0)
+	}
+
+	result.Audios = audios
+
+	// Extra
+
 	result.ForceStartBeginning = meta.ForceStartBeginning
+
+	// Time slices
 
 	var timeSlices []MediaAPIMetaTimeSplit
 
