@@ -62,6 +62,13 @@ export interface MediaData {
         url: string;
     }[],
 
+    audios: {
+        id: string;
+        name: string;
+
+        url: string;
+    }[],
+
     time_slices: {
         time: number,
         name: string,

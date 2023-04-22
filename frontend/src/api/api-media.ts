@@ -34,6 +34,7 @@ export interface MediaData {
     video_previews_interval: number;
     resolutions: MediaResolution[];
     subtitles: MediaSubtitle[];
+    audios: MediaAudioTrack[];
     force_start_beginning: boolean;
     img_notes: boolean;
     img_notes_url: string;
@@ -53,6 +54,13 @@ export interface MediaResolution {
 }
 
 export interface MediaSubtitle {
+    id: string;
+    name: string;
+    url: string;
+}
+
+
+export interface MediaAudioTrack {
     id: string;
     name: string;
     url: string;
@@ -208,6 +216,23 @@ export class MediaAPI {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/remove?id=" + encodeURIComponent(id)),
+        };
+    }
+
+    public static SetAudioTrack(mediaId: number, id: string, name: string, audio: File): RequestParams<MediaAudioTrack> {
+        const form = new FormData();
+        form.append("file", audio);
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/set?id=" + encodeURIComponent(id) + "&name=" + encodeURIComponent(name)),
+            form: form,
+        };
+    }
+
+    public static RemoveAudioTrack(mediaId: number, id: string): RequestParams<void> {
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/remove?id=" + encodeURIComponent(id)),
         };
     }
 }

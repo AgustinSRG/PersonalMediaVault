@@ -1,5 +1,7 @@
 <template>
   <div class="player-media-editor" tabindex="-1">
+    <!--- Title -->
+
     <form @submit="changeTitle">
       <div class="form-group">
         <label>{{ $t("Title") }}:</label>
@@ -11,6 +13,9 @@
         </button>
       </div>
     </form>
+
+    <!--- Description -->
+
     <div class="form-group border-top">
       <label>{{ $t("Description") }}:</label>
       <textarea v-model="desc" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" rows="3" :disabled="busy"></textarea>
@@ -20,6 +25,9 @@
         <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
       </button>
     </div>
+
+    <!--- Tags -->
+
     <div class="form-group border-top">
       <label>{{ $t("Tags") }}:</label>
     </div>
@@ -50,6 +58,9 @@
         </button>
       </div>
     </form>
+
+    <!--- Thumbnail -->
+
     <div class="form-group border-top">
       <label>{{ $t("Thumbnail") }}:</label>
     </div>
@@ -65,6 +76,10 @@
         <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
       </button>
     </div>
+
+
+    <!--- Subtitles -->
+
     <div class="form-group border-top" v-if="type === 2 || type === 3">
       <label>{{ $t("Subtitles") }}:</label>
     </div>
@@ -123,6 +138,68 @@
       </button>
     </div>
 
+    <!--- Audio tracks -->
+
+    <div class="form-group border-top" v-if="type === 2">
+      <label>{{ $t("Extra audio tracks") }}:</label>
+    </div>
+
+    <div v-if="type === 2" class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="text-left">{{ $t("ID") }}</th>
+            <th class="text-left">{{ $t("Name") }}</th>
+            <th class="text-right td-shrink"></th>
+            <th class="text-right td-shrink" v-if="canWrite"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="aud in audios" :key="aud.id">
+            <td class="bold">{{ aud.id }}</td>
+            <td class="bold">{{ aud.name }}</td>
+            <td class="text-right td-shrink">
+              <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadAudio(aud)">
+                <i class="fas fa-download"></i> {{ $t("Download") }}
+              </button>
+            </td>
+            <td class="text-right td-shrink" v-if="canWrite">
+              <button type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
+                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-group" v-if="canWrite && (type === 2)">
+      <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
+      <input type="file" class="file-hidden audio-file-hidden" @change="audioFileChanged" name="mp3-upload" accept=".mp3" />
+      <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+        <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
+      </button>
+
+      <button v-if="audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+        <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
+      </button>
+    </div>
+    <div class="form-group" v-if="canWrite && (type === 2)">
+      <label>{{ $t("Audio track identifier") }}:</label>
+      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioId" class="form-control" />
+    </div>
+    <div class="form-group" v-if="canWrite && (type === 2)">
+      <label>{{ $t("Audio track name") }}:</label>
+      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioName" class="form-control" />
+    </div>
+    <div class="form-group" v-if="canWrite && (type === 2)">
+      <button type="button" class="btn btn-primary" :disabled="busy || !audioId || !audioName || !audioFile" @click="addAudio">
+        <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
+      </button>
+    </div>
+
+    <!--- Time slices -->
+
     <div class="form-group border-top" v-if="type === 2 || type === 3">
       <label>{{ $t("Time slices") }}:</label>
       <textarea v-model="timeSlices" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" :placeholder="'00:00:00 A\n00:01:00 B'" rows="5" :disabled="busy"></textarea>
@@ -133,6 +210,8 @@
         <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
       </button>
     </div>
+
+    <!--- Resolutions -->
 
     <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
       <label v-if="type === 2">{{
@@ -186,6 +265,9 @@
         </tbody>
       </table>
     </div>
+
+    <!--- Extra config -->
+
     <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
       <label>{{ $t("Extra media configuration") }}:</label>
     </div>
@@ -208,6 +290,9 @@
         <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
       </button>
     </div>
+
+    <!--- Re-Encode -->
+
     <div class="form-group border-top" v-if="canWrite">
       <label>{{
         $t(
@@ -220,6 +305,9 @@
         <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
       </button>
     </div>
+
+    <!--- Delete -->
+
     <div class="form-group border-top" v-if="canWrite">
       <label>{{
         $t("If you want to delete this media resource, click the button below.")
@@ -234,12 +322,13 @@
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
     <ResolutionConfirmationModal v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
     <SubtitlesDeleteModal v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
+    <AudioTrackDeleteModal v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
     <ReEncodeConfirmationModal v-model:display="displayReEncode"></ReEncodeConfirmationModal>
   </div>
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
+import { MediaAPI, MediaAudioTrack, MediaSubtitle } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
@@ -257,6 +346,7 @@ import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
+import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue"
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-utils";
 
 export default defineComponent({
@@ -266,6 +356,7 @@ export default defineComponent({
     ResolutionConfirmationModal,
     ReEncodeConfirmationModal,
     SubtitlesDeleteModal,
+    AudioTrackDeleteModal,
   },
   name: "PlayerMediaEditor",
   emits: ["changed"],
@@ -376,6 +467,12 @@ export default defineComponent({
       srtId: "en",
       srtName: "English",
 
+      audios: [],
+      audioFile: null,
+      audioFileName: "",
+      audioId: "en",
+      audioName: "English",
+
       busy: false,
 
       canWrite: AuthController.CanWrite,
@@ -388,6 +485,8 @@ export default defineComponent({
       displayResolutionConfirmation: false,
 
       displaySubtitlesDelete: false,
+
+      displayAudioTrackDelete: false,
 
       displayReEncode: false,
     };
@@ -419,7 +518,15 @@ export default defineComponent({
 
       this.thumbnail = MediaController.MediaData.thumbnail;
 
-      this.subtitles = (MediaController.MediaData.subtitles || []).map((a) => {
+      this.subtitles = (MediaController.MediaData.subtitles || []).map(a => {
+        return {
+          id: a.id,
+          name: a.name,
+          url: a.url,
+        };
+      });
+
+      this.audios = (MediaController.MediaData.audios || []).map(a => {
         return {
           id: a.id,
           name: a.name,
@@ -1246,6 +1353,8 @@ export default defineComponent({
       });
     },
 
+    // Subtitles
+
     selectSRTFile: function () {
       this.$el.querySelector(".srt-file-hidden").click();
     },
@@ -1429,7 +1538,7 @@ export default defineComponent({
       });
     },
 
-    downloadSubtitles: function (sub) {
+    downloadSubtitles: function (sub: MediaSubtitle) {
       this.shownState = false;
       const link = document.createElement("a");
       link.target = "_blank";
@@ -1437,6 +1546,194 @@ export default defineComponent({
       link.href = GetAssetURL(sub.url);
       link.click();
     },
+
+    // Audios
+
+    selectAudioFile: function () {
+      this.$el.querySelector(".audio-file-hidden").click();
+    },
+
+    audioFileChanged: function (e) {
+      const data = e.target.files;
+      if (data && data.length > 0) {
+        const file = data[0];
+        this.audioFile = file;
+        this.audioFileName = file.name;
+      }
+    },
+
+    addAudio: function () {
+      if (!this.audioFile) {
+        AppEvents.Emit("snack", this.$t("Please, select an audio file first"));
+        return;
+      }
+
+      const id = this.audioId;
+      const name = this.audioName;
+
+      let duped = false;
+      for (let aud of this.audios) {
+        if (aud.id === id) {
+          duped = true;
+          break;
+        }
+      }
+
+      if (duped) {
+        AppEvents.Emit(
+          "snack",
+          this.$t(
+            "There is already another audio track with the same identifier"
+          )
+        );
+        return;
+      }
+
+      if (this.busy) {
+        return;
+      }
+
+      this.busy = true;
+
+      const mediaId = AppStatus.CurrentMedia;
+
+      Request.Pending(
+        "media-editor-busy",
+        MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile)
+      )
+        .onSuccess((res) => {
+          AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
+          this.busy = false;
+          this.audios.push(res);
+          this.$emit("changed");
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(400, "INVALID_AUDIO", () => {
+              AppEvents.Emit("snack", this.$t("Invalid audio file"));
+            })
+            .add(400, "INVALID_ID", () => {
+              AppEvents.Emit("snack", this.$t("Invalid audio track identifier"));
+            })
+            .add(400, "INVALID_NAME", () => {
+              AppEvents.Emit("snack", this.$t("Invalid audio track name"));
+            })
+            .add(400, "*", () => {
+              AppEvents.Emit("snack", this.$t("Bad request"));
+            })
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Could not connect to the server")
+              );
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    removeAudio: function (aud: MediaAudioTrack) {
+      AppEvents.Emit("audio-track-confirmation", {
+        name: aud.name,
+        callback: () => {
+          if (this.busy) {
+            return;
+          }
+
+          this.busy = true;
+
+          const mediaId = AppStatus.CurrentMedia;
+          const id = aud.id;
+
+          Request.Pending(
+            "media-editor-busy",
+            MediaAPI.RemoveAudioTrack(mediaId, id)
+          )
+            .onSuccess(() => {
+              AppEvents.Emit(
+                "snack",
+                this.$t("Removed audio track") + ": " + aud.name
+              );
+              this.busy = false;
+              for (let i = 0; i < this.audios.length; i++) {
+                if (this.audios[i].id === id) {
+                  this.audios.splice(i, 1);
+                  break;
+                }
+              }
+              this.$emit("changed");
+            })
+            .onCancel(() => {
+              this.busy = false;
+            })
+            .onRequestError((err) => {
+              this.busy = false;
+              Request.ErrorHandler()
+                .add(400, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Bad request"));
+                })
+                .add(401, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                  AppEvents.Emit("unauthorized");
+                })
+                .add(403, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Access denied"));
+                })
+                .add(404, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Not found"));
+                })
+                .add(500, "*", () => {
+                  AppEvents.Emit("snack", this.$t("Internal server error"));
+                })
+                .add("*", "*", () => {
+                  AppEvents.Emit(
+                    "snack",
+                    this.$t("Could not connect to the server")
+                  );
+                })
+                .handle(err);
+            })
+            .onUnexpectedError((err) => {
+              AppEvents.Emit("snack", err.message);
+              console.error(err);
+              this.busy = false;
+            });
+        },
+      });
+    },
+
+    downloadAudio: function (aud: MediaAudioTrack) {
+      this.shownState = false;
+      const link = document.createElement("a");
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.href = GetAssetURL(aud.url);
+      link.click();
+    },
+
+
+    // --
 
     updateAuthInfo: function () {
       this.canWrite = AuthController.CanWrite;
