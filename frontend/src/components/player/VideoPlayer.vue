@@ -453,8 +453,9 @@ export default defineComponent({
       }
     },
 
-    onLoadMetaData: function () {
-      const videoElement = this.getVideoElement();
+    onLoadMetaData: function (ev) {
+      const videoElement = ev.target;
+
       if (!videoElement) {
         return;
       }
@@ -480,9 +481,9 @@ export default defineComponent({
         this.updateCurrentTimeSlice();
       }
     },
-    onVideoTimeUpdate: function () {
+    onVideoTimeUpdate: function (ev) {
       if (this.loading) return;
-      const videoElement = this.getVideoElement();
+      const videoElement = ev.target;
       if (
         !videoElement ||
         typeof videoElement.currentTime !== "number" ||
@@ -500,19 +501,21 @@ export default defineComponent({
       this.updateSubtitles();
       this.updateCurrentTimeSlice();
 
-      const audioElement = this.$el.querySelector("audio");
-      if (audioElement) {
-        const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
+      if (this.audioTrackURL) {
+        const audioElement = this.$el.querySelector("audio");
+        if (audioElement) {
+          const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
 
-        if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
-          audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
-        }
+          if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
+            audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
+          }
 
-        if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
-          if (videoElement.paused) {
-            audioElement.pause();
-          } else {
-            audioElement.play();
+          if (audioElement.paused !== videoElement.paused && videoElement.currentTime <= audioElement.duration) {
+            if (videoElement.paused) {
+              audioElement.pause();
+            } else {
+              audioElement.play();
+            }
           }
         }
       }

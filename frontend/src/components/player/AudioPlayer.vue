@@ -383,8 +383,8 @@ export default defineComponent({
 
     /* Player events */
 
-    onLoadMetaData: function () {
-      const audioElement = this.getAudioElement();
+    onLoadMetaData: function (ev) {
+      const audioElement = ev.target;
 
       if (!audioElement) {
         return;
@@ -403,10 +403,10 @@ export default defineComponent({
         this.updateCurrentTimeSlice();
       }
     },
-    onAudioTimeUpdate: function () {
+    onAudioTimeUpdate: function (ev) {
       if (this.loading) return;
 
-      const audioElement = this.getAudioElement();
+      const audioElement = ev.target;
 
       if (!audioElement) {
         return;
