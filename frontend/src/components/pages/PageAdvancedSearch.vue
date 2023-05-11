@@ -143,7 +143,7 @@ import { MediaEntry } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { copyObject } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 

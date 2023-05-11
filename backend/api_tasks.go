@@ -67,30 +67,3 @@ func api_getTask(response http.ResponseWriter, request *http.Request) {
 
 	ReturnAPI_JSON(response, request, jsonResult)
 }
-
-func api_killTask(response http.ResponseWriter, request *http.Request) {
-	session := GetSessionFromRequest(request)
-
-	if session == nil {
-		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
-		return
-	}
-
-	if !session.write {
-		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
-		return
-	}
-
-	vars := mux.Vars(request)
-
-	task_id, err := strconv.ParseUint(vars["id"], 10, 64)
-
-	if err != nil {
-		response.WriteHeader(400)
-		return
-	}
-
-	GetVault().tasks.KillTask(task_id)
-
-	response.WriteHeader(200)
-}

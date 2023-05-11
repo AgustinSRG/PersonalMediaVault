@@ -2015,36 +2015,6 @@ paths:
           description: Task info
           schema:
             $ref: '#/definitions/TaskInfo'
-            
-  "/api/tasks/{id}/kill":
-    post:
-      summary: Kill task
-      description: Kills active task
-      tags:
-        - tasks
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
-        - in: path
-          required: true
-          type: number
-          format: int64
-          name: id
-          description: Task ID
-      responses:
-        401:
-          description: Unauthorized (No valid session)
-        404:
-          description: Not found
-        200:
-          description: Success
           
   "/api/admin/accounts":
     get:

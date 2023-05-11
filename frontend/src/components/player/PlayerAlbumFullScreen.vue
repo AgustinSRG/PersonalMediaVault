@@ -107,7 +107,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { copyObject } from "@/utils/objects";
 import { GetAssetURL } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({

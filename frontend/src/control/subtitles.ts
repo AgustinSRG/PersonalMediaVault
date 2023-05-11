@@ -101,3 +101,5 @@ export class SubtitlesController {
         return findSubtitlesEntry(SubtitlesController.Subtitles, time);
     }
 }
+
+SubtitlesController.Initialize();

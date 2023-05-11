@@ -347,7 +347,7 @@ import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.v
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue"
-import { parseTimeSlices, renderTimeSlices } from "@/utils/time-utils";
+import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 
 export default defineComponent({
   components: {

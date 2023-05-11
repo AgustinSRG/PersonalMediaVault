@@ -154,11 +154,8 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
-import {
-  findTimeSlice,
-  normalizeTimeSlices,
-  renderTimeSeconds,
-} from "../../utils/time-utils";
+import { renderTimeSeconds } from "../../utils/time";
+import { findTimeSlice, normalizeTimeSlices} from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -170,7 +167,7 @@ import {
   sanitizeSubtitlesHTML,
   getUniqueSubtitlesLoadTag,
 } from "@/utils/subtitles-html";
-import { htmlToText } from "@/utils/text";
+import { htmlToText } from "@/utils/html";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";

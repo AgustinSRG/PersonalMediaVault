@@ -146,7 +146,7 @@
 import { defineComponent, nextTick } from "vue";
 import { ImageNote, ImageNotesController } from "@/control/img-notes";
 import { AppEvents } from "@/control/app-events";
-import { escapeHTML } from "@/utils/text";
+import { escapeHTML } from "@/utils/html";
 
 export default defineComponent({
   name: "ImageNotes",

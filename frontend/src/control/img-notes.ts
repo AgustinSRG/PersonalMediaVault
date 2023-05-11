@@ -290,3 +290,5 @@ export class ImageNotesController {
         ImageNotesController.SaveNotes();
     }
 }
+
+ImageNotesController.Initialize();

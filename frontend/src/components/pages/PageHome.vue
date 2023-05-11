@@ -126,7 +126,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 

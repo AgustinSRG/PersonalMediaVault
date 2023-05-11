@@ -98,7 +98,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 

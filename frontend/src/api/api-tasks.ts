@@ -32,11 +32,4 @@ export class TasksAPI {
             url: GetApiURL("/api/tasks/" + encodeURIComponent(id)),
         };
     }
-
-    public static KillTask(id: number): RequestParams<void> {
-        return {
-            method: "POST",
-            url: GetApiURL("/api/tasks/" + encodeURIComponent(id) + "/kill"),
-        };
-    }
 }

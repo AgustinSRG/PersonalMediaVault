@@ -9,9 +9,7 @@ import { AuthController } from './control/auth';
 import { TagsController } from './control/tags';
 import { AlbumsController } from './control/albums';
 import { MediaController } from './control/media';
-import { SubtitlesController } from './control/subtitles';
 import { KeyboardManager } from './control/keyboard';
-import { ImageNotesController } from './control/img-notes';
 import { BusyStateController } from './control/busy-state';
 
 AppPreferences.LoadPreferences();
@@ -25,8 +23,6 @@ AuthController.Initialize();
 TagsController.Initialize();
 MediaController.Initialize();
 AlbumsController.Initialize();
-SubtitlesController.Initialize();
-ImageNotesController.Initialize();
 BusyStateController.Initialize();
 
 // Setup App

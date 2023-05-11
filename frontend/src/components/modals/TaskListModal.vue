@@ -73,7 +73,7 @@ import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, Request } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";

@@ -158,7 +158,7 @@ import { TagsController } from "@/control/tags";
 import { UploadController, UploadEntryMin } from "@/control/upload";
 import { copyObject } from "@/utils/objects";
 import { GenerateURIQuery } from "@/utils/request";
-import { parseTagName } from "@/utils/text";
+import { parseTagName } from "@/utils/tags";
 import { defineComponent } from "vue";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";

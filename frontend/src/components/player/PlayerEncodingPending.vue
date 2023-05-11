@@ -68,7 +68,7 @@ import { TasksAPI, TaskStatus } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { MediaController, MediaData } from "@/control/media";
 import { Request } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 

@@ -24,7 +24,7 @@
 <script lang="ts">
 import { GetAssetURL } from "@/utils/request";
 import { defineComponent } from "vue";
-import { renderTimeSeconds } from "../../utils/time-utils";
+import { renderTimeSeconds } from "../../utils/time";
 
 export default defineComponent({
   name: "PlayerMediaChangePreview",

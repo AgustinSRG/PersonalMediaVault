@@ -86,7 +86,7 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { copyObject } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
-import { renderTimeSeconds } from "@/utils/time-utils";
+import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 

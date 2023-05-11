@@ -160,11 +160,8 @@ import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
-import {
-  findTimeSlice,
-  normalizeTimeSlices,
-  renderTimeSeconds,
-} from "../../utils/time-utils";
+import { renderTimeSeconds } from "../../utils/time";
+import { findTimeSlice, normalizeTimeSlices} from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -172,7 +169,7 @@ import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
-import { htmlToText } from "@/utils/text";
+import { htmlToText } from "@/utils/html";
 import { AppEvents } from "@/control/app-events";
 import {
   getUniqueSubtitlesLoadTag,
