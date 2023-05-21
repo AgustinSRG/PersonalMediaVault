@@ -58,6 +58,10 @@
     width: 1px;
 }
 
+.tr-align-middle td {
+    vertical-align: middle;
+}
+
 /* Custom style for keyboard shortcuts table */
 
 .key-shortcut {

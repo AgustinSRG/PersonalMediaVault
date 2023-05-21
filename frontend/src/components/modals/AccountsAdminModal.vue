@@ -10,70 +10,50 @@
       <div v-if="loading" class="modal-body">
         <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
       </div>
-      <div v-if="!loading" class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("List of accounts") }}:</label>
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th class="text-left">{{ $t("Username") }}</th>
-                  <th class="text-left">{{ $t("Account type") }}</th>
-                  <th class="text-right"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="a in accounts" :key="a.username">
-                  <td class="bold">{{ a.username }}</td>
-                  <td v-if="!a.write">{{ $t("Read only") }}</td>
-                  <td v-if="a.write">{{ $t("Read / Write") }}</td>
-                  <td class="text-right">
-                    <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
-                      <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <div v-if="!loading" class="modal-body no-padding">
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="text-left">{{ $t("Username") }}</th>
+                <th class="text-left">{{ $t("Account type") }}</th>
+                <th class="text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="a in accounts" :key="a.username" class="tr-align-middle">
+                <td class="bold">{{ a.username }}</td>
+                <td v-if="!a.write">{{ $t("Read only") }}</td>
+                <td v-if="a.write">{{ $t("Read / Write") }}</td>
+                <td class="text-right">
+                  <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
+                    <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                  </button>
+                </td>
+              </tr>
+              <tr class="tr-align-middle">
+                <td colspan="4" class="text-right">
+                  <button type="button" @click="createAccount" :disabled="busy" class="btn btn-primary btn-xs">
+                    <i class="fas fa-plus"></i> {{ $t("Create account") }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <form @submit="submit" class="border-top">
-          <div class="form-group">
-            <label>{{ $t("Account name") }}:</label>
-            <input type="text" autocomplete="off" v-model="accountUsername" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Account password") }}:</label>
-            <input type="password" autocomplete="off" v-model="accountPassword" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Account password") }} ({{ $t("Again") }}):</label>
-            <input type="password" autocomplete="off" v-model="accountPassword2" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Account type") }}:</label>
-            <select v-model="accountWrite" class="form-control form-select form-control-full-width">
-              <option :value="false">{{ $t("Read only") }}</option>
-              <option :value="true">{{ $t("Read / Write") }}</option>
-            </select>
-          </div>
-
-          <div class="form-group form-error">{{ error }}</div>
-
-          <div class="form-group">
-            <button type="submit" :disabled="busy" class="btn btn-primary">
-              <i class="fas fa-plus"></i> {{ $t("Create account") }}
-            </button>
-          </div>
-        </form>
       </div>
+
+      <div class="modal-footer no-padding">
+        <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
+          <i class="fas fa-check"></i> {{ $t("Done") }}
+        </button>
+      </div>
+
     </div>
 
     <AccountDeleteModal v-model:display="displayAccountDelete"></AccountDeleteModal>
+    <AccountCreateModal v-model:display="displayAccountCreate" @account-created="load"></AccountCreateModal>
   </div>
 </template>
 
@@ -86,10 +66,12 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
+import AccountCreateModal from "../modals/AccountCreateModal.vue";
 
 export default defineComponent({
   components: {
     AccountDeleteModal,
+    AccountCreateModal,
   },
   name: "AccountsAdminModal",
   emits: ["update:display"],
@@ -111,6 +93,7 @@ export default defineComponent({
       accountWrite: false,
 
       displayAccountDelete: false,
+      displayAccountCreate: false,
 
       loading: true,
       busy: false,
@@ -210,78 +193,14 @@ export default defineComponent({
         });
     },
 
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      if (this.accountPassword !== this.accountPassword2) {
-        this.error = this.$t("The passwords do not match");
-        return;
-      }
-
-      const username = this.accountUsername;
-      const password = this.accountPassword;
-      const write = this.accountWrite;
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AdminAPI.CreateAccount(username, password, write))
-        .onSuccess(() => {
-          this.busy = false;
-          AppEvents.Emit("snack", this.$t("Account created") + ": " + username);
-          this.accountUsername = "";
-          this.accountPassword = "";
-          this.accountPassword2 = "";
-          this.accountWrite = false;
-          this.load();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "USERNAME_INVALID", () => {
-              this.error = this.$t("Invalid username provided");
-            })
-            .add(400, "USERNAME_IN_USE", () => {
-              this.error = this.$t("The username is already in use");
-            })
-            .add(400, "PASSWORD_INVALID", () => {
-              this.error = this.$t("Invalid password provided");
-            })
-            .add(400, "*", () => {
-              this.error = this.$t("Bad request");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+    createAccount: function () {
+      this.displayAccountCreate = true;
     },
 
     close: function () {
       this.displayStatus = false;
       this.displayAccountDelete = false;
+      this.displayAccountCreate = false;
     },
 
     stopPropagationEvent: function (e) {
@@ -306,6 +225,7 @@ export default defineComponent({
         this.$el.focus();
       });
       this.displayAccountDelete = false;
+      this.displayAccountCreate = false;
     }
   },
   beforeUnmount: function () {
@@ -326,6 +246,7 @@ export default defineComponent({
           this.$el.focus();
         });
         this.displayAccountDelete = false;
+        this.displayAccountCreate = false;
         this.load();
       } else {
         if (this.$options.focusTrap) {
