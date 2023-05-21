@@ -4,6 +4,16 @@ import { AlbumEntry, AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { LocalStorage } from "./local-storage";
 
+function defaultBrowserTheme(): string {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return "dark"
+    } else if (window.matchMedia) {
+        return "light";
+    } else {
+        return "dark";
+    }
+}
+
 export class AppPreferences {
     public static Language = "en";
     public static Theme = "dark";
@@ -14,7 +24,7 @@ export class AppPreferences {
         const locale = (navigator.language || "en");
 
         AppPreferences.Language = LocalStorage.Get("app-pref-lang", locale);
-        AppPreferences.Theme = LocalStorage.Get("app-pref-theme", "dark");
+        AppPreferences.Theme = LocalStorage.Get("app-pref-theme", defaultBrowserTheme());
         AppPreferences.AlbumPositionMap = LocalStorage.Get("app-pref-albums-order", Object.create(null));
         AppPreferences.FavAlbums = LocalStorage.Get("app-pref-albums-fav", []);
 
