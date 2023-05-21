@@ -1,60 +1,21 @@
 <template>
   <div class="top-bar" tabindex="-1">
     <div class="top-bar-logo-td">
-      <button
-        type="button"
-        class="top-bar-button top-bar-menu-btn"
-        :title="$t('Main menu')"
-        @click="menu"
-      >
+      <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
         <i class="fas fa-bars"></i>
       </button>
       <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
       <span :title="$t('Personal Media Vault')" class="top-bar-title">PMV</span>
-      <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
-        >PMV</span
-      >
     </div>
     <div class="top-bar-search-td">
       <div class="top-bar-center-div">
-        <form
-          class="top-bar-search-input-container"
-          :class="{ focused: searchFocus }"
-          @submit="submitSearch"
-          tabindex="-1"
-        >
-          <input
-            type="text"
-            class="top-bar-search-input"
-            name="pmv-search-input"
-            spellcheck="false"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="none"
-            :placeholder="$t('Search')"
-            v-model="search"
-            @keydown="onKeyDown"
-            @input="onSearchInput"
-            @focus="focusSearch"
-          />
-          <button
-            type="submit"
-            class="top-bar-button top-bar-search-button"
-            :title="$t('Search')"
-            @focus="blurSearch"
-          >
+        <form class="top-bar-search-input-container" :class="{ focused: searchFocus }" @submit="submitSearch" tabindex="-1">
+          <input type="text" class="top-bar-search-input" name="pmv-search-input" spellcheck="false" autocorrect="off" autocomplete="off" autocapitalize="none" :placeholder="$t('Search')" v-model="search" @keydown="onKeyDown" @input="onSearchInput" @focus="focusSearch" />
+          <button type="submit" class="top-bar-button top-bar-search-button" :title="$t('Search')" @focus="blurSearch">
             <i class="fas fa-search"></i>
           </button>
-          <div
-            class="top-bar-search-suggestions"
-            :class="{ hidden: suggestions.length === 0 }"
-          >
-            <div
-              v-for="s in suggestions"
-              :key="s.key"
-              class="top-bar-search-suggestion"
-              @click="clickSearch(s)"
-            >
+          <div class="top-bar-search-suggestions" :class="{ hidden: suggestions.length === 0 }">
+            <div v-for="s in suggestions" :key="s.key" class="top-bar-search-suggestion" @click="clickSearch(s)">
               <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
               <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
               <span>{{ s.name }}</span>
@@ -64,38 +25,18 @@
       </div>
     </div>
     <div class="top-bar-user-td">
-      <button
-        type="button"
-        class="top-bar-button top-bar-button-dropdown top-bar-button-large-version"
-        :title="$t('Help')"
-        @click="help"
-      >
+      <button type="button" class="top-bar-button top-bar-button-dropdown top-bar-button-large-version" :title="$t('Help')" @click="help">
         <i class="fas fa-question"></i>
       </button>
 
-      <button
-        type="button"
-        class="top-bar-button top-bar-button-small-version"
-        :title="$t('Search')"
-        @click="openSearch"
-      >
+      <button type="button" class="top-bar-button top-bar-button-small-version" :title="$t('Search')" @click="openSearch">
         <i class="fas fa-search"></i>
       </button>
 
-      <button
-        type="button"
-        class="top-bar-button top-bar-button-dropdown"
-        :title="$t('Settings')"
-        @click="settings"
-      >
+      <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Settings')" @click="settings">
         <i class="fas fa-cog"></i>
       </button>
-      <button
-        type="button"
-        class="top-bar-button"
-        :title="$t('Close vault')"
-        @click="logout"
-      >
+      <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
         <i class="fas fa-sign-out-alt"></i>
       </button>
     </div>

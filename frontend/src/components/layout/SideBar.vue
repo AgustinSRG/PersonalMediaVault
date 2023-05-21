@@ -1,142 +1,55 @@
 <template>
-  <div
-    class="side-bar"
-    :class="{ hidden: !display }"
-    @click="stopPropagationEvent"
-    tabindex="-1"
-    :role="initialLayout ? '' : 'dialog'"
-    :aria-hidden="!display"
-  >
+  <div class="side-bar" :class="{ hidden: !display }" @click="stopPropagationEvent" tabindex="-1" :role="initialLayout ? '' : 'dialog'" :aria-hidden="!display">
     <div class="side-bar-header">
       <div class="top-bar-logo-td">
-        <button
-          type="button"
-          class="top-bar-button"
-          :title="$t('Main menu')"
-          @click="close"
-        >
+        <button type="button" class="top-bar-button" :title="$t('Main menu')" @click="close">
           <i class="fas fa-bars"></i>
         </button>
         <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
-        <span :title="$t('Personal Media Vault')" class="top-bar-title"
-          >PMV</span
-        >
-        <span :title="$t('Personal Media Vault')" class="top-bar-title-min"
-          >PMV</span
-        >
+        <span :title="$t('Personal Media Vault')" class="top-bar-title">PMV</span>
       </div>
     </div>
     <div class="side-bar-body">
-      <a
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'home' }"
-        :title="$t('Home')"
-        @click="goToPage('home', $event)"
-        :href="getPageURL('home')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a class="side-bar-option" :class="{ selected: album < 0 && page === 'home' }" :title="$t('Home')" @click="goToPage('home', $event)" :href="getPageURL('home')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
         <div class="side-bar-option-text">{{ $t("Home") }}</div>
       </a>
 
-      <a
-        v-if="!!search"
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'search' }"
-        :title="$t('Search results')"
-        @click="goToSearch($event)"
-        :href="getPageURL('search')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a v-if="!!search" class="side-bar-option" :class="{ selected: album < 0 && page === 'search' }" :title="$t('Search results')" @click="goToSearch($event)" :href="getPageURL('search')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
         <div class="side-bar-option-text">{{ $t("Search results") }}</div>
       </a>
 
-      <a
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'albums' }"
-        :title="$t('Albums')"
-        @click="goToPage('albums', $event)"
-        :href="getPageURL('albums')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a class="side-bar-option" :class="{ selected: album < 0 && page === 'albums' }" :title="$t('Albums')" @click="goToPage('albums', $event)" :href="getPageURL('albums')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-list"></i></div>
         <div class="side-bar-option-text">{{ $t("Albums") }}</div>
       </a>
 
-      <a
-        v-if="canWrite"
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'upload' }"
-        :title="$t('Upload')"
-        @click="goToPage('upload', $event)"
-        :href="getPageURL('upload')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a v-if="canWrite" class="side-bar-option" :class="{ selected: album < 0 && page === 'upload' }" :title="$t('Upload')" @click="goToPage('upload', $event)" :href="getPageURL('upload')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
         <div class="side-bar-option-text">{{ $t("Upload") }}</div>
       </a>
 
-      <a
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'random' }"
-        :title="$t('Random')"
-        @click="goToPage('random', $event)"
-        :href="getPageURL('random')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a class="side-bar-option" :class="{ selected: album < 0 && page === 'random' }" :title="$t('Random')" @click="goToPage('random', $event)" :href="getPageURL('random')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-shuffle"></i></div>
         <div class="side-bar-option-text">{{ $t("Random") }}</div>
       </a>
 
-      <a
-        class="side-bar-option"
-        :class="{ selected: album < 0 && page === 'adv-search' }"
-        :title="$t('Advanced search')"
-        @click="goToPage('adv-search', $event)"
-        :href="getPageURL('adv-search')"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a class="side-bar-option" :class="{ selected: album < 0 && page === 'adv-search' }" :title="$t('Advanced search')" @click="goToPage('adv-search', $event)" :href="getPageURL('adv-search')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
         <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
       </a>
 
       <div class="side-bar-separator" v-if="albumsFavorite.length > 0"></div>
 
-      <a
-        v-for="a in albumsFavorite"
-        :key="a.id"
-        class="side-bar-option"
-        :class="{ selected: album == a.id }"
-        :title="a.name"
-        @click="goToAlbum(a, $event)"
-        :href="getAlbumURL(a.id)"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a v-for="a in albumsFavorite" :key="a.id" class="side-bar-option" :class="{ selected: album == a.id }" :title="a.name" @click="goToAlbum(a, $event)" :href="getAlbumURL(a.id)" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-star"></i></div>
         <div class="side-bar-option-text">{{ a.name }}</div>
       </a>
 
       <div class="side-bar-separator"></div>
 
-      <a
-        v-for="a in albumsRest"
-        :key="a.id"
-        class="side-bar-option"
-        :class="{ selected: album == a.id }"
-        :title="a.name"
-        @click="goToAlbum(a, $event)"
-        :href="getAlbumURL(a.id)"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a v-for="a in albumsRest" :key="a.id" class="side-bar-option" :class="{ selected: album == a.id }" :title="a.name" @click="goToAlbum(a, $event)" :href="getAlbumURL(a.id)" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-list-ol"></i></div>
         <div class="side-bar-option-text">{{ a.name }}</div>
       </a>

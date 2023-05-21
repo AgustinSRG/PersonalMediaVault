@@ -29,6 +29,7 @@
     text-align: left;
     display: flex;
     align-items: center;
+    max-width: 240px;
 }
 
 .top-bar-search-td {
@@ -45,30 +46,8 @@
     font-size: 24px;
     padding-left: 8px;
     padding-top: 3px;
-}
-
-.top-bar-title-min {
-    font-weight: bold;
-    font-size: 24px;
-    padding-left: 8px;
-    padding-top: 3px;
-    display: none;
-}
-
-@media (max-width: 1024px) {
-    .top-bar-title {
-        display: none;
-    }
-
-    .top-bar-title-min {
-        display: initial;
-    }
-}
-
-@media (max-width: 300px) {
-    .top-bar-title-min {
-        display: none;
-    }
+    overflow: hidden;
+    max-width: calc(240px - 72px - 32px - 8px);
 }
 
 .top-bar-button {
