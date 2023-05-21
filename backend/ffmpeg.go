@@ -293,7 +293,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// MP4
-	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", tempPath+"/video.mp4")
+	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", "-pix_fmt", "yuv420p", tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -339,6 +339,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 		vCodec = "copy"
 	} else {
 		vCodec = "libx264"
+		args = append(args, "-pix_fmt", "yuv420p")
 	}
 
 	var aCodec string
