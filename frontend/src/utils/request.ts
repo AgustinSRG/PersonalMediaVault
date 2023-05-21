@@ -3,7 +3,11 @@
 "use strict";
 
 import { AuthController } from "@/control/auth";
-import axios, { AxiosError } from "axios";
+
+interface StatusCodeError {
+    status: number;
+    body: string;
+}
 
 export function GetApiURL(path: string): string {
     if (process.env.NODE_ENV === 'development') {
@@ -90,7 +94,7 @@ export class Request<Return_Type = any> {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
-        const r = new Request<Return_Type>(url, controller);
+        const r = new Request<Return_Type>(url, controller, null);
 
         if (key) {
             Request.pending[key] = r;
@@ -98,32 +102,71 @@ export class Request<Return_Type = any> {
 
         const authToken = AuthController.Session;
 
-        axios.get(url, {
+        fetch(url, {
+            method: "GET",
             signal: controller.signal,
             headers: {
                 "x-session-token": authToken,
             },
         }).then(response => {
-            if (key) {
-                delete Request.pending[key];
-            }
-
-            r._onSuccess(response.data)
-        }).catch(thrown => {
-            if (axios.isCancel(thrown)) {
-                r._onCancel();
-            } else if (axios.isAxiosError(thrown)) {
+            if (response.status !== 200) {
                 if (key) {
                     delete Request.pending[key];
                 }
-                r._onRequestError(thrown);
+                response.text().then(txt => {
+                    r._onRequestError({
+                        status: response.status,
+                        body: txt,
+                    });
+                }).catch(() => {
+                    r._onRequestError({
+                        status: 0,
+                        body: "",
+                    });
+                });
+                return;
+            }
+
+            if (response.headers.get("content-type") === "application/json") {
+                response.json().then(data => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+
+                    r._onSuccess(data);
+                }).catch(err => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    r._onUnexpectedError(err);
+                });
+            } else {
+                response.text().then(txt => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+
+                    r._onSuccess(txt)
+                }).catch(err => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    r._onUnexpectedError(err);
+                });
+            }
+        }).catch(err => {
+            if (err.name === "AbortError") {
+                r._onCancel();
             } else {
                 if (key) {
                     delete Request.pending[key];
                 }
-                r._onUnexpectedError(thrown);
+                r._onRequestError({
+                    status: 0,
+                    body: "",
+                });
             }
-        })
+        });
 
         return r;
     }
@@ -132,7 +175,7 @@ export class Request<Return_Type = any> {
         Request.Abort(key); // Abort any other request
         const controller = new AbortController();
 
-        const r = new Request<Return_Type>(url, controller);
+        const r = new Request<Return_Type>(url, controller, null);
 
         if (key) {
             Request.pending[key] = r;
@@ -140,42 +183,83 @@ export class Request<Return_Type = any> {
 
         const authToken = AuthController.Session;
 
-        axios.post(url, json, {
+        fetch(url, {
+            method: "POST",
             signal: controller.signal,
             headers: {
                 "Content-Type": "application/json",
                 "x-session-token": authToken,
             },
+            body: JSON.stringify(json),
         }).then(response => {
-            if (key) {
-                delete Request.pending[key];
-            }
-
-            r._onSuccess(response.data)
-        }).catch(thrown => {
-            if (axios.isCancel(thrown)) {
-                r._onCancel();
-            } else if (axios.isAxiosError(thrown)) {
+            if (response.status !== 200) {
                 if (key) {
                     delete Request.pending[key];
                 }
-                r._onRequestError(thrown);
+                response.text().then(txt => {
+                    r._onRequestError({
+                        status: response.status,
+                        body: txt,
+                    });
+                }).catch(() => {
+                    r._onRequestError({
+                        status: 0,
+                        body: "",
+                    });
+                });
+                return;
+            }
+
+            if (response.headers.get("content-type") === "application/json") {
+                response.json().then(data => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+
+                    r._onSuccess(data);
+                }).catch(err => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    r._onUnexpectedError(err);
+                });
+            } else {
+                response.text().then(txt => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+
+                    r._onSuccess(txt)
+                }).catch(err => {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    r._onUnexpectedError(err);
+                });
+            }
+        }).catch(err => {
+            if (err.name === "AbortError") {
+                r._onCancel();
             } else {
                 if (key) {
                     delete Request.pending[key];
                 }
-                r._onUnexpectedError(thrown);
+                r._onRequestError({
+                    status: 0,
+                    body: "",
+                });
             }
-        })
+        });
 
         return r;
     }
 
     public static PostFormData<Return_Type = any>(key: string, url: string, form: FormData): Request<Return_Type> {
         Request.Abort(key); // Abort any other request
-        const controller = new AbortController();
 
-        const r = new Request<Return_Type>(url, controller);
+        const request = new XMLHttpRequest();
+
+        const r = new Request<Return_Type>(url, null, request);
 
         if (key) {
             Request.pending[key] = r;
@@ -183,36 +267,67 @@ export class Request<Return_Type = any> {
 
         const authToken = AuthController.Session;
 
-        axios.post(url, form, {
-            signal: controller.signal,
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "x-session-token": authToken,
-            },
-            onUploadProgress: progressEvent => {
-                r._onUploadProgress(progressEvent.loaded || 0, progressEvent.total || 0);
+        request.onabort = () => {
+            r._onCancel();
+        };
+
+        request.upload.onprogress = evt => {
+            if (!evt.lengthComputable) {
+                return;
             }
-        }).then(response => {
+
+            r._onUploadProgress(evt.loaded || 0, evt.total || 0);
+        };
+
+        request.onreadystatechange = () => {
+            if (request.readyState === XMLHttpRequest.DONE) {
+                if (key) {
+                    delete Request.pending[key];
+                }
+
+                if (request.status !== 200) {
+                    r._onRequestError({
+                        status: request.status,
+                        body: request.responseText,
+                    });
+                    return;
+                }
+
+                let data: any  = request.responseText;
+
+                if (request.getResponseHeader("content-type") === "application/json") {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (ex) {
+                        r._onUnexpectedError(ex);
+                        return;
+                    }
+                }
+
+                r._onSuccess(data);
+            }
+        };
+
+        request.onerror = () => {
             if (key) {
                 delete Request.pending[key];
             }
+            r._onRequestError({
+                status: 0,
+                body: "",
+            });
+        };
 
-            r._onSuccess(response.data)
-        }).catch(thrown => {
-            if (axios.isCancel(thrown)) {
-                r._onCancel();
-            } else if (axios.isAxiosError(thrown)) {
-                if (key) {
-                    delete Request.pending[key];
-                }
-                r._onRequestError(thrown);
-            } else {
-                if (key) {
-                    delete Request.pending[key];
-                }
-                r._onUnexpectedError(thrown);
-            }
-        })
+        request.responseType = "text";
+
+        // Open
+        request.open("POST", url);
+
+        // Set headers
+        request.setRequestHeader("x-session-token", authToken);
+
+        // Send form data
+        request.send(form);
 
         return r;
     }
@@ -222,29 +337,42 @@ export class Request<Return_Type = any> {
             return;
         }
         if (Request.pending[key]) {
-            Request.pending[key].abortController.abort();
+            Request.pending[key].abort();
             delete Request.pending[key];
         }
     }
 
     public url: string;
-    public abortController: AbortController;
+    private abortController: AbortController | null;
+    private xhr: XMLHttpRequest | null;
 
     private _onSuccess: (response: any) => void;
     private _onCancel: () => void;
-    private _onRequestError: (error: AxiosError) => void;
+    private _onRequestError: (error: StatusCodeError) => void;
     private _onUnexpectedError: (error: Error) => void;
 
     private _onUploadProgress: (loaded: number, total: number) => void;
 
-    constructor(url: string, abortController: AbortController) {
+    constructor(url: string, abortController: AbortController | null, xhr: XMLHttpRequest | null) {
         this.url = url;
         this.abortController = abortController;
+        this.xhr = xhr;
         this._onSuccess = function () { };
         this._onCancel = function () { };
         this._onRequestError = function () { };
         this._onUnexpectedError = function () { };
         this._onUploadProgress = function () { };
+    }
+
+    public abort() {
+        if (this.abortController) {
+            this.abortController.abort();
+        }
+
+        if (this.xhr) {
+            this.xhr.onreadystatechange = null;
+            this.xhr.abort();
+        }
     }
 
     public onSuccess(fn: (response: Return_Type) => void): Request {
@@ -257,7 +385,7 @@ export class Request<Return_Type = any> {
         return this;
     }
 
-    public onRequestError(fn: (err: AxiosError) => void): Request {
+    public onRequestError(fn: (err: StatusCodeError) => void): Request {
         this._onRequestError = fn;
         return this;
     }
@@ -296,28 +424,14 @@ export class RequestErrorHandler {
         return this;
     }
 
-    public handle(error: AxiosError) {
-        if (!error.response) {
-            return;
-        }
-        if (error.response.status === 0 && error.response.statusText === "abort") {
-            return;
-        }
-
+    public handle(error: StatusCodeError) {
         // Get error code from body
 
         let errorCode = "";
-        const data = error.response.data;
+        const data = error.body;
         if (data) {
             try {
-                let parsedData: any;
-
-                if (typeof data === "string") {
-                    parsedData = JSON.parse(data);
-                } else {
-                    parsedData = data;
-                }
-
+                const parsedData = JSON.parse(data);
                 errorCode = parsedData.code || "";
             } catch (err) {
                 errorCode = "";
@@ -325,7 +439,7 @@ export class RequestErrorHandler {
         }
 
         for (const callback of this.callbacks) {
-            if (callback.status === "*" || callback.status === error.response.status) {
+            if (callback.status === "*" || callback.status === error.status) {
                 if (callback.code === "*" || errorCode === callback.code) {
                     callback.callback();
                     return;
