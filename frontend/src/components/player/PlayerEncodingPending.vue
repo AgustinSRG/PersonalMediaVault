@@ -1,12 +1,22 @@
 <template>
   <div class="player-pending-checker">
-    <div v-if="status === 'loading'" class="player-lds-ring">
+    <div v-if="error" class="player-task-info">
+      <div class="player-task-info-row">
+        <span>{{ $t("Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.") }}</span>
+      </div>
+      <div class="player-task-info-row">
+        <button type="button" class="btn btn-primary" @click="refreshMedia">
+          <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+        </button>
+      </div>
+    </div>
+    <div v-else-if="status === 'loading'" class="player-lds-ring">
       <div></div>
       <div></div>
       <div></div>
       <div></div>
     </div>
-    <div v-if="status === 'not-ready'" class="player-task-info">
+    <div v-else-if="status === 'not-ready'" class="player-task-info">
       <div class="player-task-info-row">
         <span>{{
           $t(
@@ -20,7 +30,7 @@
         </button>
       </div>
     </div>
-    <div v-if="status === 'task' && stageNumber < 0" class="player-task-info">
+    <div v-else-if="status === 'task' && stageNumber < 0" class="player-task-info">
       <div class="player-task-info-row">
         <span>{{
           $t(
@@ -34,7 +44,7 @@
         </button>
       </div>
     </div>
-    <div v-if="status === 'task' && stageNumber >= 0" class="player-task-info">
+    <div v-else-if="status === 'task' && stageNumber >= 0" class="player-task-info">
       <div class="player-task-info-row">
         <span>{{ $t("The media is being encoded.") }}</span>
       </div>
@@ -51,11 +61,11 @@
       </div>
 
       <div class="player-task-info-row" v-if="progress > 0">
-        <span>{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}: {{renderTime(estimatedRemainingTime)}}</span>
+        <span>{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}: {{ renderTime(estimatedRemainingTime) }}</span>
       </div>
       <div class="player-task-info-row" v-if="progress > 0">
         <div class="player-task-progress-bar">
-            <div class="player-task-progress-bar-current" :style="{width: cssProgress(progress)}"></div>
+          <div class="player-task-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
         </div>
       </div>
     </div>
@@ -78,6 +88,7 @@ export default defineComponent({
     mid: Number,
     tid: Number,
     res: Number,
+    error: Boolean,
   },
   data: function () {
     return {
@@ -112,6 +123,10 @@ export default defineComponent({
     checkTask: function () {
       Timeouts.Abort(this.pendingId);
       Request.Abort(this.pendingId);
+
+      if (this.error) {
+        return;
+      }
 
       if (this.tid <= 0) {
         this.status = "not-ready";

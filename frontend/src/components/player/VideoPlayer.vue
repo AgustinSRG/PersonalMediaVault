@@ -5,7 +5,7 @@
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
 
-    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></video>
+    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></video>
 
     <audio v-if="audioTrackURL" :src="audioTrackURL" :key="rTick" playsinline webkit-playsinline :muted="muted || !audioTrackURL" :volume.prop="volume" :playbackRate.prop="speed" @loadedmetadata="onAudioLoadMetadata" @canplay="onAudioCanPlay"></audio>
 
@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <PlayerEncodingPending v-if="!loading && !videoURL && videoPending" :mid="mid" :tid="videoPendingTask" :res="currentResolution"></PlayerEncodingPending>
+    <PlayerEncodingPending v-if="(!loading && !videoURL && videoPending) || mediaError" :mid="mid" :tid="videoPendingTask" :res="currentResolution" :error="mediaError"></PlayerEncodingPending>
 
     <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls || !userControls }">
       <div class="player-subtitles" v-if="subtitles" v-html="subtitles" :class="{
@@ -303,6 +303,8 @@ export default defineComponent({
 
       waitingTimestamp: 0,
       isWaiting: false,
+
+      mediaError: false,
     };
   },
   methods: {
@@ -1132,6 +1134,7 @@ export default defineComponent({
     },
 
     setVideoURL() {
+      this.mediaError = false;
       if (!this.metadata) {
         this.videoURL = "";
         this.onClearURL();
@@ -1312,6 +1315,11 @@ export default defineComponent({
           }
           break;
       }
+    },
+
+    onMediaError: function() {
+      this.mediaError = true
+      this.loading = false;
     },
   },
   mounted: function () {

@@ -4,7 +4,7 @@
     'no-controls': !showControls,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
-    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" :loop="loop && !sliceLoop" crossorigin="anonymous" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause"></audio>
+    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" :loop="loop && !sliceLoop" crossorigin="anonymous" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></audio>
 
     <canvas v-if="audioURL"></canvas>
 
@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <PlayerEncodingPending v-if="!loading && !audioURL && audioPending" :mid="mid" :tid="audioPendingTask" :res="-1"></PlayerEncodingPending>
+    <PlayerEncodingPending v-if="(!loading && !audioURL && audioPending) || mediaError" :mid="mid" :tid="audioPendingTask" :res="-1" :error="mediaError"></PlayerEncodingPending>
 
     <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls }">
       <div class="player-subtitles" v-if="subtitles" v-html="subtitles" :class="{
@@ -155,7 +155,7 @@ import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
-import { findTimeSlice, normalizeTimeSlices} from "../../utils/time-slices";
+import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -290,6 +290,8 @@ export default defineComponent({
       currentTimeSliceEnd: 0,
 
       theme: AppPreferences.Theme,
+
+      mediaError: false,
     };
   },
   methods: {
@@ -944,6 +946,7 @@ export default defineComponent({
     },
 
     setAudioURL() {
+      this.mediaError = false;
       if (!this.metadata) {
         this.audioURL = "";
         this.onClearURL();
@@ -1223,6 +1226,11 @@ export default defineComponent({
           }
           break;
       }
+    },
+
+    onMediaError: function () {
+      this.mediaError = true
+      this.loading = false;
     },
   },
   mounted: function () {

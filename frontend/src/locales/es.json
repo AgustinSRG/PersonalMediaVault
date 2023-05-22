@@ -135,6 +135,7 @@
   "End": "Fin",
   "Error": "Error",
   "Error uploading file": "Error al subir el fichero",
+  "Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.": "Error: No se pudo cargar el recurso multimedia. Podría tratarse de un error de red, o de corrupción en el recurso multimedia.",
   "Escape": "Escape",
   "Exit full screen": "Salir de la pantalla completa",
   "Expand": "Expandir",

@@ -135,6 +135,7 @@
   "End": "End",
   "Error": "Error",
   "Error uploading file": "Error uploading file",
+  "Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.": "Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.",
   "Escape": "Escape",
   "Exit full screen": "Exit full screen",
   "Expand": "Expand",
