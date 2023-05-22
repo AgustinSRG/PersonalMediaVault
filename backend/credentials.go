@@ -48,7 +48,7 @@ type VaultCredentials struct {
 	Salt         []byte `json:"salt"`   // Root password salt
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with root password
 
-	VaultFingerprint string `json:"fingerprint"` // Vault finderprint, user to distinguis between vaults
+	VaultFingerprint string `json:"fingerprint"` // Vault fingerprint, user to distinguish between vaults
 
 	Accounts []VaultCredentialsAccount `json:"accounts"` // Accounts
 }
@@ -592,11 +592,8 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 	}
 }
 
-// Gets vault fingerpint
+// Gets vault fingerprint
 func (manager *VaultCredentialsManager) GetFingerprint() string {
-	manager.lock.Lock()
-	defer manager.lock.Unlock()
-
 	return manager.credentials.VaultFingerprint
 }
 

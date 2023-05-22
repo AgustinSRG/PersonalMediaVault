@@ -5,9 +5,9 @@
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
 
-    <video v-if="videoURL" :src="videoURL" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></video>
+    <video v-if="videoURL" :src="videoURL" crossorigin="use-credentials" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></video>
 
-    <audio v-if="audioTrackURL" :src="audioTrackURL" :key="rTick" playsinline webkit-playsinline :muted="muted || !audioTrackURL" :volume.prop="volume" :playbackRate.prop="speed" @loadedmetadata="onAudioLoadMetadata" @canplay="onAudioCanPlay"></audio>
+    <audio v-if="audioTrackURL" :src="audioTrackURL" crossorigin="use-credentials" :key="rTick" playsinline webkit-playsinline :muted="muted || !audioTrackURL" :volume.prop="volume" :playbackRate.prop="speed" @loadedmetadata="onAudioLoadMetadata" @canplay="onAudioCanPlay"></audio>
 
     <div class="player-feedback-container">
       <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">

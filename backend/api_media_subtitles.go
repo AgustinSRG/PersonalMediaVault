@@ -286,7 +286,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 
 	result.Id = subtitlesId
 	result.Name = subtitlesName
-	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(srt_asset) + "/subrip.srt" + "?token=" + MakeAssetToken(media_id, srt_asset)
+	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(srt_asset) + "/subrip.srt" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 	// Response
 

@@ -282,7 +282,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 
 	result.Id = audioId
 	result.Name = audioName
-	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(audio_asset) + "/audio.mp3" + "?token=" + MakeAssetToken(media_id, audio_asset)
+	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(audio_asset) + "/audio.mp3" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 	// Response
 

@@ -4,7 +4,7 @@
     'no-controls': !showControls,
     'full-screen': fullscreen,
   }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
-    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" :loop="loop && !sliceLoop" crossorigin="anonymous" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></audio>
+    <audio :src="audioURL || undefined" playsinline webkit-playsinline x-webkit-airplay="allow" :loop="loop && !sliceLoop" crossorigin="use-credentials" :muted="muted" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onAudioTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></audio>
 
     <canvas v-if="audioURL"></canvas>
 

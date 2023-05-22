@@ -41,7 +41,7 @@ func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem 
 		result.Type = meta.Type
 		result.Title = meta.Title
 		if meta.ThumbnailReady {
-			result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, meta.ThumbnailAsset)
+			result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 		} else {
 			result.Thumbnail = ""
 		}
@@ -187,7 +187,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	// Thumbnail
 
 	if meta.ThumbnailReady {
-		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?token=" + MakeAssetToken(media_id, meta.ThumbnailAsset)
+		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
 		result.Thumbnail = ""
 	}
@@ -198,12 +198,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Ready = true
 		result.Encoded = true
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?token=" + MakeAssetToken(media_id, meta.OriginalAsset)
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else if meta.OriginalReady {
 		result.Ready = true
 		result.Encoded = false
 		result.Task = meta.OriginalTask
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?token=" + MakeAssetToken(media_id, meta.OriginalAsset)
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
 		result.Ready = false
 		result.ReadyProgress = GetVault().media.GetProgress(media_id)
@@ -216,7 +216,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	if meta.PreviewsReady {
 		result.VideoPreviewsInterval = meta.PreviewsInterval
-		result.VideoPreviews = "/assets/p/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.PreviewsAsset) + "/preview_{INDEX}.jpg" + "?token=" + MakeAssetToken(media_id, meta.PreviewsAsset)
+		result.VideoPreviews = "/assets/p/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.PreviewsAsset) + "/preview_{INDEX}.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
 		result.VideoPreviewsInterval = 0
 		result.VideoPreviews = ""
@@ -226,7 +226,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	if meta.HasImageNotes {
 		result.HasImageNotes = true
-		result.ImageNotesURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ImageNotesAsset) + "/notes.json" + "?token=" + MakeAssetToken(media_id, meta.ImageNotesAsset)
+		result.ImageNotesURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ImageNotesAsset) + "/notes.json" + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
 		result.HasImageNotes = false
 		result.ImageNotesURL = ""
@@ -247,7 +247,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 			if meta.Resolutions[i].Ready {
 				r.Ready = true
-				r.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Resolutions[i].Asset) + "/video." + meta.Resolutions[i].Extension + "?token=" + MakeAssetToken(media_id, meta.Resolutions[i].Asset)
+				r.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Resolutions[i].Asset) + "/video." + meta.Resolutions[i].Extension + "?fp=" + GetVault().credentials.GetFingerprint()
 			} else {
 				r.Ready = false
 				r.Url = ""
@@ -287,7 +287,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 			s.Id = meta.Subtitles[i].Id
 			s.Name = meta.Subtitles[i].Name
 
-			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt" + "?token=" + MakeAssetToken(media_id, meta.Subtitles[i].Asset)
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Subtitles[i].Asset) + "/subrip.srt" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 			subtitles[i] = s
 		}
@@ -310,7 +310,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 			s.Id = meta.AudioTracks[i].Id
 			s.Name = meta.AudioTracks[i].Name
 
-			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.AudioTracks[i].Asset) + "/audio.mp3" + "?token=" + MakeAssetToken(media_id, meta.AudioTracks[i].Asset)
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.AudioTracks[i].Asset) + "/audio.mp3" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 			audios[i] = s
 		}

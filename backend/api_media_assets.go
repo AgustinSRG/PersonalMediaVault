@@ -37,14 +37,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	token := request.URL.Query().Get("token")
-
-	if !CheckAssetToken(token, media_id, asset_id) {
-		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
-		return
-	}
-
-	session := GetVault().sessions.FindAnySession()
+	session := GetSessionFromRequestCookie(request)
 
 	if session == nil {
 		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
@@ -289,14 +282,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	token := request.URL.Query().Get("token")
-
-	if !CheckAssetToken(token, media_id, asset_id) {
-		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
-		return
-	}
-
-	session := GetVault().sessions.FindAnySession()
+	session := GetSessionFromRequestCookie(request)
 
 	if session == nil {
 		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")

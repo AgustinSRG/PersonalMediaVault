@@ -38,6 +38,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 
 		w.Header().Set("Access-Control-Allow-Origin", corsOrigin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		allowMethods := r.Header.Get("access-control-request-method")
 
@@ -97,11 +98,6 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	if CORS_INSECURE_MODE_ENABLED {
 		LogWarning("CORS insecure mode enabled. Use this only for development")
 		router.Use(corsMiddleware)
-	}
-
-	// Initialize tokens
-	if !isTest {
-		InitAssetJWTSecret()
 	}
 
 	// API routes

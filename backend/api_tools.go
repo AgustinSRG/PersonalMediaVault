@@ -3,11 +3,9 @@
 package main
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"math"
 	"net"
@@ -16,94 +14,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/golang-jwt/jwt"
 )
 
 const (
 	JSON_BODY_MAX_LENGTH     = 5 * 1024 * 1024 // Max length of body for JSON APIs
 	AUTH_API_BODY_MAX_LENGTH = 16 * 1024       // Max length of body for authentication requests
-	ASSET_JWT_SUB            = "pmv_asset"     // Subject to use for JWT for assets
 )
-
-var (
-	ASSET_JWT_SECRET = make([]byte, 32) // Secret used to sign tokens for asset requests
-)
-
-// Initailizes secret to sign JWT tokens for assets
-func InitAssetJWTSecret() {
-	rand.Read(ASSET_JWT_SECRET) //nolint:errcheck
-}
-
-// Validates asset JWT
-// token - JWT to validate
-// media_id - Media ID
-// asset_id - Asset ID
-func CheckAssetToken(token string, media_id uint64, asset_id uint64) (valid bool) {
-	if token == "" {
-		return false
-	}
-
-	defer func() {
-		r := recover()
-		if r != nil {
-			valid = false
-		}
-	}()
-
-	t, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		// Check the algorithm
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// Provide signing key
-		return ASSET_JWT_SECRET, nil
-	})
-
-	if err != nil {
-		return false
-	}
-
-	claims, ok := t.Claims.(jwt.MapClaims)
-
-	if !ok || !t.Valid {
-		return false // Invalid token
-	}
-
-	if claims["sub"] == nil || claims["sub"].(string) != ASSET_JWT_SUB {
-		return false // Invalid sibject
-	}
-
-	if claims["mid"] == nil || claims["mid"].(string) != fmt.Sprint(media_id) {
-		return false // Invalid media ID
-	}
-
-	if claims["aid"] == nil || claims["aid"].(string) != fmt.Sprint(asset_id) {
-		return false // Invalid asset ID
-	}
-
-	return true
-}
-
-// Creates an asset JWT
-// media_id - Media ID
-// asset_id - Asset ID
-func MakeAssetToken(media_id uint64, asset_id uint64) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": ASSET_JWT_SUB,
-		"mid": fmt.Sprint(media_id),
-		"aid": fmt.Sprint(asset_id),
-	})
-
-	tokenb64, e := token.SignedString(ASSET_JWT_SECRET)
-
-	if e != nil {
-		return ""
-	}
-
-	return tokenb64
-}
 
 // Finds session from request headers
 // request - HTTP request
@@ -112,6 +28,29 @@ func GetSessionFromRequest(request *http.Request) *ActiveSession {
 	sessionToken := request.Header.Get("x-session-token")
 
 	return GetVault().sessions.FindSession(sessionToken)
+}
+
+// Finds session from request headers
+// Uses cookie if header not set
+// Use only for GET requests, to avoid CSRF
+// request - HTTP request
+// Returns the reference to the session, or nil if unauthorized
+func GetSessionFromRequestCookie(request *http.Request) *ActiveSession {
+	sessionToken := request.Header.Get("x-session-token")
+
+	if sessionToken != "" {
+		return GetVault().sessions.FindSession(sessionToken)
+	}
+
+	sessionCookieName := "st-" + GetVault().credentials.GetFingerprint()
+
+	cookie, err := request.Cookie(sessionCookieName)
+
+	if err != nil || cookie == nil {
+		return nil
+	}
+
+	return GetVault().sessions.FindSession(cookie.Value)
 }
 
 // Parses range header from request
