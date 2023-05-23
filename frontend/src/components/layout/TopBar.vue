@@ -5,7 +5,7 @@
         <i class="fas fa-bars"></i>
       </button>
       <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
-      <span :title="$t('Personal Media Vault')" class="top-bar-title">PMV</span>
+      <span :title="getAppTitle()" class="top-bar-title">PMV</span>
     </div>
     <div class="top-bar-search-td">
       <div class="top-bar-center-div">
@@ -64,6 +64,10 @@ export default defineComponent({
     };
   },
   methods: {
+    getAppTitle: function () {
+      return AuthController.Title || this.$t("Personal Media Vault");
+    },
+
     menu: function () {
       this.$emit("menu");
     },

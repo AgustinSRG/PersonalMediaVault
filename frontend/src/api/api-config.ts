@@ -3,6 +3,7 @@
 import { GetApiURL, RequestParams } from "@/utils/request";
 
 export interface VaultUserConfig {
+    title: string;
     max_tasks: number,
     encoding_threads: number,
     resolutions: {
@@ -14,6 +15,7 @@ export interface VaultUserConfig {
         width: number,
         height: number,
     }[],
+    css: string,
 }
 
 export class ConfigAPI {

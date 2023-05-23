@@ -40,6 +40,8 @@ func (res UserConfigImageResolution) Fits(width int32, height int32) bool {
 
 // User vault configuration data
 type UserConfig struct {
+	CustomTitle      string                      `json:"title"`             // Custom title
+	CustomCSS        string                      `json:"css"`               // Custom CSS code
 	MaxTasks         int32                       `json:"max_tasks"`         // Max number of tasks in parallel
 	EncodingThreads  int32                       `json:"encoding_threads"`  // Max encoding threads for FFMPEG
 	Resolutions      []UserConfigResolution      `json:"resolutions"`       // Resolutions to encode (for videos)

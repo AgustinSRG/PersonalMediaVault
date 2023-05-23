@@ -34,6 +34,7 @@ func Config_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Update config
 
+	res.CustomTitle = "Test title"
 	res.MaxTasks = 2
 
 	body, err := json.Marshal(res)
@@ -78,5 +79,9 @@ func Config_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	if res2.MaxTasks != 2 {
 		t.Error(ErrorMismatch("MaxTasks", fmt.Sprint(res2.MaxTasks), fmt.Sprint(2)))
+	}
+
+	if res2.CustomTitle != "Test title" {
+		t.Error(ErrorMismatch("CustomTitle", res2.CustomTitle, "Test title"))
 	}
 }

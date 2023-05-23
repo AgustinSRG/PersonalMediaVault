@@ -2191,6 +2191,9 @@ definitions:
     UserConfig:
       description: User configuration
       properties:
+        title:
+          type: string
+          description: Custom vault title
         max_tasks:
           type: number
           format: int32
@@ -2229,6 +2232,9 @@ definitions:
                 type: number
                 format: int32
                 description: Height (px)
+        css:
+          type: string
+          description: Custom CSS for the frontend
                 
     TaskInfo:
       description: Task status info

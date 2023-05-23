@@ -13,6 +13,7 @@ import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
 import { UploadEntryMin } from "./control/upload";
 import { GetAssetURL } from "./utils/request";
+import { AuthController } from "./control/auth";
 
 @Options({
   components: {
@@ -32,34 +33,34 @@ import { GetAssetURL } from "./utils/request";
               " | " +
               AlbumsController.CurrentAlbumData.name +
               " | " +
-              this.$t("Personal Media Vault");
+              this.getAppTitle();
           } else {
             document.title =
               MediaController.MediaData.title +
               " | " +
-              this.$t("Personal Media Vault");
+              this.getAppTitle();
           }
         } else if (AppStatus.ListSplitMode) {
           // Media with list
           document.title =
             MediaController.MediaData.title +
             " | " +
-            this.$t("Personal Media Vault");
+            this.getAppTitle();
         } else {
           // Media alone
           document.title =
             MediaController.MediaData.title +
             " | " +
-            this.$t("Personal Media Vault");
+            this.getAppTitle();
         }
       } else if (AppStatus.CurrentAlbum >= 0) {
         if (AlbumsController.CurrentAlbumData) {
           document.title =
             AlbumsController.CurrentAlbumData.name +
             " | " +
-            this.$t("Personal Media Vault");
+            this.getAppTitle();
         } else {
-          document.title = this.$t("Personal Media Vault");
+          document.title = this.getAppTitle();
         }
       } else {
         switch (AppStatus.CurrentPage) {
@@ -69,24 +70,28 @@ import { GetAssetURL } from "./utils/request";
               ": " +
               AppStatus.CurrentSearch +
               " | " +
-              this.$t("Personal Media Vault");
+              this.getAppTitle();
             break;
           case "upload":
             document.title =
-              this.$t("Upload") + " | " + this.$t("Personal Media Vault");
+              this.$t("Upload") + " | " + this.getAppTitle();
             break;
           case "random":
             document.title =
-              this.$t("Random") + " | " + this.$t("Personal Media Vault");
+              this.$t("Random") + " | " + this.getAppTitle();
             break;
           case "albums":
             document.title =
-              this.$t("Albums") + " | " + this.$t("Personal Media Vault");
+              this.$t("Albums") + " | " + this.getAppTitle();
             break;
           default:
-            document.title = this.$t("Personal Media Vault");
+            document.title = this.getAppTitle();
         }
       }
+    },
+
+    getAppTitle: function () {
+      return AuthController.Title || this.$t("Personal Media Vault");
     },
 
     updateMediaMetadata: function () {
@@ -97,7 +102,7 @@ import { GetAssetURL } from "./utils/request";
         window.navigator.mediaSession.metadata = new MediaMetadata({
           title: MediaController.MediaData.title,
           album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
-          artwork: MediaController.MediaData.thumbnail ? [{src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg'}] : undefined,
+          artwork: MediaController.MediaData.thumbnail ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg' }] : undefined,
         });
       } else {
         window.navigator.mediaSession.metadata = null;
@@ -141,7 +146,7 @@ import { GetAssetURL } from "./utils/request";
     AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue { }
 </script>
 
 <style>

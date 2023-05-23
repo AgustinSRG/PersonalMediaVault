@@ -11,6 +11,8 @@ type UsernameInfoAPIResponse struct {
 	Username string `json:"username"`
 	Root     bool   `json:"root"`
 	Write    bool   `json:"write"`
+	Title    string `json:"title"`
+	Style    string `json:"css"`
 }
 
 type ChangeUsernameBody struct {
@@ -31,11 +33,22 @@ func api_getUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	config, err := GetVault().config.Read(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
 	var result UsernameInfoAPIResponse
 
 	result.Username = session.user
 	result.Root = session.root
 	result.Write = session.write
+	result.Title = config.CustomTitle
+	result.Style = config.CustomCSS
 
 	jsonResult, err := json.Marshal(result)
 

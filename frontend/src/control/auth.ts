@@ -18,6 +18,9 @@ export class AuthController {
     public static IsRoot = false;
     public static CanWrite = false;
 
+    public static Title = "";
+    public static CSS = "";
+
     public static Initialize() {
         AuthController.Session = LocalStorage.Get("x-session-token", "");
         AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
@@ -35,10 +38,12 @@ export class AuthController {
             AuthController.IsRoot = response.root;
             AuthController.CanWrite = response.write;
             AuthController.Username = response.username;
+            AuthController.Title = response.title;
+            AuthController.CSS = response.css;
             AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
             AuthController.Loading = false;
             AppEvents.Emit("auth-status-loading", false);
-
+            AuthController.UpdateCustomStyle();
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
@@ -101,5 +106,27 @@ export class AuthController {
         AuthController.Username = "";
         setAssetsSessionCookie("st-" + AuthController.Fingerprint, AuthController.Session);
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+    }
+
+    public static UpdateCustomStyle() {
+        const head = document.head || document.getElementsByTagName('head')[0];
+
+        if (!head) {
+            return;
+        }
+
+        let styleElement: any = document.querySelector("#custom-style-pmv");
+
+        if (styleElement) {
+            styleElement.remove();
+        }
+
+        styleElement = document.createElement("style");
+
+        styleElement.id = 'custom-style-pmv';
+        styleElement.type = 'text/css';
+        styleElement.appendChild(document.createTextNode(AuthController.CSS));
+
+        head.appendChild(styleElement);
     }
 }

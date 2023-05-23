@@ -1,27 +1,9 @@
 <template>
-  <div
-    class="modal-container modal-container-settings"
-    :class="{ hidden: !display }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!display"
-    @keydown="keyDownHandle"
-  >
-    <form
-      v-if="display"
-      @submit="submit"
-      class="modal-dialog modal-lg"
-      role="document"
-      @click="stopPropagationEvent"
-    >
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Advanced settings") }}</div>
-        <button
-          type="button"
-          class="modal-close-btn"
-          :title="$t('Close')"
-          @click="close"
-        >
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="askClose" :disabled="busy">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -29,96 +11,89 @@
         <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
       </div>
       <div v-if="!loading" class="modal-body">
-        <div class="form-group">
-          <label
-            >{{
-              $t("Max number of tasks in parallel (0 for unlimited)")
-            }}:</label
-          >
-          <input
-            type="text"
-            autocomplete="off"
-            v-model.number="maxTasks"
-            :disabled="busy"
-            min="0"
-            class="form-control form-control-full-width"
-          />
+
+        <div class="horizontal-filter-menu">
+          <a href="javascript:;" @click="changePage('general')" class="horizontal-filter-menu-item" :class="{ selected: page === 'general' }">{{ $t("General") }}</a>
+          <a href="javascript:;" @click="changePage('resolutions')" class="horizontal-filter-menu-item" :class="{ selected: page == 'resolutions' }">{{ $t("Extra resolutions") }}</a>
+          <a href="javascript:;" @click="changePage('css')" class="horizontal-filter-menu-item" :class="{ selected: page === 'css' }">{{ $t("Custom style") }}</a>
         </div>
-        <div class="form-group">
-          <label
-            >{{
-              $t(
-                "Max number threads for each task (0 to use the number of cores)"
-              )
-            }}:</label
-          >
-          <input
-            type="text"
-            autocomplete="off"
-            v-model.number="encodingThreads"
-            :disabled="busy"
-            min="0"
-            class="form-control form-control-full-width"
-          />
-        </div>
-        <div class="form-group">
-          <label
-            >{{
-              $t(
-                "Extra resolutions for videos. These resolutions can be used for slow connections or small screens"
-              )
-            }}:</label
-          >
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th class="text-left">{{ $t("Name") }}</th>
-                  <th class="text-left">{{ $t("Properties") }}</th>
-                  <th class="text-right">{{ $t("Enabled") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="res in resolutions" :key="res.name">
-                  <td class="bold">{{ res.name }}</td>
-                  <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
-                  <td class="text-right">
-                    <ToggleSwitch v-model:val="res.enabled"></ToggleSwitch>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+        <div class="form-group"></div>
+
+        <div v-if="page === 'general'">
+          <div class="form-group">
+            <label>{{ $t("Vault title") }}:</label>
+            <input type="text" autocomplete="off" v-model="title" :disabled="busy" placeholder="PMV" @change="onChangesMade" class="form-control form-control-full-width" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ $t("Max number of tasks in parallel (0 for unlimited)") }}:</label>
+            <input type="number" autocomplete="off" v-model.number="maxTasks" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
+          </div>
+
+          <div class="form-group">
+            <label>{{ $t("Max number threads for each task (0 to use the number of cores)") }}:</label>
+            <input type="number" autocomplete="off" v-model.number="encodingThreads" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
           </div>
         </div>
-        <div class="form-group">
-          <label
-            >{{
-              $t(
-                "Extra resolutions for images. These resolutions can be used for slow connections or small screens"
-              )
-            }}:</label
-          >
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th class="text-left">{{ $t("Name") }}</th>
-                  <th class="text-left">{{ $t("Properties") }}</th>
-                  <th class="text-right">{{ $t("Enabled") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="res in imageResolutions" :key="res.name">
-                  <td class="bold">{{ res.name }}</td>
-                  <td>{{ res.width }}x{{ res.height }}</td>
-                  <td class="text-right">
-                    <ToggleSwitch v-model:val="res.enabled"></ToggleSwitch>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+        <div v-if="page === 'resolutions'">
+          <div class="form-group">
+            <label>{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}:</label>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th class="text-left">{{ $t("Name") }}</th>
+                    <th class="text-left">{{ $t("Properties") }}</th>
+                    <th class="text-right">{{ $t("Enabled") }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="res in resolutions" :key="res.name">
+                    <td class="bold">{{ res.name }}</td>
+                    <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
+                    <td class="text-right">
+                      <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}:</label>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th class="text-left">{{ $t("Name") }}</th>
+                    <th class="text-left">{{ $t("Properties") }}</th>
+                    <th class="text-right">{{ $t("Enabled") }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="res in imageResolutions" :key="res.name">
+                    <td class="bold">{{ res.name }}</td>
+                    <td>{{ res.width }}x{{ res.height }}</td>
+                    <td class="text-right">
+                      <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
+        <div v-if="page === 'css'">
+          <div class="form-group">
+            <label>{{ $t("Custom style (css)") }}:</label>
+            <textarea v-model="css" :disabled="busy" rows="12" @change="onChangesMade" class="form-control form-control-full-width form-textarea" :placeholder="'.main-layout.dark-theme {\n\tbackground: blue;\n}'"></textarea>
+          </div>
+          <div>{{ $t("Note: this is an advanced and possibly dangerous feature. Do not change this unless you know what you are doing.") }}</div>
+        </div>
+
         <div class="form-error">{{ error }}</div>
       </div>
       <div class="modal-footer  no-padding">
@@ -127,6 +102,9 @@
         </button>
       </div>
     </form>
+
+    <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="close"></SaveChangesAskModal>
+
   </div>
 </template>
 
@@ -139,10 +117,14 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
+import { AuthController } from "@/control/auth";
+
+import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 
 export default defineComponent({
   components: {
     ToggleSwitch,
+    SaveChangesAskModal,
   },
   name: "AdvancedSettingsModal",
   emits: ["update:display"],
@@ -156,6 +138,13 @@ export default defineComponent({
   },
   data: function () {
     return {
+      page: 'general',
+
+      dirty: false,
+      displayAskSave: false,
+
+      title: "",
+      css: "",
       maxTasks: 0,
       encodingThreads: 0,
       resolutions: [],
@@ -254,6 +243,22 @@ export default defineComponent({
       });
     },
 
+    askClose: function () {
+      if (this.dirty) {
+        this.displayAskSave = true;
+      } else {
+        this.close();
+      }
+    },
+
+    changePage: function (page: string) {
+      this.page = page;
+    },
+
+    onChangesMade: function () {
+      this.dirty = true;
+    },
+
     updateResolutions: function (resolutions, imageResolutions) {
       this.resolutions = this.standardResolutions.map((r) => {
         let enabled = false;
@@ -336,6 +341,8 @@ export default defineComponent({
 
       Request.Pending("advanced-settings", ConfigAPI.GetConfig())
         .onSuccess((response: VaultUserConfig) => {
+          this.title = response.title;
+          this.css = response.css;
           this.maxTasks = response.max_tasks;
           this.encodingThreads = response.encoding_threads;
           this.updateResolutions(
@@ -367,7 +374,9 @@ export default defineComponent({
     },
 
     submit: function (e) {
-      e.preventDefault();
+      if (e) {
+        e.preventDefault();
+      }
 
       if (this.busy) {
         return;
@@ -378,6 +387,8 @@ export default defineComponent({
 
       Request.Do(
         ConfigAPI.SetConfig({
+          title: this.title,
+          css: this.css,
           max_tasks: this.maxTasks,
           encoding_threads: this.encodingThreads,
           resolutions: this.getResolutions(),
@@ -386,7 +397,9 @@ export default defineComponent({
       )
         .onSuccess(() => {
           this.busy = false;
+          this.dirty = false;
           AppEvents.Emit("snack", this.$t("Vault configuration updated!"));
+          AuthController.CheckAuthStatus();
           this.close();
         })
         .onCancel(() => {
@@ -436,12 +449,12 @@ export default defineComponent({
     this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
     if (this.display) {
-        this.error = "";
-        this.$options.focusTrap.activate();
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
+      this.error = "";
+      this.$options.focusTrap.activate();
+      nextTick(() => {
+        this.$el.focus();
+      });
+    }
   },
   beforeUnmount: function () {
     Timeouts.Abort("advanced-settings");
@@ -460,6 +473,8 @@ export default defineComponent({
         nextTick(() => {
           this.$el.focus();
         });
+        this.dirty = false;
+        this.displayAskSave = false;
         this.load();
       } else {
         if (this.$options.focusTrap) {

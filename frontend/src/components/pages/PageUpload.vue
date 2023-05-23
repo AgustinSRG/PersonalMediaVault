@@ -72,12 +72,12 @@
       </div>
     </div>
 
-    <div class="upload-filter-menu">
-      <a href="javascript:;" @click="updateSelectedState('pending')" class="upload-filter-menu-item"
+    <div class="horizontal-filter-menu">
+      <a href="javascript:;" @click="updateSelectedState('pending')" class="horizontal-filter-menu-item"
         :class="{ selected: this.selectedState === 'pending' }">{{ $t("Pending") }} ({{ countPending }})</a>
-      <a href="javascript:;" @click="updateSelectedState('ready')" class="upload-filter-menu-item"
+      <a href="javascript:;" @click="updateSelectedState('ready')" class="horizontal-filter-menu-item"
         :class="{ selected: this.selectedState === 'ready' }">{{ $t("Ready") }} ({{ countReady }})</a>
-      <a href="javascript:;" @click="updateSelectedState('error')" class="upload-filter-menu-item"
+      <a href="javascript:;" @click="updateSelectedState('error')" class="horizontal-filter-menu-item"
         :class="{ selected: this.selectedState === 'error' }">{{ $t("Error") }} ({{ countError }})</a>
     </div>
 
