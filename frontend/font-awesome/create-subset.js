@@ -6,6 +6,7 @@
 const Font = require('fonteditor-core').Font;
 const FS = require("fs");
 const Path = require("path");
+const ttf2woff2 = require('ttf2woff2');
 
 const FA_VERSION = "6.0.0";
 
@@ -198,13 +199,13 @@ function main() {
         console.log("    " + c + " -> " + n);
     }
 
-    console.log("Preparing font files...");
+    console.log("Preparing font files... (TTF)");
 
     const fontFiles = FS.readdirSync(Path.resolve(__dirname, FA_VERSION, "webfonts"));
 
     for (const fontFile of fontFiles) {
         const format = fontFile.split(".").pop();
-        if (format !== "ttf" && format !== "woff2") {
+        if (format !== "ttf") {
             continue;
         }
         const fontFileContents = FS.readFileSync(Path.resolve(__dirname, FA_VERSION, "webfonts", fontFile));
@@ -226,11 +227,24 @@ function main() {
         console.log("WRITE: " + fontFile);
     }
 
+    console.log("Encoding to Woff2...");
+
+    const resultFontFiles = FS.readdirSync(Path.resolve(__dirname, "..", "src", "assets"));
+
+    for (let fontFile of resultFontFiles) {
+        if (!fontFile.endsWith(".ttf")) {
+            continue;
+        }
+
+        const woff2File = fontFile.replace(".ttf", ".woff2");
+
+        const inputData = FS.readFileSync(Path.resolve(__dirname, "..", "src", "assets", fontFile));
+
+        FS.writeFileSync(Path.resolve(__dirname, "..", "src", "assets", woff2File), ttf2woff2(inputData));
+    }
+
     console.log("DONE!");
 }
 
-const woff2 = require('fonteditor-core').woff2;
+main();
 
-woff2.init().then(() => {
-    main();
-});

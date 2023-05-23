@@ -9,6 +9,7 @@
   "author": "AgustinSRG",
   "license": "MIT",
   "dependencies": {
-    "fonteditor-core": "2.1.10"
+    "fonteditor-core": "2.1.11",
+    "ttf2woff2": "5.0.0"
   }
 }
