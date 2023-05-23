@@ -72,6 +72,12 @@
     -webkit-transform: rotate(360deg);
             transform: rotate(360deg); } }
 
+.fa-angles-left::before {
+  content: "\f100"; }
+
+.fa-angles-right::before {
+  content: "\f101"; }
+
 .fa-arrow-down::before {
   content: "\f063"; }
 

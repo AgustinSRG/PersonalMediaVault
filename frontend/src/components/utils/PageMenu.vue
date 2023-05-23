@@ -3,6 +3,16 @@
     <button
       :disabled="page <= 0"
       type="button"
+      class="paginated-menu-btn paginated-menu-btn-edge-extra"
+      @click="clickPage(0)"
+      :title="$t('First page')"
+    >
+      <i class="fas fa-angles-left"></i>
+    </button>
+
+    <button
+      :disabled="page <= 0"
+      type="button"
       class="paginated-menu-btn paginated-menu-btn-edge"
       @click="clickPage(page - 1)"
       :title="$t('Previous page')"
@@ -30,6 +40,16 @@
       :title="$t('Next page')"
     >
       <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <button
+      :disabled="page >= pages - 1"
+      type="button"
+      class="paginated-menu-btn paginated-menu-btn-edge-extra"
+      @click="clickPage(pages - 1)"
+      :title="$t('Last page')"
+    >
+      <i class="fas fa-angles-right"></i>
     </button>
   </div>
 </template>

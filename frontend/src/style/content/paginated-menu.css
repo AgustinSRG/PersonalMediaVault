@@ -42,11 +42,16 @@
   background: var(--theme-fg-color);
 }
 
+.paginated-menu-btn.paginated-menu-btn-edge-extra {
+  display:none;
+}
+
 .menu-min .paginated-menu-btn {
   display: none;
 }
 
 .menu-min .paginated-menu-btn.current,
+.menu-min .paginated-menu-btn.paginated-menu-btn-edge-extra,
 .menu-min .paginated-menu-btn.paginated-menu-btn-edge {
   display: block;
 }
@@ -57,6 +62,7 @@
   }
 
   .paginated-menu-btn.current,
+  .paginated-menu-btn.paginated-menu-btn-edge-extra,
   .paginated-menu-btn.paginated-menu-btn-edge {
     display: block;
   }
