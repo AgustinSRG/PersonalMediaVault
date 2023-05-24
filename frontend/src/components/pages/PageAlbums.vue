@@ -1,6 +1,6 @@
 <template>
   <div class="page-inner" :class="{ hidden: !display }">
-    <div class="search-results">
+    <div class="search-results" tabindex="-1">
       <div class="search-results-options">
         <div class="search-results-option">
           <input

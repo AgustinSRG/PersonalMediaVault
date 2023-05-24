@@ -9,7 +9,7 @@
         <span :title="getAppTitle()" class="top-bar-title">PMV</span>
       </div>
     </div>
-    <div class="side-bar-body">
+    <div class="side-bar-body" tabindex="-1">
       <a class="side-bar-option" :class="{ selected: album < 0 && page === 'home' }" :title="$t('Home')" @click="goToPage('home', $event)" :href="getPageURL('home')" target="_blank" rel="noopener noreferrer">
         <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
         <div class="side-bar-option-text">{{ $t("Home") }}</div>

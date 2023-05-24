@@ -40,7 +40,7 @@
         </div>
       </div>
     </div>
-    <div v-show="!loading && albumData" class="album-body" @scroll.passive="closeOptionsMenu">
+    <div v-show="!loading && albumData" class="album-body" @scroll.passive="closeOptionsMenu" tabindex="-1">
       <a v-for="(item, i) in albumList" :key="item.list_id" :href="getMediaURL(item)" target="_blank" rel="noopener noreferrer" class="album-body-item" :class="{ current: i === currentPos }" :title="item.title || $t('Untitled')" @click="clickMedia(item, $event)">
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">

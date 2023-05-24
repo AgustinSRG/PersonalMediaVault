@@ -94,7 +94,7 @@
       </div>
     </form>
 
-    <div class="search-results">
+    <div class="search-results" tabindex="-1">
       <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
         <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
         <div class="search-results-msg-text">

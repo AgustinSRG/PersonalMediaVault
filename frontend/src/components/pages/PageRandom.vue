@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div class="search-results">
+    <div class="search-results" tabindex="-1">
       <div v-if="loading" class="search-results-loading-display">
         <div v-for="f in loadingFiller" :key="f" class="search-result-item">
           <div class="search-result-thumb">
