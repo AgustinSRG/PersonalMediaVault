@@ -11,10 +11,11 @@ import (
 )
 
 type AlbumAPIItem struct {
-	Id        uint64 `json:"id"`
-	Name      string `json:"name"`
-	Size      int    `json:"size"`
-	Thumbnail string `json:"thumbnail"` // This thumbnail is from the first media asset in the album
+	Id           uint64 `json:"id"`
+	Name         string `json:"name"`
+	Size         int    `json:"size"`
+	Thumbnail    string `json:"thumbnail"` // This thumbnail is from the first media asset in the album
+	LastModified int64  `json:"lm"`        // Last modified timestamp
 }
 
 type AlbumAPIItemMinified struct {
@@ -53,10 +54,11 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 			}
 
 			result[i] = AlbumAPIItem{
-				Id:        album_id,
-				Name:      album.Name,
-				Size:      len(album.List),
-				Thumbnail: thumbnail,
+				Id:           album_id,
+				Name:         album.Name,
+				Size:         len(album.List),
+				Thumbnail:    thumbnail,
+				LastModified: album.LastModified,
 			}
 
 			i++
@@ -100,9 +102,10 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 }
 
 type AlbumAPIDetail struct {
-	Id   uint64              `json:"id"`
-	Name string              `json:"name"`
-	List []*MediaListAPIItem `json:"list"`
+	Id           uint64              `json:"id"`
+	Name         string              `json:"name"`
+	List         []*MediaListAPIItem `json:"list"`
+	LastModified int64               `json:"lm"` // Last modified timestamp
 }
 
 func api_getAlbum(response http.ResponseWriter, request *http.Request) {
@@ -139,8 +142,9 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 	}
 
 	result := AlbumAPIDetail{
-		Id:   album_id,
-		Name: album.Name,
+		Id:           album_id,
+		Name:         album.Name,
+		LastModified: album.LastModified,
 	}
 
 	list := make([]*MediaListAPIItem, len(album.List))

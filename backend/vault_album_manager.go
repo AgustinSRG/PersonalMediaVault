@@ -7,12 +7,14 @@ import (
 	"errors"
 	"os"
 	"path"
+	"time"
 )
 
 // Album data
 type VaultAlbumData struct {
-	Name string   `json:"name"` // Name of the album
-	List []uint64 `json:"list"` // Ordered list of media to play
+	Name         string   `json:"name"` // Name of the album
+	List         []uint64 `json:"list"` // Ordered list of media to play
+	LastModified int64    `json:"lm"`   // Last modified timestamp
 }
 
 // Album list data
@@ -173,8 +175,9 @@ func (am *VaultAlbumsManager) CreateAlbum(name string, key []byte) (uint64, erro
 	data.NextId++
 
 	data.Albums[album_id] = &VaultAlbumData{
-		Name: name,
-		List: make([]uint64, 0),
+		Name:         name,
+		List:         make([]uint64, 0),
+		LastModified: time.Now().UnixMilli(),
 	}
 
 	err = am.EndWrite(data, key)
@@ -208,6 +211,7 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	new_list := append(old_list, media_id)
 
 	data.Albums[album_id].List = new_list
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)
 
@@ -246,6 +250,7 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 	}
 
 	data.Albums[album_id].List = new_list
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)
 
@@ -256,7 +261,7 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 // album_id - Album ID
 // media_list - List of media files
 // key - Vault encryption key
-// Returns true if sucess
+// Returns true if success
 func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64, key []byte) (bool, error) {
 	data, err := am.StartWrite(key)
 
@@ -270,6 +275,7 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 	}
 
 	data.Albums[album_id].List = media_list
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)
 
@@ -294,6 +300,7 @@ func (am *VaultAlbumsManager) RenameAlbum(album_id uint64, name string, key []by
 	}
 
 	data.Albums[album_id].Name = name
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)
 

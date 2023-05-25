@@ -8,6 +8,7 @@ export interface AlbumListItem {
     name: string;
     size: number;
     thumbnail: string;
+    lm: number;
 }
 
 export interface AlbumListItemMin {
@@ -19,6 +20,7 @@ export interface Album {
     id: number;
     name: string;
     list: MediaListItem[];
+    lm: number;
 }
 
 export class AlbumsAPI {

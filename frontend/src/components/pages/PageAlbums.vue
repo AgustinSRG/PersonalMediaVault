@@ -146,8 +146,8 @@
             v-model="order"
             @change="onOrderChanged"
           >
-            <option :value="'desc'">{{ $t("Order alphabetically") }}</option>
-            <option :value="'asc'">{{ $t("Show by creation order") }}</option>
+            <option :value="'desc'">{{ $t("Order by last modified date") }}</option>
+            <option :value="'asc'">{{ $t("Order alphabetically") }}</option>
           </select>
         </div>
         <div class="search-results-option text-right">
@@ -295,6 +295,7 @@ export default defineComponent({
           nameLowerCase: a.name.toLowerCase(),
           size: a.size,
           thumbnail: a.thumbnail,
+          lm: a.lm,
         };
       });
 
@@ -306,18 +307,22 @@ export default defineComponent({
 
       if (this.order !== "asc") {
         albumsList = albumsList.sort((a, b) => {
-          if (a.nameLowerCase < b.nameLowerCase) {
+          if (a.lm > b.lm) {
             return -1;
-          } else {
+          } else if (b.lm > a.lm) {
             return 1;
+          } else if (a.id < b.id) {
+            return 1;
+          } else {
+            return -1;
           }
         });
       } else {
         albumsList = albumsList.sort((a, b) => {
-          if (a.id < b.id) {
-            return 1;
-          } else {
+          if (a.nameLowerCase < b.nameLowerCase) {
             return -1;
+          } else {
+            return 1;
           }
         });
       }

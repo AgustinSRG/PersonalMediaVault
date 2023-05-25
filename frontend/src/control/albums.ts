@@ -16,6 +16,7 @@ export interface AlbumEntry {
     name: string;
     size: number;
     thumbnail: string;
+    lm: number;
 }
 
 export interface AlbumEntryMin {
@@ -27,6 +28,7 @@ export interface AlbumData {
     id: number;
     name: string;
     list: MediaEntry[];
+    lm: number;
 }
 
 export class AlbumsController {

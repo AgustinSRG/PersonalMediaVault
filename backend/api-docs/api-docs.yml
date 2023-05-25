@@ -1599,6 +1599,10 @@ paths:
                 thumbnail:
                   type: string
                   description: Thumbnail for the album (of the first media)
+                lm:
+                  type: number
+                  format: int64
+                  description: Last modified timestamp (Unix millis)
                     
     post:
       summary: Create album
@@ -1693,6 +1697,10 @@ paths:
                 description: List of media assets of the album, in order.
                 items:
                   $ref: '#/definitions/MediaListItem'
+              lm:
+                type: number
+                format: int64
+                description: Last modified timestamp (Unix millis)
                     
   "/api/albums/{id}/delete":
     post:
