@@ -312,10 +312,6 @@ export class UploadController {
                         MediaController.OnMediaChanged()
                     }
 
-                    if (m.album !== -1) {
-                        AlbumsController.OnChangedAlbum(m.album);
-                    }
-
                     UploadController.UploadingCount--;
                 } else {
                     m.progress = media.ready_p;
