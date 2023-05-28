@@ -30,16 +30,16 @@ type ReadWriteLock struct {
 
 	read_wait_count int
 
-	read_wait_locks [](*sync.Mutex)
+	read_wait_group *sync.WaitGroup
 
 	// Write
 
 	writing bool
 
-	write_sem *sync.Mutex
+	write_mutex *sync.Mutex
 
-	write_wait     bool
-	write_wait_sem *sync.Mutex
+	write_wait       bool
+	write_wait_group *sync.WaitGroup
 }
 
 // Creates a lock to manage a resource
@@ -49,12 +49,12 @@ func CreateReadWriteLock() *ReadWriteLock {
 
 		read_count:      0,
 		read_wait_count: 0,
-		read_wait_locks: make([](*sync.Mutex), 0),
+		read_wait_group: nil,
 
-		writing:        false,
-		write_wait:     false,
-		write_sem:      &sync.Mutex{},
-		write_wait_sem: &sync.Mutex{},
+		writing:          false,
+		write_wait:       false,
+		write_mutex:      &sync.Mutex{},
+		write_wait_group: nil,
 	}
 }
 
@@ -62,7 +62,7 @@ func CreateReadWriteLock() *ReadWriteLock {
 // This locks the resource from writing
 // Only one write thread is allowed
 func (lock *ReadWriteLock) RequestWrite() {
-	lock.write_sem.Lock()
+	lock.write_mutex.Lock()
 }
 
 // Starts a write operation
@@ -71,23 +71,24 @@ func (lock *ReadWriteLock) RequestWrite() {
 func (lock *ReadWriteLock) StartWrite() {
 	lock.lock.Lock()
 
-	mustWait := false
+	var waitGroup *sync.WaitGroup = nil
 
 	if lock.read_count > 0 {
 		lock.write_wait = true
-		mustWait = true
-		lock.write_wait_sem.Lock()
+		if lock.write_wait_group == nil {
+			lock.write_wait_group = &sync.WaitGroup{}
+			lock.write_wait_group.Add(1)
+		}
+		waitGroup = lock.write_wait_group
 	} else {
 		lock.writing = true
 	}
 
 	lock.lock.Unlock()
 
-	if mustWait {
-		// Lock 2 times, so it's always blocking until other thread unlocks it
-		lock.write_wait_sem.Lock()
-
-		lock.write_wait_sem.Unlock() //nolint:staticcheck
+	if waitGroup != nil {
+		// Wait for read threads
+		waitGroup.Wait()
 	}
 }
 
@@ -101,45 +102,42 @@ func (lock *ReadWriteLock) EndWrite() {
 		lock.read_count += lock.read_wait_count
 		lock.read_wait_count = 0
 
-		// Release all locks
-
-		for i := 0; i < len(lock.read_wait_locks); i++ {
-			lock.read_wait_locks[i].Unlock()
+		// Release read threads
+		if lock.read_wait_group != nil {
+			lock.read_wait_group.Done()
+			lock.read_wait_group = nil
 		}
-
-		lock.read_wait_locks = make([]*sync.Mutex, 0) // Clear list
 	}
 
 	lock.lock.Unlock()
 
-	lock.write_sem.Unlock()
+	// Unlock write mutex, so other write threads can continue
+	lock.write_mutex.Unlock()
 }
 
 // Starts a read operation
 func (lock *ReadWriteLock) StartRead() {
 	lock.lock.Lock()
 
-	mustWait := false
-	var readLock *sync.Mutex
+	var waitGroup *sync.WaitGroup = nil
 
 	if lock.writing || lock.write_wait {
+		// We cannot read, we have to wait for a write thread
 		lock.read_wait_count++
-		mustWait = true
-		// Create a mutex and append it to the waiter list
-		readLock = &sync.Mutex{}
-		readLock.Lock()
-		lock.read_wait_locks = append(lock.read_wait_locks, readLock)
+		if lock.read_wait_group == nil {
+			lock.read_wait_group = &sync.WaitGroup{}
+			lock.read_wait_group.Add(1)
+		}
+		waitGroup = lock.read_wait_group
 	} else {
 		lock.read_count++
 	}
 
 	lock.lock.Unlock()
 
-	if mustWait {
-		// Lock 2 times to ensure blocking until the write thread releases it
-		readLock.Lock()
-
-		readLock.Unlock() //nolint:staticcheck
+	if waitGroup != nil {
+		// Wait for the write threads to finish
+		waitGroup.Wait()
 	}
 }
 
@@ -152,7 +150,12 @@ func (lock *ReadWriteLock) EndRead() {
 	if lock.write_wait && lock.read_count <= 0 {
 		lock.write_wait = false
 		lock.writing = true
-		lock.write_wait_sem.Unlock()
+
+		if lock.write_wait_group != nil {
+			// Release write wait group
+			lock.write_wait_group.Done()
+			lock.write_wait_group = nil
+		}
 	}
 
 	lock.lock.Unlock()
