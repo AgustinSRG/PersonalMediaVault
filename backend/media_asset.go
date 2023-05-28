@@ -47,8 +47,8 @@ type MediaAssetFile struct {
 
 	use_count int32 // Counter of threads accessing the file
 
-	waiting bool        // True if the is a thread waiting for the file to be released
-	wait_mu *sync.Mutex // Mutex to wait for the file to be released
+	waiting    bool            // True if the is a thread waiting for the file to be released
+	wait_group *sync.WaitGroup // Wait group to wait for the asset to be released
 }
 
 // Contains data of a resolution for the media asset
@@ -393,11 +393,11 @@ func (media *MediaAsset) AcquireAsset(asset_id uint64, asset_type string) (bool,
 	}
 
 	f := MediaAssetFile{
-		id:        asset_id,
-		lock:      CreateReadWriteLock(),
-		use_count: 1,
-		waiting:   false,
-		wait_mu:   &sync.Mutex{},
+		id:         asset_id,
+		lock:       CreateReadWriteLock(),
+		use_count:  1,
+		waiting:    false,
+		wait_group: nil,
 	}
 
 	media.files[asset_id] = &f
@@ -418,7 +418,10 @@ func (media *MediaAsset) ReleaseAsset(asset_id uint64) {
 		if media.files[asset_id].use_count <= 0 {
 
 			if media.files[asset_id].waiting {
-				media.files[asset_id].wait_mu.Unlock()
+				if media.files[asset_id].wait_group != nil {
+					media.files[asset_id].wait_group.Done()
+					media.files[asset_id].wait_group = nil
+				}
 			}
 
 			delete(media.files, asset_id)
@@ -445,7 +448,7 @@ func (media *MediaAsset) Delete() {
 func (media *MediaAsset) deleteAll() {
 	// Set deleting and wait for assets to be released
 
-	locks := make([]*sync.Mutex, 0)
+	waitGroups := make([]*sync.WaitGroup, 0)
 
 	media.mu.Lock()
 
@@ -457,15 +460,17 @@ func (media *MediaAsset) deleteAll() {
 
 	for _, a := range media.files {
 		a.waiting = true
-		a.wait_mu.Lock()
-		locks = append(locks, a.wait_mu)
+		if a.wait_group == nil {
+			a.wait_group = &sync.WaitGroup{}
+			a.wait_group.Add(1)
+		}
+		waitGroups = append(waitGroups, a.wait_group)
 	}
 
 	media.mu.Unlock()
 
-	for i := 0; i < len(locks); i++ {
-		locks[i].Lock()
-		locks[i].Unlock() //nolint:staticcheck
+	for i := 0; i < len(waitGroups); i++ {
+		waitGroups[i].Wait()
 	}
 
 	// Now, delete everything
