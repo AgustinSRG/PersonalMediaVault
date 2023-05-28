@@ -20,6 +20,7 @@ This is a personal project developed with the goal of making a media management 
  - Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
  - Automated thumbnail generation.
  - Subtitles support for videos and audios.
+ - Multiple audio track support for videos
  - Video timeline previews.
  - Video timeline slices.
  - Image annotations.
