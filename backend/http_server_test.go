@@ -73,7 +73,7 @@ func DoTestRequest(server *httptest.Server, method string, path string, body []b
 	return resp.StatusCode, bodyData, nil
 }
 
-func DoTestRangeRequest(server *httptest.Server, method string, path string, rangeHeader string) (statusCode int, head http.Header, bodyResponse []byte, e error) {
+func DoTestRangeRequest(server *httptest.Server, session string, method string, path string, rangeHeader string) (statusCode int, head http.Header, bodyResponse []byte, e error) {
 	client := server.Client()
 
 	pathSpl := strings.Split(path, "?")
@@ -102,6 +102,7 @@ func DoTestRangeRequest(server *httptest.Server, method string, path string, ran
 		return 0, nil, nil, err
 	}
 
+	req.Header.Set("x-session-token", session)
 	req.Header.Set("Range", rangeHeader)
 
 	resp, err := client.Do(req)

@@ -924,7 +924,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
 
-	statusCode, resHead, _, err := DoTestRangeRequest(server, "HEAD", meta.Url, "")
+	statusCode, resHead, _, err := DoTestRangeRequest(server, session, "HEAD", meta.Url, "")
 
 	if err != nil {
 		t.Error(err)
@@ -948,7 +948,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Range request (0-X)
 
-	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=0-31")
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, session, "GET", meta.Url, "bytes=0-31")
 
 	if err != nil {
 		t.Error(err)
@@ -975,7 +975,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Range request (X-Y)
 
-	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=32-63")
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, session, "GET", meta.Url, "bytes=32-63")
 
 	if err != nil {
 		t.Error(err)
@@ -1002,7 +1002,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Range request (X-)
 
-	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=32-")
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, session, "GET", meta.Url, "bytes=32-")
 
 	if err != nil {
 		t.Error(err)
@@ -1029,7 +1029,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Range request (-Y)
 
-	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, "GET", meta.Url, "bytes=-32")
+	statusCode, resHead, bodyResponseBytes, err = DoTestRangeRequest(server, session, "GET", meta.Url, "bytes=-32")
 
 	if err != nil {
 		t.Error(err)
