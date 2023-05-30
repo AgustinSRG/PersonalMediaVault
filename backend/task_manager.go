@@ -211,7 +211,7 @@ func (tm *TaskManager) SavePendingTasks() error {
 	}
 
 	// Move to the original path
-	err = os.Rename(tFile, tm.pending_tasks_file)
+	err = RenameAndReplace(tFile, tm.pending_tasks_file)
 	if err != nil {
 		return err
 	}

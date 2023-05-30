@@ -206,7 +206,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 	// Save to original file
 	media.lock.StartWrite()
 
-	err = os.Rename(tmpFile, path.Join(media.path, "meta.pmv"))
+	err = RenameAndReplace(tmpFile, path.Join(media.path, "meta.pmv"))
 
 	return err
 }
@@ -342,7 +342,7 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock b
 		media.lock.StartWrite()
 	}
 
-	err = os.Rename(tmpFile, path.Join(media.path, "meta.pmv"))
+	err = RenameAndReplace(tmpFile, path.Join(media.path, "meta.pmv"))
 
 	// LogDebug("WRITE META: " + string(jsonData))
 

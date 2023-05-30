@@ -149,7 +149,7 @@ func (am *VaultAlbumsManager) EndWrite(data *VaultAlbumsData, key []byte) error 
 	// Save to original file
 	am.lock.StartWrite()
 
-	err = os.Rename(tmpFile, am.albums_file)
+	err = RenameAndReplace(tmpFile, am.albums_file)
 
 	return err
 }

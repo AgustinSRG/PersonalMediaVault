@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
@@ -76,4 +77,28 @@ func GetNameFromFileName(fileName string) string {
 	} else {
 		return fileName
 	}
+}
+
+// Renames and replaces file (Atomic)
+// If it fails, tries again up to 3 times, waiting 500 ms (this is to wait for any other program to unlock the file)
+// tmpFile - The temporal file to move
+// destFile - The destination file name
+// returns the error
+func RenameAndReplace(tmpFile string, destFile string) error {
+	retriesLeft := 3
+	var err error = nil
+
+	for retriesLeft > 0 {
+		err = os.Rename(tmpFile, destFile)
+
+		if err == nil {
+			return nil
+		}
+
+		retriesLeft--
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return err
 }

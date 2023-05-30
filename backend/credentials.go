@@ -441,7 +441,7 @@ func (manager *VaultCredentialsManager) SaveCredentials() error {
 	}
 
 	// Move to the original path
-	err = os.Rename(tFile, manager.file)
+	err = RenameAndReplace(tFile, manager.file)
 	if err != nil {
 		return err
 	}

@@ -221,7 +221,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(audio_encrypted_file, asset_path)
+	err = RenameAndReplace(audio_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 

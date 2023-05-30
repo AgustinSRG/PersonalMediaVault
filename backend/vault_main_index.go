@@ -90,7 +90,7 @@ func (vmi *VaultMainIndex) EndWrite(res *VaultIndexWriteResource) error {
 	vmi.lock.StartWrite()
 
 	// Move temp file to original path
-	err := os.Rename(res.path, vmi.file)
+	err := RenameAndReplace(res.path, vmi.file)
 
 	vmi.lock.EndWrite()
 

@@ -136,7 +136,7 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 	// Save to original file
 	uc.lock.StartWrite()
 
-	err = os.Rename(tmpFile, uc.file)
+	err = RenameAndReplace(tmpFile, uc.file)
 
 	return err
 }

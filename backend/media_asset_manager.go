@@ -117,7 +117,7 @@ func (mm *MediaAssetsManager) NextMediaId() (uint64, error) {
 
 	// Save to original file
 
-	err = os.Rename(tmpFile, mm.data_file)
+	err = RenameAndReplace(tmpFile, mm.data_file)
 
 	if err != nil {
 		return 0, err

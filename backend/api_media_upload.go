@@ -312,7 +312,7 @@ func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, te
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(thumb_encrypted_file, asset_path)
+	err = RenameAndReplace(thumb_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 
@@ -425,7 +425,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 		asset_lock.StartWrite()
 
 		// Move temp file
-		err = os.Rename(srt_encrypted_file, asset_path)
+		err = RenameAndReplace(srt_encrypted_file, asset_path)
 
 		asset_lock.EndWrite()
 
@@ -546,7 +546,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 		asset_lock.StartWrite()
 
 		// Move temp file
-		err = os.Rename(mp3_encrypted_file, asset_path)
+		err = RenameAndReplace(mp3_encrypted_file, asset_path)
 
 		asset_lock.EndWrite()
 
@@ -645,7 +645,7 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(original_encrypted_file, asset_path)
+	err = RenameAndReplace(original_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 

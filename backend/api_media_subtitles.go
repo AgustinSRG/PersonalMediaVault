@@ -225,7 +225,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(srt_encrypted_file, asset_path)
+	err = RenameAndReplace(srt_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 

@@ -497,7 +497,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(encrypted_temp, asset_path)
+	err = RenameAndReplace(encrypted_temp, asset_path)
 
 	asset_lock.EndWrite()
 

@@ -191,7 +191,7 @@ func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 	// Save to original file
 	tm.tag_list_lock.StartWrite()
 
-	err = os.Rename(tmpFile, tm.tag_list_file)
+	err = RenameAndReplace(tmpFile, tm.tag_list_file)
 
 	return err
 }

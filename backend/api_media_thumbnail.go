@@ -206,7 +206,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = os.Rename(thumb_encrypted_file, asset_path)
+	err = RenameAndReplace(thumb_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 
