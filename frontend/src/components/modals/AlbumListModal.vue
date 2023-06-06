@@ -141,7 +141,7 @@ export default defineComponent({
           if (!this.canWrite) {
             this.editMode = false;
           } else if (!this.editModeChanged) {
-            this.editMode = true;
+            this.editMode = result.length === 0;
           }
           this.updateAlbums();
         })
