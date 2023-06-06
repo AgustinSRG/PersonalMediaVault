@@ -137,10 +137,6 @@
 }
 
 .image-notes-hover {
-    display: none;
-}
-
-.image-notes:hover .image-notes-hover, .image-notes:focus .image-notes-hover {
     display: block;
     background: var(--player-editor-background);
     position: absolute; 
@@ -152,18 +148,3 @@
     text-align: center;
 }
 
-.image-notes-hover.top {
-    top: 100%;
-}
-
-.image-notes-hover.bottom {
-    bottom: 100%;
-}
-
-.image-notes-hover.left {
-    left: 0;
-}
-
-.image-notes-hover.right {
-    right: 0;
-}
