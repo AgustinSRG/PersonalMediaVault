@@ -62,7 +62,7 @@
               <div v-if="!item.thumbnail" class="no-thumb">
                 <i class="fas fa-list-ol"></i>
               </div>
-              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled album')" />
+              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled album')" loading="lazy" />
               <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">
                 ({{ $t("Empty") }})
               </div>

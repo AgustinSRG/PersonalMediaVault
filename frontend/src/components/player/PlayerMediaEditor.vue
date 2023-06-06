@@ -68,7 +68,7 @@
       <label v-if="!thumbnail">{{
         $t("No thumbnail set for this media")
       }}</label>
-      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail" />
+      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail" loading="lazy" />
     </div>
     <div class="form-group" v-if="canWrite">
       <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />

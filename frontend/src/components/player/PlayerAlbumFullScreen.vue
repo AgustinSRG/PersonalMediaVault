@@ -1,43 +1,22 @@
 <template>
-  <div
-    class="player-album-container"
-    :class="{ expanded: expanded }"
-    tabindex="-1"
-  >
+  <div class="player-album-container" :class="{ expanded: expanded }" tabindex="-1">
     <div v-if="!loading && albumData" class="album-header">
       <div class="album-header-title">
         <div class="album-title">
           <i class="fas fa-list-ol"></i> {{ albumData.name }}
         </div>
-        <button
-          type="button"
-          :title="$t('Close')"
-          class="album-header-btn album-close-btn"
-          @click="close"
-        >
+        <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
       <div class="album-header-controls">
         <div class="album-buttons">
-          <button
-            type="button"
-            :title="$t('Loop')"
-            class="album-header-btn"
-            :class="{ toggled: loop }"
-            @click="toggleLoop"
-          >
+          <button type="button" :title="$t('Loop')" class="album-header-btn" :class="{ toggled: loop }" @click="toggleLoop">
             <i class="fas fa-repeat"></i>
           </button>
 
-          <button
-            type="button"
-            :title="$t('Random')"
-            class="album-header-btn"
-            :class="{ toggled: random }"
-            @click="toggleRandom"
-          >
+          <button type="button" :title="$t('Random')" class="album-header-btn" :class="{ toggled: random }" @click="toggleRandom">
             <i class="fas fa-shuffle"></i>
           </button>
         </div>
@@ -47,20 +26,8 @@
       </div>
     </div>
 
-    <div
-      v-show="!loading && albumData"
-      class="album-body"
-    >
-      <div
-        v-for="(item, i) in albumList"
-        :key="item.list_id"
-        class="album-body-item"
-        :class="{ current: i === currentPos }"
-        :title="item.title || $t('Untitled')"
-        tabindex="0"
-        @click="clickMedia(item)"
-        @keydown="clickOnEnter"
-      >
+    <div v-show="!loading && albumData" class="album-body">
+      <div v-for="(item, i) in albumList" :key="item.list_id" class="album-body-item" :class="{ current: i === currentPos }" :title="item.title || $t('Untitled')" tabindex="0" @click="clickMedia(item)" @keydown="clickOnEnter">
         <div class="album-body-item-thumbnail">
           <div v-if="!item.thumbnail" class="no-thumb">
             <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -68,15 +35,8 @@
             <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
             <i v-else class="fas fa-ban"></i>
           </div>
-          <img
-            v-if="item.thumbnail"
-            :src="getThumbnail(item.thumbnail)"
-            :alt="item.title || $t('Untitled')"
-          />
-          <div
-            class="album-body-item-thumb-tag"
-            v-if="item.type === 2 || item.type === 3"
-          >
+          <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
+          <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
             {{ renderTime(item.duration) }}
           </div>
           <div class="album-body-item-thumb-pos">

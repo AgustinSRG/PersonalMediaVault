@@ -1,13 +1,7 @@
 <template>
   <div class="page-inner" :class="{ hidden: !display }">
     <div class="search-results" tabindex="-1">
-      <PageMenu
-        v-if="total > 0"
-        :page="page"
-        :pages="totalPages"
-        :min="min"
-        @goto="changePage"
-      ></PageMenu>
+      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
       <div v-if="loading" class="search-results-loading-display">
         <div v-for="f in loadingFiller" :key="f" class="search-result-item">
@@ -37,20 +31,8 @@
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
-        <a
-          v-for="(item, i) in pageItems"
-          :key="i"
-          class="search-result-item clickable"
-          :class="{ current: currentMedia == item.id }"
-          @click="goToMedia(item.id, $event)"
-          :href="getMediaURL(item.id)"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div
-            class="search-result-thumb"
-            :title="item.title || $t('Untitled')"
-          >
+        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
+          <div class="search-result-thumb" :title="item.title || $t('Untitled')">
             <div class="search-result-thumb-inner">
               <div v-if="!item.thumbnail" class="no-thumb">
                 <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -58,15 +40,8 @@
                 <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                 <i v-else class="fas fa-ban"></i>
               </div>
-              <img
-                v-if="item.thumbnail"
-                :src="getThumbnail(item.thumbnail)"
-                :alt="item.title || $t('Untitled')"
-              />
-              <div
-                class="search-result-thumb-tag"
-                v-if="item.type === 2 || item.type === 3"
-              >
+              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
+              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                 {{ renderTime(item.duration) }}
               </div>
             </div>
@@ -77,13 +52,7 @@
         </a>
       </div>
 
-      <PageMenu
-        v-if="total > 0"
-        :page="page"
-        :pages="totalPages"
-        :min="min"
-        @goto="changePage"
-      ></PageMenu>
+      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
       <div v-if="total > 0" class="search-results-total">
         {{ $t("Total") }}: {{ total }}
@@ -91,21 +60,13 @@
 
       <div v-if="total > 0" class="search-results-options">
         <div class="search-results-option">
-          <select
-            class="form-control form-select form-control-full-width"
-            v-model="order"
-            @change="onOrderChanged"
-          >
+          <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
             <option :value="'desc'">{{ $t("Show most recent") }}</option>
             <option :value="'asc'">{{ $t("Show oldest") }}</option>
           </select>
         </div>
         <div class="search-results-option text-right">
-          <select
-            class="form-control form-select form-control-full-width"
-            v-model="pageSize"
-            @change="onPageSizeChanged"
-          >
+          <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
             <option v-for="po in pageSizeOptions" :key="po" :value="po">
               {{ po }} {{ $t("items per page") }}
             </option>
@@ -267,7 +228,7 @@ export default defineComponent({
       this.onCurrentMediaChanged();
     },
 
-    onCurrentMediaChanged: function() {
+    onCurrentMediaChanged: function () {
       const i = this.findCurrentMediaIndex();
       AlbumsController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
     },
@@ -351,30 +312,30 @@ export default defineComponent({
 
     nextMedia: function () {
       const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i < this.pageItems.length - 1) {
-          this.goToMedia(this.pageItems[i + 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        } else if (i === this.pageItems.length - 1) {
-          if (this.page < this.totalPages - 1) {
-            this.switchMediaOnLoad = "next";
-            this.changePage(this.page + 1);
-          }
+      if (i !== -1 && i < this.pageItems.length - 1) {
+        this.goToMedia(this.pageItems[i + 1].id);
+      } else if (i === -1 && this.pageItems.length > 0) {
+        this.goToMedia(this.pageItems[0].id);
+      } else if (i === this.pageItems.length - 1) {
+        if (this.page < this.totalPages - 1) {
+          this.switchMediaOnLoad = "next";
+          this.changePage(this.page + 1);
         }
+      }
     },
 
-    prevMedia: function() {
+    prevMedia: function () {
       const i = this.findCurrentMediaIndex();
-        if (i !== -1 && i > 0) {
-          this.goToMedia(this.pageItems[i - 1].id);
-        } else if (i === -1 && this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        } else if (i === 0) {
-          if (this.page > 0) {
-            this.switchMediaOnLoad = "prev";
-            this.changePage(this.page - 1);
-          }
+      if (i !== -1 && i > 0) {
+        this.goToMedia(this.pageItems[i - 1].id);
+      } else if (i === -1 && this.pageItems.length > 0) {
+        this.goToMedia(this.pageItems[0].id);
+      } else if (i === 0) {
+        if (this.page > 0) {
+          this.switchMediaOnLoad = "prev";
+          this.changePage(this.page - 1);
         }
+      }
     },
 
     handleGlobalKey: function (event: KeyboardEvent): boolean {
