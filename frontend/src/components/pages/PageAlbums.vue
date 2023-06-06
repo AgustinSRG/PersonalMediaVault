@@ -3,34 +3,16 @@
     <div class="search-results" tabindex="-1">
       <div class="search-results-options">
         <div class="search-results-option">
-          <input
-            type="text"
-            class="form-control form-control-full-width"
-            autocomplete="off"
-            v-model="filter"
-            :placeholder="$t('Filter by name') + '...'"
-            @input="changeFilter"
-          />
+          <input type="text" class="form-control form-control-full-width" autocomplete="off" v-model="filter" :placeholder="$t('Filter by name') + '...'" @input="changeFilter" />
         </div>
         <div class="search-results-option text-right">
-          <button
-            v-if="canWrite"
-            type="button"
-            @click="createAlbum"
-            class="btn btn-primary"
-          >
+          <button v-if="canWrite" type="button" @click="createAlbum" class="btn btn-primary">
             <i class="fas fa-plus"></i> {{ $t("Create album") }}
           </button>
         </div>
       </div>
 
-      <PageMenu
-        v-if="total > 0"
-        :page="page"
-        :pages="totalPages"
-        :min="min"
-        @goto="changePage"
-      ></PageMenu>
+      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
       <div v-if="loading" class="search-results-loading-display">
         <div v-for="f in loadingFiller" :key="f" class="search-result-item">
@@ -45,10 +27,7 @@
         </div>
       </div>
 
-      <div
-        v-if="!loading && total <= 0 && !filter"
-        class="search-results-msg-display"
-      >
+      <div v-if="!loading && total <= 0 && !filter" class="search-results-msg-display">
         <div class="search-results-msg-icon">
           <i class="fas fa-box-open"></i>
         </div>
@@ -56,20 +35,13 @@
           {{ $t("This vault does not have any albums yet") }}
         </div>
         <div class="search-results-msg-btn">
-          <button
-            type="button"
-            @click="refreshAlbums"
-            class="btn btn-primary"
-          >
+          <button type="button" @click="refreshAlbums" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
           </button>
         </div>
       </div>
 
-      <div
-        v-if="!loading && total <= 0 && filter"
-        class="search-results-msg-display"
-      >
+      <div v-if="!loading && total <= 0 && filter" class="search-results-msg-display">
         <div class="search-results-msg-icon">
           <i class="fas fa-box-open"></i>
         </div>
@@ -77,46 +49,27 @@
           {{ $t("Could not find any albums matching your filter") }}
         </div>
         <div class="search-results-msg-btn">
-          <button
-            type="button"
-            @click="clearFilter"
-            class="btn btn-primary"
-          >
+          <button type="button" @click="clearFilter" class="btn btn-primary">
             <i class="fas fa-times"></i> {{ $t("Clear filter") }}
           </button>
         </div>
       </div>
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
-        <a
-          v-for="item in pageItems"
-          :key="item.id"
-          class="search-result-item clickable"
-          @click="goToAlbum(item, $event)"
-          :href="getAlbumURL(item.id)"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div
-            class="search-result-thumb"
-            :title="item.name || $t('Untitled album')"
-          >
+        <a v-for="item in pageItems" :key="item.id" class="search-result-item clickable" @click="goToAlbum(item, $event)" :href="getAlbumURL(item.id)" target="_blank" rel="noopener noreferrer">
+          <div class="search-result-thumb" :title="(item.name || $t('Untitled album')) + (item.lm ? ('\n' + $t('Last modified') + ': ' + renderDate(item.lm)) : '')">
             <div class="search-result-thumb-inner">
               <div v-if="!item.thumbnail" class="no-thumb">
                 <i class="fas fa-list-ol"></i>
               </div>
-              <img
-                v-if="item.thumbnail"
-                :src="getThumbnail(item.thumbnail)"
-                :alt="item.title || $t('Untitled album')"
-              />
-              <div class="search-result-thumb-tag" v-if="item.size == 0">
+              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled album')" />
+              <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">
                 ({{ $t("Empty") }})
               </div>
-              <div class="search-result-thumb-tag" v-else-if="item.size == 1">
+              <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
                 1 {{ $t("item") }}
               </div>
-              <div class="search-result-thumb-tag" v-else-if="item.size > 1">
+              <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
                 {{ item.size }} {{ $t("items") }}
               </div>
             </div>
@@ -127,13 +80,7 @@
         </a>
       </div>
 
-      <PageMenu
-        v-if="total > 0"
-        :page="page"
-        :pages="totalPages"
-        :min="min"
-        @goto="changePage"
-      ></PageMenu>
+      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
       <div v-if="total > 0" class="search-results-total">
         {{ $t("Total") }}: {{ total }}
@@ -141,21 +88,13 @@
 
       <div v-if="total > 0" class="search-results-options">
         <div class="search-results-option">
-          <select
-            class="form-control form-select form-control-full-width"
-            v-model="order"
-            @change="onOrderChanged"
-          >
+          <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
             <option :value="'desc'">{{ $t("Order by last modified date") }}</option>
             <option :value="'asc'">{{ $t("Order alphabetically") }}</option>
           </select>
         </div>
         <div class="search-results-option text-right">
-          <select
-            class="form-control form-select form-control-full-width"
-            v-model="pageSize"
-            @change="onPageSizeChanged"
-          >
+          <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
             <option v-for="po in pageSizeOptions" :key="po" :value="po">
               {{ po }} {{ $t("items per page") }}
             </option>
@@ -419,6 +358,10 @@ export default defineComponent({
           album: albumId + "",
         })
       );
+    },
+
+    renderDate: function (ts: number): string {
+      return (new Date(ts)).toLocaleString();
     },
 
     clickOnEnter: function (event) {

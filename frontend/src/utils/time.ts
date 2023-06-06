@@ -42,5 +42,3 @@ export function renderTimeSeconds(s: number): string {
 
     return r;
 }
-
-
