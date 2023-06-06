@@ -84,14 +84,14 @@ func main() {
 	}
 
 	if options.unencryptedTempPath == "" {
-		userhome, err := os.UserHomeDir()
+		userCacheDir, err := os.UserCacheDir()
 
 		if err != nil {
 			LogError(err)
 			os.Exit(1)
 		}
 
-		options.unencryptedTempPath = path.Join(userhome, ".pmv", "temp")
+		options.unencryptedTempPath = path.Join(userCacheDir, "PersonalMediaVault", "temp")
 	}
 
 	for i := 1; i < len(args); i++ {

@@ -40,7 +40,7 @@ func main() {
 		}
 	} else if len(args) == 1 {
 		// Default vaulty path
-		userhome, err := os.UserHomeDir()
+		userConfigDir, err := os.UserConfigDir()
 
 		if err != nil {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -56,7 +56,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		vaultPath = path.Join(userhome, ".pmv", "vault")
+		vaultPath = path.Join(userConfigDir, "PersonalMediaVault", "vault")
 	} else {
 		printHelp()
 		os.Exit(1)

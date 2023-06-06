@@ -12,13 +12,13 @@ import (
 const LIMIT_LOG_FILES = 256
 
 func getLogFileName() (string, error) {
-	userhome, err := os.UserHomeDir()
+	userCacheDir, err := os.UserCacheDir()
 
 	if err != nil {
 		return "", err
 	}
 
-	logsFolder := path.Join(userhome, ".pmv", "logs")
+	logsFolder := path.Join(userCacheDir, "PersonalMediaVault", "logs")
 
 	if !folderExists(logsFolder) {
 		err = os.MkdirAll(logsFolder, FOLDER_PERMISSION)
