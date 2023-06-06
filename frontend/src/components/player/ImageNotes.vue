@@ -208,10 +208,6 @@ export default defineComponent({
     },
 
     onMouseMove: function (e) {
-      if (this.hoverPinned) {
-        return;
-      }
-
       let x: number;
       let y: number;
       if (e.touches && e.touches.length > 0) {
@@ -243,6 +239,9 @@ export default defineComponent({
       );
 
       for (let note of this.notes) {
+        if (this.hoverPinned && this.selectedNote === note) {
+          continue;
+        }
         if (trueX >= note.x && trueX <= note.x + note.w) {
           if (trueY >= note.y && trueY <= note.y + note.h) {
             this.selectedNote = note;
@@ -265,12 +264,16 @@ export default defineComponent({
               this.hoverRight = (bounds.width - realX + 8) + "px";
             }
 
+            this.hoverPinned = false;
+
             return;
           }
         }
       }
 
-      this.selectedNote = null;
+      if (!this.hoverPinned) {
+        this.selectedNote = null;
+      }
     },
 
     autoFocus: function () {
