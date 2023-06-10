@@ -28,16 +28,11 @@ export class AppStatus {
     public static Initialize() {
         window.onpopstate = function () {
             AppStatus.GetURLParams();
-            AppStatus.UpdateLayout();
-            AppEvents.Emit("app-status-update", AppStatus);
+            AppStatus.OnStatusUpdate();
         };
 
-        AppEvents.AddEventListener("app-status-update", AppStatus.UpdateURL);
-
         AppStatus.GetURLParams();
-        AppStatus.UpdateLayout();
-
-        AppEvents.Emit("app-status-update", AppStatus);
+        AppStatus.OnStatusUpdate();
     }
 
     public static GetURLParams() {
@@ -171,7 +166,7 @@ export class AppStatus {
         return window.location.protocol + "//" + window.location.host + window.location.pathname + GenerateURIQuery(params);
     }
 
-    public static UpdateURL() {
+    public static UpdateURL(replaceState?: boolean) {
         if (AppStatus.CurrentAlbum >= 0 && AppStatus.CurrentMedia < 0) {
             if (AlbumsController.Loading) {
                 return;
@@ -188,17 +183,21 @@ export class AppStatus {
             const newURL = AppStatus.GetCurrentURL();
             // Update URL
             if (newURL !== location.href) {
-                window.history.pushState({ path: newURL }, '', newURL);
+                if (replaceState) {
+                    window.history.replaceState({ path: newURL }, '', newURL);
+                } else {
+                    window.history.pushState({ path: newURL }, '', newURL);
+                }
             }
         }
     }
 
-    public static OnStatusUpdate() {
+    public static OnStatusUpdate(replaceState?: boolean) {
         AppStatus.UpdateLayout();
 
         AppEvents.Emit("app-status-update", AppStatus);
 
-        AppStatus.UpdateURL();
+        AppStatus.UpdateURL(replaceState);
     }
 
     public static GoToPage(page: string) {
@@ -353,7 +352,7 @@ export class AppStatus {
 
         AppStatus.CurrentFocus = "left";
 
-        AppStatus.OnStatusUpdate();
+        AppStatus.OnStatusUpdate(true);
     }
 
     public static FocusLeft() {
