@@ -3,7 +3,7 @@
     <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title about-modal-title">
-          <img class="about-modal-logo" src="@/assets/favicon.png" alt="PMV" />
+          <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />
           {{ $t("Personal Media Vault") }}
         </div>
         <button class="modal-close-btn" :title="$t('Close')" @click="close">

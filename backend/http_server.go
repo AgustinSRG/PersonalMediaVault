@@ -4,9 +4,11 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"mime"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gorilla/handlers"
@@ -202,6 +204,8 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	mime.AddExtensionType(".js", "text/javascript") //nolint:errcheck
 
 	router.Use(cacheTTLAdd)
+	router.HandleFunc("/favicon.ico", handleFavicon).Methods("GET")
+	router.HandleFunc("/img/icons/{file}", handleImageFile).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
 
 	// Run server
@@ -283,5 +287,79 @@ func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 	if errHTTP != nil {
 		LogError(errHTTP)
 		os.Exit(5)
+	}
+}
+
+// Handles favicon request
+// response - HTTP response handler
+// request - HTTP request handler
+func handleFavicon(response http.ResponseWriter, request *http.Request) {
+	file := filepath.Join(GetVault().path, "favicon.ico")
+
+	if _, err := os.Stat(file); err == nil {
+		http.ServeFile(response, request, file)
+	} else if errors.Is(err, os.ErrNotExist) {
+		frontend_path := os.Getenv("FRONTEND_PATH")
+
+		if frontend_path == "" {
+			frontend_path = "../frontend/dist/"
+		}
+
+		http.ServeFile(response, request, filepath.Join(frontend_path, "favicon.ico"))
+	} else {
+		response.WriteHeader(500)
+		response.Write([]byte("Internal server error. Check logs for details."))
+		LogError(err)
+	}
+}
+
+var ALLOWED_IMAGES_OVERRIDE = map[string]bool{
+	"android-chrome-192x192.png":          true,
+	"android-chrome-512x512.png":          true,
+	"android-chrome-maskable-192x192.png": true,
+	"android-chrome-maskable-512x512.png": true,
+	"apple-touch-icon.png":                true,
+	"apple-touch-icon-60x60.png":          true,
+	"apple-touch-icon-76x76.png":          true,
+	"apple-touch-icon-120x120.png":        true,
+	"apple-touch-icon-152x152.png":        true,
+	"apple-touch-icon-180x180.png":        true,
+	"favicon.png":                         true,
+	"favicon.svg":                         true,
+	"favicon-16x16.png":                   true,
+	"favicon-32x32.png":                   true,
+	"msapplication-icon-144x144.png":      true,
+	"mstile-150x150.png":                  true,
+}
+
+// Handles image file request
+// response - HTTP response handler
+// request - HTTP request handler
+func handleImageFile(response http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	fileName := vars["file"]
+
+	if !ALLOWED_IMAGES_OVERRIDE[fileName] {
+		response.WriteHeader(404)
+		return
+	}
+
+	file := filepath.Join(GetVault().path, "img", "icons", fileName)
+
+	if _, err := os.Stat(file); err == nil {
+		http.ServeFile(response, request, file)
+	} else if errors.Is(err, os.ErrNotExist) {
+		frontend_path := os.Getenv("FRONTEND_PATH")
+
+		if frontend_path == "" {
+			frontend_path = "../frontend/dist/"
+		}
+
+		http.ServeFile(response, request, filepath.Join(frontend_path, "img", "icons", fileName))
+	} else {
+		response.WriteHeader(500)
+		response.Write([]byte("Internal server error. Check logs for details."))
+		LogError(err)
 	}
 }

@@ -4,7 +4,7 @@
       <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
         <i class="fas fa-bars"></i>
       </button>
-      <img class="top-bar-logo-img" src="@/assets/favicon.png" alt="PMV" />
+      <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
       <span :title="getAppTitle()" class="top-bar-title">PMV</span>
     </div>
     <div class="top-bar-search-td">
