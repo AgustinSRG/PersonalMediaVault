@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type UsernameInfoAPIResponse struct {
+type AccountContextAPIResponse struct {
 	Username string `json:"username"`
 	Root     bool   `json:"root"`
 	Write    bool   `json:"write"`
@@ -25,7 +25,7 @@ type ChangePasswordBody struct {
 	OldPassword string `json:"old_password"`
 }
 
-func api_getUsername(response http.ResponseWriter, request *http.Request) {
+func api_getAccountContext(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -42,7 +42,7 @@ func api_getUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var result UsernameInfoAPIResponse
+	var result AccountContextAPIResponse
 
 	result.Username = session.user
 	result.Root = session.root

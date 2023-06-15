@@ -106,10 +106,10 @@ paths:
         200:
           description: Success
           
-  "/api/account/username":
+  "/api/account":
     get:
-      summary: Get username
-      description: Gets the username of the current session
+      summary: Get account context
+      description: Gets the account context for the current session
       tags:
         - account
       consumes:
@@ -123,23 +123,6 @@ paths:
           description: Current session ID
           required: true
       responses:
-        400:
-          description: Bad request.
-          schema:
-            properties:
-              code:
-                type: string
-                description: >
-                  Error code:
-                    * USERNAME_INVALID - Invalid username
-                    * USERNAME_IN_USE - There si already another user with the same username
-                enum:
-                  - USERNAME_INVALID
-                  - USERNAME_IN_USE
-              message:
-                type: string
-                description: "Error message"
-                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         200:
@@ -150,12 +133,19 @@ paths:
                 type: string
                 description: Username
                 example: "admin"
+              title:
+                type: string
+                description: "Custom title for the vault"
+              css:
+                type: string
+                description: "Custom style for the vault"
               root:
                 type: boolean
                 description: "True if the user has root access to the vault"
               write:
                 type: boolean
                 description: "True if the user has write access to the vault"
+  "/api/account/username":
     post:
       summary: Change username
       description: Changes the username for the vault credentials
@@ -185,7 +175,22 @@ paths:
                 example: password
       responses:
         400:
-          description: Bad request. (Invalid username)
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * USERNAME_INVALID - Invalid username
+                    * USERNAME_IN_USE - There si already another user with the same username
+                enum:
+                  - USERNAME_INVALID
+                  - USERNAME_IN_USE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         403:

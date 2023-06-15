@@ -3,10 +3,10 @@
 import { GetApiURL, RequestParams } from "@/utils/request";
 
 export class AccountAPI {
-    public static GetUsername(): RequestParams<{ username: string, root: boolean, write: boolean, title: string, css: string }> {
+    public static GetContext(): RequestParams<{ username: string, root: boolean, write: boolean, title: string, css: string }> {
         return {
             method: "GET",
-            url: GetApiURL("/api/account/username"),
+            url: GetApiURL("/api/account"),
         };
     }
 

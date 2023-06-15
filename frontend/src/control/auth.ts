@@ -33,7 +33,7 @@ export class AuthController {
         AuthController.Loading = true;
         AppEvents.Emit("auth-status-loading", true);
         Timeouts.Abort("auth-control-check");
-        Request.Pending("auth-control-check", AccountAPI.GetUsername()).onSuccess(response => {
+        Request.Pending("auth-control-check", AccountAPI.GetContext()).onSuccess(response => {
             AuthController.Locked = false;
             AuthController.IsRoot = response.root;
             AuthController.CanWrite = response.write;

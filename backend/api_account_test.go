@@ -11,7 +11,7 @@ import (
 
 func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Check get username API
-	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/account/username", nil, session)
+	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/account", nil, session)
 
 	if err != nil {
 		t.Error(err)
@@ -22,7 +22,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
 
-	res1 := UsernameInfoAPIResponse{}
+	res1 := AccountContextAPIResponse{}
 
 	err = json.Unmarshal(bodyResponseBytes, &res1)
 
@@ -45,7 +45,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Check invalid session
 
-	statusCode, _, err = DoTestRequest(server, "GET", "/api/account/username", nil, "random_invalid_session")
+	statusCode, _, err = DoTestRequest(server, "GET", "/api/account", nil, "random_invalid_session")
 
 	if err != nil {
 		t.Error(err)
