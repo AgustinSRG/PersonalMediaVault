@@ -110,6 +110,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// Account API (changing credentials)
 	router.HandleFunc("/api/account", api_getAccountContext).Methods("GET")
+	router.HandleFunc("/api/account/username", api_getAccountContext).Methods("GET")
 	router.HandleFunc("/api/account/username", api_changeUsername).Methods("POST")
 	router.HandleFunc("/api/account/password", api_changePassword).Methods("POST")
 
