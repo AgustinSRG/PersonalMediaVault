@@ -59,7 +59,7 @@ function main() {
             .replace(/BACKEND_VERSION = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `BACKEND_VERSION = "${VERSION}"`);
     });
 
-    updateFile(Path.resolve(__dirname, "backend", "api-docs", "api-docs.yml"), contents => {
+    updateFile(Path.resolve(__dirname, "backend", "doc", "api-docs.yml"), contents => {
         return contents
             .replace(/version\: [0-9]+\.[0-9]+\.[0-9]+/, `version: ${VERSION}`);
     });
