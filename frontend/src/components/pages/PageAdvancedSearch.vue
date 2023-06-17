@@ -63,14 +63,6 @@
             <option :value="'asc'">{{ $t("Show oldest") }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>{{ $t("Limit results") }}:</label>
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="pageSize">
-            <option v-for="po in pageSizeOptions" :key="po" :value="po">
-              {{ po }} {{ $t("results max") }}
-            </option>
-          </select>
-        </div>
       </div>
 
       <div class="">
@@ -78,9 +70,7 @@
           <i class="fas fa-search"></i> {{ $t("Search") }}
         </button>
         <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
-          <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{
-            cssProgress(progress)
-          }})
+          <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
         </button>
         <button v-if="!advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
           <i class="fas fa-cog"></i> {{ $t("More options") }}
@@ -107,7 +97,7 @@
         </div>
       </div>
 
-      <div v-if="!loading && pageItems.length > 0" class="search-results-final-display">
+      <div v-if="pageItems.length > 0" class="search-results-final-display">
         <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
           <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
             <div class="search-result-thumb-inner">
@@ -128,6 +118,13 @@
           </div>
         </a>
       </div>
+
+
+      <div v-if="!finished && pageItems.length >= PAGE_SIZE" class="search-continue-mark">
+        <button type="button" class="btn btn-primary btn-mr" disabled>
+          <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -142,11 +139,14 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { MediaEntry } from "@/control/media";
 import { TagEntry, TagsController } from "@/control/tags";
+import { elementInView } from "@/utils/in-view";
 import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
+
+const PAGE_SIZE = 50;
 
 export default defineComponent({
   name: "PageAdvancedSearch",
@@ -160,7 +160,6 @@ export default defineComponent({
     return {
       loading: false,
 
-      pageSize: 50,
       order: "desc",
       textSearch: "",
       type: 0,
@@ -182,8 +181,7 @@ export default defineComponent({
       tagToAdd: "",
       matchingTags: [],
       tagMode: "all",
-
-      pageSizeOptions: [25, 50, 100, 150, 200, 250, 500],
+      PAGE_SIZE: PAGE_SIZE,
     };
   },
   methods: {
@@ -207,18 +205,23 @@ export default defineComponent({
           this.getFirstTag(),
           this.order,
           this.page,
-          this.pageSize
+          PAGE_SIZE,
         )
       )
         .onSuccess((result) => {
           this.filterElements(result.page_items);
-          this.page = result.page_index;
+          this.page = result.page_index + 1;
           this.totalPages = result.page_count;
           this.progress =
-            ((this.page + 1) / Math.max(1, this.totalPages)) * 100;
-          if (this.pageItems.length >= this.pageSize) {
+            ((this.page) / Math.max(1, this.totalPages)) * 100;
+          if (this.pageItems.length >= PAGE_SIZE) {
+            // Done for now
             this.loading = false;
-            this.finished = true;
+
+            if (this.page >= this.totalPages) {
+              this.finished = true;
+            }
+
             if (!this.inModal) {
               nextTick(() => {
                 const currentElem = this.$el.querySelector(
@@ -230,8 +233,7 @@ export default defineComponent({
               });
               this.onCurrentMediaChanged();
             }
-          } else if (this.page < this.totalPages - 1) {
-            this.page++;
+          } else if (this.page < this.totalPages) {
             this.load();
           } else {
             this.loading = false;
@@ -286,10 +288,6 @@ export default defineComponent({
       }
 
       for (let e of results) {
-        if (this.pageItems.length >= this.pageSize) {
-          return;
-        }
-
         if (backlistAlbum.has(e.id)) {
           continue;
         }
@@ -665,6 +663,24 @@ export default defineComponent({
 
       return parts.join("\n");
     },
+
+    checkContinueSearch: function () {
+      if (this.finished || this.loading || this.pageItems.length === 0) {
+        return;
+      }
+
+      const elem = this.$el.querySelector(".search-continue-mark");
+
+      if (!elem) {
+        return;
+      }
+
+      if (!elementInView(elem)) {
+        return;
+      }
+
+      this.load();
+    },
   },
   mounted: function () {
     this.advancedSearch = false;
@@ -690,8 +706,9 @@ export default defineComponent({
     this.$options.prevMediaH = this.prevMedia.bind(this);
     AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
 
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
+    this.$options.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
 
+    this.$options.tagUpdateH = this.updateTagData.bind(this);
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
     this.updateTagData();
@@ -721,6 +738,8 @@ export default defineComponent({
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);
     }
+
+    clearInterval(this.$options.continueCheckInterval);
 
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
 

@@ -108,3 +108,7 @@
 .horizontal-filter-menu-item:visited {
     color: var(--theme-fg-color);
 }
+
+.search-continue-mark {
+    padding: 0.5rem;
+}
