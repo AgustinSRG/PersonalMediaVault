@@ -337,7 +337,7 @@ import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/constants";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
@@ -955,7 +955,7 @@ export default defineComponent({
     },
 
     updateTagData: function () {
-      this.tagData = copyObject(TagsController.Tags);
+      this.tagData = clone(TagsController.Tags);
     },
 
     getTagName: function (tag, data) {

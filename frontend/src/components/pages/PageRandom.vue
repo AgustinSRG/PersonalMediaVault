@@ -67,7 +67,7 @@
 
       <div v-if="!loading && total > 0" class="search-results-final-display">
         <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
-          <div class="search-result-thumb" :title="item.title || $t('Untitled')">
+          <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
             <div class="search-result-thumb-inner">
               <div v-if="!item.thumbnail" class="no-thumb">
                 <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -91,12 +91,15 @@
 </template>
 
 <script lang="ts">
+import { MediaListItem } from "@/api/api-media";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
+import { TagEntry, TagsController } from "@/control/tags";
+import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
@@ -127,6 +130,8 @@ export default defineComponent({
       pageSizeOptions: [],
 
       switchMediaOnLoad: "",
+
+      tagData: {},
     };
   },
   methods: {
@@ -379,6 +384,30 @@ export default defineComponent({
 
       return false;
     },
+
+    renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
+      let parts = [item.title || this.$t('Untitled')];
+
+      if (item.tags.length > 0) {
+        let tagNames = [];
+
+        for (let tag of item.tags) {
+          if (tags[tag + ""]) {
+            tagNames.push(tags[tag + ""].name);
+          } else {
+            tagNames.push("???");
+          }
+        }
+
+        parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
+      }
+
+      return parts.join("\n");
+    },
+
+    updateTagData: function () {
+      this.tagData = clone(TagsController.Tags);
+    },
   },
   mounted: function () {
     this.$options.loadH = this.load.bind(this);
@@ -405,7 +434,11 @@ export default defineComponent({
       this.pageSizeOptions.push(5 * i);
     }
 
+    this.$options.tagUpdateH = this.updateTagData.bind(this);
+    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
     this.updateSearchParams();
+    this.updateTagData();
     this.load();
   },
   beforeUnmount: function () {
@@ -420,6 +453,7 @@ export default defineComponent({
     );
     AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
     AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
+    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
     KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
     AlbumsController.OnPageUnload();
   },

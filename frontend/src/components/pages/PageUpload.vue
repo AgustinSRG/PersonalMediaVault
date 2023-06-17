@@ -156,7 +156,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { UploadController, UploadEntryMin } from "@/control/upload";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 import { GenerateURIQuery } from "@/utils/request";
 import { parseTagName } from "@/utils/tags";
 import { defineComponent } from "vue";
@@ -447,7 +447,7 @@ export default defineComponent({
     },
 
     updateTagData: function () {
-      this.tagData = copyObject(TagsController.Tags);
+      this.tagData = clone(TagsController.Tags);
     },
 
     onTagAddChanged: function (forced: boolean) {

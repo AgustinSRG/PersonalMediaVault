@@ -65,7 +65,7 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 import { GetAssetURL } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
@@ -137,7 +137,7 @@ export default defineComponent({
       let i = 0;
       if (this.albumData) {
         this.albumList = this.albumData.list.map((a) => {
-          const o = copyObject(a);
+          const o = clone(a);
           o.list_id = prefix + i;
           i++;
           return o;

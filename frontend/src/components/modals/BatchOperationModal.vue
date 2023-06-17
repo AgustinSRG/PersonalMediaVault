@@ -168,7 +168,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { TagEntry, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 import { AlbumsController } from "@/control/albums";
 import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
@@ -460,7 +460,7 @@ export default defineComponent({
     },
 
     updateTagData: function () {
-      this.tagData = copyObject(TagsController.Tags);
+      this.tagData = clone(TagsController.Tags);
       this.onTagSearchChanged(false);
       this.onTagActionChanged(false);
     },

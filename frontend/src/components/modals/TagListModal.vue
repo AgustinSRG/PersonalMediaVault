@@ -53,7 +53,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { TagsAPI } from "@/api/api-tags";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 
 export default defineComponent({
   components: {
@@ -146,7 +146,7 @@ export default defineComponent({
     },
 
     updateTagData: function () {
-      this.tagData = copyObject(TagsController.Tags);
+      this.tagData = clone(TagsController.Tags);
     },
 
     getTagName: function (tag, data) {

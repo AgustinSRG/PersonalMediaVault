@@ -84,7 +84,7 @@ import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
-import { copyObject } from "@/utils/objects";
+import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
@@ -258,7 +258,7 @@ export default defineComponent({
       let i = 0;
       if (this.albumData) {
         this.albumList = this.albumData.list.map((a) => {
-          const o = copyObject(a);
+          const o = clone(a);
           o.list_id = prefix + i;
           i++;
           return o;
