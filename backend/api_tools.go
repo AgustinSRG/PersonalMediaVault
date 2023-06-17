@@ -42,6 +42,12 @@ func GetSessionFromRequestCookie(request *http.Request) *ActiveSession {
 		return GetVault().sessions.FindSession(sessionToken)
 	}
 
+	sessionToken = request.URL.Query().Get("session_token")
+
+	if sessionToken != "" {
+		return GetVault().sessions.FindSession(sessionToken)
+	}
+
 	sessionCookieName := "st-" + GetVault().credentials.GetFingerprint()
 
 	cookie, err := request.Cookie(sessionCookieName)
