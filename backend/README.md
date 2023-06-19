@@ -70,3 +70,9 @@ Also, here is a list of environment variables to configure other options:
 | SSL_KEY | Path to SSL private key. Required to enable HTTPS |
 | USING_PROXY | Set it to `YES` if you are using a reverse proxy. |
 | TEMP_FILE_DELETE_MODE | Set it to `SECURE` to clear all the bytes of temporal files (secure delete). |
+
+## Documentation
+
+ - [Vault Storage Model](./doc/vault-storage-model.md)
+ - [API documentation](./doc/api.md)
+ - [Frontend customization](./doc/frontend-customization.md)
