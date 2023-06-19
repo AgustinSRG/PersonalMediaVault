@@ -8,6 +8,12 @@ schemes:
   - http
   - https
   
+securityDefinitions:
+  SessionTokenHeader:
+    type: apiKey
+    in: header
+    name: x-session-token
+  
 tags:
   - name: auth
     description: Authentication API (Login / Logout API)
@@ -94,12 +100,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -116,12 +119,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -156,11 +156,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (requires root access)
-          required: true
         - in: body
           name: credentials
           schema:
@@ -173,6 +168,8 @@ paths:
                 type: string
                 description: Media vault password (can't be blank, max 255 chars)
                 example: password
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -209,11 +206,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: body
           name: credentials
           schema:
@@ -226,6 +218,8 @@ paths:
                 type: string
                 description: Media vault NEW password (can't be blank, max 255 chars)
                 example: password
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request. (Invalid new password)
@@ -247,11 +241,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: query
           name: "title"
           type: string
@@ -264,6 +253,8 @@ paths:
           name: file
           type: file
           description: The file to upload.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -301,17 +292,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: path
           name: id
           required: true
           type: number
           format: int64
           description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -498,17 +486,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: path
           name: id
           required: true
           type: number
           format: int64
           description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -534,17 +519,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: path
           name: id
           required: true
           type: number
           format: int64
           description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -593,11 +575,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -612,6 +589,8 @@ paths:
                 type: string
                 description: Media title (can't be blank, max 255 chars)
                 example: New Media title
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -647,11 +626,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -666,6 +640,8 @@ paths:
                 type: string
                 description: Media description (max 5 MB)
                 example: New Media description
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -700,11 +676,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -718,6 +689,8 @@ paths:
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -739,11 +712,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -764,6 +732,8 @@ paths:
                   name:
                     type: string
                     description: "Name of the time slice"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -785,11 +755,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -821,6 +786,8 @@ paths:
                 text:
                   type: string
                   description: "Text of the notes"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -842,11 +809,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -857,6 +819,8 @@ paths:
           name: file
           type: file
           description: The file to upload.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -897,17 +861,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
           type: number
           format: int64
           description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -928,17 +889,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
           type: number
           format: int64
           description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -958,11 +916,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -985,6 +938,8 @@ paths:
                 type: number
                 format: int32
                 description: Frames per second
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1047,11 +1002,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -1074,6 +1024,8 @@ paths:
                 type: number
                 format: int32
                 description: Frames per second
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1095,11 +1047,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -1120,6 +1067,8 @@ paths:
           name: file
           type: file
           description: The file to upload.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1174,11 +1123,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -1190,6 +1134,8 @@ paths:
           type: string
           required: true
           description: "ID for the subtitles. Example: es"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1211,11 +1157,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -1236,6 +1177,8 @@ paths:
           name: file
           type: file
           description: The file to upload.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1288,11 +1231,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           name: id
           required: true
@@ -1304,6 +1242,8 @@ paths:
           type: string
           required: true
           description: "ID for the audio track. Example: es"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1324,12 +1264,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1358,11 +1295,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: body
           name: tag
           schema:
@@ -1374,6 +1306,8 @@ paths:
               tag_name:
                 type: string
                 description: Name of the tag (can't be blank, max 255 chars)
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1416,11 +1350,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: body
           name: tag
           schema:
@@ -1433,6 +1362,8 @@ paths:
                 type: number
                 format: int64
                 description: Tag ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1450,11 +1381,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: query
           name: "tag"
           type: string
@@ -1476,6 +1402,8 @@ paths:
           type: number
           format: int32
           description: Page size. Max is 256.
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1516,11 +1444,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: query
           name: "tag"
           type: string
@@ -1535,6 +1458,8 @@ paths:
           type: number
           format: int32
           description: Page size. Max is 256.
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1567,11 +1492,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: query
           name: "mode"
           type: string
@@ -1580,6 +1500,8 @@ paths:
             - min
           description: "Set to min to omit size and thumbnail"
           required: false
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1619,11 +1541,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: body
           name: Album name
           schema:
@@ -1631,6 +1548,8 @@ paths:
               name:
                 type: string
                 description: Album name. Can't be blank. Max 255 chars.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1669,17 +1588,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: path
           required: true
           type: number
           format: int64
           name: id
           description: Album ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1718,17 +1634,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           required: true
           type: number
           format: int64
           name: id
           description: Album ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1748,11 +1661,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           required: true
           type: number
@@ -1766,6 +1674,8 @@ paths:
               name:
                 type: string
                 description: Album name. Can't be blank. Max 255 chars.
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1800,11 +1710,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           required: true
           type: number
@@ -1822,6 +1727,8 @@ paths:
                   type: number
                   format: int64
                   description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -1856,11 +1763,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           required: true
           type: number
@@ -1875,6 +1777,8 @@ paths:
                 type: number
                 format: int64
                 description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1894,11 +1798,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Write access required)
-          required: true
         - in: path
           required: true
           type: number
@@ -1913,6 +1812,8 @@ paths:
                 type: number
                 format: int64
                 description: Media ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1931,12 +1832,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -1954,15 +1852,12 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Root access required)
-          required: true
         - in: body
           name: User config
           schema:
             $ref: '#/definitions/UserConfig'
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Invalid config
@@ -1981,12 +1876,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -2008,17 +1900,14 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID
-          required: true
         - in: path
           required: true
           type: number
           format: int64
           name: id
           description: Task ID
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -2039,12 +1928,9 @@ paths:
         - application/json
       produces:
         - application/json
-      parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Root access required)
-          required: true
+      parameters: []
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -2073,11 +1959,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Root access required)
-          required: true
         - in: body
           name: Account data
           schema:
@@ -2093,6 +1974,8 @@ paths:
               write:
                 type: boolean
                 description: "True to give the user write access to the vault, false for read-only accounts"
+      security:
+        - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
@@ -2132,11 +2015,6 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: "x-session-token"
-          type: string
-          description: Current session ID (Root access required)
-          required: true
         - in: body
           name: Account data
           schema:
@@ -2145,6 +2023,8 @@ paths:
                 type: string
                 description: Account username (can't be blank, max 255 chars)
                 example: admin
+      security:
+        - SessionTokenHeader: []
       responses:
         401:
           description: Unauthorized (No valid session)
@@ -2321,7 +2201,3 @@ definitions:
           type: number
           format: double
           description: "Stage progress: A number from 0 to 100"
-          
-  
-          
-    
