@@ -14,7 +14,6 @@ type UserConfigResolution struct {
 	Width  int32 `json:"width"`  // Width (PX)
 	Height int32 `json:"height"` // Height (PX)
 	Fps    int32 `json:"fps"`    // Frames per second
-
 }
 
 // Check if resolution is the same or smaller than the original resolution
