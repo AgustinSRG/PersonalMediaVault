@@ -14,10 +14,10 @@
 
       <div class="modal-body with-menu" v-if="!loading">
         <div class="albums-modal-filter" v-if="!canWrite">
-          <input type="text" autocomplete="off" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control form-control-full-width" :placeholder="$t('Filter by name') + '...'" />
+          <input type="text" autocomplete="off" @keydown="onFilterKeyDown" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control form-control-full-width auto-focus" :placeholder="$t('Filter by name') + '...'" />
         </div>
         <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
-          <input type="text" autocomplete="off" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control" :placeholder="$t('Filter by name') + '...'" />
+          <input type="text" autocomplete="off" @keydown="onFilterKeyDown" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control auto-focus" :placeholder="$t('Filter by name') + '...'" />
           <button v-if="!editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to edit mode')">
             <i class="fas fa-pencil-alt"></i>
           </button>
@@ -119,6 +119,16 @@ export default defineComponent({
     };
   },
   methods: {
+    autoFocus: function () {
+      nextTick(() => {
+        const el = this.$el.querySelector(".auto-focus");
+
+        if (el) {
+          el.focus();
+        }
+      });
+    },
+
     load: function () {
       Timeouts.Abort("media-albums-load");
       Request.Abort("media-albums-load");
@@ -144,6 +154,7 @@ export default defineComponent({
             this.editMode = result.length === 0;
           }
           this.updateAlbums();
+          this.autoFocus();
         })
         .onRequestError((err) => {
           Request.ErrorHandler()
@@ -195,9 +206,10 @@ export default defineComponent({
       this.editMode = !this.editMode;
       this.editModeChanged = true;
       this.updateAlbums();
+      this.autoFocus();
     },
 
-    clickOnAlbum: function (album) {
+    clickOnAlbum: function (album, backToText?: boolean) {
       if (this.busy) {
         return;
       }
@@ -216,6 +228,9 @@ export default defineComponent({
             }
             this.updateAlbums();
             AlbumsController.OnChangedAlbum(album.id, true);
+            if (backToText && this.editMode) {
+              this.autoFocus();
+            }
           })
           .onRequestError((err) => {
             this.busy = false;
@@ -241,6 +256,9 @@ export default defineComponent({
             }
             this.updateAlbums();
             AlbumsController.OnChangedAlbum(album.id, true);
+            if (backToText && this.editMode) {
+              this.changeEditMode();
+            }
           })
           .onRequestError((err) => {
             this.busy = false;
@@ -280,6 +298,16 @@ export default defineComponent({
           return this.editMode || a.added;
         })
         .sort((a, b) => {
+          if (filter) {
+            const aStarts = a.nameLowerCase.indexOf(filter) === 0;
+            const bStarts = b.nameLowerCase.indexOf(filter) === 0;
+
+            if (aStarts && !bStarts) {
+              return -1;
+            } else if (bStarts && !aStarts) {
+              return 1;
+            }
+          }
           if (a.nameLowerCase < b.nameLowerCase) {
             return -1;
           } else if (a.nameLowerCase > b.nameLowerCase) {
@@ -288,6 +316,41 @@ export default defineComponent({
             return 1;
           }
         });
+    },
+
+    onFilterKeyDown: function (e: KeyboardEvent) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        if (!this.filter) {
+          return;
+        }
+
+        if (this.albums.length === 0) {
+          return;
+        }
+
+        if (this.editMode) {
+          this.clickOnAlbum(this.albums[0], true);
+        } else {
+          this.goToAlbum(this.albums[0]);
+        }
+      } else if (e.key === "Tab") {
+        if (this.albums.length === 0) {
+          if (this.filter) {
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if (this.filter === this.albums[0].name) {
+          return;
+        }
+
+        e.preventDefault();
+
+        this.filter = this.albums[0].name;
+      }
     },
 
     clickOnEnter: function (event) {
