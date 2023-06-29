@@ -3,17 +3,27 @@
     <form class="adv-search-form" @submit="startSearch">
       <div class="form-group">
         <label>{{ $t("Title or description must contain") }}:</label>
-        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch" class="form-control form-control-full-width" />
+        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch" class="form-control form-control-full-width" @input="markDirty" />
       </div>
 
       <div v-if="advancedSearch">
         <div class="form-group">
           <label>{{ $t("Media type") }}:</label>
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type">
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type" @change="markDirty">
             <option :value="0">{{ $t("Any media") }}</option>
             <option :value="1">{{ $t("Images") }}</option>
             <option :value="2">{{ $t("Videos") }}</option>
             <option :value="3">{{ $t("Audios") }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>{{ $t("Album") }}:</label>
+          <select v-model="albumSearch" class="form-control form-select form-control-full-width" :disabled="loading" @change="markDirty">
+            <option :value="-1">--</option>
+            <option v-for="a in albums" :key="a.id" :value="a.id">
+              {{ a.name }}
+            </option>
           </select>
         </div>
 
@@ -58,7 +68,7 @@
 
         <div class="form-group">
           <label>{{ $t("Order") }}:</label>
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order">
+          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order" @change="markDirty">
             <option :value="'desc'">{{ $t("Show most recent") }}</option>
             <option :value="'asc'">{{ $t("Show oldest") }}</option>
           </select>
@@ -130,6 +140,7 @@
 </template>
 
 <script lang="ts">
+import { AlbumsAPI } from "@/api/api-albums";
 import { MediaListItem } from "@/api/api-media";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
@@ -182,9 +193,19 @@ export default defineComponent({
       matchingTags: [],
       tagMode: "all",
       PAGE_SIZE: PAGE_SIZE,
+
+      albums: [],
+      albumSearch: -1,
+      albumFilter: null,
+
+      dirty: false,
     };
   },
   methods: {
+    markDirty: function () {
+      this.dirty = true;
+    },
+
     load: function () {
       Timeouts.Abort("page-adv-search-load");
       Request.Abort("page-adv-search-load");
@@ -292,6 +313,10 @@ export default defineComponent({
           continue;
         }
 
+        if (this.albumFilter && !this.albumFilter.has(e.id)) {
+          continue;
+        }
+
         if (filterText) {
           if (
             !e.title.toLowerCase().includes(filterText) &&
@@ -364,13 +389,51 @@ export default defineComponent({
         event.preventDefault();
       }
       this.loading = true;
+      this.dirty = false;
       this.pageItems = [];
       this.page = 0;
       this.totalPages = 0;
       this.progress = 0;
       this.started = true;
       this.finished = false;
-      this.load();
+      this.albumFilter = null;
+      if (this.albumSearch >= 0) {
+        this.loadAlbumSearch();
+      } else {
+        this.load();
+      }
+    },
+
+    loadAlbumSearch: function () {
+      Request.Abort("page-adv-search-load");
+
+      Request.Pending(
+        "page-adv-search-load",
+        AlbumsAPI.GetAlbum(this.albumSearch)
+      )
+        .onSuccess((result) => {
+          this.albumFilter = new Set(result.list.map(m => m.id));
+          this.load();
+        })
+        .onRequestError((err) => {
+          Request.ErrorHandler()
+            .add(401, "*", () => {
+              this.cancel();
+              AppEvents.Emit("unauthorized");
+            })
+            .add(404, "*", () => {
+              this.albumFilter = new Set();
+              this.load();
+            })
+            .add("*", "*", () => {
+              Timeouts.Set("page-adv-search-load", 1500, this.loadAlbumSearch.bind(this));
+            })
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          console.error(err);
+          this.cancel();
+        });
     },
 
     cancel: function () {
@@ -464,6 +527,7 @@ export default defineComponent({
       this.tags = this.tags.filter((t) => {
         return tag !== t;
       });
+      this.markDirty();
       this.onTagAddChanged(true);
     },
 
@@ -472,6 +536,7 @@ export default defineComponent({
         return;
       }
       this.tags.push(tag.id);
+      this.markDirty();
       this.onTagAddChanged(true);
     },
 
@@ -679,7 +744,21 @@ export default defineComponent({
         return;
       }
 
-      this.load();
+      if (this.dirty) {
+        this.startSearch();
+      } else {
+        this.load();
+      }
+    },
+
+    updateAlbums: function () {
+      this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+        if (a.nameLowerCase < b.nameLowerCase) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
     },
   },
   mounted: function () {
@@ -711,6 +790,10 @@ export default defineComponent({
     this.$options.tagUpdateH = this.updateTagData.bind(this);
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
+    this.updateAlbums();
+    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+
     this.updateTagData();
 
     if (this.inModal) {
@@ -734,6 +817,7 @@ export default defineComponent({
     AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
 
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
 
     if (this.$options.findTagTimeout) {
       clearTimeout(this.$options.findTagTimeout);
