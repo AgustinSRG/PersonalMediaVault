@@ -24,14 +24,14 @@ func main() {
 				Other: "Backup tool for Personal Media Vault.",
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "ProgramUsage",
 				Other: "Usage: pmv-backup </path/to/vault> </path/to/backup>",
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		return
 	}
 
@@ -48,7 +48,7 @@ func main() {
 				"Path": vaultPath,
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		os.Exit(1)
 	}
 
@@ -66,7 +66,7 @@ func main() {
 				"Path": backupPath,
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		os.Exit(1)
 	}
 
@@ -77,7 +77,7 @@ func main() {
 				Other: "The destination path has a lock file. Close the vault or remove the vault.lock file.",
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		os.Exit(1)
 	}
 
@@ -89,7 +89,7 @@ func main() {
 			Other: "Backup tool for Personal Media Vault.",
 		},
 	})
-	fmt.Println(msg)
+	fmt.Fprintln(os.Stderr, msg)
 
 	// Fetch vault metadata
 
@@ -102,7 +102,7 @@ func main() {
 			"Path": vaultPath,
 		},
 	})
-	fmt.Println(msg)
+	fmt.Fprintln(os.Stderr, msg)
 
 	if !CheckFileExists(path.Join(vaultPath, "credentials.json")) {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
@@ -111,7 +111,7 @@ func main() {
 				Other: "Could not find a vault in the specified path",
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		os.Exit(1)
 	}
 
@@ -145,11 +145,11 @@ func main() {
 			Other: "Initializing backup...",
 		},
 	})
-	fmt.Print(msg)
+	fmt.Fprint(os.Stderr, msg)
 
 	work, err := initializeBackupWork(totalEntries)
 
-	fmt.Print("\n")
+	fmt.Fprint(os.Stderr, "\n")
 
 	if err != nil {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
@@ -161,7 +161,7 @@ func main() {
 				"Message": err.Error(),
 			},
 		})
-		fmt.Println(msg)
+		fmt.Fprintln(os.Stderr, msg)
 		os.Exit(1)
 		return
 	}
@@ -190,7 +190,7 @@ func main() {
 			Other: "Making backup...",
 		},
 	})
-	fmt.Print(msg)
+	fmt.Fprint(os.Stderr, msg)
 
 	for i := 0; i < len(work.entries); i++ {
 
@@ -203,7 +203,7 @@ func main() {
 					Other: "Backup failed!",
 				},
 			})
-			fmt.Println(msg)
+			fmt.Fprintln(os.Stderr, msg)
 			os.Exit(1)
 			return
 		}
@@ -235,7 +235,7 @@ func main() {
 
 	// Done
 
-	fmt.Print("\n")
+	fmt.Fprint(os.Stderr, "\n")
 
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
@@ -247,5 +247,5 @@ func main() {
 			"Size":      formatBytes(realBytesCopied),
 		},
 	})
-	fmt.Println(msg)
+	fmt.Fprintln(os.Stderr, msg)
 }

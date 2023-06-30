@@ -41,7 +41,7 @@ func findBackupEntries(vaultPath string, backupPath string, relativePath string)
 				"Message": err.Error(),
 			},
 		})
-		fmt.Println("\n" + msg)
+		fmt.Fprintln(os.Stderr, "\n"+msg)
 		return make([]BackupEntry, 0)
 	}
 

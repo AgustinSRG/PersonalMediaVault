@@ -137,7 +137,7 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 					"Message": err.Error(),
 				},
 			})
-			fmt.Println("\n" + msg)
+			fmt.Fprintln(os.Stderr, "\n"+msg)
 			return false, err
 		}
 	}
@@ -155,7 +155,7 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 				"Message": err.Error(),
 			},
 		})
-		fmt.Println("\n" + msg)
+		fmt.Fprintln(os.Stderr, "\n"+msg)
 		return false, err
 	}
 
@@ -174,7 +174,7 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 					"Message": err.Error(),
 				},
 			})
-			fmt.Println("\n" + msg)
+			fmt.Fprintln(os.Stderr, "\n"+msg)
 			return false, err
 		}
 	}
@@ -194,7 +194,7 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 					"Message": err.Error(),
 				},
 			})
-			fmt.Println("\n" + msg)
+			fmt.Fprintln(os.Stderr, "\n"+msg)
 			return false, err
 		}
 
@@ -228,7 +228,7 @@ func printLineOverWrite(line string) {
 
 	PreviousLine = line
 
-	fmt.Print("\r" + paddedLine)
+	fmt.Fprint(os.Stderr, "\r"+paddedLine)
 }
 
 func resetLineOverWrite() {

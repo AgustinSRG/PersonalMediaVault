@@ -52,7 +52,7 @@ func initializeBackupWork(foundEntries []BackupEntry) (*BackupWork, error) {
 						"Message": err.Error(),
 					},
 				})
-				fmt.Println("\n" + msg)
+				fmt.Fprintln(os.Stderr, "\n"+msg)
 				return nil, err
 			}
 		}
@@ -72,7 +72,7 @@ func initializeBackupWork(foundEntries []BackupEntry) (*BackupWork, error) {
 						"Message": err.Error(),
 					},
 				})
-				fmt.Println("\n" + msg)
+				fmt.Fprintln(os.Stderr, "\n"+msg)
 				return nil, err
 			}
 		}
