@@ -206,6 +206,20 @@ export default defineComponent({
       this.dirty = true;
     },
 
+    autoScroll: function () {
+      if (!this.inModal) {
+        nextTick(() => {
+          const currentElem = this.$el.querySelector(
+            ".search-result-item.current"
+          );
+          if (currentElem) {
+            currentElem.scrollIntoView();
+          }
+        });
+        this.onCurrentMediaChanged();
+      }
+    },
+
     load: function () {
       Timeouts.Abort("page-adv-search-load");
       Request.Abort("page-adv-search-load");
@@ -243,33 +257,13 @@ export default defineComponent({
               this.finished = true;
             }
 
-            if (!this.inModal) {
-              nextTick(() => {
-                const currentElem = this.$el.querySelector(
-                  ".search-result-item.current"
-                );
-                if (currentElem) {
-                  currentElem.scrollIntoView();
-                }
-              });
-              this.onCurrentMediaChanged();
-            }
+            this.autoScroll();
           } else if (this.page < this.totalPages) {
             this.load();
           } else {
             this.loading = false;
             this.finished = true;
-            if (!this.inModal) {
-              nextTick(() => {
-                const currentElem = this.$el.querySelector(
-                  ".search-result-item.current"
-                );
-                if (currentElem) {
-                  currentElem.scrollIntoView();
-                }
-              });
-              this.onCurrentMediaChanged();
-            }
+            this.autoScroll();
           }
         })
         .onRequestError((err) => {
@@ -412,8 +406,30 @@ export default defineComponent({
         AlbumsAPI.GetAlbum(this.albumSearch)
       )
         .onSuccess((result) => {
-          this.albumFilter = new Set(result.list.map(m => m.id));
-          this.load();
+          if (this.order === "asc") {
+            this.filterElements(result.list.sort((a, b) => {
+              if (a.id < b.id) {
+                return -1;
+              } else {
+                return 1;
+              }
+            }));
+          } else {
+            this.filterElements(result.list.sort((a, b) => {
+              if (a.id > b.id) {
+                return -1;
+              } else {
+                return 1;
+              }
+            }));
+          }
+
+          this.page = 1;
+          this.totalPages = 1;
+          this.progress = 100;
+          this.loading = false;
+          this.finished = true;
+          this.autoScroll();
         })
         .onRequestError((err) => {
           Request.ErrorHandler()

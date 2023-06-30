@@ -515,8 +515,8 @@ export default defineComponent({
         AlbumsAPI.GetAlbum(this.albumSearch)
       )
         .onSuccess((result) => {
-          const albumList = new Set(result.list.map(m => m.id));
-          this.searchNext(0, albumList);
+          this.filterElements(result.list);
+          this.finishSearch();
         })
         .onRequestError((err) => {
           Request.ErrorHandler()
@@ -558,7 +558,7 @@ export default defineComponent({
       }
     },
 
-    searchNext: function (page: number, albumList?: Set<number>) {
+    searchNext: function (page: number) {
       Request.Abort("modal-batch-request");
 
       Request.Pending(
@@ -571,21 +571,15 @@ export default defineComponent({
         )
       )
         .onSuccess((result) => {
-          this.filterElements(result.page_items, albumList);
+          this.filterElements(result.page_items);
 
           this.progress = (page + 1) * 100 / (result.page_count || 1);
 
           if (page >= (result.page_count - 1)) {
             // Finished
-            if (this.actionItems.length > 0) {
-              this.status = this.action === "delete" ? "confirmation-delete" : "confirmation";
-              this.actionCount = this.actionItems.length;
-            } else {
-              this.status = "error";
-              this.error = this.$t("No items found matching the specified criteria");
-            }
+            this.finishSearch();
           } else {
-            this.searchNext(page + 1, albumList);
+            this.searchNext(page + 1);
           }
         })
         .onRequestError((err) => {
@@ -612,17 +606,23 @@ export default defineComponent({
         });
     },
 
-    filterElements: function (results: MediaEntry[], filterAlbum: Set<number>) {
+    finishSearch: function () {
+      if (this.actionItems.length > 0) {
+        this.status = this.action === "delete" ? "confirmation-delete" : "confirmation";
+        this.actionCount = this.actionItems.length;
+      } else {
+        this.status = "error";
+        this.error = this.$t("No items found matching the specified criteria");
+      }
+    },
+
+    filterElements: function (results: MediaEntry[]) {
       const filterText = this.textSearch.toLowerCase();
       const filterType = this.typeSearch;
       const filterTags = this.tagsSearch.slice();
       const filterTagMode = this.tagModeSearch;
 
       for (let e of results) {
-        if (filterAlbum && !filterAlbum.has(e.id)) {
-          continue;
-        }
-
         if (filterText) {
           if (
             !e.title.toLowerCase().includes(filterText) &&
