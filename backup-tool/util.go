@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -17,7 +18,7 @@ const (
 )
 
 // Copy file
-func CopyFile(src string, dst string, generalProgress int64, current int, total int) (int64, error) {
+func CopyFile(src string, dst string, tmpFile string, generalProgress int64, current int, total int) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -42,11 +43,10 @@ func CopyFile(src string, dst string, generalProgress int64, current int, total 
 	}
 	defer source.Close()
 
-	destination, err := os.Create(dst)
+	destination, err := os.Create(tmpFile)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
 
 	buf := make([]byte, 32*1000)
 
@@ -106,7 +106,27 @@ func CopyFile(src string, dst string, generalProgress int64, current int, total 
 		}
 	}
 
-	return written, err
+	if err != nil {
+		destination.Close()
+		os.Remove(tmpFile)
+		return 0, err
+	}
+
+	err = destination.Close()
+
+	if err != nil {
+		os.Remove(tmpFile)
+		return 0, err
+	}
+
+	err = RenameAndReplace(tmpFile, dst)
+
+	if err != nil {
+		os.Remove(tmpFile)
+		return 0, err
+	}
+
+	return written, nil
 }
 
 func CheckFileExists(file string) bool {
@@ -120,7 +140,31 @@ func CheckFileExists(file string) bool {
 	}
 }
 
-func backupFile(entry BackupEntryExtended, generalProgress int64, current int, total int) (copied bool, err error) {
+// Renames and replaces file (Atomic)
+// If it fails, tries again up to 3 times, waiting 500 ms (this is to wait for any other program to unlock the file)
+// tmpFile - The temporal file to move
+// destFile - The destination file name
+// returns the error
+func RenameAndReplace(tmpFile string, destFile string) error {
+	retriesLeft := 3
+	var err error = nil
+
+	for retriesLeft > 0 {
+		err = os.Rename(tmpFile, destFile)
+
+		if err == nil {
+			return nil
+		}
+
+		retriesLeft--
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return err
+}
+
+func backupFile(entry BackupEntryExtended, tmpFile string, generalProgress int64, current int, total int) (copied bool, err error) {
 	fileInfo, err := os.Stat(entry.original)
 
 	if err != nil {
@@ -179,9 +223,9 @@ func backupFile(entry BackupEntryExtended, generalProgress int64, current int, t
 		}
 	}
 
-	if fileInfoBackup == nil || fileInfo.ModTime().UnixMilli() > fileInfoBackup.ModTime().UnixMilli() || fileInfo.Size() != fileInfoBackup.Size() {
+	if fileInfoBackup == nil || fileInfo.ModTime().UnixMilli() > fileInfoBackup.ModTime().UnixMilli() {
 		// Backup file does not exists, or it's older, copy it
-		_, err = CopyFile(entry.original, entry.backupFile, generalProgress, current, total)
+		_, err = CopyFile(entry.original, entry.backupFile, tmpFile, generalProgress, current, total)
 
 		if err != nil {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{

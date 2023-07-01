@@ -77,7 +77,7 @@ func initializeBackupWork(foundEntries []BackupEntry) (*BackupWork, error) {
 			}
 		}
 
-		if fileInfoBackup == nil || fileInfo.ModTime().UnixMilli() > fileInfoBackup.ModTime().UnixMilli() || fileInfo.Size() != fileInfoBackup.Size() {
+		if fileInfoBackup == nil || fileInfo.ModTime().UnixMilli() > fileInfoBackup.ModTime().UnixMilli() {
 			work.entries = append(work.entries, BackupEntryExtended{
 				original:   entry.original,
 				backupPath: entry.backupPath,

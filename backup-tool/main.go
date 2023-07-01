@@ -81,6 +81,29 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create temp path for atomic copy
+
+	tempPath := path.Join(backupPath, "temp")
+
+	err = os.MkdirAll(tempPath, FOLDER_PERMISSION)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Fprintln(os.Stderr, msg)
+		os.Exit(1)
+		return
+	}
+
+	tmpFile := path.Join(tempPath, "backup.tmp")
+
 	// Welcome
 
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -194,7 +217,7 @@ func main() {
 
 	for i := 0; i < len(work.entries); i++ {
 
-		copied, err := backupFile(work.entries[i], progressInt, i+1, len(work.entries))
+		copied, err := backupFile(work.entries[i], tmpFile, progressInt, i+1, len(work.entries))
 
 		if err != nil {
 			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
