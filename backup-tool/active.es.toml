@@ -6,6 +6,10 @@ other = "Copiando archivos... ({{.Percent}}%) ({{.Current}} / {{.Total}}) - {{.F
 hash = "sha1-73f26757f30c3c81ef01a1e448468161b3b79ceb"
 other = "Copia de seguridad lista. Total de archivos copiados: {{.FileCount}} ({{.Size}})"
 
+[BackupDoneReEncrypt]
+hash = "sha1-191b60e1921bf5d8c1ab63d9a4c35c06343380c5"
+other = "Copia de seguridad lista. Total de archivos re-encriptados: {{.FileCount}} ({{.Size}})"
+
 [BackupFailed]
 hash = "sha1-c894768353128628d1e2c812a8cdecdb1810f1e4"
 other = "¡La copia de seguridad ha fallado!"
@@ -13,6 +17,10 @@ other = "¡La copia de seguridad ha fallado!"
 [BackupProgress]
 hash = "sha1-c3b3202e87a0ab426adcac54587bb902c6a929c1"
 other = "Copiando archivos... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
+
+[EnterRootPassword]
+hash = "sha1-25b10556ea7f6ec979ed8249adf04d55a78a7fdd"
+other = "Escriba la contraseña del usuario principal ({{.Account}})"
 
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
@@ -30,6 +38,10 @@ other = "Error obteniendo información del archivo {{.File}} | Error: {{.Message
 hash = "sha1-d7badd343243c5bb77627e2e71254cb365bd7a2b"
 other = "{{.File}} no es un archivo"
 
+[ErrorReEncryptFile]
+hash = "sha1-eecad21894f6f2f54e702fb1ed535a6692e7d128"
+other = "Error re-encriptando el archivo {{.File}} | Error: {{.Message}}"
+
 [ErrorReadPath]
 hash = "sha1-655a5ae5ba4b1ddfc3dfff44e2f8841ce1e71807"
 other = "Error accediendo al directorio {{.Path}} | Error: {{.Message}}"
@@ -37,6 +49,10 @@ other = "Error accediendo al directorio {{.Path}} | Error: {{.Message}}"
 [FetchNotice]
 hash = "sha1-3bf220d0de646037641bfabf6795cdab3c29775e"
 other = "Extrayendo metadatos de: {{.Path}}"
+
+[FindingFiles]
+hash = "sha1-075199214b17fcd17c1240e726d792eb563165a2"
+other = "Buscando archivos..."
 
 [InitializeNotice]
 hash = "sha1-c17156c98ada8a559819cf57e5b0997f3b95d995"
@@ -46,6 +62,10 @@ other = "Inicializando copia de seguridad..."
 hash = "sha1-aace60c8794b69ff83120922dddf66b98356c98d"
 other = "Inicializando copia de seguridad... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
 
+[LoadingCredentials]
+hash = "sha1-3cc6a4d438f58223405df54a69fece0b57392a65"
+other = "Cargando credenciales..."
+
 [LockError]
 hash = "sha1-7c8516e4790e2a4d8145b93b3168382973186c7f"
 other = "La ruta tiene un fichero de bloqueo. Cierre la galería o elimine el archivo vault.lock"
@@ -54,13 +74,21 @@ other = "La ruta tiene un fichero de bloqueo. Cierre la galería o elimine el ar
 hash = "sha1-aca99d7d39a3215a1e0a3868fd8a9d10989f257d"
 other = "Creando copia de seguridad..."
 
+[ModeReEncryptedBackup]
+hash = "sha1-9fe9c83b949adcfce18bd78a2beb74da82b8ccd2"
+other = "Modo: Copia de seguridad re-encriptada"
+
+[ModeRegularBackup]
+hash = "sha1-f1ceef478aa98e185e1f0c0ae157bb5a7ffcb804"
+other = "Modo: Copia de seguridad estándar"
+
 [PathError]
 hash = "sha1-9e7a2817625214ec7fc1b0bdd26c5e5b41863a85"
 other = "La ruta no existe: {{.Path}}"
 
 [ProgramUsage]
-hash = "sha1-1976759ecd4bfc24c7f62b90705229b61c39f942"
-other = "Uso del comando: pmv-backup </ruta/de/galería> </ruta/copia/de/seguridad>"
+hash = "sha1-ef02242cc444d6f973e8493dcf56bad4e5457589"
+other = "Uso del comando: pmv-backup </ruta/de/galería> </ruta/copia/de/seguridad> [--re-encrypt]"
 
 [ProgramWelcome]
 hash = "sha1-df69330ffb2a276629bbd93feae80825a052907d"
@@ -69,3 +97,11 @@ other = "Herramienta de creación de copias de seguridad de su galería multimed
 [VaultNotFoundError]
 hash = "sha1-f4697133f6137e4d9320d98671bc9eaf8e2a3e91"
 other = "No se encontró ninguna galería en la ruta seleccionada"
+
+[WrongPasswordDestError]
+hash = "sha1-53294cdf4560bb8ed07e2f4311e383fcfbd36782"
+other = "Error: Existe un fichero de credenciales en el directorio de destino, pero la contraseña no coincide"
+
+[WrongPasswordError]
+hash = "sha1-00415e7e538b0c5e9a97063df1e855cb61ff72fc"
+other = "Error: Contraseña incorrecta"

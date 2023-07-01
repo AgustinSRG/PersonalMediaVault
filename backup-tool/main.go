@@ -17,7 +17,7 @@ func main() {
 	// Parse arguments
 	args := os.Args
 
-	if len(args) != 3 {
+	if len(args) != 3 && len(args) != 4 {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "ProgramWelcome",
@@ -28,7 +28,7 @@ func main() {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "ProgramUsage",
-				Other: "Usage: pmv-backup </path/to/vault> </path/to/backup>",
+				Other: "Usage: pmv-backup </path/to/vault> </path/to/backup> [--re-encrypt]",
 			},
 		})
 		fmt.Fprintln(os.Stderr, msg)
@@ -37,6 +37,29 @@ func main() {
 
 	vaultPath := args[1]
 	backupPath := args[2]
+	isReEncrypt := false
+
+	if len(args) == 4 {
+		if args[3] != "--re-encrypt" {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ProgramWelcome",
+					Other: "Backup tool for Personal Media Vault.",
+				},
+			})
+			fmt.Fprintln(os.Stderr, msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ProgramUsage",
+					Other: "Usage: pmv-backup </path/to/vault> </path/to/backup> [--re-encrypt]",
+				},
+			})
+			fmt.Fprintln(os.Stderr, msg)
+			return
+		} else {
+			isReEncrypt = true
+		}
+	}
 
 	if !CheckFileExists(vaultPath) {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -138,137 +161,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Find files to check
-
-	totalEntries := make([]BackupEntry, 0)
-
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "main.index"))
-
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "credentials.json"))
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "media_ids.json"))
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "tasks.json"))
-
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "albums.pmv"))
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "tag_list.pmv"))
-	totalEntries = append(totalEntries, makeBackupEntry(vaultPath, backupPath, "./", "user_config.pmv"))
-
-	tagFiles := findBackupEntries(vaultPath, backupPath, "./tags")
-	totalEntries = append(totalEntries, tagFiles...)
-
-	mediaFiles := findBackupEntries(vaultPath, backupPath, "./media")
-	totalEntries = append(totalEntries, mediaFiles...)
-
-	resetLineOverWrite()
-
-	// Initialize backup (check files to be copied)
-
-	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-		DefaultMessage: &i18n.Message{
-			ID:    "InitializeNotice",
-			Other: "Initializing backup...",
-		},
-	})
-	fmt.Fprint(os.Stderr, msg)
-
-	work, err := initializeBackupWork(totalEntries)
-
-	fmt.Fprint(os.Stderr, "\n")
-
-	if err != nil {
-		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "Error",
-				Other: "Error: {{.Message}}",
-			},
-			TemplateData: map[string]interface{}{
-				"Message": err.Error(),
-			},
-		})
-		fmt.Fprintln(os.Stderr, msg)
-		os.Exit(1)
-		return
+	if isReEncrypt {
+		RunReEncryptedBackup(vaultPath, backupPath, tmpFile)
+	} else {
+		RunNormalBackup(vaultPath, backupPath, tmpFile)
 	}
-
-	// Copy files
-
-	bytesCopied := int64(0)
-	bytesToCopy := work.totalSize
-
-	realBytesCopied := int64(0)
-
-	progressInt := int64(0)
-	prevProgress := int64(0)
-
-	if bytesToCopy < 1 {
-		bytesToCopy = 1
-	}
-
-	statFilesCopied := 0
-
-	resetLineOverWrite()
-
-	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-		DefaultMessage: &i18n.Message{
-			ID:    "MakeNotice",
-			Other: "Making backup...",
-		},
-	})
-	fmt.Fprint(os.Stderr, msg)
-
-	for i := 0; i < len(work.entries); i++ {
-
-		copied, err := backupFile(work.entries[i], tmpFile, progressInt, i+1, len(work.entries))
-
-		if err != nil {
-			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-				DefaultMessage: &i18n.Message{
-					ID:    "BackupFailed",
-					Other: "Backup failed!",
-				},
-			})
-			fmt.Fprintln(os.Stderr, msg)
-			os.Exit(1)
-			return
-		}
-
-		bytesCopied += work.entries[i].size
-
-		if copied {
-			statFilesCopied++
-			realBytesCopied += work.entries[i].size
-		}
-
-		progressInt = bytesCopied * 100 / bytesToCopy
-		if prevProgress != progressInt {
-			prevProgress = progressInt
-			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-				DefaultMessage: &i18n.Message{
-					ID:    "BackupProgress",
-					Other: "Making backup... ({{.Percent}}%) ({{.Current}} / {{.Total}})",
-				},
-				TemplateData: map[string]interface{}{
-					"Percent": fmt.Sprint(progressInt),
-					"Current": fmt.Sprint(i + 1),
-					"Total":   fmt.Sprint(len(work.entries)),
-				},
-			})
-			printLineOverWrite(msg)
-		}
-	}
-
-	// Done
-
-	fmt.Fprint(os.Stderr, "\n")
-
-	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-		DefaultMessage: &i18n.Message{
-			ID:    "BackupDone",
-			Other: "Backup done. Total files copied: {{.FileCount}} ({{.Size}})",
-		},
-		TemplateData: map[string]interface{}{
-			"FileCount": fmt.Sprint(statFilesCopied),
-			"Size":      formatBytes(realBytesCopied),
-		},
-	})
-	fmt.Fprintln(os.Stderr, msg)
 }
