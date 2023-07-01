@@ -2,6 +2,10 @@
 hash = "sha1-6891f27ae9aec33b9adee2be1d72df5c71a72403"
 other = "Se va a crear una copia de seguridad de la galería multimedia en el directorio:"
 
+[BackupReEncryptNotice]
+hash = "sha1-e3c4b9dff35d8a483c4c75d7185fff3040119733"
+other = "Advertencia: Está usando el modo de re-encriptado. Se cambiará la clave de encriptado de la galería. Además, las cuentas adicionales no se moverán a la copia de seguridad."
+
 [CertificateFile]
 hash = "sha1-38059f1a5dbf538d37104a7baa5526a728694df5"
 other = "Fichero de certificado"
@@ -51,8 +55,8 @@ hash = "sha1-8b9e0d563e76ea1308549eb89510c77e063dabcf"
 other = "Error: No se pudo encontrar el binario de copias de seguridad (pmv-backup)"
 
 [ErrorBackupUsage]
-hash = "sha1-d1b976aaeb974ef95196c148b25dbc586aa94ee8"
-other = "Uso: backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-826be9387c350f25b90a9adb3950556b0aef1f19"
+other = "Uso: backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ErrorBrowser]
 hash = "sha1-da7c1fd0c0d54733790f8123554431eadd886b76"
@@ -155,8 +159,8 @@ hash = "sha1-cf17e7fdee1c20b4f3d976516bdcc121cf229f9c"
 other = "Fichero de log: {{.File}}"
 
 [ManualCommandBackup]
-hash = "sha1-95d4e25c102b2241378287acb639ca244140dd49"
-other = "backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-01d28d9e4f273bf2123d46736efe820a143922d0"
+other = "backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ManualCommandBrowser]
 hash = "sha1-e9d23a48574b81db3810d616f47d3ab437c7c72c"

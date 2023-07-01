@@ -796,7 +796,7 @@ func (vc *VaultController) RecoverAssets() {
 	}
 }
 
-func (vc *VaultController) Backup(p string) {
+func (vc *VaultController) Backup(p string, re_encrypt bool) {
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "AboutToCreateBackup",
@@ -805,6 +805,15 @@ func (vc *VaultController) Backup(p string) {
 	})
 	fmt.Println(msg)
 	fmt.Println(p)
+	if re_encrypt {
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "BackupReEncryptNotice",
+				Other: "Warning: You are using re-encryption mode. This will change the vault encryption key. Also, any additional accounts won't be moved to the backup.",
+			},
+		})
+		fmt.Println(msg)
+	}
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "Proceed",
@@ -841,7 +850,13 @@ func (vc *VaultController) Backup(p string) {
 	}
 
 	// Backup
-	cmd := exec.Command(BACKUP_BIN, vc.vaultPath, p)
+	var cmd *exec.Cmd
+
+	if re_encrypt {
+		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p, "--re-encrypt")
+	} else {
+		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p)
+	}
 
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)

@@ -246,18 +246,31 @@ func runCommand(cmdText string, vc *VaultController) {
 				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 					DefaultMessage: &i18n.Message{
 						ID:    "ErrorBackupUsage",
-						Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
+						Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
 					},
 				})
 				fmt.Println(msg)
 			} else {
-				vc.Backup(ap)
+				vc.Backup(ap, false)
+			}
+		} else if len(args) == 3 && args[2] == "--re-encrypt" {
+			ap, err := filepath.Abs(args[1])
+			if err != nil {
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorBackupUsage",
+						Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
+					},
+				})
+				fmt.Println(msg)
+			} else {
+				vc.Backup(ap, true)
 			}
 		} else {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 				DefaultMessage: &i18n.Message{
 					ID:    "ErrorBackupUsage",
-					Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
+					Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
 				},
 			})
 			fmt.Println(msg)
@@ -545,7 +558,7 @@ func printCommandList() {
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandBackup",
-			Other: "backup [path] - Makes a backup of the vault in the specified path",
+			Other: "backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
 		},
 	})
 	manList = append(manList, msg)
