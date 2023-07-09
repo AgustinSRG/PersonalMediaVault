@@ -278,7 +278,8 @@ paths:
           schema:
             properties:
               media_id:
-                type: string
+                type: number
+                format: int64
                 description: ID for the media asset just created.
           
   "/api/media/{id}":
