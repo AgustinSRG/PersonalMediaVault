@@ -108,6 +108,8 @@ export default defineComponent({
       if (this.$options.focusTrap) {
         this.$options.focusTrap.activate();
       }
+      AlbumsController.Load();
+      TagsController.Load();
     },
 
     blurSearchInstantly: function () {

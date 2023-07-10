@@ -289,6 +289,7 @@ export default defineComponent({
     },
 
     filterElements: function (results: MediaEntry[]) {
+      TagsController.OnMediaListReceived(results);
       const filterText = this.textSearch.toLowerCase();
       const filterType = this.type;
       const filterTags = this.tags.slice();

@@ -387,6 +387,7 @@ export default defineComponent({
       nextTick(() => {
         this.$el.focus();
       });
+      AlbumsController.Load();
     }
   },
   beforeUnmount: function () {
@@ -408,6 +409,7 @@ export default defineComponent({
         nextTick(() => {
           this.$el.focus();
         });
+        AlbumsController.Load();
         this.load();
       } else {
         if (this.$options.focusTrap) {

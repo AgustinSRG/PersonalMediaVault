@@ -162,6 +162,7 @@ export default defineComponent({
             s.add(i.id);
             return true;
           });
+          TagsController.OnMediaListReceived(this.pageItems);
           this.total = this.pageItems.length;
           this.loading = false;
           if (this.switchMediaOnLoad === "next") {

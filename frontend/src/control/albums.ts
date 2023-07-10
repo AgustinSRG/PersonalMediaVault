@@ -35,6 +35,7 @@ export class AlbumsController {
     public static Albums: { [id: string]: AlbumEntryMin } = Object.create(null);
 
     public static Loading = true;
+    public static InitiallyLoaded = false;
 
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", AlbumsController.Load);
@@ -67,6 +68,7 @@ export class AlbumsController {
             AppEvents.Emit("albums-update", AlbumsController.Albums);
             AlbumsController.Loading = false;
             AppEvents.Emit("albums-loading", false);
+            AlbumsController.InitiallyLoaded = true;
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {

@@ -149,6 +149,7 @@ export default defineComponent({
         SearchAPI.Search("", this.order, this.page, this.pageSize)
       )
         .onSuccess((result) => {
+          TagsController.OnMediaListReceived(result.page_items);
           this.pageItems = result.page_items;
           this.page = result.page_index;
           this.totalPages = result.page_count;

@@ -370,11 +370,11 @@ export default defineComponent({
     },
 
     onTagsLoading: function (l: boolean) {
-      this.loadingTags = l;
+      this.loadingTags = l && !TagsController.InitiallyLoaded;
     },
 
     onAlbumsLoading: function (l: boolean) {
-      this.loadingAlbums = l;
+      this.loadingAlbums = l && !AlbumsController.InitiallyLoaded;
     },
   },
   mounted: function () {

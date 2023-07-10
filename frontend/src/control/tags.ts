@@ -5,6 +5,8 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AuthController } from "./auth";
+import { MediaListItem } from "@/api/api-media";
+import { MediaEntry } from "./media";
 
 export interface TagEntry {
     id: number;
@@ -13,8 +15,10 @@ export interface TagEntry {
 
 export class TagsController {
     public static Tags: { [id: string]: TagEntry } = Object.create(null);
+    public static LastTagId = -1;
 
     public static Loading = true;
+    public static InitiallyLoaded = false;
 
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", TagsController.Load);
@@ -34,12 +38,16 @@ export class TagsController {
             TagsController.Tags = Object.create(null);
 
             for (const tag of tags) {
+                if (tag.id > TagsController.LastTagId) {
+                    TagsController.LastTagId = tag.id;
+                }
                 TagsController.Tags[tag.id + ""] = tag;
             }
 
             AppEvents.Emit("tags-update", TagsController.Tags);
             TagsController.Loading = false;
             AppEvents.Emit("tags-loading", false);
+            TagsController.InitiallyLoaded = true;
         }).onRequestError(err => {
             Request.ErrorHandler()
                 .add(401, "*", () => {
@@ -86,5 +94,33 @@ export class TagsController {
         };
 
         AppEvents.Emit("tags-update", TagsController.Tags);
+
+        if (TagsController.LastTagId < id) {
+            if (TagsController.LastTagId === id - 1) {
+                // Next tag added, no de-sync
+                TagsController.LastTagId = id;
+            } else if (!TagsController.Loading) {
+                // De-sync, reload
+                TagsController.Load();
+            }
+        }
+    }
+
+    public static OnMediaListReceived(list: (MediaListItem | MediaEntry)[]) {
+        if (TagsController.Loading) {
+            return; // Already loading
+        }
+        for (const m of list) {
+            if (!m.tags) {
+                continue;
+            }
+
+            for (const t of m.tags) {
+                if (t > TagsController.LastTagId) {
+                    TagsController.Load();
+                    return;
+                }
+            }
+        }
     }
 }

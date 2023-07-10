@@ -1795,6 +1795,8 @@ export default defineComponent({
       "auth-status-changed",
       this.$options.authUpdateH
     );
+
+    TagsController.Load();
   },
 
   beforeUnmount: function () {

@@ -938,6 +938,8 @@ export default defineComponent({
       this.error = "";
       this.$options.focusTrap.activate();
       this.autoFocus();
+      TagsController.Load();
+      AlbumsController.Load();
     }
   },
   beforeUnmount: function () {
@@ -968,6 +970,8 @@ export default defineComponent({
           this.$options.focusTrap.activate();
         }
         this.autoFocus();
+        TagsController.Load();
+        AlbumsController.Load();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();

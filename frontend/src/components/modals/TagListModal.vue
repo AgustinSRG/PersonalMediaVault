@@ -450,6 +450,7 @@ export default defineComponent({
     if (this.display) {
       this.$options.focusTrap.activate();
       this.autoFocus();
+      TagsController.Load();
     }
   },
   beforeUnmount: function () {
@@ -475,6 +476,7 @@ export default defineComponent({
         }
         this.autoFocus();
         this.load();
+        TagsController.Load();
       } else {
         if (this.$options.focusTrap) {
           this.$options.focusTrap.deactivate();

@@ -158,6 +158,7 @@ export default defineComponent({
       )
         .onSuccess((result) => {
           this.pageItems = result.page_items;
+          TagsController.OnMediaListReceived(this.pageItems);
           this.page = result.page_index;
           this.totalPages = result.page_count;
           this.total = result.total_count;

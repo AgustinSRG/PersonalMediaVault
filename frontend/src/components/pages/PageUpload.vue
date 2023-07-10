@@ -648,6 +648,9 @@ export default defineComponent({
     this.updateAlbums();
     this.$options.albumsUpdateH = this.updateAlbums.bind(this);
     AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+
+    TagsController.Load();
+    AlbumsController.Load();
   },
   beforeUnmount: function () {
     AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
