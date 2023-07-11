@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -95,7 +94,7 @@ func runCommand(cmdText string, vc *VaultController) {
 				fmt.Println(msg)
 			} else {
 				vc.launchConfig.Port = p
-				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+				err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 				if err != nil {
 					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -153,7 +152,7 @@ func runCommand(cmdText string, vc *VaultController) {
 		} else if len(args) == 2 {
 			if checkYesNoAnswer(args[1]) {
 				vc.launchConfig.Local = true
-				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+				err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 				if err != nil {
 					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -178,7 +177,7 @@ func runCommand(cmdText string, vc *VaultController) {
 				}
 			} else if checkNegativeAnswer(args[1]) {
 				vc.launchConfig.Local = false
-				err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+				err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 				if err != nil {
 					msg, _ := Localizer.Localize(&i18n.LocalizeConfig{

@@ -80,7 +80,7 @@ func main() {
 
 	detectLauncherPaths()
 
-	absolutePath, err := filepath.Abs(vaultPath)
+	vaultPath, err = filepath.Abs(vaultPath)
 
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -104,7 +104,7 @@ func main() {
 			Other: "Vault path: {{.Path}}",
 		},
 		TemplateData: map[string]interface{}{
-			"Path": absolutePath,
+			"Path": vaultPath,
 		},
 	})
 	fmt.Println(msg)
@@ -162,9 +162,10 @@ func main() {
 		}
 	}
 
-	launcherConfigFile := path.Join(vaultPath, "launcher.config.json")
+	launcherConfigFile := getLauncherConfigFile(vaultPath)
 
 	launcherConfig := readLauncherConfig(launcherConfigFile)
+	launcherConfig.Path = vaultPath
 
 	for launcherConfig.Port <= 0 {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -361,7 +362,7 @@ func main() {
 
 	// Initailize the vault if needed
 
-	vaultController.Initialize(absolutePath, launcherConfig, reader)
+	vaultController.Initialize(vaultPath, launcherConfig, reader)
 
 	// Start vault
 
@@ -370,7 +371,7 @@ func main() {
 	// Read commands
 
 	for {
-		readNextCommand(reader, absolutePath, &vaultController)
+		readNextCommand(reader, vaultPath, &vaultController)
 	}
 }
 

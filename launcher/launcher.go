@@ -20,6 +20,7 @@ var (
 )
 
 type LauncherConfig struct {
+	Path             string `json:"path"`
 	Port             int    `json:"port"`
 	Local            bool   `json:"local"`
 	SSL_Cert         string `json:"ssl_cert"`

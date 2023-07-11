@@ -1111,7 +1111,7 @@ func (vc *VaultController) SetupSSL() bool {
 		}
 	}
 
-	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -1191,7 +1191,7 @@ func (vc *VaultController) disableSSL() bool {
 		vc.launchConfig.Port = 80
 	}
 
-	err = writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+	err = writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -1238,7 +1238,7 @@ func (vc *VaultController) SetSecureTempDelete(d bool) bool {
 		fmt.Println(msg)
 	}
 
-	err := writeLauncherConfig(path.Join(vc.vaultPath, "launcher.config.json"), vc.launchConfig)
+	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
 
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{

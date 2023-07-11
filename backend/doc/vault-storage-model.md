@@ -142,7 +142,6 @@ Media vaults are stored in folders. A vault folder may contain the following fil
 | [**Media assets**](#media-assets-folder)                   | `media`                | Folder                                           | Folder where media assets are stored.                                                                                                                                         |
 | [**Tag indexes**](#tag-indexes-folder)                     | `tags`                 | Folder                                           | Folder where tag indexes are stored.                                                                                                                                          |
 | [**Lock file**](#lock-file)                                | `vault.lock`           | [Lock file](#lock-file)                          | File used to prevent multiple instances of the PersonalMediaVault backend to access a vault at the same time. It may not be present, in case the vault is not being accessed. |
-| [**Launcher configuration**](#launcher-configuration-file) | `launcher.config.json` | [Unencrypted JSON file](#unencrypted-json-files) | File to store the launcher configuration.                                                                                                                                     |
 | [**Credentials file**](#credentials-file)                  | `credentials.json`     | [Unencrypted JSON file](#unencrypted-json-files) | File to store the existing accounts, along with the hashed credentials and the encrypted vault key, protected with the account password.                                      |
 | [**Media ID tracker**](#media-id-tracker)                  | `media_ids.json`       | [Unencrypted JSON file](#unencrypted-json-files) | File to store the last used media asset ID.                                                                                                                                   |
 | [**Tasks tracker**](#tasks-tracker)                        | `tasks.json`           | [Unencrypted JSON file](#unencrypted-json-files) | File used to store the last used task ID, along with the list of pending tasks.                                                                                               |
@@ -283,21 +282,6 @@ func GetTagIndexPath(vault_path string, tag_id uint64) string {
 ```
 
 Each tag index file contains the list of media asset identifiers that have such tag.
-
-### Launcher configuration file
-
-The launcher configuration file, named `launcher.config.json` is an [unencrypted JSON file](#unencrypted-json-files) used to store any configuration the [launcher](../../launcher/) needs to launch the PersonalMediaVault backend.
-
-The fields it contains are the following:
-
-| Field name          | Type                    | Description                                                                                                                |
-| ------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `port`              | Number (32 bit integer) | Port for the backend to listen                                                                                             |
-| `local`             | Boolean                 | True to bind to localhost. False to bind to all available network interfaces.                                              |
-| `ssl_cert`          | String                  | Absolute path to the SSL certificate file, in PEM format.                                                                  |
-| `ssl_key`           | String                  | Absolute path to the SSL key file, in PEM format.                                                                          |
-| `secure_tmp_delete` | Boolean                 | True to securely delete temp files (overwrite them), in order not to leave traces of the original information in the disk. |
-
 ### Credentials file
 
 The credentials file, named `credentials.json` is an [unencrypted JSON file](#unencrypted-json-files) used to store the hashed credentials, along with the encrypted vault key.

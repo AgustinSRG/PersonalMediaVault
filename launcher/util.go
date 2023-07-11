@@ -3,6 +3,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -45,4 +46,24 @@ func getBinaryFileName(name string) string {
 	} else {
 		return name
 	}
+}
+
+// Copy file
+// src - Source file
+// dst - Destination path
+// Returns the number of bytes copied
+func CopyFile(src, dst string) (int64, error) {
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
