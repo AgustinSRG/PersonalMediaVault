@@ -309,7 +309,7 @@ func handleFavicon(response http.ResponseWriter, request *http.Request) {
 		http.ServeFile(response, request, filepath.Join(frontend_path, "favicon.ico"))
 	} else {
 		response.WriteHeader(500)
-		response.Write([]byte("Internal server error. Check logs for details."))
+		response.Write([]byte("Internal server error. Check logs for details.")) //nolint:errcheck
 		LogError(err)
 	}
 }
@@ -360,7 +360,7 @@ func handleImageFile(response http.ResponseWriter, request *http.Request) {
 		http.ServeFile(response, request, filepath.Join(frontend_path, "img", "icons", fileName))
 	} else {
 		response.WriteHeader(500)
-		response.Write([]byte("Internal server error. Check logs for details."))
+		response.Write([]byte("Internal server error. Check logs for details.")) //nolint:errcheck
 		LogError(err)
 	}
 }
