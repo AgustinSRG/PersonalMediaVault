@@ -607,9 +607,9 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 }
 
 const (
-	PREVIEWS_INTERVAL_SECONDS = 3   // Number of seconds between each preview
-	PREVIEWS_IMAGE_WIDTH      = 256 // Preview width (px)
-	PREVIEWS_IMAGE_HEIGHT     = 144 // Preview height (px)
+	PREVIEWS_DEFAULT_INTERVAL_SECONDS = 3   // Number of seconds between each preview
+	PREVIEWS_IMAGE_WIDTH              = 256 // Preview width (px)
+	PREVIEWS_IMAGE_HEIGHT             = 144 // Preview height (px)
 )
 
 // Generates previews for a video
@@ -619,7 +619,7 @@ const (
 // tempPath - Temporal path to use for the encoding
 // config - User configuration
 // The previews will be generated with the following format: tempPath/thumb_%d.jpg
-func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) *exec.Cmd {
+func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileFormat string, originalFileDuration float64, tempPath string, config *UserConfig) (cmd_res *exec.Cmd, interval int32) {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -634,8 +634,14 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 
 	args = append(args, "-f", originalFileFormat, "-i", originalFilePath) // Input file
 
+	intervalSeconds := config.VideoPreviewsInterval
+
+	if intervalSeconds <= 0 {
+		intervalSeconds = PREVIEWS_DEFAULT_INTERVAL_SECONDS
+	}
+
 	// Video filter
-	videoFilter := "fps=1/" + fmt.Sprint(PREVIEWS_INTERVAL_SECONDS) +
+	videoFilter := "fps=1/" + fmt.Sprint(intervalSeconds) +
 		",scale=" + fmt.Sprint(PREVIEWS_IMAGE_WIDTH) + ":" + fmt.Sprint(PREVIEWS_IMAGE_HEIGHT) +
 		":force_original_aspect_ratio=decrease,pad=" + fmt.Sprint(PREVIEWS_IMAGE_WIDTH) + ":" + fmt.Sprint(PREVIEWS_IMAGE_HEIGHT) +
 		":(ow-iw)/2:(oh-ih)/2"
@@ -649,7 +655,7 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 
 	cmd.Args = args
 
-	return cmd
+	return cmd, intervalSeconds
 }
 
 // Runs FFMPEG command asynchronously (the child process can be managed)

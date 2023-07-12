@@ -207,7 +207,6 @@
   "Less options": "Less options",
   "License": "License",
   "Light Theme": "Light Theme",
-  "Limit results": "Limit results",
   "List": "List",
   "List of active tasks": "List of active tasks",
   "Loading": "Loading",
@@ -415,6 +414,7 @@
   "Vault username changed!": "Vault username changed!",
   "Version": "Version",
   "Version date": "Version date",
+  "Video previews interval (seconds) (if set to 0, by default is 3 seconds)": "Video previews interval (seconds) (if set to 0, by default is 3 seconds)",
   "Videos": "Videos",
   "View Album": "View Album",
   "View media": "View media",
@@ -434,7 +434,6 @@
   "items per page": "items per page",
   "none": "none",
   "or": "or",
-  "results max": "results max",
   "second": "second",
   "seconds": "seconds"
 }

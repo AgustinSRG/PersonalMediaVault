@@ -987,6 +987,22 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 
 			meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 		}
+	} else if meta.Type == MediaTypeVideo && meta.PreviewsReady {
+		success, asset_path, asset_lock := media.AcquireAsset(meta.PreviewsAsset, ASSET_MULTI_FILE)
+
+		if success {
+			asset_lock.RequestWrite()
+			asset_lock.StartWrite()
+
+			os.Remove(asset_path)
+
+			asset_lock.EndWrite()
+
+			media.ReleaseAsset(meta.PreviewsAsset)
+		}
+
+		meta.PreviewsReady = false
+		meta.PreviewsTask = GetVault().tasks.AddTask(session, media_id, TASK_IMAGE_PREVIEWS, nil, false)
 	}
 
 	// Check resolutions

@@ -137,18 +137,18 @@ This format is useful to store video previews, without the need to use too many 
 
 Media vaults are stored in folders. A vault folder may contain the following files and folders:
 
-| Name                                                       | Path                   | Type                                             | Description                                                                                                                                                                   |
-| ---------------------------------------------------------- | ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**Media assets**](#media-assets-folder)                   | `media`                | Folder                                           | Folder where media assets are stored.                                                                                                                                         |
-| [**Tag indexes**](#tag-indexes-folder)                     | `tags`                 | Folder                                           | Folder where tag indexes are stored.                                                                                                                                          |
-| [**Lock file**](#lock-file)                                | `vault.lock`           | [Lock file](#lock-file)                          | File used to prevent multiple instances of the PersonalMediaVault backend to access a vault at the same time. It may not be present, in case the vault is not being accessed. |
-| [**Credentials file**](#credentials-file)                  | `credentials.json`     | [Unencrypted JSON file](#unencrypted-json-files) | File to store the existing accounts, along with the hashed credentials and the encrypted vault key, protected with the account password.                                      |
-| [**Media ID tracker**](#media-id-tracker)                  | `media_ids.json`       | [Unencrypted JSON file](#unencrypted-json-files) | File to store the last used media asset ID.                                                                                                                                   |
-| [**Tasks tracker**](#tasks-tracker)                        | `tasks.json`           | [Unencrypted JSON file](#unencrypted-json-files) | File used to store the last used task ID, along with the list of pending tasks.                                                                                               |
-| [**Albums**](#albums-file)                                 | `albums.pmv`           | [Encrypted JSON file](#encrypted-json-files)     | File used to store the existing albums, including the metadata and the list of media assets included in them.                                                                 |
-| [**Tag list**](#tags-file)                                 | `tag_list.pmv`         | [Encrypted JSON file](#encrypted-json-files)     | File to store the metadata of the existing vault tags                                                                                                                         |
-| [**User configuration**](#user-configuration-file)         | `user_config.pmv`      | [Encrypted JSON file](#encrypted-json-files)     | File to store user configuration, like the vault title or the encoding parameters                                                                                             |
-| [**Main index**](#main-index-file)                         | `main.index`           | [Index file](#index-files)                       | File to index every single media asset existing in the vault.                                                                                                                 |
+| Name                                               | Path               | Type                                             | Description                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**Media assets**](#media-assets-folder)           | `media`            | Folder                                           | Folder where media assets are stored.                                                                                                                                         |
+| [**Tag indexes**](#tag-indexes-folder)             | `tags`             | Folder                                           | Folder where tag indexes are stored.                                                                                                                                          |
+| [**Lock file**](#lock-file)                        | `vault.lock`       | [Lock file](#lock-file)                          | File used to prevent multiple instances of the PersonalMediaVault backend to access a vault at the same time. It may not be present, in case the vault is not being accessed. |
+| [**Credentials file**](#credentials-file)          | `credentials.json` | [Unencrypted JSON file](#unencrypted-json-files) | File to store the existing accounts, along with the hashed credentials and the encrypted vault key, protected with the account password.                                      |
+| [**Media ID tracker**](#media-id-tracker)          | `media_ids.json`   | [Unencrypted JSON file](#unencrypted-json-files) | File to store the last used media asset ID.                                                                                                                                   |
+| [**Tasks tracker**](#tasks-tracker)                | `tasks.json`       | [Unencrypted JSON file](#unencrypted-json-files) | File used to store the last used task ID, along with the list of pending tasks.                                                                                               |
+| [**Albums**](#albums-file)                         | `albums.pmv`       | [Encrypted JSON file](#encrypted-json-files)     | File used to store the existing albums, including the metadata and the list of media assets included in them.                                                                 |
+| [**Tag list**](#tags-file)                         | `tag_list.pmv`     | [Encrypted JSON file](#encrypted-json-files)     | File to store the metadata of the existing vault tags                                                                                                                         |
+| [**User configuration**](#user-configuration-file) | `user_config.pmv`  | [Encrypted JSON file](#encrypted-json-files)     | File to store user configuration, like the vault title or the encoding parameters                                                                                             |
+| [**Main index**](#main-index-file)                 | `main.index`       | [Index file](#index-files)                       | File to index every single media asset existing in the vault.                                                                                                                 |
 
 ### Media assets folder
 
@@ -413,14 +413,15 @@ The user configuration file, named `user_config.pmv` is an [encrypted JSON file]
 
 The file has the following fields:
 
-| Field name          | Type                         | Description                                                 |
-| ------------------- | ---------------------------- | ----------------------------------------------------------- |
-| `title`             | String                       | Vault custom title                                          |
-| `css`               | String                       | Custom CSS for the frontend                                 |
-| `max_tasks`         | Number (32 bit integer)      | Max number of tasks to run in parallel                      |
-| `encoding_threads`  | Number (32 bit integer)      | Max number of threads to use for a single encoding task     |
-| `resolutions`       | Array&lt;VideoResolution&gt; | Resolutions to automatically encode when uploading a video  |
-| `image_resolutions` | Array&lt;ImageResolution&gt; | Resolutions to automatically encode when uploading an image |
+| Field name                | Type                         | Description                                                 |
+| ------------------------- | ---------------------------- | ----------------------------------------------------------- |
+| `title`                   | String                       | Vault custom title                                          |
+| `css`                     | String                       | Custom CSS for the frontend                                 |
+| `max_tasks`               | Number (32 bit integer)      | Max number of tasks to run in parallel                      |
+| `encoding_threads`        | Number (32 bit integer)      | Max number of threads to use for a single encoding task     |
+| `video_previews_interval` | Number (32 bit integer)      | Video previews interval (seconds)                           |
+| `resolutions`             | Array&lt;VideoResolution&gt; | Resolutions to automatically encode when uploading a video  |
+| `image_resolutions`       | Array&lt;ImageResolution&gt; | Resolutions to automatically encode when uploading an image |
 
 The `VideoResolution` object has the following fields:
 

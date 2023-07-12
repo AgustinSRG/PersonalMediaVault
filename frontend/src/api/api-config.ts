@@ -6,6 +6,7 @@ export interface VaultUserConfig {
     title: string;
     max_tasks: number,
     encoding_threads: number,
+    video_previews_interval: number,
     resolutions: {
         width: number,
         height: number,

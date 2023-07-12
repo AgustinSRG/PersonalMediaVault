@@ -264,9 +264,10 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	}
 
 	var cmd *exec.Cmd
+	var intervalSeconds int32
 
 	if probe_data.Type == MediaTypeVideo {
-		cmd = MakeFFMpegEncodeToPreviewsCommand(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, userConfig)
+		cmd, intervalSeconds = MakeFFMpegEncodeToPreviewsCommand(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, userConfig)
 	} else {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)
@@ -471,7 +472,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	found, asset_path, asset_lock = media.AcquireAsset(asset_id, ASSET_MULTI_FILE)
 
 	if !found {
-		LogTaskError(task.definition.Id, "Error: Cound not find asset to write")
+		LogTaskError(task.definition.Id, "Error: Could not find asset to write")
 
 		media.CancelWrite()
 
@@ -505,7 +506,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	// Write metadata
 	metaToWrite.PreviewsReady = true
 	metaToWrite.PreviewsAsset = asset_id
-	metaToWrite.PreviewsInterval = PREVIEWS_INTERVAL_SECONDS
+	metaToWrite.PreviewsInterval = float64(intervalSeconds)
 	metaToWrite.PreviewsTask = 0
 
 	err = media.EndWrite(metaToWrite, task.session.key, false)

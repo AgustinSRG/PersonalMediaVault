@@ -878,7 +878,6 @@ paths:
         200:
           description: Success
           
-          
   "/api/media/{id}/delete":
     post:
       summary: Deletes media
@@ -2096,6 +2095,10 @@ definitions:
           type: number
           format: int32
           description: Max number of threads to use for FFmpeg tasks.
+        video_previews_interval:
+          type: number
+          format: int32
+          description: Video previews interval (seconds)
         resolutions:
           type: array
           description: Extra resolutions to encode videos

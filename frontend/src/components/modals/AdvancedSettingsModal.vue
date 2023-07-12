@@ -35,6 +35,11 @@
             <label>{{ $t("Max number threads for each task (0 to use the number of cores)") }}:</label>
             <input type="number" autocomplete="off" v-model.number="encodingThreads" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
           </div>
+
+          <div class="form-group">
+            <label>{{ $t("Video previews interval (seconds) (if set to 0, by default is 3 seconds)") }}:</label>
+            <input type="number" autocomplete="off" v-model.number="videoPreviewsInterval" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
+          </div>
         </div>
 
         <div v-if="page === 'resolutions'">
@@ -147,6 +152,7 @@ export default defineComponent({
       css: "",
       maxTasks: 0,
       encodingThreads: 0,
+      videoPreviewsInterval: 0,
       resolutions: [],
       imageResolutions: [],
 
@@ -345,6 +351,7 @@ export default defineComponent({
           this.css = response.css;
           this.maxTasks = response.max_tasks;
           this.encodingThreads = response.encoding_threads;
+          this.videoPreviewsInterval = response.video_previews_interval;
           this.updateResolutions(
             response.resolutions,
             response.image_resolutions
@@ -393,6 +400,7 @@ export default defineComponent({
           encoding_threads: this.encodingThreads,
           resolutions: this.getResolutions(),
           image_resolutions: this.getImageResolutions(),
+          video_previews_interval: this.videoPreviewsInterval,
         })
       )
         .onSuccess(() => {
