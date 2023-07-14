@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 const VAULT_CRED_METHOD_AES_SHA256 string = "aes256/sha256/salt16"
@@ -83,7 +85,7 @@ func MakeCredentials(user string, password string, fingerprint string) (credenti
 	copy(ctBytes[len(pwBytes):], randomSalt)
 	pwHash := sha256.Sum256(ctBytes)
 
-	encKey, err := encryptFileContents(key, AES256_FLAT, pwHash[:])
+	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
 
 	if err != nil {
 		return nil, err
@@ -168,7 +170,7 @@ func DecryptKey(password string, method string, passwordHash []byte, salt []byte
 		}
 
 		// Decrypt key
-		key, err := decryptFileContents(encryptedKey, pwHash[:])
+		key, err := encrypted_storage.DecryptFileContents(encryptedKey, pwHash[:])
 
 		if err != nil {
 			return nil, err

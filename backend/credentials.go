@@ -19,6 +19,7 @@ import (
 	"syscall"
 	"time"
 
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 	"golang.org/x/term"
 )
 
@@ -217,12 +218,16 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 
 		// Create a random key
 		key := make([]byte, 32)
-		rand.Read(key) //nolint:errcheck
+		_, err2 := rand.Read(key)
+
+		if err2 != nil {
+			return err2
+		}
 
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		err2 := manager.SetRootCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
+		err2 = manager.SetRootCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
 
 		if err2 != nil {
 			return err2
@@ -257,12 +262,16 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 
 		// Create a random key
 		key := make([]byte, 32)
-		rand.Read(key) //nolint:errcheck
+		_, err2 := rand.Read(key)
+
+		if err2 != nil {
+			return err2
+		}
 
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		err2 := manager.SetRootCredentials(user, password, key)
+		err2 = manager.SetRootCredentials(user, password, key)
 
 		if err2 != nil {
 			return err2
@@ -296,7 +305,11 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 
 	// Random salt
 	manager.credentials.Salt = make([]byte, 16)
-	rand.Read(manager.credentials.Salt) //nolint:errcheck
+	_, err := rand.Read(manager.credentials.Salt)
+
+	if err != nil {
+		return err
+	}
 
 	// Store ecrypted key
 	pwBytes := []byte(password)
@@ -305,7 +318,7 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 	copy(ctBytes[len(pwBytes):], manager.credentials.Salt)
 	pwHash := sha256.Sum256(ctBytes)
 
-	encKey, err := encryptFileContents(key, AES256_FLAT, pwHash[:])
+	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
 
 	if err != nil {
 		return err
@@ -350,7 +363,11 @@ func (manager *VaultCredentialsManager) SetAccountCredentials(user string, passw
 
 	// Random salt
 	manager.credentials.Accounts[accountIndex].Salt = make([]byte, 16)
-	rand.Read(manager.credentials.Accounts[accountIndex].Salt) //nolint:errcheck
+	_, err := rand.Read(manager.credentials.Accounts[accountIndex].Salt)
+
+	if err != nil {
+		return err
+	}
 
 	// Store ecrypted key
 	pwBytes := []byte(password)
@@ -359,7 +376,7 @@ func (manager *VaultCredentialsManager) SetAccountCredentials(user string, passw
 	copy(ctBytes[len(pwBytes):], manager.credentials.Accounts[accountIndex].Salt)
 	pwHash := sha256.Sum256(ctBytes)
 
-	encKey, err := encryptFileContents(key, AES256_FLAT, pwHash[:])
+	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
 
 	if err != nil {
 		return err
@@ -580,7 +597,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		}
 
 		// Decrypt key
-		key, err := decryptFileContents(pwEcryptedKey, pwHash[:])
+		key, err := encrypted_storage.DecryptFileContents(pwEcryptedKey, pwHash[:])
 
 		if err != nil {
 			return nil, nil, err

@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 type VideoPreviewTempFile struct {
@@ -142,7 +144,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 	asset_lock.StartRead()
 
-	s, err := CreateFileBlockEncryptReadStream(asset_path, task.session.key)
+	s, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, task.session.key, FILE_PERMISSION)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -213,7 +215,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		}
 
 		bytesCopied += int64(c)
-		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(s.file_size)))
+		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(s.FileSize())))
 
 		if task.killed {
 			f.Close()
@@ -362,7 +364,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 	encrypted_temp := GetTemporalFileName("pma", true)
 
-	ws, err := CreateMultiFilePackWriteStream(encrypted_temp)
+	ws, err := encrypted_storage.CreateMultiFilePackWriteStream(encrypted_temp, FILE_PERMISSION)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -402,7 +404,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 		// Encrypt data
 
-		encData, err := encryptFileContents(bytesImage, AES256_ZIP, task.session.key)
+		encData, err := encrypted_storage.EncryptFileContents(bytesImage, encrypted_storage.AES256_ZIP, task.session.key)
 
 		if err != nil {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())

@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 // This task encodes the media file to a specific resolution
@@ -139,7 +141,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 	asset_lock.StartRead()
 
-	s, err := CreateFileBlockEncryptReadStream(asset_path, task.session.key)
+	s, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, task.session.key, FILE_PERMISSION)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -210,7 +212,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		}
 
 		bytesCopied += int64(c)
-		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(s.file_size)))
+		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(s.FileSize())))
 
 		if task.killed {
 			f.Close()
@@ -348,7 +350,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 	encrypted_temp := GetTemporalFileName("pma", true)
 
-	ws, err := CreateFileBlockEncryptWriteStream(encrypted_temp)
+	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_temp, FILE_PERMISSION)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -360,7 +362,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		return
 	}
 
-	err = ws.Initialize(f_info.Size(), task.session.key)
+	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, task.session.key)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -415,7 +417,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		}
 
 		bytesCopied += int64(c)
-		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(ws.file_size)))
+		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(ENCRYPTED_BLOCK_MAX_SIZE)))
 
 		if task.killed {
 			f.Close()
@@ -485,7 +487,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	found, asset_path, asset_lock = media.AcquireAsset(asset_id, ASSET_SINGLE_FILE)
 
 	if !found {
-		LogTaskError(task.definition.Id, "Error: Cound not find asset to write")
+		LogTaskError(task.definition.Id, "Error: Could not find asset to write")
 
 		media.CancelWrite()
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/term"
 )
@@ -501,7 +502,7 @@ func FastReEncrypt(src string, dst string, tmpFile string, srcKey []byte, dstKey
 	}
 
 	// Decrypt
-	decrypted, err := decryptFileContents(b, srcKey)
+	decrypted, err := encrypted_storage.DecryptFileContents(b, srcKey)
 
 	if err != nil {
 		return err
@@ -509,7 +510,7 @@ func FastReEncrypt(src string, dst string, tmpFile string, srcKey []byte, dstKey
 
 	// Re-Encrypt
 
-	encrypted, err := encryptFileContents(decrypted, AES256_ZIP, dstKey)
+	encrypted, err := encrypted_storage.EncryptFileContents(decrypted, encrypted_storage.AES256_ZIP, dstKey)
 
 	if err != nil {
 		return err
@@ -553,7 +554,7 @@ func ReEncryptSingleAssetFile(src string, dst string, tmpFile string, generalPro
 
 	// Create read stream
 
-	readStream, err := CreateFileBlockEncryptReadStream(src, srcKey)
+	readStream, err := encrypted_storage.CreateFileBlockEncryptReadStream(src, srcKey, FILE_PERMISSION)
 
 	if err != nil {
 		return 0, err
@@ -561,14 +562,14 @@ func ReEncryptSingleAssetFile(src string, dst string, tmpFile string, generalPro
 
 	// Create and initialize write stream
 
-	writeStream, err := CreateFileBlockEncryptWriteStream(tmpFile)
+	writeStream, err := encrypted_storage.CreateFileBlockEncryptWriteStream(tmpFile, FILE_PERMISSION)
 
 	if err != nil {
 		readStream.Close()
 		return 0, err
 	}
 
-	err = writeStream.Initialize(readStream.file_size, dstKey)
+	err = writeStream.Initialize(readStream.FileSize(), ENCRYPTED_BLOCK_MAX_SIZE, dstKey)
 
 	if err != nil {
 		readStream.Close()
@@ -583,7 +584,7 @@ func ReEncryptSingleAssetFile(src string, dst string, tmpFile string, generalPro
 	written := int64(0)
 	progressInt := int64(0)
 	prevProgress := int64(0)
-	size := readStream.file_size
+	size := readStream.FileSize()
 
 	if size < 1 {
 		size = 1
@@ -671,7 +672,7 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 	}
 
 	// Create read stream
-	readStream, err := CreateMultiFilePackReadStream(src)
+	readStream, err := encrypted_storage.CreateMultiFilePackReadStream(src, FILE_PERMISSION)
 
 	if err != nil {
 		return 0, err
@@ -679,14 +680,14 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 
 	// Create and initialize write stream
 
-	writeStream, err := CreateMultiFilePackWriteStream(tmpFile)
+	writeStream, err := encrypted_storage.CreateMultiFilePackWriteStream(tmpFile, FILE_PERMISSION)
 
 	if err != nil {
 		readStream.Close()
 		return 0, err
 	}
 
-	err = writeStream.Initialize(readStream.file_count)
+	err = writeStream.Initialize(readStream.FileCount())
 
 	if err != nil {
 		readStream.Close()
@@ -699,13 +700,13 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 	written := int64(0)
 	progressInt := int64(0)
 	prevProgress := int64(0)
-	size := readStream.file_count
+	size := readStream.FileCount()
 
 	if size < 1 {
 		size = 1
 	}
 
-	for i := int64(0); i < readStream.file_count; i++ {
+	for i := int64(0); i < readStream.FileCount(); i++ {
 		// Read embedded file
 		b, err := readStream.GetFile(i)
 
@@ -716,7 +717,7 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 		}
 
 		// Decrypt
-		decrypted, err := decryptFileContents(b, srcKey)
+		decrypted, err := encrypted_storage.DecryptFileContents(b, srcKey)
 
 		if err != nil {
 			readStream.Close()
@@ -726,7 +727,7 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 
 		// Re-Encrypt
 
-		encrypted, err := encryptFileContents(decrypted, AES256_ZIP, dstKey)
+		encrypted, err := encrypted_storage.EncryptFileContents(decrypted, encrypted_storage.AES256_ZIP, dstKey)
 
 		if err != nil {
 			readStream.Close()

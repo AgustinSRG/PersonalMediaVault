@@ -7,6 +7,8 @@ import (
 	"errors"
 	"os"
 	"path"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 // Video resolution config
@@ -73,7 +75,7 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 			return nil, err
 		}
 
-		bJSON, err := decryptFileContents(b, key)
+		bJSON, err := encrypted_storage.DecryptFileContents(b, key)
 
 		if err != nil {
 			return nil, err
@@ -117,7 +119,7 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 		return err
 	}
 
-	encData, err := encryptFileContents(jsonData, AES256_ZIP, key)
+	encData, err := encrypted_storage.EncryptFileContents(jsonData, encrypted_storage.AES256_ZIP, key)
 
 	if err != nil {
 		return err

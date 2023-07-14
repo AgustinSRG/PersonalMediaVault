@@ -10,6 +10,8 @@ import (
 	"path"
 	"sync"
 	"time"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 // Media types
@@ -192,7 +194,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		return err
 	}
 
-	encData, err := encryptFileContents(jsonData, AES256_ZIP, key)
+	encData, err := encrypted_storage.EncryptFileContents(jsonData, encrypted_storage.AES256_ZIP, key)
 
 	if err != nil {
 		return err
@@ -229,7 +231,7 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 			return nil, err
 		}
 
-		bJSON, err := decryptFileContents(b, key)
+		bJSON, err := encrypted_storage.DecryptFileContents(b, key)
 
 		if err != nil {
 			return nil, err
@@ -326,7 +328,7 @@ func (media *MediaAsset) EndWrite(data *MediaMetadata, key []byte, hasFullLock b
 		return err
 	}
 
-	encData, err := encryptFileContents(jsonData, AES256_ZIP, key)
+	encData, err := encrypted_storage.EncryptFileContents(jsonData, encrypted_storage.AES256_ZIP, key)
 
 	if err != nil {
 		return err

@@ -10,6 +10,8 @@ import (
 	"path"
 	"strings"
 	"sync"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 // Tag manager
@@ -111,7 +113,7 @@ func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 			return nil, err
 		}
 
-		bJSON, err := decryptFileContents(b, key)
+		bJSON, err := encrypted_storage.DecryptFileContents(b, key)
 
 		if err != nil {
 			return nil, err
@@ -172,7 +174,7 @@ func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 		return err
 	}
 
-	encData, err := encryptFileContents(jsonData, AES256_ZIP, key)
+	encData, err := encrypted_storage.EncryptFileContents(jsonData, encrypted_storage.AES256_ZIP, key)
 
 	if err != nil {
 		return err

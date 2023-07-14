@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 	"github.com/gorilla/mux"
 )
 
@@ -121,7 +122,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 	asset_lock.StartRead() // Start reading the asset
 
-	s, err := CreateFileBlockEncryptReadStream(asset_path, session.key)
+	s, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, session.key, FILE_PERMISSION)
 
 	if err != nil {
 		asset_lock.EndRead()
@@ -133,19 +134,19 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	fileSeek := int64(0)
-	fileEnding := s.file_size - 1
-	contentLength := s.file_size
+	fileEnding := s.FileSize() - 1
+	contentLength := s.FileSize()
 	hasRange := false
 
 	if start < 0 && end > 0 {
 		// Only end
-		fileSeek = s.file_size - end
+		fileSeek = s.FileSize() - end
 		contentLength = end
 		hasRange = true
 	} else if start >= 0 && end < 0 {
 		// Only start point
 		fileSeek = start
-		contentLength = s.file_size - start
+		contentLength = s.FileSize() - start
 		hasRange = true
 	} else if start >= 0 && end > 0 {
 		// Both start and end
@@ -155,7 +156,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		hasRange = true
 	}
 
-	if fileSeek < 0 || fileSeek >= s.file_size || fileEnding >= s.file_size || fileEnding < fileSeek {
+	if fileSeek < 0 || fileSeek >= s.FileSize() || fileEnding >= s.FileSize() || fileEnding < fileSeek {
 		// Invalid range
 		s.Close()
 
@@ -163,7 +164,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.file_size))
+		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.FileSize()))
 
 		response.WriteHeader(416)
 		return
@@ -192,7 +193,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("Cache-Control", "max-age=31536000")
 
 	if hasRange {
-		response.Header().Add("Content-Range", "bytes "+fmt.Sprint(fileSeek)+"-"+fmt.Sprint(fileEnding)+"/"+fmt.Sprint(s.file_size))
+		response.Header().Add("Content-Range", "bytes "+fmt.Sprint(fileSeek)+"-"+fmt.Sprint(fileEnding)+"/"+fmt.Sprint(s.FileSize()))
 		response.WriteHeader(206)
 	} else {
 		response.WriteHeader(200)
@@ -319,7 +320,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	asset_lock.StartRead()
 
-	s, err := CreateMultiFilePackReadStream(asset_path)
+	s, err := encrypted_storage.CreateMultiFilePackReadStream(asset_path, FILE_PERMISSION)
 
 	if err != nil {
 		asset_lock.EndRead()
@@ -330,7 +331,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if preview_img_index < 0 || preview_img_index >= s.file_count {
+	if preview_img_index < 0 || preview_img_index >= s.FileCount() {
 		s.Close()
 
 		asset_lock.EndRead()
@@ -366,7 +367,7 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	// Decrypt the data
 
-	d, err := decryptFileContents(b, session.key)
+	d, err := encrypted_storage.DecryptFileContents(b, session.key)
 
 	if err != nil {
 		LogError(err)

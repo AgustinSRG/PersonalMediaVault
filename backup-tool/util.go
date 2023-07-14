@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	FILE_PERMISSION   = 0600 // Read/Write
-	FOLDER_PERMISSION = 0700 // Read/Write/Run
+	FILE_PERMISSION          = 0600 // Read/Write
+	FOLDER_PERMISSION        = 0700 // Read/Write/Run
+	ENCRYPTED_BLOCK_MAX_SIZE = 5 * 1024 * 1024
 )
 
 func CheckFileExists(file string) bool {

@@ -14,6 +14,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
 const (
@@ -201,7 +203,7 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 		return "", err
 	}
 
-	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_file, FILE_PERMISSION)
 
 	if err != nil {
 		f.Close()
@@ -209,7 +211,7 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 		return "", err
 	}
 
-	err = ws.Initialize(f_info.Size(), key)
+	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
 		ws.Close()
@@ -263,7 +265,7 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 
 		bytesEncrypted += c
 
-		progress_enc := math.Round(float64(bytesEncrypted) * 100 / float64(ws.file_size))
+		progress_enc := math.Round(float64(bytesEncrypted) * 100 / float64(ENCRYPTED_BLOCK_MAX_SIZE))
 		p := int32(progress_enc)
 		GetVault().media.SetProgress(mid, p)
 	}
@@ -297,7 +299,7 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 		return "", err
 	}
 
-	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_file, FILE_PERMISSION)
 
 	if err != nil {
 		f.Close()
@@ -305,7 +307,7 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 		return "", err
 	}
 
-	err = ws.Initialize(f_info.Size(), key)
+	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
 		ws.Close()
@@ -362,14 +364,14 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 func EncryptAssetData(data []byte, key []byte) (string, error) {
 	encrypted_file := GetTemporalFileName("pma", true)
 
-	ws, err := CreateFileBlockEncryptWriteStream(encrypted_file)
+	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_file, FILE_PERMISSION)
 
 	if err != nil {
 
 		return "", err
 	}
 
-	err = ws.Initialize(int64(len(data)), key)
+	err = ws.Initialize(int64(len(data)), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
 		ws.Close()
