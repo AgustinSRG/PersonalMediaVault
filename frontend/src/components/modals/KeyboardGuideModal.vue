@@ -235,6 +235,13 @@
             </tr>
 
             <tr>
+              <td>{{ $t("Show media extended description") }}</td>
+              <td>
+                <span class="key-shortcut">I</span>
+              </td>
+            </tr>
+
+            <tr>
               <td>{{ $t("Go to next") }}</td>
               <td>
                 <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Right arrow") }}</span>

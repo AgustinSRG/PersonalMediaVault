@@ -38,6 +38,7 @@ export interface MediaData {
     force_start_beginning: boolean;
     img_notes: boolean;
     img_notes_url: string;
+    ext_desc_url: string;
     time_slices: {
         time: number;
         name: string;
@@ -151,6 +152,16 @@ export class MediaAPI {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/notes"),
             json: notes,
+        };
+    }
+
+    public static SetExtendedDescription(id: number, extendedDesc: string): RequestParams<void> {
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/ext_desc"),
+            json: {
+                ext_desc: extendedDesc,
+            },
         };
     }
 

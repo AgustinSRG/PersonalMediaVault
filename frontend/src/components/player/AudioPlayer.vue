@@ -140,7 +140,7 @@
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" @open-tags="openTags"></PlayerContextMenu>
+    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" @open-tags="openTags"  @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
   </div>
 </template>
 
@@ -192,6 +192,7 @@ export default defineComponent({
     "albums-open",
     "stats-open",
     "tags-open",
+    "ext-desc-open",
   ],
   props: {
     mid: Number,
@@ -312,6 +313,10 @@ export default defineComponent({
 
     openTags: function () {
       this.$emit("tags-open");
+    },
+
+    openExtendedDescription: function () {
+      this.$emit("ext-desc-open");
     },
 
     hideContext: function (e) {
@@ -760,6 +765,10 @@ export default defineComponent({
         case "A":
         case "a":
           this.manageAlbums();
+          break;
+        case "i":
+        case "I":
+          this.openExtendedDescription();
           break;
         case "t":
         case "T":

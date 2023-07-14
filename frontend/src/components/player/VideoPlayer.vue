@@ -31,18 +31,18 @@
 
     <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls || !userControls }">
       <div class="player-subtitles" v-if="subtitles" v-html="subtitles" :class="{
-          'player-subtitles-s': subtitlesSize === 's',
-          'player-subtitles-m': subtitlesSize === 'm',
-          'player-subtitles-l': subtitlesSize === 'l',
-          'player-subtitles-xl': subtitlesSize === 'xl',
-          'player-subtitles-xxl': subtitlesSize === 'xxl',
+        'player-subtitles-s': subtitlesSize === 's',
+        'player-subtitles-m': subtitlesSize === 'm',
+        'player-subtitles-l': subtitlesSize === 'l',
+        'player-subtitles-xl': subtitlesSize === 'xl',
+        'player-subtitles-xxl': subtitlesSize === 'xxl',
 
-          'player-subtitles-bg-0': subtitlesBg === '0',
-          'player-subtitles-bg-25': subtitlesBg === '25',
-          'player-subtitles-bg-50': subtitlesBg === '50',
-          'player-subtitles-bg-75': subtitlesBg === '75',
-          'player-subtitles-bg-100': subtitlesBg === '100',
-        }"></div>
+        'player-subtitles-bg-0': subtitlesBg === '0',
+        'player-subtitles-bg-25': subtitlesBg === '25',
+        'player-subtitles-bg-50': subtitlesBg === '50',
+        'player-subtitles-bg-75': subtitlesBg === '75',
+        'player-subtitles-bg-100': subtitlesBg === '100',
+      }"></div>
     </div>
 
     <div class="player-controls" :class="{ hidden: !showControls || !userControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
@@ -146,7 +146,7 @@
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls && userControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="video" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="videoURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" v-model:controls="userControlsState" @open-tags="openTags"></PlayerContextMenu>
+    <PlayerContextMenu type="video" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="videoURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" v-model:controls="userControlsState" @open-tags="openTags" @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
   </div>
 </template>
 
@@ -161,7 +161,7 @@ import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
-import { findTimeSlice, normalizeTimeSlices} from "../../utils/time-slices";
+import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -197,6 +197,7 @@ export default defineComponent({
     "albums-open",
     "stats-open",
     "tags-open",
+    "ext-desc-open",
   ],
   props: {
     mid: Number,
@@ -325,6 +326,10 @@ export default defineComponent({
 
     openTags: function () {
       this.$emit("tags-open");
+    },
+
+    openExtendedDescription: function () {
+      this.$emit("ext-desc-open");
     },
 
     hideContext: function (e) {
@@ -942,6 +947,10 @@ export default defineComponent({
         case "a":
           this.manageAlbums();
           break;
+        case "i":
+        case "I":
+          this.openExtendedDescription();
+          break;
         case "t":
         case "T":
           this.openTags();
@@ -1317,7 +1326,7 @@ export default defineComponent({
       }
     },
 
-    onMediaError: function() {
+    onMediaError: function () {
       this.mediaError = true
       this.loading = false;
     },

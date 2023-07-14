@@ -105,6 +105,10 @@
     height: auto;
 }
 
+.form-control.form-textarea.no-resize {
+    resize: none;
+}
+
 textarea.form-control::-webkit-resizer {
     background: var(--input-bg-color);
     color: var(--theme-fg-color);

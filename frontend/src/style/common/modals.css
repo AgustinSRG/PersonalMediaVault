@@ -101,6 +101,10 @@
     min-height: calc(100vh - 60px - 1rem);
 }
 
+.modal-height-100-wf .modal-body {
+    min-height: calc(100vh - 60px - 85px - 1rem);
+}
+
 .modal-header {
     display: flex;
     flex-direction: row;
@@ -142,6 +146,7 @@
 
 .modal-body,
 .modal-footer {
+    position: relative;
     padding: 1rem;
 }
 

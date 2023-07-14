@@ -78,6 +78,8 @@ export interface MediaData {
 
     img_notes: boolean,
     img_notes_url: string,
+
+    ext_desc_url: string,
 }
 
 export class MediaController {

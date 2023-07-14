@@ -97,7 +97,7 @@
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControlsState" :canWrite="canWrite" v-model:notesEdit="notesEditMode" @stats="openStats" @open-tags="openTags"></PlayerContextMenu>
+    <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControlsState" :canWrite="canWrite" v-model:notesEdit="notesEditMode" @stats="openStats" @open-tags="openTags"  @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
   </div>
 </template>
 
@@ -147,6 +147,7 @@ export default defineComponent({
     "albums-open",
     "stats-open",
     "tags-open",
+    "ext-desc-open",
   ],
   props: {
     mid: Number,
@@ -244,6 +245,10 @@ export default defineComponent({
 
     openTags: function () {
       this.$emit("tags-open");
+    },
+
+    openExtendedDescription: function () {
+      this.$emit("ext-desc-open");
     },
 
     grabScroll: function (e) {
@@ -630,6 +635,10 @@ export default defineComponent({
         case "A":
         case "a":
           this.manageAlbums();
+          break;
+        case "i":
+        case "I":
+          this.openExtendedDescription();
           break;
         case "t":
         case "T":

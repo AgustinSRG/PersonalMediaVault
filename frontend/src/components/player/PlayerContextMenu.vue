@@ -116,6 +116,20 @@
       </tr>
 
       <tr
+        class="tr-button"
+        tabindex="0"
+        @click="showExtendedDescription"
+        @keydown="clickOnEnter"
+      >
+        <td>
+          <i class="fas fa-info icon-config"></i>
+          <span class="context-entry-title">{{ $t("Extended description") }}</span>
+        </td>
+        <td class="td-right">
+        </td>
+      </tr>
+
+      <tr
         v-if="url"
         class="tr-button"
         tabindex="0"
@@ -175,6 +189,7 @@ export default defineComponent({
     "update:notesEdit",
     "update:sliceLoop",
     "open-tags",
+    "open-ext-desc",
     "stats",
     "close",
   ],
@@ -262,6 +277,12 @@ export default defineComponent({
 
     showTags: function () {
       this.$emit("open-tags");
+      this.shownState = false;
+      this.$emit("close");
+    },
+
+    showExtendedDescription: function () {
+      this.$emit("open-ext-desc");
       this.shownState = false;
       this.$emit("close");
     },
