@@ -106,6 +106,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		mimeType = "application/x-subrip"
 	case "json":
 		mimeType = "application/json"
+	case "txt":
+		mimeType = "text/pain"
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)

@@ -293,7 +293,9 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	})
 
 	if err != nil {
-		LogTaskError(task.definition.Id, "Error: "+err.Error())
+		if !task.killed {
+			LogTaskError(task.definition.Id, "Error: "+err.Error())
+		}
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		WipeTemporalPath(tempFolder)

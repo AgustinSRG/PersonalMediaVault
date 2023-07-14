@@ -11,15 +11,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ImageNote struct {
-	XPosition int    `json:"x"`
-	YPosition int    `json:"y"`
-	Width     int    `json:"w"`
-	Height    int    `json:"h"`
-	Text      string `json:"text"`
+type ExtendedDescriptionSetBody struct {
+	ExtendedDescription string `json:"ext_desc"`
 }
 
-func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
+func api_setExtendedDescription(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -41,7 +37,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var p []ImageNote = make([]ImageNote, 0)
+	var p ExtendedDescriptionSetBody
 
 	err = json.NewDecoder(request.Body).Decode(&p)
 	if err != nil {
@@ -49,7 +45,11 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	assetData, err := json.Marshal(p)
+	assetData := []byte(p.ExtendedDescription)
+
+	// Encrypt the description file
+
+	desc_encrypted_file, err := EncryptAssetData(assetData, session.key)
 
 	if err != nil {
 		LogError(err)
@@ -58,23 +58,12 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Encrypt the notes file
-
-	notes_encrypted_file, err := EncryptAssetData(assetData, session.key)
-
-	if err != nil {
-		LogError(err)
-
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
-		return
-	}
-
-	// Put the notes into the media assets
+	// Put the description into the media assets
 
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		os.Remove(notes_encrypted_file)
+		os.Remove(desc_encrypted_file)
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
@@ -84,7 +73,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		os.Remove(notes_encrypted_file)
+		os.Remove(desc_encrypted_file)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
@@ -94,28 +83,20 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	if meta == nil {
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+		os.Remove(desc_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
-	if meta.Type != MediaTypeImage {
-		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
-		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 400, "NOT_SUPPORTED", "This feature is not supported for the media type. Only for images.")
-		return
-	}
-
-	notes_asset := meta.NextAssetID
+	desc_asset := meta.NextAssetID
 	meta.NextAssetID++
 
-	success, asset_path, asset_lock := media.AcquireAsset(notes_asset, ASSET_SINGLE_FILE)
+	success, asset_path, asset_lock := media.AcquireAsset(desc_asset, ASSET_SINGLE_FILE)
 
 	if !success {
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+		os.Remove(desc_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
@@ -126,17 +107,17 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 	asset_lock.StartWrite()
 
 	// Move temp file
-	err = RenameAndReplace(notes_encrypted_file, asset_path)
+	err = RenameAndReplace(desc_encrypted_file, asset_path)
 
 	asset_lock.EndWrite()
 
-	media.ReleaseAsset(notes_asset)
+	media.ReleaseAsset(desc_asset)
 
 	if err != nil {
 		LogError(err)
 
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+		os.Remove(desc_encrypted_file)
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -145,9 +126,9 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	// Change metadata
 
-	if meta.HasImageNotes {
+	if meta.HasExtendedDescription {
 		// Remove old asset
-		oldAsset := meta.ImageNotesAsset
+		oldAsset := meta.ExtendedDescriptionAsset
 		success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
 		if success {
@@ -162,8 +143,8 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	meta.HasImageNotes = true
-	meta.ImageNotesAsset = notes_asset
+	meta.HasExtendedDescription = true
+	meta.ExtendedDescriptionAsset = desc_asset
 
 	// Save
 	err = media.EndWrite(meta, session.key, false)

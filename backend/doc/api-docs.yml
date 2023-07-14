@@ -463,6 +463,10 @@ paths:
                 type: string
                 description: "URL to fetch the image notes from"
                 example: "/assets/b/0/0/notes.json"
+              ext_desc_url:
+                type: string
+                description: "URL to fetch the extended description from. Empty if no extended description."
+                example: "/assets/b/0/0/ext_desc.txt"
               time_slices:
                 type: array
                 description: "Timeline splits, for videos and audios"
@@ -787,6 +791,42 @@ paths:
                 text:
                   type: string
                   description: "Text of the notes"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+
+  "/api/media/{id}/edit/ext_desc":
+    post:
+      summary: Sets the extended description.
+      description: Updates the extended description file for a media asset.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: array of notes
+          schema:
+            properties:
+              ext_desc:
+                type: string
+                description: "Extended description to store"
       security:
         - SessionTokenHeader: []
       responses:

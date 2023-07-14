@@ -125,6 +125,8 @@ type MediaAPIMetaResponse struct {
 
 	HasImageNotes bool   `json:"img_notes"`
 	ImageNotesURL string `json:"img_notes_url"`
+
+	ExtendedDescriptionURL string `json:"ext_desc_url"`
 }
 
 func api_getMedia(response http.ResponseWriter, request *http.Request) {
@@ -230,6 +232,14 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	} else {
 		result.HasImageNotes = false
 		result.ImageNotesURL = ""
+	}
+
+	// Extended description
+
+	if meta.HasExtendedDescription {
+		result.ExtendedDescriptionURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ExtendedDescriptionAsset) + "/ext_desc.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
+	} else {
+		result.ExtendedDescriptionURL = ""
 	}
 
 	// Resolutions

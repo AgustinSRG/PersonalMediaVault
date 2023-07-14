@@ -126,6 +126,9 @@ type MediaMetadata struct {
 
 	HasImageNotes   bool   `json:"img_notes"`       // True to indicate the asset has image notes
 	ImageNotesAsset uint64 `json:"img_notes_asset"` // Asset where the image notes are stored
+
+	HasExtendedDescription   bool   `json:"ext_desc"`       // True to indicate the asset has extended description
+	ExtendedDescriptionAsset uint64 `json:"ext_desc_asset"` // Asset where the extended description is stored
 }
 
 // Creates a new media asset. Creates the folder and stores the initial metadata.
@@ -149,33 +152,35 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 	now := time.Now().UnixMilli()
 
 	meta := MediaMetadata{
-		Id:                media.id,
-		Type:              media_type,
-		MediaDuration:     duration,
-		Width:             width,
-		Height:            height,
-		Fps:               fps,
-		Title:             title,
-		Description:       desc,
-		Tags:              make([]uint64, 0),
-		UploadTimestamp:   now,
-		NextAssetID:       0,
-		OriginalReady:     false,
-		OriginalAsset:     0,
-		OriginalTask:      0,
-		OriginalEncoded:   false,
-		OriginalExtension: "",
-		ThumbnailReady:    false,
-		ThumbnailAsset:    0,
-		Resolutions:       make([]MediaResolution, 0),
-		Subtitles:         make([]MediaSubtitle, 0),
-		AudioTracks:       make([]MediaAudioTrack, 0),
-		Splits:            make([]MediaSplit, 0),
-		PreviewsReady:     false,
-		PreviewsInterval:  0,
-		PreviewsAsset:     0,
-		HasImageNotes:     false,
-		ImageNotesAsset:   0,
+		Id:                       media.id,
+		Type:                     media_type,
+		MediaDuration:            duration,
+		Width:                    width,
+		Height:                   height,
+		Fps:                      fps,
+		Title:                    title,
+		Description:              desc,
+		Tags:                     make([]uint64, 0),
+		UploadTimestamp:          now,
+		NextAssetID:              0,
+		OriginalReady:            false,
+		OriginalAsset:            0,
+		OriginalTask:             0,
+		OriginalEncoded:          false,
+		OriginalExtension:        "",
+		ThumbnailReady:           false,
+		ThumbnailAsset:           0,
+		Resolutions:              make([]MediaResolution, 0),
+		Subtitles:                make([]MediaSubtitle, 0),
+		AudioTracks:              make([]MediaAudioTrack, 0),
+		Splits:                   make([]MediaSplit, 0),
+		PreviewsReady:            false,
+		PreviewsInterval:         0,
+		PreviewsAsset:            0,
+		HasImageNotes:            false,
+		ImageNotesAsset:          0,
+		HasExtendedDescription:   false,
+		ExtendedDescriptionAsset: 0,
 	}
 
 	media.lock.RequestWrite() // Request write
