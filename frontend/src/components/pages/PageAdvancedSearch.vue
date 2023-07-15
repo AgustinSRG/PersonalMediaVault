@@ -151,6 +151,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import { MediaEntry } from "@/control/media";
 import { TagEntry, TagsController } from "@/control/tags";
 import { elementInView } from "@/utils/in-view";
+import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
@@ -290,7 +291,8 @@ export default defineComponent({
 
     filterElements: function (results: MediaEntry[]) {
       TagsController.OnMediaListReceived(results);
-      const filterText = this.textSearch.toLowerCase();
+      const filterText = normalizeString(this.textSearch).trim().toLowerCase();
+      const filterTextWords = filterToWords(filterText);
       const filterType = this.type;
       const filterTags = this.tags.slice();
       const filterTagMode = this.tagMode;
@@ -313,10 +315,7 @@ export default defineComponent({
         }
 
         if (filterText) {
-          if (
-            !e.title.toLowerCase().includes(filterText) &&
-            !e.description.toLowerCase().includes(filterText)
-          ) {
+          if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
             continue;
           }
         }

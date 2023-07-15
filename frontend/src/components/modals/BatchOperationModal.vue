@@ -176,6 +176,7 @@ import { SearchAPI } from "@/api/api-search";
 import { MediaController, MediaEntry } from "@/control/media";
 import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
+import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 
 const PAGE_SIZE = 50;
 
@@ -617,17 +618,15 @@ export default defineComponent({
     },
 
     filterElements: function (results: MediaEntry[]) {
-      const filterText = this.textSearch.toLowerCase();
+      const filterText = normalizeString(this.textSearch).trim().toLowerCase();
+      const filterTextWords = filterToWords(filterText);
       const filterType = this.typeSearch;
       const filterTags = this.tagsSearch.slice();
       const filterTagMode = this.tagModeSearch;
 
       for (let e of results) {
         if (filterText) {
-          if (
-            !e.title.toLowerCase().includes(filterText) &&
-            !e.description.toLowerCase().includes(filterText)
-          ) {
+          if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
             continue;
           }
         }

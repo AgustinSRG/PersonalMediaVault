@@ -121,6 +121,7 @@ import { AlbumEntry } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 
 export default defineComponent({
   name: "PageAlbums",
@@ -225,13 +226,13 @@ export default defineComponent({
         return;
       }
 
-      let filter = (this.filter + "").toLowerCase();
+      let filter = normalizeString(this.filter + "").trim().toLowerCase();
 
       let albumsList = this.albumsList.map((a: AlbumEntry) => {
         return {
           id: a.id,
           name: a.name,
-          nameLowerCase: a.name.toLowerCase(),
+          nameLowerCase: a.name.trim().toLowerCase(),
           size: a.size,
           thumbnail: a.thumbnail,
           lm: a.lm,
@@ -239,8 +240,9 @@ export default defineComponent({
       });
 
       if (filter) {
-        albumsList = albumsList.filter((a) => {
-          return !filter || a.nameLowerCase.indexOf(filter) >= 0;
+        const filterWords = filterToWords(filter);
+        albumsList = albumsList.filter(a => {
+          return matchSearchFilter(a.name, filter, filterWords)  >= 0;
         });
       }
 

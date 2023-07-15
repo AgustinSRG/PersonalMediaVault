@@ -52,6 +52,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 import { FocusTrap } from "../../utils/focus-trap";
+import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 
 export default defineComponent({
   name: "TopBar",
@@ -177,14 +178,16 @@ export default defineComponent({
     },
 
     updateSuggestions: function () {
-      const tagFilter = this.search
+      const tagFilter = normalizeString(this.search
         .replace(/[\n\r]/g, " ")
         .trim()
         .replace(/[\s]/g, "_")
-        .toLowerCase();
+        .toLowerCase());
+      const albumFilter = normalizeString(this.search).trim().toLowerCase();
+      const albumFilterWords = filterToWords(albumFilter);
       this.suggestions = Object.values(TagsController.Tags)
         .map((a: any) => {
-          const i = tagFilter ? a.name.indexOf(tagFilter) : 0;
+          const i = tagFilter ? normalizeString(a.name).indexOf(tagFilter) : 0;
           return {
             key: "tag:" + a.id,
             id: a.id,
@@ -197,13 +200,12 @@ export default defineComponent({
         })
         .concat(
           Object.values(AlbumsController.Albums).map((a) => {
-            const name = a.name.replace(/[\s]/g, "_").toLowerCase();
-            const i = tagFilter ? name.indexOf(tagFilter) : 0;
+            const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
             return {
               key: "album:" + a.id,
               id: a.id,
               name: a.name,
-              nameLower: name,
+              nameLower: a.name.toLowerCase(),
               starts: i === 0,
               contains: i >= 0,
               type: "album",
