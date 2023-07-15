@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent">
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Tasks") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">

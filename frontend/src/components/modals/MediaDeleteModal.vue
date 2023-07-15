@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Delete media") }}

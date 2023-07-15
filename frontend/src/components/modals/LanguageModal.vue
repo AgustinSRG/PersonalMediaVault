@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header-corner">
         <div class="modal-header-corner-title">{{ $t("Choose your language") }}</div>
       </div>

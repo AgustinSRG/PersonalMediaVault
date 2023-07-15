@@ -2,8 +2,8 @@
   <div class="
         modal-container modal-container-corner modal-container-help
         no-transition
-      " :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent">
+      " :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header-corner">
         <div class="modal-header-corner-title">{{ $t("Help") }}</div>
       </div>

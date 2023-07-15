@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @click="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent">
+  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title about-modal-title">
           <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />

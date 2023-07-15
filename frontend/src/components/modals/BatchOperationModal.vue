@@ -1,6 +1,6 @@
 <template>
   <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl" role="document" @click="stopPropagationEvent">
+    <div v-if="display" class="modal-dialog modal-xl" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Batch operation") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">

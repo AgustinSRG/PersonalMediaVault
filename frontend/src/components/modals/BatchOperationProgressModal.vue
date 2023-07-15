@@ -1,6 +1,6 @@
 <template>
   <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
-    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent">
+    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title" v-if="status === 'search'">
           {{ $t("Searching") }}...

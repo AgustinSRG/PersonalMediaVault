@@ -1,6 +1,6 @@
 <template>
   <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header">
         <div class="modal-title" v-if="!isUpload">
           {{ $t("Search media to add to the album") }}
