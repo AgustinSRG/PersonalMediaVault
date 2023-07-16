@@ -92,45 +92,45 @@ type MediaMetadata struct {
 
 	Type MediaType `json:"type"` // Type of media (image, video, audio)
 
-	Title       string   `json:"title"`       // Title
-	Description string   `json:"description"` // Description
-	Tags        []uint64 `json:"tags"`        // List of tag IDs
+	Title       string   `json:"title"`                 // Title
+	Description string   `json:"description,omitempty"` // Description
+	Tags        []uint64 `json:"tags"`                  // List of tag IDs
 
-	MediaDuration float64 `json:"duration"` // Duration (seconds)
-	Width         int32   `json:"width"`    // Width (px)
-	Height        int32   `json:"height"`   // Height (px)
-	Fps           int32   `json:"fps"`      // Frames per second
+	MediaDuration float64 `json:"duration,omitempty"` // Duration (seconds)
+	Width         int32   `json:"width,omitempty"`    // Width (px)
+	Height        int32   `json:"height,omitempty"`   // Height (px)
+	Fps           int32   `json:"fps,omitempty"`      // Frames per second
 
 	UploadTimestamp int64 `json:"upload_time"` // Upload timestamp (unix milliseconds)
 
 	NextAssetID uint64 `json:"next_asset_id"` // Id to give to the next asset file
 
-	OriginalReady     bool   `json:"original_ready"`   // True if original media asset is fully uploaded and encrypted
-	OriginalAsset     uint64 `json:"original_asset"`   // ID of the asset file (MediaAssetFile) where the media is stored
-	OriginalExtension string `json:"original_ext"`     // Extension of the original media file
-	OriginalTask      uint64 `json:"original_task"`    // ID of the task that must encode the original asset (only if OriginalEncoded = false)
-	OriginalEncoded   bool   `json:"original_encoded"` // True if the original asset is ready for playback
+	OriginalReady     bool   `json:"original_ready"`          // True if original media asset is fully uploaded and encrypted
+	OriginalAsset     uint64 `json:"original_asset"`          // ID of the asset file (MediaAssetFile) where the media is stored
+	OriginalExtension string `json:"original_ext"`            // Extension of the original media file
+	OriginalTask      uint64 `json:"original_task,omitempty"` // ID of the task that must encode the original asset (only if OriginalEncoded = false)
+	OriginalEncoded   bool   `json:"original_encoded"`        // True if the original asset is ready for playback
 
 	ThumbnailReady bool   `json:"thumb_ready"` // True if the thumbnail is ready to be displayed
 	ThumbnailAsset uint64 `json:"thumb_asset"` // ID of the asset file (MediaAssetFile) where the thumbnail is stored
 
-	Resolutions []MediaResolution `json:"resolutions"`  // List of extra resolutions (not original)
-	Subtitles   []MediaSubtitle   `json:"subtitles"`    // List of subtitle files
-	Splits      []MediaSplit      `json:"time_splits"`  // List of time splits
-	AudioTracks []MediaAudioTrack `json:"audio_tracks"` // List of audio tracks
+	Resolutions []MediaResolution `json:"resolutions,omitempty"`  // List of extra resolutions (not original)
+	Subtitles   []MediaSubtitle   `json:"subtitles,omitempty"`    // List of subtitle files
+	Splits      []MediaSplit      `json:"time_splits,omitempty"`  // List of time splits
+	AudioTracks []MediaAudioTrack `json:"audio_tracks,omitempty"` // List of audio tracks
 
-	PreviewsReady    bool    `json:"previews_ready"`    // True if timeline previews are ready to be displayed
-	PreviewsTask     uint64  `json:"previews_task"`     // ID of the task that must create the video previews (only if PreviewsReady = false)
-	PreviewsInterval float64 `json:"previews_interval"` // Interval for each video preview, in seconds
-	PreviewsAsset    uint64  `json:"previews_asset"`    // ID of the asset file (MediaAssetFile) where the video previews are stored
+	PreviewsReady    bool    `json:"previews_ready,omitempty"`    // True if timeline previews are ready to be displayed
+	PreviewsTask     uint64  `json:"previews_task,omitempty"`     // ID of the task that must create the video previews (only if PreviewsReady = false)
+	PreviewsInterval float64 `json:"previews_interval,omitempty"` // Interval for each video preview, in seconds
+	PreviewsAsset    uint64  `json:"previews_asset,omitempty"`    // ID of the asset file (MediaAssetFile) where the video previews are stored
 
-	ForceStartBeginning bool `json:"force_start_beginning"` // True to indicate clients not to save the current time for this media
+	ForceStartBeginning bool `json:"force_start_beginning,omitempty"` // True to indicate clients not to save the current time for this media
 
-	HasImageNotes   bool   `json:"img_notes"`       // True to indicate the asset has image notes
-	ImageNotesAsset uint64 `json:"img_notes_asset"` // Asset where the image notes are stored
+	HasImageNotes   bool   `json:"img_notes,omitempty"`       // True to indicate the asset has image notes
+	ImageNotesAsset uint64 `json:"img_notes_asset,omitempty"` // Asset where the image notes are stored
 
-	HasExtendedDescription   bool   `json:"ext_desc"`       // True to indicate the asset has extended description
-	ExtendedDescriptionAsset uint64 `json:"ext_desc_asset"` // Asset where the extended description is stored
+	HasExtendedDescription   bool   `json:"ext_desc,omitempty"`       // True to indicate the asset has extended description
+	ExtendedDescriptionAsset uint64 `json:"ext_desc_asset,omitempty"` // Asset where the extended description is stored
 }
 
 // Creates a new media asset. Creates the folder and stores the initial metadata.
