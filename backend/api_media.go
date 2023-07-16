@@ -496,6 +496,15 @@ func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) 
 		})
 	}
 
+	if meta.HasExtendedDescription {
+		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+			Id:   meta.ExtendedDescriptionAsset,
+			Type: ASSET_SINGLE_FILE,
+			Name: "EXT_DESC",
+			Size: 0,
+		})
+	}
+
 	for i := 0; i < len(result.AssetSize); i++ {
 		found, asset_path, asset_lock := media.AcquireAsset(result.AssetSize[i].Id, result.AssetSize[i].Type)
 
