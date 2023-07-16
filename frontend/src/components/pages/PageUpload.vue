@@ -47,7 +47,7 @@
       <form @submit="addTag">
         <div class="form-group">
           <label>{{ $t("Tag to add") }}:</label>
-          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" @input="onTagAddChanged(false)"
+          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" @input="onTagAddChanged(false)" @keydown="onTagInputKeyDown"
             class="form-control" />
         </div>
         <div class="form-group" v-if="matchingTags.length > 0">
@@ -450,6 +450,17 @@ export default defineComponent({
       this.tagData = clone(TagsController.Tags);
     },
 
+    onTagInputKeyDown: function (event: KeyboardEvent) {
+      if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
+        this.onTagAddChanged(true);
+        if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
+          this.tagToAdd = this.matchingTags[0].name;
+          this.onTagAddChanged(true);
+          event.preventDefault();
+        }
+      }
+    },
+
     onTagAddChanged: function (forced: boolean) {
       if (forced) {
         if (this.$options.findTagTimeout) {
@@ -483,6 +494,7 @@ export default defineComponent({
         e.preventDefault();
       }
       this.addTagByName(this.tagToAdd);
+      this.tagToAdd = "";
     },
 
     addTagByName: function (tag: string) {

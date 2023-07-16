@@ -556,19 +556,25 @@ export default defineComponent({
       this.onTagAddChanged(true);
     },
 
-    onTagAddKeyDown: function (e: KeyboardEvent) {
-      if (e.key !== "Enter") {
-        return;
-      }
+    onTagAddKeyDown: function (event: KeyboardEvent) {
+      if (event.key === "Enter") {
+        event.preventDefault();
 
-      e.preventDefault();
-
-      this.onTagAddChanged(true);
-
-      if (this.matchingTags.length > 0) {
-        this.addMatchingTag(this.matchingTags[0]);
-        this.tagToAdd = "";
         this.onTagAddChanged(true);
+
+        if (this.matchingTags.length > 0) {
+          this.addMatchingTag(this.matchingTags[0]);
+          this.tagToAdd = "";
+          this.onTagAddChanged(true);
+        }
+      } else if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
+        this.onTagAddChanged(true);
+
+        if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
+          this.tagToAdd = this.matchingTags[0].name;
+          this.onTagAddChanged(true);
+          event.preventDefault();
+        }
       }
     },
 
