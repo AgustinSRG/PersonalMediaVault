@@ -1,5 +1,30 @@
 #!/bin/bash
 
+# Build project
+
+echo "Building project: PersonalMediaVault"
+
+cd ../../backend
+echo "Building backend..."
+./build-production.sh
+
+cd ../backup-tool
+echo "Building backup tool..."
+./build-production.sh
+
+cd ../launcher
+echo "Building launcher..."
+./build-production.sh
+
+cd ../frontend
+echo "Building frontend..."
+npm install
+npm run build
+
+cd ../packages/dpkg-deb
+
+# Build package
+
 PMV_VERSION_MAJOR=1
 PMV_VERSION_MINOR=8
 PMV_VERSION_REVISION=1
