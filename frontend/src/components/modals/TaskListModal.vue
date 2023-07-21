@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Tasks") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -65,7 +65,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -77,7 +77,6 @@ import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "TaskListModal",
@@ -237,11 +236,7 @@ export default defineComponent({
     },
 
     close: function () {
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+      this.$refs.modalContainer.close();
     },
 
     renderType: function (t: number) {
@@ -340,20 +335,11 @@ export default defineComponent({
         })
       );
     },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
 
     if (this.display) {
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
@@ -363,25 +349,14 @@ export default defineComponent({
     Timeouts.Abort("admin-tasks");
     Request.Abort("admin-tasks");
     Timeouts.Abort("admin-tasks-update");
-    Timeouts.Abort("admin-tasks-update");
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
         this.load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

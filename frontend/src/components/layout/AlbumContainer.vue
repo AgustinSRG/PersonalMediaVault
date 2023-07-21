@@ -71,7 +71,7 @@
     <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
     <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
     <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
-    <AlbumMovePosModal v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
+    <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
     <LoadingOverlay v-if="loading"></LoadingOverlay>
   </div>
 </template>
@@ -352,7 +352,7 @@ export default defineComponent({
     },
 
     changeMediaPos: function (i: number) {
-      AppEvents.Emit("album-user-request-pos", {
+      this.$refs.movePosModal.show({
         pos: i,
         callback: (newPos: number) => {
           if (isNaN(newPos) || !isFinite(newPos)) {

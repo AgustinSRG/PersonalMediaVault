@@ -1,8 +1,8 @@
 <template>
-  <div class="modal-container modal-container-settings modal-container-top" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document">
       <div class="modal-header">
-        <div class="modal-title">{{ $t("Extended description") }}</div>
+        <div class="modal-title">{{ title || $t("Extended description") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
           <i class="fas fa-times"></i>
         </button>
@@ -31,7 +31,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -40,7 +40,6 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 import { MediaController } from "@/control/media";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -161,30 +160,19 @@ export default defineComponent({
     },
 
     close: function () {
-      if (this.busy) {
-        return;
-      }
-      this.displayStatus = false;
+      this.$refs.modalContainer.close();
+    },
+
+    onClose: function () {
       if (this.changed) {
         MediaController.Load();
       }
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
     },
 
     updateMediaData: function () {
       this.mid = AppStatus.CurrentMedia;
       this.title = MediaController.MediaData ? MediaController.MediaData.title : "";
       this.load();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
     },
 
     startEdit: function () {
@@ -206,7 +194,7 @@ export default defineComponent({
           return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
         } else {
           return "<p>" + escapeHTML(paragraph).replace(/\n/g, "<br>") + "</p>";
-        } 
+        }
       }).join("");
     },
 
@@ -238,8 +226,6 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
     this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
     AppEvents.AddEventListener(
@@ -255,7 +241,6 @@ export default defineComponent({
     );
 
     if (this.display) {
-      this.$options.focusTrap.activate();
       this.load();
     }
   },
@@ -268,22 +253,11 @@ export default defineComponent({
       "current-media-update",
       this.$options.mediaUpdateH
     );
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         this.load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

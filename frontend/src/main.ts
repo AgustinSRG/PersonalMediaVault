@@ -32,6 +32,7 @@ import { createApp } from 'vue'
 import { i18n } from './i18n'
 import './registerServiceWorker'
 import App from './App.vue'
+import ModalDialogContainer from "@/components/utils/ModalDialogContainer.vue";
 
 document.addEventListener("drop", function (e) {
     e.preventDefault();
@@ -43,4 +44,4 @@ document.addEventListener("dragover", function (e) {
     e.stopPropagation();
 })
 
-createApp(App).use(i18n).mount('#app')
+createApp(App).use(i18n).component("ModalDialogContainer", ModalDialogContainer).mount('#app')

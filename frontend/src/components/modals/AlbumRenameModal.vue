@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
       <div class="modal-header">
         <div class="modal-title">
           {{ $t("Rename album") }}
@@ -22,7 +22,7 @@
         </button>
       </div>
     </form>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -32,7 +32,6 @@ import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AlbumRenameModal",
@@ -76,14 +75,7 @@ export default defineComponent({
     },
 
     close: function () {
-      if (this.busy) {
-        return;
-      }
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+      this.$refs.modalContainer.close();
     },
 
     submit: function (e) {
@@ -146,13 +138,6 @@ export default defineComponent({
           this.busy = false;
         });
     },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
   },
   mounted: function () {
     this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
@@ -161,14 +146,11 @@ export default defineComponent({
       this.$options.albumUpdateH
     );
 
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
     this.onAlbumUpdate();
 
     if (this.display) {
       this.error = "";
       this.name = this.oldName;
-      this.$options.focusTrap.activate();
       this.autoFocus();
     }
   },
@@ -177,23 +159,13 @@ export default defineComponent({
       "current-album-update",
       this.$options.albumUpdateH
     );
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
         this.error = "";
         this.name = this.oldName;
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         this.autoFocus();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

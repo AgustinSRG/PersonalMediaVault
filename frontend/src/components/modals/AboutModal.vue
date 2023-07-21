@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <div v-if="display" class="modal-dialog modal-lg" role="document">
       <div class="modal-header">
         <div class="modal-title about-modal-title">
           <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />
@@ -50,13 +50,12 @@
         </table>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "AboutModal",
@@ -80,47 +79,22 @@ export default defineComponent({
   },
   methods: {
     close: function () {
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
+      this.$refs.modalContainer.close();
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     if (this.display) {
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
     }
   },
-  beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
   watch: {
     display: function () {
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

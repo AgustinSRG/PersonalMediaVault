@@ -23,9 +23,9 @@
     <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
     <div class="sidebar-float-overlay" :class="{ hidden: !displaySidebar }" @click="hideSidebar"></div>
 
-    <SettingsModal v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsModal>
-    <LanguageModal v-if="displayLang" v-model:display="displayLang"></LanguageModal>
-    <ThemeModal v-if="displayTheme" v-model:display="displayTheme"></ThemeModal>
+    <SettingsDropdown v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsDropdown>
+    <LanguageDropdown v-if="displayLang" v-model:display="displayLang"></LanguageDropdown>
+    <ThemeDropdown v-if="displayTheme" v-model:display="displayTheme"></ThemeDropdown>
     <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
     <ChangePasswordModal v-if="displayPasswordModal" v-model:display="displayPasswordModal"></ChangePasswordModal>
     <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
@@ -37,7 +37,7 @@
 
     <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
 
-    <HelpHubModal v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubModal>
+    <HelpHubDropdown v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubDropdown>
 
     <AboutModal v-if="displayAboutModal" v-model:display="displayAboutModal"></AboutModal>
 
@@ -103,20 +103,20 @@ const LogoutModal = defineAsyncComponent({
   delay: 1000,
 });
 
-const SettingsModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/SettingsModal.vue"),
+const SettingsDropdown = defineAsyncComponent({
+  loader: () => import("@/components/dropdowns/SettingsDropdown.vue"),
   loadingComponent: LoadingOverlay,
   delay: 1000,
 });
 
-const LanguageModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/LanguageModal.vue"),
+const LanguageDropdown = defineAsyncComponent({
+  loader: () => import("@/components/dropdowns/LanguageDropdown.vue"),
   loadingComponent: LoadingOverlay,
   delay: 1000,
 });
 
-const ThemeModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/ThemeModal.vue"),
+const ThemeDropdown = defineAsyncComponent({
+  loader: () => import("@/components/dropdowns/ThemeDropdown.vue"),
   loadingComponent: LoadingOverlay,
   delay: 1000,
 });
@@ -157,8 +157,8 @@ const SearchInputModal = defineAsyncComponent({
   delay: 1000,
 });
 
-const HelpHubModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/HelpHubModal.vue"),
+const HelpHubDropdown = defineAsyncComponent({
+  loader: () => import("@/components/dropdowns/HelpHubDropdown.vue"),
   loadingComponent: LoadingOverlay,
   delay: 1000,
 });
@@ -192,16 +192,16 @@ export default defineComponent({
     LoadingOverlay,
     LoginModal,
     LogoutModal,
-    SettingsModal,
-    LanguageModal,
-    ThemeModal,
+    SettingsDropdown,
+    LanguageDropdown,
+    ThemeDropdown,
     ChangeUsernameModal,
     ChangePasswordModal,
     AdvancedSettingsModal,
     AccountsAdminModal,
     TaskListModal,
     SearchInputModal,
-    HelpHubModal,
+    HelpHubDropdown,
     AboutModal,
     KeyboardGuideModal,
     BatchOperationModal,

@@ -1,22 +1,28 @@
 <template>
-  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <div class="
+        modal-container modal-container-corner modal-container-help
+        no-transition
+      " :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
+    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
       <div class="modal-header-corner">
-        <div class="modal-header-corner-title">{{ $t("Choose your language") }}</div>
+        <div class="modal-header-corner-title">{{ $t("Help") }}</div>
       </div>
-      <div class="modal-body with-menu limited-height">
+      <div class="modal-body with-menu">
         <table class="modal-menu">
-          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('en')">
-            <td class="modal-menu-item-icon">
-              <i class="fas fa-check" :class="{ unchecked: lang !== 'en' }"></i>
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
+            <td class="modal-menu-item-icon"><i class="fas fa-info"></i></td>
+            <td class="modal-menu-item-title">
+              {{ $t("About PMV") }}
             </td>
-            <td class="modal-menu-item-title">English ({{ $t("Default") }})</td>
           </tr>
-          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('es')">
+
+          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
             <td class="modal-menu-item-icon">
-              <i class="fas fa-check" :class="{ unchecked: lang !== 'es' }"></i>
+              <i class="fas fa-keyboard"></i>
             </td>
-            <td class="modal-menu-item-title">Español (Internacional)</td>
+            <td class="modal-menu-item-title">
+              {{ $t("Keyboard shortcuts") }}
+            </td>
           </tr>
         </table>
       </div>
@@ -25,15 +31,13 @@
 </template>
 
 <script lang="ts">
-import { AppPreferences } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
-import { AppEvents } from "@/control/app-events";
 
 export default defineComponent({
-  name: "LanguageModal",
-  emits: ["update:display"],
+  name: "HelpHubDropdown",
+  emits: ["update:display", "goto"],
   props: {
     display: Boolean,
   },
@@ -43,9 +47,7 @@ export default defineComponent({
     };
   },
   data: function () {
-    return {
-      lang: AppPreferences.Language,
-    };
+    return {};
   },
   methods: {
     close: function () {
@@ -56,10 +58,9 @@ export default defineComponent({
       e.stopPropagation();
     },
 
-    changeLocale: function (l: string) {
-      this.lang = l;
-      AppPreferences.SetLanguage(l);
-      AppEvents.Emit("set-locale", l);
+    clickOnOption: function (o: string) {
+      this.$emit("goto", o);
+      this.close();
     },
 
     clickOnEnter: function (event) {
@@ -109,3 +110,4 @@ export default defineComponent({
   },
 });
 </script>
+

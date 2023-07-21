@@ -9,6 +9,15 @@
     }
 }
 
+@keyframes modal-close-animation {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 .modal-container {
     position: fixed;
     top: 0;
@@ -23,7 +32,6 @@
 
     padding: 0.5rem;
 
-    transition: opacity 0.2s;
     opacity: 1;
 
     animation-name: modal-show-animation;
@@ -32,8 +40,14 @@
     overflow: auto;
 }
 
+.modal-container.closing {
+    animation-name: modal-close-animation;
+    animation-duration: 0.1s;
+    pointer-events: none;
+}
+
 .modal-container.hidden {
-    transition: opacity 0.2s, visibility 0.2s;
+    animation-name: none;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
@@ -47,6 +61,15 @@
 
 .modal-container:focus {
     outline: none;
+}
+
+.modal-out-close-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: calc(100% - 0.5em);
+    z-index: -1;
 }
 
 .modal-dialog {
@@ -189,9 +212,7 @@
 .modal-menu {
     width: 100%;
     border-spacing: 0;
-    /* Removes the cell spacing via CSS */
     border-collapse: collapse;
-    /* Optional - if you don't want to have double border where cells touch */
 }
 
 .modal-body.with-menu {
@@ -260,6 +281,8 @@
     margin: 0;
     width: 300px;
     pointer-events: initial;
+    max-height: 100%;
+    overflow: auto;
 }
 
 @media (max-width: 400px) {
@@ -288,8 +311,7 @@
     z-index: 301;
 }
 
-.modal-container-logout,
-.modal-container-settings {
+.modal-container-dialog {
     z-index: 250;
 }
 

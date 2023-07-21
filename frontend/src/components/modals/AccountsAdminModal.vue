@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-lg" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <div v-if="display" class="modal-dialog modal-lg" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Administrate accounts") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -52,9 +52,9 @@
 
     </div>
 
-    <AccountDeleteModal v-model:display="displayAccountDelete"></AccountDeleteModal>
+    <AccountDeleteModal ref="deleteModal" v-model:display="displayAccountDelete"></AccountDeleteModal>
     <AccountCreateModal v-model:display="displayAccountCreate" @account-created="load"></AccountCreateModal>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -64,7 +64,6 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 
@@ -138,7 +137,7 @@ export default defineComponent({
     },
 
     askDeleteAccount: function (username: string) {
-      AppEvents.Emit("account-del-confirmation", {
+      this.$refs.deleteModal.show({
         name: username,
         callback: () => {
           this.deleteAccount(username);
@@ -198,29 +197,16 @@ export default defineComponent({
     },
 
     close: function () {
-      this.displayStatus = false;
       this.displayAccountDelete = false;
       this.displayAccountCreate = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
+      this.$refs.modalContainer.close();
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
 
     if (this.display) {
       this.error = "";
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
@@ -231,27 +217,17 @@ export default defineComponent({
   beforeUnmount: function () {
     Timeouts.Abort("admin-accounts");
     Request.Abort("admin-accounts");
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
         this.error = "";
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
         this.displayAccountDelete = false;
         this.displayAccountCreate = false;
         this.load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
-    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :lock-close="status === 'search' || status === 'action'">
+    <div v-if="display" class="modal-dialog modal-md" role="document">
       <div class="modal-header">
         <div class="modal-title" v-if="status === 'search'">
           {{ $t("Searching") }}...
@@ -76,11 +76,11 @@
         </button>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
@@ -108,19 +108,16 @@ export default defineComponent({
   },
   methods: {
     close: function () {
-      this.displayStatus = false;
+      this.$refs.modalContainer.close();
     },
 
     cancel: function () {
       this.$emit("cancel");
+      this.$refs.modalContainer.close(true);
     },
 
     confirm: function () {
       this.$emit("confirm");
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
     },
 
     cssProgress: function (p: number) {
@@ -147,11 +144,14 @@ export default defineComponent({
       }
     },
   },
-  mounted: function () {
-
-  },
-  beforeUnmount: function () {
-
+  watch: {
+    display: function () {
+      if (this.display) {
+        nextTick(() => {
+          this.$el.focus();
+        });
+      }
+    },
   },
 });
 </script>

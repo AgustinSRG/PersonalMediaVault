@@ -1,9 +1,9 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :close-callback="askClose">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Advanced settings") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="askClose" :disabled="busy">
+        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close" :disabled="busy">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -108,9 +108,9 @@
       </div>
     </form>
 
-    <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="close"></SaveChangesAskModal>
+    <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>
 
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -121,7 +121,6 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { FocusTrap } from "../../utils/focus-trap";
 import { AuthController } from "@/control/auth";
 
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
@@ -249,11 +248,11 @@ export default defineComponent({
       });
     },
 
-    askClose: function () {
+    askClose: function (callback: () => void) {
       if (this.dirty) {
         this.displayAskSave = true;
       } else {
-        this.close();
+        callback();
       }
     },
 
@@ -439,26 +438,17 @@ export default defineComponent({
     },
 
     close: function () {
-      this.displayStatus = false;
+      this.$refs.modalContainer.close();
     },
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
+    closeForced: function () {
+      this.$refs.modalContainer.close(true);
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     this.load();
     if (this.display) {
       this.error = "";
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
@@ -467,27 +457,17 @@ export default defineComponent({
   beforeUnmount: function () {
     Timeouts.Abort("advanced-settings");
     Request.Abort("advanced-settings");
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
         this.error = "";
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
         this.dirty = false;
         this.displayAskSave = false;
         this.load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

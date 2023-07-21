@@ -79,7 +79,7 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  name: "SettingsModal",
+  name: "SettingsDropdown",
   emits: ["update:display", "goto"],
   props: {
     display: Boolean,

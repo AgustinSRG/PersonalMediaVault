@@ -320,10 +320,10 @@
     </div>
 
     <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
-    <ResolutionConfirmationModal v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
-    <SubtitlesDeleteModal v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
-    <AudioTrackDeleteModal v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
-    <ReEncodeConfirmationModal v-model:display="displayReEncode"></ReEncodeConfirmationModal>
+    <ResolutionConfirmationModal ref="resolutionConfirmationModal" v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
+    <SubtitlesDeleteModal ref="subtitlesDeleteModal" v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
+    <AudioTrackDeleteModal ref="audioTrackDeleteModal" v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
+    <ReEncodeConfirmationModal v-model:display="displayReEncode" @confirm="doEncodeMedia"></ReEncodeConfirmationModal>
   </div>
 </template>
 
@@ -894,64 +894,64 @@ export default defineComponent({
         });
     },
 
-    encodeMedia: function () {
-      AppEvents.Emit("re-encode-confirmation", {
-        callback: () => {
-          if (this.busy) {
-            return;
-          }
+    doEncodeMedia: function () {
+      if (this.busy) {
+        return;
+      }
 
-          this.busy = true;
+      this.busy = true;
 
-          const mediaId = AppStatus.CurrentMedia;
+      const mediaId = AppStatus.CurrentMedia;
 
-          Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
-            .onSuccess(() => {
+      Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
+        .onSuccess(() => {
+          AppEvents.Emit(
+            "snack",
+            this.$t("Successfully requested pending encoding tasks")
+          );
+          this.busy = false;
+          MediaController.Load();
+        })
+        .onCancel(() => {
+          this.busy = false;
+        })
+        .onRequestError((err) => {
+          this.busy = false;
+          Request.ErrorHandler()
+            .add(401, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+              AppEvents.Emit("unauthorized");
+            })
+            .add(403, "*", () => {
+              AppEvents.Emit("snack", this.$t("Access denied"));
+            })
+            .add(404, "*", () => {
+              AppEvents.Emit("snack", this.$t("Not found"));
+            })
+            .add(500, "*", () => {
+              AppEvents.Emit("snack", this.$t("Internal server error"));
+            })
+            .add("*", "*", () => {
               AppEvents.Emit(
                 "snack",
-                this.$t("Successfully requested pending encoding tasks")
+                this.$t("Could not connect to the server")
               );
-              this.busy = false;
-              MediaController.Load();
             })
-            .onCancel(() => {
-              this.busy = false;
-            })
-            .onRequestError((err) => {
-              this.busy = false;
-              Request.ErrorHandler()
-                .add(401, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                  AppEvents.Emit("unauthorized");
-                })
-                .add(403, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                })
-                .add(404, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Not found"));
-                })
-                .add(500, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Internal server error"));
-                })
-                .add("*", "*", () => {
-                  AppEvents.Emit(
-                    "snack",
-                    this.$t("Could not connect to the server")
-                  );
-                })
-                .handle(err);
-            })
-            .onUnexpectedError((err) => {
-              AppEvents.Emit("snack", err.message);
-              console.error(err);
-              this.busy = false;
-            });
-        },
-      });
+            .handle(err);
+        })
+        .onUnexpectedError((err) => {
+          AppEvents.Emit("snack", err.message);
+          console.error(err);
+          this.busy = false;
+        });
+    },
+
+    encodeMedia: function () {
+      this.displayReEncode = true;
     },
 
     deleteMedia: function () {
-      AppEvents.Emit("media-delete-request");
+      this.displayMediaDelete = true;
     },
 
     updateTagData: function () {
@@ -1215,7 +1215,7 @@ export default defineComponent({
     },
 
     addResolution: function (r) {
-      AppEvents.Emit("resolution-confirmation", {
+      this.$refs.resolutionConfirmationModal.show({
         type: this.type,
         deleting: false,
         name: r.name,
@@ -1285,7 +1285,7 @@ export default defineComponent({
     },
 
     deleteResolution: function (r) {
-      AppEvents.Emit("resolution-confirmation", {
+      this.$refs.resolutionConfirmationModal.show({
         type: this.type,
         deleting: true,
         name: r.name,
@@ -1469,7 +1469,7 @@ export default defineComponent({
     },
 
     removeSubtitles: function (sub) {
-      AppEvents.Emit("subtitles-confirmation", {
+      this.$refs.subtitlesDeleteModal.show({
         name: sub.name,
         callback: () => {
           if (this.busy) {
@@ -1654,7 +1654,7 @@ export default defineComponent({
     },
 
     removeAudio: function (aud: MediaAudioTrack) {
-      AppEvents.Emit("audio-track-confirmation", {
+      this.$refs.audioTrackDeleteModal.show({
         name: aud.name,
         callback: () => {
           if (this.busy) {

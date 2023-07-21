@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy" @close="onClose">
+    <div v-if="display" class="modal-dialog modal-md" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Tags") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -39,7 +39,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -49,7 +49,6 @@ import { AuthController } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { TagsAPI } from "@/api/api-tags";
@@ -112,37 +111,18 @@ export default defineComponent({
     },
 
     close: function () {
-      if (this.busy) {
-        return;
-      }
-      this.displayStatus = false;
+      this.$refs.modalContainer.close();
+    },
+
+    onClose: function () {
       if (this.changed) {
         MediaController.Load();
       }
     },
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
     updateMediaData: function () {
       this.mid = AppStatus.CurrentMedia;
       this.load();
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
     },
 
     updateTagData: function () {
@@ -425,8 +405,6 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
     this.$options.tagUpdateH = this.updateTagData.bind(this);
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
@@ -448,7 +426,6 @@ export default defineComponent({
     this.load();
 
     if (this.display) {
-      this.$options.focusTrap.activate();
       this.autoFocus();
       TagsController.Load();
     }
@@ -463,24 +440,13 @@ export default defineComponent({
       "current-media-update",
       this.$options.mediaUpdateH
     );
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         this.autoFocus();
         this.load();
         TagsController.Load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

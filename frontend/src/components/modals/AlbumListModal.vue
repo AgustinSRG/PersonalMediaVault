@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <div v-if="display" class="modal-dialog modal-sm" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Albums") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -68,7 +68,7 @@
       </div>
     </div>
     <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -82,7 +82,6 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 
@@ -178,14 +177,7 @@ export default defineComponent({
     },
 
     close: function () {
-      if (this.busy) {
-        return;
-      }
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+      this.$refs.modalContainer.close();
     },
 
     createAlbum: function () {
@@ -360,15 +352,6 @@ export default defineComponent({
         event.target.click();
       }
     },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      } else if (e.key === "+") {
-        this.createAlbum();
-      }
-    },
   },
   mounted: function () {
     this.$options.albumsUpdateH = this.updateAlbums.bind(this);
@@ -377,13 +360,10 @@ export default defineComponent({
     this.$options.statusH = this.onUpdateStatus.bind(this);
     AppEvents.AddEventListener("app-status-update", this.$options.statusH);
 
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
     this.updateAlbums();
     this.load();
 
     if (this.display) {
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
@@ -395,26 +375,17 @@ export default defineComponent({
     AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
     Timeouts.Abort("media-albums-load");
     Request.Abort("media-albums-load");
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
   },
   watch: {
     display: function () {
       this.displayAlbumCreate = false;
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
         AlbumsController.Load();
         this.load();
       } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");
       }

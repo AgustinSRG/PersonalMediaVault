@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true">
+    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
       <div class="modal-header">
         <div class="modal-title" v-if="!isUpload">
           {{ $t("Search media to add to the album") }}
@@ -21,13 +21,12 @@
         <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
       </div>
     </div>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
@@ -61,7 +60,7 @@ export default defineComponent({
   },
   methods: {
     close: function () {
-      this.displayStatus = false;
+      this.$refs.modalContainer.close();
     },
 
     changeToUpload: function () {
@@ -70,10 +69,6 @@ export default defineComponent({
 
     changeToSearch: function () {
       this.isUpload = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
     },
 
     selectMedia: function (mid, callback) {
@@ -103,41 +98,20 @@ export default defineComponent({
           console.error(err);
         });
     },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     if (this.display) {
-      this.$options.focusTrap.activate();
       nextTick(() => {
         this.$el.focus();
       });
     }
   },
-  beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
   watch: {
     display: function () {
       if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         nextTick(() => {
           this.$el.focus();
         });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

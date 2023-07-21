@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-xl" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <div v-if="display" class="modal-dialog modal-xl" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Batch operation") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -157,13 +157,12 @@
     </div>
 
     <BatchOperationProgressModal v-if="displayProgress" v-model:display="displayProgress" :status="status" :progress="progress" :error="error" :actionCount="actionCount" @cancel="cancel" @confirm="confirm"></BatchOperationProgressModal>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { TagEntry, TagsController } from "@/control/tags";
@@ -243,18 +242,7 @@ export default defineComponent({
     },
 
     close: function () {
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e: Event) {
-      e.stopPropagation();
-    },
-
-    keyDownHandle: function (e: KeyboardEvent) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
+      this.$refs.modalContainer.close();
     },
 
     getTagName: function (tag, data) {
@@ -835,7 +823,6 @@ export default defineComponent({
         });
     },
 
-
     actionAddTag: function (mid: number, tags: string[], next: number) {
       if (tags.length === 0) {
         this.actionNext(next);
@@ -921,8 +908,6 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
     this.$options.tagUpdateH = this.updateTagData.bind(this);
 
     AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
@@ -935,7 +920,6 @@ export default defineComponent({
 
     if (this.display) {
       this.error = "";
-      this.$options.focusTrap.activate();
       this.autoFocus();
       TagsController.Load();
       AlbumsController.Load();
@@ -943,10 +927,6 @@ export default defineComponent({
   },
   beforeUnmount: function () {
     Request.Abort("modal-batch-request");
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
 
     if (this.$options.findTagSearchTimeout) {
       clearTimeout(this.$options.findTagSearchTimeout);
@@ -965,16 +945,9 @@ export default defineComponent({
     display: function () {
       if (this.display) {
         this.error = "";
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         this.autoFocus();
         TagsController.Load();
         AlbumsController.Load();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },

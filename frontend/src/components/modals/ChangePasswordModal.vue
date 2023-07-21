@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-container modal-container-settings" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
+  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
       <div class="modal-header">
         <div class="modal-title">{{ $t("Change password") }}</div>
         <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -31,7 +31,7 @@
         </button>
       </div>
     </form>
-  </div>
+  </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -40,7 +40,6 @@ import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
   name: "ChangePasswordModal",
@@ -131,37 +130,16 @@ export default defineComponent({
     },
 
     close: function () {
-      if (this.busy) {
-        return;
-      }
-      this.displayStatus = false;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
+      this.$refs.modalContainer.close();
     },
   },
   mounted: function () {
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
     if (this.display) {
       this.error = "";
       this.currentPassword = "";
       this.password = "";
       this.password2 = "";
-      this.$options.focusTrap.activate();
       this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
     }
   },
   watch: {
@@ -171,14 +149,7 @@ export default defineComponent({
         this.currentPassword = "";
         this.password = "";
         this.password2 = "";
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
-        }
         this.autoFocus();
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
       }
     },
   },
