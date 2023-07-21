@@ -140,7 +140,7 @@
 
     <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
 
-    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" @open-tags="openTags"  @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
+    <PlayerContextMenu type="audio" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="audioURL" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" @open-tags="openTags" @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
   </div>
 </template>
 
@@ -791,12 +791,20 @@ export default defineComponent({
           this.togglePlay();
           break;
         case "ArrowUp":
-          this.changeVolume(Math.min(1, this.volume + 0.05));
+          if (!shifting) {
+            this.changeVolume(Math.min(1, this.volume + 0.05));
+          } else {
+            this.changeVolume(Math.min(1, this.volume + 0.01));
+          }
           this.volumeShown = true;
           this.helpTooltip = "volume";
           break;
         case "ArrowDown":
-          this.changeVolume(Math.max(0, this.volume - 0.05));
+          if (!shifting) {
+            this.changeVolume(Math.max(0, this.volume - 0.05));
+          } else {
+            this.changeVolume(Math.max(0, this.volume - 0.01));
+          }
           this.volumeShown = true;
           this.helpTooltip = "volume";
           break;

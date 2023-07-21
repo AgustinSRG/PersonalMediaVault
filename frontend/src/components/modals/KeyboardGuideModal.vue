@@ -99,15 +99,27 @@
               </td>
             </tr>
             <tr>
-              <td>{{ $t("Increase volume by 5%") }}</td>
+              <td>{{ $t("Increase volume by") }} 5%</td>
               <td>
                 <span class="key-shortcut">{{ $t("Up arrow") }}</span>
               </td>
             </tr>
             <tr>
-              <td>{{ $t("Decrease volume by 5%") }}</td>
+              <td>{{ $t("Increase volume by") }}  1%</td>
+              <td>
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Up arrow") }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>{{ $t("Decrease volume by") }} 5%</td>
               <td>
                 <span class="key-shortcut">{{ $t("Down arrow") }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>{{ $t("Decrease volume by") }} 1%</td>
+              <td>
+                <span class="key-shortcut">{{ $t("Shift") }} + {{ $t("Down arrow") }}</span>
               </td>
             </tr>
             <tr>

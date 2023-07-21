@@ -972,12 +972,20 @@ export default defineComponent({
           this.togglePlayImmediate();
           break;
         case "ArrowUp":
-          this.changeVolume(Math.min(1, this.volume + 0.05));
+          if (!shifting) {
+            this.changeVolume(Math.min(1, this.volume + 0.05));
+          } else {
+            this.changeVolume(Math.min(1, this.volume + 0.01));
+          }
           this.volumeShown = true;
           this.helpTooltip = "volume";
           break;
         case "ArrowDown":
-          this.changeVolume(Math.max(0, this.volume - 0.05));
+          if (!shifting) {
+            this.changeVolume(Math.max(0, this.volume - 0.05));
+          } else {
+            this.changeVolume(Math.max(0, this.volume - 0.01));
+          }
           this.volumeShown = true;
           this.helpTooltip = "volume";
           break;
