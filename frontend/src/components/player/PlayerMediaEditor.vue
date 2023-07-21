@@ -350,1473 +350,1473 @@ import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue"
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 
 export default defineComponent({
-  components: {
-    ToggleSwitch,
-    MediaDeleteModal,
-    ResolutionConfirmationModal,
-    ReEncodeConfirmationModal,
-    SubtitlesDeleteModal,
-    AudioTrackDeleteModal,
-  },
-  name: "PlayerMediaEditor",
-  emits: ["changed"],
-  data: function () {
-    return {
-      type: 0,
-
-      title: "",
-      originalTitle: "",
-
-      desc: "",
-      originalDesc: "",
-
-      timeSlices: "",
-      originalTimeSlices: "",
-
-      tags: [],
-      tagToAdd: "",
-      tagData: {},
-      matchingTags: [],
-
-      thumbnail: "",
-
-      width: 0,
-      height: 0,
-      fps: 0,
-
-      standardResolutions: [
-        {
-          name: "144p",
-          width: 256,
-          height: 144,
-          fps: 30,
-        },
-        {
-          name: "240p",
-          width: 352,
-          height: 240,
-          fps: 30,
-        },
-        {
-          name: "360p",
-          width: 480,
-          height: 360,
-          fps: 30,
-        },
-        {
-          name: "480p",
-          width: 858,
-          height: 480,
-          fps: 30,
-        },
-        {
-          name: "720p",
-          width: 1280,
-          height: 720,
-          fps: 30,
-        },
-        {
-          name: "720p60",
-          width: 1280,
-          height: 720,
-          fps: 60,
-        },
-        {
-          name: "1080p",
-          width: 1920,
-          height: 1080,
-          fps: 30,
-        },
-        {
-          name: "1080p60",
-          width: 1920,
-          height: 1080,
-          fps: 60,
-        },
-        {
-          name: "2k",
-          width: 2048,
-          height: 1152,
-          fps: 30,
-        },
-        {
-          name: "2k60",
-          width: 2048,
-          height: 1152,
-          fps: 60,
-        },
-        {
-          name: "4k",
-          width: 3860,
-          height: 2160,
-          fps: 30,
-        },
-        {
-          name: "4k60",
-          width: 3860,
-          height: 2160,
-          fps: 60,
-        },
-      ],
-
-      resolutions: [],
-
-      subtitles: [],
-      srtFile: null,
-      srtFileName: "",
-      srtId: "en",
-      srtName: "English",
-
-      audios: [],
-      audioFile: null,
-      audioFileName: "",
-      audioId: "en",
-      audioName: "English",
-
-      busy: false,
-
-      canWrite: AuthController.CanWrite,
-
-      originalStartBeginning: false,
-      startBeginning: false,
-
-      displayMediaDelete: false,
-
-      displayResolutionConfirmation: false,
-
-      displaySubtitlesDelete: false,
-
-      displayAudioTrackDelete: false,
-
-      displayReEncode: false,
-    };
-  },
-
-  methods: {
-    updateMediaData: function () {
-      if (!MediaController.MediaData) {
-        return;
-      }
-
-      this.type = MediaController.MediaData.type;
-
-      this.originalTitle = MediaController.MediaData.title;
-      this.title = this.originalTitle;
-
-      this.originalDesc = MediaController.MediaData.description;
-      this.desc = this.originalDesc;
-
-      this.originalStartBeginning =
-        MediaController.MediaData.force_start_beginning;
-      this.startBeginning = this.originalStartBeginning;
-
-      this.width = MediaController.MediaData.width;
-      this.height = MediaController.MediaData.height;
-      this.fps = MediaController.MediaData.fps;
-
-      this.tags = (MediaController.MediaData.tags || []).slice();
-
-      this.thumbnail = MediaController.MediaData.thumbnail;
-
-      this.subtitles = (MediaController.MediaData.subtitles || []).map(a => {
+    components: {
+        ToggleSwitch,
+        MediaDeleteModal,
+        ResolutionConfirmationModal,
+        ReEncodeConfirmationModal,
+        SubtitlesDeleteModal,
+        AudioTrackDeleteModal,
+    },
+    name: "PlayerMediaEditor",
+    emits: ["changed"],
+    data: function () {
         return {
-          id: a.id,
-          name: a.name,
-          url: a.url,
+            type: 0,
+
+            title: "",
+            originalTitle: "",
+
+            desc: "",
+            originalDesc: "",
+
+            timeSlices: "",
+            originalTimeSlices: "",
+
+            tags: [],
+            tagToAdd: "",
+            tagData: {},
+            matchingTags: [],
+
+            thumbnail: "",
+
+            width: 0,
+            height: 0,
+            fps: 0,
+
+            standardResolutions: [
+                {
+                    name: "144p",
+                    width: 256,
+                    height: 144,
+                    fps: 30,
+                },
+                {
+                    name: "240p",
+                    width: 352,
+                    height: 240,
+                    fps: 30,
+                },
+                {
+                    name: "360p",
+                    width: 480,
+                    height: 360,
+                    fps: 30,
+                },
+                {
+                    name: "480p",
+                    width: 858,
+                    height: 480,
+                    fps: 30,
+                },
+                {
+                    name: "720p",
+                    width: 1280,
+                    height: 720,
+                    fps: 30,
+                },
+                {
+                    name: "720p60",
+                    width: 1280,
+                    height: 720,
+                    fps: 60,
+                },
+                {
+                    name: "1080p",
+                    width: 1920,
+                    height: 1080,
+                    fps: 30,
+                },
+                {
+                    name: "1080p60",
+                    width: 1920,
+                    height: 1080,
+                    fps: 60,
+                },
+                {
+                    name: "2k",
+                    width: 2048,
+                    height: 1152,
+                    fps: 30,
+                },
+                {
+                    name: "2k60",
+                    width: 2048,
+                    height: 1152,
+                    fps: 60,
+                },
+                {
+                    name: "4k",
+                    width: 3860,
+                    height: 2160,
+                    fps: 30,
+                },
+                {
+                    name: "4k60",
+                    width: 3860,
+                    height: 2160,
+                    fps: 60,
+                },
+            ],
+
+            resolutions: [],
+
+            subtitles: [],
+            srtFile: null,
+            srtFileName: "",
+            srtId: "en",
+            srtName: "English",
+
+            audios: [],
+            audioFile: null,
+            audioFileName: "",
+            audioId: "en",
+            audioName: "English",
+
+            busy: false,
+
+            canWrite: AuthController.CanWrite,
+
+            originalStartBeginning: false,
+            startBeginning: false,
+
+            displayMediaDelete: false,
+
+            displayResolutionConfirmation: false,
+
+            displaySubtitlesDelete: false,
+
+            displayAudioTrackDelete: false,
+
+            displayReEncode: false,
         };
-      });
-
-      this.audios = (MediaController.MediaData.audios || []).map(a => {
-        return {
-          id: a.id,
-          name: a.name,
-          url: a.url,
-        };
-      });
-
-      this.originalTimeSlices = renderTimeSlices(MediaController.MediaData.time_slices);
-      this.timeSlices = this.originalTimeSlices;
-
-      this.updateResolutions(MediaController.MediaData.resolutions || []);
     },
 
-    updateResolutions: function (resolutions) {
-      this.resolutions = this.standardResolutions
-        .filter((r) => {
-          if (this.type === MEDIA_TYPE_IMAGE) {
-            return r.fps === 30;
-          } else if (this.type === MEDIA_TYPE_VIDEO) {
-            return true;
-          } else {
-            return false;
-          }
-        })
-        .map((r) => {
-          let enabled = false;
-          let fps = r.fps;
-          for (let res of resolutions) {
-            if (
-              res.width === r.width &&
+    methods: {
+        updateMediaData: function () {
+            if (!MediaController.MediaData) {
+                return;
+            }
+
+            this.type = MediaController.MediaData.type;
+
+            this.originalTitle = MediaController.MediaData.title;
+            this.title = this.originalTitle;
+
+            this.originalDesc = MediaController.MediaData.description;
+            this.desc = this.originalDesc;
+
+            this.originalStartBeginning =
+        MediaController.MediaData.force_start_beginning;
+            this.startBeginning = this.originalStartBeginning;
+
+            this.width = MediaController.MediaData.width;
+            this.height = MediaController.MediaData.height;
+            this.fps = MediaController.MediaData.fps;
+
+            this.tags = (MediaController.MediaData.tags || []).slice();
+
+            this.thumbnail = MediaController.MediaData.thumbnail;
+
+            this.subtitles = (MediaController.MediaData.subtitles || []).map(a => {
+                return {
+                    id: a.id,
+                    name: a.name,
+                    url: a.url,
+                };
+            });
+
+            this.audios = (MediaController.MediaData.audios || []).map(a => {
+                return {
+                    id: a.id,
+                    name: a.name,
+                    url: a.url,
+                };
+            });
+
+            this.originalTimeSlices = renderTimeSlices(MediaController.MediaData.time_slices);
+            this.timeSlices = this.originalTimeSlices;
+
+            this.updateResolutions(MediaController.MediaData.resolutions || []);
+        },
+
+        updateResolutions: function (resolutions) {
+            this.resolutions = this.standardResolutions
+                .filter((r) => {
+                    if (this.type === MEDIA_TYPE_IMAGE) {
+                        return r.fps === 30;
+                    } else if (this.type === MEDIA_TYPE_VIDEO) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                })
+                .map((r) => {
+                    let enabled = false;
+                    let fps = r.fps;
+                    for (let res of resolutions) {
+                        if (
+                            res.width === r.width &&
               res.height === r.height &&
               (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)
-            ) {
-              enabled = true;
-              fps = res.fps;
-              break;
-            }
-          }
-          return {
-            enabled: enabled,
-            name: r.name,
-            width: r.width,
-            height: r.height,
-            fps: fps,
-          };
-        });
-    },
-
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
-    },
-
-    uploadThumbnail: function () {
-      this.$el.querySelector(".file-hidden").click();
-    },
-
-    inputFileChanged: function (e) {
-      const data = e.target.files;
-      if (data && data.length > 0) {
-        const file = data[0];
-        this.changeThumbnail(file);
-      }
-    },
-
-    onDrop: function (e) {
-      e.preventDefault();
-      const data = e.dataTransfer.files;
-      if (data && data.length > 0) {
-        const file = data[0];
-        this.changeThumbnail(file);
-      }
-    },
-
-    changeThumbnail: function (file) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.ChangeMediaThumbnail(mediaId, file)
-      )
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
-          this.busy = false;
-          this.thumbnail = res.url;
-          this.$emit("changed");
-          AlbumsController.LoadCurrentAlbum();
-          AppEvents.Emit("media-meta-change");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid thumbnail provided"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    changeTitle: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.ChangeMediaTitle(mediaId, this.title)
-      )
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Successfully changed title"));
-          this.busy = false;
-          this.originalTitle = this.title;
-          this.$emit("changed");
-          AlbumsController.LoadCurrentAlbum();
-          AppEvents.Emit("media-meta-change");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    changeDescription: function () {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.ChangeMediaDescription(mediaId, this.desc)
-      )
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Successfully changed description"));
-          this.busy = false;
-          this.originalDesc = this.desc;
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    changeTimeSlices: function () {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      const slices = parseTimeSlices(this.timeSlices);
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.ChangeTimeSlices(mediaId, slices)
-      )
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
-          this.busy = false;
-          this.originalTimeSlices = renderTimeSlices(slices);
-          this.timeSlices = this.originalTimeSlices;
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    changeExtraParams: function () {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.ChangeExtraParams(mediaId, this.startBeginning)
-      )
-        .onSuccess(() => {
-          AppEvents.Emit(
-            "snack",
-            this.$t("Successfully changed media extra params")
-          );
-          this.busy = false;
-          this.originalStartBeginning = this.startBeginning;
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    doEncodeMedia: function () {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
-        .onSuccess(() => {
-          AppEvents.Emit(
-            "snack",
-            this.$t("Successfully requested pending encoding tasks")
-          );
-          this.busy = false;
-          MediaController.Load();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    encodeMedia: function () {
-      this.displayReEncode = true;
-    },
-
-    deleteMedia: function () {
-      this.displayMediaDelete = true;
-    },
-
-    updateTagData: function () {
-      this.tagData = clone(TagsController.Tags);
-    },
-
-    getTagName: function (tag, data) {
-      if (data[tag + ""]) {
-        return data[tag + ""].name;
-      } else {
-        return "???";
-      }
-    },
-
-    removeTag: function (tag) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-      const tagName = this.getTagName(tag, this.tagData);
-
-      Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
-          this.busy = false;
-          for (let i = 0; i < this.tags.length; i++) {
-            if (this.tags[i] === tag) {
-              this.tags.splice(i, 1);
-              break;
-            }
-          }
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    addTag: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-      const tag = this.tagToAdd;
-
-      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
-          this.busy = false;
-          this.tagToAdd = "";
-          if (this.tags.indexOf(res.id) === -1) {
-            this.tags.push(res.id);
-          }
-          this.findTags();
-          TagsController.AddTag(res.id, res.name);
-          this.$emit("changed");
-          nextTick(() => {
-            const elemFocus = this.$el.querySelector(".tag-to-add");
-
-            if (elemFocus) {
-              elemFocus.focus();
-            }
-          });
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    addMatchingTag: function (tag) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
-          this.busy = false;
-          if (this.tags.indexOf(res.id) === -1) {
-            this.tags.push(res.id);
-          }
-          this.findTags();
-          TagsController.AddTag(res.id, res.name);
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    onTagAddChanged: function () {
-      if (this.$options.findTagTimeout) {
-        return;
-      }
-      this.$options.findTagTimeout = setTimeout(() => {
-        this.$options.findTagTimeout = null;
-        this.findTags();
-      }, 200);
-    },
-
-    findTags: function () {
-      const tagFilter = this.tagToAdd
-        .replace(/[\n\r]/g, " ")
-        .trim()
-        .replace(/[\s]/g, "_")
-        .toLowerCase();
-      if (!tagFilter) {
-        this.matchingTags = [];
-        return;
-      }
-      this.matchingTags = Object.values(this.tagData)
-        .map((a: any) => {
-          const i = a.name.indexOf(tagFilter);
-          return {
-            id: a.id,
-            name: a.name,
-            starts: i === 0,
-            contains: i >= 0,
-          };
-        })
-        .filter((a) => {
-          if (this.tags.indexOf(a.id) >= 0) {
-            return false;
-          }
-          return a.starts || a.contains;
-        })
-        .sort((a, b) => {
-          if (a.starts && !b.starts) {
-            return -1;
-          } else if (b.starts && !a.starts) {
-            return 1;
-          } else if (a.name < b.name) {
-            return -1;
-          } else {
-            return 1;
-          }
-        })
-        .slice(0, 10);
-    },
-
-    onTagAddKeyDown: function (e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        this.addTag();
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        this.findTags();
-        if (this.matchingTags.length > 0) {
-          this.tagToAdd = this.matchingTags[0].name;
-        }
-      }
-    },
-
-    addResolution: function (r) {
-      this.$refs.resolutionConfirmationModal.show({
-        type: this.type,
-        deleting: false,
-        name: r.name,
-        width: r.width,
-        height: r.height,
-        fps: r.fps,
-        callback: () => {
-          if (this.busy) {
-            return;
-          }
-
-          this.busy = true;
-
-          const mediaId = AppStatus.CurrentMedia;
-
-          Request.Pending(
-            "media-editor-busy",
-            MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps)
-          )
-            .onSuccess((result) => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Added resolution") + ": " + r.name
-              );
-              this.busy = false;
-              r.enabled = true;
-              r.fps = result.fps;
-              this.$emit("changed");
-            })
-            .onCancel(() => {
-              this.busy = false;
-            })
-            .onRequestError((err) => {
-              this.busy = false;
-              Request.ErrorHandler()
-                .add(400, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Bad request"));
-                })
-                .add(401, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                  AppEvents.Emit("unauthorized");
-                })
-                .add(403, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                })
-                .add(404, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Not found"));
-                })
-                .add(500, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Internal server error"));
-                })
-                .add("*", "*", () => {
-                  AppEvents.Emit(
-                    "snack",
-                    this.$t("Could not connect to the server")
-                  );
-                })
-                .handle(err);
-            })
-            .onUnexpectedError((err) => {
-              AppEvents.Emit("snack", err.message);
-              console.error(err);
-              this.busy = false;
-            });
+                        ) {
+                            enabled = true;
+                            fps = res.fps;
+                            break;
+                        }
+                    }
+                    return {
+                        enabled: enabled,
+                        name: r.name,
+                        width: r.width,
+                        height: r.height,
+                        fps: fps,
+                    };
+                });
         },
-      });
-    },
 
-    deleteResolution: function (r) {
-      this.$refs.resolutionConfirmationModal.show({
-        type: this.type,
-        deleting: true,
-        name: r.name,
-        width: r.width,
-        height: r.height,
-        fps: r.fps,
-        callback: () => {
-          if (this.busy) {
-            return;
-          }
-
-          this.busy = true;
-
-          const mediaId = AppStatus.CurrentMedia;
-
-          Request.Pending(
-            "media-editor-busy",
-            MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps)
-          )
-            .onSuccess(() => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Removed resolution") + ": " + r.name
-              );
-              this.busy = false;
-              r.enabled = false;
-              this.$emit("changed");
-            })
-            .onCancel(() => {
-              this.busy = false;
-            })
-            .onRequestError((err) => {
-              this.busy = false;
-              Request.ErrorHandler()
-                .add(400, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Bad request"));
-                })
-                .add(401, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                  AppEvents.Emit("unauthorized");
-                })
-                .add(403, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                })
-                .add(404, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Not found"));
-                })
-                .add(500, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Internal server error"));
-                })
-                .add("*", "*", () => {
-                  AppEvents.Emit(
-                    "snack",
-                    this.$t("Could not connect to the server")
-                  );
-                })
-                .handle(err);
-            })
-            .onUnexpectedError((err) => {
-              AppEvents.Emit("snack", err.message);
-              console.error(err);
-              this.busy = false;
-            });
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
         },
-      });
-    },
 
-    // Subtitles
+        uploadThumbnail: function () {
+            this.$el.querySelector(".file-hidden").click();
+        },
 
-    selectSRTFile: function () {
-      this.$el.querySelector(".srt-file-hidden").click();
-    },
+        inputFileChanged: function (e) {
+            const data = e.target.files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.changeThumbnail(file);
+            }
+        },
 
-    srtFileChanged: function (e) {
-      const data = e.target.files;
-      if (data && data.length > 0) {
-        const file = data[0];
-        this.srtFile = file;
-        this.srtFileName = file.name;
-      }
-    },
+        onDrop: function (e) {
+            e.preventDefault();
+            const data = e.dataTransfer.files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.changeThumbnail(file);
+            }
+        },
 
-    addSubtitles: function () {
-      if (!this.srtFile) {
-        AppEvents.Emit("snack", this.$t("Please, select a SubRip file first"));
-        return;
-      }
+        changeThumbnail: function (file) {
+            if (this.busy) {
+                return;
+            }
 
-      const id = this.srtId;
-      const name = this.srtName;
+            this.busy = true;
 
-      let duped = false;
-      for (let sub of this.subtitles) {
-        if (sub.id === id) {
-          duped = true;
-          break;
-        }
-      }
+            const mediaId = AppStatus.CurrentMedia;
 
-      if (duped) {
-        AppEvents.Emit(
-          "snack",
-          this.$t(
-            "There is already another subtitles file with the same identifier"
-          )
-        );
-        return;
-      }
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.ChangeMediaThumbnail(mediaId, file)
+            )
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
+                    this.busy = false;
+                    this.thumbnail = res.url;
+                    this.$emit("changed");
+                    AlbumsController.LoadCurrentAlbum();
+                    AppEvents.Emit("media-meta-change");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid thumbnail provided"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
 
-      if (this.busy) {
-        return;
-      }
+        changeTitle: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
 
-      this.busy = true;
+            if (this.busy) {
+                return;
+            }
 
-      const mediaId = AppStatus.CurrentMedia;
+            this.busy = true;
 
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile)
-      )
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
-          this.busy = false;
-          this.subtitles.push(res);
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "INVALID_SRT", () => {
-              AppEvents.Emit("snack", this.$t("Invalid SubRip file"));
-            })
-            .add(400, "INVALID_ID", () => {
-              AppEvents.Emit("snack", this.$t("Invalid subtitles identifier"));
-            })
-            .add(400, "INVALID_NAME", () => {
-              AppEvents.Emit("snack", this.$t("Invalid subtitles name"));
-            })
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(413, "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Subtitles file too big (max is $MAX)").replace(
-                  "$MAX",
-                  "10MB"
-                )
-              );
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
+            const mediaId = AppStatus.CurrentMedia;
 
-    removeSubtitles: function (sub) {
-      this.$refs.subtitlesDeleteModal.show({
-        name: sub.name,
-        callback: () => {
-          if (this.busy) {
-            return;
-          }
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.ChangeMediaTitle(mediaId, this.title)
+            )
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Successfully changed title"));
+                    this.busy = false;
+                    this.originalTitle = this.title;
+                    this.$emit("changed");
+                    AlbumsController.LoadCurrentAlbum();
+                    AppEvents.Emit("media-meta-change");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
 
-          this.busy = true;
+        changeDescription: function () {
+            if (this.busy) {
+                return;
+            }
 
-          const mediaId = AppStatus.CurrentMedia;
-          const id = sub.id;
+            this.busy = true;
 
-          Request.Pending(
-            "media-editor-busy",
-            MediaAPI.RemoveSubtitles(mediaId, id)
-          )
-            .onSuccess(() => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Removed subtitles") + ": " + sub.name
-              );
-              this.busy = false;
-              for (let i = 0; i < this.subtitles.length; i++) {
-                if (this.subtitles[i].id === id) {
-                  this.subtitles.splice(i, 1);
-                  break;
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.ChangeMediaDescription(mediaId, this.desc)
+            )
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Successfully changed description"));
+                    this.busy = false;
+                    this.originalDesc = this.desc;
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        changeTimeSlices: function () {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            const slices = parseTimeSlices(this.timeSlices);
+
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.ChangeTimeSlices(mediaId, slices)
+            )
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
+                    this.busy = false;
+                    this.originalTimeSlices = renderTimeSlices(slices);
+                    this.timeSlices = this.originalTimeSlices;
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        changeExtraParams: function () {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.ChangeExtraParams(mediaId, this.startBeginning)
+            )
+                .onSuccess(() => {
+                    AppEvents.Emit(
+                        "snack",
+                        this.$t("Successfully changed media extra params")
+                    );
+                    this.busy = false;
+                    this.originalStartBeginning = this.startBeginning;
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        doEncodeMedia: function () {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
+                .onSuccess(() => {
+                    AppEvents.Emit(
+                        "snack",
+                        this.$t("Successfully requested pending encoding tasks")
+                    );
+                    this.busy = false;
+                    MediaController.Load();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        encodeMedia: function () {
+            this.displayReEncode = true;
+        },
+
+        deleteMedia: function () {
+            this.displayMediaDelete = true;
+        },
+
+        updateTagData: function () {
+            this.tagData = clone(TagsController.Tags);
+        },
+
+        getTagName: function (tag, data) {
+            if (data[tag + ""]) {
+                return data[tag + ""].name;
+            } else {
+                return "???";
+            }
+        },
+
+        removeTag: function (tag) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const tagName = this.getTagName(tag, this.tagData);
+
+            Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
+                    this.busy = false;
+                    for (let i = 0; i < this.tags.length; i++) {
+                        if (this.tags[i] === tag) {
+                            this.tags.splice(i, 1);
+                            break;
+                        }
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        addTag: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const tag = this.tagToAdd;
+
+            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    this.busy = false;
+                    this.tagToAdd = "";
+                    if (this.tags.indexOf(res.id) === -1) {
+                        this.tags.push(res.id);
+                    }
+                    this.findTags();
+                    TagsController.AddTag(res.id, res.name);
+                    this.$emit("changed");
+                    nextTick(() => {
+                        const elemFocus = this.$el.querySelector(".tag-to-add");
+
+                        if (elemFocus) {
+                            elemFocus.focus();
+                        }
+                    });
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        addMatchingTag: function (tag) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    this.busy = false;
+                    if (this.tags.indexOf(res.id) === -1) {
+                        this.tags.push(res.id);
+                    }
+                    this.findTags();
+                    TagsController.AddTag(res.id, res.name);
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        onTagAddChanged: function () {
+            if (this.$options.findTagTimeout) {
+                return;
+            }
+            this.$options.findTagTimeout = setTimeout(() => {
+                this.$options.findTagTimeout = null;
+                this.findTags();
+            }, 200);
+        },
+
+        findTags: function () {
+            const tagFilter = this.tagToAdd
+                .replace(/[\n\r]/g, " ")
+                .trim()
+                .replace(/[\s]/g, "_")
+                .toLowerCase();
+            if (!tagFilter) {
+                this.matchingTags = [];
+                return;
+            }
+            this.matchingTags = Object.values(this.tagData)
+                .map((a: any) => {
+                    const i = a.name.indexOf(tagFilter);
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        starts: i === 0,
+                        contains: i >= 0,
+                    };
+                })
+                .filter((a) => {
+                    if (this.tags.indexOf(a.id) >= 0) {
+                        return false;
+                    }
+                    return a.starts || a.contains;
+                })
+                .sort((a, b) => {
+                    if (a.starts && !b.starts) {
+                        return -1;
+                    } else if (b.starts && !a.starts) {
+                        return 1;
+                    } else if (a.name < b.name) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                })
+                .slice(0, 10);
+        },
+
+        onTagAddKeyDown: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.addTag();
+            } else if (e.key === "Tab") {
+                e.preventDefault();
+                this.findTags();
+                if (this.matchingTags.length > 0) {
+                    this.tagToAdd = this.matchingTags[0].name;
                 }
-              }
-              this.$emit("changed");
-            })
-            .onCancel(() => {
-              this.busy = false;
-            })
-            .onRequestError((err) => {
-              this.busy = false;
-              Request.ErrorHandler()
-                .add(400, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Bad request"));
-                })
-                .add(401, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                  AppEvents.Emit("unauthorized");
-                })
-                .add(403, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                })
-                .add(404, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Not found"));
-                })
-                .add(500, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Internal server error"));
-                })
-                .add("*", "*", () => {
-                  AppEvents.Emit(
-                    "snack",
-                    this.$t("Could not connect to the server")
-                  );
-                })
-                .handle(err);
-            })
-            .onUnexpectedError((err) => {
-              AppEvents.Emit("snack", err.message);
-              console.error(err);
-              this.busy = false;
+            }
+        },
+
+        addResolution: function (r) {
+            this.$refs.resolutionConfirmationModal.show({
+                type: this.type,
+                deleting: false,
+                name: r.name,
+                width: r.width,
+                height: r.height,
+                fps: r.fps,
+                callback: () => {
+                    if (this.busy) {
+                        return;
+                    }
+
+                    this.busy = true;
+
+                    const mediaId = AppStatus.CurrentMedia;
+
+                    Request.Pending(
+                        "media-editor-busy",
+                        MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps)
+                    )
+                        .onSuccess((result) => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Added resolution") + ": " + r.name
+                            );
+                            this.busy = false;
+                            r.enabled = true;
+                            r.fps = result.fps;
+                            this.$emit("changed");
+                        })
+                        .onCancel(() => {
+                            this.busy = false;
+                        })
+                        .onRequestError((err) => {
+                            this.busy = false;
+                            Request.ErrorHandler()
+                                .add(400, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                })
+                                .add(401, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.Emit("unauthorized");
+                                })
+                                .add(403, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                })
+                                .add(404, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                })
+                                .add(500, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                })
+                                .add("*", "*", () => {
+                                    AppEvents.Emit(
+                                        "snack",
+                                        this.$t("Could not connect to the server")
+                                    );
+                                })
+                                .handle(err);
+                        })
+                        .onUnexpectedError((err) => {
+                            AppEvents.Emit("snack", err.message);
+                            console.error(err);
+                            this.busy = false;
+                        });
+                },
             });
         },
-      });
-    },
 
-    downloadSubtitles: function (sub: MediaSubtitle) {
-      this.shownState = false;
-      const link = document.createElement("a");
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.href = GetAssetURL(sub.url);
-      link.click();
-    },
+        deleteResolution: function (r) {
+            this.$refs.resolutionConfirmationModal.show({
+                type: this.type,
+                deleting: true,
+                name: r.name,
+                width: r.width,
+                height: r.height,
+                fps: r.fps,
+                callback: () => {
+                    if (this.busy) {
+                        return;
+                    }
 
-    // Audios
+                    this.busy = true;
 
-    selectAudioFile: function () {
-      this.$el.querySelector(".audio-file-hidden").click();
-    },
+                    const mediaId = AppStatus.CurrentMedia;
 
-    audioFileChanged: function (e) {
-      const data = e.target.files;
-      if (data && data.length > 0) {
-        const file = data[0];
-        this.audioFile = file;
-        this.audioFileName = file.name;
-      }
-    },
+                    Request.Pending(
+                        "media-editor-busy",
+                        MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps)
+                    )
+                        .onSuccess(() => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Removed resolution") + ": " + r.name
+                            );
+                            this.busy = false;
+                            r.enabled = false;
+                            this.$emit("changed");
+                        })
+                        .onCancel(() => {
+                            this.busy = false;
+                        })
+                        .onRequestError((err) => {
+                            this.busy = false;
+                            Request.ErrorHandler()
+                                .add(400, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                })
+                                .add(401, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.Emit("unauthorized");
+                                })
+                                .add(403, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                })
+                                .add(404, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                })
+                                .add(500, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                })
+                                .add("*", "*", () => {
+                                    AppEvents.Emit(
+                                        "snack",
+                                        this.$t("Could not connect to the server")
+                                    );
+                                })
+                                .handle(err);
+                        })
+                        .onUnexpectedError((err) => {
+                            AppEvents.Emit("snack", err.message);
+                            console.error(err);
+                            this.busy = false;
+                        });
+                },
+            });
+        },
 
-    addAudio: function () {
-      if (!this.audioFile) {
-        AppEvents.Emit("snack", this.$t("Please, select an audio file first"));
-        return;
-      }
+        // Subtitles
 
-      const id = this.audioId;
-      const name = this.audioName;
+        selectSRTFile: function () {
+            this.$el.querySelector(".srt-file-hidden").click();
+        },
 
-      let duped = false;
-      for (let aud of this.audios) {
-        if (aud.id === id) {
-          duped = true;
-          break;
-        }
-      }
+        srtFileChanged: function (e) {
+            const data = e.target.files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.srtFile = file;
+                this.srtFileName = file.name;
+            }
+        },
 
-      if (duped) {
-        AppEvents.Emit(
-          "snack",
-          this.$t(
-            "There is already another audio track with the same identifier"
-          )
-        );
-        return;
-      }
+        addSubtitles: function () {
+            if (!this.srtFile) {
+                AppEvents.Emit("snack", this.$t("Please, select a SubRip file first"));
+                return;
+            }
 
-      if (this.busy) {
-        return;
-      }
+            const id = this.srtId;
+            const name = this.srtName;
 
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending(
-        "media-editor-busy",
-        MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile)
-      )
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
-          this.busy = false;
-          this.audios.push(res);
-          this.$emit("changed");
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "INVALID_AUDIO", () => {
-              AppEvents.Emit("snack", this.$t("Invalid audio file"));
-            })
-            .add(400, "INVALID_ID", () => {
-              AppEvents.Emit("snack", this.$t("Invalid audio track identifier"));
-            })
-            .add(400, "INVALID_NAME", () => {
-              AppEvents.Emit("snack", this.$t("Invalid audio track name"));
-            })
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Bad request"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    removeAudio: function (aud: MediaAudioTrack) {
-      this.$refs.audioTrackDeleteModal.show({
-        name: aud.name,
-        callback: () => {
-          if (this.busy) {
-            return;
-          }
-
-          this.busy = true;
-
-          const mediaId = AppStatus.CurrentMedia;
-          const id = aud.id;
-
-          Request.Pending(
-            "media-editor-busy",
-            MediaAPI.RemoveAudioTrack(mediaId, id)
-          )
-            .onSuccess(() => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Removed audio track") + ": " + aud.name
-              );
-              this.busy = false;
-              for (let i = 0; i < this.audios.length; i++) {
-                if (this.audios[i].id === id) {
-                  this.audios.splice(i, 1);
-                  break;
+            let duped = false;
+            for (let sub of this.subtitles) {
+                if (sub.id === id) {
+                    duped = true;
+                    break;
                 }
-              }
-              this.$emit("changed");
-            })
-            .onCancel(() => {
-              this.busy = false;
-            })
-            .onRequestError((err) => {
-              this.busy = false;
-              Request.ErrorHandler()
-                .add(400, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Bad request"));
-                })
-                .add(401, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                  AppEvents.Emit("unauthorized");
-                })
-                .add(403, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Access denied"));
-                })
-                .add(404, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Not found"));
-                })
-                .add(500, "*", () => {
-                  AppEvents.Emit("snack", this.$t("Internal server error"));
-                })
-                .add("*", "*", () => {
-                  AppEvents.Emit(
+            }
+
+            if (duped) {
+                AppEvents.Emit(
                     "snack",
-                    this.$t("Could not connect to the server")
-                  );
+                    this.$t(
+                        "There is already another subtitles file with the same identifier"
+                    )
+                );
+                return;
+            }
+
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile)
+            )
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
+                    this.busy = false;
+                    this.subtitles.push(res);
+                    this.$emit("changed");
                 })
-                .handle(err);
-            })
-            .onUnexpectedError((err) => {
-              AppEvents.Emit("snack", err.message);
-              console.error(err);
-              this.busy = false;
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "INVALID_SRT", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid SubRip file"));
+                        })
+                        .add(400, "INVALID_ID", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid subtitles identifier"));
+                        })
+                        .add(400, "INVALID_NAME", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid subtitles name"));
+                        })
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(413, "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Subtitles file too big (max is $MAX)").replace(
+                                    "$MAX",
+                                    "10MB"
+                                )
+                            );
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        removeSubtitles: function (sub) {
+            this.$refs.subtitlesDeleteModal.show({
+                name: sub.name,
+                callback: () => {
+                    if (this.busy) {
+                        return;
+                    }
+
+                    this.busy = true;
+
+                    const mediaId = AppStatus.CurrentMedia;
+                    const id = sub.id;
+
+                    Request.Pending(
+                        "media-editor-busy",
+                        MediaAPI.RemoveSubtitles(mediaId, id)
+                    )
+                        .onSuccess(() => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Removed subtitles") + ": " + sub.name
+                            );
+                            this.busy = false;
+                            for (let i = 0; i < this.subtitles.length; i++) {
+                                if (this.subtitles[i].id === id) {
+                                    this.subtitles.splice(i, 1);
+                                    break;
+                                }
+                            }
+                            this.$emit("changed");
+                        })
+                        .onCancel(() => {
+                            this.busy = false;
+                        })
+                        .onRequestError((err) => {
+                            this.busy = false;
+                            Request.ErrorHandler()
+                                .add(400, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                })
+                                .add(401, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.Emit("unauthorized");
+                                })
+                                .add(403, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                })
+                                .add(404, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                })
+                                .add(500, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                })
+                                .add("*", "*", () => {
+                                    AppEvents.Emit(
+                                        "snack",
+                                        this.$t("Could not connect to the server")
+                                    );
+                                })
+                                .handle(err);
+                        })
+                        .onUnexpectedError((err) => {
+                            AppEvents.Emit("snack", err.message);
+                            console.error(err);
+                            this.busy = false;
+                        });
+                },
             });
         },
-      });
+
+        downloadSubtitles: function (sub: MediaSubtitle) {
+            this.shownState = false;
+            const link = document.createElement("a");
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.href = GetAssetURL(sub.url);
+            link.click();
+        },
+
+        // Audios
+
+        selectAudioFile: function () {
+            this.$el.querySelector(".audio-file-hidden").click();
+        },
+
+        audioFileChanged: function (e) {
+            const data = e.target.files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.audioFile = file;
+                this.audioFileName = file.name;
+            }
+        },
+
+        addAudio: function () {
+            if (!this.audioFile) {
+                AppEvents.Emit("snack", this.$t("Please, select an audio file first"));
+                return;
+            }
+
+            const id = this.audioId;
+            const name = this.audioName;
+
+            let duped = false;
+            for (let aud of this.audios) {
+                if (aud.id === id) {
+                    duped = true;
+                    break;
+                }
+            }
+
+            if (duped) {
+                AppEvents.Emit(
+                    "snack",
+                    this.$t(
+                        "There is already another audio track with the same identifier"
+                    )
+                );
+                return;
+            }
+
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending(
+                "media-editor-busy",
+                MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile)
+            )
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
+                    this.busy = false;
+                    this.audios.push(res);
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "INVALID_AUDIO", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid audio file"));
+                        })
+                        .add(400, "INVALID_ID", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid audio track identifier"));
+                        })
+                        .add(400, "INVALID_NAME", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid audio track name"));
+                        })
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Bad request"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        removeAudio: function (aud: MediaAudioTrack) {
+            this.$refs.audioTrackDeleteModal.show({
+                name: aud.name,
+                callback: () => {
+                    if (this.busy) {
+                        return;
+                    }
+
+                    this.busy = true;
+
+                    const mediaId = AppStatus.CurrentMedia;
+                    const id = aud.id;
+
+                    Request.Pending(
+                        "media-editor-busy",
+                        MediaAPI.RemoveAudioTrack(mediaId, id)
+                    )
+                        .onSuccess(() => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Removed audio track") + ": " + aud.name
+                            );
+                            this.busy = false;
+                            for (let i = 0; i < this.audios.length; i++) {
+                                if (this.audios[i].id === id) {
+                                    this.audios.splice(i, 1);
+                                    break;
+                                }
+                            }
+                            this.$emit("changed");
+                        })
+                        .onCancel(() => {
+                            this.busy = false;
+                        })
+                        .onRequestError((err) => {
+                            this.busy = false;
+                            Request.ErrorHandler()
+                                .add(400, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                })
+                                .add(401, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.Emit("unauthorized");
+                                })
+                                .add(403, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                })
+                                .add(404, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                })
+                                .add(500, "*", () => {
+                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                })
+                                .add("*", "*", () => {
+                                    AppEvents.Emit(
+                                        "snack",
+                                        this.$t("Could not connect to the server")
+                                    );
+                                })
+                                .handle(err);
+                        })
+                        .onUnexpectedError((err) => {
+                            AppEvents.Emit("snack", err.message);
+                            console.error(err);
+                            this.busy = false;
+                        });
+                },
+            });
+        },
+
+        downloadAudio: function (aud: MediaAudioTrack) {
+            this.shownState = false;
+            const link = document.createElement("a");
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.href = GetAssetURL(aud.url);
+            link.click();
+        },
+
+
+        // --
+
+        updateAuthInfo: function () {
+            this.canWrite = AuthController.CanWrite;
+        },
+
+        renderResolutionProperties: function (
+            resWidth: number,
+            resHeight: number,
+            originalWidth: number,
+            originalHeight: number
+        ): string {
+            let width = originalWidth;
+            let height = originalHeight;
+
+            if (width > height) {
+                const proportionalHeight = Math.round((height * resWidth) / width);
+
+                if (proportionalHeight > resHeight) {
+                    width = Math.round((width * resHeight) / height);
+                    height = resHeight;
+                } else {
+                    width = resWidth;
+                    height = proportionalHeight;
+                }
+            } else {
+                const proportionalWidth = Math.round((width * resHeight) / height);
+
+                if (proportionalWidth > resWidth) {
+                    height = Math.round((height * resWidth) / width);
+                    width = resWidth;
+                } else {
+                    width = proportionalWidth;
+                    height = resHeight;
+                }
+            }
+
+            return width + "x" + height;
+        },
     },
 
-    downloadAudio: function (aud: MediaAudioTrack) {
-      this.shownState = false;
-      const link = document.createElement("a");
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.href = GetAssetURL(aud.url);
-      link.click();
+    mounted: function () {
+        this.updateMediaData();
+        this.updateTagData();
+
+        this.$options.mediaUpdateH = this.updateMediaData.bind(this);
+
+        AppEvents.AddEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
+        );
+
+        this.$options.tagUpdateH = this.updateTagData.bind(this);
+
+        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+
+        TagsController.Load();
     },
 
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
+        );
 
-    // --
+        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 
-    updateAuthInfo: function () {
-      this.canWrite = AuthController.CanWrite;
-    },
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    renderResolutionProperties: function (
-      resWidth: number,
-      resHeight: number,
-      originalWidth: number,
-      originalHeight: number
-    ): string {
-      let width = originalWidth;
-      let height = originalHeight;
-
-      if (width > height) {
-        const proportionalHeight = Math.round((height * resWidth) / width);
-
-        if (proportionalHeight > resHeight) {
-          width = Math.round((width * resHeight) / height);
-          height = resHeight;
-        } else {
-          width = resWidth;
-          height = proportionalHeight;
+        if (this.$options.findTagTimeout) {
+            clearTimeout(this.$options.findTagTimeout);
         }
-      } else {
-        const proportionalWidth = Math.round((width * resHeight) / height);
 
-        if (proportionalWidth > resWidth) {
-          height = Math.round((height * resWidth) / width);
-          width = resWidth;
-        } else {
-          width = proportionalWidth;
-          height = resHeight;
-        }
-      }
-
-      return width + "x" + height;
+        Request.Abort("media-editor-busy");
     },
-  },
-
-  mounted: function () {
-    this.updateMediaData();
-    this.updateTagData();
-
-    this.$options.mediaUpdateH = this.updateMediaData.bind(this);
-
-    AppEvents.AddEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
-
-    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
-
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
-
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    TagsController.Load();
-  },
-
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-
-    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    if (this.$options.findTagTimeout) {
-      clearTimeout(this.$options.findTagTimeout);
-    }
-
-    Request.Abort("media-editor-busy");
-  },
 });
 </script>

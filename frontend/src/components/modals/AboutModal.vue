@@ -58,45 +58,45 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "AboutModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      version: process.env.VUE_APP_VERSION || "-",
-      versionDate: process.env.VUE_APP_VERSION_DATE || "-",
-      homePage: process.env.VUE_APP_HOME_URL || "#",
-      gitRepo: process.env.VUE_APP_GIT_URL || "#",
-      license: process.env.VUE_APP_LICENSE_URL || "#",
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+    name: "AboutModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-  },
-  mounted: function () {
-    if (this.display) {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
-  },
+    data: function () {
+        return {
+            version: process.env.VUE_APP_VERSION || "-",
+            versionDate: process.env.VUE_APP_VERSION_DATE || "-",
+            homePage: process.env.VUE_APP_HOME_URL || "#",
+            gitRepo: process.env.VUE_APP_GIT_URL || "#",
+            license: process.env.VUE_APP_LICENSE_URL || "#",
+        };
+    },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
 });
 </script>

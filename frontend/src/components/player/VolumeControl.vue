@@ -49,162 +49,162 @@ import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({
-  name: "VolumeControl",
-  emits: ["update:volume", "update:muted", "update:expanded", "enter", "leave"],
-  props: {
-    width: Number,
-    volume: Number,
-    min: Boolean,
-    muted: Boolean,
-    expanded: Boolean,
-  },
-  setup(props) {
-    return {
-      volumeState: useVModel(props, "volume"),
-      mutedState: useVModel(props, "muted"),
-      expandedState: useVModel(props, "expanded"),
-    };
-  },
-  data: function () {
-    return {
-      volumeGrabbed: false,
-    };
-  },
-  methods: {
-    onEnter: function () {
-      this.$emit("enter");
-      this.showVolumeBar();
+    name: "VolumeControl",
+    emits: ["update:volume", "update:muted", "update:expanded", "enter", "leave"],
+    props: {
+        width: Number,
+        volume: Number,
+        min: Boolean,
+        muted: Boolean,
+        expanded: Boolean,
     },
-    onLeave: function () {
-      this.$emit("leave");
+    setup(props) {
+        return {
+            volumeState: useVModel(props, "volume"),
+            mutedState: useVModel(props, "muted"),
+            expandedState: useVModel(props, "expanded"),
+        };
     },
-    computeFullWidth: function (
-      width: number,
-      min: boolean,
-      expanded: boolean
-    ) {
-      let margins = 40;
-      let barWidth = width;
-      let btnWidth = 40;
+    data: function () {
+        return {
+            volumeGrabbed: false,
+        };
+    },
+    methods: {
+        onEnter: function () {
+            this.$emit("enter");
+            this.showVolumeBar();
+        },
+        onLeave: function () {
+            this.$emit("leave");
+        },
+        computeFullWidth: function (
+            width: number,
+            min: boolean,
+            expanded: boolean
+        ) {
+            let margins = 40;
+            let barWidth = width;
+            let btnWidth = 40;
 
-      if (min) {
-        btnWidth = 24;
-      }
+            if (min) {
+                btnWidth = 24;
+            }
 
-      return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
-    },
-    computeBarContainerWidth(width: number) {
-      let margins = 32;
-      return width + margins + "px";
-    },
-    computeBarContainerInnerWidth(width: number) {
-      let margins = 16;
-      return width + margins + "px";
-    },
-    clickOnVolumeButton() {
-      this.mutedState = !this.mutedState;
-    },
-    getVolumeBarWidth(width: number) {
-      return width + 16 + "px";
-    },
-    getVolumeBarCurrentWidth(width: number, volume: number, muted: boolean) {
-      let actualVolume = volume;
+            return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
+        },
+        computeBarContainerWidth(width: number) {
+            let margins = 32;
+            return width + margins + "px";
+        },
+        computeBarContainerInnerWidth(width: number) {
+            let margins = 16;
+            return width + margins + "px";
+        },
+        clickOnVolumeButton() {
+            this.mutedState = !this.mutedState;
+        },
+        getVolumeBarWidth(width: number) {
+            return width + 16 + "px";
+        },
+        getVolumeBarCurrentWidth(width: number, volume: number, muted: boolean) {
+            let actualVolume = volume;
 
-      if (muted) {
-        actualVolume = 0;
-      }
+            if (muted) {
+                actualVolume = 0;
+            }
 
-      actualVolume = Math.max(0, Math.min(1, actualVolume));
+            actualVolume = Math.max(0, Math.min(1, actualVolume));
 
-      return Math.floor(actualVolume * width) + "px";
-    },
-    getVolumeThumbLeft(width: number, volume: number, muted: boolean) {
-      return this.getVolumeBarCurrentWidth(width, volume, muted);
-    },
-    showVolumeBar: function () {
-      this.expandedState = true;
-    },
-    hideVolumeBar: function () {
-      if (isTouchDevice()) {
-        return;
-      }
-      this.expandedState = false;
-    },
-    grabVolume(e) {
-      this.volumeGrabbed = true;
-      if (e.touches && e.touches.length > 0) {
-        this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-      } else {
-        this.modifyVolumeByMouse(e.pageX, e.pageY);
-      }
-    },
-    dropVolume(e) {
-      if (!this.volumeGrabbed) {
-        return;
-      }
-      this.volumeGrabbed = false;
-      if (e.touches && e.touches.length > 0) {
-        this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-      } else {
-        this.modifyVolumeByMouse(e.pageX, e.pageY);
-      }
-    },
-    moveVolume(e) {
-      if (!this.volumeGrabbed) {
-        return;
-      }
-      if (e.touches && e.touches.length > 0) {
-        this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-      } else {
-        this.modifyVolumeByMouse(e.pageX, e.pageY);
-      }
-    },
-    modifyVolumeByMouse: function (x, y) {
-      if (
-        typeof x !== "number" ||
+            return Math.floor(actualVolume * width) + "px";
+        },
+        getVolumeThumbLeft(width: number, volume: number, muted: boolean) {
+            return this.getVolumeBarCurrentWidth(width, volume, muted);
+        },
+        showVolumeBar: function () {
+            this.expandedState = true;
+        },
+        hideVolumeBar: function () {
+            if (isTouchDevice()) {
+                return;
+            }
+            this.expandedState = false;
+        },
+        grabVolume(e) {
+            this.volumeGrabbed = true;
+            if (e.touches && e.touches.length > 0) {
+                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
+            } else {
+                this.modifyVolumeByMouse(e.pageX, e.pageY);
+            }
+        },
+        dropVolume(e) {
+            if (!this.volumeGrabbed) {
+                return;
+            }
+            this.volumeGrabbed = false;
+            if (e.touches && e.touches.length > 0) {
+                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
+            } else {
+                this.modifyVolumeByMouse(e.pageX, e.pageY);
+            }
+        },
+        moveVolume(e) {
+            if (!this.volumeGrabbed) {
+                return;
+            }
+            if (e.touches && e.touches.length > 0) {
+                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
+            } else {
+                this.modifyVolumeByMouse(e.pageX, e.pageY);
+            }
+        },
+        modifyVolumeByMouse: function (x, y) {
+            if (
+                typeof x !== "number" ||
         typeof y !== "number" ||
         isNaN(x) ||
         isNaN(y)
-      ) {
-        return;
-      }
-      const offset = this.$el.getBoundingClientRect();
+            ) {
+                return;
+            }
+            const offset = this.$el.getBoundingClientRect();
 
-      const offsetX = offset.left + 8 + (this.min ? 24 : 40);
+            const offsetX = offset.left + 8 + (this.min ? 24 : 40);
 
-      if (x < offsetX) {
-        this.changeVolume(0);
-      } else {
-        const p = x - offsetX;
-        const vol = Math.min(1, p / this.width);
-        this.changeVolume(vol);
-      }
+            if (x < offsetX) {
+                this.changeVolume(0);
+            } else {
+                const p = x - offsetX;
+                const vol = Math.min(1, p / this.width);
+                this.changeVolume(vol);
+            }
+        },
+        changeVolume: function (v: number) {
+            this.mutedState = false;
+            this.volumeState = v;
+        },
     },
-    changeVolume: function (v: number) {
-      this.mutedState = false;
-      this.volumeState = v;
+    mounted: function () {
+        if (isTouchDevice()) {
+            this.expandedState = true;
+        }
+
+        this.$options.dropVolumeHandler = this.dropVolume.bind(this);
+        document.addEventListener("mouseup", this.$options.dropVolumeHandler);
+        document.addEventListener("touchend", this.$options.dropVolumeHandler);
+
+        this.$options.moveVolumeHandler = this.moveVolume.bind(this);
+
+        document.addEventListener("mousemove", this.$options.moveVolumeHandler);
+        document.addEventListener("touchmove", this.$options.moveVolumeHandler);
     },
-  },
-  mounted: function () {
-    if (isTouchDevice()) {
-      this.expandedState = true;
-    }
+    beforeUnmount: function () {
+        document.removeEventListener("mouseup", this.$options.dropVolumeHandler);
+        document.removeEventListener("touchend", this.$options.dropVolumeHandler);
 
-    this.$options.dropVolumeHandler = this.dropVolume.bind(this);
-    document.addEventListener("mouseup", this.$options.dropVolumeHandler);
-    document.addEventListener("touchend", this.$options.dropVolumeHandler);
-
-    this.$options.moveVolumeHandler = this.moveVolume.bind(this);
-
-    document.addEventListener("mousemove", this.$options.moveVolumeHandler);
-    document.addEventListener("touchmove", this.$options.moveVolumeHandler);
-  },
-  beforeUnmount: function () {
-    document.removeEventListener("mouseup", this.$options.dropVolumeHandler);
-    document.removeEventListener("touchend", this.$options.dropVolumeHandler);
-
-    document.removeEventListener("mousemove", this.$options.moveVolumeHandler);
-    document.removeEventListener("touchmove", this.$options.moveVolumeHandler);
-  },
+        document.removeEventListener("mousemove", this.$options.moveVolumeHandler);
+        document.removeEventListener("touchmove", this.$options.moveVolumeHandler);
+    },
 });
 </script>

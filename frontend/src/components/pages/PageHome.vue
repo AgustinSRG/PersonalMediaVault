@@ -95,384 +95,384 @@ import { TagEntry, TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
 
 export default defineComponent({
-  name: "PageHome",
-  components: {
-    PageMenu,
-  },
-  props: {
-    display: Boolean,
-    min: Boolean,
-  },
-  data: function () {
-    return {
-      search: AppStatus.CurrentSearch,
+    name: "PageHome",
+    components: {
+        PageMenu,
+    },
+    props: {
+        display: Boolean,
+        min: Boolean,
+    },
+    data: function () {
+        return {
+            search: AppStatus.CurrentSearch,
 
-      loading: false,
+            loading: false,
 
-      pageSize: 50,
-      order: "desc",
-      searchParams: AppStatus.SearchParams,
+            pageSize: 50,
+            order: "desc",
+            searchParams: AppStatus.SearchParams,
 
-      currentMedia: AppStatus.CurrentMedia,
+            currentMedia: AppStatus.CurrentMedia,
 
-      page: 0,
-      total: 0,
-      totalPages: 0,
-      pageItems: [],
+            page: 0,
+            total: 0,
+            totalPages: 0,
+            pageItems: [],
 
-      loadingFiller: [],
+            loadingFiller: [],
 
-      pageSizeOptions: [],
+            pageSizeOptions: [],
 
-      switchMediaOnLoad: "",
+            switchMediaOnLoad: "",
 
-      tagData: {},
-    };
-  },
-  methods: {
-    load: function () {
-      Timeouts.Abort("page-home-load");
-      Request.Abort("page-home-load");
+            tagData: {},
+        };
+    },
+    methods: {
+        load: function () {
+            Timeouts.Abort("page-home-load");
+            Request.Abort("page-home-load");
 
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      if (AuthController.Locked) {
-        return; // Vault is locked
-      }
-
-      Request.Pending(
-        "page-home-load",
-        SearchAPI.Search("", this.order, this.page, this.pageSize)
-      )
-        .onSuccess((result) => {
-          TagsController.OnMediaListReceived(result.page_items);
-          this.pageItems = result.page_items;
-          this.page = result.page_index;
-          this.totalPages = result.page_count;
-          this.total = result.total_count;
-          this.loading = false;
-          if (this.switchMediaOnLoad === "next") {
-            this.switchMediaOnLoad = "";
-            if (this.pageItems.length > 0) {
-              this.goToMedia(this.pageItems[0].id);
+            if (!this.display) {
+                return;
             }
-          } else if (this.switchMediaOnLoad === "prev") {
-            this.switchMediaOnLoad = "";
-            if (this.pageItems.length > 0) {
-              this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+
+            this.loading = true;
+
+            if (AuthController.Locked) {
+                return; // Vault is locked
             }
-          }
-          if (this.page < 0) {
+
+            Request.Pending(
+                "page-home-load",
+                SearchAPI.Search("", this.order, this.page, this.pageSize)
+            )
+                .onSuccess((result) => {
+                    TagsController.OnMediaListReceived(result.page_items);
+                    this.pageItems = result.page_items;
+                    this.page = result.page_index;
+                    this.totalPages = result.page_count;
+                    this.total = result.total_count;
+                    this.loading = false;
+                    if (this.switchMediaOnLoad === "next") {
+                        this.switchMediaOnLoad = "";
+                        if (this.pageItems.length > 0) {
+                            this.goToMedia(this.pageItems[0].id);
+                        }
+                    } else if (this.switchMediaOnLoad === "prev") {
+                        this.switchMediaOnLoad = "";
+                        if (this.pageItems.length > 0) {
+                            this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                        }
+                    }
+                    if (this.page < 0) {
+                        this.page = 0;
+                        this.load();
+                        return;
+                    } else if (this.page >= this.totalPages && this.totalPages > 0) {
+                        this.page = this.totalPages - 1;
+                        this.load();
+                        return;
+                    }
+                    nextTick(() => {
+                        const currentElem = this.$el.querySelector(
+                            ".search-result-item.current"
+                        );
+                        if (currentElem) {
+                            currentElem.scrollIntoView();
+                        }
+                    });
+                    this.onCurrentMediaChanged();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("page-home-load", 1500, this.$options.loadH);
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("page-home-load", 1500, this.$options.loadH);
+                });
+        },
+
+        onOrderChanged: function () {
             this.page = 0;
             this.load();
-            return;
-          } else if (this.page >= this.totalPages && this.totalPages > 0) {
-            this.page = this.totalPages - 1;
+            this.onSearchParamsChanged();
+        },
+
+        onPageSizeChanged: function () {
+            this.updateLoadingFiller();
+            this.page = 0;
             this.load();
-            return;
-          }
-          nextTick(() => {
-            const currentElem = this.$el.querySelector(
-              ".search-result-item.current"
-            );
-            if (currentElem) {
-              currentElem.scrollIntoView();
+            this.onSearchParamsChanged();
+        },
+
+        onAppStatusChanged: function () {
+            this.currentMedia = AppStatus.CurrentMedia;
+            if (AppStatus.SearchParams !== this.searchParams) {
+                this.searchParams = AppStatus.SearchParams;
+                this.updateSearchParams();
+                this.load();
             }
-          });
-          this.onCurrentMediaChanged();
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("page-home-load", 1500, this.$options.loadH);
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("page-home-load", 1500, this.$options.loadH);
-        });
-    },
+            nextTick(() => {
+                const currentElem = this.$el.querySelector(
+                    ".search-result-item.current"
+                );
+                if (currentElem) {
+                    currentElem.scrollIntoView();
+                }
+            });
+            this.onCurrentMediaChanged();
+        },
 
-    onOrderChanged: function () {
-      this.page = 0;
-      this.load();
-      this.onSearchParamsChanged();
-    },
+        onCurrentMediaChanged: function () {
+            const i = this.findCurrentMediaIndex();
+            AlbumsController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
+        },
 
-    onPageSizeChanged: function () {
-      this.updateLoadingFiller();
-      this.page = 0;
-      this.load();
-      this.onSearchParamsChanged();
-    },
+        onSearchParamsChanged: function () {
+            this.searchParams = AppStatus.PackSearchParams(
+                this.page,
+                this.pageSize,
+                this.order
+            );
+            AppStatus.ChangeSearchParams(this.searchParams);
+        },
 
-    onAppStatusChanged: function () {
-      this.currentMedia = AppStatus.CurrentMedia;
-      if (AppStatus.SearchParams !== this.searchParams) {
-        this.searchParams = AppStatus.SearchParams;
-        this.updateSearchParams();
-        this.load();
-      }
-      nextTick(() => {
-        const currentElem = this.$el.querySelector(
-          ".search-result-item.current"
-        );
-        if (currentElem) {
-          currentElem.scrollIntoView();
-        }
-      });
-      this.onCurrentMediaChanged();
-    },
+        changePage: function (p) {
+            this.page = p;
+            this.onSearchParamsChanged();
+            this.load();
+        },
 
-    onCurrentMediaChanged: function () {
-      const i = this.findCurrentMediaIndex();
-      AlbumsController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
-    },
+        goToMedia: function (mid, e) {
+            if (e) {
+                e.preventDefault();
+            }
+            AppStatus.ClickOnMedia(mid, true);
+        },
 
-    onSearchParamsChanged: function () {
-      this.searchParams = AppStatus.PackSearchParams(
-        this.page,
-        this.pageSize,
-        this.order
-      );
-      AppStatus.ChangeSearchParams(this.searchParams);
-    },
-
-    changePage: function (p) {
-      this.page = p;
-      this.onSearchParamsChanged();
-      this.load();
-    },
-
-    goToMedia: function (mid, e) {
-      if (e) {
-        e.preventDefault();
-      }
-      AppStatus.ClickOnMedia(mid, true);
-    },
-
-    getMediaURL: function (mid: number): string {
-      return (
-        window.location.protocol +
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          media: mid + "",
+            media: mid + "",
         })
-      );
-    },
+            );
+        },
 
-    updateSearchParams: function () {
-      const params = AppStatus.UnPackSearchParams(this.searchParams);
-      this.page = params.page;
-      this.pageSize = params.pageSize;
-      this.order = params.order;
-      this.updateLoadingFiller();
-    },
+        updateSearchParams: function () {
+            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            this.page = params.page;
+            this.pageSize = params.pageSize;
+            this.order = params.order;
+            this.updateLoadingFiller();
+        },
 
-    updateLoadingFiller: function () {
-      const filler = [];
+        updateLoadingFiller: function () {
+            const filler = [];
 
-      for (let i = 0; i < this.pageSize; i++) {
-        filler.push(i);
-      }
+            for (let i = 0; i < this.pageSize; i++) {
+                filler.push(i);
+            }
 
-      this.loadingFiller = filler;
-    },
+            this.loadingFiller = filler;
+        },
 
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
-    },
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
+        },
 
-    renderTime: function (s: number): string {
-      return renderTimeSeconds(s);
-    },
+        renderTime: function (s: number): string {
+            return renderTimeSeconds(s);
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
 
-    findCurrentMediaIndex: function (): number {
-      for (let i = 0; i < this.pageItems.length; i++) {
-        if (this.pageItems[i].id === this.currentMedia) {
-          return i;
-        }
-      }
-      return -1;
-    },
+        findCurrentMediaIndex: function (): number {
+            for (let i = 0; i < this.pageItems.length; i++) {
+                if (this.pageItems[i].id === this.currentMedia) {
+                    return i;
+                }
+            }
+            return -1;
+        },
 
-    nextMedia: function () {
-      const i = this.findCurrentMediaIndex();
-      if (i !== -1 && i < this.pageItems.length - 1) {
-        this.goToMedia(this.pageItems[i + 1].id);
-      } else if (i === -1 && this.pageItems.length > 0) {
-        this.goToMedia(this.pageItems[0].id);
-      } else if (i === this.pageItems.length - 1) {
-        if (this.page < this.totalPages - 1) {
-          this.switchMediaOnLoad = "next";
-          this.changePage(this.page + 1);
-        }
-      }
-    },
+        nextMedia: function () {
+            const i = this.findCurrentMediaIndex();
+            if (i !== -1 && i < this.pageItems.length - 1) {
+                this.goToMedia(this.pageItems[i + 1].id);
+            } else if (i === -1 && this.pageItems.length > 0) {
+                this.goToMedia(this.pageItems[0].id);
+            } else if (i === this.pageItems.length - 1) {
+                if (this.page < this.totalPages - 1) {
+                    this.switchMediaOnLoad = "next";
+                    this.changePage(this.page + 1);
+                }
+            }
+        },
 
-    prevMedia: function () {
-      const i = this.findCurrentMediaIndex();
-      if (i !== -1 && i > 0) {
-        this.goToMedia(this.pageItems[i - 1].id);
-      } else if (i === -1 && this.pageItems.length > 0) {
-        this.goToMedia(this.pageItems[0].id);
-      } else if (i === 0) {
-        if (this.page > 0) {
-          this.switchMediaOnLoad = "prev";
-          this.changePage(this.page - 1);
-        }
-      }
-    },
+        prevMedia: function () {
+            const i = this.findCurrentMediaIndex();
+            if (i !== -1 && i > 0) {
+                this.goToMedia(this.pageItems[i - 1].id);
+            } else if (i === -1 && this.pageItems.length > 0) {
+                this.goToMedia(this.pageItems[0].id);
+            } else if (i === 0) {
+                if (this.page > 0) {
+                    this.switchMediaOnLoad = "prev";
+                    this.changePage(this.page - 1);
+                }
+            }
+        },
 
-    handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (
-        AuthController.Locked ||
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (
+                AuthController.Locked ||
         !AppStatus.IsPageVisible() ||
         !this.display ||
         !event.key ||
         event.ctrlKey
-      ) {
-        return false;
-      }
+            ) {
+                return false;
+            }
 
-      if (event.key === "PageDown") {
-        if (this.page > 0) {
-          this.changePage(this.page - 1);
-        }
-        return true;
-      }
+            if (event.key === "PageDown") {
+                if (this.page > 0) {
+                    this.changePage(this.page - 1);
+                }
+                return true;
+            }
 
-      if (event.key === "PageUp") {
-        if (this.page < this.totalPages - 1) {
-          this.changePage(this.page + 1);
-        }
-        return true;
-      }
+            if (event.key === "PageUp") {
+                if (this.page < this.totalPages - 1) {
+                    this.changePage(this.page + 1);
+                }
+                return true;
+            }
 
-      if (event.key === "Home") {
-        if (this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
-        }
-        return true;
-      }
+            if (event.key === "Home") {
+                if (this.pageItems.length > 0) {
+                    this.goToMedia(this.pageItems[0].id);
+                }
+                return true;
+            }
 
-      if (event.key === "End") {
-        if (this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-        }
-        return true;
-      }
+            if (event.key === "End") {
+                if (this.pageItems.length > 0) {
+                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                }
+                return true;
+            }
 
-      if (event.key === "ArrowLeft") {
-        this.prevMedia();
-        return true;
-      }
+            if (event.key === "ArrowLeft") {
+                this.prevMedia();
+                return true;
+            }
 
-      if (event.key === "ArrowRight") {
-        this.nextMedia()
-        return true;
-      }
+            if (event.key === "ArrowRight") {
+                this.nextMedia()
+                return true;
+            }
 
-      return false;
+            return false;
+        },
+
+        renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
+            let parts = [item.title || this.$t('Untitled')];
+
+            if (item.tags.length > 0) {
+                let tagNames = [];
+
+                for (let tag of item.tags) {
+                    if (tags[tag + ""]) {
+                        tagNames.push(tags[tag + ""].name);
+                    } else {
+                        tagNames.push("???");
+                    }
+                }
+
+                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
+            }
+
+            return parts.join("\n");
+        },
+
+        updateTagData: function () {
+            this.tagData = clone(TagsController.Tags);
+        },
     },
+    mounted: function () {
+        this.$options.loadH = this.load.bind(this);
+        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
 
-    renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-      let parts = [item.title || this.$t('Untitled')];
+        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
-      if (item.tags.length > 0) {
-        let tagNames = [];
+        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.AddEventListener("media-delete", this.$options.loadH);
+        AppEvents.AddEventListener("media-meta-change", this.$options.loadH);
+        AppEvents.AddEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
 
-        for (let tag of item.tags) {
-          if (tags[tag + ""]) {
-            tagNames.push(tags[tag + ""].name);
-          } else {
-            tagNames.push("???");
-          }
+        this.$options.nextMediaH = this.nextMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+
+        this.$options.prevMediaH = this.prevMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
+
+        for (let i = 1; i <= 20; i++) {
+            this.pageSizeOptions.push(5 * i);
         }
 
-        parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
-      }
+        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
-      return parts.join("\n");
+        this.updateSearchParams();
+        this.updateTagData();
+        this.load();
     },
-
-    updateTagData: function () {
-      this.tagData = clone(TagsController.Tags);
+    beforeUnmount: function () {
+        Timeouts.Abort("page-home-load");
+        Request.Abort("page-home-load");
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.RemoveEventListener("media-meta-change", this.$options.loadH);
+        AppEvents.RemoveEventListener("media-delete", this.$options.loadH);
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
+        AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
+        AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
+        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        AlbumsController.OnPageUnload();
     },
-  },
-  mounted: function () {
-    this.$options.loadH = this.load.bind(this);
-    this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
-
-    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
-
-    AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.AddEventListener("media-delete", this.$options.loadH);
-    AppEvents.AddEventListener("media-meta-change", this.$options.loadH);
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
-
-    this.$options.nextMediaH = this.nextMedia.bind(this);
-    AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
-
-    this.$options.prevMediaH = this.prevMedia.bind(this);
-    AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
-
-    for (let i = 1; i <= 20; i++) {
-      this.pageSizeOptions.push(5 * i);
-    }
-
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
-    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
-
-    this.updateSearchParams();
-    this.updateTagData();
-    this.load();
-  },
-  beforeUnmount: function () {
-    Timeouts.Abort("page-home-load");
-    Request.Abort("page-home-load");
-    AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.RemoveEventListener("media-meta-change", this.$options.loadH);
-    AppEvents.RemoveEventListener("media-delete", this.$options.loadH);
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
-    AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
-    AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
-    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
-    AlbumsController.OnPageUnload();
-  },
-  watch: {
-    display: function () {
-      this.load();
-      this.switchMediaOnLoad = "";
+    watch: {
+        display: function () {
+            this.load();
+            this.switchMediaOnLoad = "";
+        },
     },
-  },
 });
 </script>

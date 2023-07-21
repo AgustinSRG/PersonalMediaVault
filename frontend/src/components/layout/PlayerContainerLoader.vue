@@ -10,11 +10,11 @@ import { defineComponent } from "vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
 export default defineComponent({
-  components: {
-    LoadingOverlay,
-  },
-  name: "PlayerContainerLoader",
-  props: {
-  },
+    components: {
+        LoadingOverlay,
+    },
+    name: "PlayerContainerLoader",
+    props: {
+    },
 });
 </script>

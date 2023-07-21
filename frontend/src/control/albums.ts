@@ -399,11 +399,11 @@ export class AlbumsController {
         if (currentMediaIndex >= 0) {
             AlbumsController.HasPagePrev = (currentMediaIndex > 0) || (page > 0);
             AlbumsController.HasPageNext = (currentMediaIndex < pageSize - 1) || (page < totalPages - 1);
-          } else {
+        } else {
             AlbumsController.HasPagePrev = false
             AlbumsController.HasPageNext = false;
-          }
-          AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
+        }
+        AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
     }
 
     public static OnPageUnload() {

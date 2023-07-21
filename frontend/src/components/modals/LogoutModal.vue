@@ -25,60 +25,60 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "LogoutModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+    name: "LogoutModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        logout: function () {
+            AuthController.Logout();
+            this.close();
+        },
+
+        keyDownHandle: function (e) {
+            e.stopPropagation();
+            if (e.key === "Escape") {
+                this.close();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
         }
-      });
     },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
     },
-
-    logout: function () {
-      AuthController.Logout();
-      this.close();
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

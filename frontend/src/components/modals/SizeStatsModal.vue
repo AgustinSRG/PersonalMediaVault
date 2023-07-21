@@ -50,123 +50,123 @@ import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";
 
 export default defineComponent({
-  name: "SizeStatsModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-    mid: Number,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      loading: false,
-      metaSize: 0,
-      assets: [],
-      total: 0,
-    };
-  },
-  methods: {
-    load: function () {
-      Timeouts.Abort("media-size-stats-load");
-      Request.Abort("media-size-stats-load");
-
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      if (AuthController.Locked) {
-        return; // Vault is locked
-      }
-
-      Request.Pending(
-        "media-size-stats-load",
-        MediaAPI.GetMediaSizeStats(this.mid)
-      )
-        .onSuccess((result) => {
-          this.loading = false;
-          this.metaSize = result.meta_size;
-          this.assets = result.assets;
-
-          let total = 0;
-
-          total += result.meta_size;
-
-          for (let asset of result.assets) {
-            total += asset.size;
-          }
-
-          this.total = total;
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add(404, "*", () => {
-              this.close();
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
-        });
+    name: "SizeStatsModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+        mid: Number,
     },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            loading: false,
+            metaSize: 0,
+            assets: [],
+            total: 0,
+        };
+    },
+    methods: {
+        load: function () {
+            Timeouts.Abort("media-size-stats-load");
+            Request.Abort("media-size-stats-load");
 
-    renderSize: function (bytes: number): string {
-      if (bytes > 1024 * 1024 * 1024) {
-        let gb = bytes / (1024 * 1024 * 1024);
-        gb = Math.floor(gb * 100) / 100;
-        return gb + " GB";
-      } else if (bytes > 1024 * 1024) {
-        let mb = bytes / (1024 * 1024);
-        mb = Math.floor(mb * 100) / 100;
-        return mb + " MB";
-      } else if (bytes > 1024) {
-        let kb = bytes / 1024;
-        kb = Math.floor(kb * 100) / 100;
-        return kb + " KB";
-      } else {
-        return bytes + " Bytes";
-      }
-    },
+            if (!this.display) {
+                return;
+            }
 
-    close: function () {
-      this.$refs.modalContainer.close();
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      nextTick(() => {
-        this.$el.focus();
-      });
-      this.load();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-        this.load();
-      }
-    },
+            this.loading = true;
 
-    mid: function () {
-      this.load();
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
+
+            Request.Pending(
+                "media-size-stats-load",
+                MediaAPI.GetMediaSizeStats(this.mid)
+            )
+                .onSuccess((result) => {
+                    this.loading = false;
+                    this.metaSize = result.meta_size;
+                    this.assets = result.assets;
+
+                    let total = 0;
+
+                    total += result.meta_size;
+
+                    for (let asset of result.assets) {
+                        total += asset.size;
+                    }
+
+                    this.total = total;
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add(404, "*", () => {
+                            this.close();
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
+                });
+        },
+
+        renderSize: function (bytes: number): string {
+            if (bytes > 1024 * 1024 * 1024) {
+                let gb = bytes / (1024 * 1024 * 1024);
+                gb = Math.floor(gb * 100) / 100;
+                return gb + " GB";
+            } else if (bytes > 1024 * 1024) {
+                let mb = bytes / (1024 * 1024);
+                mb = Math.floor(mb * 100) / 100;
+                return mb + " MB";
+            } else if (bytes > 1024) {
+                let kb = bytes / 1024;
+                kb = Math.floor(kb * 100) / 100;
+                return kb + " KB";
+            } else {
+                return bytes + " Bytes";
+            }
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
     },
-  },
+    mounted: function () {
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+            this.load();
+        }
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.load();
+            }
+        },
+
+        mid: function () {
+            this.load();
+        },
+    },
 });
 </script>

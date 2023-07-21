@@ -84,74 +84,74 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "BatchOperationProgressModal",
-  emits: ["update:display", "confirm", "cancel"],
-  props: {
-    display: Boolean,
+    name: "BatchOperationProgressModal",
+    emits: ["update:display", "confirm", "cancel"],
+    props: {
+        display: Boolean,
 
-    status: String,
-    progress: Number,
+        status: String,
+        progress: Number,
 
-    actionCount: Number,
+        actionCount: Number,
 
-    error: String,
-  },
-  data: function () {
-    return {
-      confirmationDelete: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+        error: String,
     },
+    data: function () {
+        return {
+            confirmationDelete: "",
+        };
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-    cancel: function () {
-      this.$emit("cancel");
-      this.$refs.modalContainer.close(true);
-    },
+        cancel: function () {
+            this.$emit("cancel");
+            this.$refs.modalContainer.close(true);
+        },
 
-    confirm: function () {
-      this.$emit("confirm");
-    },
+        confirm: function () {
+            this.$emit("confirm");
+        },
 
-    cssProgress: function (p: number) {
-      return Math.round(p) + "%";
-    },
+        cssProgress: function (p: number) {
+            return Math.round(p) + "%";
+        },
 
-    renderStatus(status: string, p: number) {
-      const renderP = Math.round(p * 100) / 100;
-      switch (status) {
-        case "search":
-          if (p > 0) {
-            return this.$t("Searching") + "... (" + renderP + "%)";
-          } else {
-            return this.$t("Searching") + "...";
-          }
-        case "action":
-          if (p > 0) {
-            return this.$t("Applying") + "... (" + renderP + "%)";
-          } else {
-            return this.$t("Applying") + "...";
-          }
-        default:
-          return "-";
-      }
+        renderStatus(status: string, p: number) {
+            const renderP = Math.round(p * 100) / 100;
+            switch (status) {
+            case "search":
+                if (p > 0) {
+                    return this.$t("Searching") + "... (" + renderP + "%)";
+                } else {
+                    return this.$t("Searching") + "...";
+                }
+            case "action":
+                if (p > 0) {
+                    return this.$t("Applying") + "... (" + renderP + "%)";
+                } else {
+                    return this.$t("Applying") + "...";
+                }
+            default:
+                return "-";
+            }
+        },
     },
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
     },
-  },
 });
 </script>

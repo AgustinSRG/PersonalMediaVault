@@ -112,7 +112,7 @@ export function findTimeSlice(time_slices: { start: number, end: number, name: s
             high = m - 1
         } else {
             low = m
-			high = m - 1
+            high = m - 1
         }
     }
 

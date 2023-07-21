@@ -124,349 +124,349 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 
 export default defineComponent({
-  name: "PageAlbums",
-  emits: [],
-  components: {
-    PageMenu,
-    AlbumCreateModal,
-  },
-  props: {
-    display: Boolean,
-    min: Boolean,
-  },
-  data: function () {
-    return {
-      loading: true,
-
-      albumsList: [],
-
-      filter: "",
-
-      pageSize: 50,
-      order: "desc",
-      searchParams: AppStatus.SearchParams,
-
-      page: 0,
-      total: 0,
-      totalPages: 0,
-      pageItems: [],
-
-      loadingFiller: [],
-
-      pageSizeOptions: [],
-
-      canWrite: AuthController.CanWrite,
-
-      displayAlbumCreate: false,
-    };
-  },
-  methods: {
-    createAlbum: function () {
-      this.displayAlbumCreate = true;
+    name: "PageAlbums",
+    emits: [],
+    components: {
+        PageMenu,
+        AlbumCreateModal,
     },
-
-    onNewAlbum: function (albumId: number) {
-      AppStatus.ClickOnAlbum(albumId);
+    props: {
+        display: Boolean,
+        min: Boolean,
     },
-
-    refreshAlbums: function () {
-      this.load();
-    },
-
-    clearFilter: function () {
-      this.filter = "";
-      this.changeFilter();
-    },
-
-    changeFilter: function () {
-      this.page = 0;
-      this.updateList();
-    },
-
-    load: function () {
-      Timeouts.Abort("page-albums-load");
-      Request.Abort("page-albums-load");
-
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      if (AuthController.Locked) {
-        return; // Vault is locked
-      }
-
-      Request.Pending("page-albums-load", AlbumsAPI.GetAlbums())
-        .onSuccess((result) => {
-          this.albumsList = result;
-          this.loading = false;
-          this.updateList();
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
-        });
-    },
-
-    updateList: function () {
-      if (!this.display) {
-        return;
-      }
-
-      let filter = normalizeString(this.filter + "").trim().toLowerCase();
-
-      let albumsList = this.albumsList.map((a: AlbumEntry) => {
+    data: function () {
         return {
-          id: a.id,
-          name: a.name,
-          nameLowerCase: a.name.trim().toLowerCase(),
-          size: a.size,
-          thumbnail: a.thumbnail,
-          lm: a.lm,
+            loading: true,
+
+            albumsList: [],
+
+            filter: "",
+
+            pageSize: 50,
+            order: "desc",
+            searchParams: AppStatus.SearchParams,
+
+            page: 0,
+            total: 0,
+            totalPages: 0,
+            pageItems: [],
+
+            loadingFiller: [],
+
+            pageSizeOptions: [],
+
+            canWrite: AuthController.CanWrite,
+
+            displayAlbumCreate: false,
         };
-      });
-
-      if (filter) {
-        const filterWords = filterToWords(filter);
-        albumsList = albumsList.filter(a => {
-          return matchSearchFilter(a.name, filter, filterWords)  >= 0;
-        });
-      }
-
-      if (this.order !== "asc") {
-        albumsList = albumsList.sort((a, b) => {
-          if (a.lm > b.lm) {
-            return -1;
-          } else if (b.lm > a.lm) {
-            return 1;
-          } else if (a.id < b.id) {
-            return 1;
-          } else {
-            return -1;
-          }
-        });
-      } else {
-        albumsList = albumsList.sort((a, b) => {
-          if (a.nameLowerCase < b.nameLowerCase) {
-            return -1;
-          } else {
-            return 1;
-          }
-        });
-      }
-
-      this.total = albumsList.length;
-
-      const pageSize = Math.max(1, this.pageSize);
-
-      this.totalPages = Math.floor(this.total / pageSize);
-
-      if (this.total % pageSize > 0) {
-        this.totalPages++;
-      }
-
-      this.page = Math.max(0, Math.min(this.page, this.totalPages - 1));
-
-      const skip = pageSize * this.page;
-
-      this.pageItems = albumsList.slice(skip, skip + this.pageSize);
     },
+    methods: {
+        createAlbum: function () {
+            this.displayAlbumCreate = true;
+        },
 
-    onPageSizeChanged: function () {
-      this.updateLoadingFiller();
-      this.page = 0;
-      this.updateList();
-      this.onSearchParamsChanged();
-    },
+        onNewAlbum: function (albumId: number) {
+            AppStatus.ClickOnAlbum(albumId);
+        },
 
-    onOrderChanged: function () {
-      this.page = 0;
-      this.updateList();
-      this.onSearchParamsChanged();
-    },
+        refreshAlbums: function () {
+            this.load();
+        },
 
-    onAppStatusChanged: function () {
-      if (AppStatus.SearchParams !== this.searchParams) {
-        this.searchParams = AppStatus.SearchParams;
-        this.updateSearchParams();
-        this.updateList();
-      }
-    },
+        clearFilter: function () {
+            this.filter = "";
+            this.changeFilter();
+        },
 
-    onSearchParamsChanged: function () {
-      this.searchParams = AppStatus.PackSearchParams(
-        this.page,
-        this.pageSize,
-        this.order
-      );
-      AppStatus.ChangeSearchParams(this.searchParams);
-    },
+        changeFilter: function () {
+            this.page = 0;
+            this.updateList();
+        },
 
-    changePage: function (p) {
-      this.page = p;
-      this.onSearchParamsChanged();
-      this.updateList();
-    },
+        load: function () {
+            Timeouts.Abort("page-albums-load");
+            Request.Abort("page-albums-load");
 
-    updateSearchParams: function () {
-      const params = AppStatus.UnPackSearchParams(this.searchParams);
-      this.page = params.page;
-      this.pageSize = params.pageSize;
-      this.order = params.order;
-      this.updateLoadingFiller();
-    },
+            if (!this.display) {
+                return;
+            }
 
-    updateLoadingFiller: function () {
-      const filler = [];
+            this.loading = true;
 
-      for (let i = 0; i < this.pageSize; i++) {
-        filler.push(i);
-      }
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
 
-      this.loadingFiller = filler;
-    },
+            Request.Pending("page-albums-load", AlbumsAPI.GetAlbums())
+                .onSuccess((result) => {
+                    this.albumsList = result;
+                    this.loading = false;
+                    this.updateList();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+                });
+        },
 
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
-    },
+        updateList: function () {
+            if (!this.display) {
+                return;
+            }
 
-    goToAlbum: function (album, e) {
-      if (e) {
-        e.preventDefault();
-      }
-      AppStatus.ClickOnAlbum(album.id);
-    },
+            let filter = normalizeString(this.filter + "").trim().toLowerCase();
 
-    getAlbumURL: function (albumId: number): string {
-      return (
-        window.location.protocol +
+            let albumsList = this.albumsList.map((a: AlbumEntry) => {
+                return {
+                    id: a.id,
+                    name: a.name,
+                    nameLowerCase: a.name.trim().toLowerCase(),
+                    size: a.size,
+                    thumbnail: a.thumbnail,
+                    lm: a.lm,
+                };
+            });
+
+            if (filter) {
+                const filterWords = filterToWords(filter);
+                albumsList = albumsList.filter(a => {
+                    return matchSearchFilter(a.name, filter, filterWords)  >= 0;
+                });
+            }
+
+            if (this.order !== "asc") {
+                albumsList = albumsList.sort((a, b) => {
+                    if (a.lm > b.lm) {
+                        return -1;
+                    } else if (b.lm > a.lm) {
+                        return 1;
+                    } else if (a.id < b.id) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                });
+            } else {
+                albumsList = albumsList.sort((a, b) => {
+                    if (a.nameLowerCase < b.nameLowerCase) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
+            }
+
+            this.total = albumsList.length;
+
+            const pageSize = Math.max(1, this.pageSize);
+
+            this.totalPages = Math.floor(this.total / pageSize);
+
+            if (this.total % pageSize > 0) {
+                this.totalPages++;
+            }
+
+            this.page = Math.max(0, Math.min(this.page, this.totalPages - 1));
+
+            const skip = pageSize * this.page;
+
+            this.pageItems = albumsList.slice(skip, skip + this.pageSize);
+        },
+
+        onPageSizeChanged: function () {
+            this.updateLoadingFiller();
+            this.page = 0;
+            this.updateList();
+            this.onSearchParamsChanged();
+        },
+
+        onOrderChanged: function () {
+            this.page = 0;
+            this.updateList();
+            this.onSearchParamsChanged();
+        },
+
+        onAppStatusChanged: function () {
+            if (AppStatus.SearchParams !== this.searchParams) {
+                this.searchParams = AppStatus.SearchParams;
+                this.updateSearchParams();
+                this.updateList();
+            }
+        },
+
+        onSearchParamsChanged: function () {
+            this.searchParams = AppStatus.PackSearchParams(
+                this.page,
+                this.pageSize,
+                this.order
+            );
+            AppStatus.ChangeSearchParams(this.searchParams);
+        },
+
+        changePage: function (p) {
+            this.page = p;
+            this.onSearchParamsChanged();
+            this.updateList();
+        },
+
+        updateSearchParams: function () {
+            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            this.page = params.page;
+            this.pageSize = params.pageSize;
+            this.order = params.order;
+            this.updateLoadingFiller();
+        },
+
+        updateLoadingFiller: function () {
+            const filler = [];
+
+            for (let i = 0; i < this.pageSize; i++) {
+                filler.push(i);
+            }
+
+            this.loadingFiller = filler;
+        },
+
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
+        },
+
+        goToAlbum: function (album, e) {
+            if (e) {
+                e.preventDefault();
+            }
+            AppStatus.ClickOnAlbum(album.id);
+        },
+
+        getAlbumURL: function (albumId: number): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          album: albumId + "",
+            album: albumId + "",
         })
-      );
-    },
+            );
+        },
 
-    renderDate: function (ts: number): string {
-      return (new Date(ts)).toLocaleString();
-    },
+        renderDate: function (ts: number): string {
+            return (new Date(ts)).toLocaleString();
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
 
-    updateAuthInfo: function () {
-      this.canWrite = AuthController.CanWrite;
-    },
+        updateAuthInfo: function () {
+            this.canWrite = AuthController.CanWrite;
+        },
 
-    handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (
-        AuthController.Locked ||
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (
+                AuthController.Locked ||
         !AppStatus.IsPageVisible() ||
         !this.display ||
         !event.key ||
         event.ctrlKey
-      ) {
-        return false;
-      }
+            ) {
+                return false;
+            }
 
-      if (event.key === "PageDown") {
-        if (this.page > 0) {
-          this.changePage(this.page - 1);
-        }
-        return true;
-      }
+            if (event.key === "PageDown") {
+                if (this.page > 0) {
+                    this.changePage(this.page - 1);
+                }
+                return true;
+            }
 
-      if (event.key === "PageUp") {
-        if (this.page < this.totalPages - 1) {
-          this.changePage(this.page + 1);
-        }
-        return true;
-      }
+            if (event.key === "PageUp") {
+                if (this.page < this.totalPages - 1) {
+                    this.changePage(this.page + 1);
+                }
+                return true;
+            }
 
-      if (event.key === "+") {
-        this.createAlbum();
-        return true;
-      }
+            if (event.key === "+") {
+                this.createAlbum();
+                return true;
+            }
 
-      if (event.key.toUpperCase() === "R") {
-        this.refreshAlbums();
-        return true;
-      }
+            if (event.key.toUpperCase() === "R") {
+                this.refreshAlbums();
+                return true;
+            }
 
-      return false;
+            return false;
+        },
     },
-  },
-  mounted: function () {
-    this.$options.loadH = this.load.bind(this);
-    this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+    mounted: function () {
+        this.$options.loadH = this.load.bind(this);
+        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
 
-    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
+        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
-    AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.AddEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
 
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
+        AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
 
-    for (let i = 1; i <= 20; i++) {
-      this.pageSizeOptions.push(5 * i);
-    }
+        for (let i = 1; i <= 20; i++) {
+            this.pageSizeOptions.push(5 * i);
+        }
 
-    this.updateSearchParams();
-    this.load();
-  },
-  beforeUnmount: function () {
-    Timeouts.Abort("page-albums-load");
-    Request.Abort("page-albums-load");
-    AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
-
-    AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
-
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
-  },
-  watch: {
-    display: function () {
-      this.load();
+        this.updateSearchParams();
+        this.load();
     },
-  },
+    beforeUnmount: function () {
+        Timeouts.Abort("page-albums-load");
+        Request.Abort("page-albums-load");
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
+
+        AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
+
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+
+        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+    },
+    watch: {
+        display: function () {
+            this.load();
+        },
+    },
 });
 </script>

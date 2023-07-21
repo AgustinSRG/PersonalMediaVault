@@ -16,135 +16,135 @@ import { GetAssetURL } from "./utils/request";
 import { AuthController } from "./control/auth";
 
 @Options({
-  components: {
-    MainLayout,
-  },
-  data: function () {
-    return {};
-  },
-  methods: {
-    updateTitle: function () {
-      if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
-        if (AppStatus.CurrentAlbum >= 0) {
-          // Media with album list
-          if (AlbumsController.CurrentAlbumData) {
-            document.title =
+    components: {
+        MainLayout,
+    },
+    data: function () {
+        return {};
+    },
+    methods: {
+        updateTitle: function () {
+            if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+                if (AppStatus.CurrentAlbum >= 0) {
+                    // Media with album list
+                    if (AlbumsController.CurrentAlbumData) {
+                        document.title =
               MediaController.MediaData.title +
               " | " +
               AlbumsController.CurrentAlbumData.name +
               " | " +
               this.getAppTitle();
-          } else {
-            document.title =
+                    } else {
+                        document.title =
               MediaController.MediaData.title +
               " | " +
               this.getAppTitle();
-          }
-        } else if (AppStatus.ListSplitMode) {
-          // Media with list
-          document.title =
+                    }
+                } else if (AppStatus.ListSplitMode) {
+                    // Media with list
+                    document.title =
             MediaController.MediaData.title +
             " | " +
             this.getAppTitle();
-        } else {
-          // Media alone
-          document.title =
+                } else {
+                    // Media alone
+                    document.title =
             MediaController.MediaData.title +
             " | " +
             this.getAppTitle();
-        }
-      } else if (AppStatus.CurrentAlbum >= 0) {
-        if (AlbumsController.CurrentAlbumData) {
-          document.title =
+                }
+            } else if (AppStatus.CurrentAlbum >= 0) {
+                if (AlbumsController.CurrentAlbumData) {
+                    document.title =
             AlbumsController.CurrentAlbumData.name +
             " | " +
             this.getAppTitle();
-        } else {
-          document.title = this.getAppTitle();
-        }
-      } else {
-        switch (AppStatus.CurrentPage) {
-          case "search":
-            document.title =
+                } else {
+                    document.title = this.getAppTitle();
+                }
+            } else {
+                switch (AppStatus.CurrentPage) {
+                case "search":
+                    document.title =
               this.$t("Search results") +
               ": " +
               AppStatus.CurrentSearch +
               " | " +
               this.getAppTitle();
-            break;
-          case "upload":
-            document.title =
+                    break;
+                case "upload":
+                    document.title =
               this.$t("Upload") + " | " + this.getAppTitle();
-            break;
-          case "random":
-            document.title =
+                    break;
+                case "random":
+                    document.title =
               this.$t("Random") + " | " + this.getAppTitle();
-            break;
-          case "albums":
-            document.title =
+                    break;
+                case "albums":
+                    document.title =
               this.$t("Albums") + " | " + this.getAppTitle();
-            break;
-          default:
-            document.title = this.getAppTitle();
-        }
-      }
+                    break;
+                default:
+                    document.title = this.getAppTitle();
+                }
+            }
+        },
+
+        getAppTitle: function () {
+            return AuthController.Title || this.$t("Personal Media Vault");
+        },
+
+        updateMediaMetadata: function () {
+            if (!window.navigator || !window.navigator.mediaSession) {
+                return;
+            }
+            if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
+                window.navigator.mediaSession.metadata = new MediaMetadata({
+                    title: MediaController.MediaData.title,
+                    album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
+                    artwork: MediaController.MediaData.thumbnail ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg' }] : undefined,
+                });
+            } else {
+                window.navigator.mediaSession.metadata = null;
+            }
+        },
+
+        updateAppStatus: function () {
+            this.updateTitle();
+            this.updateMediaMetadata();
+        },
+
+        onUploadFinished: function (i, m: UploadEntryMin) {
+            if (m.status === "ready") {
+                AppEvents.Emit("snack", this.$t("Successfully uploaded") + ": " + m.name);
+            } else if (m.status === "error") {
+                AppEvents.Emit("snack", this.$t("Error uploading file") + ": " + m.name);
+            }
+        },
     },
+    mounted: function () {
+        this.updateAppStatus();
+        this.$options.updateH = this.updateAppStatus.bind(this);
 
-    getAppTitle: function () {
-      return AuthController.Title || this.$t("Personal Media Vault");
+        AppEvents.AddEventListener("app-status-update", this.$options.updateH);
+        AppEvents.AddEventListener("current-album-update", this.$options.updateH);
+        AppEvents.AddEventListener("current-media-update", this.$options.updateH);
+
+        this.$options.uploadDoneH = this.onUploadFinished.bind(this);
+        AppEvents.AddEventListener("upload-list-update", this.$options.uploadDoneH);
     },
-
-    updateMediaMetadata: function () {
-      if (!window.navigator || !window.navigator.mediaSession) {
-        return;
-      }
-      if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
-        window.navigator.mediaSession.metadata = new MediaMetadata({
-          title: MediaController.MediaData.title,
-          album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
-          artwork: MediaController.MediaData.thumbnail ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg' }] : undefined,
-        });
-      } else {
-        window.navigator.mediaSession.metadata = null;
-      }
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("app-status-update", this.$options.updateH);
+        AppEvents.RemoveEventListener(
+            "current-album-update",
+            this.$options.updateH
+        );
+        AppEvents.RemoveEventListener(
+            "current-media-update",
+            this.$options.updateH
+        );
+        AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
     },
-
-    updateAppStatus: function () {
-      this.updateTitle();
-      this.updateMediaMetadata();
-    },
-
-    onUploadFinished: function (i, m: UploadEntryMin) {
-      if (m.status === "ready") {
-        AppEvents.Emit("snack", this.$t("Successfully uploaded") + ": " + m.name);
-      } else if (m.status === "error") {
-        AppEvents.Emit("snack", this.$t("Error uploading file") + ": " + m.name);
-      }
-    },
-  },
-  mounted: function () {
-    this.updateAppStatus();
-    this.$options.updateH = this.updateAppStatus.bind(this);
-
-    AppEvents.AddEventListener("app-status-update", this.$options.updateH);
-    AppEvents.AddEventListener("current-album-update", this.$options.updateH);
-    AppEvents.AddEventListener("current-media-update", this.$options.updateH);
-
-    this.$options.uploadDoneH = this.onUploadFinished.bind(this);
-    AppEvents.AddEventListener("upload-list-update", this.$options.uploadDoneH);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("app-status-update", this.$options.updateH);
-    AppEvents.RemoveEventListener(
-      "current-album-update",
-      this.$options.updateH
-    );
-    AppEvents.RemoveEventListener(
-      "current-media-update",
-      this.$options.updateH
-    );
-    AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
-  },
 })
 export default class App extends Vue { }
 </script>

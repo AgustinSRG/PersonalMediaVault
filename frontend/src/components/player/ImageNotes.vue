@@ -61,656 +61,656 @@ import { AppEvents } from "@/control/app-events";
 import { escapeHTML } from "@/utils/html";
 
 export default defineComponent({
-  name: "ImageNotes",
-  emits: [],
-  props: {
-    top: String,
-    left: String,
-    width: String,
-    height: String,
+    name: "ImageNotes",
+    emits: [],
+    props: {
+        top: String,
+        left: String,
+        width: String,
+        height: String,
 
-    editing: Boolean,
+        editing: Boolean,
 
-    contextOpen: Boolean,
-  },
-
-  data: function () {
-    return {
-      notes: [],
-
-      selectedNotes: -1,
-      selectedNotesData: null,
-
-      realWidth: 1,
-      realHeight: 1,
-
-      imageWidth: 1,
-      imageHeight: 1,
-
-      adding: false,
-
-      addStartX: 0,
-      addStartY: 0,
-
-      addX: 0,
-      addY: 0,
-      addW: 0,
-      addH: 0,
-
-      moving: false,
-      moveOriginalX: 0,
-      moveOriginalY: 0,
-      moveStartX: 0,
-      moveStartY: 0,
-
-      resizing: false,
-      resizeOriginalX: 0,
-      resizeOriginalY: 0,
-      resizeOriginalW: 0,
-      resizeOriginalH: 0,
-      resizeStartX: 0,
-      resizeStartY: 0,
-      resizeMode: "",
-
-      selectedNote: null,
-      hoverRight: "",
-      hoverLeft: "",
-      hoverTop: "",
-      hoverBottom: "",
-      hoverPinned: false,
-    };
-  },
-
-  methods: {
-    mapDim: function (
-      dim: number,
-      minDim: number,
-      maxDim: number,
-      imgDim: number
-    ) {
-      return (
-        Math.min(
-          maxDim,
-          Math.max(minDim, Math.round((dim * maxDim) / imgDim))
-        ) + "px"
-      );
+        contextOpen: Boolean,
     },
 
-    escapeText: function (txt: string): string {
-      return escapeHTML(txt).replace(/\n/g, "<br>");
+    data: function () {
+        return {
+            notes: [],
+
+            selectedNotes: -1,
+            selectedNotesData: null,
+
+            realWidth: 1,
+            realHeight: 1,
+
+            imageWidth: 1,
+            imageHeight: 1,
+
+            adding: false,
+
+            addStartX: 0,
+            addStartY: 0,
+
+            addX: 0,
+            addY: 0,
+            addW: 0,
+            addH: 0,
+
+            moving: false,
+            moveOriginalX: 0,
+            moveOriginalY: 0,
+            moveStartX: 0,
+            moveStartY: 0,
+
+            resizing: false,
+            resizeOriginalX: 0,
+            resizeOriginalY: 0,
+            resizeOriginalW: 0,
+            resizeOriginalH: 0,
+            resizeStartX: 0,
+            resizeStartY: 0,
+            resizeMode: "",
+
+            selectedNote: null,
+            hoverRight: "",
+            hoverLeft: "",
+            hoverTop: "",
+            hoverBottom: "",
+            hoverPinned: false,
+        };
     },
 
-    startAdding: function (e) {
-      if ((e.which || e.button) !== 1) {
-        return;
-      }
-      if (!this.editing) {
-        this.onClickFindNotes(e);
-        return;
-      }
-      if (this.contextOpen) {
-        return;
-      }
-      if (this.selectedNotesData) {
-        this.selectedNotesData = null;
-        this.selectedNotes = -1;
-        return;
-      }
-      e.stopPropagation();
-      const bounds = this.$el.getBoundingClientRect();
-      let x: number;
-      let y: number;
-      if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].pageX;
-        y = e.touches[0].pageY;
-      } else {
-        x = e.pageX;
-        y = e.pageY;
-      }
+    methods: {
+        mapDim: function (
+            dim: number,
+            minDim: number,
+            maxDim: number,
+            imgDim: number
+        ) {
+            return (
+                Math.min(
+                    maxDim,
+                    Math.max(minDim, Math.round((dim * maxDim) / imgDim))
+                ) + "px"
+            );
+        },
 
-      const trueX = Math.max(
-        0,
-        Math.min(
-          this.imageWidth - 32,
-          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-        )
-      );
-      const trueY = Math.max(
-        0,
-        Math.min(
-          this.imageHeight - 32,
-          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-        )
-      );
+        escapeText: function (txt: string): string {
+            return escapeHTML(txt).replace(/\n/g, "<br>");
+        },
 
-      this.adding = true;
-      this.addStartX = trueX;
-      this.addStartY = trueY;
-
-      this.addX = trueX;
-      this.addY = trueY;
-      this.addW = 32;
-      this.addH = 32;
-    },
-
-    onClickFindNotes: function (e) {
-      this.hoverPinned = false;
-      this.onMouseMove(e);
-
-      this.hoverPinned = !!this.selectedNote;
-    },
-
-    onMouseLeave: function () {
-      if (this.hoverPinned) {
-        return;
-      }
-      this.selectedNote = null;
-    },
-
-    onMouseMove: function (e) {
-      let x: number;
-      let y: number;
-      if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].pageX;
-        y = e.touches[0].pageY;
-      } else {
-        x = e.pageX;
-        y = e.pageY;
-      }
-
-      const bounds = this.$el.getBoundingClientRect();
-
-      let realY = y - bounds.top;
-      let realX = x - bounds.left;
-
-      const trueX = Math.max(
-        0,
-        Math.min(
-          this.imageWidth - 32,
-          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-        )
-      );
-      const trueY = Math.max(
-        0,
-        Math.min(
-          this.imageHeight - 32,
-          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-        )
-      );
-
-      for (let note of this.notes) {
-        if (this.hoverPinned && this.selectedNote === note) {
-          continue;
-        }
-        if (trueX >= note.x && trueX <= note.x + note.w) {
-          if (trueY >= note.y && trueY <= note.y + note.h) {
-            this.selectedNote = note;
-
-            // Position mouse
-
-            if (realY < (bounds.height / 2)) {
-              this.hoverTop = (realY + 8) + "px";
-              this.hoverBottom = "";
+        startAdding: function (e) {
+            if ((e.which || e.button) !== 1) {
+                return;
+            }
+            if (!this.editing) {
+                this.onClickFindNotes(e);
+                return;
+            }
+            if (this.contextOpen) {
+                return;
+            }
+            if (this.selectedNotesData) {
+                this.selectedNotesData = null;
+                this.selectedNotes = -1;
+                return;
+            }
+            e.stopPropagation();
+            const bounds = this.$el.getBoundingClientRect();
+            let x: number;
+            let y: number;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].pageX;
+                y = e.touches[0].pageY;
             } else {
-              this.hoverTop = "";
-              this.hoverBottom = (bounds.height - realY + 8) + "px";
+                x = e.pageX;
+                y = e.pageY;
             }
 
-            if (realX < (bounds.width / 2)) {
-              this.hoverLeft = (realX + 8) + "px";
-              this.hoverRight = "";
-            } else {
-              this.hoverLeft = "";
-              this.hoverRight = (bounds.width - realX + 8) + "px";
-            }
+            const trueX = Math.max(
+                0,
+                Math.min(
+                    this.imageWidth - 32,
+                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                )
+            );
+            const trueY = Math.max(
+                0,
+                Math.min(
+                    this.imageHeight - 32,
+                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                )
+            );
 
+            this.adding = true;
+            this.addStartX = trueX;
+            this.addStartY = trueY;
+
+            this.addX = trueX;
+            this.addY = trueY;
+            this.addW = 32;
+            this.addH = 32;
+        },
+
+        onClickFindNotes: function (e) {
             this.hoverPinned = false;
+            this.onMouseMove(e);
 
-            return;
-          }
-        }
-      }
+            this.hoverPinned = !!this.selectedNote;
+        },
 
-      if (!this.hoverPinned) {
-        this.selectedNote = null;
-      }
-    },
+        onMouseLeave: function () {
+            if (this.hoverPinned) {
+                return;
+            }
+            this.selectedNote = null;
+        },
 
-    autoFocus: function () {
-      nextTick(() => {
-        const editElement = this.$el.querySelector(".auto-focus");
-        if (editElement) {
-          editElement.focus();
-        }
-      });
-    },
+        onMouseMove: function (e) {
+            let x: number;
+            let y: number;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].pageX;
+                y = e.touches[0].pageY;
+            } else {
+                x = e.pageX;
+                y = e.pageY;
+            }
 
-    mouseDrop: function () {
-      if (!this.adding && !this.moving && !this.resizing) {
-        return;
-      }
-      if (this.adding) {
-        this.adding = false;
-        ImageNotesController.AddNote(
-          this.addX,
-          this.addY,
-          this.addW,
-          this.addH
-        );
-      }
+            const bounds = this.$el.getBoundingClientRect();
 
-      if (this.moving) {
-        this.moving = false;
-        if (this.selectedNotesData) {
-          ImageNotesController.ModifyNote(this.selectedNotesData);
-        }
-        this.autoFocus();
-      }
-      if (this.resizing) {
-        this.resizing = false;
-        if (this.selectedNotesData) {
-          ImageNotesController.ModifyNote(this.selectedNotesData);
-        }
-        this.autoFocus();
-      }
-    },
+            let realY = y - bounds.top;
+            let realX = x - bounds.left;
 
-    mouseMove: function (e) {
-      if (!this.adding && !this.moving && !this.resizing) {
-        return;
-      }
-      const bounds = this.$el.getBoundingClientRect();
-      let x: number;
-      let y: number;
-      if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].pageX;
-        y = e.touches[0].pageY;
-      } else {
-        x = e.pageX;
-        y = e.pageY;
-      }
-      if (this.adding) {
-        const trueX = Math.min(
-          this.imageWidth,
-          Math.max(
-            0,
-            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-          )
-        );
-        const trueY = Math.min(
-          this.imageHeight,
-          Math.max(
-            0,
-            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-          )
-        );
+            const trueX = Math.max(
+                0,
+                Math.min(
+                    this.imageWidth - 32,
+                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                )
+            );
+            const trueY = Math.max(
+                0,
+                Math.min(
+                    this.imageHeight - 32,
+                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                )
+            );
 
-        if (trueX - this.addStartX > 0) {
-          this.addX = this.addStartX;
-          this.addW = Math.max(32, trueX - this.addStartX);
-        } else {
-          this.addX = Math.max(0, trueX);
-          this.addW = Math.max(32, this.addStartX - trueX);
-        }
+            for (let note of this.notes) {
+                if (this.hoverPinned && this.selectedNote === note) {
+                    continue;
+                }
+                if (trueX >= note.x && trueX <= note.x + note.w) {
+                    if (trueY >= note.y && trueY <= note.y + note.h) {
+                        this.selectedNote = note;
 
-        if (trueY - this.addStartY > 0) {
-          this.addY = this.addStartY;
-          this.addH = trueY - this.addStartY;
-        } else {
-          this.addY = Math.max(0, trueY);
-          this.addH = Math.max(32, this.addStartY - trueY);
-        }
-      }
-      if (this.moving && this.selectedNotesData) {
-        const trueX = Math.min(
-          this.imageWidth,
-          Math.max(
-            0,
-            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-          )
-        );
-        const trueY = Math.min(
-          this.imageHeight,
-          Math.max(
-            0,
-            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-          )
-        );
+                        // Position mouse
 
-        const diffX = this.moveStartX - trueX;
-        this.selectedNotesData.x = Math.max(0, this.moveOriginalX - diffX);
+                        if (realY < (bounds.height / 2)) {
+                            this.hoverTop = (realY + 8) + "px";
+                            this.hoverBottom = "";
+                        } else {
+                            this.hoverTop = "";
+                            this.hoverBottom = (bounds.height - realY + 8) + "px";
+                        }
 
-        if (
-          this.selectedNotesData.x + this.selectedNotesData.w >
+                        if (realX < (bounds.width / 2)) {
+                            this.hoverLeft = (realX + 8) + "px";
+                            this.hoverRight = "";
+                        } else {
+                            this.hoverLeft = "";
+                            this.hoverRight = (bounds.width - realX + 8) + "px";
+                        }
+
+                        this.hoverPinned = false;
+
+                        return;
+                    }
+                }
+            }
+
+            if (!this.hoverPinned) {
+                this.selectedNote = null;
+            }
+        },
+
+        autoFocus: function () {
+            nextTick(() => {
+                const editElement = this.$el.querySelector(".auto-focus");
+                if (editElement) {
+                    editElement.focus();
+                }
+            });
+        },
+
+        mouseDrop: function () {
+            if (!this.adding && !this.moving && !this.resizing) {
+                return;
+            }
+            if (this.adding) {
+                this.adding = false;
+                ImageNotesController.AddNote(
+                    this.addX,
+                    this.addY,
+                    this.addW,
+                    this.addH
+                );
+            }
+
+            if (this.moving) {
+                this.moving = false;
+                if (this.selectedNotesData) {
+                    ImageNotesController.ModifyNote(this.selectedNotesData);
+                }
+                this.autoFocus();
+            }
+            if (this.resizing) {
+                this.resizing = false;
+                if (this.selectedNotesData) {
+                    ImageNotesController.ModifyNote(this.selectedNotesData);
+                }
+                this.autoFocus();
+            }
+        },
+
+        mouseMove: function (e) {
+            if (!this.adding && !this.moving && !this.resizing) {
+                return;
+            }
+            const bounds = this.$el.getBoundingClientRect();
+            let x: number;
+            let y: number;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].pageX;
+                y = e.touches[0].pageY;
+            } else {
+                x = e.pageX;
+                y = e.pageY;
+            }
+            if (this.adding) {
+                const trueX = Math.min(
+                    this.imageWidth,
+                    Math.max(
+                        0,
+                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                    )
+                );
+                const trueY = Math.min(
+                    this.imageHeight,
+                    Math.max(
+                        0,
+                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                    )
+                );
+
+                if (trueX - this.addStartX > 0) {
+                    this.addX = this.addStartX;
+                    this.addW = Math.max(32, trueX - this.addStartX);
+                } else {
+                    this.addX = Math.max(0, trueX);
+                    this.addW = Math.max(32, this.addStartX - trueX);
+                }
+
+                if (trueY - this.addStartY > 0) {
+                    this.addY = this.addStartY;
+                    this.addH = trueY - this.addStartY;
+                } else {
+                    this.addY = Math.max(0, trueY);
+                    this.addH = Math.max(32, this.addStartY - trueY);
+                }
+            }
+            if (this.moving && this.selectedNotesData) {
+                const trueX = Math.min(
+                    this.imageWidth,
+                    Math.max(
+                        0,
+                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                    )
+                );
+                const trueY = Math.min(
+                    this.imageHeight,
+                    Math.max(
+                        0,
+                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                    )
+                );
+
+                const diffX = this.moveStartX - trueX;
+                this.selectedNotesData.x = Math.max(0, this.moveOriginalX - diffX);
+
+                if (
+                    this.selectedNotesData.x + this.selectedNotesData.w >
           this.imageWidth
-        ) {
-          this.selectedNotesData.x = Math.max(
-            0,
-            this.imageWidth - this.selectedNotesData.w
-          );
-        }
+                ) {
+                    this.selectedNotesData.x = Math.max(
+                        0,
+                        this.imageWidth - this.selectedNotesData.w
+                    );
+                }
 
-        const diffY = this.moveStartY - trueY;
-        this.selectedNotesData.y = Math.max(0, this.moveOriginalY - diffY);
+                const diffY = this.moveStartY - trueY;
+                this.selectedNotesData.y = Math.max(0, this.moveOriginalY - diffY);
 
-        if (
-          this.selectedNotesData.y + this.selectedNotesData.h >
+                if (
+                    this.selectedNotesData.y + this.selectedNotesData.h >
           this.imageHeight
-        ) {
-          this.selectedNotesData.y = Math.max(
-            0,
-            this.imageHeight - this.selectedNotesData.h
-          );
-        }
-      }
-      if (this.resizing && this.selectedNotesData) {
-        const trueX = Math.min(
-          this.imageWidth,
-          Math.max(
-            0,
-            Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-          )
+                ) {
+                    this.selectedNotesData.y = Math.max(
+                        0,
+                        this.imageHeight - this.selectedNotesData.h
+                    );
+                }
+            }
+            if (this.resizing && this.selectedNotesData) {
+                const trueX = Math.min(
+                    this.imageWidth,
+                    Math.max(
+                        0,
+                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                    )
+                );
+                const trueY = Math.min(
+                    this.imageHeight,
+                    Math.max(
+                        0,
+                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                    )
+                );
+
+                const diffX = this.resizeStartX - trueX;
+                const diffY = this.resizeStartY - trueY;
+
+                let x1 = this.resizeOriginalX;
+                let y1 = this.resizeOriginalY;
+                let x2 = x1 + this.resizeOriginalW;
+                let y2 = y1 + this.resizeOriginalH;
+
+                switch (this.resizeMode) {
+                case "t":
+                    y1 -= diffY;
+                    break;
+                case "b":
+                    y2 -= diffY;
+                    break;
+                case "l":
+                    x1 -= diffX;
+                    break;
+                case "r":
+                    x2 -= diffX;
+                    break;
+                case "tl":
+                    y1 -= diffY;
+                    x1 -= diffX;
+                    break;
+                case "tr":
+                    y1 -= diffY;
+                    x2 -= diffX;
+                    break;
+                case "bl":
+                    y2 -= diffY;
+                    x1 -= diffX;
+                    break;
+                case "br":
+                    y2 -= diffY;
+                    x2 -= diffX;
+                    break;
+                }
+
+                x1 = Math.min(this.imageHeight, Math.max(0, x1));
+                x2 = Math.min(this.imageHeight, Math.max(0, x2));
+
+                y1 = Math.min(this.imageHeight, Math.max(0, y1));
+                y2 = Math.min(this.imageHeight, Math.max(0, y2));
+
+                this.selectedNotesData.x = Math.min(x1, x2);
+                this.selectedNotesData.y = Math.min(y1, y2);
+
+                this.selectedNotesData.w = Math.max(32, Math.abs(x1 - x2));
+                this.selectedNotesData.h = Math.max(32, Math.abs(y1 - y2));
+            }
+        },
+
+        clickOnNotes: function (notes, e) {
+            if (this.contextOpen) {
+                return;
+            }
+            if (!this.editing) {
+                return;
+            }
+            if (this.moving || this.resizing) {
+                return;
+            }
+            if ((e.which || e.button) !== 1) {
+                return;
+            }
+            e.stopPropagation();
+            this.selectedNotes = notes.id;
+            this.selectedNotesData = notes;
+            const bounds = this.$el.getBoundingClientRect();
+            let x: number;
+            let y: number;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].pageX;
+                y = e.touches[0].pageY;
+            } else {
+                x = e.pageX;
+                y = e.pageY;
+            }
+            const trueX = Math.max(
+                0,
+                Math.min(
+                    this.imageWidth,
+                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                )
+            );
+            const trueY = Math.max(
+                0,
+                Math.min(
+                    this.imageHeight,
+                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                )
+            );
+
+            this.moving = true;
+            this.moveStartX = trueX;
+            this.moveStartY = trueY;
+            this.moveOriginalX = notes.x;
+            this.moveOriginalY = notes.y;
+        },
+
+        startResizeNotes: function (notes, e, resizeMode) {
+            if (this.contextOpen) {
+                return;
+            }
+            if (!this.editing) {
+                return;
+            }
+            if (this.moving || this.resizing) {
+                return;
+            }
+            if ((e.which || e.button) !== 1) {
+                return;
+            }
+            e.stopPropagation();
+            this.selectedNotes = notes.id;
+            this.selectedNotesData = notes;
+            const bounds = this.$el.getBoundingClientRect();
+            let x: number;
+            let y: number;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].pageX;
+                y = e.touches[0].pageY;
+            } else {
+                x = e.pageX;
+                y = e.pageY;
+            }
+            const trueX = Math.max(
+                0,
+                Math.min(
+                    this.imageWidth,
+                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
+                )
+            );
+            const trueY = Math.max(
+                0,
+                Math.min(
+                    this.imageHeight,
+                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
+                )
+            );
+
+            this.resizing = true;
+            this.resizeMode = resizeMode;
+            this.resizeOriginalX = notes.x;
+            this.resizeOriginalY = notes.y;
+            this.resizeOriginalW = notes.w;
+            this.resizeOriginalH = notes.h;
+
+            this.resizeStartX = trueX;
+            this.resizeStartY = trueY;
+        },
+
+        saveNote: function (note) {
+            ImageNotesController.ModifyNote(note);
+            this.selectedNotes = -1;
+            this.selectedNotesData = "";
+        },
+
+        deleteNote: function (note) {
+            ImageNotesController.RemoveNote(note);
+            this.selectedNotes = -1;
+            this.selectedNotesData = "";
+        },
+
+        onNotesUpdate: function () {
+            this.notes = ImageNotesController.GetNotes();
+            this.imageWidth = Math.max(1, ImageNotesController.ImageWidth);
+            this.imageHeight = Math.max(1, ImageNotesController.ImageHeight);
+        },
+
+        onNotesPush: function (note: ImageNote) {
+            this.notes.push({
+                id: note.id,
+                x: note.x,
+                y: note.y,
+                w: note.w,
+                h: note.h,
+                text: note.text,
+            });
+
+            this.selectedNotes = note.id;
+            this.selectedNotesData = this.notes[this.notes.length - 1];
+            this.autoFocus();
+        },
+
+        onNotesChange: function (i: number, note: ImageNote) {
+            this.notes[i].x = note.x;
+            this.notes[i].y = note.y;
+            this.notes[i].w = note.w;
+            this.notes[i].h = note.h;
+        },
+
+        onNotesRemove: function (i: number) {
+            this.notes.splice(i, 1);
+        },
+
+        updateRealDimensions: function () {
+            nextTick(() => {
+                const bounds = this.$el.getBoundingClientRect();
+                this.realWidth = bounds.width;
+                this.realHeight = bounds.height;
+            });
+        },
+
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        onNotesSaved: function () {
+            AppEvents.Emit("snack", this.$t("Image notes have been saved"));
+        },
+    },
+
+    mounted: function () {
+        this.updateRealDimensions();
+
+        this.$options.onNotesUpdateH = this.onNotesUpdate.bind(this);
+        AppEvents.AddEventListener(
+            "img-notes-update",
+            this.$options.onNotesUpdateH
         );
-        const trueY = Math.min(
-          this.imageHeight,
-          Math.max(
-            0,
-            Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-          )
+
+        this.$options.onNotesPushH = this.onNotesPush.bind(this);
+        AppEvents.AddEventListener("img-notes-push", this.$options.onNotesPushH);
+
+        this.$options.onNotesChangeH = this.onNotesChange.bind(this);
+        AppEvents.AddEventListener(
+            "img-notes-change",
+            this.$options.onNotesChangeH
         );
 
-        const diffX = this.resizeStartX - trueX;
-        const diffY = this.resizeStartY - trueY;
+        this.$options.onNotesRemoveH = this.onNotesRemove.bind(this);
+        AppEvents.AddEventListener("img-notes-rm", this.$options.onNotesRemoveH);
 
-        let x1 = this.resizeOriginalX;
-        let y1 = this.resizeOriginalY;
-        let x2 = x1 + this.resizeOriginalW;
-        let y2 = y1 + this.resizeOriginalH;
+        this.$options.mouseDropH = this.mouseDrop.bind(this);
+        document.addEventListener("mouseup", this.$options.mouseDropH);
+        document.addEventListener("touchend", this.$options.mouseDropH);
 
-        switch (this.resizeMode) {
-          case "t":
-            y1 -= diffY;
-            break;
-          case "b":
-            y2 -= diffY;
-            break;
-          case "l":
-            x1 -= diffX;
-            break;
-          case "r":
-            x2 -= diffX;
-            break;
-          case "tl":
-            y1 -= diffY;
-            x1 -= diffX;
-            break;
-          case "tr":
-            y1 -= diffY;
-            x2 -= diffX;
-            break;
-          case "bl":
-            y2 -= diffY;
-            x1 -= diffX;
-            break;
-          case "br":
-            y2 -= diffY;
-            x2 -= diffX;
-            break;
-        }
+        this.$options.mouseMoveH = this.mouseMove.bind(this);
 
-        x1 = Math.min(this.imageHeight, Math.max(0, x1));
-        x2 = Math.min(this.imageHeight, Math.max(0, x2));
+        document.addEventListener("mousemove", this.$options.mouseMoveH);
+        document.addEventListener("touchmove", this.$options.mouseMoveH);
 
-        y1 = Math.min(this.imageHeight, Math.max(0, y1));
-        y2 = Math.min(this.imageHeight, Math.max(0, y2));
+        this.onNotesUpdate();
 
-        this.selectedNotesData.x = Math.min(x1, x2);
-        this.selectedNotesData.y = Math.min(y1, y2);
-
-        this.selectedNotesData.w = Math.max(32, Math.abs(x1 - x2));
-        this.selectedNotesData.h = Math.max(32, Math.abs(y1 - y2));
-      }
+        this.$options.onNotesSavedH = this.onNotesSaved.bind(this);
+        AppEvents.AddEventListener(
+            "image-notes-saved",
+            this.$options.onNotesSavedH
+        );
     },
 
-    clickOnNotes: function (notes, e) {
-      if (this.contextOpen) {
-        return;
-      }
-      if (!this.editing) {
-        return;
-      }
-      if (this.moving || this.resizing) {
-        return;
-      }
-      if ((e.which || e.button) !== 1) {
-        return;
-      }
-      e.stopPropagation();
-      this.selectedNotes = notes.id;
-      this.selectedNotesData = notes;
-      const bounds = this.$el.getBoundingClientRect();
-      let x: number;
-      let y: number;
-      if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].pageX;
-        y = e.touches[0].pageY;
-      } else {
-        x = e.pageX;
-        y = e.pageY;
-      }
-      const trueX = Math.max(
-        0,
-        Math.min(
-          this.imageWidth,
-          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-        )
-      );
-      const trueY = Math.max(
-        0,
-        Math.min(
-          this.imageHeight,
-          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-        )
-      );
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "img-notes-update",
+            this.$options.onNotesUpdateH
+        );
+        AppEvents.RemoveEventListener("img-notes-push", this.$options.onNotesPushH);
+        AppEvents.RemoveEventListener(
+            "img-notes-change",
+            this.$options.onNotesChangeH
+        );
+        AppEvents.RemoveEventListener("img-notes-rm", this.$options.onNotesRemoveH);
 
-      this.moving = true;
-      this.moveStartX = trueX;
-      this.moveStartY = trueY;
-      this.moveOriginalX = notes.x;
-      this.moveOriginalY = notes.y;
+        document.removeEventListener("mouseup", this.$options.mouseDropH);
+        document.removeEventListener("touchend", this.$options.mouseDropH);
+        document.removeEventListener("mousemove", this.$options.mouseMoveH);
+        document.removeEventListener("touchmove", this.$options.mouseMoveH);
+
+        AppEvents.RemoveEventListener(
+            "image-notes-saved",
+            this.$options.onNotesSavedH
+        );
     },
 
-    startResizeNotes: function (notes, e, resizeMode) {
-      if (this.contextOpen) {
-        return;
-      }
-      if (!this.editing) {
-        return;
-      }
-      if (this.moving || this.resizing) {
-        return;
-      }
-      if ((e.which || e.button) !== 1) {
-        return;
-      }
-      e.stopPropagation();
-      this.selectedNotes = notes.id;
-      this.selectedNotesData = notes;
-      const bounds = this.$el.getBoundingClientRect();
-      let x: number;
-      let y: number;
-      if (e.touches && e.touches.length > 0) {
-        x = e.touches[0].pageX;
-        y = e.touches[0].pageY;
-      } else {
-        x = e.pageX;
-        y = e.pageY;
-      }
-      const trueX = Math.max(
-        0,
-        Math.min(
-          this.imageWidth,
-          Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-        )
-      );
-      const trueY = Math.max(
-        0,
-        Math.min(
-          this.imageHeight,
-          Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-        )
-      );
+    watch: {
+        top: function () {
+            this.updateRealDimensions();
+        },
 
-      this.resizing = true;
-      this.resizeMode = resizeMode;
-      this.resizeOriginalX = notes.x;
-      this.resizeOriginalY = notes.y;
-      this.resizeOriginalW = notes.w;
-      this.resizeOriginalH = notes.h;
+        left: function () {
+            this.updateRealDimensions();
+        },
 
-      this.resizeStartX = trueX;
-      this.resizeStartY = trueY;
+        width: function () {
+            this.updateRealDimensions();
+        },
+
+        height: function () {
+            this.updateRealDimensions();
+        },
     },
-
-    saveNote: function (note) {
-      ImageNotesController.ModifyNote(note);
-      this.selectedNotes = -1;
-      this.selectedNotesData = "";
-    },
-
-    deleteNote: function (note) {
-      ImageNotesController.RemoveNote(note);
-      this.selectedNotes = -1;
-      this.selectedNotesData = "";
-    },
-
-    onNotesUpdate: function () {
-      this.notes = ImageNotesController.GetNotes();
-      this.imageWidth = Math.max(1, ImageNotesController.ImageWidth);
-      this.imageHeight = Math.max(1, ImageNotesController.ImageHeight);
-    },
-
-    onNotesPush: function (note: ImageNote) {
-      this.notes.push({
-        id: note.id,
-        x: note.x,
-        y: note.y,
-        w: note.w,
-        h: note.h,
-        text: note.text,
-      });
-
-      this.selectedNotes = note.id;
-      this.selectedNotesData = this.notes[this.notes.length - 1];
-      this.autoFocus();
-    },
-
-    onNotesChange: function (i: number, note: ImageNote) {
-      this.notes[i].x = note.x;
-      this.notes[i].y = note.y;
-      this.notes[i].w = note.w;
-      this.notes[i].h = note.h;
-    },
-
-    onNotesRemove: function (i: number) {
-      this.notes.splice(i, 1);
-    },
-
-    updateRealDimensions: function () {
-      nextTick(() => {
-        const bounds = this.$el.getBoundingClientRect();
-        this.realWidth = bounds.width;
-        this.realHeight = bounds.height;
-      });
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    onNotesSaved: function () {
-      AppEvents.Emit("snack", this.$t("Image notes have been saved"));
-    },
-  },
-
-  mounted: function () {
-    this.updateRealDimensions();
-
-    this.$options.onNotesUpdateH = this.onNotesUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "img-notes-update",
-      this.$options.onNotesUpdateH
-    );
-
-    this.$options.onNotesPushH = this.onNotesPush.bind(this);
-    AppEvents.AddEventListener("img-notes-push", this.$options.onNotesPushH);
-
-    this.$options.onNotesChangeH = this.onNotesChange.bind(this);
-    AppEvents.AddEventListener(
-      "img-notes-change",
-      this.$options.onNotesChangeH
-    );
-
-    this.$options.onNotesRemoveH = this.onNotesRemove.bind(this);
-    AppEvents.AddEventListener("img-notes-rm", this.$options.onNotesRemoveH);
-
-    this.$options.mouseDropH = this.mouseDrop.bind(this);
-    document.addEventListener("mouseup", this.$options.mouseDropH);
-    document.addEventListener("touchend", this.$options.mouseDropH);
-
-    this.$options.mouseMoveH = this.mouseMove.bind(this);
-
-    document.addEventListener("mousemove", this.$options.mouseMoveH);
-    document.addEventListener("touchmove", this.$options.mouseMoveH);
-
-    this.onNotesUpdate();
-
-    this.$options.onNotesSavedH = this.onNotesSaved.bind(this);
-    AppEvents.AddEventListener(
-      "image-notes-saved",
-      this.$options.onNotesSavedH
-    );
-  },
-
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "img-notes-update",
-      this.$options.onNotesUpdateH
-    );
-    AppEvents.RemoveEventListener("img-notes-push", this.$options.onNotesPushH);
-    AppEvents.RemoveEventListener(
-      "img-notes-change",
-      this.$options.onNotesChangeH
-    );
-    AppEvents.RemoveEventListener("img-notes-rm", this.$options.onNotesRemoveH);
-
-    document.removeEventListener("mouseup", this.$options.mouseDropH);
-    document.removeEventListener("touchend", this.$options.mouseDropH);
-    document.removeEventListener("mousemove", this.$options.mouseMoveH);
-    document.removeEventListener("touchmove", this.$options.mouseMoveH);
-
-    AppEvents.RemoveEventListener(
-      "image-notes-saved",
-      this.$options.onNotesSavedH
-    );
-  },
-
-  watch: {
-    top: function () {
-      this.updateRealDimensions();
-    },
-
-    left: function () {
-      this.updateRealDimensions();
-    },
-
-    width: function () {
-      this.updateRealDimensions();
-    },
-
-    height: function () {
-      this.updateRealDimensions();
-    },
-  },
 });
 </script>

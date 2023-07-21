@@ -161,707 +161,707 @@ import { defineComponent, nextTick } from "vue";
 const PAGE_SIZE = 50;
 
 export default defineComponent({
-  name: "PageAdvancedSearch",
-  emits: ['select-media'],
-  props: {
-    display: Boolean,
-    inModal: Boolean,
-    noAlbum: Number,
-  },
-  data: function () {
-    return {
-      loading: false,
-
-      order: "desc",
-      textSearch: "",
-      type: 0,
-
-      currentMedia: AppStatus.CurrentMedia,
-
-      pageItems: [],
-      page: 0,
-      totalPages: 0,
-      progress: 0,
-
-      started: false,
-      finished: true,
-
-      advancedSearch: false,
-
-      tagData: {},
-      tags: [],
-      tagToAdd: "",
-      matchingTags: [],
-      tagMode: "all",
-      PAGE_SIZE: PAGE_SIZE,
-
-      albums: [],
-      albumSearch: -1,
-      albumFilter: null,
-
-      dirty: false,
-    };
-  },
-  methods: {
-    markDirty: function () {
-      this.dirty = true;
+    name: "PageAdvancedSearch",
+    emits: ['select-media'],
+    props: {
+        display: Boolean,
+        inModal: Boolean,
+        noAlbum: Number,
     },
+    data: function () {
+        return {
+            loading: false,
 
-    autoScroll: function () {
-      if (!this.inModal) {
-        nextTick(() => {
-          const currentElem = this.$el.querySelector(
-            ".search-result-item.current"
-          );
-          if (currentElem) {
-            currentElem.scrollIntoView();
-          }
-        });
-        this.onCurrentMediaChanged();
-      }
+            order: "desc",
+            textSearch: "",
+            type: 0,
+
+            currentMedia: AppStatus.CurrentMedia,
+
+            pageItems: [],
+            page: 0,
+            totalPages: 0,
+            progress: 0,
+
+            started: false,
+            finished: true,
+
+            advancedSearch: false,
+
+            tagData: {},
+            tags: [],
+            tagToAdd: "",
+            matchingTags: [],
+            tagMode: "all",
+            PAGE_SIZE: PAGE_SIZE,
+
+            albums: [],
+            albumSearch: -1,
+            albumFilter: null,
+
+            dirty: false,
+        };
     },
+    methods: {
+        markDirty: function () {
+            this.dirty = true;
+        },
 
-    load: function () {
-      Timeouts.Abort("page-adv-search-load");
-      Request.Abort("page-adv-search-load");
+        autoScroll: function () {
+            if (!this.inModal) {
+                nextTick(() => {
+                    const currentElem = this.$el.querySelector(
+                        ".search-result-item.current"
+                    );
+                    if (currentElem) {
+                        currentElem.scrollIntoView();
+                    }
+                });
+                this.onCurrentMediaChanged();
+            }
+        },
 
-      if (!this.display || this.finished) {
-        return;
-      }
+        load: function () {
+            Timeouts.Abort("page-adv-search-load");
+            Request.Abort("page-adv-search-load");
 
-      this.loading = true;
-
-      if (AuthController.Locked) {
-        return; // Vault is locked
-      }
-
-      Request.Pending(
-        "page-adv-search-load",
-        SearchAPI.Search(
-          this.getFirstTag(),
-          this.order,
-          this.page,
-          PAGE_SIZE,
-        )
-      )
-        .onSuccess((result) => {
-          this.filterElements(result.page_items);
-          this.page = result.page_index + 1;
-          this.totalPages = result.page_count;
-          this.progress =
-            ((this.page) / Math.max(1, this.totalPages)) * 100;
-          if (this.pageItems.length >= PAGE_SIZE) {
-            // Done for now
-            this.loading = false;
-
-            if (this.page >= this.totalPages) {
-              this.finished = true;
+            if (!this.display || this.finished) {
+                return;
             }
 
-            this.autoScroll();
-          } else if (this.page < this.totalPages) {
-            this.load();
-          } else {
+            this.loading = true;
+
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
+
+            Request.Pending(
+                "page-adv-search-load",
+                SearchAPI.Search(
+                    this.getFirstTag(),
+                    this.order,
+                    this.page,
+                    PAGE_SIZE,
+                )
+            )
+                .onSuccess((result) => {
+                    this.filterElements(result.page_items);
+                    this.page = result.page_index + 1;
+                    this.totalPages = result.page_count;
+                    this.progress =
+            ((this.page) / Math.max(1, this.totalPages)) * 100;
+                    if (this.pageItems.length >= PAGE_SIZE) {
+                        // Done for now
+                        this.loading = false;
+
+                        if (this.page >= this.totalPages) {
+                            this.finished = true;
+                        }
+
+                        this.autoScroll();
+                    } else if (this.page < this.totalPages) {
+                        this.load();
+                    } else {
+                        this.loading = false;
+                        this.finished = true;
+                        this.autoScroll();
+                    }
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
+                });
+        },
+
+        toggleAdvancedSearch: function () {
+            this.advancedSearch = !this.advancedSearch;
+        },
+
+        filterElements: function (results: MediaEntry[]) {
+            TagsController.OnMediaListReceived(results);
+            const filterText = normalizeString(this.textSearch).trim().toLowerCase();
+            const filterTextWords = filterToWords(filterText);
+            const filterType = this.type;
+            const filterTags = this.tags.slice();
+            const filterTagMode = this.tagMode;
+
+            let backlistAlbum = new Set();
+
+            if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
+                backlistAlbum = new Set(AlbumsController.CurrentAlbumData.list.map(a => {
+                    return a.id;
+                }));
+            }
+
+            for (let e of results) {
+                if (backlistAlbum.has(e.id)) {
+                    continue;
+                }
+
+                if (this.albumFilter && !this.albumFilter.has(e.id)) {
+                    continue;
+                }
+
+                if (filterText) {
+                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
+                        continue;
+                    }
+                }
+
+                if (filterType) {
+                    if (e.type !== filterType) {
+                        continue;
+                    }
+                }
+
+                if (filterTagMode === "all") {
+                    if (filterTags.length > 0) {
+                        let passesTags = true;
+                        for (let tag of filterTags) {
+                            if (!e.tags || !e.tags.includes(tag)) {
+                                passesTags = false;
+                                break;
+                            }
+                        }
+
+                        if (!passesTags) {
+                            continue;
+                        }
+                    }
+                } else if (filterTagMode === "none") {
+                    if (filterTags.length > 0) {
+                        let passesTags = true;
+                        for (let tag of filterTags) {
+                            if (e.tags && e.tags.includes(tag)) {
+                                passesTags = false;
+                                break;
+                            }
+                        }
+
+                        if (!passesTags) {
+                            continue;
+                        }
+                    }
+                } else if (filterTagMode === "any") {
+                    if (filterTags.length > 0) {
+                        let passesTags = false;
+                        for (let tag of filterTags) {
+                            if (!e.tags || e.tags.includes(tag)) {
+                                passesTags = true;
+                                break;
+                            }
+                        }
+
+                        if (!passesTags) {
+                            continue;
+                        }
+                    }
+                } else if (filterTagMode === "untagged") {
+                    if (e.tags && e.tags.length > 0) {
+                        continue;
+                    }
+                }
+
+                this.pageItems.push(e);
+            }
+        },
+
+        startSearch: function (event?: Event) {
+            if (event) {
+                event.preventDefault();
+            }
+            this.loading = true;
+            this.dirty = false;
+            this.pageItems = [];
+            this.page = 0;
+            this.totalPages = 0;
+            this.progress = 0;
+            this.started = true;
+            this.finished = false;
+            this.albumFilter = null;
+            if (this.albumSearch >= 0) {
+                this.loadAlbumSearch();
+            } else {
+                this.load();
+            }
+        },
+
+        loadAlbumSearch: function () {
+            Request.Abort("page-adv-search-load");
+
+            Request.Pending(
+                "page-adv-search-load",
+                AlbumsAPI.GetAlbum(this.albumSearch)
+            )
+                .onSuccess((result) => {
+                    if (this.order === "asc") {
+                        this.filterElements(result.list.sort((a, b) => {
+                            if (a.id < b.id) {
+                                return -1;
+                            } else {
+                                return 1;
+                            }
+                        }));
+                    } else {
+                        this.filterElements(result.list.sort((a, b) => {
+                            if (a.id > b.id) {
+                                return -1;
+                            } else {
+                                return 1;
+                            }
+                        }));
+                    }
+
+                    this.page = 1;
+                    this.totalPages = 1;
+                    this.progress = 100;
+                    this.loading = false;
+                    this.finished = true;
+                    this.autoScroll();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            this.cancel();
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(404, "*", () => {
+                            this.albumFilter = new Set();
+                            this.load();
+                        })
+                        .add("*", "*", () => {
+                            Timeouts.Set("page-adv-search-load", 1500, this.loadAlbumSearch.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    this.cancel();
+                });
+        },
+
+        cancel: function () {
+            Timeouts.Abort("page-adv-search-load");
+            Request.Abort("page-adv-search-load");
             this.loading = false;
             this.finished = true;
-            this.autoScroll();
-          }
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
-        });
-    },
+        },
 
-    toggleAdvancedSearch: function () {
-      this.advancedSearch = !this.advancedSearch;
-    },
+        resetSearch: function () {
+            Timeouts.Abort("page-adv-search-load");
+            Request.Abort("page-adv-search-load");
+            this.pageItems = [];
+            this.page = 0;
+            this.totalPages = 0;
+            this.progress = 0;
+            this.loading = false;
+            this.finished = true;
+            this.started = false;
+        },
 
-    filterElements: function (results: MediaEntry[]) {
-      TagsController.OnMediaListReceived(results);
-      const filterText = normalizeString(this.textSearch).trim().toLowerCase();
-      const filterTextWords = filterToWords(filterText);
-      const filterType = this.type;
-      const filterTags = this.tags.slice();
-      const filterTagMode = this.tagMode;
-
-      let backlistAlbum = new Set();
-
-      if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
-        backlistAlbum = new Set(AlbumsController.CurrentAlbumData.list.map(a => {
-          return a.id;
-        }));
-      }
-
-      for (let e of results) {
-        if (backlistAlbum.has(e.id)) {
-          continue;
-        }
-
-        if (this.albumFilter && !this.albumFilter.has(e.id)) {
-          continue;
-        }
-
-        if (filterText) {
-          if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
-            continue;
-          }
-        }
-
-        if (filterType) {
-          if (e.type !== filterType) {
-            continue;
-          }
-        }
-
-        if (filterTagMode === "all") {
-          if (filterTags.length > 0) {
-            let passesTags = true;
-            for (let tag of filterTags) {
-              if (!e.tags || !e.tags.includes(tag)) {
-                passesTags = false;
-                break;
-              }
+        goToMedia: function (mid, e) {
+            if (e) {
+                e.preventDefault();
             }
-
-            if (!passesTags) {
-              continue;
+            if (this.inModal) {
+                this.$emit("select-media", mid, () => {
+                    this.pageItems = this.pageItems.filter(i => {
+                        return mid !== i.id;
+                    });
+                });
+            } else {
+                AppStatus.ClickOnMedia(mid, true);
             }
-          }
-        } else if (filterTagMode === "none") {
-          if (filterTags.length > 0) {
-            let passesTags = true;
-            for (let tag of filterTags) {
-              if (e.tags && e.tags.includes(tag)) {
-                passesTags = false;
-                break;
-              }
-            }
+        },
 
-            if (!passesTags) {
-              continue;
-            }
-          }
-        } else if (filterTagMode === "any") {
-          if (filterTags.length > 0) {
-            let passesTags = false;
-            for (let tag of filterTags) {
-              if (!e.tags || e.tags.includes(tag)) {
-                passesTags = true;
-                break;
-              }
-            }
-
-            if (!passesTags) {
-              continue;
-            }
-          }
-        } else if (filterTagMode === "untagged") {
-          if (e.tags && e.tags.length > 0) {
-            continue;
-          }
-        }
-
-        this.pageItems.push(e);
-      }
-    },
-
-    startSearch: function (event?: Event) {
-      if (event) {
-        event.preventDefault();
-      }
-      this.loading = true;
-      this.dirty = false;
-      this.pageItems = [];
-      this.page = 0;
-      this.totalPages = 0;
-      this.progress = 0;
-      this.started = true;
-      this.finished = false;
-      this.albumFilter = null;
-      if (this.albumSearch >= 0) {
-        this.loadAlbumSearch();
-      } else {
-        this.load();
-      }
-    },
-
-    loadAlbumSearch: function () {
-      Request.Abort("page-adv-search-load");
-
-      Request.Pending(
-        "page-adv-search-load",
-        AlbumsAPI.GetAlbum(this.albumSearch)
-      )
-        .onSuccess((result) => {
-          if (this.order === "asc") {
-            this.filterElements(result.list.sort((a, b) => {
-              if (a.id < b.id) {
-                return -1;
-              } else {
-                return 1;
-              }
-            }));
-          } else {
-            this.filterElements(result.list.sort((a, b) => {
-              if (a.id > b.id) {
-                return -1;
-              } else {
-                return 1;
-              }
-            }));
-          }
-
-          this.page = 1;
-          this.totalPages = 1;
-          this.progress = 100;
-          this.loading = false;
-          this.finished = true;
-          this.autoScroll();
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              this.cancel();
-              AppEvents.Emit("unauthorized");
-            })
-            .add(404, "*", () => {
-              this.albumFilter = new Set();
-              this.load();
-            })
-            .add("*", "*", () => {
-              Timeouts.Set("page-adv-search-load", 1500, this.loadAlbumSearch.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          this.cancel();
-        });
-    },
-
-    cancel: function () {
-      Timeouts.Abort("page-adv-search-load");
-      Request.Abort("page-adv-search-load");
-      this.loading = false;
-      this.finished = true;
-    },
-
-    resetSearch: function () {
-      Timeouts.Abort("page-adv-search-load");
-      Request.Abort("page-adv-search-load");
-      this.pageItems = [];
-      this.page = 0;
-      this.totalPages = 0;
-      this.progress = 0;
-      this.loading = false;
-      this.finished = true;
-      this.started = false;
-    },
-
-    goToMedia: function (mid, e) {
-      if (e) {
-        e.preventDefault();
-      }
-      if (this.inModal) {
-        this.$emit("select-media", mid, () => {
-          this.pageItems = this.pageItems.filter(i => {
-            return mid !== i.id;
-          });
-        });
-      } else {
-        AppStatus.ClickOnMedia(mid, true);
-      }
-    },
-
-    getMediaURL: function (mid: number): string {
-      return (
-        window.location.protocol +
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          media: mid + "",
+            media: mid + "",
         })
-      );
-    },
+            );
+        },
 
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
-    },
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
+        },
 
-    renderTime: function (s: number): string {
-      return renderTimeSeconds(s);
-    },
+        renderTime: function (s: number): string {
+            return renderTimeSeconds(s);
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
 
-    cssProgress: function (p: number) {
-      return Math.round(p) + "%";
-    },
+        cssProgress: function (p: number) {
+            return Math.round(p) + "%";
+        },
 
-    updateTagData: function () {
-      this.tagData = clone(TagsController.Tags);
-      this.onTagAddChanged(false);
-    },
+        updateTagData: function () {
+            this.tagData = clone(TagsController.Tags);
+            this.onTagAddChanged(false);
+        },
 
-    getFirstTag: function () {
-      if (this.tagMode === "all" && this.tags.length > 0) {
-        return this.getTagName(this.tags[0], this.tagData);
-      } else {
-        return "";
-      }
-    },
+        getFirstTag: function () {
+            if (this.tagMode === "all" && this.tags.length > 0) {
+                return this.getTagName(this.tags[0], this.tagData);
+            } else {
+                return "";
+            }
+        },
 
-    getTagName: function (tag, data) {
-      if (data[tag + ""]) {
-        return data[tag + ""].name;
-      } else {
-        return "???";
-      }
-    },
+        getTagName: function (tag, data) {
+            if (data[tag + ""]) {
+                return data[tag + ""].name;
+            } else {
+                return "???";
+            }
+        },
 
-    removeTag: function (tag) {
-      this.tags = this.tags.filter((t) => {
-        return tag !== t;
-      });
-      this.markDirty();
-      this.onTagAddChanged(true);
-    },
+        removeTag: function (tag) {
+            this.tags = this.tags.filter((t) => {
+                return tag !== t;
+            });
+            this.markDirty();
+            this.onTagAddChanged(true);
+        },
 
-    addMatchingTag: function (tag) {
-      if (this.tags.indexOf(tag.id) >= 0) {
-        return;
-      }
-      this.tags.push(tag.id);
-      this.markDirty();
-      this.onTagAddChanged(true);
-    },
+        addMatchingTag: function (tag) {
+            if (this.tags.indexOf(tag.id) >= 0) {
+                return;
+            }
+            this.tags.push(tag.id);
+            this.markDirty();
+            this.onTagAddChanged(true);
+        },
 
-    onTagAddKeyDown: function (event: KeyboardEvent) {
-      if (event.key === "Enter") {
-        event.preventDefault();
+        onTagAddKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Enter") {
+                event.preventDefault();
 
-        this.onTagAddChanged(true);
+                this.onTagAddChanged(true);
 
-        if (this.matchingTags.length > 0) {
-          this.addMatchingTag(this.matchingTags[0]);
-          this.tagToAdd = "";
-          this.onTagAddChanged(true);
-        }
-      } else if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
-        this.onTagAddChanged(true);
+                if (this.matchingTags.length > 0) {
+                    this.addMatchingTag(this.matchingTags[0]);
+                    this.tagToAdd = "";
+                    this.onTagAddChanged(true);
+                }
+            } else if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
+                this.onTagAddChanged(true);
 
-        if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
-          this.tagToAdd = this.matchingTags[0].name;
-          this.onTagAddChanged(true);
-          event.preventDefault();
-        }
-      }
-    },
+                if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
+                    this.tagToAdd = this.matchingTags[0].name;
+                    this.onTagAddChanged(true);
+                    event.preventDefault();
+                }
+            }
+        },
 
-    onTagAddChanged: function (forced?: boolean) {
-      if (forced) {
-        if (this.$options.findTagTimeout) {
-          clearTimeout(this.$options.findTagTimeout);
-          this.$options.findTagTimeout = null;
-        }
-        this.findTags();
-      } else {
-        if (this.$options.findTagTimeout) {
-          return;
-        }
-        this.$options.findTagTimeout = setTimeout(() => {
-          this.$options.findTagTimeout = null;
-          this.findTags();
-        }, 200);
-      }
-    },
+        onTagAddChanged: function (forced?: boolean) {
+            if (forced) {
+                if (this.$options.findTagTimeout) {
+                    clearTimeout(this.$options.findTagTimeout);
+                    this.$options.findTagTimeout = null;
+                }
+                this.findTags();
+            } else {
+                if (this.$options.findTagTimeout) {
+                    return;
+                }
+                this.$options.findTagTimeout = setTimeout(() => {
+                    this.$options.findTagTimeout = null;
+                    this.findTags();
+                }, 200);
+            }
+        },
 
-    findTags: function () {
-      const tagFilter = this.tagToAdd
-        .replace(/[\n\r]/g, " ")
-        .trim()
-        .replace(/[\s]/g, "_")
-        .toLowerCase();
-      this.matchingTags = Object.values(this.tagData)
-        .map((a: any) => {
-          if (!tagFilter) {
-            return {
-              id: a.id,
-              name: a.name,
-              starts: true,
-              contains: true,
-            };
-          }
-          const i = a.name.indexOf(tagFilter);
-          return {
-            id: a.id,
-            name: a.name,
-            starts: i === 0,
-            contains: i >= 0,
-          };
-        })
-        .filter((a) => {
-          if (this.tags.indexOf(a.id) >= 0) {
-            return false;
-          }
-          return a.starts || a.contains;
-        })
-        .sort((a, b) => {
-          if (a.starts && !b.starts) {
+        findTags: function () {
+            const tagFilter = this.tagToAdd
+                .replace(/[\n\r]/g, " ")
+                .trim()
+                .replace(/[\s]/g, "_")
+                .toLowerCase();
+            this.matchingTags = Object.values(this.tagData)
+                .map((a: any) => {
+                    if (!tagFilter) {
+                        return {
+                            id: a.id,
+                            name: a.name,
+                            starts: true,
+                            contains: true,
+                        };
+                    }
+                    const i = a.name.indexOf(tagFilter);
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        starts: i === 0,
+                        contains: i >= 0,
+                    };
+                })
+                .filter((a) => {
+                    if (this.tags.indexOf(a.id) >= 0) {
+                        return false;
+                    }
+                    return a.starts || a.contains;
+                })
+                .sort((a, b) => {
+                    if (a.starts && !b.starts) {
+                        return -1;
+                    } else if (b.starts && !a.starts) {
+                        return 1;
+                    } else if (a.name < b.name) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                })
+                .slice(0, 10);
+        },
+
+        onAppStatusChanged: function () {
+            this.currentMedia = AppStatus.CurrentMedia;
+            if (!this.inModal) {
+                nextTick(() => {
+                    const currentElem = this.$el.querySelector(
+                        ".search-result-item.current"
+                    );
+                    if (currentElem) {
+                        currentElem.scrollIntoView();
+                    }
+                });
+                this.onCurrentMediaChanged();
+            }
+        },
+
+        findCurrentMediaIndex: function (): number {
+            for (let i = 0; i < this.pageItems.length; i++) {
+                if (this.pageItems[i].id === this.currentMedia) {
+                    return i;
+                }
+            }
             return -1;
-          } else if (b.starts && !a.starts) {
-            return 1;
-          } else if (a.name < b.name) {
-            return -1;
-          } else {
-            return 1;
-          }
-        })
-        .slice(0, 10);
-    },
+        },
 
-    onAppStatusChanged: function () {
-      this.currentMedia = AppStatus.CurrentMedia;
-      if (!this.inModal) {
-        nextTick(() => {
-          const currentElem = this.$el.querySelector(
-            ".search-result-item.current"
-          );
-          if (currentElem) {
-            currentElem.scrollIntoView();
-          }
-        });
-        this.onCurrentMediaChanged();
-      }
-    },
+        onCurrentMediaChanged: function () {
+            if (!this.inModal) {
+                const i = this.findCurrentMediaIndex();
+                AlbumsController.OnPageLoad(i, this.pageItems.length, 0, 1);
+            }
+        },
 
-    findCurrentMediaIndex: function (): number {
-      for (let i = 0; i < this.pageItems.length; i++) {
-        if (this.pageItems[i].id === this.currentMedia) {
-          return i;
-        }
-      }
-      return -1;
-    },
+        nextMedia: function () {
+            const i = this.findCurrentMediaIndex();
+            if (i !== -1 && i < this.pageItems.length - 1) {
+                this.goToMedia(this.pageItems[i + 1].id);
+            } else if (i === -1 && this.pageItems.length > 0) {
+                this.goToMedia(this.pageItems[0].id);
+            }
+        },
 
-    onCurrentMediaChanged: function () {
-      if (!this.inModal) {
-        const i = this.findCurrentMediaIndex();
-        AlbumsController.OnPageLoad(i, this.pageItems.length, 0, 1);
-      }
-    },
+        prevMedia: function () {
+            const i = this.findCurrentMediaIndex();
+            if (i !== -1 && i > 0) {
+                this.goToMedia(this.pageItems[i - 1].id);
+            } else if (i === -1 && this.pageItems.length > 0) {
+                this.goToMedia(this.pageItems[0].id);
+            }
+        },
 
-    nextMedia: function () {
-      const i = this.findCurrentMediaIndex();
-      if (i !== -1 && i < this.pageItems.length - 1) {
-        this.goToMedia(this.pageItems[i + 1].id);
-      } else if (i === -1 && this.pageItems.length > 0) {
-        this.goToMedia(this.pageItems[0].id);
-      }
-    },
-
-    prevMedia: function () {
-      const i = this.findCurrentMediaIndex();
-      if (i !== -1 && i > 0) {
-        this.goToMedia(this.pageItems[i - 1].id);
-      } else if (i === -1 && this.pageItems.length > 0) {
-        this.goToMedia(this.pageItems[0].id);
-      }
-    },
-
-    handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (
-        AuthController.Locked ||
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (
+                AuthController.Locked ||
         !AppStatus.IsPageVisible() ||
         !this.display ||
         !event.key ||
         event.ctrlKey
-      ) {
-        return false;
-      }
+            ) {
+                return false;
+            }
 
-      if (this.inModal) {
-        return false;
-      }
+            if (this.inModal) {
+                return false;
+            }
 
-      if (event.key === "Home") {
-        if (this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[0].id);
+            if (event.key === "Home") {
+                if (this.pageItems.length > 0) {
+                    this.goToMedia(this.pageItems[0].id);
+                }
+                return true;
+            }
+
+            if (event.key === "End") {
+                if (this.pageItems.length > 0) {
+                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                }
+                return true;
+            }
+
+            if (event.key === "ArrowLeft") {
+                this.prevMedia();
+                return true;
+            }
+
+            if (event.key === "ArrowRight") {
+                this.nextMedia();
+                return true;
+            }
+
+            return false;
+        },
+
+        renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
+            let parts = [item.title || this.$t('Untitled')];
+
+            if (item.tags.length > 0) {
+                let tagNames = [];
+
+                for (let tag of item.tags) {
+                    if (tags[tag + ""]) {
+                        tagNames.push(tags[tag + ""].name);
+                    } else {
+                        tagNames.push("???");
+                    }
+                }
+
+                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
+            }
+
+            return parts.join("\n");
+        },
+
+        checkContinueSearch: function () {
+            if (this.finished || this.loading || this.pageItems.length === 0) {
+                return;
+            }
+
+            const elem = this.$el.querySelector(".search-continue-mark");
+
+            if (!elem) {
+                return;
+            }
+
+            if (!elementInView(elem)) {
+                return;
+            }
+
+            if (this.dirty) {
+                this.startSearch();
+            } else {
+                this.load();
+            }
+        },
+
+        updateAlbums: function () {
+            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+                if (a.nameLowerCase < b.nameLowerCase) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+        },
+    },
+    mounted: function () {
+        this.advancedSearch = false;
+        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
+
+        this.$options.loadH = this.load.bind(this);
+        this.$options.resetH = this.resetSearch.bind(this);
+        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+
+        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.AddEventListener("media-delete", this.$options.resetH);
+        AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
+
+        AppEvents.AddEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
+
+        this.$options.nextMediaH = this.nextMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+
+        this.$options.prevMediaH = this.prevMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
+
+        this.$options.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
+
+        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+
+        this.updateAlbums();
+        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+
+        this.updateTagData();
+
+        if (this.inModal) {
+            this.startSearch();
         }
-        return true;
-      }
-
-      if (event.key === "End") {
-        if (this.pageItems.length > 0) {
-          this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-        }
-        return true;
-      }
-
-      if (event.key === "ArrowLeft") {
-        this.prevMedia();
-        return true;
-      }
-
-      if (event.key === "ArrowRight") {
-        this.nextMedia();
-        return true;
-      }
-
-      return false;
     },
+    beforeUnmount: function () {
+        Timeouts.Abort("page-adv-search-load");
+        Request.Abort("page-adv-search-load");
 
-    renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-      let parts = [item.title || this.$t('Untitled')];
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
+        AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
+        AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
 
-      if (item.tags.length > 0) {
-        let tagNames = [];
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.statusChangeH
+        );
 
-        for (let tag of item.tags) {
-          if (tags[tag + ""]) {
-            tagNames.push(tags[tag + ""].name);
-          } else {
-            tagNames.push("???");
-          }
+        AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
+        AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
+
+        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+
+        if (this.$options.findTagTimeout) {
+            clearTimeout(this.$options.findTagTimeout);
         }
 
-        parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
-      }
+        clearInterval(this.$options.continueCheckInterval);
 
-      return parts.join("\n");
-    },
+        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
 
-    checkContinueSearch: function () {
-      if (this.finished || this.loading || this.pageItems.length === 0) {
-        return;
-      }
-
-      const elem = this.$el.querySelector(".search-continue-mark");
-
-      if (!elem) {
-        return;
-      }
-
-      if (!elementInView(elem)) {
-        return;
-      }
-
-      if (this.dirty) {
-        this.startSearch();
-      } else {
-        this.load();
-      }
-    },
-
-    updateAlbums: function () {
-      this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-        if (a.nameLowerCase < b.nameLowerCase) {
-          return -1;
-        } else {
-          return 1;
+        if (!this.inModal) {
+            AlbumsController.OnPageUnload();
         }
-      });
     },
-  },
-  mounted: function () {
-    this.advancedSearch = false;
-    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
-
-    this.$options.loadH = this.load.bind(this);
-    this.$options.resetH = this.resetSearch.bind(this);
-    this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
-
-    AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.AddEventListener("media-delete", this.$options.resetH);
-    AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
-
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
-
-    this.$options.nextMediaH = this.nextMedia.bind(this);
-    AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
-
-    this.$options.prevMediaH = this.prevMedia.bind(this);
-    AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
-
-    this.$options.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
-
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
-    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
-
-    this.updateAlbums();
-    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
-
-    this.updateTagData();
-
-    if (this.inModal) {
-      this.startSearch();
-    }
-  },
-  beforeUnmount: function () {
-    Timeouts.Abort("page-adv-search-load");
-    Request.Abort("page-adv-search-load");
-
-    AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-    AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
-    AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
-
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.statusChangeH
-    );
-
-    AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
-    AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
-
-    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
-
-    if (this.$options.findTagTimeout) {
-      clearTimeout(this.$options.findTagTimeout);
-    }
-
-    clearInterval(this.$options.continueCheckInterval);
-
-    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
-
-    if (!this.inModal) {
-      AlbumsController.OnPageUnload();
-    }
-  },
-  watch: {
-    display: function () {
-      this.load();
-      if (this.display && this.inModal) {
-        this.startSearch();
-      } else if (this.inModal) {
-        this.cancel();
-      }
+    watch: {
+        display: function () {
+            this.load();
+            if (this.display && this.inModal) {
+                this.startSearch();
+            } else if (this.inModal) {
+                this.cancel();
+            }
+        },
     },
-  },
 });
 </script>

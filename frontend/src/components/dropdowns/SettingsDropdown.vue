@@ -79,100 +79,100 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  name: "SettingsDropdown",
-  emits: ["update:display", "goto"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      isRoot: AuthController.IsRoot,
-      canWrite: AuthController.CanWrite,
-      username: AuthController.Username,
-    };
-  },
-  methods: {
-    close: function () {
-      this.displayStatus = false;
+    name: "SettingsDropdown",
+    emits: ["update:display", "goto"],
+    props: {
+        display: Boolean,
     },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
-
-    clickOnOption: function (o: string) {
-      this.$emit("goto", o);
-      this.close();
+    data: function () {
+        return {
+            isRoot: AuthController.IsRoot,
+            canWrite: AuthController.CanWrite,
+            username: AuthController.Username,
+        };
     },
+    methods: {
+        close: function () {
+            this.displayStatus = false;
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        clickOnOption: function (o: string) {
+            this.$emit("goto", o);
+            this.close();
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
+
+        updateAuthInfo: function () {
+            this.isRoot = AuthController.IsRoot;
+            this.canWrite = AuthController.CanWrite;
+            this.username = AuthController.Username;
+        },
+
+        keyDownHandle: function (e) {
+            e.stopPropagation();
+            if (e.key === "Escape") {
+                this.close();
+            }
+        },
     },
+    mounted: function () {
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-    updateAuthInfo: function () {
-      this.isRoot = AuthController.IsRoot;
-      this.canWrite = AuthController.CanWrite;
-      this.username = AuthController.Username;
-    },
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
-
-    if (this.display) {
-      this.$options.focusTrap.activate();
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+        if (this.display) {
+            this.$options.focusTrap.activate();
+            nextTick(() => {
+                this.$el.focus();
+            });
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-  },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+
+        if (this.$options.focusTrap) {
+            this.$options.focusTrap.destroy();
+        }
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+    },
 });
 </script>

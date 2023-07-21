@@ -168,527 +168,527 @@ const STATE_FILTER_READY = ['ready'];
 const STATE_FILTER_ERROR = ['error'];
 
 export default defineComponent({
-  components: {
-    AlbumCreateModal,
-  },
-  name: "PageUpload",
-  emits: ['media-go'],
-  props: {
-    display: Boolean,
-    inModal: Boolean,
-    fixedAlbum: Number,
-  },
-  data: function () {
-    return {
-      dragging: false,
-      pendingToUpload: [],
-      countCancellable: 0,
-
-      optionsShown: false,
-
-      maxParallelUploads: UploadController.MaxParallelUploads,
-
-      tags: [],
-      tagToAdd: "",
-      tagData: {},
-      matchingTags: [],
-
-      album: -1,
-      albums: [],
-
-      displayAlbumCreate: false,
-
-      countPending: 0,
-      countReady: 0,
-      countError: 0,
-
-      stateFilter: STATE_FILTER_PENDING.slice(),
-      selectedState: 'pending',
-
-      filteredEntries: [],
-    };
-  },
-  methods: {
-    clickToSelect: function () {
-      this.$el.querySelector(".file-hidden").click();
+    components: {
+        AlbumCreateModal,
     },
-
-    updateSelectedState: function (s: string) {
-      this.selectedState = s;
-      switch (s) {
-        case "ready":
-          this.stateFilter = STATE_FILTER_READY.slice();
-          break;
-        case "error":
-          this.stateFilter = STATE_FILTER_ERROR.slice();
-          break;
-        default:
-          this.stateFilter = STATE_FILTER_PENDING.slice();
-      }
-      this.updateFilteredEntries();
+    name: "PageUpload",
+    emits: ['media-go'],
+    props: {
+        display: Boolean,
+        inModal: Boolean,
+        fixedAlbum: Number,
     },
+    data: function () {
+        return {
+            dragging: false,
+            pendingToUpload: [],
+            countCancellable: 0,
 
-    updateFilteredEntries: function () {
-      this.filteredEntries = this.pendingToUpload.filter((e: UploadEntryMin) => {
-        return this.stateFilter.includes(e.status);
-      });
+            optionsShown: false,
 
-      if (this.selectedState !== 'pending') {
-        this.filteredEntries = this.filteredEntries.reverse();
-      }
-    },
+            maxParallelUploads: UploadController.MaxParallelUploads,
 
-    createAlbum: function () {
-      this.displayAlbumCreate = true;
-    },
+            tags: [],
+            tagToAdd: "",
+            tagData: {},
+            matchingTags: [],
 
-    onNewAlbum: function (albumId) {
-      this.album = albumId;
-    },
+            album: -1,
+            albums: [],
 
-    updateMaxParallelUploads: function () {
-      UploadController.MaxParallelUploads = this.maxParallelUploads;
-    },
+            displayAlbumCreate: false,
 
-    inputFileChanged: function (e) {
-      const data = e.target.files;
-      if (data && data.length > 0) {
-        for (let file of data) {
-          this.addFile(file);
-        }
-      }
-    },
+            countPending: 0,
+            countReady: 0,
+            countError: 0,
 
-    onDrop: function (e) {
-      e.preventDefault();
-      this.dragging = false;
-      const data = e.dataTransfer.files;
-      if (data && data.length > 0) {
-        for (let file of data) {
-          this.addFile(file);
-        }
-      }
-    },
+            stateFilter: STATE_FILTER_PENDING.slice(),
+            selectedState: 'pending',
 
-    dragOver: function (e) {
-      e.preventDefault();
+            filteredEntries: [],
+        };
     },
-    dragEnter: function (e) {
-      e.preventDefault();
-      this.dragging = true;
-    },
-    dragLeave: function (e) {
-      e.preventDefault();
-      this.dragging = false;
-    },
+    methods: {
+        clickToSelect: function () {
+            this.$el.querySelector(".file-hidden").click();
+        },
 
-    renderSize: function (bytes: number): string {
-      if (bytes > 1024 * 1024 * 1024) {
-        let gb = bytes / (1024 * 1024 * 1024);
-        gb = Math.floor(gb * 100) / 100;
-        return gb + " GB";
-      } else if (bytes > 1024 * 1024) {
-        let mb = bytes / (1024 * 1024);
-        mb = Math.floor(mb * 100) / 100;
-        return mb + " MB";
-      } else if (bytes > 1024) {
-        let kb = bytes / 1024;
-        kb = Math.floor(kb * 100) / 100;
-        return kb + " KB";
-      } else {
-        return bytes + " Bytes";
-      }
-    },
+        updateSelectedState: function (s: string) {
+            this.selectedState = s;
+            switch (s) {
+            case "ready":
+                this.stateFilter = STATE_FILTER_READY.slice();
+                break;
+            case "error":
+                this.stateFilter = STATE_FILTER_ERROR.slice();
+                break;
+            default:
+                this.stateFilter = STATE_FILTER_PENDING.slice();
+            }
+            this.updateFilteredEntries();
+        },
 
-    addFile: function (file: File) {
-      UploadController.AddFile(file, this.album, this.tags.slice());
-      this.updateSelectedState("pending");
-    },
+        updateFilteredEntries: function () {
+            this.filteredEntries = this.pendingToUpload.filter((e: UploadEntryMin) => {
+                return this.stateFilter.includes(e.status);
+            });
 
-    removeFile: function (id: number) {
-      UploadController.RemoveFile(id);
-    },
+            if (this.selectedState !== 'pending') {
+                this.filteredEntries = this.filteredEntries.reverse();
+            }
+        },
 
-    clearList: function () {
-      UploadController.ClearList();
-    },
+        createAlbum: function () {
+            this.displayAlbumCreate = true;
+        },
 
-    cancelAll: function () {
-      UploadController.CancelAll();
-    },
+        onNewAlbum: function (albumId) {
+            this.album = albumId;
+        },
 
-    tryAgain: function (m: UploadEntryMin) {
-      UploadController.TryAgain(m.id);
-    },
+        updateMaxParallelUploads: function () {
+            UploadController.MaxParallelUploads = this.maxParallelUploads;
+        },
 
-    goToMedia: function (m: UploadEntryMin, e?: MouseEvent) {
-      if (e) {
-        e.preventDefault();
-      }
-      if (m.mid < 0) {
-        return;
-      }
-      AppStatus.ClickOnMedia(m.mid, true);
-      this.$emit("media-go");
-    },
+        inputFileChanged: function (e) {
+            const data = e.target.files;
+            if (data && data.length > 0) {
+                for (let file of data) {
+                    this.addFile(file);
+                }
+            }
+        },
 
-    renderStatus(status: string, p: number, err: string) {
-      switch (status) {
-        case "ready":
-          return this.$t("Ready");
-        case "pending":
-          return this.$t("Pending");
-        case "uploading":
-          if (p > 0) {
-            return this.$t("Uploading") + "... (" + p + "%)";
-          } else {
-            return this.$t("Uploading") + "...";
-          }
-        case "encrypting":
-          if (p > 0) {
-            return this.$t("Encrypting") + "... (" + p + "%)";
-          } else {
-            return this.$t("Encrypting") + "...";
-          }
-        case "tag":
-          return (
-            this.$t("Adding tags") +
+        onDrop: function (e) {
+            e.preventDefault();
+            this.dragging = false;
+            const data = e.dataTransfer.files;
+            if (data && data.length > 0) {
+                for (let file of data) {
+                    this.addFile(file);
+                }
+            }
+        },
+
+        dragOver: function (e) {
+            e.preventDefault();
+        },
+        dragEnter: function (e) {
+            e.preventDefault();
+            this.dragging = true;
+        },
+        dragLeave: function (e) {
+            e.preventDefault();
+            this.dragging = false;
+        },
+
+        renderSize: function (bytes: number): string {
+            if (bytes > 1024 * 1024 * 1024) {
+                let gb = bytes / (1024 * 1024 * 1024);
+                gb = Math.floor(gb * 100) / 100;
+                return gb + " GB";
+            } else if (bytes > 1024 * 1024) {
+                let mb = bytes / (1024 * 1024);
+                mb = Math.floor(mb * 100) / 100;
+                return mb + " MB";
+            } else if (bytes > 1024) {
+                let kb = bytes / 1024;
+                kb = Math.floor(kb * 100) / 100;
+                return kb + " KB";
+            } else {
+                return bytes + " Bytes";
+            }
+        },
+
+        addFile: function (file: File) {
+            UploadController.AddFile(file, this.album, this.tags.slice());
+            this.updateSelectedState("pending");
+        },
+
+        removeFile: function (id: number) {
+            UploadController.RemoveFile(id);
+        },
+
+        clearList: function () {
+            UploadController.ClearList();
+        },
+
+        cancelAll: function () {
+            UploadController.CancelAll();
+        },
+
+        tryAgain: function (m: UploadEntryMin) {
+            UploadController.TryAgain(m.id);
+        },
+
+        goToMedia: function (m: UploadEntryMin, e?: MouseEvent) {
+            if (e) {
+                e.preventDefault();
+            }
+            if (m.mid < 0) {
+                return;
+            }
+            AppStatus.ClickOnMedia(m.mid, true);
+            this.$emit("media-go");
+        },
+
+        renderStatus(status: string, p: number, err: string) {
+            switch (status) {
+            case "ready":
+                return this.$t("Ready");
+            case "pending":
+                return this.$t("Pending");
+            case "uploading":
+                if (p > 0) {
+                    return this.$t("Uploading") + "... (" + p + "%)";
+                } else {
+                    return this.$t("Uploading") + "...";
+                }
+            case "encrypting":
+                if (p > 0) {
+                    return this.$t("Encrypting") + "... (" + p + "%)";
+                } else {
+                    return this.$t("Encrypting") + "...";
+                }
+            case "tag":
+                return (
+                    this.$t("Adding tags") +
             "... (" +
             this.$t("$N left").replace("$N", "" + p) +
             ")"
-          );
-        case "error":
-          switch (err) {
-            case "invalid-media":
-              return (
-                this.$t("Error") + ": " + this.$t("Invalid media file provided")
-              );
-            case "access-denied":
-              return this.$t("Error") + ": " + this.$t("Access denied");
-            case "deleted":
-              return (
-                this.$t("Error") + ": " + this.$t("The media asset was deleted")
-              );
-            case "no-internet":
-              return (
-                this.$t("Error") +
+                );
+            case "error":
+                switch (err) {
+                case "invalid-media":
+                    return (
+                        this.$t("Error") + ": " + this.$t("Invalid media file provided")
+                    );
+                case "access-denied":
+                    return this.$t("Error") + ": " + this.$t("Access denied");
+                case "deleted":
+                    return (
+                        this.$t("Error") + ": " + this.$t("The media asset was deleted")
+                    );
+                case "no-internet":
+                    return (
+                        this.$t("Error") +
                 ": " +
                 this.$t("Could not connect to the server")
-              );
+                    );
+                default:
+                    return this.$t("Error") + ": " + this.$t("Internal server error");
+                }
             default:
-              return this.$t("Error") + ": " + this.$t("Internal server error");
-          }
-        default:
-          return "-";
-      }
-    },
+                return "-";
+            }
+        },
 
-    cssProgress: function (status: string, p: number) {
-      switch (status) {
-        case "uploading":
-          return Math.round(p * 50 / 100) + "%";
-        case "encrypting":
-          return Math.round(50 + (p * 50 / 100)) + "%";
-        case "ready":
-        case "error":
-        case "tag":
-          return "100%";
-        default:
-          return "0";
-      }
-    },
+        cssProgress: function (status: string, p: number) {
+            switch (status) {
+            case "uploading":
+                return Math.round(p * 50 / 100) + "%";
+            case "encrypting":
+                return Math.round(50 + (p * 50 / 100)) + "%";
+            case "ready":
+            case "error":
+            case "tag":
+                return "100%";
+            default:
+                return "0";
+            }
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
 
-    findTags: function () {
-      const tagFilter = this.tagToAdd
-        .replace(/[\n\r]/g, " ")
-        .trim()
-        .replace(/[\s]/g, "_")
-        .toLowerCase();
-      if (!tagFilter) {
-        this.matchingTags = [];
-        return;
-      }
-      this.matchingTags = Object.values(this.tagData)
-        .map((a: any) => {
-          const i = a.name.indexOf(tagFilter);
-          return {
-            id: a.id,
-            name: a.name,
-            starts: i === 0,
-            contains: i >= 0,
-          };
-        })
-        .filter((a) => {
-          if (this.tags.indexOf(a.name) >= 0) {
-            return false;
-          }
-          return a.starts || a.contains;
-        })
-        .sort((a, b) => {
-          if (a.starts && !b.starts) {
-            return -1;
-          } else if (b.starts && !a.starts) {
-            return 1;
-          } else if (a.name < b.name) {
-            return -1;
-          } else {
-            return 1;
-          }
-        })
-        .slice(0, 10);
-    },
+        findTags: function () {
+            const tagFilter = this.tagToAdd
+                .replace(/[\n\r]/g, " ")
+                .trim()
+                .replace(/[\s]/g, "_")
+                .toLowerCase();
+            if (!tagFilter) {
+                this.matchingTags = [];
+                return;
+            }
+            this.matchingTags = Object.values(this.tagData)
+                .map((a: any) => {
+                    const i = a.name.indexOf(tagFilter);
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        starts: i === 0,
+                        contains: i >= 0,
+                    };
+                })
+                .filter((a) => {
+                    if (this.tags.indexOf(a.name) >= 0) {
+                        return false;
+                    }
+                    return a.starts || a.contains;
+                })
+                .sort((a, b) => {
+                    if (a.starts && !b.starts) {
+                        return -1;
+                    } else if (b.starts && !a.starts) {
+                        return 1;
+                    } else if (a.name < b.name) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                })
+                .slice(0, 10);
+        },
 
-    updateTagData: function () {
-      this.tagData = clone(TagsController.Tags);
-    },
+        updateTagData: function () {
+            this.tagData = clone(TagsController.Tags);
+        },
 
-    onTagInputKeyDown: function (event: KeyboardEvent) {
-      if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
-        this.onTagAddChanged(true);
-        if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
-          this.tagToAdd = this.matchingTags[0].name;
-          this.onTagAddChanged(true);
-          event.preventDefault();
-        }
-      }
-    },
+        onTagInputKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
+                this.onTagAddChanged(true);
+                if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
+                    this.tagToAdd = this.matchingTags[0].name;
+                    this.onTagAddChanged(true);
+                    event.preventDefault();
+                }
+            }
+        },
 
-    onTagAddChanged: function (forced: boolean) {
-      if (forced) {
-        if (this.$options.findTagTimeout) {
-          clearTimeout(this.$options.findTagTimeout);
-          this.$options.findTagTimeout = null;
-        }
-        this.findTags();
-      } else {
-        if (this.$options.findTagTimeout) {
-          return;
-        }
-        this.$options.findTagTimeout = setTimeout(() => {
-          this.$options.findTagTimeout = null;
-          this.findTags();
-        }, 200);
-      }
-    },
+        onTagAddChanged: function (forced: boolean) {
+            if (forced) {
+                if (this.$options.findTagTimeout) {
+                    clearTimeout(this.$options.findTagTimeout);
+                    this.$options.findTagTimeout = null;
+                }
+                this.findTags();
+            } else {
+                if (this.$options.findTagTimeout) {
+                    return;
+                }
+                this.$options.findTagTimeout = setTimeout(() => {
+                    this.$options.findTagTimeout = null;
+                    this.findTags();
+                }, 200);
+            }
+        },
 
-    removeTag: function (tag: string) {
-      for (let i = 0; i < this.tags.length; i++) {
-        if (this.tags[i] === tag) {
-          this.tags.splice(i, 1);
-          this.onTagAddChanged(true);
-          break;
-        }
-      }
-    },
+        removeTag: function (tag: string) {
+            for (let i = 0; i < this.tags.length; i++) {
+                if (this.tags[i] === tag) {
+                    this.tags.splice(i, 1);
+                    this.onTagAddChanged(true);
+                    break;
+                }
+            }
+        },
 
-    addTag: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-      this.addTagByName(this.tagToAdd);
-      this.tagToAdd = "";
-    },
+        addTag: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
+            this.addTagByName(this.tagToAdd);
+            this.tagToAdd = "";
+        },
 
-    addTagByName: function (tag: string) {
-      tag = parseTagName(tag);
-      this.removeTag(tag);
-      this.tags.push(tag);
-      this.onTagAddChanged(true);
-    },
+        addTagByName: function (tag: string) {
+            tag = parseTagName(tag);
+            this.removeTag(tag);
+            this.tags.push(tag);
+            this.onTagAddChanged(true);
+        },
 
-    showOptions: function (b: boolean) {
-      this.optionsShown = b;
-    },
+        showOptions: function (b: boolean) {
+            this.optionsShown = b;
+        },
 
-    updateAlbums: function () {
-      this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-        if (a.nameLowerCase < b.nameLowerCase) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
+        updateAlbums: function () {
+            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+                if (a.nameLowerCase < b.nameLowerCase) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
 
-      if (this.inModal) {
-        this.album = this.fixedAlbum;
-      }
-    },
+            if (this.inModal) {
+                this.album = this.fixedAlbum;
+            }
+        },
 
-    onPendingPush: function (m: UploadEntryMin) {
-      this.pendingToUpload.push(m);
-      this.updateCountCancellable(this.pendingToUpload);
+        onPendingPush: function (m: UploadEntryMin) {
+            this.pendingToUpload.push(m);
+            this.updateCountCancellable(this.pendingToUpload);
 
-      if (this.stateFilter.includes(m.status)) {
-        if (this.selectedState === "pending") {
-          this.filteredEntries.push(m);
-        } else {
-          this.filteredEntries.unshift(m);
-        }
-      }
-    },
+            if (this.stateFilter.includes(m.status)) {
+                if (this.selectedState === "pending") {
+                    this.filteredEntries.push(m);
+                } else {
+                    this.filteredEntries.unshift(m);
+                }
+            }
+        },
 
-    onPendingRemove: function (i: number) {
-      const removed = this.pendingToUpload.splice(i, 1)[0];
-      this.updateCountCancellable(this.pendingToUpload);
+        onPendingRemove: function (i: number) {
+            const removed = this.pendingToUpload.splice(i, 1)[0];
+            this.updateCountCancellable(this.pendingToUpload);
 
-      if (removed) {
-        for (let j = 0; j < this.filteredEntries.length; j++) {
-          if (this.filteredEntries[j].id === removed.id) {
-            this.filteredEntries.splice(j, 1);
-            break;
-          }
-        }
-      }
-    },
+            if (removed) {
+                for (let j = 0; j < this.filteredEntries.length; j++) {
+                    if (this.filteredEntries[j].id === removed.id) {
+                        this.filteredEntries.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        },
 
-    onPendingClear: function () {
-      this.pendingToUpload = UploadController.GetEntries();
-      this.updateCountCancellable(this.pendingToUpload);
-      this.updateFilteredEntries();
-    },
+        onPendingClear: function () {
+            this.pendingToUpload = UploadController.GetEntries();
+            this.updateCountCancellable(this.pendingToUpload);
+            this.updateFilteredEntries();
+        },
 
-    onPendingUpdate: function (i: number, m: UploadEntryMin) {
-      let mustUpdate = (this.pendingToUpload[i].status !== m.status)
-      this.pendingToUpload[i].status = m.status;
-      this.pendingToUpload[i].error = m.error;
-      this.pendingToUpload[i].progress = m.progress;
-      this.pendingToUpload[i].mid = m.mid;
-      if (mustUpdate) {
-        this.updateCountCancellable(this.pendingToUpload);
-      }
+        onPendingUpdate: function (i: number, m: UploadEntryMin) {
+            let mustUpdate = (this.pendingToUpload[i].status !== m.status)
+            this.pendingToUpload[i].status = m.status;
+            this.pendingToUpload[i].error = m.error;
+            this.pendingToUpload[i].progress = m.progress;
+            this.pendingToUpload[i].mid = m.mid;
+            if (mustUpdate) {
+                this.updateCountCancellable(this.pendingToUpload);
+            }
 
-      let found = false;
+            let found = false;
 
-      for (let j = 0; j < this.filteredEntries.length; j++) {
-        if (this.filteredEntries[j].id === m.id) {
-          found = true;
-          if (mustUpdate && !this.stateFilter.includes(m.status)) {
-            this.filteredEntries.splice(j, 1);
-          } else {
-            this.filteredEntries[j].status = m.status;
-            this.filteredEntries[j].error = m.error;
-            this.filteredEntries[j].progress = m.progress;
-            this.filteredEntries[j].mid = m.mid;
-          }
-        }
-      }
+            for (let j = 0; j < this.filteredEntries.length; j++) {
+                if (this.filteredEntries[j].id === m.id) {
+                    found = true;
+                    if (mustUpdate && !this.stateFilter.includes(m.status)) {
+                        this.filteredEntries.splice(j, 1);
+                    } else {
+                        this.filteredEntries[j].status = m.status;
+                        this.filteredEntries[j].error = m.error;
+                        this.filteredEntries[j].progress = m.progress;
+                        this.filteredEntries[j].mid = m.mid;
+                    }
+                }
+            }
 
-      if (!found && mustUpdate && this.stateFilter.includes(m.status)) {
-        if (this.selectedState === "pending") {
-          this.filteredEntries.push(m);
-        } else {
-          this.filteredEntries.unshift(m);
-        }
-      }
-    },
+            if (!found && mustUpdate && this.stateFilter.includes(m.status)) {
+                if (this.selectedState === "pending") {
+                    this.filteredEntries.push(m);
+                } else {
+                    this.filteredEntries.unshift(m);
+                }
+            }
+        },
 
-    updateCountCancellable: function (list: UploadEntryMin[]) {
-      let count = 0;
-      let countPending = 0;
-      let countReady = 0;
-      let countError = 0;
-      for (let l of list) {
-        if (l.status !== "ready" && l.status !== "error") {
-          count++;
-        }
+        updateCountCancellable: function (list: UploadEntryMin[]) {
+            let count = 0;
+            let countPending = 0;
+            let countReady = 0;
+            let countError = 0;
+            for (let l of list) {
+                if (l.status !== "ready" && l.status !== "error") {
+                    count++;
+                }
 
-        if (STATE_FILTER_PENDING.includes(l.status)) {
-          countPending++;
-        } else if (STATE_FILTER_READY.includes(l.status)) {
-          countReady++;
-        } else if (STATE_FILTER_ERROR.includes(l.status)) {
-          countError++;
-        }
-      }
-      this.countCancellable = count;
-      this.countPending = countPending;
-      this.countReady = countReady;
-      this.countError = countError;
-    },
+                if (STATE_FILTER_PENDING.includes(l.status)) {
+                    countPending++;
+                } else if (STATE_FILTER_READY.includes(l.status)) {
+                    countReady++;
+                } else if (STATE_FILTER_ERROR.includes(l.status)) {
+                    countError++;
+                }
+            }
+            this.countCancellable = count;
+            this.countPending = countPending;
+            this.countReady = countReady;
+            this.countError = countError;
+        },
 
-    getMediaURL: function (mid: number): string {
-      return (
-        window.location.protocol +
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          media: mid + "",
+            media: mid + "",
         })
-      );
+            );
+        },
     },
-  },
-  mounted: function () {
-    this.pendingToUpload = UploadController.GetEntries();
-    this.updateCountCancellable(this.pendingToUpload);
-    this.updateFilteredEntries();
+    mounted: function () {
+        this.pendingToUpload = UploadController.GetEntries();
+        this.updateCountCancellable(this.pendingToUpload);
+        this.updateFilteredEntries();
 
-    this.$options.onPendingPushH = this.onPendingPush.bind(this);
-    this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
-    this.$options.onPendingClearH = this.onPendingClear.bind(this);
-    this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
+        this.$options.onPendingPushH = this.onPendingPush.bind(this);
+        this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
+        this.$options.onPendingClearH = this.onPendingClear.bind(this);
+        this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
 
-    AppEvents.AddEventListener(
-      "upload-list-push",
-      this.$options.onPendingPushH
-    );
-    AppEvents.AddEventListener(
-      "upload-list-rm",
-      this.$options.onPendingRemoveH
-    );
-    AppEvents.AddEventListener(
-      "upload-list-clear",
-      this.$options.onPendingClearH
-    );
-    AppEvents.AddEventListener(
-      "upload-list-update",
-      this.$options.onPendingUpdateH
-    );
+        AppEvents.AddEventListener(
+            "upload-list-push",
+            this.$options.onPendingPushH
+        );
+        AppEvents.AddEventListener(
+            "upload-list-rm",
+            this.$options.onPendingRemoveH
+        );
+        AppEvents.AddEventListener(
+            "upload-list-clear",
+            this.$options.onPendingClearH
+        );
+        AppEvents.AddEventListener(
+            "upload-list-update",
+            this.$options.onPendingUpdateH
+        );
 
-    this.updateTagData();
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
-    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        this.updateTagData();
+        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
-    this.updateAlbums();
-    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+        this.updateAlbums();
+        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
 
-    TagsController.Load();
-    AlbumsController.Load();
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        TagsController.Load();
+        AlbumsController.Load();
+    },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 
-    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
 
-    AppEvents.RemoveEventListener(
-      "upload-list-push",
-      this.$options.onPendingPushH
-    );
-    AppEvents.RemoveEventListener(
-      "upload-list-rm",
-      this.$options.onPendingRemoveH
-    );
-    AppEvents.RemoveEventListener(
-      "upload-list-clear",
-      this.$options.onPendingClearH
-    );
-    AppEvents.RemoveEventListener(
-      "upload-list-update",
-      this.$options.onPendingUpdateH
-    );
+        AppEvents.RemoveEventListener(
+            "upload-list-push",
+            this.$options.onPendingPushH
+        );
+        AppEvents.RemoveEventListener(
+            "upload-list-rm",
+            this.$options.onPendingRemoveH
+        );
+        AppEvents.RemoveEventListener(
+            "upload-list-clear",
+            this.$options.onPendingClearH
+        );
+        AppEvents.RemoveEventListener(
+            "upload-list-update",
+            this.$options.onPendingUpdateH
+        );
 
-    if (this.$options.findTagTimeout) {
-      clearTimeout(this.$options.findTagTimeout);
-    }
-  },
+        if (this.$options.findTagTimeout) {
+            clearTimeout(this.$options.findTagTimeout);
+        }
+    },
 });
 </script>

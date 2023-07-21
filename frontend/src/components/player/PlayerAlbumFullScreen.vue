@@ -71,173 +71,173 @@ import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
-  name: "PlayerAlbumFullScreen",
-  emits: ["close"],
-  props: {
-    expanded: Boolean,
-  },
-  data: function () {
-    return {
-      albumId: AlbumsController.CurrentAlbum,
-      albumData: AlbumsController.CurrentAlbumData,
-
-      albumList: [],
-
-      loading: AlbumsController.CurrentAlbumLoading,
-
-      currentPos: AlbumsController.CurrentAlbumPos,
-
-      loop: false,
-      random: false,
-    };
-  },
-  methods: {
-    onAlbumUpdate: function () {
-      this.albumId = AlbumsController.CurrentAlbum;
-      this.albumData = AlbumsController.CurrentAlbumData;
-      this.updateAlbumsList();
+    name: "PlayerAlbumFullScreen",
+    emits: ["close"],
+    props: {
+        expanded: Boolean,
     },
+    data: function () {
+        return {
+            albumId: AlbumsController.CurrentAlbum,
+            albumData: AlbumsController.CurrentAlbumData,
 
-    onAlbumLoading: function (l) {
-      if (l) {
-        if (this.albumId !== AlbumsController.CurrentAlbum) {
-          this.loading = true;
-        }
-      } else {
-        this.loading = false;
-      }
+            albumList: [],
+
+            loading: AlbumsController.CurrentAlbumLoading,
+
+            currentPos: AlbumsController.CurrentAlbumPos,
+
+            loop: false,
+            random: false,
+        };
     },
+    methods: {
+        onAlbumUpdate: function () {
+            this.albumId = AlbumsController.CurrentAlbum;
+            this.albumData = AlbumsController.CurrentAlbumData;
+            this.updateAlbumsList();
+        },
 
-    toggleLoop: function () {
-      AlbumsController.ToggleLoop();
+        onAlbumLoading: function (l) {
+            if (l) {
+                if (this.albumId !== AlbumsController.CurrentAlbum) {
+                    this.loading = true;
+                }
+            } else {
+                this.loading = false;
+            }
+        },
+
+        toggleLoop: function () {
+            AlbumsController.ToggleLoop();
+        },
+
+        toggleRandom: function () {
+            AlbumsController.ToggleRandom();
+        },
+
+        renderPos: function (p) {
+            if (p < 0) {
+                return "?";
+            } else {
+                return "" + (p + 1);
+            }
+        },
+
+        renderTime: function (s: number): string {
+            return renderTimeSeconds(s);
+        },
+
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
+        },
+
+        updateAlbumsList: function () {
+            const prefix = "" + Date.now() + "-";
+            let i = 0;
+            if (this.albumData) {
+                this.albumList = this.albumData.list.map((a) => {
+                    const o = clone(a);
+                    o.list_id = prefix + i;
+                    i++;
+                    return o;
+                });
+            } else {
+                this.albumList = [];
+            }
+        },
+
+        clickMedia: function (item) {
+            AppStatus.ClickOnMedia(item.id, false);
+            this.$emit("close");
+        },
+
+        close: function () {
+            this.$emit("close");
+        },
+
+        onAlbumPosUpdate: function () {
+            this.loop = AlbumsController.AlbumLoop;
+            this.random = AlbumsController.AlbumRandom;
+            this.currentPos = AlbumsController.CurrentAlbumPos;
+            nextTick(() => {
+                this.scrollToSelected();
+            });
+        },
+
+        scrollToSelected: function () {
+            const itemHeight = 130;
+            const element = this.$el.querySelector(".album-body");
+
+            if (!element) {
+                return;
+            }
+
+            const scrollHeight = element.scrollHeight;
+            const height = element.getBoundingClientRect().height;
+
+            const itemTop = this.currentPos * itemHeight;
+
+            const expectedTop = height / 2 - itemHeight / 2;
+
+            const scroll = Math.max(
+                0,
+                Math.min(scrollHeight - height, itemTop - expectedTop)
+            );
+
+            element.scrollTop = scroll;
+        },
+
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
     },
+    mounted: function () {
+        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
+        );
 
-    toggleRandom: function () {
-      AlbumsController.ToggleRandom();
+        this.onAlbumPosUpdate();
+
+        this.updateAlbumsList();
+
+        this.$options.loadingH = this.onAlbumLoading.bind(this);
+        AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
+
+        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
     },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
+        );
+        AppEvents.RemoveEventListener(
+            "current-album-loading",
+            this.$options.loadingH
+        );
 
-    renderPos: function (p) {
-      if (p < 0) {
-        return "?";
-      } else {
-        return "" + (p + 1);
-      }
+        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
     },
-
-    renderTime: function (s: number): string {
-      return renderTimeSeconds(s);
+    watch: {
+        expanded: function () {
+            if (this.expanded) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.scrollToSelected();
+            }
+        },
     },
-
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
-    },
-
-    updateAlbumsList: function () {
-      const prefix = "" + Date.now() + "-";
-      let i = 0;
-      if (this.albumData) {
-        this.albumList = this.albumData.list.map((a) => {
-          const o = clone(a);
-          o.list_id = prefix + i;
-          i++;
-          return o;
-        });
-      } else {
-        this.albumList = [];
-      }
-    },
-
-    clickMedia: function (item) {
-      AppStatus.ClickOnMedia(item.id, false);
-      this.$emit("close");
-    },
-
-    close: function () {
-      this.$emit("close");
-    },
-
-    onAlbumPosUpdate: function () {
-      this.loop = AlbumsController.AlbumLoop;
-      this.random = AlbumsController.AlbumRandom;
-      this.currentPos = AlbumsController.CurrentAlbumPos;
-      nextTick(() => {
-        this.scrollToSelected();
-      });
-    },
-
-    scrollToSelected: function () {
-      const itemHeight = 130;
-      const element = this.$el.querySelector(".album-body");
-
-      if (!element) {
-        return;
-      }
-
-      const scrollHeight = element.scrollHeight;
-      const height = element.getBoundingClientRect().height;
-
-      const itemTop = this.currentPos * itemHeight;
-
-      const expectedTop = height / 2 - itemHeight / 2;
-
-      const scroll = Math.max(
-        0,
-        Math.min(scrollHeight - height, itemTop - expectedTop)
-      );
-
-      element.scrollTop = scroll;
-    },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
-
-    this.onAlbumPosUpdate();
-
-    this.updateAlbumsList();
-
-    this.$options.loadingH = this.onAlbumLoading.bind(this);
-    AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
-
-    this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-    AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
-    AppEvents.RemoveEventListener(
-      "current-album-loading",
-      this.$options.loadingH
-    );
-
-    AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
-  },
-  watch: {
-    expanded: function () {
-      if (this.expanded) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-        this.scrollToSelected();
-      }
-    },
-  },
 });
 </script>

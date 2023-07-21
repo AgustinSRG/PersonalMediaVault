@@ -87,7 +87,7 @@ export function findSubtitlesEntry(subtitles: SubtitlesEntry[], time: number): S
             high = m - 1
         } else {
             low = m
-			high = m - 1
+            high = m - 1
         }
     }
 

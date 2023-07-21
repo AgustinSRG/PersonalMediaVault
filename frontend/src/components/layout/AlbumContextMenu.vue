@@ -63,154 +63,154 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  name: "AlbumContextMenu",
-  emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
-  props: {
-    shown: Boolean,
+    name: "AlbumContextMenu",
+    emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
+    props: {
+        shown: Boolean,
 
-    mediaIndex: Number,
-    albumLength: Number,
+        mediaIndex: Number,
+        albumLength: Number,
 
-    x: Number,
-    y: Number,
-  },
-  setup(props) {
-    return {
-      shownState: useVModel(props, "shown"),
-    };
-  },
-  data: function () {
-    return {
-      top: "",
-      left: "",
-      right: "",
-      bottom: "",
-
-      width: "",
-
-      maxWidth: "",
-      maxHeight: "",
-    };
-  },
-  methods: {
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+        x: Number,
+        y: Number,
     },
-
-    moveMediaUp: function () {
-      this.$emit("move-up", this.mediaIndex);
-      this.hide();
+    setup(props) {
+        return {
+            shownState: useVModel(props, "shown"),
+        };
     },
+    data: function () {
+        return {
+            top: "",
+            left: "",
+            right: "",
+            bottom: "",
 
-    moveMediaDown: function () {
-      this.$emit("move-down", this.mediaIndex);
-      this.hide();
+            width: "",
+
+            maxWidth: "",
+            maxHeight: "",
+        };
     },
+    methods: {
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
 
-    changePosition: function () {
-      this.$emit("change-pos", this.mediaIndex);
-      this.hide();
+        moveMediaUp: function () {
+            this.$emit("move-up", this.mediaIndex);
+            this.hide();
+        },
+
+        moveMediaDown: function () {
+            this.$emit("move-down", this.mediaIndex);
+            this.hide();
+        },
+
+        changePosition: function () {
+            this.$emit("change-pos", this.mediaIndex);
+            this.hide();
+        },
+
+        removeMedia: function () {
+            this.$emit("media-remove", this.mediaIndex);
+            this.hide();
+        },
+
+        hide: function () {
+            this.shownState = false;
+        },
+
+        computeDimensions: function () {
+            const pageWidth = window.innerWidth;
+            const pageHeight = window.innerHeight;
+
+            const x = this.x;
+            const y = this.y;
+
+            if (y > pageHeight / 2) {
+                let bottom = pageHeight - y;
+                let right = pageWidth - x;
+
+                let maxWidth = pageWidth - right;
+
+                let maxHeight = pageHeight - bottom;
+
+                this.top = "auto";
+                this.left = "auto";
+                this.right = right + "px";
+                this.bottom = bottom + "px";
+                this.width = "auto";
+                this.maxWidth = maxWidth + "px";
+                this.maxHeight = maxHeight + "px";
+            } else {
+                let top = y;
+                let right = pageWidth - x;
+
+                let maxWidth = pageWidth - right;
+
+                let maxHeight = pageHeight - top;
+
+                this.top = top + "px";
+                this.left = "auto";
+                this.right = right + "px";
+                this.bottom = "auto";
+                this.width = "auto";
+                this.maxWidth = maxWidth + "px";
+                this.maxHeight = maxHeight + "px";
+            }
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
     },
+    mounted: function () {
+        this.computeDimensions();
 
-    removeMedia: function () {
-      this.$emit("media-remove", this.mediaIndex);
-      this.hide();
+        this.$options.hideHandler = this.hide.bind(this);
+
+        document.addEventListener("mousedown", this.$options.hideHandler);
+        document.addEventListener("touchstart", this.$options.hideHandler);
+
+        this.$options.focusTrap = new FocusTrap(
+            this.$el,
+            this.hide.bind(this),
+            "album-body-btn"
+        );
     },
-
-    hide: function () {
-      this.shownState = false;
-    },
-
-    computeDimensions: function () {
-      const pageWidth = window.innerWidth;
-      const pageHeight = window.innerHeight;
-
-      const x = this.x;
-      const y = this.y;
-
-      if (y > pageHeight / 2) {
-        let bottom = pageHeight - y;
-        let right = pageWidth - x;
-
-        let maxWidth = pageWidth - right;
-
-        let maxHeight = pageHeight - bottom;
-
-        this.top = "auto";
-        this.left = "auto";
-        this.right = right + "px";
-        this.bottom = bottom + "px";
-        this.width = "auto";
-        this.maxWidth = maxWidth + "px";
-        this.maxHeight = maxHeight + "px";
-      } else {
-        let top = y;
-        let right = pageWidth - x;
-
-        let maxWidth = pageWidth - right;
-
-        let maxHeight = pageHeight - top;
-
-        this.top = top + "px";
-        this.left = "auto";
-        this.right = right + "px";
-        this.bottom = "auto";
-        this.width = "auto";
-        this.maxWidth = maxWidth + "px";
-        this.maxHeight = maxHeight + "px";
-      }
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-  },
-  mounted: function () {
-    this.computeDimensions();
-
-    this.$options.hideHandler = this.hide.bind(this);
-
-    document.addEventListener("mousedown", this.$options.hideHandler);
-    document.addEventListener("touchstart", this.$options.hideHandler);
-
-    this.$options.focusTrap = new FocusTrap(
-      this.$el,
-      this.hide.bind(this),
-      "album-body-btn"
-    );
-  },
-  beforeUnmount: function () {
-    document.removeEventListener("mousedown", this.$options.hideHandler);
-    document.removeEventListener("touchstart", this.$options.hideHandler);
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    x: function () {
-      this.computeDimensions();
-    },
-    y: function () {
-      this.computeDimensions();
-    },
-    shown: function () {
-      if (this.shown) {
+    beforeUnmount: function () {
+        document.removeEventListener("mousedown", this.$options.hideHandler);
+        document.removeEventListener("touchstart", this.$options.hideHandler);
         if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+            this.$options.focusTrap.destroy();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-  },
+    watch: {
+        x: function () {
+            this.computeDimensions();
+        },
+        y: function () {
+            this.computeDimensions();
+        },
+        shown: function () {
+            if (this.shown) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+    },
 });
 </script>

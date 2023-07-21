@@ -59,37 +59,37 @@ import { generateMenuForPages } from "@/utils/menu-make";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "PageMenu",
-  emits: ["goto"],
-  props: {
-    page: Number,
-    pages: Number,
-    min: Boolean,
-  },
-  data: function () {
-    return {
-      menu: [],
-    };
-  },
-  methods: {
-    updatePageMenu: function () {
-      this.menu = generateMenuForPages(this.page, this.pages);
+    name: "PageMenu",
+    emits: ["goto"],
+    props: {
+        page: Number,
+        pages: Number,
+        min: Boolean,
     },
+    data: function () {
+        return {
+            menu: [],
+        };
+    },
+    methods: {
+        updatePageMenu: function () {
+            this.menu = generateMenuForPages(this.page, this.pages);
+        },
 
-    clickPage: function (p) {
-      this.$emit("goto", p);
+        clickPage: function (p) {
+            this.$emit("goto", p);
+        },
     },
-  },
-  mounted: function () {
-    this.updatePageMenu();
-  },
-  watch: {
-    page: function () {
-      this.updatePageMenu();
+    mounted: function () {
+        this.updatePageMenu();
     },
-    pages: function () {
-      this.updatePageMenu();
+    watch: {
+        page: function () {
+            this.updatePageMenu();
+        },
+        pages: function () {
+            this.updatePageMenu();
+        },
     },
-  },
 });
 </script>

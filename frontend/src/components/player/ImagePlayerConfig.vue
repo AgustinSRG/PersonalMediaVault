@@ -178,231 +178,231 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  name: "ImagePlayerConfig",
-  emits: [
-    "update:shown",
-    "update:resolution",
-    "update:background",
-    "update-auto-next",
-    "enter",
-    "leave",
-  ],
-  props: {
-    shown: Boolean,
-    metadata: Object,
-    resolution: Number,
-    background: String,
-    rTick: Number,
-  },
-  setup(props) {
-    return {
-      shownState: useVModel(props, "shown"),
-      resolutionState: useVModel(props, "resolution"),
-      backgroundState: useVModel(props, "background"),
-    };
-  },
-  data: function () {
-    return {
-      page: "",
-      resolutions: [],
-      bgOptions: ["default", "black", "white"],
-      autoNext: PlayerPreferences.ImageAutoNext,
-      autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
-    };
-  },
-  methods: {
-    changeResolution: function (i) {
-      this.resolutionState = i;
+    name: "ImagePlayerConfig",
+    emits: [
+        "update:shown",
+        "update:resolution",
+        "update:background",
+        "update-auto-next",
+        "enter",
+        "leave",
+    ],
+    props: {
+        shown: Boolean,
+        metadata: Object,
+        resolution: Number,
+        background: String,
+        rTick: Number,
     },
-
-    changeBackground: function (b) {
-      this.backgroundState = b;
+    setup(props) {
+        return {
+            shownState: useVModel(props, "shown"),
+            resolutionState: useVModel(props, "resolution"),
+            backgroundState: useVModel(props, "background"),
+        };
     },
-
-    changeAutoNext: function (b) {
-      this.autoNext = b;
-      PlayerPreferences.SetImageAutoNext(b);
-      this.$emit("update-auto-next");
+    data: function () {
+        return {
+            page: "",
+            resolutions: [],
+            bgOptions: ["default", "black", "white"],
+            autoNext: PlayerPreferences.ImageAutoNext,
+            autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
+        };
     },
+    methods: {
+        changeResolution: function (i) {
+            this.resolutionState = i;
+        },
 
-    enterConfig: function () {
-      this.$emit("enter");
-    },
+        changeBackground: function (b) {
+            this.backgroundState = b;
+        },
 
-    leaveConfig: function () {
-      this.$emit("leave");
-    },
+        changeAutoNext: function (b) {
+            this.autoNext = b;
+            PlayerPreferences.SetImageAutoNext(b);
+            this.$emit("update-auto-next");
+        },
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
+        enterConfig: function () {
+            this.$emit("enter");
+        },
 
-    focus: function () {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    },
+        leaveConfig: function () {
+            this.$emit("leave");
+        },
 
-    goBack: function () {
-      this.page = "";
-      this.focus();
-    },
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
 
-    goToResolutions: function () {
-      this.page = "resolution";
-      this.focus();
-    },
+        focus: function () {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        },
 
-    goToBackgrounds: function () {
-      this.page = "background";
-      this.focus();
-    },
+        goBack: function () {
+            this.page = "";
+            this.focus();
+        },
 
-    goToAutoNext: function () {
-      this.page = "auto-next";
-      this.focus();
-    },
+        goToResolutions: function () {
+            this.page = "resolution";
+            this.focus();
+        },
 
-    renderBackground: function (b: string) {
-      switch (b) {
-        case "white":
-          return this.$t("White");
-        case "black":
-          return this.$t("Black");
-        default:
-          return this.$t("Default (Theme)");
-      }
-    },
+        goToBackgrounds: function () {
+            this.page = "background";
+            this.focus();
+        },
 
-    renderAutoNext: function (s: number) {
-      if (!isNaN(s) && isFinite(s) && s > 0) {
-        if (s === 1) {
-          return s + " " + this.$t("second");
-        } else {
-          return s + " " + this.$t("seconds");
-        }
-      } else {
-        return this.$t("Disabled");
-      }
-    },
+        goToAutoNext: function () {
+            this.page = "auto-next";
+            this.focus();
+        },
 
-    renderResolution: function (res: number, rTick: number) {
-      if (rTick < 0 || !this.metadata) {
-        return this.$t("Unknown");
-      }
-      if (res < 0) {
-        return (
-          this.metadata.width +
+        renderBackground: function (b: string) {
+            switch (b) {
+            case "white":
+                return this.$t("White");
+            case "black":
+                return this.$t("Black");
+            default:
+                return this.$t("Default (Theme)");
+            }
+        },
+
+        renderAutoNext: function (s: number) {
+            if (!isNaN(s) && isFinite(s) && s > 0) {
+                if (s === 1) {
+                    return s + " " + this.$t("second");
+                } else {
+                    return s + " " + this.$t("seconds");
+                }
+            } else {
+                return this.$t("Disabled");
+            }
+        },
+
+        renderResolution: function (res: number, rTick: number) {
+            if (rTick < 0 || !this.metadata) {
+                return this.$t("Unknown");
+            }
+            if (res < 0) {
+                return (
+                    this.metadata.width +
           "x" +
           this.metadata.height +
           " (" +
           this.$t("Original") +
           ")" +
           (this.metadata.encoded ? "" : "(" + this.$t("Pending") + ")")
-        );
-      } else {
-        let resData = this.metadata.resolutions[res];
+                );
+            } else {
+                let resData = this.metadata.resolutions[res];
 
-        let width = this.metadata.width;
-        let height = this.metadata.height;
+                let width = this.metadata.width;
+                let height = this.metadata.height;
 
-        if (width > height) {
-          const proportionalHeight = Math.round(height * resData.width / width);
+                if (width > height) {
+                    const proportionalHeight = Math.round(height * resData.width / width);
 
-          if (proportionalHeight > resData.height) {
-            width = Math.round(width * resData.height / height);
-            height = resData.height
-          } else {
-            width = resData.width
-            height = proportionalHeight
-          }
-        } else {
-          const proportionalWidth = Math.round(width * resData.height / height);
+                    if (proportionalHeight > resData.height) {
+                        width = Math.round(width * resData.height / height);
+                        height = resData.height
+                    } else {
+                        width = resData.width
+                        height = proportionalHeight
+                    }
+                } else {
+                    const proportionalWidth = Math.round(width * resData.height / height);
 
-          if (proportionalWidth > resData.width) {
-            height = Math.round(height * resData.width / width);
-            width = resData.width
-          } else {
-            width = proportionalWidth
-            height = resData.height
-          }
-        }
+                    if (proportionalWidth > resData.width) {
+                        height = Math.round(height * resData.width / width);
+                        width = resData.width
+                    } else {
+                        width = proportionalWidth
+                        height = resData.height
+                    }
+                }
 
-        if (resData) {
-          return (
-            width +
+                if (resData) {
+                    return (
+                        width +
             "x" +
             height +
             "" +
             (resData.ready ? "" : "(" + this.$t("Pending") + ")")
-          );
-        } else {
-          return this.$t("Unknown");
-        }
-      }
-    },
-    updateResolutions: function () {
-      if (this.metadata && this.metadata.resolutions) {
-        this.resolutions = this.metadata.resolutions.slice();
-      } else {
-        this.resolutions = [];
-      }
-    },
+                    );
+                } else {
+                    return this.$t("Unknown");
+                }
+            }
+        },
+        updateResolutions: function () {
+            if (this.metadata && this.metadata.resolutions) {
+                this.resolutions = this.metadata.resolutions.slice();
+            } else {
+                this.resolutions = [];
+            }
+        },
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
 
-    close: function () {
-      this.shownState = false;
-    },
+        close: function () {
+            this.shownState = false;
+        },
 
-    keyDownHandle: function (e: KeyboardEvent) {
-      if (e.ctrlKey) {
-        return;
-      }
-      if (e.key === "Escape") {
-        this.close();
-        e.stopPropagation();
-      }
+        keyDownHandle: function (e: KeyboardEvent) {
+            if (e.ctrlKey) {
+                return;
+            }
+            if (e.key === "Escape") {
+                this.close();
+                e.stopPropagation();
+            }
+        },
     },
-  },
-  mounted: function () {
-    this.$options.focusTrap = new FocusTrap(
-      this.$el,
-      this.close.bind(this),
-      "player-settings-no-trap"
-    );
-    this.updateResolutions();
-  },
-  beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    shown: function () {
-      this.page = "";
-      if (this.shown) {
+    mounted: function () {
+        this.$options.focusTrap = new FocusTrap(
+            this.$el,
+            this.close.bind(this),
+            "player-settings-no-trap"
+        );
+        this.updateResolutions();
+    },
+    beforeUnmount: function () {
         if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+            this.$options.focusTrap.destroy();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-    rTick: function () {
-      this.updateResolutions();
+    watch: {
+        shown: function () {
+            this.page = "";
+            if (this.shown) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+        rTick: function () {
+            this.updateResolutions();
+        },
     },
-  },
 });
 </script>

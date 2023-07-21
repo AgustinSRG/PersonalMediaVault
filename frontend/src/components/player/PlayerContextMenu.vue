@@ -180,191 +180,191 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "PlayerContextMenu",
-  emits: [
-    "update:shown",
-    "update:loop",
-    "update:controls",
-    "update:fit",
-    "update:notesEdit",
-    "update:sliceLoop",
-    "open-tags",
-    "open-ext-desc",
-    "stats",
-    "close",
-  ],
-  props: {
-    shown: Boolean,
-    type: String,
-    x: Number,
-    y: Number,
+    name: "PlayerContextMenu",
+    emits: [
+        "update:shown",
+        "update:loop",
+        "update:controls",
+        "update:fit",
+        "update:notesEdit",
+        "update:sliceLoop",
+        "open-tags",
+        "open-ext-desc",
+        "stats",
+        "close",
+    ],
+    props: {
+        shown: Boolean,
+        type: String,
+        x: Number,
+        y: Number,
 
-    url: String,
+        url: String,
 
-    loop: Boolean,
-    fit: Boolean,
-    controls: Boolean,
+        loop: Boolean,
+        fit: Boolean,
+        controls: Boolean,
 
-    sliceLoop: Boolean,
-    hasSlices: Boolean,
+        sliceLoop: Boolean,
+        hasSlices: Boolean,
 
-    notesEdit: Boolean,
-    canWrite: Boolean,
-  },
-  setup(props) {
-    return {
-      shownState: useVModel(props, "shown"),
-      loopState: useVModel(props, "loop"),
-      fitState: useVModel(props, "fit"),
-      controlsState: useVModel(props, "controls"),
-      notesState: useVModel(props, "notesEdit"),
-      sliceLoopState: useVModel(props, "sliceLoop"),
-    };
-  },
-  data: function () {
-    return {
-      top: "",
-      left: "",
-      right: "",
-      bottom: "",
-
-      width: "",
-
-      maxWidth: "",
-      maxHeight: "",
-    };
-  },
-  methods: {
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+        notesEdit: Boolean,
+        canWrite: Boolean,
     },
-
-    toggleLoop: function () {
-      this.loopState = !this.loopState;
-      this.shownState = false;
-      this.$emit("close");
+    setup(props) {
+        return {
+            shownState: useVModel(props, "shown"),
+            loopState: useVModel(props, "loop"),
+            fitState: useVModel(props, "fit"),
+            controlsState: useVModel(props, "controls"),
+            notesState: useVModel(props, "notesEdit"),
+            sliceLoopState: useVModel(props, "sliceLoop"),
+        };
     },
+    data: function () {
+        return {
+            top: "",
+            left: "",
+            right: "",
+            bottom: "",
 
-    toggleSliceLoop: function () {
-      this.sliceLoopState = !this.sliceLoopState;
-      this.shownState = false;
-      this.$emit("close");
+            width: "",
+
+            maxWidth: "",
+            maxHeight: "",
+        };
     },
+    methods: {
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
 
-    toggleFit: function () {
-      this.fitState = !this.fitState;
-      this.shownState = false;
-      this.$emit("close");
+        toggleLoop: function () {
+            this.loopState = !this.loopState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        toggleSliceLoop: function () {
+            this.sliceLoopState = !this.sliceLoopState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        toggleFit: function () {
+            this.fitState = !this.fitState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        toggleNotes: function () {
+            this.notesState = !this.notesState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        toggleControls: function () {
+            this.controlsState = !this.controlsState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        refreshMedia: function () {
+            MediaController.Load();
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        showTags: function () {
+            this.$emit("open-tags");
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        showExtendedDescription: function () {
+            this.$emit("open-ext-desc");
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        download: function () {
+            this.shownState = false;
+            const link = document.createElement("a");
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.href = this.url;
+            link.click();
+            this.$emit("close");
+        },
+
+        hide: function () {
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        openStats: function () {
+            this.$emit("stats");
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        computeDimensions: function () {
+            const pageWidth = window.innerWidth;
+            const pageHeight = window.innerHeight;
+
+            const x = this.x;
+            const y = this.y;
+
+            let top = y;
+            let left = x;
+
+            let maxWidth = pageWidth - left;
+
+            let maxHeight = pageHeight - top;
+
+            this.top = top + "px";
+            this.left = left + "px";
+            this.right = "auto";
+            this.bottom = "auto";
+            this.width = "auto";
+            this.maxWidth = maxWidth + "px";
+            this.maxHeight = maxHeight + "px";
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
     },
+    mounted: function () {
+        this.computeDimensions();
 
-    toggleNotes: function () {
-      this.notesState = !this.notesState;
-      this.shownState = false;
-      this.$emit("close");
+        this.$options.hideHandler = this.hide.bind(this);
+
+        document.addEventListener("mousedown", this.$options.hideHandler);
+        document.addEventListener("touchstart", this.$options.hideHandler);
     },
-
-    toggleControls: function () {
-      this.controlsState = !this.controlsState;
-      this.shownState = false;
-      this.$emit("close");
+    beforeUnmount: function () {
+        document.removeEventListener("mousedown", this.$options.hideHandler);
+        document.removeEventListener("touchstart", this.$options.hideHandler);
     },
-
-    refreshMedia: function () {
-      MediaController.Load();
-      this.shownState = false;
-      this.$emit("close");
+    watch: {
+        x: function () {
+            this.computeDimensions();
+        },
+        y: function () {
+            this.computeDimensions();
+        },
+        shown: function () {
+            if (this.shown) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
     },
-
-    showTags: function () {
-      this.$emit("open-tags");
-      this.shownState = false;
-      this.$emit("close");
-    },
-
-    showExtendedDescription: function () {
-      this.$emit("open-ext-desc");
-      this.shownState = false;
-      this.$emit("close");
-    },
-
-    download: function () {
-      this.shownState = false;
-      const link = document.createElement("a");
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.href = this.url;
-      link.click();
-      this.$emit("close");
-    },
-
-    hide: function () {
-      this.shownState = false;
-      this.$emit("close");
-    },
-
-    openStats: function () {
-      this.$emit("stats");
-      this.shownState = false;
-      this.$emit("close");
-    },
-
-    computeDimensions: function () {
-      const pageWidth = window.innerWidth;
-      const pageHeight = window.innerHeight;
-
-      const x = this.x;
-      const y = this.y;
-
-      let top = y;
-      let left = x;
-
-      let maxWidth = pageWidth - left;
-
-      let maxHeight = pageHeight - top;
-
-      this.top = top + "px";
-      this.left = left + "px";
-      this.right = "auto";
-      this.bottom = "auto";
-      this.width = "auto";
-      this.maxWidth = maxWidth + "px";
-      this.maxHeight = maxHeight + "px";
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-  },
-  mounted: function () {
-    this.computeDimensions();
-
-    this.$options.hideHandler = this.hide.bind(this);
-
-    document.addEventListener("mousedown", this.$options.hideHandler);
-    document.addEventListener("touchstart", this.$options.hideHandler);
-  },
-  beforeUnmount: function () {
-    document.removeEventListener("mousedown", this.$options.hideHandler);
-    document.removeEventListener("touchstart", this.$options.hideHandler);
-  },
-  watch: {
-    x: function () {
-      this.computeDimensions();
-    },
-    y: function () {
-      this.computeDimensions();
-    },
-    shown: function () {
-      if (this.shown) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
-    },
-  },
 });
 </script>

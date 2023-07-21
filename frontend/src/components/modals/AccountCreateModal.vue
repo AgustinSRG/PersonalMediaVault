@@ -53,129 +53,129 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  components: {
-  },
-  name: "AccountCreateModal",
-  emits: ["update:display", "account-created"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      accountUsername: "",
-      accountPassword: "",
-      accountPassword2: "",
-      accountWrite: false,
+    components: {
+    },
+    name: "AccountCreateModal",
+    emits: ["update:display", "account-created"],
+    props: {
+        display: Boolean,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            accountUsername: "",
+            accountPassword: "",
+            accountPassword2: "",
+            accountWrite: false,
 
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-          elem.select();
+            busy: false,
+            error: "",
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                    elem.select();
+                }
+            });
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            if (this.accountPassword !== this.accountPassword2) {
+                this.error = this.$t("The passwords do not match");
+                return;
+            }
+
+            const username = this.accountUsername;
+            const password = this.accountPassword;
+            const write = this.accountWrite;
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(AdminAPI.CreateAccount(username, password, write))
+                .onSuccess(() => {
+                    this.busy = false;
+                    AppEvents.Emit("snack", this.$t("Account created") + ": " + username);
+                    this.accountUsername = "";
+                    this.accountPassword = "";
+                    this.accountPassword2 = "";
+                    this.accountWrite = false;
+                    this.$emit("account-created");
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "USERNAME_INVALID", () => {
+                            this.error = this.$t("Invalid username provided");
+                        })
+                        .add(400, "USERNAME_IN_USE", () => {
+                            this.error = this.$t("The username is already in use");
+                        })
+                        .add(400, "PASSWORD_INVALID", () => {
+                            this.error = this.$t("Invalid password provided");
+                        })
+                        .add(400, "*", () => {
+                            this.error = this.$t("Bad request");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
         }
-      });
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      if (this.accountPassword !== this.accountPassword2) {
-        this.error = this.$t("The passwords do not match");
-        return;
-      }
-
-      const username = this.accountUsername;
-      const password = this.accountPassword;
-      const write = this.accountWrite;
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AdminAPI.CreateAccount(username, password, write))
-        .onSuccess(() => {
-          this.busy = false;
-          AppEvents.Emit("snack", this.$t("Account created") + ": " + username);
-          this.accountUsername = "";
-          this.accountPassword = "";
-          this.accountPassword2 = "";
-          this.accountWrite = false;
-          this.$emit("account-created");
-          this.close();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "USERNAME_INVALID", () => {
-              this.error = this.$t("Invalid username provided");
-            })
-            .add(400, "USERNAME_IN_USE", () => {
-              this.error = this.$t("The username is already in use");
-            })
-            .add(400, "PASSWORD_INVALID", () => {
-              this.error = this.$t("Invalid password provided");
-            })
-            .add(400, "*", () => {
-              this.error = this.$t("Bad request");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+    beforeUnmount: function () {
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
     },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.error = "";
-      this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

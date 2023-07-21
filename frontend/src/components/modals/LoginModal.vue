@@ -49,110 +49,110 @@ import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
-  name: "LoginModal",
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      username: "",
-      password: "",
-      cooldown: 0,
-      mustWait: 0,
-      now: Date.now(),
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-        }
-      });
+    name: "LoginModal",
+    props: {
+        display: Boolean,
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AuthAPI.Login(this.username, this.password))
-        .onSuccess((response) => {
-          this.busy = false;
-          this.username = "";
-          this.password = "";
-          AuthController.SetSession(
-            response.session_id,
-            response.vault_fingerprint
-          );
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid username or password");
-            })
-            .add(403, "COOLDOWN", () => {
-              this.error = this.$t("You must wait 5 seconds to try again");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Invalid username or password");
-              this.cooldown = Date.now() + 5000;
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+    data: function () {
+        return {
+            username: "",
+            password: "",
+            cooldown: 0,
+            mustWait: 0,
+            now: Date.now(),
+            busy: false,
+            error: "",
+        };
     },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
 
-    updateNow: function () {
-      this.now = Date.now();
-      if (this.now < this.cooldown) {
-        this.mustWait = Math.max(
-          1,
-          Math.round((this.cooldown - this.now) / 1000)
-        );
-      } else {
-        this.mustWait = 0;
-      }
-    },
-  },
-  mounted: function () {
-    this.autoFocus();
+        submit: function (e) {
+            e.preventDefault();
 
-    this.$options.timer = setInterval(this.updateNow.bind(this), 200);
-  },
-  watch: {
-    display: function () {
-      this.error = "";
-      this.autoFocus();
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(AuthAPI.Login(this.username, this.password))
+                .onSuccess((response) => {
+                    this.busy = false;
+                    this.username = "";
+                    this.password = "";
+                    AuthController.SetSession(
+                        response.session_id,
+                        response.vault_fingerprint
+                    );
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid username or password");
+                        })
+                        .add(403, "COOLDOWN", () => {
+                            this.error = this.$t("You must wait 5 seconds to try again");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Invalid username or password");
+                            this.cooldown = Date.now() + 5000;
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        updateNow: function () {
+            this.now = Date.now();
+            if (this.now < this.cooldown) {
+                this.mustWait = Math.max(
+                    1,
+                    Math.round((this.cooldown - this.now) / 1000)
+                );
+            } else {
+                this.mustWait = 0;
+            }
+        },
     },
-  },
-  beforeUnmount: function () {
-    clearInterval(this.$options.timer);
-  },
+    mounted: function () {
+        this.autoFocus();
+
+        this.$options.timer = setInterval(this.updateNow.bind(this), 200);
+    },
+    watch: {
+        display: function () {
+            this.error = "";
+            this.autoFocus();
+        },
+    },
+    beforeUnmount: function () {
+        clearInterval(this.$options.timer);
+    },
 });
 </script>

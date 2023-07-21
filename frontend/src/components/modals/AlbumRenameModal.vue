@@ -34,140 +34,140 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "AlbumRenameModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      currentAlbum: -1,
-      name: "",
-      oldName: "",
-
-      busy: false,
-      error: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        elem.focus();
-        elem.select();
-      });
+    name: "AlbumRenameModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
+    data: function () {
+        return {
+            currentAlbum: -1,
+            name: "",
+            oldName: "",
 
-    onAlbumUpdate: function () {
-      this.currentAlbum = AlbumsController.CurrentAlbum;
-      if (AlbumsController.CurrentAlbumData) {
-        this.oldName = AlbumsController.CurrentAlbumData.name;
-        this.name = this.oldName;
-      }
+            busy: false,
+            error: "",
+        };
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                elem.focus();
+                elem.select();
+            });
+        },
 
-    submit: function (e) {
-      e.preventDefault();
+        onAlbumUpdate: function () {
+            this.currentAlbum = AlbumsController.CurrentAlbum;
+            if (AlbumsController.CurrentAlbumData) {
+                this.oldName = AlbumsController.CurrentAlbumData.name;
+                this.name = this.oldName;
+            }
+        },
 
-      if (this.busy) {
-        return;
-      }
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-      if (!this.name) {
-        this.error = this.$t("Invalid album name provided");
-        return;
-      }
+        submit: function (e) {
+            e.preventDefault();
 
-      if (this.name === this.oldName) {
-        this.close();
-        return;
-      }
+            if (this.busy) {
+                return;
+            }
 
-      this.busy = true;
-      this.error = "";
+            if (!this.name) {
+                this.error = this.$t("Invalid album name provided");
+                return;
+            }
 
-      const albumId = this.currentAlbum;
+            if (this.name === this.oldName) {
+                this.close();
+                return;
+            }
 
-      Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Album renamed") + ": " + this.name);
-          this.busy = false;
-          this.name = "";
-          this.close();
-          AlbumsController.OnChangedAlbum(albumId);
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid album name provided");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+            this.busy = true;
+            this.error = "";
+
+            const albumId = this.currentAlbum;
+
+            Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Album renamed") + ": " + this.name);
+                    this.busy = false;
+                    this.name = "";
+                    this.close();
+                    AlbumsController.OnChangedAlbum(albumId);
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid album name provided");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
     },
-  },
-  mounted: function () {
-    this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
+    mounted: function () {
+        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
+        );
 
-    this.onAlbumUpdate();
+        this.onAlbumUpdate();
 
-    if (this.display) {
-      this.error = "";
-      this.name = this.oldName;
-      this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.name = this.oldName;
-        this.autoFocus();
-      }
+        if (this.display) {
+            this.error = "";
+            this.name = this.oldName;
+            this.autoFocus();
+        }
     },
-  },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
+        );
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.name = this.oldName;
+                this.autoFocus();
+            }
+        },
+    },
 });
 </script>

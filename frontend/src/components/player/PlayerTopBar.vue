@@ -72,142 +72,142 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 
 const PlayerMediaEditor = defineAsyncComponent({
-  loader: () => import("./PlayerMediaEditor.vue"),
+    loader: () => import("./PlayerMediaEditor.vue"),
 });
 
 export default defineComponent({
-  name: "PlayerTopBar",
-  components: {
-    PlayerAlbumFullScreen,
-    PlayerMediaEditor,
-  },
-  emits: ["update:expanded", "update:albumExpanded", "click-player"],
-  props: {
-    mid: Number,
-    metadata: Object,
-
-    inAlbum: Boolean,
-
-    shown: Boolean,
-    fullscreen: Boolean,
-    expanded: Boolean,
-    albumExpanded: Boolean,
-  },
-  setup(props) {
-    return {
-      expandedState: useVModel(props, "expanded"),
-      albumExpandedState: useVModel(props, "albumExpanded"),
-    };
-  },
-  data: function () {
-    return {
-      dirty: false,
-
-      clickedContract: false,
-    };
-  },
-  methods: {
-    clickTopBar: function (e) {
-      e.stopPropagation();
-      this.$emit("click-player");
+    name: "PlayerTopBar",
+    components: {
+        PlayerAlbumFullScreen,
+        PlayerMediaEditor,
     },
+    emits: ["update:expanded", "update:albumExpanded", "click-player"],
+    props: {
+        mid: Number,
+        metadata: Object,
 
-    expandTitle: function () {
-      this.albumExpandedState = false;
-      this.expandedState = true;
+        inAlbum: Boolean,
+
+        shown: Boolean,
+        fullscreen: Boolean,
+        expanded: Boolean,
+        albumExpanded: Boolean,
     },
-
-    onEditDone: function () {
-      this.dirty = true;
+    setup(props) {
+        return {
+            expandedState: useVModel(props, "expanded"),
+            albumExpandedState: useVModel(props, "albumExpanded"),
+        };
     },
+    data: function () {
+        return {
+            dirty: false,
 
-    closeTitle: function () {
-      this.expandedState = false;
+            clickedContract: false,
+        };
     },
+    methods: {
+        clickTopBar: function (e) {
+            e.stopPropagation();
+            this.$emit("click-player");
+        },
 
-    expandAlbum: function () {
-      this.albumExpandedState = true;
-      this.expandedState = false;
-    },
+        expandTitle: function () {
+            this.albumExpandedState = false;
+            this.expandedState = true;
+        },
 
-    closeAlbum: function () {
-      this.albumExpandedState = false;
-    },
+        onEditDone: function () {
+            this.dirty = true;
+        },
 
-    close: function () {
-      this.closeTitle();
-      this.closeAlbum();
-    },
+        closeTitle: function () {
+            this.expandedState = false;
+        },
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
+        expandAlbum: function () {
+            this.albumExpandedState = true;
+            this.expandedState = false;
+        },
 
-    onKeyDown: function (e) {
-      if (!this.expanded && !this.albumExpanded) {
-        return;
-      }
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        e.preventDefault();
-        this.close();
-      }
-    },
+        closeAlbum: function () {
+            this.albumExpandedState = false;
+        },
 
-    handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (AuthController.Locked || !event.key || event.ctrlKey) {
-        return false;
-      }
+        close: function () {
+            this.closeTitle();
+            this.closeAlbum();
+        },
 
-      if (event.key.toUpperCase() === "E") {
-        this.expandTitle();
-        return true;
-      }
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
 
-      return false;
-    },
-  },
-  watch: {
-    fullscreen: function () {
-      this.albumExpandedState = false;
-    },
-
-    expanded: function () {
-      this.clickedContract = !this.expanded;
-      if (this.expanded) {
-        nextTick(() => {
-            const el = this.$el.querySelector(".player-media-editor");
-            if (el) {
-              el.focus();
+        onKeyDown: function (e) {
+            if (!this.expanded && !this.albumExpanded) {
+                return;
             }
-          });
-      }
-      if (this.dirty) {
-        this.dirty = false;
-        setTimeout(() => {
-          MediaController.Load();
-        }, 100);
-      }
-    },
-
-    albumExpanded: function () {
-      this.clickedContract = false;
-      if (this.albumExpanded) {
-         nextTick(() => {
-            const el = this.$el.querySelector(".player-album-container");
-            if (el) {
-              el.focus();
+            e.stopPropagation();
+            if (e.key === "Escape") {
+                e.preventDefault();
+                this.close();
             }
-          });
-      }
+        },
+
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (AuthController.Locked || !event.key || event.ctrlKey) {
+                return false;
+            }
+
+            if (event.key.toUpperCase() === "E") {
+                this.expandTitle();
+                return true;
+            }
+
+            return false;
+        },
     },
-  },
-  mounted: function () {
-    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
-  },
-  beforeUnmount: function () {
-    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
-  },
+    watch: {
+        fullscreen: function () {
+            this.albumExpandedState = false;
+        },
+
+        expanded: function () {
+            this.clickedContract = !this.expanded;
+            if (this.expanded) {
+                nextTick(() => {
+                    const el = this.$el.querySelector(".player-media-editor");
+                    if (el) {
+                        el.focus();
+                    }
+                });
+            }
+            if (this.dirty) {
+                this.dirty = false;
+                setTimeout(() => {
+                    MediaController.Load();
+                }, 100);
+            }
+        },
+
+        albumExpanded: function () {
+            this.clickedContract = false;
+            if (this.albumExpanded) {
+                nextTick(() => {
+                    const el = this.$el.querySelector(".player-album-container");
+                    if (el) {
+                        el.focus();
+                    }
+                });
+            }
+        },
+    },
+    mounted: function () {
+        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
+    },
+    beforeUnmount: function () {
+        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+    },
 });
 </script>

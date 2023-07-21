@@ -32,86 +32,86 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  name: "ThemeDropdown",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      theme: AppPreferences.Theme,
-    };
-  },
-  methods: {
-    close: function () {
-      this.displayStatus = false;
+    name: "ThemeDropdown",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
-
-    changeTheme: function (t: string) {
-      AppPreferences.SetTheme(t);
+    data: function () {
+        return {
+            theme: AppPreferences.Theme,
+        };
     },
+    methods: {
+        close: function () {
+            this.displayStatus = false;
+        },
 
-    themeUpdated: function () {
-      this.theme = AppPreferences.Theme;
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        changeTheme: function (t: string) {
+            AppPreferences.SetTheme(t);
+        },
+
+        themeUpdated: function () {
+            this.theme = AppPreferences.Theme;
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
+
+        keyDownHandle: function (e) {
+            e.stopPropagation();
+            if (e.key === "Escape") {
+                this.close();
+            }
+        },
     },
+    mounted: function () {
+        this.$options.themeHandler = this.themeUpdated.bind(this);
+        AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
+        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-
-    keyDownHandle: function (e) {
-      e.stopPropagation();
-      if (e.key === "Escape") {
-        this.close();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.themeHandler = this.themeUpdated.bind(this);
-    AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
-    this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
-
-    if (this.display) {
-      this.$options.focusTrap.activate();
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+        if (this.display) {
+            this.$options.focusTrap.activate();
+            nextTick(() => {
+                this.$el.focus();
+            });
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-  },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
+        if (this.$options.focusTrap) {
+            this.$options.focusTrap.destroy();
+        }
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+    },
 });
 </script>

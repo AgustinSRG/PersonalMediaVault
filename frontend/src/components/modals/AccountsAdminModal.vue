@@ -68,168 +68,168 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 
 export default defineComponent({
-  components: {
-    AccountDeleteModal,
-    AccountCreateModal,
-  },
-  name: "AccountsAdminModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      accounts: [],
-
-      accountUsername: "",
-      accountPassword: "",
-      accountPassword2: "",
-      accountWrite: false,
-
-      displayAccountDelete: false,
-      displayAccountCreate: false,
-
-      loading: true,
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    load: function () {
-      Timeouts.Abort("admin-accounts");
-      Request.Abort("admin-accounts");
-
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      Request.Pending("admin-accounts", AdminAPI.ListAccounts())
-        .onSuccess((accounts) => {
-          this.accounts = accounts;
-          this.loading = false;
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.displayStatus = false;
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("admin-accounts", 1500, this.load.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("admin-accounts", 1500, this.load.bind(this));
-        });
+    components: {
+        AccountDeleteModal,
+        AccountCreateModal,
     },
+    name: "AccountsAdminModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            accounts: [],
 
-    askDeleteAccount: function (username: string) {
-      this.$refs.deleteModal.show({
-        name: username,
-        callback: () => {
-          this.deleteAccount(username);
+            accountUsername: "",
+            accountPassword: "",
+            accountPassword2: "",
+            accountWrite: false,
+
+            displayAccountDelete: false,
+            displayAccountCreate: false,
+
+            loading: true,
+            busy: false,
+            error: "",
+        };
+    },
+    methods: {
+        load: function () {
+            Timeouts.Abort("admin-accounts");
+            Request.Abort("admin-accounts");
+
+            if (!this.display) {
+                return;
+            }
+
+            this.loading = true;
+
+            Request.Pending("admin-accounts", AdminAPI.ListAccounts())
+                .onSuccess((accounts) => {
+                    this.accounts = accounts;
+                    this.loading = false;
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.displayStatus = false;
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("admin-accounts", 1500, this.load.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("admin-accounts", 1500, this.load.bind(this));
+                });
         },
-      });
+
+        askDeleteAccount: function (username: string) {
+            this.$refs.deleteModal.show({
+                name: username,
+                callback: () => {
+                    this.deleteAccount(username);
+                },
+            });
+        },
+
+        deleteAccount: function (username: string) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(AdminAPI.DeleteAccount(username))
+                .onSuccess(() => {
+                    this.busy = false;
+                    AppEvents.Emit("snack", this.$t("Account deleted") + ": " + username);
+                    this.load();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(404, "*", () => {
+                            // Already deleted?
+                            this.busy = false;
+                            this.load();
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        createAccount: function () {
+            this.displayAccountCreate = true;
+        },
+
+        close: function () {
+            this.displayAccountDelete = false;
+            this.displayAccountCreate = false;
+            this.$refs.modalContainer.close();
+        },
     },
-
-    deleteAccount: function (username: string) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AdminAPI.DeleteAccount(username))
-        .onSuccess(() => {
-          this.busy = false;
-          AppEvents.Emit("snack", this.$t("Account deleted") + ": " + username);
-          this.load();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(404, "*", () => {
-              // Already deleted?
-              this.busy = false;
-              this.load();
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    createAccount: function () {
-      this.displayAccountCreate = true;
-    },
-
-    close: function () {
-      this.displayAccountDelete = false;
-      this.displayAccountCreate = false;
-      this.$refs.modalContainer.close();
-    },
-  },
-  mounted: function () {
-    this.load();
-
-    if (this.display) {
-      this.error = "";
-      nextTick(() => {
-        this.$el.focus();
-      });
-      this.displayAccountDelete = false;
-      this.displayAccountCreate = false;
-    }
-  },
-  beforeUnmount: function () {
-    Timeouts.Abort("admin-accounts");
-    Request.Abort("admin-accounts");
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        nextTick(() => {
-          this.$el.focus();
-        });
-        this.displayAccountDelete = false;
-        this.displayAccountCreate = false;
+    mounted: function () {
         this.load();
-      }
+
+        if (this.display) {
+            this.error = "";
+            nextTick(() => {
+                this.$el.focus();
+            });
+            this.displayAccountDelete = false;
+            this.displayAccountCreate = false;
+        }
     },
-  },
+    beforeUnmount: function () {
+        Timeouts.Abort("admin-accounts");
+        Request.Abort("admin-accounts");
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.displayAccountDelete = false;
+                this.displayAccountCreate = false;
+                this.load();
+            }
+        },
+    },
 });
 </script>

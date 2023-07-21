@@ -55,400 +55,400 @@ import { TagsAPI } from "@/api/api-tags";
 import { clone } from "@/utils/objects";
 
 export default defineComponent({
-  components: {
-  },
-  name: "TagListModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      mid: AppStatus.CurrentMedia,
-
-      tags: [],
-      tagToAdd: "",
-      tagData: {},
-      matchingTags: [],
-
-      loading: true,
-      busy: false,
-      canWrite: AuthController.CanWrite,
-
-      changed: false,
-    };
-  },
-  methods: {
-    load: function () {
-      if (!MediaController.MediaData) {
-        return;
-      }
-      this.tags = (MediaController.MediaData.tags || []).slice();
-      this.onTagAddChanged();
+    components: {
     },
-
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-        } else {
-          this.$el.focus();
-        }
-      });
+    name: "TagListModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-
-    updateAuthInfo: function () {
-      this.canWrite = AuthController.CanWrite;
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    data: function () {
+        return {
+            mid: AppStatus.CurrentMedia,
 
-    close: function () {
-      this.$refs.modalContainer.close();
+            tags: [],
+            tagToAdd: "",
+            tagData: {},
+            matchingTags: [],
+
+            loading: true,
+            busy: false,
+            canWrite: AuthController.CanWrite,
+
+            changed: false,
+        };
     },
-
-    onClose: function () {
-      if (this.changed) {
-        MediaController.Load();
-      }
-    },
-
-    updateMediaData: function () {
-      this.mid = AppStatus.CurrentMedia;
-      this.load();
-    },
-
-    updateTagData: function () {
-      this.tagData = clone(TagsController.Tags);
-    },
-
-    getTagName: function (tag, data) {
-      if (data[tag + ""]) {
-        return data[tag + ""].name;
-      } else {
-        return "???";
-      }
-    },
-
-    removeTag: function (tag) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-      const tagName = this.getTagName(tag, this.tagData);
-
-      Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
-        .onSuccess(() => {
-          AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
-          this.busy = false;
-          for (let i = 0; i < this.tags.length; i++) {
-            if (this.tags[i] === tag) {
-              this.tags.splice(i, 1);
-              break;
+    methods: {
+        load: function () {
+            if (!MediaController.MediaData) {
+                return;
             }
-          }
-          this.changed = true;
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
+            this.tags = (MediaController.MediaData.tags || []).slice();
+            this.onTagAddChanged();
+        },
 
-    addTag: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      const mediaId = AppStatus.CurrentMedia;
-      const tag = this.tagToAdd;
-
-      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
-          this.busy = false;
-          this.tagToAdd = "";
-          if (this.tags.indexOf(res.id) === -1) {
-            this.tags.push(res.id);
-          }
-          this.findTags();
-          TagsController.AddTag(res.id, res.name);
-          this.changed = true;
-          nextTick(() => {
-            const elemFocus = this.$el.querySelector(".tag-to-add");
-
-            if (elemFocus) {
-              elemFocus.focus();
+        autoFocus: function () {
+            if (!this.display) {
+                return;
             }
-          });
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                } else {
+                    this.$el.focus();
+                }
+            });
+        },
 
-    addMatchingTag: function (tag) {
-      if (this.busy) {
-        return;
-      }
+        updateAuthInfo: function () {
+            this.canWrite = AuthController.CanWrite;
+        },
 
-      this.busy = true;
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-      const mediaId = AppStatus.CurrentMedia;
-
-      Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
-        .onSuccess((res) => {
-          AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
-          this.busy = false;
-          if (this.tags.indexOf(res.id) === -1) {
-            this.tags.push(res.id);
-          }
-          this.findTags();
-          TagsController.AddTag(res.id, res.name);
-          this.changed = true;
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              AppEvents.Emit("snack", this.$t("Invalid tag name"));
-            })
-            .add(401, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              AppEvents.Emit("snack", this.$t("Access denied"));
-            })
-            .add(404, "*", () => {
-              AppEvents.Emit("snack", this.$t("Not found"));
-            })
-            .add(500, "*", () => {
-              AppEvents.Emit("snack", this.$t("Internal server error"));
-            })
-            .add("*", "*", () => {
-              AppEvents.Emit(
-                "snack",
-                this.$t("Could not connect to the server")
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          AppEvents.Emit("snack", err.message);
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    onTagAddChanged: function () {
-      if (this.$options.findTagTimeout) {
-        return;
-      }
-      this.$options.findTagTimeout = setTimeout(() => {
-        this.$options.findTagTimeout = null;
-        this.findTags();
-      }, 200);
-    },
-
-    findTags: function () {
-      const tagFilter = this.tagToAdd
-        .replace(/[\n\r]/g, " ")
-        .trim()
-        .replace(/[\s]/g, "_")
-        .toLowerCase();
-      if (!tagFilter) {
-        this.matchingTags = Object.values(this.tagData)
-          .map((a: any) => {
-            return {
-              id: a.id,
-              name: a.name,
-            };
-          })
-          .filter((a) => {
-            if (this.tags.indexOf(a.id) >= 0) {
-              return false;
+        onClose: function () {
+            if (this.changed) {
+                MediaController.Load();
             }
-            return true
-          })
-          .sort((a, b) => {
-            if (a.name < b.name) {
-              return -1;
+        },
+
+        updateMediaData: function () {
+            this.mid = AppStatus.CurrentMedia;
+            this.load();
+        },
+
+        updateTagData: function () {
+            this.tagData = clone(TagsController.Tags);
+        },
+
+        getTagName: function (tag, data) {
+            if (data[tag + ""]) {
+                return data[tag + ""].name;
             } else {
-              return 1;
+                return "???";
             }
-          })
-          .slice(0, 10);
-      }
-      this.matchingTags = Object.values(this.tagData)
-        .map((a: any) => {
-          const i = a.name.indexOf(tagFilter);
-          return {
-            id: a.id,
-            name: a.name,
-            starts: i === 0,
-            contains: i >= 0,
-          };
-        })
-        .filter((a) => {
-          if (this.tags.indexOf(a.id) >= 0) {
-            return false;
-          }
-          return a.starts || a.contains;
-        })
-        .sort((a, b) => {
-          if (a.starts && !b.starts) {
-            return -1;
-          } else if (b.starts && !a.starts) {
-            return 1;
-          } else if (a.name < b.name) {
-            return -1;
-          } else {
-            return 1;
-          }
-        })
-        .slice(0, 10);
+        },
+
+        removeTag: function (tag) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const tagName = this.getTagName(tag, this.tagData);
+
+            Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
+                .onSuccess(() => {
+                    AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
+                    this.busy = false;
+                    for (let i = 0; i < this.tags.length; i++) {
+                        if (this.tags[i] === tag) {
+                            this.tags.splice(i, 1);
+                            break;
+                        }
+                    }
+                    this.changed = true;
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        addTag: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const tag = this.tagToAdd;
+
+            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    this.busy = false;
+                    this.tagToAdd = "";
+                    if (this.tags.indexOf(res.id) === -1) {
+                        this.tags.push(res.id);
+                    }
+                    this.findTags();
+                    TagsController.AddTag(res.id, res.name);
+                    this.changed = true;
+                    nextTick(() => {
+                        const elemFocus = this.$el.querySelector(".tag-to-add");
+
+                        if (elemFocus) {
+                            elemFocus.focus();
+                        }
+                    });
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        addMatchingTag: function (tag) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+                .onSuccess((res) => {
+                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    this.busy = false;
+                    if (this.tags.indexOf(res.id) === -1) {
+                        this.tags.push(res.id);
+                    }
+                    this.findTags();
+                    TagsController.AddTag(res.id, res.name);
+                    this.changed = true;
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                        })
+                        .add(401, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Access denied"));
+                        })
+                        .add(404, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Not found"));
+                        })
+                        .add(500, "*", () => {
+                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                        })
+                        .add("*", "*", () => {
+                            AppEvents.Emit(
+                                "snack",
+                                this.$t("Could not connect to the server")
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    AppEvents.Emit("snack", err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        onTagAddChanged: function () {
+            if (this.$options.findTagTimeout) {
+                return;
+            }
+            this.$options.findTagTimeout = setTimeout(() => {
+                this.$options.findTagTimeout = null;
+                this.findTags();
+            }, 200);
+        },
+
+        findTags: function () {
+            const tagFilter = this.tagToAdd
+                .replace(/[\n\r]/g, " ")
+                .trim()
+                .replace(/[\s]/g, "_")
+                .toLowerCase();
+            if (!tagFilter) {
+                this.matchingTags = Object.values(this.tagData)
+                    .map((a: any) => {
+                        return {
+                            id: a.id,
+                            name: a.name,
+                        };
+                    })
+                    .filter((a) => {
+                        if (this.tags.indexOf(a.id) >= 0) {
+                            return false;
+                        }
+                        return true
+                    })
+                    .sort((a, b) => {
+                        if (a.name < b.name) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    })
+                    .slice(0, 10);
+            }
+            this.matchingTags = Object.values(this.tagData)
+                .map((a: any) => {
+                    const i = a.name.indexOf(tagFilter);
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        starts: i === 0,
+                        contains: i >= 0,
+                    };
+                })
+                .filter((a) => {
+                    if (this.tags.indexOf(a.id) >= 0) {
+                        return false;
+                    }
+                    return a.starts || a.contains;
+                })
+                .sort((a, b) => {
+                    if (a.starts && !b.starts) {
+                        return -1;
+                    } else if (b.starts && !a.starts) {
+                        return 1;
+                    } else if (a.name < b.name) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                })
+                .slice(0, 10);
+        },
+
+        onTagAddKeyDown: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.addTag();
+            } else if (e.key === "Tab") {
+                e.preventDefault();
+                this.findTags();
+                if (this.matchingTags.length > 0) {
+                    this.tagToAdd = this.matchingTags[0].name;
+                }
+            }
+        },
     },
+    mounted: function () {
+        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
-    onTagAddKeyDown: function (e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        this.addTag();
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        this.findTags();
-        if (this.matchingTags.length > 0) {
-          this.tagToAdd = this.matchingTags[0].name;
-        }
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.tagUpdateH = this.updateTagData.bind(this);
-    AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
+        this.$options.mediaUpdateH = this.updateMediaData.bind(this);
 
-    this.$options.mediaUpdateH = this.updateMediaData.bind(this);
+        AppEvents.AddEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
+        );
 
-    AppEvents.AddEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-
-    this.updateTagData();
-    this.load();
-
-    if (this.display) {
-      this.autoFocus();
-      TagsController.Load();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-    AppEvents.RemoveEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
+        this.updateTagData();
         this.load();
-        TagsController.Load();
-      }
+
+        if (this.display) {
+            this.autoFocus();
+            TagsController.Load();
+        }
     },
-  },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+        AppEvents.RemoveEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
+        );
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+                this.load();
+                TagsController.Load();
+            }
+        },
+    },
 });
 </script>

@@ -27,50 +27,50 @@ import { defineComponent } from "vue";
 import { renderTimeSeconds } from "../../utils/time";
 
 export default defineComponent({
-  name: "PlayerMediaChangePreview",
-  emits: [],
-  props: {
-    media: Object,
-    next: Boolean,
-  },
-  data: function () {
-    return {
-      type: 0,
-      thumbnail: "",
-      title: "",
-      duration: 0,
-      width: 0,
-      height: 0,
-      fps: 0,
-    };
-  },
-  methods: {
-    getThumbnail(thumb: string) {
-      return GetAssetURL(thumb);
+    name: "PlayerMediaChangePreview",
+    emits: [],
+    props: {
+        media: Object,
+        next: Boolean,
     },
-    updateData: function () {
-      if (this.media) {
-        this.type = this.media.type;
-        this.thumbnail = this.media.thumbnail;
-        this.title = this.media.title;
-        this.width = this.media.width;
-        this.height = this.media.height;
-        this.fps = this.media.fps;
-        this.duration = this.media.duration;
-      }
+    data: function () {
+        return {
+            type: 0,
+            thumbnail: "",
+            title: "",
+            duration: 0,
+            width: 0,
+            height: 0,
+            fps: 0,
+        };
     },
-    renderDuration: function (s) {
-      return renderTimeSeconds(s);
+    methods: {
+        getThumbnail(thumb: string) {
+            return GetAssetURL(thumb);
+        },
+        updateData: function () {
+            if (this.media) {
+                this.type = this.media.type;
+                this.thumbnail = this.media.thumbnail;
+                this.title = this.media.title;
+                this.width = this.media.width;
+                this.height = this.media.height;
+                this.fps = this.media.fps;
+                this.duration = this.media.duration;
+            }
+        },
+        renderDuration: function (s) {
+            return renderTimeSeconds(s);
+        },
     },
-  },
-  mounted: function () {
-    this.updateData();
-  },
-  beforeUnmount: function () {},
-  watch: {
-    media: function () {
-      this.updateData();
+    mounted: function () {
+        this.updateData();
     },
-  },
+    beforeUnmount: function () {},
+    watch: {
+        media: function () {
+            this.updateData();
+        },
+    },
 });
 </script>

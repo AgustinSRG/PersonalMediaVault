@@ -65,155 +65,155 @@ import { KeyboardManager } from "@/control/keyboard";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
 const PageHome = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageHome.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageHome.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const PageSearch = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageSearch.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageSearch.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const PageUpload = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageUpload.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageUpload.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const PageRandom = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageRandom.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageRandom.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const PageAlbums = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageAlbums.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageAlbums.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const PageAdvancedSearch = defineAsyncComponent({
-  loader: () => import("@/components/pages/PageAdvancedSearch.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/pages/PageAdvancedSearch.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 export default defineComponent({
-  components: {
-    PageHome,
-    PageSearch,
-    PageAlbums,
-    PageUpload,
-    PageRandom,
-    PageAdvancedSearch,
-  },
-  name: "PageContent",
-  emits: [],
-  props: {
-    min: Boolean,
-  },
-  data: function () {
-    return {
-      isDisplayed:
+    components: {
+        PageHome,
+        PageSearch,
+        PageAlbums,
+        PageUpload,
+        PageRandom,
+        PageAdvancedSearch,
+    },
+    name: "PageContent",
+    emits: [],
+    props: {
+        min: Boolean,
+    },
+    data: function () {
+        return {
+            isDisplayed:
         (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) &&
         AppStatus.CurrentAlbum < 0,
-      page: AppStatus.CurrentPage,
-      search: AppStatus.CurrentSearch,
-    };
-  },
-  methods: {
-    updatePage: function () {
-      this.page = AppStatus.CurrentPage;
-      this.search = AppStatus.CurrentSearch;
-      this.isDisplayed =
+            page: AppStatus.CurrentPage,
+            search: AppStatus.CurrentSearch,
+        };
+    },
+    methods: {
+        updatePage: function () {
+            this.page = AppStatus.CurrentPage;
+            this.search = AppStatus.CurrentSearch;
+            this.isDisplayed =
         (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) &&
         AppStatus.CurrentAlbum < 0;
-    },
+        },
 
-    expandPage: function () {
-      AppStatus.ExpandPage();
-    },
+        expandPage: function () {
+            AppStatus.ExpandPage();
+        },
 
-    closePage: function () {
-      AppStatus.ClosePage();
-    },
+        closePage: function () {
+            AppStatus.ClosePage();
+        },
 
-    renderTitle: function (p, s) {
-      switch (p) {
-        case "home":
-          return this.$t("Home");
-        case "search":
-          return this.$t("Search results") + ": " + s;
-        case "adv-search":
-          return this.$t("Advanced search");
-        case "upload":
-          return this.$t("Upload media");
-        case "albums":
-          return this.$t("Albums list");
-        case "random":
-          return this.$t("Random results");
-        default:
-          return "";
-      }
-    },
+        renderTitle: function (p, s) {
+            switch (p) {
+            case "home":
+                return this.$t("Home");
+            case "search":
+                return this.$t("Search results") + ": " + s;
+            case "adv-search":
+                return this.$t("Advanced search");
+            case "upload":
+                return this.$t("Upload media");
+            case "albums":
+                return this.$t("Albums list");
+            case "random":
+                return this.$t("Random results");
+            default:
+                return "";
+            }
+        },
 
-    getIcon: function (p) {
-      switch (p) {
-        case "home":
-          return "fas fa-home";
-        case "search":
-        case "adv-search":
-          return "fas fa-search";
-        case "upload":
-          return "fas fa-upload";
-        case "albums":
-          return "fas fa-list";
-        case "random":
-          return "fas fa-shuffle";
-        default:
-          return "";
-      }
-    },
+        getIcon: function (p) {
+            switch (p) {
+            case "home":
+                return "fas fa-home";
+            case "search":
+            case "adv-search":
+                return "fas fa-search";
+            case "upload":
+                return "fas fa-upload";
+            case "albums":
+                return "fas fa-list";
+            case "random":
+                return "fas fa-shuffle";
+            default:
+                return "";
+            }
+        },
 
-    handleGlobalKey: function (event: KeyboardEvent): boolean {
-      if (
-        AuthController.Locked ||
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (
+                AuthController.Locked ||
         !AppStatus.IsPageVisible() ||
         !event.key ||
         event.ctrlKey
-      ) {
-        return false;
-      }
+            ) {
+                return false;
+            }
 
-      if (event.key.toUpperCase() === "Q") {
-        this.closePage();
-        return true;
-      }
+            if (event.key.toUpperCase() === "Q") {
+                this.closePage();
+                return true;
+            }
 
-      if (event.key.toUpperCase() === "BACKSPACE") {
-        this.expandPage();
-        return true;
-      }
+            if (event.key.toUpperCase() === "BACKSPACE") {
+                this.expandPage();
+                return true;
+            }
 
-      return false;
+            return false;
+        },
     },
-  },
-  mounted: function () {
-    this.$options.pageUpdater = this.updatePage.bind(this);
+    mounted: function () {
+        this.$options.pageUpdater = this.updatePage.bind(this);
 
-    AppEvents.AddEventListener("app-status-update", this.$options.pageUpdater);
+        AppEvents.AddEventListener("app-status-update", this.$options.pageUpdater);
 
-    this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-    KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.pageUpdater
-    );
-    KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
-  },
+        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
+    },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.pageUpdater
+        );
+        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+    },
 });
 </script>

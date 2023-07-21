@@ -28,50 +28,50 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "ReEncodeConfirmationModal",
-  emits: ["update:display", "confirm"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+    name: "ReEncodeConfirmationModal",
+    emits: ["update:display", "confirm"],
+    props: {
+        display: Boolean,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+            this.close();
+            this.$emit("confirm");
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
         }
-      });
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
     },
-
-    submit: function (e) {
-      e.preventDefault();
-      this.close();
-      this.$emit("confirm");
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

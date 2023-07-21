@@ -32,61 +32,61 @@ import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
 
 export default defineComponent({
-  name: "SearchInputModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      search: AppStatus.CurrentSearch,
+    name: "SearchInputModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+    },
+    data: function () {
+        return {
+            search: AppStatus.CurrentSearch,
 
-      busy: false,
-      error: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+            busy: false,
+            error: "",
+        };
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            AppEvents.Emit("search-modal-submit", this.search);
+            this.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.search = AppStatus.CurrentSearch;
+            this.autoFocus();
         }
-      });
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.search = AppStatus.CurrentSearch;
+                this.autoFocus();
+            }
+        },
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      AppEvents.Emit("search-modal-submit", this.search);
-      this.close();
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.search = AppStatus.CurrentSearch;
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.search = AppStatus.CurrentSearch;
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

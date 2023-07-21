@@ -126,350 +126,350 @@ import { AuthController } from "@/control/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 
 export default defineComponent({
-  components: {
-    ToggleSwitch,
-    SaveChangesAskModal,
-  },
-  name: "AdvancedSettingsModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      page: 'general',
-
-      dirty: false,
-      displayAskSave: false,
-
-      title: "",
-      css: "",
-      maxTasks: 0,
-      encodingThreads: 0,
-      videoPreviewsInterval: 0,
-      resolutions: [],
-      imageResolutions: [],
-
-      standardResolutions: [
-        {
-          name: "144p",
-          width: 256,
-          height: 144,
-          fps: 30,
-        },
-        {
-          name: "240p",
-          width: 352,
-          height: 240,
-          fps: 30,
-        },
-        {
-          name: "360p",
-          width: 480,
-          height: 360,
-          fps: 30,
-        },
-        {
-          name: "480p",
-          width: 858,
-          height: 480,
-          fps: 30,
-        },
-        {
-          name: "720p",
-          width: 1280,
-          height: 720,
-          fps: 30,
-        },
-        {
-          name: "720p60",
-          width: 1280,
-          height: 720,
-          fps: 60,
-        },
-        {
-          name: "1080p",
-          width: 1920,
-          height: 1080,
-          fps: 30,
-        },
-        {
-          name: "1080p60",
-          width: 1920,
-          height: 1080,
-          fps: 60,
-        },
-        {
-          name: "2k",
-          width: 2048,
-          height: 1152,
-          fps: 30,
-        },
-        {
-          name: "2k60",
-          width: 2048,
-          height: 1152,
-          fps: 60,
-        },
-        {
-          name: "4k",
-          width: 3860,
-          height: 2160,
-          fps: 30,
-        },
-        {
-          name: "4k60",
-          width: 3860,
-          height: 2160,
-          fps: 60,
-        },
-      ],
-
-      loading: true,
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-        }
-      });
+    components: {
+        ToggleSwitch,
+        SaveChangesAskModal,
     },
-
-    askClose: function (callback: () => void) {
-      if (this.dirty) {
-        this.displayAskSave = true;
-      } else {
-        callback();
-      }
+    name: "AdvancedSettingsModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-
-    changePage: function (page: string) {
-      this.page = page;
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    data: function () {
+        return {
+            page: 'general',
 
-    onChangesMade: function () {
-      this.dirty = true;
+            dirty: false,
+            displayAskSave: false,
+
+            title: "",
+            css: "",
+            maxTasks: 0,
+            encodingThreads: 0,
+            videoPreviewsInterval: 0,
+            resolutions: [],
+            imageResolutions: [],
+
+            standardResolutions: [
+                {
+                    name: "144p",
+                    width: 256,
+                    height: 144,
+                    fps: 30,
+                },
+                {
+                    name: "240p",
+                    width: 352,
+                    height: 240,
+                    fps: 30,
+                },
+                {
+                    name: "360p",
+                    width: 480,
+                    height: 360,
+                    fps: 30,
+                },
+                {
+                    name: "480p",
+                    width: 858,
+                    height: 480,
+                    fps: 30,
+                },
+                {
+                    name: "720p",
+                    width: 1280,
+                    height: 720,
+                    fps: 30,
+                },
+                {
+                    name: "720p60",
+                    width: 1280,
+                    height: 720,
+                    fps: 60,
+                },
+                {
+                    name: "1080p",
+                    width: 1920,
+                    height: 1080,
+                    fps: 30,
+                },
+                {
+                    name: "1080p60",
+                    width: 1920,
+                    height: 1080,
+                    fps: 60,
+                },
+                {
+                    name: "2k",
+                    width: 2048,
+                    height: 1152,
+                    fps: 30,
+                },
+                {
+                    name: "2k60",
+                    width: 2048,
+                    height: 1152,
+                    fps: 60,
+                },
+                {
+                    name: "4k",
+                    width: 3860,
+                    height: 2160,
+                    fps: 30,
+                },
+                {
+                    name: "4k60",
+                    width: 3860,
+                    height: 2160,
+                    fps: 60,
+                },
+            ],
+
+            loading: true,
+            busy: false,
+            error: "",
+        };
     },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
 
-    updateResolutions: function (resolutions, imageResolutions) {
-      this.resolutions = this.standardResolutions.map((r) => {
-        let enabled = false;
-        for (let res of resolutions) {
-          if (
-            res.width === r.width &&
+        askClose: function (callback: () => void) {
+            if (this.dirty) {
+                this.displayAskSave = true;
+            } else {
+                callback();
+            }
+        },
+
+        changePage: function (page: string) {
+            this.page = page;
+        },
+
+        onChangesMade: function () {
+            this.dirty = true;
+        },
+
+        updateResolutions: function (resolutions, imageResolutions) {
+            this.resolutions = this.standardResolutions.map((r) => {
+                let enabled = false;
+                for (let res of resolutions) {
+                    if (
+                        res.width === r.width &&
             res.height === r.height &&
             res.fps === r.fps
-          ) {
-            enabled = true;
-            break;
-          }
-        }
-        return {
-          enabled: enabled,
-          name: r.name,
-          width: r.width,
-          height: r.height,
-          fps: r.fps,
-        };
-      });
+                    ) {
+                        enabled = true;
+                        break;
+                    }
+                }
+                return {
+                    enabled: enabled,
+                    name: r.name,
+                    width: r.width,
+                    height: r.height,
+                    fps: r.fps,
+                };
+            });
 
-      this.imageResolutions = this.standardResolutions
-        .filter((r) => {
-          return r.fps === 30;
-        })
-        .map((r) => {
-          let enabled = false;
-          for (let res of imageResolutions) {
-            if (res.width === r.width && res.height === r.height) {
-              enabled = true;
-              break;
+            this.imageResolutions = this.standardResolutions
+                .filter((r) => {
+                    return r.fps === 30;
+                })
+                .map((r) => {
+                    let enabled = false;
+                    for (let res of imageResolutions) {
+                        if (res.width === r.width && res.height === r.height) {
+                            enabled = true;
+                            break;
+                        }
+                    }
+                    return {
+                        enabled: enabled,
+                        name: r.name,
+                        width: r.width,
+                        height: r.height,
+                    };
+                });
+        },
+
+        getResolutions: function () {
+            return this.resolutions
+                .filter((r) => {
+                    return r.enabled;
+                })
+                .map((r) => {
+                    return {
+                        width: r.width,
+                        height: r.height,
+                        fps: r.fps,
+                    };
+                });
+        },
+
+        getImageResolutions: function () {
+            return this.imageResolutions
+                .filter((r) => {
+                    return r.enabled;
+                })
+                .map((r) => {
+                    return {
+                        width: r.width,
+                        height: r.height,
+                    };
+                });
+        },
+
+        load: function () {
+            Timeouts.Abort("advanced-settings");
+            Request.Abort("advanced-settings");
+
+            if (!this.display) {
+                return;
             }
-          }
-          return {
-            enabled: enabled,
-            name: r.name,
-            width: r.width,
-            height: r.height,
-          };
-        });
+
+            this.loading = true;
+
+            Request.Pending("advanced-settings", ConfigAPI.GetConfig())
+                .onSuccess((response: VaultUserConfig) => {
+                    this.title = response.title;
+                    this.css = response.css;
+                    this.maxTasks = response.max_tasks;
+                    this.encodingThreads = response.encoding_threads;
+                    this.videoPreviewsInterval = response.video_previews_interval;
+                    this.updateResolutions(
+                        response.resolutions,
+                        response.image_resolutions
+                    );
+                    this.loading = false;
+
+                    this.autoFocus();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized");
+                            // Retry
+                            Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                });
+        },
+
+        submit: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
+
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(
+                ConfigAPI.SetConfig({
+                    title: this.title,
+                    css: this.css,
+                    max_tasks: this.maxTasks,
+                    encoding_threads: this.encodingThreads,
+                    resolutions: this.getResolutions(),
+                    image_resolutions: this.getImageResolutions(),
+                    video_previews_interval: this.videoPreviewsInterval,
+                })
+            )
+                .onSuccess(() => {
+                    this.busy = false;
+                    this.dirty = false;
+                    AppEvents.Emit("snack", this.$t("Vault configuration updated!"));
+                    AuthController.CheckAuthStatus();
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid configuration provided");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        closeForced: function () {
+            this.$refs.modalContainer.close(true);
+        },
     },
-
-    getResolutions: function () {
-      return this.resolutions
-        .filter((r) => {
-          return r.enabled;
-        })
-        .map((r) => {
-          return {
-            width: r.width,
-            height: r.height,
-            fps: r.fps,
-          };
-        });
-    },
-
-    getImageResolutions: function () {
-      return this.imageResolutions
-        .filter((r) => {
-          return r.enabled;
-        })
-        .map((r) => {
-          return {
-            width: r.width,
-            height: r.height,
-          };
-        });
-    },
-
-    load: function () {
-      Timeouts.Abort("advanced-settings");
-      Request.Abort("advanced-settings");
-
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      Request.Pending("advanced-settings", ConfigAPI.GetConfig())
-        .onSuccess((response: VaultUserConfig) => {
-          this.title = response.title;
-          this.css = response.css;
-          this.maxTasks = response.max_tasks;
-          this.encodingThreads = response.encoding_threads;
-          this.videoPreviewsInterval = response.video_previews_interval;
-          this.updateResolutions(
-            response.resolutions,
-            response.image_resolutions
-          );
-          this.loading = false;
-
-          this.autoFocus();
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized");
-              // Retry
-              Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
-        });
-    },
-
-    submit: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(
-        ConfigAPI.SetConfig({
-          title: this.title,
-          css: this.css,
-          max_tasks: this.maxTasks,
-          encoding_threads: this.encodingThreads,
-          resolutions: this.getResolutions(),
-          image_resolutions: this.getImageResolutions(),
-          video_previews_interval: this.videoPreviewsInterval,
-        })
-      )
-        .onSuccess(() => {
-          this.busy = false;
-          this.dirty = false;
-          AppEvents.Emit("snack", this.$t("Vault configuration updated!"));
-          AuthController.CheckAuthStatus();
-          this.close();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid configuration provided");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
-    },
-
-    close: function () {
-      this.$refs.modalContainer.close();
-    },
-
-    closeForced: function () {
-      this.$refs.modalContainer.close(true);
-    },
-  },
-  mounted: function () {
-    this.load();
-    if (this.display) {
-      this.error = "";
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  beforeUnmount: function () {
-    Timeouts.Abort("advanced-settings");
-    Request.Abort("advanced-settings");
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        nextTick(() => {
-          this.$el.focus();
-        });
-        this.dirty = false;
-        this.displayAskSave = false;
+    mounted: function () {
         this.load();
-      }
+        if (this.display) {
+            this.error = "";
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
     },
-  },
+    beforeUnmount: function () {
+        Timeouts.Abort("advanced-settings");
+        Request.Abort("advanced-settings");
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.dirty = false;
+                this.displayAskSave = false;
+                this.load();
+            }
+        },
+    },
 });
 </script>

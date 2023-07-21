@@ -23,27 +23,27 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
 const EmptyPlayer = defineAsyncComponent({
-  loader: () => import("@/components/player/EmptyPlayer.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/player/EmptyPlayer.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const AudioPlayer = defineAsyncComponent({
-  loader: () => import("@/components/player/AudioPlayer.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/player/AudioPlayer.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 })
 
 const VideoPlayer = defineAsyncComponent({
-  loader: () => import("@/components/player/VideoPlayer.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/player/VideoPlayer.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 })
 
 const ImagePlayer = defineAsyncComponent({
-  loader: () => import("@/components/player/ImagePlayer.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/player/ImagePlayer.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 })
 
 import { AlbumsController } from "@/control/albums";
@@ -53,254 +53,254 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 
 const AlbumListModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/AlbumListModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/AlbumListModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const SizeStatsModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/SizeStatsModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/SizeStatsModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const TagListModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/TagListModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/TagListModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const ExtendedDescriptionModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/ExtendedDescriptionModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/ExtendedDescriptionModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 export default defineComponent({
-  name: "PlayerContainer",
-  emits: [],
-  components: {
-    EmptyPlayer,
-    AudioPlayer,
-    VideoPlayer,
-    ImagePlayer,
-    AlbumListModal,
-    SizeStatsModal,
-    TagListModal,
-    ExtendedDescriptionModal,
-  },
-  data: function () {
-    return {
-      tick: 0,
-      status: "loading",
-      loading: MediaController.Loading,
-      mid: MediaController.MediaId,
-      mediaData: MediaController.MediaData,
-
-      fullScreen: false,
-      showControls: true,
-
-      prev: AlbumsController.CurrentPrev,
-      next: AlbumsController.CurrentNext,
-      isInAlbum: AppStatus.CurrentAlbum >= 0,
-      albumLoading: AlbumsController.CurrentAlbumLoading,
-
-      canWrite: AuthController.CanWrite,
-
-      displayAlbumList: false,
-      displaySizeStats: false,
-      displayTagList: false,
-      displayExtendedDescription: false,
-
-      hasPagePrev: AlbumsController.HasPagePrev,
-      hasPageNext: AlbumsController.HasPageNext,
-
-      minPlayer: false,
-    };
-  },
-  methods: {
-    updateMedia: function () {
-      this.mid = MediaController.MediaId;
-      if (MediaController.MediaData !== this.mediaData) {
-        this.mediaData = MediaController.MediaData;
-        this.tick++;
-      }
-      this.updateStatus();
+    name: "PlayerContainer",
+    emits: [],
+    components: {
+        EmptyPlayer,
+        AudioPlayer,
+        VideoPlayer,
+        ImagePlayer,
+        AlbumListModal,
+        SizeStatsModal,
+        TagListModal,
+        ExtendedDescriptionModal,
     },
+    data: function () {
+        return {
+            tick: 0,
+            status: "loading",
+            loading: MediaController.Loading,
+            mid: MediaController.MediaId,
+            mediaData: MediaController.MediaData,
 
-    updateLoading: function (l) {
-      this.loading = l;
-      this.updateStatus();
+            fullScreen: false,
+            showControls: true,
+
+            prev: AlbumsController.CurrentPrev,
+            next: AlbumsController.CurrentNext,
+            isInAlbum: AppStatus.CurrentAlbum >= 0,
+            albumLoading: AlbumsController.CurrentAlbumLoading,
+
+            canWrite: AuthController.CanWrite,
+
+            displayAlbumList: false,
+            displaySizeStats: false,
+            displayTagList: false,
+            displayExtendedDescription: false,
+
+            hasPagePrev: AlbumsController.HasPagePrev,
+            hasPageNext: AlbumsController.HasPageNext,
+
+            minPlayer: false,
+        };
     },
+    methods: {
+        updateMedia: function () {
+            this.mid = MediaController.MediaId;
+            if (MediaController.MediaData !== this.mediaData) {
+                this.mediaData = MediaController.MediaData;
+                this.tick++;
+            }
+            this.updateStatus();
+        },
 
-    updateAlbumsLoading: function (l) {
-      this.albumLoading = l;
+        updateLoading: function (l) {
+            this.loading = l;
+            this.updateStatus();
+        },
+
+        updateAlbumsLoading: function (l) {
+            this.albumLoading = l;
+        },
+
+        updateStatus: function () {
+            if (this.loading) {
+                this.status = "loading";
+            } else if (this.mediaData) {
+                this.status = "200";
+            } else if (this.mid === -1) {
+                this.status = "none";
+            } else {
+                this.status = "404";
+            }
+        },
+
+        openAlbums: function () {
+            this.displayAlbumList = true;
+        },
+
+        openStats: function () {
+            this.displaySizeStats = true;
+        },
+
+        openTags: function () {
+            this.displayTagList = true;
+        },
+
+        openExtendedDescription: function () {
+            this.displayExtendedDescription = true;
+        },
+
+        goNext: function () {
+            if (this.next) {
+                AppStatus.ClickOnMedia(this.next.id, false);
+            } else if (this.hasPageNext) {
+                AppEvents.Emit("page-media-nav-next");
+            }
+        },
+
+        goPrev: function () {
+            if (this.prev) {
+                AppStatus.ClickOnMedia(this.prev.id, false);
+            } else if (this.hasPagePrev) {
+                AppEvents.Emit("page-media-nav-prev");
+            }
+        },
+
+        onAlbumPosUpdate: function () {
+            this.prev = AlbumsController.CurrentPrev;
+            this.next = AlbumsController.CurrentNext;
+            this.isInAlbum = AppStatus.CurrentAlbum >= 0;
+        },
+
+        onPagePosUpdate: function () {
+            this.hasPagePrev = AlbumsController.HasPagePrev;
+            this.hasPageNext = AlbumsController.HasPageNext;
+        },
+
+        updateAuthInfo: function () {
+            this.canWrite = AuthController.CanWrite;
+        },
+
+        onUpdateFullScreen: function () {
+            if (this.fullScreen) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+
+        focusLost: function () {
+            closeFullscreen();
+        },
+
+        checkPlayerSize() {
+            const rect = this.$el.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            if (width < 480 || height < 360) {
+                this.minPlayer = true;
+            } else {
+                this.minPlayer = false;
+            }
+        },
     },
+    mounted: function () {
+        this.$options.loadingH = this.updateLoading.bind(this);
+        this.$options.updateH = this.updateMedia.bind(this);
 
-    updateStatus: function () {
-      if (this.loading) {
-        this.status = "loading";
-      } else if (this.mediaData) {
-        this.status = "200";
-      } else if (this.mid === -1) {
-        this.status = "none";
-      } else {
-        this.status = "404";
-      }
+        this.$options.focusTrap = new FocusTrap(
+            this.$el,
+            this.focusLost.bind(this)
+        );
+
+        this.$options.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
+        this.checkPlayerSize();
+
+        this.updateStatus();
+
+        AppEvents.AddEventListener("current-media-loading", this.$options.loadingH);
+        AppEvents.AddEventListener("current-media-update", this.$options.updateH);
+
+        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+
+        this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+        AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+
+        this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
+        AppEvents.AddEventListener(
+            "current-album-loading",
+            this.$options.albumLoadingH
+        );
+
+        this.$options.goPrevH = this.goPrev.bind(this);
+        AppEvents.AddEventListener("media-go-prev", this.$options.goPrevH);
+
+        this.$options.goNextH = this.goNext.bind(this);
+        AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
     },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "current-media-loading",
+            this.$options.loadingH
+        );
+        AppEvents.RemoveEventListener(
+            "current-media-update",
+            this.$options.updateH
+        );
 
-    openAlbums: function () {
-      this.displayAlbumList = true;
-    },
+        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+        AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
 
-    openStats: function () {
-      this.displaySizeStats = true;
-    },
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    openTags: function () {
-      this.displayTagList = true;
-    },
+        AppEvents.RemoveEventListener(
+            "current-album-loading",
+            this.$options.albumLoadingH
+        );
 
-    openExtendedDescription: function () {
-      this.displayExtendedDescription = true;
-    },
+        AppEvents.RemoveEventListener("media-go-prev", this.$options.goPrevH);
+        AppEvents.RemoveEventListener("media-go-next", this.$options.goNextH);
 
-    goNext: function () {
-      if (this.next) {
-        AppStatus.ClickOnMedia(this.next.id, false);
-      } else if (this.hasPageNext) {
-        AppEvents.Emit("page-media-nav-next");
-      }
-    },
-
-    goPrev: function () {
-      if (this.prev) {
-        AppStatus.ClickOnMedia(this.prev.id, false);
-      } else if (this.hasPagePrev) {
-        AppEvents.Emit("page-media-nav-prev");
-      }
-    },
-
-    onAlbumPosUpdate: function () {
-      this.prev = AlbumsController.CurrentPrev;
-      this.next = AlbumsController.CurrentNext;
-      this.isInAlbum = AppStatus.CurrentAlbum >= 0;
-    },
-
-    onPagePosUpdate: function () {
-      this.hasPagePrev = AlbumsController.HasPagePrev;
-      this.hasPageNext = AlbumsController.HasPageNext;
-    },
-
-    updateAuthInfo: function () {
-      this.canWrite = AuthController.CanWrite;
-    },
-
-    onUpdateFullScreen: function () {
-      if (this.fullScreen) {
         if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+            this.$options.focusTrap.destroy();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
+
+        clearInterval(this.$options.timer);
     },
-
-    focusLost: function () {
-      closeFullscreen();
-    },
-
-    checkPlayerSize() {
-      const rect = this.$el.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
-
-      if (width < 480 || height < 360) {
-        this.minPlayer = true;
-      } else {
-        this.minPlayer = false;
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.loadingH = this.updateLoading.bind(this);
-    this.$options.updateH = this.updateMedia.bind(this);
-
-    this.$options.focusTrap = new FocusTrap(
-      this.$el,
-      this.focusLost.bind(this)
-    );
-
-    this.$options.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
-    this.checkPlayerSize();
-
-    this.updateStatus();
-
-    AppEvents.AddEventListener("current-media-loading", this.$options.loadingH);
-    AppEvents.AddEventListener("current-media-update", this.$options.updateH);
-
-    this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-    AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
-
-    this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-    AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
-
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
-
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
-    AppEvents.AddEventListener(
-      "current-album-loading",
-      this.$options.albumLoadingH
-    );
-
-    this.$options.goPrevH = this.goPrev.bind(this);
-    AppEvents.AddEventListener("media-go-prev", this.$options.goPrevH);
-
-    this.$options.goNextH = this.goNext.bind(this);
-    AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "current-media-loading",
-      this.$options.loadingH
-    );
-    AppEvents.RemoveEventListener(
-      "current-media-update",
-      this.$options.updateH
-    );
-
-    AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
-    AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
-
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    AppEvents.RemoveEventListener(
-      "current-album-loading",
-      this.$options.albumLoadingH
-    );
-
-    AppEvents.RemoveEventListener("media-go-prev", this.$options.goPrevH);
-    AppEvents.RemoveEventListener("media-go-next", this.$options.goNextH);
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-
-    clearInterval(this.$options.timer);
-  },
 });
 </script>
 

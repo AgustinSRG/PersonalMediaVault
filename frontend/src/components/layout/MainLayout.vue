@@ -74,335 +74,335 @@ import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 
 const PlayerContainer = defineAsyncComponent({
-  loader: () => import("@/components/layout/PlayerContainer.vue"),
-  loadingComponent: PlayerContainerLoader,
-  delay: 200,
+    loader: () => import("@/components/layout/PlayerContainer.vue"),
+    loadingComponent: PlayerContainerLoader,
+    delay: 200,
 });
 
 const AlbumContainer = defineAsyncComponent({
-  loader: () => import("@/components/layout/AlbumContainer.vue"),
-  loadingComponent: AlbumContainerLoader,
-  delay: 200,
+    loader: () => import("@/components/layout/AlbumContainer.vue"),
+    loadingComponent: AlbumContainerLoader,
+    delay: 200,
 });
 
 const PageContent = defineAsyncComponent({
-  loader: () => import("@/components/layout/PageContent.vue"),
-  loadingComponent: PageContentLoader,
-  delay: 200,
+    loader: () => import("@/components/layout/PageContent.vue"),
+    loadingComponent: PageContentLoader,
+    delay: 200,
 });
 
 const LoginModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/LoginModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 200,
+    loader: () => import("@/components/modals/LoginModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
 });
 
 const LogoutModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/LogoutModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/LogoutModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const SettingsDropdown = defineAsyncComponent({
-  loader: () => import("@/components/dropdowns/SettingsDropdown.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/dropdowns/SettingsDropdown.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const LanguageDropdown = defineAsyncComponent({
-  loader: () => import("@/components/dropdowns/LanguageDropdown.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/dropdowns/LanguageDropdown.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const ThemeDropdown = defineAsyncComponent({
-  loader: () => import("@/components/dropdowns/ThemeDropdown.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/dropdowns/ThemeDropdown.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const ChangeUsernameModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/ChangeUsernameModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/ChangeUsernameModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const ChangePasswordModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/ChangePasswordModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/ChangePasswordModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const AdvancedSettingsModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/AdvancedSettingsModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/AdvancedSettingsModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const AccountsAdminModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/AccountsAdminModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/AccountsAdminModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const TaskListModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/TaskListModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/TaskListModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const SearchInputModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/SearchInputModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/SearchInputModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const HelpHubDropdown = defineAsyncComponent({
-  loader: () => import("@/components/dropdowns/HelpHubDropdown.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/dropdowns/HelpHubDropdown.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const AboutModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/AboutModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/AboutModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const KeyboardGuideModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/KeyboardGuideModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/KeyboardGuideModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 const BatchOperationModal = defineAsyncComponent({
-  loader: () => import("@/components/modals/BatchOperationModal.vue"),
-  loadingComponent: LoadingOverlay,
-  delay: 1000,
+    loader: () => import("@/components/modals/BatchOperationModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
 });
 
 export default defineComponent({
-  components: {
-    TopBar,
-    BottomBar,
-    SideBar,
-    PageContent,
-    AlbumContainer,
-    PlayerContainer,
-    LoadingOverlay,
-    LoginModal,
-    LogoutModal,
-    SettingsDropdown,
-    LanguageDropdown,
-    ThemeDropdown,
-    ChangeUsernameModal,
-    ChangePasswordModal,
-    AdvancedSettingsModal,
-    AccountsAdminModal,
-    TaskListModal,
-    SearchInputModal,
-    HelpHubDropdown,
-    AboutModal,
-    KeyboardGuideModal,
-    BatchOperationModal,
-    SnackBar,
-  },
-  name: "MainLayout",
-  data: function () {
-    return {
-      theme: AppPreferences.Theme,
-
-      locked: AuthController.Locked,
-      loadingAuth: AuthController.Loading,
-
-      layout: AppStatus.CurrentLayout,
-      focus: AppStatus.CurrentFocus,
-
-      loadingTags: TagsController.Loading,
-      loadingAlbums: AlbumsController.Loading,
-
-      displayLogout: false,
-      displaySettings: false,
-      displayTheme: false,
-      displayLang: false,
-      displayUsernameModal: false,
-      displayPasswordModal: false,
-      displayAdvancedSettings: false,
-      displayBatchOperation: false,
-
-      displayAccountAdmin: false,
-
-      displayTaskList: false,
-
-      displaySearchModal: false,
-
-      displaySidebar: true,
-
-      displayHelpModal: false,
-
-      displayAboutModal: false,
-      displayKeyboardHelpModal: false,
-    };
-  },
-  methods: {
-    logout: function () {
-      this.displayLogout = true;
+    components: {
+        TopBar,
+        BottomBar,
+        SideBar,
+        PageContent,
+        AlbumContainer,
+        PlayerContainer,
+        LoadingOverlay,
+        LoginModal,
+        LogoutModal,
+        SettingsDropdown,
+        LanguageDropdown,
+        ThemeDropdown,
+        ChangeUsernameModal,
+        ChangePasswordModal,
+        AdvancedSettingsModal,
+        AccountsAdminModal,
+        TaskListModal,
+        SearchInputModal,
+        HelpHubDropdown,
+        AboutModal,
+        KeyboardGuideModal,
+        BatchOperationModal,
+        SnackBar,
     },
+    name: "MainLayout",
+    data: function () {
+        return {
+            theme: AppPreferences.Theme,
 
-    showSettings: function () {
-      this.displaySettings = !this.displaySettings;
-      this.displayHelpModal = false;
-      this.displayTheme = false;
-      this.displayLang = false;
+            locked: AuthController.Locked,
+            loadingAuth: AuthController.Loading,
+
+            layout: AppStatus.CurrentLayout,
+            focus: AppStatus.CurrentFocus,
+
+            loadingTags: TagsController.Loading,
+            loadingAlbums: AlbumsController.Loading,
+
+            displayLogout: false,
+            displaySettings: false,
+            displayTheme: false,
+            displayLang: false,
+            displayUsernameModal: false,
+            displayPasswordModal: false,
+            displayAdvancedSettings: false,
+            displayBatchOperation: false,
+
+            displayAccountAdmin: false,
+
+            displayTaskList: false,
+
+            displaySearchModal: false,
+
+            displaySidebar: true,
+
+            displayHelpModal: false,
+
+            displayAboutModal: false,
+            displayKeyboardHelpModal: false,
+        };
     },
+    methods: {
+        logout: function () {
+            this.displayLogout = true;
+        },
 
-    showHelp: function () {
-      this.displayHelpModal = !this.displayHelpModal;
-      this.displaySettings = false;
-      this.displayTheme = false;
-      this.displayLang = false;
+        showSettings: function () {
+            this.displaySettings = !this.displaySettings;
+            this.displayHelpModal = false;
+            this.displayTheme = false;
+            this.displayLang = false;
+        },
+
+        showHelp: function () {
+            this.displayHelpModal = !this.displayHelpModal;
+            this.displaySettings = false;
+            this.displayTheme = false;
+            this.displayLang = false;
+        },
+
+        onGoSettings: function (o: string) {
+            switch (o) {
+            case "theme":
+                this.displayTheme = true;
+                break;
+            case "lang":
+                this.displayLang = true;
+                break;
+            case "username":
+                this.displayUsernameModal = true;
+                break;
+            case "password":
+                this.displayPasswordModal = true;
+                break;
+            case "advanced":
+                this.displayAdvancedSettings = true;
+                break;
+            case "batch":
+                this.displayBatchOperation = true;
+                break;
+            case "tasks":
+                this.displayTaskList = true;
+                break;
+            case "admin":
+                this.displayAccountAdmin = true;
+                break;
+            }
+        },
+
+        onGoHelp: function (o: string) {
+            switch (o) {
+            case "about":
+                this.displayAboutModal = true;
+                break;
+            case "keyboard":
+                this.displayKeyboardHelpModal = true;
+                break;
+            }
+        },
+
+        toggleSidebar: function () {
+            this.displaySidebar = !this.displaySidebar;
+        },
+
+        hideSidebar: function () {
+            this.displaySidebar = false;
+        },
+
+        openSearchModal: function () {
+            this.displaySearchModal = true;
+        },
+
+        skipToMainContent: function (event) {
+            if (event) {
+                event.preventDefault();
+            }
+            let skipTo = null;
+            switch (AppStatus.CurrentLayout) {
+            case "media":
+            case "media-split":
+            case "album":
+                skipTo = this.$el.querySelector(".player-container");
+                break;
+            default:
+                skipTo = this.$el.querySelector(".page-content");
+            }
+            if (skipTo) {
+                skipTo.focus();
+            }
+        },
+
+        onThemeChanged: function () {
+            this.theme = AppPreferences.Theme;
+        },
+
+        onAppStatusUpdate: function () {
+            this.layout = AppStatus.CurrentLayout;
+            this.focus = AppStatus.CurrentFocus;
+        },
+
+        onAuthStatusChanged: function (locked: boolean) {
+            this.locked = locked;
+
+            if (this.locked) {
+                // Close all modals
+                this.displayLogout = false;
+                this.displaySettings = false;
+                this.displayTheme = false;
+                this.displayLang = false;
+                this.displayUsernameModal = false;
+                this.displayPasswordModal = false;
+                this.displayAdvancedSettings = false;
+                this.displayBatchOperation = false;
+
+                this.displayAlbumCreate = false;
+
+                this.displayAccountAdmin = false;
+
+                this.displaySearchModal = false;
+            }
+        },
+
+        onAuthStatusLoading: function (l: boolean) {
+            this.loadingAuth = l;
+        },
+
+        onTagsLoading: function (l: boolean) {
+            this.loadingTags = l && !TagsController.InitiallyLoaded;
+        },
+
+        onAlbumsLoading: function (l: boolean) {
+            this.loadingAlbums = l && !AlbumsController.InitiallyLoaded;
+        },
     },
+    mounted: function () {
+        this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
+        AppEvents.AddEventListener("theme-changed", this.$options.onThemeChangedH);
 
-    onGoSettings: function (o: string) {
-      switch (o) {
-        case "theme":
-          this.displayTheme = true;
-          break;
-        case "lang":
-          this.displayLang = true;
-          break;
-        case "username":
-          this.displayUsernameModal = true;
-          break;
-        case "password":
-          this.displayPasswordModal = true;
-          break;
-        case "advanced":
-          this.displayAdvancedSettings = true;
-          break;
-        case "batch":
-          this.displayBatchOperation = true;
-          break;
-        case "tasks":
-          this.displayTaskList = true;
-          break;
-        case "admin":
-          this.displayAccountAdmin = true;
-          break;
-      }
+        this.$options.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
+        AppEvents.AddEventListener("app-status-update", this.$options.onAppStatusUpdateH);
+
+        this.$options.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
+        AppEvents.AddEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
+
+        this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
+        AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+
+        this.$options.onTagsLoadingH = this.onTagsLoading.bind(this);
+        AppEvents.AddEventListener("tags-loading", this.$options.onTagsLoadingH);
+
+        this.$options.onAlbumsLoadingH = this.onAlbumsLoading.bind(this);
+        AppEvents.AddEventListener("albums-loading", this.$options.onAlbumsLoadingH);
     },
-
-    onGoHelp: function (o: string) {
-      switch (o) {
-        case "about":
-          this.displayAboutModal = true;
-          break;
-        case "keyboard":
-          this.displayKeyboardHelpModal = true;
-          break;
-      }
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
+        AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
+        AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+        AppEvents.RemoveEventListener("tags-loading", this.$options.onTagsLoadingH);
+        AppEvents.RemoveEventListener("albums-loading", this.$options.onAlbumsLoadingH);
     },
-
-    toggleSidebar: function () {
-      this.displaySidebar = !this.displaySidebar;
-    },
-
-    hideSidebar: function () {
-      this.displaySidebar = false;
-    },
-
-    openSearchModal: function () {
-      this.displaySearchModal = true;
-    },
-
-    skipToMainContent: function (event) {
-      if (event) {
-        event.preventDefault();
-      }
-      let skipTo = null;
-      switch (AppStatus.CurrentLayout) {
-        case "media":
-        case "media-split":
-        case "album":
-          skipTo = this.$el.querySelector(".player-container");
-          break;
-        default:
-          skipTo = this.$el.querySelector(".page-content");
-      }
-      if (skipTo) {
-        skipTo.focus();
-      }
-    },
-
-    onThemeChanged: function () {
-      this.theme = AppPreferences.Theme;
-    },
-
-    onAppStatusUpdate: function () {
-      this.layout = AppStatus.CurrentLayout;
-      this.focus = AppStatus.CurrentFocus;
-    },
-
-    onAuthStatusChanged: function (locked: boolean) {
-      this.locked = locked;
-
-      if (this.locked) {
-        // Close all modals
-        this.displayLogout = false;
-        this.displaySettings = false;
-        this.displayTheme = false;
-        this.displayLang = false;
-        this.displayUsernameModal = false;
-        this.displayPasswordModal = false;
-        this.displayAdvancedSettings = false;
-        this.displayBatchOperation = false;
-
-        this.displayAlbumCreate = false;
-
-        this.displayAccountAdmin = false;
-
-        this.displaySearchModal = false;
-      }
-    },
-
-    onAuthStatusLoading: function (l: boolean) {
-      this.loadingAuth = l;
-    },
-
-    onTagsLoading: function (l: boolean) {
-      this.loadingTags = l && !TagsController.InitiallyLoaded;
-    },
-
-    onAlbumsLoading: function (l: boolean) {
-      this.loadingAlbums = l && !AlbumsController.InitiallyLoaded;
-    },
-  },
-  mounted: function () {
-    this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
-    AppEvents.AddEventListener("theme-changed", this.$options.onThemeChangedH);
-
-    this.$options.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
-    AppEvents.AddEventListener("app-status-update", this.$options.onAppStatusUpdateH);
-
-    this.$options.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
-    AppEvents.AddEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
-
-    this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
-    AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
-
-    this.$options.onTagsLoadingH = this.onTagsLoading.bind(this);
-    AppEvents.AddEventListener("tags-loading", this.$options.onTagsLoadingH);
-
-    this.$options.onAlbumsLoadingH = this.onAlbumsLoading.bind(this);
-    AppEvents.AddEventListener("albums-loading", this.$options.onAlbumsLoadingH);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
-    AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
-    AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
-    AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
-    AppEvents.RemoveEventListener("tags-loading", this.$options.onTagsLoadingH);
-    AppEvents.RemoveEventListener("albums-loading", this.$options.onAlbumsLoadingH);
-  },
 });
 </script>

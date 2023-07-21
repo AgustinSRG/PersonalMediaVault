@@ -86,310 +86,310 @@ import { useVModel } from "../../utils/v-model";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 
 export default defineComponent({
-  components: {
-    AlbumCreateModal,
-  },
-  name: "AlbumListModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      albums: [],
-      filter: "",
-
-      mid: AppStatus.CurrentMedia,
-      mediaAlbums: [],
-
-      loading: true,
-      busy: false,
-
-      displayAlbumCreate: false,
-
-      editMode: AuthController.CanWrite,
-      canWrite: AuthController.CanWrite,
-      editModeChanged: false,
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      nextTick(() => {
-        const el = this.$el.querySelector(".auto-focus");
-
-        if (el) {
-          el.focus();
-        }
-      });
+    components: {
+        AlbumCreateModal,
     },
-
-    load: function () {
-      Timeouts.Abort("media-albums-load");
-      Request.Abort("media-albums-load");
-
-      if (!this.display) {
-        return;
-      }
-
-      this.loading = true;
-
-      if (AuthController.Locked) {
-        return; // Vault is locked
-      }
-
-      Request.Pending("media-albums-load", MediaAPI.GetMediaAlbums(this.mid))
-        .onSuccess((result) => {
-          this.mediaAlbums = result;
-          this.loading = false;
-          this.canWrite = AuthController.CanWrite;
-          if (!this.canWrite) {
-            this.editMode = false;
-          } else if (!this.editModeChanged) {
-            this.editMode = result.length === 0;
-          }
-          this.updateAlbums();
-          this.autoFocus();
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add(404, "*", () => {
-              this.close();
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
-        });
+    name: "AlbumListModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    data: function () {
+        return {
+            albums: [],
+            filter: "",
 
-    createAlbum: function () {
-      this.displayAlbumCreate = true;
+            mid: AppStatus.CurrentMedia,
+            mediaAlbums: [],
+
+            loading: true,
+            busy: false,
+
+            displayAlbumCreate: false,
+
+            editMode: AuthController.CanWrite,
+            canWrite: AuthController.CanWrite,
+            editModeChanged: false,
+        };
     },
+    methods: {
+        autoFocus: function () {
+            nextTick(() => {
+                const el = this.$el.querySelector(".auto-focus");
 
-    onNewAlbum: function (albumId, albumName) {
-      this.filter = albumName;
-      this.updateAlbums();
-    },
+                if (el) {
+                    el.focus();
+                }
+            });
+        },
 
-    goToAlbum: function (album) {
-      this.close();
-      AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
-    },
+        load: function () {
+            Timeouts.Abort("media-albums-load");
+            Request.Abort("media-albums-load");
 
-    changeEditMode: function () {
-      this.editMode = !this.editMode;
-      this.editModeChanged = true;
-      this.updateAlbums();
-      this.autoFocus();
-    },
-
-    clickOnAlbum: function (album, backToText?: boolean) {
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-
-      if (album.added) {
-        // Remove
-        Request.Do(AlbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
-          .onSuccess(() => {
-            this.busy = false;
-            album.added = false;
-            AppEvents.Emit("snack", this.$t("Successfully removed from album"));
-            if (this.mediaAlbums.indexOf(album.id) >= 0) {
-              this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
+            if (!this.display) {
+                return;
             }
+
+            this.loading = true;
+
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
+
+            Request.Pending("media-albums-load", MediaAPI.GetMediaAlbums(this.mid))
+                .onSuccess((result) => {
+                    this.mediaAlbums = result;
+                    this.loading = false;
+                    this.canWrite = AuthController.CanWrite;
+                    if (!this.canWrite) {
+                        this.editMode = false;
+                    } else if (!this.editModeChanged) {
+                        this.editMode = result.length === 0;
+                    }
+                    this.updateAlbums();
+                    this.autoFocus();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add(404, "*", () => {
+                            this.close();
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+                });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        createAlbum: function () {
+            this.displayAlbumCreate = true;
+        },
+
+        onNewAlbum: function (albumId, albumName) {
+            this.filter = albumName;
             this.updateAlbums();
-            AlbumsController.OnChangedAlbum(album.id, true);
-            if (backToText && this.editMode) {
-              this.autoFocus();
-            }
-          })
-          .onRequestError((err) => {
-            this.busy = false;
-            Request.ErrorHandler()
-              .add(401, "*", () => {
-                AppEvents.Emit("unauthorized");
-              })
-              .handle(err);
-          })
-          .onUnexpectedError((err) => {
-            this.busy = false;
-            console.error(err);
-          });
-      } else {
-        // Add
-        Request.Do(AlbumsAPI.AddMediaToAlbum(album.id, this.mid))
-          .onSuccess(() => {
-            this.busy = false;
-            album.added = true;
-            AppEvents.Emit("snack", this.$t("Successfully added to album"));
-            if (this.mediaAlbums.indexOf(album.id) === -1) {
-              this.mediaAlbums.push(album.id);
-            }
-            this.updateAlbums();
-            AlbumsController.OnChangedAlbum(album.id, true);
-            if (backToText && this.editMode) {
-              this.changeEditMode();
-            }
-          })
-          .onRequestError((err) => {
-            this.busy = false;
-            Request.ErrorHandler()
-              .add(401, "*", () => {
-                AppEvents.Emit("unauthorized");
-              })
-              .handle(err);
-          })
-          .onUnexpectedError((err) => {
-            this.busy = false;
-            console.error(err);
-          });
-      }
-    },
+        },
 
-    onUpdateStatus: function () {
-      const changed = this.mid !== AppStatus.CurrentMedia;
-      this.mid = AppStatus.CurrentMedia;
-      if (changed) {
+        goToAlbum: function (album) {
+            this.close();
+            AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
+        },
+
+        changeEditMode: function () {
+            this.editMode = !this.editMode;
+            this.editModeChanged = true;
+            this.updateAlbums();
+            this.autoFocus();
+        },
+
+        clickOnAlbum: function (album, backToText?: boolean) {
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            if (album.added) {
+                // Remove
+                Request.Do(AlbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
+                    .onSuccess(() => {
+                        this.busy = false;
+                        album.added = false;
+                        AppEvents.Emit("snack", this.$t("Successfully removed from album"));
+                        if (this.mediaAlbums.indexOf(album.id) >= 0) {
+                            this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
+                        }
+                        this.updateAlbums();
+                        AlbumsController.OnChangedAlbum(album.id, true);
+                        if (backToText && this.editMode) {
+                            this.autoFocus();
+                        }
+                    })
+                    .onRequestError((err) => {
+                        this.busy = false;
+                        Request.ErrorHandler()
+                            .add(401, "*", () => {
+                                AppEvents.Emit("unauthorized");
+                            })
+                            .handle(err);
+                    })
+                    .onUnexpectedError((err) => {
+                        this.busy = false;
+                        console.error(err);
+                    });
+            } else {
+                // Add
+                Request.Do(AlbumsAPI.AddMediaToAlbum(album.id, this.mid))
+                    .onSuccess(() => {
+                        this.busy = false;
+                        album.added = true;
+                        AppEvents.Emit("snack", this.$t("Successfully added to album"));
+                        if (this.mediaAlbums.indexOf(album.id) === -1) {
+                            this.mediaAlbums.push(album.id);
+                        }
+                        this.updateAlbums();
+                        AlbumsController.OnChangedAlbum(album.id, true);
+                        if (backToText && this.editMode) {
+                            this.changeEditMode();
+                        }
+                    })
+                    .onRequestError((err) => {
+                        this.busy = false;
+                        Request.ErrorHandler()
+                            .add(401, "*", () => {
+                                AppEvents.Emit("unauthorized");
+                            })
+                            .handle(err);
+                    })
+                    .onUnexpectedError((err) => {
+                        this.busy = false;
+                        console.error(err);
+                    });
+            }
+        },
+
+        onUpdateStatus: function () {
+            const changed = this.mid !== AppStatus.CurrentMedia;
+            this.mid = AppStatus.CurrentMedia;
+            if (changed) {
+                this.updateAlbums();
+            }
+        },
+
+        updateAlbums: function () {
+            const mid = AppStatus.CurrentMedia;
+            const filter = (this.filter + "").toLowerCase();
+            this.albums = AlbumsController.GetAlbumsListCopy()
+                .filter((a) => {
+                    return !filter || a.nameLowerCase.indexOf(filter) >= 0;
+                })
+                .map((a: any) => {
+                    a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
+                    return a;
+                })
+                .filter(a => {
+                    return this.editMode || a.added;
+                })
+                .sort((a, b) => {
+                    if (filter) {
+                        const aStarts = a.nameLowerCase.indexOf(filter) === 0;
+                        const bStarts = b.nameLowerCase.indexOf(filter) === 0;
+
+                        if (aStarts && !bStarts) {
+                            return -1;
+                        } else if (bStarts && !aStarts) {
+                            return 1;
+                        }
+                    }
+                    if (a.nameLowerCase < b.nameLowerCase) {
+                        return -1;
+                    } else if (a.nameLowerCase > b.nameLowerCase) {
+                        return 1;
+                    } else {
+                        return 1;
+                    }
+                });
+        },
+
+        onFilterKeyDown: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+
+                if (!this.filter) {
+                    return;
+                }
+
+                if (this.albums.length === 0) {
+                    return;
+                }
+
+                if (this.editMode) {
+                    this.clickOnAlbum(this.albums[0], true);
+                } else {
+                    this.goToAlbum(this.albums[0]);
+                }
+            } else if (e.key === "Tab") {
+                if (this.albums.length === 0) {
+                    if (this.filter) {
+                        e.preventDefault();
+                    }
+                    return;
+                }
+
+                if (this.filter === this.albums[0].name) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                this.filter = this.albums[0].name;
+            }
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
+    },
+    mounted: function () {
+        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+
+        this.$options.statusH = this.onUpdateStatus.bind(this);
+        AppEvents.AddEventListener("app-status-update", this.$options.statusH);
+
         this.updateAlbums();
-      }
-    },
-
-    updateAlbums: function () {
-      const mid = AppStatus.CurrentMedia;
-      const filter = (this.filter + "").toLowerCase();
-      this.albums = AlbumsController.GetAlbumsListCopy()
-        .filter((a) => {
-          return !filter || a.nameLowerCase.indexOf(filter) >= 0;
-        })
-        .map((a: any) => {
-          a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
-          return a;
-        })
-        .filter(a => {
-          return this.editMode || a.added;
-        })
-        .sort((a, b) => {
-          if (filter) {
-            const aStarts = a.nameLowerCase.indexOf(filter) === 0;
-            const bStarts = b.nameLowerCase.indexOf(filter) === 0;
-
-            if (aStarts && !bStarts) {
-              return -1;
-            } else if (bStarts && !aStarts) {
-              return 1;
-            }
-          }
-          if (a.nameLowerCase < b.nameLowerCase) {
-            return -1;
-          } else if (a.nameLowerCase > b.nameLowerCase) {
-            return 1;
-          } else {
-            return 1;
-          }
-        });
-    },
-
-    onFilterKeyDown: function (e: KeyboardEvent) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-
-        if (!this.filter) {
-          return;
-        }
-
-        if (this.albums.length === 0) {
-          return;
-        }
-
-        if (this.editMode) {
-          this.clickOnAlbum(this.albums[0], true);
-        } else {
-          this.goToAlbum(this.albums[0]);
-        }
-      } else if (e.key === "Tab") {
-        if (this.albums.length === 0) {
-          if (this.filter) {
-            e.preventDefault();
-          }
-          return;
-        }
-
-        if (this.filter === this.albums[0].name) {
-          return;
-        }
-
-        e.preventDefault();
-
-        this.filter = this.albums[0].name;
-      }
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
-
-    this.$options.statusH = this.onUpdateStatus.bind(this);
-    AppEvents.AddEventListener("app-status-update", this.$options.statusH);
-
-    this.updateAlbums();
-    this.load();
-
-    if (this.display) {
-      nextTick(() => {
-        this.$el.focus();
-      });
-      AlbumsController.Load();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
-    AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
-    Timeouts.Abort("media-albums-load");
-    Request.Abort("media-albums-load");
-  },
-  watch: {
-    display: function () {
-      this.displayAlbumCreate = false;
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-        AlbumsController.Load();
         this.load();
-      } else {
+
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+            AlbumsController.Load();
+        }
+    },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+        AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");
-      }
     },
-  },
+    watch: {
+        display: function () {
+            this.displayAlbumCreate = false;
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                AlbumsController.Load();
+                this.load();
+            } else {
+                Timeouts.Abort("media-albums-load");
+                Request.Abort("media-albums-load");
+            }
+        },
+    },
 });
 </script>

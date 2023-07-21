@@ -41,140 +41,140 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "AlbumDeleteModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      currentAlbum: -1,
-      oldName: "",
-
-      confirmation: "",
-
-      busy: false,
-      error: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-        }
-      });
+    name: "AlbumDeleteModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
+    data: function () {
+        return {
+            currentAlbum: -1,
+            oldName: "",
 
-    onAlbumUpdate: function () {
-      this.currentAlbum = AlbumsController.CurrentAlbum;
-      if (AlbumsController.CurrentAlbumData) {
-        this.oldName = AlbumsController.CurrentAlbumData.name;
-      }
+            confirmation: "",
+
+            busy: false,
+            error: "",
+        };
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
 
-    submit: function (e) {
-      e.preventDefault();
+        onAlbumUpdate: function () {
+            this.currentAlbum = AlbumsController.CurrentAlbum;
+            if (AlbumsController.CurrentAlbumData) {
+                this.oldName = AlbumsController.CurrentAlbumData.name;
+            }
+        },
 
-      if (this.busy) {
-        return;
-      }
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-      if (this.confirmation.toLowerCase() !== "confirm") {
-        this.error = this.$t(
-          "You must type 'confirm' in order to confirm the deletion of the album"
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            if (this.confirmation.toLowerCase() !== "confirm") {
+                this.error = this.$t(
+                    "You must type 'confirm' in order to confirm the deletion of the album"
+                );
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            const albumId = this.currentAlbum;
+
+            Request.Do(AlbumsAPI.DeleteAlbum(albumId))
+                .onSuccess(() => {
+                    AppEvents.Emit(
+                        "snack",
+                        this.$t("Album deleted") + ": " + this.oldName
+                    );
+                    this.busy = false;
+                    this.confirmation = "";
+                    this.close();
+                    AlbumsController.OnChangedAlbum(albumId);
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(404, "*", () => {
+                            this.error = this.$t("Not found");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+    },
+    mounted: function () {
+        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
         );
-        return;
-      }
 
-      this.busy = true;
-      this.error = "";
-
-      const albumId = this.currentAlbum;
-
-      Request.Do(AlbumsAPI.DeleteAlbum(albumId))
-        .onSuccess(() => {
-          AppEvents.Emit(
-            "snack",
-            this.$t("Album deleted") + ": " + this.oldName
-          );
-          this.busy = false;
-          this.confirmation = "";
-          this.close();
-          AlbumsController.OnChangedAlbum(albumId);
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(404, "*", () => {
-              this.error = this.$t("Not found");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+        this.onAlbumUpdate();
+        if (this.display) {
+            this.error = "";
+            this.confirmation = "";
+            this.autoFocus();
+        }
     },
-  },
-  mounted: function () {
-    this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
-
-    this.onAlbumUpdate();
-    if (this.display) {
-      this.error = "";
-      this.confirmation = "";
-      this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "current-album-update",
-      this.$options.albumUpdateH
-    );
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.confirmation = "";
-        this.autoFocus();
-      }
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "current-album-update",
+            this.$options.albumUpdateH
+        );
     },
-  },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.confirmation = "";
+                this.autoFocus();
+            }
+        },
+    },
 });
 </script>

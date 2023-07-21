@@ -13,13 +13,13 @@
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "LoadingOverlay",
-  props: {
-    display: {
-      type: Boolean,
-      default: true,
+    name: "LoadingOverlay",
+    props: {
+        display: {
+            type: Boolean,
+            default: true,
+        },
+        fixed: Boolean,
     },
-    fixed: Boolean,
-  },
 });
 </script>

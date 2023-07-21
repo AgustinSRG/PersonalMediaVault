@@ -40,124 +40,124 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "ChangeUsernameModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      currentUsername: "",
-      username: "",
-      password: "",
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+    name: "ChangeUsernameModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            currentUsername: "",
+            username: "",
+            password: "",
+            busy: false,
+            error: "",
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(AccountAPI.ChangeUsername(this.username, this.password))
+                .onSuccess(() => {
+                    this.busy = false;
+                    AuthController.UpdateUsername(this.username);
+                    this.username = "";
+                    this.password = "";
+                    AppEvents.Emit("snack", this.$t("Vault username changed!"));
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "USERNAME_IN_USE", () => {
+                            this.error = this.$t("The username is already in use");
+                        })
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid username provided");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Invalid password");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        usernameUpdated: function () {
+            this.currentUsername = AuthController.Username;
+        },
+    },
+    mounted: function () {
+        this.currentUsername = AuthController.Username;
+        this.$options.usernameUpdatedH = this.usernameUpdated.bind(this);
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.usernameUpdatedH
+        );
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
         }
-      });
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AccountAPI.ChangeUsername(this.username, this.password))
-        .onSuccess(() => {
-          this.busy = false;
-          AuthController.UpdateUsername(this.username);
-          this.username = "";
-          this.password = "";
-          AppEvents.Emit("snack", this.$t("Vault username changed!"));
-          this.close();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "USERNAME_IN_USE", () => {
-              this.error = this.$t("The username is already in use");
-            })
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid username provided");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Invalid password");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.usernameUpdatedH
+        );
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
     },
-
-    usernameUpdated: function () {
-      this.currentUsername = AuthController.Username;
-    },
-  },
-  mounted: function () {
-    this.currentUsername = AuthController.Username;
-    this.$options.usernameUpdatedH = this.usernameUpdated.bind(this);
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.usernameUpdatedH
-    );
-    if (this.display) {
-      this.error = "";
-      this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.usernameUpdatedH
-    );
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

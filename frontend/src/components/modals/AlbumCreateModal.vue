@@ -34,119 +34,119 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "AlbumCreateModal",
-  emits: ["update:display", "new-album"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      name: "",
+    name: "AlbumCreateModal",
+    emits: ["update:display", "new-album"],
+    props: {
+        display: Boolean,
+    },
+    data: function () {
+        return {
+            name: "",
 
-      busy: false,
-      error: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+            busy: false,
+            error: "",
+        };
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            if (!this.name) {
+                this.error = this.$t("Invalid album name provided");
+                return;
+            }
+
+            if (AlbumsController.FindDuplicatedName(this.name)) {
+                this.error = this.$t(
+                    "There is already another album with the same name"
+                );
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            const albumName = this.name;
+
+            Request.Do(AlbumsAPI.CreateAlbum(albumName))
+                .onSuccess((response) => {
+                    AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
+                    this.busy = false;
+                    this.name = "";
+                    this.close();
+                    AppEvents.Emit("albums-list-change");
+                    AlbumsController.Load();
+                    this.$emit("new-album", response.album_id, albumName)
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid album name provided");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
         }
-      });
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      if (!this.name) {
-        this.error = this.$t("Invalid album name provided");
-        return;
-      }
-
-      if (AlbumsController.FindDuplicatedName(this.name)) {
-        this.error = this.$t(
-          "There is already another album with the same name"
-        );
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      const albumName = this.name;
-
-      Request.Do(AlbumsAPI.CreateAlbum(albumName))
-        .onSuccess((response) => {
-          AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
-          this.busy = false;
-          this.name = "";
-          this.close();
-          AppEvents.Emit("albums-list-change");
-          AlbumsController.Load();
-          this.$emit("new-album", response.album_id, albumName)
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid album name provided");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.error = "";
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

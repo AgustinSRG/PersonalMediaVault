@@ -42,116 +42,116 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "ChangePasswordModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      currentPassword: "",
-      password: "",
-      password2: "",
-      busy: false,
-      error: "",
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+    name: "ChangePasswordModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            currentPassword: "",
+            password: "",
+            password2: "",
+            busy: false,
+            error: "",
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            if (this.password !== this.password2) {
+                this.error = this.$t("The passwords do not match");
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            Request.Do(AccountAPI.ChangePassword(this.currentPassword, this.password))
+                .onSuccess(() => {
+                    this.busy = false;
+                    this.currentPassword = "";
+                    this.password = "";
+                    this.password2 = "";
+                    AppEvents.Emit("snack", this.$t("Vault password changed!"));
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(400, "*", () => {
+                            this.error = this.$t("Invalid password provided");
+                        })
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Invalid password");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.currentPassword = "";
+            this.password = "";
+            this.password2 = "";
+            this.autoFocus();
         }
-      });
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.busy) {
-        return;
-      }
-
-      if (this.password !== this.password2) {
-        this.error = this.$t("The passwords do not match");
-        return;
-      }
-
-      this.busy = true;
-      this.error = "";
-
-      Request.Do(AccountAPI.ChangePassword(this.currentPassword, this.password))
-        .onSuccess(() => {
-          this.busy = false;
-          this.currentPassword = "";
-          this.password = "";
-          this.password2 = "";
-          AppEvents.Emit("snack", this.$t("Vault password changed!"));
-          this.close();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(400, "*", () => {
-              this.error = this.$t("Invalid password provided");
-            })
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Invalid password");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.currentPassword = "";
+                this.password = "";
+                this.password2 = "";
+                this.autoFocus();
+            }
+        },
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.error = "";
-      this.currentPassword = "";
-      this.password = "";
-      this.password2 = "";
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.currentPassword = "";
-        this.password = "";
-        this.password2 = "";
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

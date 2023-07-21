@@ -22,78 +22,78 @@ import { AppStatus } from "@/control/app-status";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "BottomBar",
-  data: function () {
-    return {
-      focus: AppStatus.CurrentFocus,
+    name: "BottomBar",
+    data: function () {
+        return {
+            focus: AppStatus.CurrentFocus,
 
-      prev: AlbumsController.CurrentPrev,
-      next: AlbumsController.CurrentNext,
+            prev: AlbumsController.CurrentPrev,
+            next: AlbumsController.CurrentNext,
 
-      hasPagePrev: AlbumsController.HasPagePrev,
-      hasPageNext: AlbumsController.HasPageNext,
-    };
-  },
-  methods: {
-    onStatusUpdate: function () {
-      this.focus = AppStatus.CurrentFocus;
+            hasPagePrev: AlbumsController.HasPagePrev,
+            hasPageNext: AlbumsController.HasPageNext,
+        };
     },
+    methods: {
+        onStatusUpdate: function () {
+            this.focus = AppStatus.CurrentFocus;
+        },
 
-    onAlbumPosUpdate: function () {
-      this.prev = AlbumsController.CurrentPrev;
-      this.next = AlbumsController.CurrentNext;
+        onAlbumPosUpdate: function () {
+            this.prev = AlbumsController.CurrentPrev;
+            this.next = AlbumsController.CurrentNext;
+        },
+
+        onPagePosUpdate: function () {
+            this.hasPagePrev = AlbumsController.HasPagePrev;
+            this.hasPageNext = AlbumsController.HasPageNext;
+        },
+
+        clickLeft: function () {
+            AppStatus.FocusLeft();
+        },
+
+        clickRight: function () {
+            AppStatus.FocusRight();
+        },
+
+        goNext: function () {
+            AppEvents.Emit("media-go-next");
+        },
+
+        goPrev: function () {
+            AppEvents.Emit("media-go-prev");
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
     },
+    mounted: function () {
+        this.$options.updateStatusH = this.onStatusUpdate.bind(this);
+        AppEvents.AddEventListener(
+            "app-status-update",
+            this.$options.updateStatusH
+        );
 
-    onPagePosUpdate: function () {
-      this.hasPagePrev = AlbumsController.HasPagePrev;
-      this.hasPageNext = AlbumsController.HasPageNext;
+        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+
+        this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+        AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
     },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.updateStatusH
+        );
 
-    clickLeft: function () {
-      AppStatus.FocusLeft();
+        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+        AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
     },
-
-    clickRight: function () {
-      AppStatus.FocusRight();
-    },
-
-    goNext: function () {
-      AppEvents.Emit("media-go-next");
-    },
-
-    goPrev: function () {
-      AppEvents.Emit("media-go-prev");
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.updateStatusH = this.onStatusUpdate.bind(this);
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.updateStatusH
-    );
-
-    this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-    AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
-
-    this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-    AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.updateStatusH
-    );
-
-    AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
-    AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
-  },
 });
 </script>

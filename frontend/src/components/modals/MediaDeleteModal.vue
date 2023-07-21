@@ -43,149 +43,149 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "MediaDeleteModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      currentMedia: -1,
-      oldName: "",
-
-      confirmation: "",
-
-      busy: false,
-      error: "",
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-        }
-      });
+    name: "MediaDeleteModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
+    data: function () {
+        return {
+            currentMedia: -1,
+            oldName: "",
 
-    onMediaUpdate: function () {
-      this.currentMedia = AppStatus.CurrentMedia;
-      if (MediaController.MediaData) {
-        this.oldName = MediaController.MediaData.title;
-      }
+            confirmation: "",
+
+            busy: false,
+            error: "",
+        };
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    methods: {
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
 
-    submit: function (e) {
-      e.preventDefault();
+        onMediaUpdate: function () {
+            this.currentMedia = AppStatus.CurrentMedia;
+            if (MediaController.MediaData) {
+                this.oldName = MediaController.MediaData.title;
+            }
+        },
 
-      if (this.busy) {
-        return;
-      }
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-      if (this.confirmation.toLowerCase() !== "confirm") {
-        this.error = this.$t(
-          "You must type 'confirm' in order to confirm the deletion of the media"
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            if (this.confirmation.toLowerCase() !== "confirm") {
+                this.error = this.$t(
+                    "You must type 'confirm' in order to confirm the deletion of the media"
+                );
+                return;
+            }
+
+            this.busy = true;
+            this.error = "";
+
+            const mediaId = this.currentMedia;
+
+            Request.Do(MediaAPI.DeleteMedia(mediaId))
+                .onSuccess(() => {
+                    AppEvents.Emit(
+                        "snack",
+                        this.$t("Media deleted") + ": " + this.oldName
+                    );
+                    this.busy = false;
+                    this.confirmation = "";
+                    this.close();
+                    AlbumsController.LoadCurrentAlbum();
+                    AppStatus.OnDeleteMedia();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .add(403, "*", () => {
+                            this.error = this.$t("Access denied");
+                        })
+                        .add(404, "*", () => {
+                            this.error = this.$t("Not found");
+                        })
+                        .add(500, "*", () => {
+                            this.error = this.$t("Internal server error");
+                        })
+                        .add("*", "*", () => {
+                            this.error = this.$t("Could not connect to the server");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
+        },
+    },
+    mounted: function () {
+        this.$options.mediaUpdateH = this.onMediaUpdate.bind(this);
+        AppEvents.AddEventListener("app-status-update", this.$options.mediaUpdateH);
+
+        AppEvents.AddEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
         );
-        return;
-      }
 
-      this.busy = true;
-      this.error = "";
+        this.onMediaUpdate();
 
-      const mediaId = this.currentMedia;
-
-      Request.Do(MediaAPI.DeleteMedia(mediaId))
-        .onSuccess(() => {
-          AppEvents.Emit(
-            "snack",
-            this.$t("Media deleted") + ": " + this.oldName
-          );
-          this.busy = false;
-          this.confirmation = "";
-          this.close();
-          AlbumsController.LoadCurrentAlbum();
-          AppStatus.OnDeleteMedia();
-        })
-        .onCancel(() => {
-          this.busy = false;
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              this.error = this.$t("Access denied");
-              AppEvents.Emit("unauthorized");
-            })
-            .add(403, "*", () => {
-              this.error = this.$t("Access denied");
-            })
-            .add(404, "*", () => {
-              this.error = this.$t("Not found");
-            })
-            .add(500, "*", () => {
-              this.error = this.$t("Internal server error");
-            })
-            .add("*", "*", () => {
-              this.error = this.$t("Could not connect to the server");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.error = err.message;
-          console.error(err);
-          this.busy = false;
-        });
+        if (this.display) {
+            this.error = "";
+            this.confirmation = "";
+            this.autoFocus();
+        }
     },
-  },
-  mounted: function () {
-    this.$options.mediaUpdateH = this.onMediaUpdate.bind(this);
-    AppEvents.AddEventListener("app-status-update", this.$options.mediaUpdateH);
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.mediaUpdateH
+        );
 
-    AppEvents.AddEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-
-    this.onMediaUpdate();
-
-    if (this.display) {
-      this.error = "";
-      this.confirmation = "";
-      this.autoFocus();
-    }
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.mediaUpdateH
-    );
-
-    AppEvents.RemoveEventListener(
-      "current-media-update",
-      this.$options.mediaUpdateH
-    );
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.error = "";
-        this.confirmation = "";
-        this.autoFocus();
-      }
+        AppEvents.RemoveEventListener(
+            "current-media-update",
+            this.$options.mediaUpdateH
+        );
     },
-  },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.confirmation = "";
+                this.autoFocus();
+            }
+        },
+    },
 });
 </script>

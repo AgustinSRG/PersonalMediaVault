@@ -30,64 +30,64 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "AlbumMovePosModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      currentPos: 0,
-      callback: null,
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    autoFocus: function () {
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
-          elem.select();
+    name: "AlbumMovePosModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+    },
+    data: function () {
+        return {
+            currentPos: 0,
+            callback: null,
+        };
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        autoFocus: function () {
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                    elem.select();
+                }
+            });
+        },
+
+        show: function (options: { pos: number; callback: () => void }) {
+            this.currentPos = options.pos + 1;
+            this.callback = options.callback;
+            this.displayStatus = true;
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.callback) {
+                this.callback(this.currentPos - 1);
+            }
+
+            this.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
         }
-      });
     },
-
-    show: function (options: { pos: number; callback: () => void }) {
-      this.currentPos = options.pos + 1;
-      this.callback = options.callback;
-      this.displayStatus = true;
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
-    },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.callback) {
-        this.callback(this.currentPos - 1);
-      }
-
-      this.close();
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

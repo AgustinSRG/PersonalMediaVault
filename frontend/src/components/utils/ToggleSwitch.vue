@@ -20,36 +20,36 @@ import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "ToggleSwitch",
-  emits: ["update:val"],
-  props: {
-    val: Boolean,
-    disabled: Boolean,
-  },
-  setup(props) {
-    return {
-      valState: useVModel(props, "val"),
-    };
-  },
-  data: function () {
-    return {
-    };
-  },
-  methods: {
-    toggle: function () {
-      if (this.disabled) {
-        return;
-      }
-      this.valState = !this.valState;
+    name: "ToggleSwitch",
+    emits: ["update:val"],
+    props: {
+        val: Boolean,
+        disabled: Boolean,
     },
-    keyToggle: function (e) {
-      if (e.key === " " || e.key === "Enter") {
-        this.toggle();
-      }
-      e.stopPropagation();
+    setup(props) {
+        return {
+            valState: useVModel(props, "val"),
+        };
     },
-  },
-  mounted: function () {},
-  beforeUnmount: function () {},
+    data: function () {
+        return {
+        };
+    },
+    methods: {
+        toggle: function () {
+            if (this.disabled) {
+                return;
+            }
+            this.valState = !this.valState;
+        },
+        keyToggle: function (e) {
+            if (e.key === " " || e.key === "Enter") {
+                this.toggle();
+            }
+            e.stopPropagation();
+        },
+    },
+    mounted: function () {},
+    beforeUnmount: function () {},
 });
 </script>

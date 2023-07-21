@@ -36,84 +36,84 @@ import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 
 export default defineComponent({
-  components: {
-    PageAdvancedSearch,
-    PageUpload,
-  },
-  name: "AlbumAddMediaModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-    aid: Number,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      busy: false,
+    components: {
+        PageAdvancedSearch,
+        PageUpload,
+    },
+    name: "AlbumAddMediaModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
+        aid: Number,
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    data: function () {
+        return {
+            busy: false,
 
-      isUpload: false,
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+            isUpload: false,
+        };
     },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-    changeToUpload: function () {
-      this.isUpload = true;
-    },
+        changeToUpload: function () {
+            this.isUpload = true;
+        },
 
-    changeToSearch: function () {
-      this.isUpload = false;
-    },
+        changeToSearch: function () {
+            this.isUpload = false;
+        },
 
-    selectMedia: function (mid, callback) {
-      if (this.busy) {
-        return;
-      }
-      const albumId = this.aid;
-      this.busy = true;
-      // Add
-      Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
-        .onSuccess(() => {
-          this.busy = false;
-          AppEvents.Emit("snack", this.$t("Successfully added to album"));
-          AlbumsController.OnChangedAlbum(albumId, true);
-          callback();
-        })
-        .onRequestError((err) => {
-          this.busy = false;
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized");
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          this.busy = false;
-          console.error(err);
-        });
+        selectMedia: function (mid, callback) {
+            if (this.busy) {
+                return;
+            }
+            const albumId = this.aid;
+            this.busy = true;
+            // Add
+            Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
+                .onSuccess(() => {
+                    this.busy = false;
+                    AppEvents.Emit("snack", this.$t("Successfully added to album"));
+                    AlbumsController.OnChangedAlbum(albumId, true);
+                    callback();
+                })
+                .onRequestError((err) => {
+                    this.busy = false;
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized");
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    this.busy = false;
+                    console.error(err);
+                });
+        },
     },
-  },
-  mounted: function () {
-    if (this.display) {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
+    mounted: function () {
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
     },
-  },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
 });
 </script>

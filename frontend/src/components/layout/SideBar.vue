@@ -71,275 +71,275 @@ import { FocusTrap } from "../../utils/focus-trap";
 const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 
 export default defineComponent({
-  name: "SideBar",
-  emits: ["update:display", "skip-to-content"],
-  props: {
-    display: Boolean,
-    initialLayout: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  data: function () {
-    return {
-      page: AppStatus.CurrentPage,
-      album: AppStatus.CurrentAlbum,
-      layout: AppStatus.CurrentLayout,
-      search: AppStatus.CurrentSearch,
-
-      canWrite: AuthController.CanWrite,
-
-      albums: [],
-      albumsFavorite: [],
-      albumsRest: [],
-    };
-  },
-  methods: {
-    close: function () {
-      this.displayStatus = false;
+    name: "SideBar",
+    emits: ["update:display", "skip-to-content"],
+    props: {
+        display: Boolean,
+        initialLayout: Boolean,
     },
-
-    getAppTitle: function () {
-      return AuthController.Title || this.$t("Personal Media Vault");
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    data: function () {
+        return {
+            page: AppStatus.CurrentPage,
+            album: AppStatus.CurrentAlbum,
+            layout: AppStatus.CurrentLayout,
+            search: AppStatus.CurrentSearch,
 
-    updateStatus: function () {
-      if (AppStatus.CurrentLayout !== "initial") {
-        this.displayStatus = false;
-      } else if (this.layout !== "initial") {
-        this.displayStatus = true;
-      }
+            canWrite: AuthController.CanWrite,
 
-      this.layout = AppStatus.CurrentLayout;
-
-      this.page = AppStatus.CurrentPage;
-      this.album = AppStatus.CurrentAlbum;
-
-      this.search = AppStatus.CurrentSearch;
+            albums: [],
+            albumsFavorite: [],
+            albumsRest: [],
+        };
     },
+    methods: {
+        close: function () {
+            this.displayStatus = false;
+        },
 
-    goToPage: function (p, e) {
-      if (e) {
-        e.preventDefault();
-      }
-      AppStatus.GoToPageNoSplit(p);
-      nextTick(() => {
-        this.$emit("skip-to-content");
-      });
-    },
+        getAppTitle: function () {
+            return AuthController.Title || this.$t("Personal Media Vault");
+        },
 
-    goToSearch: function (e) {
-      if (e) {
-        e.preventDefault();
-      }
-      AppStatus.GoToSearch(this.search);
-      nextTick(() => {
-        this.$emit("skip-to-content");
-      });
-    },
+        updateStatus: function () {
+            if (AppStatus.CurrentLayout !== "initial") {
+                this.displayStatus = false;
+            } else if (this.layout !== "initial") {
+                this.displayStatus = true;
+            }
 
-    goToAlbum: function (a, e) {
-      if (e) {
-        e.preventDefault();
-      }
-      AppStatus.ClickOnAlbum(a.id);
-      nextTick(() => {
-        this.$emit("skip-to-content");
-      });
-    },
+            this.layout = AppStatus.CurrentLayout;
 
-    getPageURL: function (page: string): string {
-      return (
-        window.location.protocol +
+            this.page = AppStatus.CurrentPage;
+            this.album = AppStatus.CurrentAlbum;
+
+            this.search = AppStatus.CurrentSearch;
+        },
+
+        goToPage: function (p, e) {
+            if (e) {
+                e.preventDefault();
+            }
+            AppStatus.GoToPageNoSplit(p);
+            nextTick(() => {
+                this.$emit("skip-to-content");
+            });
+        },
+
+        goToSearch: function (e) {
+            if (e) {
+                e.preventDefault();
+            }
+            AppStatus.GoToSearch(this.search);
+            nextTick(() => {
+                this.$emit("skip-to-content");
+            });
+        },
+
+        goToAlbum: function (a, e) {
+            if (e) {
+                e.preventDefault();
+            }
+            AppStatus.ClickOnAlbum(a.id);
+            nextTick(() => {
+                this.$emit("skip-to-content");
+            });
+        },
+
+        getPageURL: function (page: string): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          page: page,
+            page: page,
         })
-      );
-    },
+            );
+        },
 
-    getAlbumURL: function (albumId: number): string {
-      return (
-        window.location.protocol +
+        getAlbumURL: function (albumId: number): string {
+            return (
+                window.location.protocol +
         "//" +
         window.location.host +
         window.location.pathname +
         GenerateURIQuery({
-          album: albumId + "",
+            album: albumId + "",
         })
-      );
-    },
+            );
+        },
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
 
-    updateAlbums: function () {
-      this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-        const lruA = AppPreferences.AlbumPositionMap[a.id + ""] || 0;
-        const lruB = AppPreferences.AlbumPositionMap[b.id + ""] || 0;
-        if (lruA > lruB) {
-          return -1;
-        } else if (lruA < lruB) {
-          return 1;
-        } else if (a.nameLowerCase < b.nameLowerCase) {
-          return -1;
-        } else if (a.nameLowerCase > b.nameLowerCase) {
-          return 1;
-        } else {
-          return 0;
+        updateAlbums: function () {
+            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+                const lruA = AppPreferences.AlbumPositionMap[a.id + ""] || 0;
+                const lruB = AppPreferences.AlbumPositionMap[b.id + ""] || 0;
+                if (lruA > lruB) {
+                    return -1;
+                } else if (lruA < lruB) {
+                    return 1;
+                } else if (a.nameLowerCase < b.nameLowerCase) {
+                    return -1;
+                } else if (a.nameLowerCase > b.nameLowerCase) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+            const favIdList = AppPreferences.FavAlbums;
+            const albumsFavorite = [];
+            const albumsRest = [];
+            this.albums.forEach((album) => {
+                if (favIdList.includes(album.id + "")) {
+                    albumsFavorite.push(album);
+                } else {
+                    albumsRest.push(album);
+                }
+            });
+            this.albumsFavorite = albumsFavorite;
+            this.albumsRest = albumsRest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
+
+        updateAuthInfo: function () {
+            this.canWrite = AuthController.CanWrite;
+        },
+
+        putAlbumFirst: function (albumId: number) {
+            for (let i = 0; i < this.albumsFavorite.length; i++) {
+                if (this.albumsFavorite[i].id === albumId) {
+                    const albumEntry = this.albumsFavorite.splice(i, 1)[0];
+                    this.albumsFavorite.unshift(albumEntry);
+                    return;
+                }
+            }
+            for (let i = 0; i < this.albumsRest.length; i++) {
+                if (this.albumsRest[i].id === albumId) {
+                    const albumEntry = this.albumsRest.splice(i, 1)[0];
+                    this.albumsRest.unshift(albumEntry);
+                    return;
+                }
+            }
+            for (let i = 0; i < this.albums.length; i++) {
+                if (this.albums[i].id === albumId) {
+                    const albumEntry = this.albums[i];
+                    this.albumsRest.unshift(albumEntry);
+                    if (this.albumsRest.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
+                        this.albumsRest.pop();
+                    }
+                    return;
+                }
+            }
+        },
+
+        undoScroll: function () {
+            const e = this.$el.querySelector(".side-bar-body");
+            if (e) {
+                e.scrollTop = 0;
+            }
+        },
+
+        lostFocus: function () {
+            if (!this.initialLayout) {
+                this.close();
+            }
+        },
+    },
+    mounted: function () {
+        this.$options.statusUpdater = this.updateStatus.bind(this);
+
+        AppEvents.AddEventListener(
+            "app-status-update",
+            this.$options.statusUpdater
+        );
+
+        this.$options.albumsUpdater = this.updateAlbums.bind(this);
+
+        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
+        AppEvents.AddEventListener(
+            "albums-fav-updated",
+            this.$options.albumsUpdater
+        );
+
+        this.$options.albumGoTop = this.putAlbumFirst.bind(this);
+
+        AppEvents.AddEventListener("album-sidebar-top", this.$options.albumGoTop);
+
+        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+
+        AppEvents.AddEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
+
+        this.$options.focusTrap = new FocusTrap(
+            this.$el,
+            this.lostFocus.bind(this)
+        );
+
+        if (this.display) {
+            this.$options.focusTrap.activate();
         }
-      });
-      const favIdList = AppPreferences.FavAlbums;
-      const albumsFavorite = [];
-      const albumsRest = [];
-      this.albums.forEach((album) => {
-        if (favIdList.includes(album.id + "")) {
-          albumsFavorite.push(album);
-        } else {
-          albumsRest.push(album);
-        }
-      });
-      this.albumsFavorite = albumsFavorite;
-      this.albumsRest = albumsRest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
+
+        this.updateStatus();
+        this.updateAlbums();
     },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener(
+            "app-status-update",
+            this.$options.statusUpdater
+        );
 
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
+        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
+        AppEvents.RemoveEventListener(
+            "albums-fav-updated",
+            this.$options.albumsUpdater
+        );
 
-    updateAuthInfo: function () {
-      this.canWrite = AuthController.CanWrite;
-    },
+        AppEvents.RemoveEventListener(
+            "album-sidebar-top",
+            this.$options.albumGoTop
+        );
 
-    putAlbumFirst: function (albumId: number) {
-      for (let i = 0; i < this.albumsFavorite.length; i++) {
-        if (this.albumsFavorite[i].id === albumId) {
-          const albumEntry = this.albumsFavorite.splice(i, 1)[0];
-          this.albumsFavorite.unshift(albumEntry);
-          return;
-        }
-      }
-      for (let i = 0; i < this.albumsRest.length; i++) {
-        if (this.albumsRest[i].id === albumId) {
-          const albumEntry = this.albumsRest.splice(i, 1)[0];
-          this.albumsRest.unshift(albumEntry);
-          return;
-        }
-      }
-      for (let i = 0; i < this.albums.length; i++) {
-        if (this.albums[i].id === albumId) {
-          const albumEntry = this.albums[i];
-          this.albumsRest.unshift(albumEntry);
-          if (this.albumsRest.length > MAX_ALBUMS_LIST_LENGTH_SIDEBAR) {
-            this.albumsRest.pop();
-          }
-          return;
-        }
-      }
-    },
+        AppEvents.RemoveEventListener(
+            "auth-status-changed",
+            this.$options.authUpdateH
+        );
 
-    undoScroll: function () {
-      const e = this.$el.querySelector(".side-bar-body");
-      if (e) {
-        e.scrollTop = 0;
-      }
-    },
-
-    lostFocus: function () {
-      if (!this.initialLayout) {
-        this.close();
-      }
-    },
-  },
-  mounted: function () {
-    this.$options.statusUpdater = this.updateStatus.bind(this);
-
-    AppEvents.AddEventListener(
-      "app-status-update",
-      this.$options.statusUpdater
-    );
-
-    this.$options.albumsUpdater = this.updateAlbums.bind(this);
-
-    AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
-    AppEvents.AddEventListener(
-      "albums-fav-updated",
-      this.$options.albumsUpdater
-    );
-
-    this.$options.albumGoTop = this.putAlbumFirst.bind(this);
-
-    AppEvents.AddEventListener("album-sidebar-top", this.$options.albumGoTop);
-
-    this.$options.authUpdateH = this.updateAuthInfo.bind(this);
-
-    AppEvents.AddEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    this.$options.focusTrap = new FocusTrap(
-      this.$el,
-      this.lostFocus.bind(this)
-    );
-
-    if (this.display) {
-      this.$options.focusTrap.activate();
-    }
-
-    this.updateStatus();
-    this.updateAlbums();
-  },
-  beforeUnmount: function () {
-    AppEvents.RemoveEventListener(
-      "app-status-update",
-      this.$options.statusUpdater
-    );
-
-    AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
-    AppEvents.RemoveEventListener(
-      "albums-fav-updated",
-      this.$options.albumsUpdater
-    );
-
-    AppEvents.RemoveEventListener(
-      "album-sidebar-top",
-      this.$options.albumGoTop
-    );
-
-    AppEvents.RemoveEventListener(
-      "auth-status-changed",
-      this.$options.authUpdateH
-    );
-
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
         if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+            this.$options.focusTrap.destroy();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-  },
+    watch: {
+        display: function () {
+            if (this.display) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+    },
 });
 </script>

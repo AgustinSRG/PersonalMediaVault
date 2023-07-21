@@ -322,36 +322,36 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "KeyboardGuideModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+    name: "KeyboardGuideModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
-  },
-  mounted: function () {
-    if (this.display) {
-      nextTick(() => {
-        this.$el.focus();
-      });
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        nextTick(() => {
-          this.$el.focus();
-        });
-      }
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
-  },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
 });
 </script>

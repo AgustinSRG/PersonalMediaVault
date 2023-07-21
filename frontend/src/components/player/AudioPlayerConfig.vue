@@ -308,245 +308,245 @@ import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-  components: { ToggleSwitch },
-  name: "AudioPlayerConfig",
-  emits: [
-    "update:shown",
-    "update:loop",
-    "update:nextEnd",
-    "update:speed",
-    "update:animColors",
-    "update:subSize",
-    "update:subBackground",
-    "update:subHTML",
-    "enter",
-    "leave",
-  ],
-  props: {
-    shown: Boolean,
-    metadata: Object,
-    loop: Boolean,
-    nextEnd: Boolean,
-    speed: Number,
-    animColors: String,
-    subSize: String,
-    subBackground: String,
-    subHTML: Boolean,
-    rTick: Number,
-  },
-  setup(props) {
-    return {
-      shownState: useVModel(props, "shown"),
-      loopState: useVModel(props, "loop"),
-      nextEndState: useVModel(props, "nextEnd"),
-      speedState: useVModel(props, "speed"),
-      animColorsState: useVModel(props, "animColors"),
-      subSizeState: useVModel(props, "subSize"),
-      subBackgroundState: useVModel(props, "subBackground"),
-      subHTMLState: useVModel(props, "subHTML"),
-    };
-  },
-  data: function () {
-    return {
-      page: "",
-      speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-      animStyles: ["gradient", "", "none"],
-
-      subtitles: "",
-
-      subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
-      subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
-    };
-  },
-  methods: {
-    enterConfig: function () {
-      this.$emit("enter");
+    components: { ToggleSwitch },
+    name: "AudioPlayerConfig",
+    emits: [
+        "update:shown",
+        "update:loop",
+        "update:nextEnd",
+        "update:speed",
+        "update:animColors",
+        "update:subSize",
+        "update:subBackground",
+        "update:subHTML",
+        "enter",
+        "leave",
+    ],
+    props: {
+        shown: Boolean,
+        metadata: Object,
+        loop: Boolean,
+        nextEnd: Boolean,
+        speed: Number,
+        animColors: String,
+        subSize: String,
+        subBackground: String,
+        subHTML: Boolean,
+        rTick: Number,
     },
-
-    leaveConfig: function () {
-      this.$emit("leave");
+    setup(props) {
+        return {
+            shownState: useVModel(props, "shown"),
+            loopState: useVModel(props, "loop"),
+            nextEndState: useVModel(props, "nextEnd"),
+            speedState: useVModel(props, "speed"),
+            animColorsState: useVModel(props, "animColors"),
+            subSizeState: useVModel(props, "subSize"),
+            subBackgroundState: useVModel(props, "subBackground"),
+            subHTMLState: useVModel(props, "subHTML"),
+        };
     },
+    data: function () {
+        return {
+            page: "",
+            speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+            animStyles: ["gradient", "", "none"],
 
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
+            subtitles: "",
+
+            subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
+            subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+        };
     },
+    methods: {
+        enterConfig: function () {
+            this.$emit("enter");
+        },
 
-    focus: function () {
-      nextTick(() => {
-        this.$el.focus();
-      });
+        leaveConfig: function () {
+            this.$emit("leave");
+        },
+
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        focus: function () {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        },
+
+        goBack: function () {
+            this.page = "";
+            this.focus();
+        },
+
+        changeSpeed: function (s) {
+            this.speedState = s;
+        },
+
+        goToSpeeds: function () {
+            this.page = "speed";
+            this.focus();
+        },
+
+        goToAnimStyles: function () {
+            this.page = "anim";
+            this.focus();
+        },
+
+        goToSubtitles: function () {
+            this.page = "subtitles";
+            this.focus();
+        },
+
+        goToSubSizes: function () {
+            this.page = "subSizes";
+            this.focus();
+        },
+
+        goToSubBackgrounds: function () {
+            this.page = "subBackground";
+            this.focus();
+        },
+
+        renderSpeed: function (speed: number) {
+            if (speed > 1) {
+                return Math.floor(speed * 100) + "%";
+            } else if (speed < 1) {
+                return Math.floor(speed * 100) + "%";
+            } else {
+                return this.$t("Normal");
+            }
+        },
+
+        renderAnimStyle: function (s) {
+            switch (s) {
+            case "gradient":
+                return this.$t("Gradient");
+            case "none":
+                return this.$t("None");
+            default:
+                return this.$t("Monochrome");
+            }
+        },
+
+        setAnimStyle: function (s) {
+            this.animColorsState = s;
+        },
+
+        changeSubtitle: function (s) {
+            this.subtitles = s;
+            PlayerPreferences.SetSubtitles(s);
+            SubtitlesController.OnSubtitlesChanged();
+        },
+
+        renderSubtitleSize: function (s: string) {
+            switch (s) {
+            case "s":
+                return this.$t("Small");
+            case "l":
+                return this.$t("Large");
+            case "xl":
+                return this.$t("Extra large");
+            case "xxl":
+                return this.$t("Extra extra large");
+            default:
+                return this.$t("Medium");
+            }
+        },
+
+        updateSubtitleSize: function (s: string) {
+            this.subSizeState = s;
+            PlayerPreferences.SetSubtitlesSize(s);
+        },
+
+        renderSubtitleBackground: function (s: string) {
+            switch (s) {
+            case "0":
+                return this.$t("Transparent");
+            case "25":
+                return this.$t("Translucid") + " (75%)";
+            case "50":
+                return this.$t("Translucid") + " (50%)";
+            case "75":
+                return this.$t("Translucid") + " (25%)";
+            default:
+                return this.$t("Opaque");
+            }
+        },
+
+        updateSubtitleBackground: function (s: string) {
+            this.subBackgroundState = s;
+            PlayerPreferences.SetSubtitlesBackground(s);
+        },
+
+        renderSubtitle: function (subId: string, rTick: number) {
+            if (rTick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
+                return this.$t("No subtitles");
+            }
+
+            for (let sub of this.metadata.subtitles) {
+                if (sub.id === subId) {
+                    return sub.name;
+                }
+            }
+
+            return this.$t("No subtitles");
+        },
+
+        clickOnEnter: function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                event.target.click();
+            }
+        },
+
+        close: function () {
+            this.shownState = false;
+        },
+
+        keyDownHandle: function (e: KeyboardEvent) {
+            if (e.ctrlKey) {
+                return;
+            }
+            if (e.key === "Escape") {
+                this.close();
+                e.stopPropagation();
+            }
+        },
     },
-
-    goBack: function () {
-      this.page = "";
-      this.focus();
+    mounted: function () {
+        this.subtitles = PlayerPreferences.SelectedSubtitles;
+        this.$options.focusTrap = new FocusTrap(
+            this.$el,
+            this.close.bind(this),
+            "player-settings-no-trap"
+        );
     },
-
-    changeSpeed: function (s) {
-      this.speedState = s;
-    },
-
-    goToSpeeds: function () {
-      this.page = "speed";
-      this.focus();
-    },
-
-    goToAnimStyles: function () {
-      this.page = "anim";
-      this.focus();
-    },
-
-    goToSubtitles: function () {
-      this.page = "subtitles";
-      this.focus();
-    },
-
-    goToSubSizes: function () {
-      this.page = "subSizes";
-      this.focus();
-    },
-
-    goToSubBackgrounds: function () {
-      this.page = "subBackground";
-      this.focus();
-    },
-
-    renderSpeed: function (speed: number) {
-      if (speed > 1) {
-        return Math.floor(speed * 100) + "%";
-      } else if (speed < 1) {
-        return Math.floor(speed * 100) + "%";
-      } else {
-        return this.$t("Normal");
-      }
-    },
-
-    renderAnimStyle: function (s) {
-      switch (s) {
-        case "gradient":
-          return this.$t("Gradient");
-        case "none":
-          return this.$t("None");
-        default:
-          return this.$t("Monochrome");
-      }
-    },
-
-    setAnimStyle: function (s) {
-      this.animColorsState = s;
-    },
-
-    changeSubtitle: function (s) {
-      this.subtitles = s;
-      PlayerPreferences.SetSubtitles(s);
-      SubtitlesController.OnSubtitlesChanged();
-    },
-
-    renderSubtitleSize: function (s: string) {
-      switch (s) {
-        case "s":
-          return this.$t("Small");
-        case "l":
-          return this.$t("Large");
-        case "xl":
-          return this.$t("Extra large");
-        case "xxl":
-          return this.$t("Extra extra large");
-        default:
-          return this.$t("Medium");
-      }
-    },
-
-    updateSubtitleSize: function (s: string) {
-      this.subSizeState = s;
-      PlayerPreferences.SetSubtitlesSize(s);
-    },
-
-    renderSubtitleBackground: function (s: string) {
-      switch (s) {
-        case "0":
-          return this.$t("Transparent");
-        case "25":
-          return this.$t("Translucid") + " (75%)";
-        case "50":
-          return this.$t("Translucid") + " (50%)";
-        case "75":
-          return this.$t("Translucid") + " (25%)";
-        default:
-          return this.$t("Opaque");
-      }
-    },
-
-    updateSubtitleBackground: function (s: string) {
-      this.subBackgroundState = s;
-      PlayerPreferences.SetSubtitlesBackground(s);
-    },
-
-    renderSubtitle: function (subId: string, rTick: number) {
-      if (rTick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
-        return this.$t("No subtitles");
-      }
-
-      for (let sub of this.metadata.subtitles) {
-        if (sub.id === subId) {
-          return sub.name;
-        }
-      }
-
-      return this.$t("No subtitles");
-    },
-
-    clickOnEnter: function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.target.click();
-      }
-    },
-
-    close: function () {
-      this.shownState = false;
-    },
-
-    keyDownHandle: function (e: KeyboardEvent) {
-      if (e.ctrlKey) {
-        return;
-      }
-      if (e.key === "Escape") {
-        this.close();
-        e.stopPropagation();
-      }
-    },
-  },
-  mounted: function () {
-    this.subtitles = PlayerPreferences.SelectedSubtitles;
-    this.$options.focusTrap = new FocusTrap(
-      this.$el,
-      this.close.bind(this),
-      "player-settings-no-trap"
-    );
-  },
-  beforeUnmount: function () {
-    if (this.$options.focusTrap) {
-      this.$options.focusTrap.destroy();
-    }
-  },
-  watch: {
-    shown: function () {
-      this.page = "";
-      if (this.shown) {
+    beforeUnmount: function () {
         if (this.$options.focusTrap) {
-          this.$options.focusTrap.activate();
+            this.$options.focusTrap.destroy();
         }
-        nextTick(() => {
-          this.$el.focus();
-        });
-      } else {
-        if (this.$options.focusTrap) {
-          this.$options.focusTrap.deactivate();
-        }
-      }
     },
-  },
+    watch: {
+        shown: function () {
+            this.page = "";
+            if (this.shown) {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.activate();
+                }
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                if (this.$options.focusTrap) {
+                    this.$options.focusTrap.deactivate();
+                }
+            }
+        },
+    },
 });
 </script>

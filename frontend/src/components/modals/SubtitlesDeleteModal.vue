@@ -32,67 +32,67 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "SubtitlesDeleteModal",
-  emits: ["update:display"],
-  props: {
-    display: Boolean,
-  },
-  data: function () {
-    return {
-      name: "",
-
-      callback: null,
-    };
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    show: function (options: {name: string, callback: () => void}) {
-      this.name = options.name;
-      this.callback = options.callback;
-      this.displayStatus = true;
+    name: "SubtitlesDeleteModal",
+    emits: ["update:display"],
+    props: {
+        display: Boolean,
     },
+    data: function () {
+        return {
+            name: "",
 
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+            callback: null,
+        };
+    },
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
+    methods: {
+        show: function (options: {name: string, callback: () => void}) {
+            this.name = options.name;
+            this.callback = options.callback;
+            this.displayStatus = true;
+        },
+
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
+
+        submit: function (e) {
+            e.preventDefault();
+
+            if (this.callback) {
+                this.callback();
+            }
+
+            this.close();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
         }
-      });
     },
-
-    close: function () {
-      this.$refs.modalContainer.close();
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
     },
-
-    submit: function (e) {
-      e.preventDefault();
-
-      if (this.callback) {
-        this.callback();
-      }
-
-      this.close();
-    },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
-      }
-    },
-  },
 });
 </script>

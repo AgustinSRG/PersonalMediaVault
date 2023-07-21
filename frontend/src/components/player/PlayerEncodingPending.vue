@@ -83,214 +83,214 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "PlayerEncodingPending",
-  props: {
-    mid: Number,
-    tid: Number,
-    res: Number,
-    error: Boolean,
-  },
-  data: function () {
-    return {
-      status: "loading",
-      progress: 0,
-      stage: "",
-      stageNumber: -1,
-      stageProgress: 0,
-      startTime: 0,
-      estimatedRemainingTime: 0,
+    name: "PlayerEncodingPending",
+    props: {
+        mid: Number,
+        tid: Number,
+        res: Number,
+        error: Boolean,
+    },
+    data: function () {
+        return {
+            status: "loading",
+            progress: 0,
+            stage: "",
+            stageNumber: -1,
+            stageProgress: 0,
+            startTime: 0,
+            estimatedRemainingTime: 0,
 
-      pendingId: "",
-    };
-  },
-
-  methods: {
-    start: function () {
-      this.checkTask();
+            pendingId: "",
+        };
     },
 
-    stop: function () {
-      Timeouts.Abort(this.pendingId);
-      Request.Abort(this.pendingId);
-      this.status = "loading";
-      this.progress = 0;
-      this.stage = "";
-      this.stageNumber = -1;
-      this.startTime = 0;
-      this.estimatedRemainingTime = 0;
-    },
+    methods: {
+        start: function () {
+            this.checkTask();
+        },
 
-    checkTask: function () {
-      Timeouts.Abort(this.pendingId);
-      Request.Abort(this.pendingId);
+        stop: function () {
+            Timeouts.Abort(this.pendingId);
+            Request.Abort(this.pendingId);
+            this.status = "loading";
+            this.progress = 0;
+            this.stage = "";
+            this.stageNumber = -1;
+            this.startTime = 0;
+            this.estimatedRemainingTime = 0;
+        },
 
-      if (this.error) {
-        return;
-      }
+        checkTask: function () {
+            Timeouts.Abort(this.pendingId);
+            Request.Abort(this.pendingId);
 
-      if (this.tid <= 0) {
-        this.status = "not-ready";
-        Timeouts.Set(this.pendingId, 1000, this.refreshMedia.bind(this));
-        return;
-      }
+            if (this.error) {
+                return;
+            }
 
-      Request.Pending(this.pendingId, TasksAPI.GetTask(this.tid))
-        .onSuccess((task: TaskStatus) => {
-          this.status = "task";
-          if (task.running) {
-            this.progress = task.stage_progress;
-            this.startTime = task.stage_start;
-            this.stage = task.stage;
+            if (this.tid <= 0) {
+                this.status = "not-ready";
+                Timeouts.Set(this.pendingId, 1000, this.refreshMedia.bind(this));
+                return;
+            }
 
-            this.estimatedRemainingTime =
+            Request.Pending(this.pendingId, TasksAPI.GetTask(this.tid))
+                .onSuccess((task: TaskStatus) => {
+                    this.status = "task";
+                    if (task.running) {
+                        this.progress = task.stage_progress;
+                        this.startTime = task.stage_start;
+                        this.stage = task.stage;
+
+                        this.estimatedRemainingTime =
               (((task.time_now - task.stage_start) / task.stage_progress) *
                 100 -
                 (task.time_now - task.stage_start)) /
               1000;
 
-            switch (this.stage) {
-              case "PREPARE":
-                this.stageNumber = 0;
-                break;
-              case "COPY":
-                this.stageNumber = 1;
-                break;
-              case "PROBE":
-                this.stageNumber = 2;
-                break;
-              case "ENCODE":
-                this.stageNumber = 3;
-                break;
-              case "ENCRYPT":
-                this.stageNumber = 4;
-                break;
-              case "UPDATE":
-                this.stageNumber = 5;
-                break;
-              case "FINISH":
-                this.stageNumber = 6;
-                break;
-              default:
-                this.stageNumber = 0;
-            }
+                        switch (this.stage) {
+                        case "PREPARE":
+                            this.stageNumber = 0;
+                            break;
+                        case "COPY":
+                            this.stageNumber = 1;
+                            break;
+                        case "PROBE":
+                            this.stageNumber = 2;
+                            break;
+                        case "ENCODE":
+                            this.stageNumber = 3;
+                            break;
+                        case "ENCRYPT":
+                            this.stageNumber = 4;
+                            break;
+                        case "UPDATE":
+                            this.stageNumber = 5;
+                            break;
+                        case "FINISH":
+                            this.stageNumber = 6;
+                            break;
+                        default:
+                            this.stageNumber = 0;
+                        }
 
-            this.stageProgress = (this.stageNumber * 100) / 6;
+                        this.stageProgress = (this.stageNumber * 100) / 6;
 
-            Timeouts.Set(this.pendingId, 500, this.checkTask.bind(this));
-          } else {
-            this.stageNumber = -1;
-            this.stage = "QUEUE";
-            this.progress = 0;
-            Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
-          }
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add(404, "*", () => {
-              this.status = "loading";
-              this.checkMediaStatus();
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
-        });
-    },
+                        Timeouts.Set(this.pendingId, 500, this.checkTask.bind(this));
+                    } else {
+                        this.stageNumber = -1;
+                        this.stage = "QUEUE";
+                        this.progress = 0;
+                        Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                    }
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add(404, "*", () => {
+                            this.status = "loading";
+                            this.checkMediaStatus();
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                });
+        },
 
-    checkMediaStatus: function () {
-      Timeouts.Abort(this.pendingId);
-      Request.Abort(this.pendingId);
+        checkMediaStatus: function () {
+            Timeouts.Abort(this.pendingId);
+            Request.Abort(this.pendingId);
 
-      Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
-        .onSuccess((media: MediaData) => {
-          if (this.res >= 0) {
-            if (
-              media.resolutions[this.res] &&
+            Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
+                .onSuccess((media: MediaData) => {
+                    if (this.res >= 0) {
+                        if (
+                            media.resolutions[this.res] &&
               media.resolutions[this.res].ready
-            ) {
-              this.refreshMedia();
-            } else {
-              this.status = "not-ready";
-            }
-          } else {
-            if (media.encoded) {
-              this.refreshMedia();
-            } else {
-              this.status = "not-ready";
-            }
-          }
-        })
-        .onRequestError((err) => {
-          Request.ErrorHandler()
-            .add(401, "*", () => {
-              AppEvents.Emit("unauthorized", false);
-            })
-            .add(404, "*", () => {
-              this.refreshMedia();
-            })
-            .add("*", "*", () => {
-              // Retry
-              Timeouts.Set(
-                this.pendingId,
-                1500,
-                this.checkMediaStatus.bind(this)
-              );
-            })
-            .handle(err);
-        })
-        .onUnexpectedError((err) => {
-          console.error(err);
-          // Retry
-          Timeouts.Set(this.pendingId, 1500, this.checkMediaStatus.bind(this));
-        });
+                        ) {
+                            this.refreshMedia();
+                        } else {
+                            this.status = "not-ready";
+                        }
+                    } else {
+                        if (media.encoded) {
+                            this.refreshMedia();
+                        } else {
+                            this.status = "not-ready";
+                        }
+                    }
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add(404, "*", () => {
+                            this.refreshMedia();
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set(
+                                this.pendingId,
+                                1500,
+                                this.checkMediaStatus.bind(this)
+                            );
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set(this.pendingId, 1500, this.checkMediaStatus.bind(this));
+                });
+        },
+
+        refreshMedia: function () {
+            MediaController.Load();
+        },
+
+        renderTime: function (s: number): string {
+            return renderTimeSeconds(s);
+        },
+
+        cssProgress: function (p: number) {
+            return Math.round(p) + "%";
+        },
     },
 
-    refreshMedia: function () {
-      MediaController.Load();
+    mounted: function () {
+        this.pendingId = MediaController.GetPendingId();
+        this.start();
     },
 
-    renderTime: function (s: number): string {
-      return renderTimeSeconds(s);
+    beforeUnmount: function () {
+        this.stop();
     },
 
-    cssProgress: function (p: number) {
-      return Math.round(p) + "%";
+    watch: {
+        mid: function () {
+            this.stop();
+            this.start();
+        },
+
+        res: function () {
+            this.stop();
+            this.start();
+        },
+
+        tid: function () {
+            this.stop();
+            this.start();
+        },
     },
-  },
-
-  mounted: function () {
-    this.pendingId = MediaController.GetPendingId();
-    this.start();
-  },
-
-  beforeUnmount: function () {
-    this.stop();
-  },
-
-  watch: {
-    mid: function () {
-      this.stop();
-      this.start();
-    },
-
-    res: function () {
-      this.stop();
-      this.start();
-    },
-
-    tid: function () {
-      this.stop();
-      this.start();
-    },
-  },
 });
 </script>

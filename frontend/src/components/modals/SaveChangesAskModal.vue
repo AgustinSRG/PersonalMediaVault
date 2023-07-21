@@ -27,54 +27,54 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
-  name: "SaveChangesAskModal",
-  emits: ["update:display", "yes", "no"],
-  props: {
-    display: Boolean,
-  },
-  setup(props) {
-    return {
-      displayStatus: useVModel(props, "display"),
-    };
-  },
-  methods: {
-    close: function () {
-      this.$refs.modalContainer.close();
+    name: "SaveChangesAskModal",
+    emits: ["update:display", "yes", "no"],
+    props: {
+        display: Boolean,
     },
-
-    clickNo: function () {
-      this.$emit("no");
-      this.close();
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
+    methods: {
+        close: function () {
+            this.$refs.modalContainer.close();
+        },
 
-    clickYes: function () {
-      this.$emit("yes");
-      this.close();
+        clickNo: function () {
+            this.$emit("no");
+            this.close();
+        },
+
+        clickYes: function () {
+            this.$emit("yes");
+            this.close();
+        },
+
+        autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
     },
-
-    autoFocus: function () {
-      if (!this.display) {
-        return;
-      }
-      nextTick(() => {
-        const elem = this.$el.querySelector(".auto-focus");
-        if (elem) {
-          elem.focus();
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
         }
-      });
     },
-  },
-  mounted: function () {
-    if (this.display) {
-      this.autoFocus();
-    }
-  },
-  watch: {
-    display: function () {
-      if (this.display) {
-        this.autoFocus();
-      }
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
     },
-  },
 });
 </script>

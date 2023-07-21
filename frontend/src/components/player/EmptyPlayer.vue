@@ -83,178 +83,178 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 
 export default defineComponent({
-  components: {
-    PlayerMediaChangePreview,
-    PlayerTopBar,
-  },
-  name: "EmptyPlayer",
-  emits: ["go-next", "go-prev", "update:fullscreen"],
-  props: {
-    mid: Number,
-    status: String,
-
-    albumLoading: Boolean,
-
-    fullscreen: Boolean,
-
-    rTick: Number,
-
-    next: Object,
-    prev: Object,
-    inAlbum: Boolean,
-
-    pageNext: Boolean,
-    pagePrev: Boolean,
-
-    canWrite: Boolean,
-
-    min: Boolean,
-  },
-  setup(props) {
-    return {
-      fullScreenState: useVModel(props, "fullscreen"),
-    };
-  },
-  data: function () {
-    return {
-      helpTooltip: "",
-
-      expandedTitle: false,
-      expandedAlbum: false,
-    };
-  },
-  methods: {
-    enterTooltip: function (t: string) {
-      this.helpTooltip = t;
+    components: {
+        PlayerMediaChangePreview,
+        PlayerTopBar,
     },
+    name: "EmptyPlayer",
+    emits: ["go-next", "go-prev", "update:fullscreen"],
+    props: {
+        mid: Number,
+        status: String,
 
-    leaveTooltip: function (t: string) {
-      if (t === this.helpTooltip) {
-        this.helpTooltip = "";
-      }
-    },
+        albumLoading: Boolean,
 
-    goNext: function () {
-      if (this.next || this.pageNext) {
-        this.$emit("go-next");
-      }
-    },
+        fullscreen: Boolean,
 
-    goPrev: function () {
-      if (this.prev || this.pagePrev) {
-        this.$emit("go-prev");
-      }
-    },
+        rTick: Number,
 
-    mouseLeavePlayer: function () {
-      this.helpTooltip = "";
-    },
+        next: Object,
+        prev: Object,
+        inAlbum: Boolean,
 
-    leaveControls: function () {
-      this.helpTooltip = "";
-    },
+        pageNext: Boolean,
+        pagePrev: Boolean,
 
-    toggleFullScreen: function () {
-      if (!this.fullscreen) {
-        openFullscreen();
-      } else {
-        closeFullscreen();
-      }
-      this.fullScreenState = !this.fullScreenState;
-    },
-    onExitFullScreen: function () {
-      if (!document.fullscreenElement) {
-        this.fullScreenState = false;
-      }
-    },
-    stopPropagationEvent: function (e) {
-      e.stopPropagation();
-    },
+        canWrite: Boolean,
 
-    onKeyPress: function (event: KeyboardEvent): boolean {
-      if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
-        return false;
-      }
-      let caught = true;
-      switch (event.key) {
-        case "F":
-        case "f":
-          if (event.altKey || event.shiftKey) {
-            caught = false;
-          } else {
-            this.toggleFullScreen();
-          }
-          break;
-        case "PageDown":
-        case "ArrowLeft":
-          if (this.prev || this.pagePrev) {
-            this.goPrev();
-          } else {
-            caught = false;
-          }
-          break;
-        case "PageUp":
-        case "ArrowRight":
-          if (this.next || this.pageNext) {
-            this.goNext();
-          } else {
-            caught = false;
-          }
-          break;
-        default:
-          caught = false;
-      }
-
-      return caught;
+        min: Boolean,
     },
-  },
-  mounted: function () {
+    setup(props) {
+        return {
+            fullScreenState: useVModel(props, "fullscreen"),
+        };
+    },
+    data: function () {
+        return {
+            helpTooltip: "",
+
+            expandedTitle: false,
+            expandedAlbum: false,
+        };
+    },
+    methods: {
+        enterTooltip: function (t: string) {
+            this.helpTooltip = t;
+        },
+
+        leaveTooltip: function (t: string) {
+            if (t === this.helpTooltip) {
+                this.helpTooltip = "";
+            }
+        },
+
+        goNext: function () {
+            if (this.next || this.pageNext) {
+                this.$emit("go-next");
+            }
+        },
+
+        goPrev: function () {
+            if (this.prev || this.pagePrev) {
+                this.$emit("go-prev");
+            }
+        },
+
+        mouseLeavePlayer: function () {
+            this.helpTooltip = "";
+        },
+
+        leaveControls: function () {
+            this.helpTooltip = "";
+        },
+
+        toggleFullScreen: function () {
+            if (!this.fullscreen) {
+                openFullscreen();
+            } else {
+                closeFullscreen();
+            }
+            this.fullScreenState = !this.fullScreenState;
+        },
+        onExitFullScreen: function () {
+            if (!document.fullscreenElement) {
+                this.fullScreenState = false;
+            }
+        },
+        stopPropagationEvent: function (e) {
+            e.stopPropagation();
+        },
+
+        onKeyPress: function (event: KeyboardEvent): boolean {
+            if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+                return false;
+            }
+            let caught = true;
+            switch (event.key) {
+            case "F":
+            case "f":
+                if (event.altKey || event.shiftKey) {
+                    caught = false;
+                } else {
+                    this.toggleFullScreen();
+                }
+                break;
+            case "PageDown":
+            case "ArrowLeft":
+                if (this.prev || this.pagePrev) {
+                    this.goPrev();
+                } else {
+                    caught = false;
+                }
+                break;
+            case "PageUp":
+            case "ArrowRight":
+                if (this.next || this.pageNext) {
+                    this.goNext();
+                } else {
+                    caught = false;
+                }
+                break;
+            default:
+                caught = false;
+            }
+
+            return caught;
+        },
+    },
+    mounted: function () {
     // Load player preferences
 
-    this.$options.keyHandler = this.onKeyPress.bind(this);
-    KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+        this.$options.keyHandler = this.onKeyPress.bind(this);
+        KeyboardManager.AddHandler(this.$options.keyHandler, 100);
 
-    this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-    document.addEventListener(
-      "fullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.addEventListener(
-      "webkitfullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.addEventListener(
-      "mozfullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.addEventListener(
-      "MSFullscreenChange",
-      this.$options.exitFullScreenListener
-    );
-  },
-  beforeUnmount: function () {
-    document.removeEventListener(
-      "fullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.removeEventListener(
-      "webkitfullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.removeEventListener(
-      "mozfullscreenchange",
-      this.$options.exitFullScreenListener
-    );
-    document.removeEventListener(
-      "MSFullscreenChange",
-      this.$options.exitFullScreenListener
-    );
-    KeyboardManager.RemoveHandler(this.$options.keyHandler);
-  },
-  watch: {
-    rTick: function () {
-      this.expandedTitle = false;
+        this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
+        document.addEventListener(
+            "fullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.addEventListener(
+            "webkitfullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.addEventListener(
+            "mozfullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.addEventListener(
+            "MSFullscreenChange",
+            this.$options.exitFullScreenListener
+        );
     },
-  },
+    beforeUnmount: function () {
+        document.removeEventListener(
+            "fullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.removeEventListener(
+            "webkitfullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.removeEventListener(
+            "mozfullscreenchange",
+            this.$options.exitFullScreenListener
+        );
+        document.removeEventListener(
+            "MSFullscreenChange",
+            this.$options.exitFullScreenListener
+        );
+        KeyboardManager.RemoveHandler(this.$options.keyHandler);
+    },
+    watch: {
+        rTick: function () {
+            this.expandedTitle = false;
+        },
+    },
 });
 </script>
