@@ -1,177 +1,110 @@
 <template>
-  <div
-    class="player-context-menu"
-    :class="{
-      hidden: !shown,
-    }"
-    :style="{
-      top: top,
-      left: left,
-      right: right,
-      bottom: bottom,
-      width: width,
-      'max-width': maxWidth,
-      'max-height': maxHeight,
-    }"
-    tabindex="-1"
-    @mousedown="stopPropagationEvent"
-    @toutchstart.passive="stopPropagationEvent"
-    @click="stopPropagationEvent"
-    @dblclick="stopPropagationEvent"
-  >
-    <table class="player-context-menu-table">
-      <tr
-        v-if="type === 'video' || type === 'audio'"
-        class="tr-button"
-        tabindex="0"
-        @click="toggleLoop"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-repeat icon-config"></i>
-          <span class="context-entry-title">{{ $t("Loop") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !loop }"></i>
-        </td>
-      </tr>
+    <div class="player-context-menu" :class="{
+        hidden: !shown,
+    }" :style="{
+    top: top,
+    left: left,
+    right: right,
+    bottom: bottom,
+    width: width,
+    'max-width': maxWidth,
+    'max-height': maxHeight,
+}" tabindex="-1" @mousedown="stopPropagationEvent" @toutchstart.passive="stopPropagationEvent" @click="stopPropagationEvent" @dblclick="stopPropagationEvent">
+        <table class="player-context-menu-table">
+            <tr v-if="type === 'video' || type === 'audio'" class="tr-button" tabindex="0" @click="toggleLoop" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-repeat icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Loop") }}</span>
+                </td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': !loop }"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="(type === 'video' || type === 'audio') && hasSlices"
-        class="tr-button"
-        tabindex="0"
-        @click="toggleSliceLoop"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-repeat icon-config"></i>
-          <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !sliceLoop }"></i>
-        </td>
-      </tr>
+            <tr v-if="(type === 'video' || type === 'audio') && hasSlices" class="tr-button" tabindex="0" @click="toggleSliceLoop" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-repeat icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
+                </td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': !sliceLoop }"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="type === 'image'"
-        class="tr-button"
-        tabindex="0"
-        @click="toggleFit"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-magnifying-glass icon-config"></i>
-          <span class="context-entry-title">{{ $t("Fit image") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !fit }"></i>
-        </td>
-      </tr>
+            <tr v-if="type === 'image'" class="tr-button" tabindex="0" @click="toggleFit" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-magnifying-glass icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Fit image") }}</span>
+                </td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': !fit }"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="type === 'image' || type === 'video'"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="toggleControls"
-      >
-        <td>
-          <i class="fas fa-eye-slash icon-config"></i>
-          <span class="context-entry-title">{{ $t("Hide controls") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': controls }"></i>
-        </td>
-      </tr>
+            <tr v-if="type === 'image' || type === 'video'" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="toggleControls">
+                <td>
+                    <i class="fas fa-eye-slash icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Hide controls") }}</span>
+                </td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': controls }"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="type === 'image' && canWrite"
-        class="tr-button"
-        tabindex="0"
-        @click="toggleNotes"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-pencil-alt icon-config"></i>
-          <span class="context-entry-title">{{ $t("Edit image notes") }}</span>
-        </td>
-        <td class="td-right">
-          <i class="fas fa-check" :class="{ 'check-uncheck': !notesEdit }"></i>
-        </td>
-      </tr>
+            <tr v-if="type === 'image' && canWrite" class="tr-button" tabindex="0" @click="toggleNotes" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-pencil-alt icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Edit image notes") }}</span>
+                </td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': !notesEdit }"></i>
+                </td>
+            </tr>
 
 
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @click="showTags"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-tag icon-config"></i>
-          <span class="context-entry-title">{{ $t("Tags") }}</span>
-        </td>
-        <td class="td-right">
-        </td>
-      </tr>
+            <tr class="tr-button" tabindex="0" @click="showTags" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-tag icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Tags") }}</span>
+                </td>
+                <td class="td-right">
+                </td>
+            </tr>
 
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @click="showExtendedDescription"
-        @keydown="clickOnEnter"
-      >
-        <td>
-          <i class="fas fa-info icon-config"></i>
-          <span class="context-entry-title">{{ $t("Extended description") }}</span>
-        </td>
-        <td class="td-right">
-        </td>
-      </tr>
+            <tr v-if="hasExtendedDescription || canWrite" class="tr-button" tabindex="0" @click="showExtendedDescription" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-info icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Extended description") }}</span>
+                </td>
+                <td class="td-right">
+                </td>
+            </tr>
 
-      <tr
-        v-if="url"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="download"
-      >
-        <td>
-          <i class="fas fa-download icon-config"></i>
-          <span class="context-entry-title">{{ $t("Download") }}</span>
-        </td>
-        <td class="td-right"></td>
-      </tr>
+            <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="download">
+                <td>
+                    <i class="fas fa-download icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Download") }}</span>
+                </td>
+                <td class="td-right"></td>
+            </tr>
 
-      <tr
-        v-if="url"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="openStats"
-      >
-        <td>
-          <i class="fas fa-bars-progress icon-config"></i>
-          <span class="context-entry-title">{{ $t("Size Statistics") }}</span>
-        </td>
-        <td class="td-right"></td>
-      </tr>
+            <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="openStats">
+                <td>
+                    <i class="fas fa-bars-progress icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Size Statistics") }}</span>
+                </td>
+                <td class="td-right"></td>
+            </tr>
 
-      <tr
-        v-if="url"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="refreshMedia"
-      >
-        <td>
-          <i class="fas fa-sync-alt icon-config"></i>
-          <span class="context-entry-title">{{ $t("Refresh") }}</span>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
-  </div>
+            <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="refreshMedia">
+                <td>
+                    <i class="fas fa-sync-alt icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Refresh") }}</span>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+    </div>
 </template>
 
 <script lang="ts">
@@ -210,6 +143,8 @@ export default defineComponent({
 
         notesEdit: Boolean,
         canWrite: Boolean,
+
+        hasExtendedDescription: Boolean,
     },
     setup(props) {
         return {
