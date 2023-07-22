@@ -224,7 +224,12 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 
 	finished := false
 	buf := make([]byte, 1024*1024)
-	bytesEncrypted := 0
+	bytesEncrypted := float64(0)
+	bytesTotal := float64(f_info.Size())
+
+	if bytesTotal == 0 {
+		bytesTotal = 1
+	}
 
 	for !finished {
 		c, err := f.Read(buf)
@@ -263,9 +268,9 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 			return "", err
 		}
 
-		bytesEncrypted += c
+		bytesEncrypted += float64(c)
 
-		progress_enc := math.Round(float64(bytesEncrypted) * 100 / float64(ENCRYPTED_BLOCK_MAX_SIZE))
+		progress_enc := math.Round(bytesEncrypted * 100 / bytesTotal)
 		p := int32(progress_enc)
 		GetVault().media.SetProgress(mid, p)
 	}

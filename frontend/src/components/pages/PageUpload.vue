@@ -384,6 +384,7 @@ export default defineComponent({
         },
 
         cssProgress: function (status: string, p: number) {
+            p = Math.min(100, Math.max(0, p));
             switch (status) {
             case "uploading":
                 return Math.round(p * 50 / 100) + "%";
