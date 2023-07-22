@@ -146,6 +146,10 @@
     width: 100%;
 }
 
+.modal-title.with-2-buttons {
+    width: calc(100% - 48px - 48px);
+}
+
 .modal-close-btn {
     display: block;
     width: 48px;

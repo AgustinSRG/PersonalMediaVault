@@ -45,6 +45,8 @@ export class PlayerPreferences {
 
     public static PlayerTogglePlayDelay = 250;
 
+    public static ExtendedDescriptionSize = "xl";
+
     public static LoadPreferences() {
         const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
         if (userRes) {
@@ -89,6 +91,8 @@ export class PlayerPreferences {
         PlayerPreferences.PlayerTogglePlayDelay = LocalStorage.Get("player-pref-toggle-delay", 250);
 
         PlayerPreferences.SelectedAudioTrack = LocalStorage.Get("player-pref-audio-track", "");
+
+        PlayerPreferences.ExtendedDescriptionSize = LocalStorage.Get("player-pref-ext-desc-size", "xl");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -320,5 +324,10 @@ export class PlayerPreferences {
     public static SetPlayerToggleDelay(d: number) {
         PlayerPreferences.PlayerTogglePlayDelay = d;
         LocalStorage.Set("player-pref-toggle-delay", d);
+    }
+
+    public static SetExtendedDescriptionSize(s: string) {
+        PlayerPreferences.ExtendedDescriptionSize = s;
+        LocalStorage.Set("player-pref-ext-desc-size", s);
     }
 }

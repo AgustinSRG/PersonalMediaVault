@@ -1,8 +1,19 @@
 <template>
     <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy">
-        <div v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document">
+        <div
+            v-if="display"
+            class="modal-dialog modal-height-100-wf"
+            :class="{ 'modal-lg': modalSize === 'lg', 'modal-xl': modalSize === 'xl' }"
+            role="document"
+        >
             <div class="modal-header">
-                <div class="modal-title">{{ title || $t("Extended description") }}</div>
+                <div class="modal-title with-2-buttons">{{ title || $t("Extended description") }}</div>
+                <button v-if="modalSize === 'lg'" type="button" class="modal-close-btn" :title="$t('Expand')" @click="switchModalSize">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button v-if="modalSize === 'xl'" type="button" class="modal-close-btn" :title="$t('Compress')" @click="switchModalSize">
+                    <i class="fas fa-compress"></i>
+                </button>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
@@ -64,6 +75,7 @@ import { Timeouts } from "@/utils/timeout";
 import { GetAssetURL, Request } from "@/utils/request";
 import { MediaAPI } from "@/api/api-media";
 import { escapeHTML } from "@/utils/html";
+import { PlayerPreferences } from "@/control/player-preferences";
 
 export default defineComponent({
     components: {
@@ -92,6 +104,8 @@ export default defineComponent({
             loading: true,
             busy: false,
             canWrite: AuthController.CanWrite,
+
+            modalSize: "xl",
 
             changed: false,
         };
@@ -247,6 +261,22 @@ export default defineComponent({
                     console.error(err);
                 });
         },
+
+        updateModalSize: function () {
+            this.modalSize = PlayerPreferences.ExtendedDescriptionSize;
+            if (!["lg", "xl"].includes(this.modalSize)) {
+                this.modalSize = "xl";
+            }
+        },
+
+        switchModalSize: function () {
+            if (this.modalSize === "lg") {
+                this.modalSize = "xl";
+            } else {
+                this.modalSize = "lg";
+            }
+            PlayerPreferences.SetExtendedDescriptionSize(this.modalSize);
+        },
     },
     mounted: function () {
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
@@ -258,6 +288,7 @@ export default defineComponent({
         AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
 
         if (this.display) {
+            this.updateModalSize();
             this.load();
         }
     },
@@ -268,6 +299,7 @@ export default defineComponent({
     watch: {
         display: function () {
             if (this.display) {
+                this.updateModalSize();
                 this.load();
             }
         },
