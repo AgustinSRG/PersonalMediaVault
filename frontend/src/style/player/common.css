@@ -97,9 +97,8 @@
 }
 
 .player-time-label-container.in-album {
-    max-width: calc(100%  - 160px - 40px - 40px - 40px);
+    max-width: calc(100% - 160px - 40px - 40px - 40px);
 }
-
 
 .player-min .player-time-label-container .times-slice-name {
     display: none;

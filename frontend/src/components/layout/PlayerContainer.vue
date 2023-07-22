@@ -1,18 +1,97 @@
 <template>
-  <div class="player-container" tabindex="-1">
-    <EmptyPlayer v-if="!mediaData || mediaData.type === 0" :mid="mid" :status="status" :rTick="tick" :prev="prev" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :next="next" :inAlbum="isInAlbum" :albumLoading="albumLoading" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" :min="minPlayer"></EmptyPlayer>
-    <ImagePlayer v-if="mediaData && mediaData.type === 1" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:showControls="showControls" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" @ext-desc-open="openExtendedDescription" :min="minPlayer"></ImagePlayer>
-    <VideoPlayer v-if="mediaData && mediaData.type === 2" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" v-model:userControls="showControls" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" @ext-desc-open="openExtendedDescription" :min="minPlayer"></VideoPlayer>
-    <AudioPlayer v-if="mediaData && mediaData.type === 3" :mid="mid" :metadata="mediaData" :rTick="tick" :prev="prev" :next="next" :pagePrev="hasPagePrev" :pageNext="hasPageNext" :inAlbum="isInAlbum" :canWrite="canWrite" @go-next="goNext" @go-prev="goPrev" v-model:fullscreen="fullScreen" @update:fullscreen="onUpdateFullScreen" @albums-open="openAlbums" @stats-open="openStats" @tags-open="openTags" @ext-desc-open="openExtendedDescription" :min="minPlayer"></AudioPlayer>
+    <div class="player-container" tabindex="-1">
+        <EmptyPlayer
+            v-if="!mediaData || mediaData.type === 0"
+            :mid="mid"
+            :status="status"
+            :rTick="tick"
+            :prev="prev"
+            :pagePrev="hasPagePrev"
+            :pageNext="hasPageNext"
+            :next="next"
+            :inAlbum="isInAlbum"
+            :albumLoading="albumLoading"
+            :canWrite="canWrite"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            v-model:fullscreen="fullScreen"
+            @update:fullscreen="onUpdateFullScreen"
+            :min="minPlayer"
+        ></EmptyPlayer>
+        <ImagePlayer
+            v-if="mediaData && mediaData.type === 1"
+            :mid="mid"
+            :metadata="mediaData"
+            :rTick="tick"
+            :prev="prev"
+            :next="next"
+            :pagePrev="hasPagePrev"
+            :pageNext="hasPageNext"
+            :inAlbum="isInAlbum"
+            :canWrite="canWrite"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            v-model:fullscreen="fullScreen"
+            @update:fullscreen="onUpdateFullScreen"
+            v-model:showControls="showControls"
+            @albums-open="openAlbums"
+            @stats-open="openStats"
+            @tags-open="openTags"
+            @ext-desc-open="openExtendedDescription"
+            :min="minPlayer"
+        ></ImagePlayer>
+        <VideoPlayer
+            v-if="mediaData && mediaData.type === 2"
+            :mid="mid"
+            :metadata="mediaData"
+            :rTick="tick"
+            :prev="prev"
+            :next="next"
+            :pagePrev="hasPagePrev"
+            :pageNext="hasPageNext"
+            :inAlbum="isInAlbum"
+            :canWrite="canWrite"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            v-model:fullscreen="fullScreen"
+            @update:fullscreen="onUpdateFullScreen"
+            v-model:userControls="showControls"
+            @albums-open="openAlbums"
+            @stats-open="openStats"
+            @tags-open="openTags"
+            @ext-desc-open="openExtendedDescription"
+            :min="minPlayer"
+        ></VideoPlayer>
+        <AudioPlayer
+            v-if="mediaData && mediaData.type === 3"
+            :mid="mid"
+            :metadata="mediaData"
+            :rTick="tick"
+            :prev="prev"
+            :next="next"
+            :pagePrev="hasPagePrev"
+            :pageNext="hasPageNext"
+            :inAlbum="isInAlbum"
+            :canWrite="canWrite"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            v-model:fullscreen="fullScreen"
+            @update:fullscreen="onUpdateFullScreen"
+            @albums-open="openAlbums"
+            @stats-open="openStats"
+            @tags-open="openTags"
+            @ext-desc-open="openExtendedDescription"
+            :min="minPlayer"
+        ></AudioPlayer>
 
-    <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
+        <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
-    <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
+        <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
 
-    <TagListModal v-if="displayTagList" v-model:display="displayTagList"></TagListModal>
+        <TagListModal v-if="displayTagList" v-model:display="displayTagList"></TagListModal>
 
-    <ExtendedDescriptionModal v-if="displayExtendedDescription" v-model:display="displayExtendedDescription"></ExtendedDescriptionModal>
-  </div>
+        <ExtendedDescriptionModal v-if="displayExtendedDescription" v-model:display="displayExtendedDescription"></ExtendedDescriptionModal>
+    </div>
 </template>
 
 <script lang="ts">
@@ -32,19 +111,19 @@ const AudioPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/AudioPlayer.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
-})
+});
 
 const VideoPlayer = defineAsyncComponent({
     loader: () => import("@/components/player/VideoPlayer.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
-})
+});
 
 const ImagePlayer = defineAsyncComponent({
     loader: () => import("@/components/player/ImagePlayer.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
-})
+});
 
 import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
@@ -231,10 +310,7 @@ export default defineComponent({
         this.$options.loadingH = this.updateLoading.bind(this);
         this.$options.updateH = this.updateMedia.bind(this);
 
-        this.$options.focusTrap = new FocusTrap(
-            this.$el,
-            this.focusLost.bind(this)
-        );
+        this.$options.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
 
         this.$options.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
         this.checkPlayerSize();
@@ -252,16 +328,10 @@ export default defineComponent({
 
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
-        AppEvents.AddEventListener(
-            "current-album-loading",
-            this.$options.albumLoadingH
-        );
+        AppEvents.AddEventListener("current-album-loading", this.$options.albumLoadingH);
 
         this.$options.goPrevH = this.goPrev.bind(this);
         AppEvents.AddEventListener("media-go-prev", this.$options.goPrevH);
@@ -270,27 +340,15 @@ export default defineComponent({
         AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "current-media-loading",
-            this.$options.loadingH
-        );
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.updateH
-        );
+        AppEvents.RemoveEventListener("current-media-loading", this.$options.loadingH);
+        AppEvents.RemoveEventListener("current-media-update", this.$options.updateH);
 
         AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
         AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "current-album-loading",
-            this.$options.albumLoadingH
-        );
+        AppEvents.RemoveEventListener("current-album-loading", this.$options.albumLoadingH);
 
         AppEvents.RemoveEventListener("media-go-prev", this.$options.goPrevH);
         AppEvents.RemoveEventListener("media-go-next", this.$options.goNextH);

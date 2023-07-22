@@ -1,37 +1,56 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Change password") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("Current password") }}:</label>
-          <input type="password" name="password" v-model="currentPassword" :disabled="busy" maxlength="255" class="form-control form-control-full-width auto-focus" />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("New password") }}:</label>
-          <input type="password" name="new-password" v-model="password" :disabled="busy" autocomplete="new-password" maxlength="255" class="form-control form-control-full-width" />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("New password") }} ({{
-            $t("Repeat it for confirmation")
-          }}):</label>
-          <input type="password" name="new-password-repeat" v-model="password2" :disabled="busy" autocomplete="new-password" maxlength="255" class="form-control form-control-full-width" />
-        </div>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Change password") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{ $t("Current password") }}:</label>
+                    <input
+                        type="password"
+                        name="password"
+                        v-model="currentPassword"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width auto-focus"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("New password") }}:</label>
+                    <input
+                        type="password"
+                        name="new-password"
+                        v-model="password"
+                        :disabled="busy"
+                        autocomplete="new-password"
+                        maxlength="255"
+                        class="form-control form-control-full-width"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("New password") }} ({{ $t("Repeat it for confirmation") }}):</label>
+                    <input
+                        type="password"
+                        name="new-password-repeat"
+                        v-model="password2"
+                        :disabled="busy"
+                        autocomplete="new-password"
+                        maxlength="255"
+                        class="form-control form-control-full-width"
+                    />
+                </div>
 
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button type="submit" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Change password") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Change password") }}</button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

@@ -1,73 +1,116 @@
 <template>
-  <div class="empty-player" :class="{
-    'player-min': min,
-    'full-screen': fullscreen,
-  }" @dblclick="toggleFullScreen">
+    <div
+        class="empty-player"
+        :class="{
+            'player-min': min,
+            'full-screen': fullscreen,
+        }"
+        @dblclick="toggleFullScreen"
+    >
+        <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumLoading)">
+            <div class="player-lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
 
-    <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumLoading)">
-      <div class="player-lds-ring">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
+        <div class="player-error-container" v-if="status === '404'">
+            <div class="player-info-icon"><i class="fas fa-ban"></i></div>
+            <div class="player-error">{{ $t("Media asset does not exist or was removed from the vault") }}</div>
+        </div>
+
+        <div class="player-error-container" v-if="status === 'none' && !albumLoading">
+            <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
+            <div class="player-info">{{ $t("The album is empty") }}</div>
+            <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
+        </div>
+
+        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls">
+            <div class="player-controls-left">
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!prev && !pagePrev"
+                    type="button"
+                    :title="$t('Previous')"
+                    class="player-btn"
+                    @click="goPrev"
+                    @mouseenter="enterTooltip('prev')"
+                    @mouseleave="leaveTooltip('prev')"
+                >
+                    <i class="fas fa-backward-step"></i>
+                </button>
+
+                <button disabled type="button" :title="$t('Play')" class="player-btn">
+                    <i class="fas fa-play"></i>
+                </button>
+
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!next && !pageNext"
+                    type="button"
+                    :title="$t('Next')"
+                    class="player-btn"
+                    @click="goNext"
+                    @mouseenter="enterTooltip('next')"
+                    @mouseleave="leaveTooltip('next')"
+                >
+                    <i class="fas fa-forward-step"></i>
+                </button>
+            </div>
+
+            <div class="player-controls-right">
+                <button
+                    v-if="!fullscreen"
+                    type="button"
+                    :title="$t('Full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen')"
+                    @mouseleave="leaveTooltip('full-screen')"
+                >
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button
+                    v-if="fullscreen"
+                    type="button"
+                    :title="$t('Exit full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen-exit')"
+                    @mouseleave="leaveTooltip('full-screen-exit')"
+                >
+                    <i class="fas fa-compress"></i>
+                </button>
+            </div>
+        </div>
+
+        <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
+            <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
+        </div>
+
+        <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+            <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
+        </div>
+
+        <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
+            {{ $t("Full screen") }}
+        </div>
+        <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
+            {{ $t("Exit full screen") }}
+        </div>
+
+        <PlayerTopBar
+            :mid="mid"
+            :metadata="null"
+            :shown="true"
+            :fullscreen="fullscreen"
+            v-model:expanded="expandedTitle"
+            v-model:albumExpanded="expandedAlbum"
+            :inAlbum="inAlbum"
+        ></PlayerTopBar>
     </div>
-
-    <div class="player-error-container" v-if="status === '404'">
-      <div class="player-info-icon"><i class="fas fa-ban"></i></div>
-      <div class="player-error">{{ $t('Media asset does not exist or was removed from the vault') }}</div>
-    </div>
-
-    <div class="player-error-container" v-if="status === 'none' && !albumLoading">
-      <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
-      <div class="player-info">{{ $t('The album is empty') }}</div>
-      <div class="player-info">{{ $t('Browse the vault in order to add media to it') }}</div>
-    </div>
-
-    <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls">
-      <div class="player-controls-left">
-        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
-          <i class="fas fa-backward-step"></i>
-        </button>
-
-        <button disabled type="button" :title="$t('Play')" class="player-btn">
-          <i class="fas fa-play"></i>
-        </button>
-
-        <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
-          <i class="fas fa-forward-step"></i>
-        </button>
-      </div>
-
-      <div class="player-controls-right">
-
-        <button v-if="!fullscreen" type="button" :title="$t('Full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen')" @mouseleave="leaveTooltip('full-screen')">
-          <i class="fas fa-expand"></i>
-        </button>
-        <button v-if="fullscreen" type="button" :title="$t('Exit full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen-exit')" @mouseleave="leaveTooltip('full-screen-exit')">
-          <i class="fas fa-compress"></i>
-        </button>
-      </div>
-    </div>
-
-    <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-      <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
-    </div>
-
-    <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-      <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
-    </div>
-
-    <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
-      {{ $t("Full screen") }}
-    </div>
-    <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
-      {{ $t("Exit full screen") }}
-    </div>
-
-
-    <PlayerTopBar :mid="mid" :metadata="null" :shown="true" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum"></PlayerTopBar>
-  </div>
 </template>
 
 <script lang="ts">
@@ -209,46 +252,22 @@ export default defineComponent({
         },
     },
     mounted: function () {
-    // Load player preferences
+        // Load player preferences
 
         this.$options.keyHandler = this.onKeyPress.bind(this);
         KeyboardManager.AddHandler(this.$options.keyHandler, 100);
 
         this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
     },
     beforeUnmount: function () {
-        document.removeEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
         KeyboardManager.RemoveHandler(this.$options.keyHandler);
     },
     watch: {

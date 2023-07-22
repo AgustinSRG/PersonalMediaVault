@@ -28,7 +28,7 @@ function parseDurationSRT(duration: string): number {
         const n = parseInt(parts[i]);
 
         if (!isNaN(n) && isFinite(n) && n >= 0) {
-            result += (n * multiplier);
+            result += n * multiplier;
         }
 
         multiplier = multiplier * 60;
@@ -38,7 +38,11 @@ function parseDurationSRT(duration: string): number {
 }
 
 function replaceSRT_HTMLFormat(text: string): string {
-    return text.replace(/[\n\r]+/g, " ").replace(/\{\\an[0-9]\}/g, "").replace(/\}\}/g, "<").replace(/\}\}/g, ">");
+    return text
+        .replace(/[\n\r]+/g, " ")
+        .replace(/\{\\an[0-9]\}/g, "")
+        .replace(/\}\}/g, "<")
+        .replace(/\}\}/g, ">");
 }
 
 export function parseSRT(srt: string): SubtitlesEntry[] {
@@ -74,20 +78,20 @@ export function findSubtitlesEntry(subtitles: SubtitlesEntry[], time: number): S
         return null;
     }
 
-    let low = 0
-    let high = subtitles.length - 1
+    let low = 0;
+    let high = subtitles.length - 1;
 
     while (low <= high) {
         const m = (low + high) >> 1;
         const v = subtitles[m].start;
 
         if (v < time) {
-            low = m + 1
+            low = m + 1;
         } else if (v > time) {
-            high = m - 1
+            high = m - 1;
         } else {
-            low = m
-            high = m - 1
+            low = m;
+            high = m - 1;
         }
     }
 

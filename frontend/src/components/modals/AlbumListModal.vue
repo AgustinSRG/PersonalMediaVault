@@ -1,74 +1,118 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
-    <div v-if="display" class="modal-dialog modal-sm" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Albums") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+        <div v-if="display" class="modal-dialog modal-sm" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Albums") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-      <div class="modal-body" v-if="loading">
-        <i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...
-      </div>
+            <div class="modal-body" v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</div>
 
-      <div class="modal-body with-menu" v-if="!loading">
-        <div class="albums-modal-filter" v-if="!canWrite">
-          <input type="text" autocomplete="off" @keydown="onFilterKeyDown" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control form-control-full-width auto-focus" :placeholder="$t('Filter by name') + '...'" />
-        </div>
-        <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
-          <input type="text" autocomplete="off" @keydown="onFilterKeyDown" @input="updateAlbums" :disabled="busy" v-model="filter" class="form-control auto-focus" :placeholder="$t('Filter by name') + '...'" />
-          <button v-if="!editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to edit mode')">
-            <i class="fas fa-pencil-alt"></i>
-          </button>
-          <button v-if="editMode" type="button" :disabled="busy" @click="changeEditMode" class="album-edit-mode-btn" :title="$t('Change to view mode')">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-        <div class="albums-list-table-container">
-          <table class="modal-menu" v-if="editMode">
-            <tr v-if="albums.length === 0">
-              <td colspan="2" class="albums-menu-empty">
-                {{ $t("No albums found") }}
-              </td>
-            </tr>
-            <tr v-for="a in albums" :key="a.id" class="modal-menu-item" tabindex="0" @click="clickOnAlbum(a)" @keydown="clickOnEnter">
-              <td class="modal-menu-item-icon">
-                <i v-if="busy" class="fa fa-spinner fa-spin"></i>
-                <i v-else-if="a.added" class="far fa-square-check"></i>
-                <i v-else class="far fa-square"></i>
-              </td>
-              <td class="modal-menu-item-title">
-                {{ a.name }}
-              </td>
-            </tr>
-          </table>
-          <table class="modal-menu" v-if="!editMode">
-            <tr v-if="albums.length === 0">
-              <td colspan="2" class="albums-menu-empty">
-                {{ $t("No albums found") }}
-              </td>
-            </tr>
-            <tr v-for="a in albums" :key="a.id" class="modal-menu-item" tabindex="0" @click="goToAlbum(a)" @keydown="clickOnEnter">
-              <td class="modal-menu-item-icon">
-                <i class="fas fa-list-ol"></i>
-              </td>
-              <td class="modal-menu-item-title">
-                {{ a.name }}
-              </td>
-            </tr>
-          </table>
-        </div>
-      </div>
+            <div class="modal-body with-menu" v-if="!loading">
+                <div class="albums-modal-filter" v-if="!canWrite">
+                    <input
+                        type="text"
+                        autocomplete="off"
+                        @keydown="onFilterKeyDown"
+                        @input="updateAlbums"
+                        :disabled="busy"
+                        v-model="filter"
+                        class="form-control form-control-full-width auto-focus"
+                        :placeholder="$t('Filter by name') + '...'"
+                    />
+                </div>
+                <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
+                    <input
+                        type="text"
+                        autocomplete="off"
+                        @keydown="onFilterKeyDown"
+                        @input="updateAlbums"
+                        :disabled="busy"
+                        v-model="filter"
+                        class="form-control auto-focus"
+                        :placeholder="$t('Filter by name') + '...'"
+                    />
+                    <button
+                        v-if="!editMode"
+                        type="button"
+                        :disabled="busy"
+                        @click="changeEditMode"
+                        class="album-edit-mode-btn"
+                        :title="$t('Change to edit mode')"
+                    >
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button
+                        v-if="editMode"
+                        type="button"
+                        :disabled="busy"
+                        @click="changeEditMode"
+                        class="album-edit-mode-btn"
+                        :title="$t('Change to view mode')"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="albums-list-table-container">
+                    <table class="modal-menu" v-if="editMode">
+                        <tr v-if="albums.length === 0">
+                            <td colspan="2" class="albums-menu-empty">
+                                {{ $t("No albums found") }}
+                            </td>
+                        </tr>
+                        <tr
+                            v-for="a in albums"
+                            :key="a.id"
+                            class="modal-menu-item"
+                            tabindex="0"
+                            @click="clickOnAlbum(a)"
+                            @keydown="clickOnEnter"
+                        >
+                            <td class="modal-menu-item-icon">
+                                <i v-if="busy" class="fa fa-spinner fa-spin"></i>
+                                <i v-else-if="a.added" class="far fa-square-check"></i>
+                                <i v-else class="far fa-square"></i>
+                            </td>
+                            <td class="modal-menu-item-title">
+                                {{ a.name }}
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="modal-menu" v-if="!editMode">
+                        <tr v-if="albums.length === 0">
+                            <td colspan="2" class="albums-menu-empty">
+                                {{ $t("No albums found") }}
+                            </td>
+                        </tr>
+                        <tr
+                            v-for="a in albums"
+                            :key="a.id"
+                            class="modal-menu-item"
+                            tabindex="0"
+                            @click="goToAlbum(a)"
+                            @keydown="clickOnEnter"
+                        >
+                            <td class="modal-menu-item-icon">
+                                <i class="fas fa-list-ol"></i>
+                            </td>
+                            <td class="modal-menu-item-title">
+                                {{ a.name }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
-      <div class="modal-footer no-padding" v-if="!loading && editMode">
-        <button type="button" @click="createAlbum" class="modal-footer-btn">
-          <i class="fas fa-plus"></i> {{ $t("Create album") }}
-        </button>
-      </div>
-    </div>
-    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
-  </ModalDialogContainer>
+            <div class="modal-footer no-padding" v-if="!loading && editMode">
+                <button type="button" @click="createAlbum" class="modal-footer-btn">
+                    <i class="fas fa-plus"></i> {{ $t("Create album") }}
+                </button>
+            </div>
+        </div>
+        <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -286,7 +330,7 @@ export default defineComponent({
                     a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
                     return a;
                 })
-                .filter(a => {
+                .filter((a) => {
                     return this.editMode || a.added;
                 })
                 .sort((a, b) => {

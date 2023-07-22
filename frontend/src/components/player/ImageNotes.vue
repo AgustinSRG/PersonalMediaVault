@@ -1,57 +1,135 @@
 <template>
-  <div class="image-notes-container" :class="{ 'edit-active': editing, 'add-active': adding }" :style="{ top: top, left: left, width: width, height: height }" @mousedown="startAdding" @touchstart.passive="startAdding" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
+    <div
+        class="image-notes-container"
+        :class="{ 'edit-active': editing, 'add-active': adding }"
+        :style="{ top: top, left: left, width: width, height: height }"
+        @mousedown="startAdding"
+        @touchstart.passive="startAdding"
+        @mousemove="onMouseMove"
+        @mouseleave="onMouseLeave"
+    >
+        <div
+            class="image-notes-hover"
+            v-if="!editing && selectedNote"
+            v-html="escapeText(selectedNote.text)"
+            :style="{
+                top: hoverTop,
+                bottom: hoverBottom,
+                left: hoverLeft,
+                right: hoverRight,
+            }"
+        ></div>
 
-    <div class="image-notes-hover" v-if="!editing && selectedNote" v-html="escapeText(selectedNote.text)" :style="{
-      top: hoverTop,
-      bottom: hoverBottom,
-      left: hoverLeft,
-      right: hoverRight,
-    }"></div>
+        <div
+            v-for="note in notes"
+            :key="note.id"
+            class="image-notes"
+            tabindex="0"
+            :class="{ selected: selectedNotes === note.id }"
+            :style="{
+                top: mapDim(note.y, 0, realHeight, imageHeight),
+                left: mapDim(note.x, 0, realWidth, imageWidth),
+                width: mapDim(note.w, 0, realWidth, imageWidth),
+                height: mapDim(note.h, 0, realHeight, imageHeight),
+            }"
+            @mousedown="clickOnNotes(note, $event)"
+            @touchstart.passive="clickOnNotes(note, $event)"
+        >
+            <div
+                v-if="editing"
+                class="resize resize-left"
+                @mousedown="startResizeNotes(note, $event, 'l')"
+                @touchstart.passive="startResizeNotes(note, $event, 'l')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-top"
+                @mousedown="startResizeNotes(note, $event, 't')"
+                @touchstart.passive="startResizeNotes(note, $event, 't')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-right"
+                @mousedown="startResizeNotes(note, $event, 'r')"
+                @touchstart.passive="startResizeNotes(note, $event, 'r')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-bottom"
+                @mousedown="startResizeNotes(note, $event, 'b')"
+                @touchstart.passive="startResizeNotes(note, $event, 'b')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-corner-top-left"
+                @mousedown="startResizeNotes(note, $event, 'tl')"
+                @touchstart.passive="startResizeNotes(note, $event, 'tl')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-corner-top-right"
+                @mousedown="startResizeNotes(note, $event, 'tr')"
+                @touchstart.passive="startResizeNotes(note, $event, 'tr')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-corner-bottom-left"
+                @mousedown="startResizeNotes(note, $event, 'bl')"
+                @touchstart.passive="startResizeNotes(note, $event, 'bl')"
+            ></div>
+            <div
+                v-if="editing"
+                class="resize resize-corner-bottom-right"
+                @mousedown="startResizeNotes(note, $event, 'br')"
+                @touchstart.passive="startResizeNotes(note, $event, 'br')"
+            ></div>
 
-    <div v-for="note in notes" :key="note.id" class="image-notes" tabindex="0" :class="{ selected: selectedNotes === note.id }" :style="{
-      top: mapDim(note.y, 0, realHeight, imageHeight),
-      left: mapDim(note.x, 0, realWidth, imageWidth),
-      width: mapDim(note.w, 0, realWidth, imageWidth),
-      height: mapDim(note.h, 0, realHeight, imageHeight),
-    }" @mousedown="clickOnNotes(note, $event)" @touchstart.passive="clickOnNotes(note, $event)">
-      <div v-if="editing" class="resize resize-left" @mousedown="startResizeNotes(note, $event, 'l')" @touchstart.passive="startResizeNotes(note, $event, 'l')"></div>
-      <div v-if="editing" class="resize resize-top" @mousedown="startResizeNotes(note, $event, 't')" @touchstart.passive="startResizeNotes(note, $event, 't')"></div>
-      <div v-if="editing" class="resize resize-right" @mousedown="startResizeNotes(note, $event, 'r')" @touchstart.passive="startResizeNotes(note, $event, 'r')"></div>
-      <div v-if="editing" class="resize resize-bottom" @mousedown="startResizeNotes(note, $event, 'b')" @touchstart.passive="startResizeNotes(note, $event, 'b')"></div>
-      <div v-if="editing" class="resize resize-corner-top-left" @mousedown="startResizeNotes(note, $event, 'tl')" @touchstart.passive="startResizeNotes(note, $event, 'tl')"></div>
-      <div v-if="editing" class="resize resize-corner-top-right" @mousedown="startResizeNotes(note, $event, 'tr')" @touchstart.passive="startResizeNotes(note, $event, 'tr')"></div>
-      <div v-if="editing" class="resize resize-corner-bottom-left" @mousedown="startResizeNotes(note, $event, 'bl')" @touchstart.passive="startResizeNotes(note, $event, 'bl')"></div>
-      <div v-if="editing" class="resize resize-corner-bottom-right" @mousedown="startResizeNotes(note, $event, 'br')" @touchstart.passive="startResizeNotes(note, $event, 'br')"></div>
-
-      <div class="image-notes-text-edit" :class="{
-        top: (note.y + (note.h / 2)) < imageHeight / 2,
-        left: (note.x + (note.w / 2)) < imageWidth / 2,
-        bottom: (note.y + (note.h / 2)) >= imageHeight / 2,
-        right: (note.x + (note.w / 2)) >= imageWidth / 2,
-      }" v-if="editing && !moving && !resizing && selectedNotes === note.id" tabindex="-1" @dblclick="stopPropagationEvent" @keydown="stopPropagationEvent" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart.passive="stopPropagationEvent" @contextmenu="stopPropagationEvent">
-        <div class="form-group">
-          <textarea class="
-              form-control form-textarea form-control-full-width
-              auto-focus
-            " :placeholder="$t('Type the notes text') + '...'" v-model="note.text" @change="saveNote(note)"></textarea>
+            <div
+                class="image-notes-text-edit"
+                :class="{
+                    top: note.y + note.h / 2 < imageHeight / 2,
+                    left: note.x + note.w / 2 < imageWidth / 2,
+                    bottom: note.y + note.h / 2 >= imageHeight / 2,
+                    right: note.x + note.w / 2 >= imageWidth / 2,
+                }"
+                v-if="editing && !moving && !resizing && selectedNotes === note.id"
+                tabindex="-1"
+                @dblclick="stopPropagationEvent"
+                @keydown="stopPropagationEvent"
+                @click="stopPropagationEvent"
+                @mousedown="stopPropagationEvent"
+                @touchstart.passive="stopPropagationEvent"
+                @contextmenu="stopPropagationEvent"
+            >
+                <div class="form-group">
+                    <textarea
+                        class="form-control form-textarea form-control-full-width auto-focus"
+                        :placeholder="$t('Type the notes text') + '...'"
+                        v-model="note.text"
+                        @change="saveNote(note)"
+                    ></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary btn-xs btn-mr" @click="saveNote(note)">
+                        <i class="fas fa-check"></i> {{ $t("Save") }}
+                    </button>
+                    <button type="button" class="btn btn-danger btn-xs" @click="deleteNote(note)">
+                        <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-          <button type="button" class="btn btn-primary btn-xs btn-mr" @click="saveNote(note)">
-            <i class="fas fa-check"></i> {{ $t("Save") }}
-          </button>
-          <button type="button" class="btn btn-danger btn-xs" @click="deleteNote(note)">
-            <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-          </button>
-        </div>
-      </div>
+        <div
+            v-if="adding"
+            class="image-notes creating"
+            :style="{
+                top: mapDim(addY, 0, realHeight, imageHeight),
+                left: mapDim(addX, 0, realWidth, imageWidth),
+                width: mapDim(addW, 0, realWidth, imageWidth),
+                height: mapDim(addH, 0, realHeight, imageHeight),
+            }"
+        ></div>
     </div>
-    <div v-if="adding" class="image-notes creating" :style="{
-      top: mapDim(addY, 0, realHeight, imageHeight),
-      left: mapDim(addX, 0, realWidth, imageWidth),
-      width: mapDim(addW, 0, realWidth, imageWidth),
-      height: mapDim(addH, 0, realHeight, imageHeight),
-    }"></div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -122,18 +200,8 @@ export default defineComponent({
     },
 
     methods: {
-        mapDim: function (
-            dim: number,
-            minDim: number,
-            maxDim: number,
-            imgDim: number
-        ) {
-            return (
-                Math.min(
-                    maxDim,
-                    Math.max(minDim, Math.round((dim * maxDim) / imgDim))
-                ) + "px"
-            );
+        mapDim: function (dim: number, minDim: number, maxDim: number, imgDim: number) {
+            return Math.min(maxDim, Math.max(minDim, Math.round((dim * maxDim) / imgDim))) + "px";
         },
 
         escapeText: function (txt: string): string {
@@ -168,20 +236,8 @@ export default defineComponent({
                 y = e.pageY;
             }
 
-            const trueX = Math.max(
-                0,
-                Math.min(
-                    this.imageWidth - 32,
-                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                )
-            );
-            const trueY = Math.max(
-                0,
-                Math.min(
-                    this.imageHeight - 32,
-                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                )
-            );
+            const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+            const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
             this.adding = true;
             this.addStartX = trueX;
@@ -223,20 +279,8 @@ export default defineComponent({
             let realY = y - bounds.top;
             let realX = x - bounds.left;
 
-            const trueX = Math.max(
-                0,
-                Math.min(
-                    this.imageWidth - 32,
-                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                )
-            );
-            const trueY = Math.max(
-                0,
-                Math.min(
-                    this.imageHeight - 32,
-                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                )
-            );
+            const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+            const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
             for (let note of this.notes) {
                 if (this.hoverPinned && this.selectedNote === note) {
@@ -248,20 +292,20 @@ export default defineComponent({
 
                         // Position mouse
 
-                        if (realY < (bounds.height / 2)) {
-                            this.hoverTop = (realY + 8) + "px";
+                        if (realY < bounds.height / 2) {
+                            this.hoverTop = realY + 8 + "px";
                             this.hoverBottom = "";
                         } else {
                             this.hoverTop = "";
-                            this.hoverBottom = (bounds.height - realY + 8) + "px";
+                            this.hoverBottom = bounds.height - realY + 8 + "px";
                         }
 
-                        if (realX < (bounds.width / 2)) {
-                            this.hoverLeft = (realX + 8) + "px";
+                        if (realX < bounds.width / 2) {
+                            this.hoverLeft = realX + 8 + "px";
                             this.hoverRight = "";
                         } else {
                             this.hoverLeft = "";
-                            this.hoverRight = (bounds.width - realX + 8) + "px";
+                            this.hoverRight = bounds.width - realX + 8 + "px";
                         }
 
                         this.hoverPinned = false;
@@ -291,12 +335,7 @@ export default defineComponent({
             }
             if (this.adding) {
                 this.adding = false;
-                ImageNotesController.AddNote(
-                    this.addX,
-                    this.addY,
-                    this.addW,
-                    this.addH
-                );
+                ImageNotesController.AddNote(this.addX, this.addY, this.addW, this.addH);
             }
 
             if (this.moving) {
@@ -330,20 +369,8 @@ export default defineComponent({
                 y = e.pageY;
             }
             if (this.adding) {
-                const trueX = Math.min(
-                    this.imageWidth,
-                    Math.max(
-                        0,
-                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                    )
-                );
-                const trueY = Math.min(
-                    this.imageHeight,
-                    Math.max(
-                        0,
-                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                    )
-                );
+                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
                 if (trueX - this.addStartX > 0) {
                     this.addX = this.addStartX;
@@ -362,62 +389,26 @@ export default defineComponent({
                 }
             }
             if (this.moving && this.selectedNotesData) {
-                const trueX = Math.min(
-                    this.imageWidth,
-                    Math.max(
-                        0,
-                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                    )
-                );
-                const trueY = Math.min(
-                    this.imageHeight,
-                    Math.max(
-                        0,
-                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                    )
-                );
+                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
                 const diffX = this.moveStartX - trueX;
                 this.selectedNotesData.x = Math.max(0, this.moveOriginalX - diffX);
 
-                if (
-                    this.selectedNotesData.x + this.selectedNotesData.w >
-          this.imageWidth
-                ) {
-                    this.selectedNotesData.x = Math.max(
-                        0,
-                        this.imageWidth - this.selectedNotesData.w
-                    );
+                if (this.selectedNotesData.x + this.selectedNotesData.w > this.imageWidth) {
+                    this.selectedNotesData.x = Math.max(0, this.imageWidth - this.selectedNotesData.w);
                 }
 
                 const diffY = this.moveStartY - trueY;
                 this.selectedNotesData.y = Math.max(0, this.moveOriginalY - diffY);
 
-                if (
-                    this.selectedNotesData.y + this.selectedNotesData.h >
-          this.imageHeight
-                ) {
-                    this.selectedNotesData.y = Math.max(
-                        0,
-                        this.imageHeight - this.selectedNotesData.h
-                    );
+                if (this.selectedNotesData.y + this.selectedNotesData.h > this.imageHeight) {
+                    this.selectedNotesData.y = Math.max(0, this.imageHeight - this.selectedNotesData.h);
                 }
             }
             if (this.resizing && this.selectedNotesData) {
-                const trueX = Math.min(
-                    this.imageWidth,
-                    Math.max(
-                        0,
-                        Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                    )
-                );
-                const trueY = Math.min(
-                    this.imageHeight,
-                    Math.max(
-                        0,
-                        Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                    )
-                );
+                const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+                const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
                 const diffX = this.resizeStartX - trueX;
                 const diffY = this.resizeStartY - trueY;
@@ -498,20 +489,8 @@ export default defineComponent({
                 x = e.pageX;
                 y = e.pageY;
             }
-            const trueX = Math.max(
-                0,
-                Math.min(
-                    this.imageWidth,
-                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                )
-            );
-            const trueY = Math.max(
-                0,
-                Math.min(
-                    this.imageHeight,
-                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                )
-            );
+            const trueX = Math.max(0, Math.min(this.imageWidth, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+            const trueY = Math.max(0, Math.min(this.imageHeight, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
             this.moving = true;
             this.moveStartX = trueX;
@@ -546,20 +525,8 @@ export default defineComponent({
                 x = e.pageX;
                 y = e.pageY;
             }
-            const trueX = Math.max(
-                0,
-                Math.min(
-                    this.imageWidth,
-                    Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)
-                )
-            );
-            const trueY = Math.max(
-                0,
-                Math.min(
-                    this.imageHeight,
-                    Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)
-                )
-            );
+            const trueX = Math.max(0, Math.min(this.imageWidth, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
+            const trueY = Math.max(0, Math.min(this.imageHeight, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
             this.resizing = true;
             this.resizeMode = resizeMode;
@@ -637,19 +604,13 @@ export default defineComponent({
         this.updateRealDimensions();
 
         this.$options.onNotesUpdateH = this.onNotesUpdate.bind(this);
-        AppEvents.AddEventListener(
-            "img-notes-update",
-            this.$options.onNotesUpdateH
-        );
+        AppEvents.AddEventListener("img-notes-update", this.$options.onNotesUpdateH);
 
         this.$options.onNotesPushH = this.onNotesPush.bind(this);
         AppEvents.AddEventListener("img-notes-push", this.$options.onNotesPushH);
 
         this.$options.onNotesChangeH = this.onNotesChange.bind(this);
-        AppEvents.AddEventListener(
-            "img-notes-change",
-            this.$options.onNotesChangeH
-        );
+        AppEvents.AddEventListener("img-notes-change", this.$options.onNotesChangeH);
 
         this.$options.onNotesRemoveH = this.onNotesRemove.bind(this);
         AppEvents.AddEventListener("img-notes-rm", this.$options.onNotesRemoveH);
@@ -666,22 +627,13 @@ export default defineComponent({
         this.onNotesUpdate();
 
         this.$options.onNotesSavedH = this.onNotesSaved.bind(this);
-        AppEvents.AddEventListener(
-            "image-notes-saved",
-            this.$options.onNotesSavedH
-        );
+        AppEvents.AddEventListener("image-notes-saved", this.$options.onNotesSavedH);
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "img-notes-update",
-            this.$options.onNotesUpdateH
-        );
+        AppEvents.RemoveEventListener("img-notes-update", this.$options.onNotesUpdateH);
         AppEvents.RemoveEventListener("img-notes-push", this.$options.onNotesPushH);
-        AppEvents.RemoveEventListener(
-            "img-notes-change",
-            this.$options.onNotesChangeH
-        );
+        AppEvents.RemoveEventListener("img-notes-change", this.$options.onNotesChangeH);
         AppEvents.RemoveEventListener("img-notes-rm", this.$options.onNotesRemoveH);
 
         document.removeEventListener("mouseup", this.$options.mouseDropH);
@@ -689,10 +641,7 @@ export default defineComponent({
         document.removeEventListener("mousemove", this.$options.mouseMoveH);
         document.removeEventListener("touchmove", this.$options.mouseMoveH);
 
-        AppEvents.RemoveEventListener(
-            "image-notes-saved",
-            this.$options.onNotesSavedH
-        );
+        AppEvents.RemoveEventListener("image-notes-saved", this.$options.onNotesSavedH);
     },
 
     watch: {

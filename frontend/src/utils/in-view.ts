@@ -16,5 +16,7 @@ export function elementInView(el: Element): boolean {
         bottom: boundsTop + el.clientHeight,
     };
 
-    return (bounds.bottom >= viewport.top && bounds.bottom <= viewport.bottom) || (bounds.top <= viewport.bottom && bounds.top >= viewport.top);
+    return (
+        (bounds.bottom >= viewport.top && bounds.bottom <= viewport.bottom) || (bounds.top <= viewport.bottom && bounds.top >= viewport.top)
+    );
 }

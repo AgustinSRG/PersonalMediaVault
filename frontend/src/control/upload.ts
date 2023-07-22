@@ -71,7 +71,7 @@ export class UploadController {
     private static timer: number = null;
 
     public static GetEntries(): UploadEntryMin[] {
-        return UploadController.Entries.map(e => {
+        return UploadController.Entries.map((e) => {
             return {
                 id: e.id,
                 name: e.name,
@@ -80,7 +80,7 @@ export class UploadController {
                 status: e.status,
                 error: e.error,
                 progress: e.progress,
-            }
+            };
         });
     }
 
@@ -206,7 +206,6 @@ export class UploadController {
         AppEvents.Emit("upload-list-clear");
     }
 
-
     public static CancelAll() {
         const entries = UploadController.Entries.slice();
 
@@ -225,10 +224,7 @@ export class UploadController {
         m.progress = 0;
         AppEvents.Emit("upload-list-update", index, m);
 
-        Request.Pending(
-            "upload-media-" + m.id,
-            MediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album)
-        )
+        Request.Pending("upload-media-" + m.id, MediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
                 AppEvents.Emit("upload-list-update", index, m);
@@ -288,10 +284,7 @@ export class UploadController {
         m.busy = true;
         m.lastRequest = Date.now();
 
-        Request.Pending(
-            "check-media-encryption-" + m.id,
-            MediaAPI.GetMedia(m.mid)
-        )
+        Request.Pending("check-media-encryption-" + m.id, MediaAPI.GetMedia(m.mid))
             .onSuccess((media) => {
                 m.busy = false;
                 if (media.ready) {
@@ -309,7 +302,7 @@ export class UploadController {
                     }
 
                     if (MediaController.MediaId === m.mid) {
-                        MediaController.OnMediaChanged()
+                        MediaController.OnMediaChanged();
                     }
 
                     UploadController.UploadingCount--;
@@ -352,7 +345,7 @@ export class UploadController {
             AppEvents.Emit("upload-list-update", index, m);
             UploadController.CheckEmptyList();
             if (MediaController.MediaId === m.mid) {
-                MediaController.OnMediaChanged()
+                MediaController.OnMediaChanged();
             }
             return;
         }

@@ -53,33 +53,33 @@ export interface MediaData {
         task: number;
 
         url: string;
-    }[],
+    }[];
 
     subtitles: {
         id: string;
         name: string;
 
         url: string;
-    }[],
+    }[];
 
     audios: {
         id: string;
         name: string;
 
         url: string;
-    }[],
+    }[];
 
     time_slices: {
-        time: number,
-        name: string,
-    }[],
+        time: number;
+        name: string;
+    }[];
 
-    force_start_beginning: boolean,
+    force_start_beginning: boolean;
 
-    img_notes: boolean,
-    img_notes_url: string,
+    img_notes: boolean;
+    img_notes_url: string;
 
-    ext_desc_url: string,
+    ext_desc_url: string;
 }
 
 export class MediaController {
@@ -133,34 +133,37 @@ export class MediaController {
             return; // Pre-fetch
         }
 
-        Request.Pending("media-current-load", MediaAPI.GetMedia(MediaController.MediaId)).onSuccess(media => {
-            MediaController.MediaData = media;
-            AppEvents.Emit("current-media-update", MediaController.MediaData);
+        Request.Pending("media-current-load", MediaAPI.GetMedia(MediaController.MediaId))
+            .onSuccess((media) => {
+                MediaController.MediaData = media;
+                AppEvents.Emit("current-media-update", MediaController.MediaData);
 
-            MediaController.Loading = false;
-            AppEvents.Emit("current-media-loading", false);
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add(404, "*", () => {
-                    MediaController.MediaData = null;
-                    AppEvents.Emit("current-media-update", MediaController.MediaData);
+                MediaController.Loading = false;
+                AppEvents.Emit("current-media-loading", false);
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add(404, "*", () => {
+                        MediaController.MediaData = null;
+                        AppEvents.Emit("current-media-update", MediaController.MediaData);
 
-                    MediaController.Loading = false;
-                    AppEvents.Emit("current-media-loading", false);
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("media-current-load", 1500, MediaController.Load);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("media-current-load", 1500, MediaController.Load);
-        });
+                        MediaController.Loading = false;
+                        AppEvents.Emit("current-media-loading", false);
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("media-current-load", 1500, MediaController.Load);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("media-current-load", 1500, MediaController.Load);
+            });
     }
 
     public static NextPendingId = 0;

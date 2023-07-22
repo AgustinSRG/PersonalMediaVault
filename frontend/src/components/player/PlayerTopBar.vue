@@ -1,67 +1,43 @@
 <template>
-  <div
-    class="player-top-bar"
-    :class="{
-      hidden: !shown,
-      'with-album': inAlbum,
-      'album-expand': albumExpanded,
-      expanded: expanded && !albumExpanded,
-      contracting: clickedContract,
-    }"
-    tabindex="-1"
-    @click="clickTopBar"
-    @dblclick="stopPropagationEvent"
-    @contextmenu="stopPropagationEvent"
-    @keydown="onKeyDown"
-  >
-    <div v-if="!albumExpanded" class="player-title-container">
-      <div class="player-title-left">
-        <button
-          type="button"
-          :title="$t('View Album')"
-          class="player-btn"
-          @click="expandAlbum"
-        >
-          <i class="fas fa-list-ol"></i>
-        </button>
-      </div>
-      <div class="player-title">
-        <div v-if="metadata">{{ metadata.title }}</div>
-      </div>
-      <div class="player-title-right">
-        <button
-          v-if="metadata && !expanded"
-          type="button"
-          :title="$t('Expand')"
-          class="player-btn"
-          @click="expandTitle"
-        >
-          <i class="fas fa-chevron-down"></i>
-        </button>
+    <div
+        class="player-top-bar"
+        :class="{
+            hidden: !shown,
+            'with-album': inAlbum,
+            'album-expand': albumExpanded,
+            expanded: expanded && !albumExpanded,
+            contracting: clickedContract,
+        }"
+        tabindex="-1"
+        @click="clickTopBar"
+        @dblclick="stopPropagationEvent"
+        @contextmenu="stopPropagationEvent"
+        @keydown="onKeyDown"
+    >
+        <div v-if="!albumExpanded" class="player-title-container">
+            <div class="player-title-left">
+                <button type="button" :title="$t('View Album')" class="player-btn" @click="expandAlbum">
+                    <i class="fas fa-list-ol"></i>
+                </button>
+            </div>
+            <div class="player-title">
+                <div v-if="metadata">{{ metadata.title }}</div>
+            </div>
+            <div class="player-title-right">
+                <button v-if="metadata && !expanded" type="button" :title="$t('Expand')" class="player-btn" @click="expandTitle">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
 
-        <button
-          v-if="metadata && expanded"
-          type="button"
-          :title="$t('Close')"
-          class="player-btn"
-          @click="closeTitle"
-        >
-          <i class="fas fa-chevron-up"></i>
-        </button>
-      </div>
+                <button v-if="metadata && expanded" type="button" :title="$t('Close')" class="player-btn" @click="closeTitle">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <PlayerAlbumFullScreen :expanded="albumExpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
+        <PlayerMediaEditor v-if="expanded" @changed="onEditDone"></PlayerMediaEditor>
     </div>
-
-    <PlayerAlbumFullScreen
-      :expanded="albumExpanded"
-      @close="closeAlbum"
-    ></PlayerAlbumFullScreen>
-    <PlayerMediaEditor
-      v-if="expanded"
-      @changed="onEditDone"
-    ></PlayerMediaEditor>
-  </div>
 </template>
-
 
 <script lang="ts">
 import { MediaController } from "@/control/media";

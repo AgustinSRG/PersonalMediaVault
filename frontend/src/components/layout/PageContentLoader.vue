@@ -1,7 +1,7 @@
 <template>
-  <div class="page-content">
-    <LoadingOverlay></LoadingOverlay>
-  </div>
+    <div class="page-content">
+        <LoadingOverlay></LoadingOverlay>
+    </div>
 </template>
 
 <script lang="ts">
@@ -14,7 +14,6 @@ export default defineComponent({
         LoadingOverlay,
     },
     name: "PageContentLoader",
-    props: {
-    },
+    props: {},
 });
 </script>

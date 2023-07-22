@@ -1,17 +1,17 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require("@vue/cli-service");
 module.exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    publicPath: "./",
 
     pluginOptions: {
         i18n: {
-            locale: 'en',
-            fallbackLocale: 'en',
-            localeDir: 'locales',
+            locale: "en",
+            fallbackLocale: "en",
+            localeDir: "locales",
             enableLegacy: true,
             runtimeOnly: false,
             compositionOnly: true,
-            fullInstall: true
+            fullInstall: true,
         },
     },
 
@@ -23,21 +23,17 @@ module.exports = defineConfig({
         },
     },
 
-    chainWebpack: config => {
-        config.module
-            .rule('images')
-            .set('parser', {
-                dataUrlCondition: {
-                    maxSize: 1 // Disable
-                }
-            });
+    chainWebpack: (config) => {
+        config.module.rule("images").set("parser", {
+            dataUrlCondition: {
+                maxSize: 1, // Disable
+            },
+        });
 
-        config.module
-            .rule('fonts')
-            .set('parser', {
-                dataUrlCondition: {
-                    maxSize: 1 // Disable
-                }
-            })
+        config.module.rule("fonts").set("parser", {
+            dataUrlCondition: {
+                maxSize: 1, // Disable
+            },
+        });
     },
-})
+});

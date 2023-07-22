@@ -1,71 +1,70 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Tasks") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div v-if="loading" class="modal-body">
-        <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
-      </div>
-      <div v-if="!loading" class="modal-body no-padding">
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="text-left" colspan="2">
-                  {{ $t("List of active tasks") }}
-                </th>
-                <th class="text-left">{{ $t("Type") }}</th>
-                <th class="text-left">{{ $t("Media") }}</th>
-                <th class="text-left">{{ $t("Status") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="tasks.length === 0">
-                <td colspan="5">
-                  {{
-                    $t("There are no active tasks in the vault at the moment.")
-                  }}
-                </td>
-              </tr>
-              <tr v-for="t in tasks" :key="t.id">
-                <td class="one-line td-shrink">
-                  <i class="fas fa-circle task-status" :class="{ 'task-running': t.running }"></i>
-                </td>
-                <td class="task-progress-bar-td one-line td-shrink">
-                  <div class="task-progress-bar-container" v-if="t.running">
-                    <div class="task-progress-bar-current" :style="{
-                      width: getGlobalProgress(t.stage, t.stage_progress),
-                    }"></div>
-                  </div>
-                </td>
-                <td class="bold one-line td-shrink">
-                  {{ renderType(t.type) }}
-                </td>
-                <td class="bold one-line td-shrink">
-                  <a @click="goToMedia(t.media_id, $event)" :href="getMediaURL(t.media_id)" target="_blank" rel="noopener noreferrer">{{ t.media_id }}</a>
-                </td>
-                <td class="one-line">
-                  {{
-                    renderStatus(
-                      t.running,
-                      t.stage,
-                      t.stage_progress,
-                      t.stage_start,
-                      t.time_now
-                    )
-                  }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Tasks") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div v-if="loading" class="modal-body">
+                <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
+            </div>
+            <div v-if="!loading" class="modal-body no-padding">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="text-left" colspan="2">
+                                    {{ $t("List of active tasks") }}
+                                </th>
+                                <th class="text-left">{{ $t("Type") }}</th>
+                                <th class="text-left">{{ $t("Media") }}</th>
+                                <th class="text-left">{{ $t("Status") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="tasks.length === 0">
+                                <td colspan="5">
+                                    {{ $t("There are no active tasks in the vault at the moment.") }}
+                                </td>
+                            </tr>
+                            <tr v-for="t in tasks" :key="t.id">
+                                <td class="one-line td-shrink">
+                                    <i class="fas fa-circle task-status" :class="{ 'task-running': t.running }"></i>
+                                </td>
+                                <td class="task-progress-bar-td one-line td-shrink">
+                                    <div class="task-progress-bar-container" v-if="t.running">
+                                        <div
+                                            class="task-progress-bar-current"
+                                            :style="{
+                                                width: getGlobalProgress(t.stage, t.stage_progress),
+                                            }"
+                                        ></div>
+                                    </div>
+                                </td>
+                                <td class="bold one-line td-shrink">
+                                    {{ renderType(t.type) }}
+                                </td>
+                                <td class="bold one-line td-shrink">
+                                    <a
+                                        @click="goToMedia(t.media_id, $event)"
+                                        :href="getMediaURL(t.media_id)"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        >{{ t.media_id }}</a
+                                    >
+                                </td>
+                                <td class="one-line">
+                                    {{ renderStatus(t.running, t.stage, t.stage_progress, t.stage_start, t.time_now) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -177,11 +176,7 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(
-                                "admin-tasks-update",
-                                1500,
-                                this.updateTasks.bind(this)
-                            );
+                            Timeouts.Set("admin-tasks-update", 1500, this.updateTasks.bind(this));
                         })
                         .handle(err);
                 })
@@ -252,13 +247,7 @@ export default defineComponent({
             }
         },
 
-        renderStatus: function (
-            running: boolean,
-            stage: string,
-            p: number,
-            ts: number,
-            now: number
-        ) {
+        renderStatus: function (running: boolean, stage: string, p: number, ts: number, now: number) {
             if (running) {
                 let stageNumber = 0;
 
@@ -288,26 +277,21 @@ export default defineComponent({
 
                 const progressPercent = this.getProgressPercent(p);
 
-                const estimatedRemainingTime =
-          (((now - ts) / p) * 100 - (now - ts)) / 1000;
+                const estimatedRemainingTime = (((now - ts) / p) * 100 - (now - ts)) / 1000;
 
                 let txt =
-          this.getGlobalProgress(stage, p) +
-          " | " +
-          this.$t("Stage") +
-          ": " +
-          (stageNumber + 1) +
-          " / 7 | " +
-          this.$t("Stage progress") +
-          ": " +
-          progressPercent;
+                    this.getGlobalProgress(stage, p) +
+                    " | " +
+                    this.$t("Stage") +
+                    ": " +
+                    (stageNumber + 1) +
+                    " / 7 | " +
+                    this.$t("Stage progress") +
+                    ": " +
+                    progressPercent;
 
                 if (estimatedRemainingTime > 0) {
-                    txt +=
-            " | " +
-            this.$t("Remaining time (estimated)") +
-            ": " +
-            renderTimeSeconds(estimatedRemainingTime);
+                    txt += " | " + this.$t("Remaining time (estimated)") + ": " + renderTimeSeconds(estimatedRemainingTime);
                 }
 
                 return txt;
@@ -327,12 +311,12 @@ export default defineComponent({
         getMediaURL: function (mid: number): string {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            media: mid + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    media: mid + "",
+                })
             );
         },
     },

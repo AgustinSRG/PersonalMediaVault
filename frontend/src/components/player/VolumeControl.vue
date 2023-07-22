@@ -1,46 +1,31 @@
 <template>
-  <div
-    class="player-volume-control"
-    :class="{ expanded: expanded, 'player-min': min }"
-    :style="{ width: computeFullWidth(width, min, expanded) }"
-    @mouseenter="onEnter"
-    @mouseleave="onLeave"
-  >
-    <button class="player-volume-btn" @click="clickOnVolumeButton" :title="$t('Volume')">
-      <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>
-      <i v-if="!muted && volume <= 0" class="fas fa-volume-off"></i>
-      <i
-        v-if="!muted && volume > 0 && volume <= 0.5"
-        class="fas fa-volume-down"
-      ></i>
-      <i v-if="muted" class="fas fa-volume-mute"></i>
-    </button>
     <div
-      class="player-volume-btn-expand"
-      :class="{ hidden: !expanded }"
-      :style="{ width: computeBarContainerWidth(width) }"
-      @mousedown="grabVolume"
-      @toutchstart.passive="grabVolume"
+        class="player-volume-control"
+        :class="{ expanded: expanded, 'player-min': min }"
+        :style="{ width: computeFullWidth(width, min, expanded) }"
+        @mouseenter="onEnter"
+        @mouseleave="onLeave"
     >
-      <div
-        class="player-volume-bar-container"
-        :style="{ width: computeBarContainerInnerWidth(width) }"
-      >
+        <button class="player-volume-btn" @click="clickOnVolumeButton" :title="$t('Volume')">
+            <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>
+            <i v-if="!muted && volume <= 0" class="fas fa-volume-off"></i>
+            <i v-if="!muted && volume > 0 && volume <= 0.5" class="fas fa-volume-down"></i>
+            <i v-if="muted" class="fas fa-volume-mute"></i>
+        </button>
         <div
-          class="player-volume-bar"
-          :style="{ width: getVolumeBarWidth(width) }"
-        ></div>
-        <div
-          class="player-volume-current"
-          :style="{ width: getVolumeBarCurrentWidth(width, volume, muted) }"
-        ></div>
-        <div
-          class="player-volume-thumb"
-          :style="{ left: getVolumeThumbLeft(width, volume, muted) }"
-        ></div>
-      </div>
+            class="player-volume-btn-expand"
+            :class="{ hidden: !expanded }"
+            :style="{ width: computeBarContainerWidth(width) }"
+            @mousedown="grabVolume"
+            @toutchstart.passive="grabVolume"
+        >
+            <div class="player-volume-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
+                <div class="player-volume-bar" :style="{ width: getVolumeBarWidth(width) }"></div>
+                <div class="player-volume-current" :style="{ width: getVolumeBarCurrentWidth(width, volume, muted) }"></div>
+                <div class="player-volume-thumb" :style="{ left: getVolumeThumbLeft(width, volume, muted) }"></div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -78,11 +63,7 @@ export default defineComponent({
         onLeave: function () {
             this.$emit("leave");
         },
-        computeFullWidth: function (
-            width: number,
-            min: boolean,
-            expanded: boolean
-        ) {
+        computeFullWidth: function (width: number, min: boolean, expanded: boolean) {
             let margins = 40;
             let barWidth = width;
             let btnWidth = 40;
@@ -91,7 +72,7 @@ export default defineComponent({
                 btnWidth = 24;
             }
 
-            return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
+            return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
         },
         computeBarContainerWidth(width: number) {
             let margins = 32;
@@ -160,12 +141,7 @@ export default defineComponent({
             }
         },
         modifyVolumeByMouse: function (x, y) {
-            if (
-                typeof x !== "number" ||
-        typeof y !== "number" ||
-        isNaN(x) ||
-        isNaN(y)
-            ) {
+            if (typeof x !== "number" || typeof y !== "number" || isNaN(x) || isNaN(y)) {
                 return;
             }
             const offset = this.$el.getBoundingClientRect();

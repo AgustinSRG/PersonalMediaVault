@@ -1,153 +1,195 @@
 <template>
-  <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }">
-    <div class="form-group">
-      <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
-        <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
-      </button>
-      <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
-        <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
-      </button>
-    </div>
-    <div class="upload-options-container" v-if="optionsShown">
-      <div class="form-group">
-        <label>{{ $t("Max number of uploads in parallel") }}:</label>
-        <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
-          <option :value="1">1</option>
-          <option :value="2">2</option>
-          <option :value="4">4</option>
-          <option :value="8">8</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
-        <select v-model="album" :disabled="inModal" class="form-control form-select">
-          <option :value="-1">--</option>
-          <option v-for="a in albums" :key="a.id" :value="a.id">
-            {{ a.name }}
-          </option>
-        </select>
-      </div>
-      <div class="form-group" v-if="!inModal">
-        <button type="button" @click="createAlbum" class="btn btn-primary">
-          <i class="fas fa-plus"></i> {{ $t("Create album") }}
-        </button>
-      </div>
-      <div class="form-group">
-        <label>{{ $t("Tags to automatically add to the uploaded media") }}:</label>
-      </div>
-      <div class="form-group media-tags">
-        <label v-if="tags.length === 0">({{ $t("none") }})</label>
-        <div v-for="tag in tags" :key="tag" class="media-tag">
-          <div class="media-tag-name">{{ tag }}</div>
-          <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      <form @submit="addTag">
+    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }">
         <div class="form-group">
-          <label>{{ $t("Tag to add") }}:</label>
-          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" @input="onTagAddChanged(false)" @keydown="onTagInputKeyDown"
-            class="form-control" />
+            <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
+                <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
+            </button>
+            <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
+                <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
+            </button>
         </div>
-        <div class="form-group" v-if="matchingTags.length > 0">
-          <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini"
-            @click="addTagByName(mt.name)">
-            <i class="fas fa-plus"></i> {{ mt.name }}
-          </button>
-        </div>
-        <div class="form-group">
-          <button type="submit" class="btn btn-primary" :disabled="!tagToAdd">
-            <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
-          </button>
-        </div>
-      </form>
-    </div>
-    <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
-    <div class="upload-box" :class="{ dragging: dragging }" tabindex="0" @click="clickToSelect" @dragover="dragOver"
-      @dragenter="dragEnter" @dragstart="dragEnter" @dragend="dragLeave" @dragleave="dragLeave" @drop="onDrop"
-      @keydown="clickOnEnter">
-      <div class="upload-box-hint">
-        {{ $t("Drop file here or click to open the file selection dialog.") }}
-      </div>
-    </div>
-
-    <div class="horizontal-filter-menu">
-      <a href="javascript:;" @click="updateSelectedState('pending')" class="horizontal-filter-menu-item"
-        :class="{ selected: this.selectedState === 'pending' }">{{ $t("Pending") }} ({{ countPending }})</a>
-      <a href="javascript:;" @click="updateSelectedState('ready')" class="horizontal-filter-menu-item"
-        :class="{ selected: this.selectedState === 'ready' }">{{ $t("Ready") }} ({{ countReady }})</a>
-      <a href="javascript:;" @click="updateSelectedState('error')" class="horizontal-filter-menu-item"
-        :class="{ selected: this.selectedState === 'error' }">{{ $t("Error") }} ({{ countError }})</a>
-    </div>
-
-    <div class="upload-list">
-      <div v-for="m in filteredEntries" :key="m.id" class="upload-list-item">
-        <div class="upload-list-item-top">
-          <div class="upload-list-item-file-name">
-            <span v-if="m.status !== 'ready'" class="bold">{{ m.name }}</span>
-            <a v-if="m.status === 'ready'" class="bold" @click="goToMedia(m, $event)" :href="getMediaURL(m.mid)"
-              target="_blank" rel="noopener noreferrer">{{
-                m.name }}</a>
-          </div>
-          <div class="upload-list-item-file-size">
-            <span>{{ renderSize(m.size) }}</span>
-          </div>
-        </div>
-        <div class="upload-list-item-bottom">
-          <div class="upload-list-item-status">
-            <div class="upload-list-item-status-bar">
-              <div class="upload-list-item-status-bar-current"
-                :class="{ error: m.status === 'error', success: m.status === 'ready' }"
-                :style="{ width: cssProgress(m.status, m.progress) }"></div>
-              <div class="upload-list-item-status-bar-text">{{ renderStatus(m.status, m.progress, m.error) }}</div>
+        <div class="upload-options-container" v-if="optionsShown">
+            <div class="form-group">
+                <label>{{ $t("Max number of uploads in parallel") }}:</label>
+                <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
+                    <option :value="1">1</option>
+                    <option :value="2">2</option>
+                    <option :value="4">4</option>
+                    <option :value="8">8</option>
+                </select>
             </div>
-          </div>
-          <div class="upload-list-item-right">
-            <button v-if="
-              m.status === 'pending' ||
-              m.status === 'uploading' ||
-              m.status === 'encrypting' ||
-              m.status === 'tag'
-            " type="button" class="table-btn" :title="$t('Cancel upload')" @click="removeFile(m.id)">
-              <i class="fas fa-times"></i>
-            </button>
-            <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('View media')"
-              @click="goToMedia(m)">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('Done')"
-              @click="removeFile(m.id)">
-              <i class="fas fa-check"></i>
-            </button>
-            <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Try again')"
-              @click="tryAgain(m)">
-              <i class="fas fa-rotate"></i>
-            </button>
-            <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Remove')"
-              @click="removeFile(m.id)">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
+            <div class="form-group">
+                <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
+                <select v-model="album" :disabled="inModal" class="form-control form-select">
+                    <option :value="-1">--</option>
+                    <option v-for="a in albums" :key="a.id" :value="a.id">
+                        {{ a.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="form-group" v-if="!inModal">
+                <button type="button" @click="createAlbum" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> {{ $t("Create album") }}
+                </button>
+            </div>
+            <div class="form-group">
+                <label>{{ $t("Tags to automatically add to the uploaded media") }}:</label>
+            </div>
+            <div class="form-group media-tags">
+                <label v-if="tags.length === 0">({{ $t("none") }})</label>
+                <div v-for="tag in tags" :key="tag" class="media-tag">
+                    <div class="media-tag-name">{{ tag }}</div>
+                    <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <form @submit="addTag">
+                <div class="form-group">
+                    <label>{{ $t("Tag to add") }}:</label>
+                    <input
+                        type="text"
+                        autocomplete="off"
+                        maxlength="255"
+                        v-model="tagToAdd"
+                        @input="onTagAddChanged(false)"
+                        @keydown="onTagInputKeyDown"
+                        class="form-control"
+                    />
+                </div>
+                <div class="form-group" v-if="matchingTags.length > 0">
+                    <button
+                        v-for="mt in matchingTags"
+                        :key="mt.id"
+                        type="button"
+                        class="btn btn-primary btn-sm btn-tag-mini"
+                        @click="addTagByName(mt.name)"
+                    >
+                        <i class="fas fa-plus"></i> {{ mt.name }}
+                    </button>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" :disabled="!tagToAdd">
+                        <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
+                    </button>
+                </div>
+            </form>
         </div>
-      </div>
-    </div>
+        <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
+        <div
+            class="upload-box"
+            :class="{ dragging: dragging }"
+            tabindex="0"
+            @click="clickToSelect"
+            @dragover="dragOver"
+            @dragenter="dragEnter"
+            @dragstart="dragEnter"
+            @dragend="dragLeave"
+            @dragleave="dragLeave"
+            @drop="onDrop"
+            @keydown="clickOnEnter"
+        >
+            <div class="upload-box-hint">
+                {{ $t("Drop file here or click to open the file selection dialog.") }}
+            </div>
+        </div>
 
-    <div class="upload-table table-responsive" v-if="pendingToUpload.length > 0">
-      <div class="form-group" v-if="pendingToUpload.length > 0">
-        <button type="button" class="btn btn-primary" @click="clearList">
-          <i class="fas fa-broom"></i> {{ $t("Clear list") }}
-        </button>
-      </div>
-      <div class="form-group" v-if="countCancellable > 0">
-        <button type="button" class="btn btn-primary" @click="cancelAll">
-          <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
-        </button>
-      </div>
-    </div>
+        <div class="horizontal-filter-menu">
+            <a
+                href="javascript:;"
+                @click="updateSelectedState('pending')"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: this.selectedState === 'pending' }"
+                >{{ $t("Pending") }} ({{ countPending }})</a
+            >
+            <a
+                href="javascript:;"
+                @click="updateSelectedState('ready')"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: this.selectedState === 'ready' }"
+                >{{ $t("Ready") }} ({{ countReady }})</a
+            >
+            <a
+                href="javascript:;"
+                @click="updateSelectedState('error')"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: this.selectedState === 'error' }"
+                >{{ $t("Error") }} ({{ countError }})</a
+            >
+        </div>
 
-    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
-  </div>
+        <div class="upload-list">
+            <div v-for="m in filteredEntries" :key="m.id" class="upload-list-item">
+                <div class="upload-list-item-top">
+                    <div class="upload-list-item-file-name">
+                        <span v-if="m.status !== 'ready'" class="bold">{{ m.name }}</span>
+                        <a
+                            v-if="m.status === 'ready'"
+                            class="bold"
+                            @click="goToMedia(m, $event)"
+                            :href="getMediaURL(m.mid)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >{{ m.name }}</a
+                        >
+                    </div>
+                    <div class="upload-list-item-file-size">
+                        <span>{{ renderSize(m.size) }}</span>
+                    </div>
+                </div>
+                <div class="upload-list-item-bottom">
+                    <div class="upload-list-item-status">
+                        <div class="upload-list-item-status-bar">
+                            <div
+                                class="upload-list-item-status-bar-current"
+                                :class="{ error: m.status === 'error', success: m.status === 'ready' }"
+                                :style="{ width: cssProgress(m.status, m.progress) }"
+                            ></div>
+                            <div class="upload-list-item-status-bar-text">{{ renderStatus(m.status, m.progress, m.error) }}</div>
+                        </div>
+                    </div>
+                    <div class="upload-list-item-right">
+                        <button
+                            v-if="m.status === 'pending' || m.status === 'uploading' || m.status === 'encrypting' || m.status === 'tag'"
+                            type="button"
+                            class="table-btn"
+                            :title="$t('Cancel upload')"
+                            @click="removeFile(m.id)"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('View media')" @click="goToMedia(m)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button v-if="m.status === 'ready'" type="button" class="table-btn" :title="$t('Done')" @click="removeFile(m.id)">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Try again')" @click="tryAgain(m)">
+                            <i class="fas fa-rotate"></i>
+                        </button>
+                        <button v-if="m.status === 'error'" type="button" class="table-btn" :title="$t('Remove')" @click="removeFile(m.id)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-table table-responsive" v-if="pendingToUpload.length > 0">
+            <div class="form-group" v-if="pendingToUpload.length > 0">
+                <button type="button" class="btn btn-primary" @click="clearList">
+                    <i class="fas fa-broom"></i> {{ $t("Clear list") }}
+                </button>
+            </div>
+            <div class="form-group" v-if="countCancellable > 0">
+                <button type="button" class="btn btn-primary" @click="cancelAll">
+                    <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
+                </button>
+            </div>
+        </div>
+
+        <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
+    </div>
 </template>
 
 <script lang="ts">
@@ -163,16 +205,16 @@ import { defineComponent } from "vue";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 
-const STATE_FILTER_PENDING = ['pending', 'uploading', 'encrypting', 'tag'];
-const STATE_FILTER_READY = ['ready'];
-const STATE_FILTER_ERROR = ['error'];
+const STATE_FILTER_PENDING = ["pending", "uploading", "encrypting", "tag"];
+const STATE_FILTER_READY = ["ready"];
+const STATE_FILTER_ERROR = ["error"];
 
 export default defineComponent({
     components: {
         AlbumCreateModal,
     },
     name: "PageUpload",
-    emits: ['media-go'],
+    emits: ["media-go"],
     props: {
         display: Boolean,
         inModal: Boolean,
@@ -203,7 +245,7 @@ export default defineComponent({
             countError: 0,
 
             stateFilter: STATE_FILTER_PENDING.slice(),
-            selectedState: 'pending',
+            selectedState: "pending",
 
             filteredEntries: [],
         };
@@ -233,7 +275,7 @@ export default defineComponent({
                 return this.stateFilter.includes(e.status);
             });
 
-            if (this.selectedState !== 'pending') {
+            if (this.selectedState !== "pending") {
                 this.filteredEntries = this.filteredEntries.reverse();
             }
         },
@@ -351,30 +393,17 @@ export default defineComponent({
                     return this.$t("Encrypting") + "...";
                 }
             case "tag":
-                return (
-                    this.$t("Adding tags") +
-            "... (" +
-            this.$t("$N left").replace("$N", "" + p) +
-            ")"
-                );
+                return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
             case "error":
                 switch (err) {
                 case "invalid-media":
-                    return (
-                        this.$t("Error") + ": " + this.$t("Invalid media file provided")
-                    );
+                    return this.$t("Error") + ": " + this.$t("Invalid media file provided");
                 case "access-denied":
                     return this.$t("Error") + ": " + this.$t("Access denied");
                 case "deleted":
-                    return (
-                        this.$t("Error") + ": " + this.$t("The media asset was deleted")
-                    );
+                    return this.$t("Error") + ": " + this.$t("The media asset was deleted");
                 case "no-internet":
-                    return (
-                        this.$t("Error") +
-                ": " +
-                this.$t("Could not connect to the server")
-                    );
+                    return this.$t("Error") + ": " + this.$t("Could not connect to the server");
                 default:
                     return this.$t("Error") + ": " + this.$t("Internal server error");
                 }
@@ -387,9 +416,9 @@ export default defineComponent({
             p = Math.min(100, Math.max(0, p));
             switch (status) {
             case "uploading":
-                return Math.round(p * 50 / 100) + "%";
+                return Math.round((p * 50) / 100) + "%";
             case "encrypting":
-                return Math.round(50 + (p * 50 / 100)) + "%";
+                return Math.round(50 + (p * 50) / 100) + "%";
             case "ready":
             case "error":
             case "tag":
@@ -557,7 +586,7 @@ export default defineComponent({
         },
 
         onPendingUpdate: function (i: number, m: UploadEntryMin) {
-            let mustUpdate = (this.pendingToUpload[i].status !== m.status)
+            let mustUpdate = this.pendingToUpload[i].status !== m.status;
             this.pendingToUpload[i].status = m.status;
             this.pendingToUpload[i].error = m.error;
             this.pendingToUpload[i].progress = m.progress;
@@ -618,12 +647,12 @@ export default defineComponent({
         getMediaURL: function (mid: number): string {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            media: mid + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    media: mid + "",
+                })
             );
         },
     },
@@ -637,22 +666,10 @@ export default defineComponent({
         this.$options.onPendingClearH = this.onPendingClear.bind(this);
         this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
 
-        AppEvents.AddEventListener(
-            "upload-list-push",
-            this.$options.onPendingPushH
-        );
-        AppEvents.AddEventListener(
-            "upload-list-rm",
-            this.$options.onPendingRemoveH
-        );
-        AppEvents.AddEventListener(
-            "upload-list-clear",
-            this.$options.onPendingClearH
-        );
-        AppEvents.AddEventListener(
-            "upload-list-update",
-            this.$options.onPendingUpdateH
-        );
+        AppEvents.AddEventListener("upload-list-push", this.$options.onPendingPushH);
+        AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
+        AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
+        AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
 
         this.updateTagData();
         this.$options.tagUpdateH = this.updateTagData.bind(this);
@@ -670,22 +687,10 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "upload-list-push",
-            this.$options.onPendingPushH
-        );
-        AppEvents.RemoveEventListener(
-            "upload-list-rm",
-            this.$options.onPendingRemoveH
-        );
-        AppEvents.RemoveEventListener(
-            "upload-list-clear",
-            this.$options.onPendingClearH
-        );
-        AppEvents.RemoveEventListener(
-            "upload-list-update",
-            this.$options.onPendingUpdateH
-        );
+        AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
+        AppEvents.RemoveEventListener("upload-list-rm", this.$options.onPendingRemoveH);
+        AppEvents.RemoveEventListener("upload-list-clear", this.$options.onPendingClearH);
+        AppEvents.RemoveEventListener("upload-list-update", this.$options.onPendingUpdateH);
 
         if (this.$options.findTagTimeout) {
             clearTimeout(this.$options.findTagTimeout);

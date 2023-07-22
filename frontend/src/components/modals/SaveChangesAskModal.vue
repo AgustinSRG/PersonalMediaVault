@@ -1,25 +1,23 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Save changes") }}</div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>{{ $t("Do you want to save the changes you made?") }}</p>
-      </div>
-      <div class="modal-footer text-right">
-        <button type="button" class="btn btn-primary btn-mr" @click="clickNo">
-          <i class="fas fa-times"></i> {{ $t("No") }}
-        </button>
-        <button type="button" class="btn btn-primary auto-focus" @click="clickYes">
-          <i class="fas fa-check"></i> {{ $t("Yes") }}
-        </button>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Save changes") }}</div>
+                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>{{ $t("Do you want to save the changes you made?") }}</p>
+            </div>
+            <div class="modal-footer text-right">
+                <button type="button" class="btn btn-primary btn-mr" @click="clickNo"><i class="fas fa-times"></i> {{ $t("No") }}</button>
+                <button type="button" class="btn btn-primary auto-focus" @click="clickYes">
+                    <i class="fas fa-check"></i> {{ $t("Yes") }}
+                </button>
+            </div>
+        </div>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

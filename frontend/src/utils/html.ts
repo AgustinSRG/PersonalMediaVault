@@ -1,6 +1,6 @@
 // HTML utils
 
-"use strict"
+"use strict";
 
 /**
  * Escapes html reserved characters.
@@ -8,9 +8,13 @@
  * @returns         The escaped text.
  */
 export function escapeHTML(html: string): string {
-    return ("" + html).replace(/&/g, "&amp;").replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;").replace(/\//g, "&#x2f;");
+    return ("" + html)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;")
+        .replace(/\//g, "&#x2f;");
 }
 
 /**
@@ -19,5 +23,5 @@ export function escapeHTML(html: string): string {
  * @returns Text
  */
 export function htmlToText(html: string): string {
-    return (html + "").replace(/<[^>]*>/g, '').trim();
+    return (html + "").replace(/<[^>]*>/g, "").trim();
 }

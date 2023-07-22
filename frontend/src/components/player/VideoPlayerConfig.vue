@@ -1,427 +1,316 @@
 <template>
-  <div
-    class="video-player-config"
-    :class="{ hidden: !shown }"
-    tabindex="-1"
-    role="dialog"
-    :aria-hidden="!shown"
-    @click="stopPropagationEvent"
-    @dblclick="stopPropagationEvent"
-    @mouseenter="enterConfig"
-    @mouseleave="leaveConfig"
-    @keydown="keyDownHandle"
-  >
-    <table v-if="page === ''">
-      <tr>
-        <td>
-          <i class="fas fa-repeat icon-config"></i>
-          <b>{{ $t("Loop") }}</b>
-        </td>
-        <td class="td-right">
-          <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <i class="fas fa-forward icon-config"></i>
-          <b>{{ $t("Auto next") }}</b>
-        </td>
-        <td class="td-right">
-          <ToggleSwitch v-model:val="nextEndState"></ToggleSwitch>
-        </td>
-      </tr>
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToSpeeds"
-      >
-        <td>
-          <i class="fas fa-gauge icon-config"></i>
-          <b>{{ $t("Playback speed") }}</b>
-        </td>
-        <td class="td-right">
-          {{ renderSpeed(speed) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToResolutions"
-      >
-        <td>
-          <i class="fas fa-photo-film icon-config"></i>
-          <b>{{ $t("Quality") }}</b>
-        </td>
-        <td class="td-right">
-          {{ renderResolution(resolution, rTick) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
-      <tr
-        v-if="metadata.audios && metadata.audios.length > 0"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToAudios"
-      >
-        <td>
-          <i class="fas fa-headphones icon-config"></i>
-          <b>{{ $t("Audio") }}</b>
-        </td>
-        <td class="td-right">
-          {{ renderAudio(audioTrack, rTick) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
-      <tr
-        v-if="metadata.subtitles && metadata.subtitles.length > 0"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToSubtitles"
-      >
-        <td>
-          <i class="fas fa-closed-captioning icon-config"></i>
-          <b>{{ $t("Subtitles") }}</b>
-        </td>
-        <td class="td-right">
-          {{ renderSubtitle(subtitles, rTick) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
-      <tr
-        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToSubSizes"
-      >
-        <td>
-          <i class="fas fa-closed-captioning icon-config"></i>
-          <b>{{ $t("Subtitles") }} ({{ $t("Size") }})</b>
-        </td>
-        <td class="td-right">
-          {{ renderSubtitleSize(subSize) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
+    <div
+        class="video-player-config"
+        :class="{ hidden: !shown }"
+        tabindex="-1"
+        role="dialog"
+        :aria-hidden="!shown"
+        @click="stopPropagationEvent"
+        @dblclick="stopPropagationEvent"
+        @mouseenter="enterConfig"
+        @mouseleave="leaveConfig"
+        @keydown="keyDownHandle"
+    >
+        <table v-if="page === ''">
+            <tr>
+                <td>
+                    <i class="fas fa-repeat icon-config"></i>
+                    <b>{{ $t("Loop") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <i class="fas fa-forward icon-config"></i>
+                    <b>{{ $t("Auto next") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="nextEndState"></ToggleSwitch>
+                </td>
+            </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSpeeds">
+                <td>
+                    <i class="fas fa-gauge icon-config"></i>
+                    <b>{{ $t("Playback speed") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderSpeed(speed) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToResolutions">
+                <td>
+                    <i class="fas fa-photo-film icon-config"></i>
+                    <b>{{ $t("Quality") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderResolution(resolution, rTick) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+            <tr
+                v-if="metadata.audios && metadata.audios.length > 0"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="goToAudios"
+            >
+                <td>
+                    <i class="fas fa-headphones icon-config"></i>
+                    <b>{{ $t("Audio") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderAudio(audioTrack, rTick) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+            <tr
+                v-if="metadata.subtitles && metadata.subtitles.length > 0"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="goToSubtitles"
+            >
+                <td>
+                    <i class="fas fa-closed-captioning icon-config"></i>
+                    <b>{{ $t("Subtitles") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderSubtitle(subtitles, rTick) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+            <tr
+                v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="goToSubSizes"
+            >
+                <td>
+                    <i class="fas fa-closed-captioning icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }})</b>
+                </td>
+                <td class="td-right">
+                    {{ renderSubtitleSize(subSize) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToSubBackgrounds"
-      >
-        <td>
-          <i class="fas fa-closed-captioning icon-config"></i>
-          <b>{{ $t("Subtitles") }} ({{ $t("Background") }})</b>
-        </td>
-        <td class="td-right">
-          {{ renderSubtitleBackground(subBackground) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
+            <tr
+                v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="goToSubBackgrounds"
+            >
+                <td>
+                    <i class="fas fa-closed-captioning icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Background") }})</b>
+                </td>
+                <td class="td-right">
+                    {{ renderSubtitleBackground(subBackground) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
 
-      <tr
-        v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
-      >
-        <td>
-          <i class="fas fa-closed-captioning icon-config"></i>
-          <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
-        </td>
-        <td class="td-right">
-          <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
-        </td>
-      </tr>
+            <tr v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles">
+                <td>
+                    <i class="fas fa-closed-captioning icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
+                </td>
+            </tr>
 
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goToDelays"
-      >
-        <td>
-          <i class="fas fa-clock icon-config"></i>
-          <b>{{ $t("Toggle play delay") }}</b>
-        </td>
-        <td class="td-right">
-          {{ renderToggleDelay(toggleDelay) }}
-          <i class="fas fa-chevron-right arrow-config"></i>
-        </td>
-      </tr>
-    </table>
-    <table v-if="page === 'speed'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Playback speed") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="s in speeds"
-        :key="s"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeSpeed(s)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== speed }"
-          ></i>
-          {{ renderSpeed(s) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
-    <table v-if="page === 'resolution'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Quality") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeResolution(-1)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': -1 !== resolution }"
-          ></i>
-          {{ renderResolution(-1, rTick) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="(r, i) in metadata.resolutions"
-        :key="i"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeResolution(i)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': i !== resolution }"
-          ></i>
-          {{ renderResolution(i, rTick) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToDelays">
+                <td>
+                    <i class="fas fa-clock icon-config"></i>
+                    <b>{{ $t("Toggle play delay") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderToggleDelay(toggleDelay) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+        </table>
+        <table v-if="page === 'speed'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Playback speed") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr v-for="s in speeds" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSpeed(s)">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== speed }"></i>
+                    {{ renderSpeed(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+        <table v-if="page === 'resolution'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Quality") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeResolution(-1)">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': -1 !== resolution }"></i>
+                    {{ renderResolution(-1, rTick) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="(r, i) in metadata.resolutions"
+                :key="i"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="changeResolution(i)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': i !== resolution }"></i>
+                    {{ renderResolution(i, rTick) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
 
-    <table v-if="page === 'audios'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Audio") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeAudioTrack('')"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': '' !== audioTrack }"
-          ></i>
-          {{ renderAudio("", rTick) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="aud in metadata.audios"
-        :key="aud.id"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeAudioTrack(aud.id)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': aud.id !== audioTrack }"
-          ></i>
-          {{ aud.name }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
+        <table v-if="page === 'audios'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Audio") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeAudioTrack('')">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== audioTrack }"></i>
+                    {{ renderAudio("", rTick) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="aud in metadata.audios"
+                :key="aud.id"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="changeAudioTrack(aud.id)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': aud.id !== audioTrack }"></i>
+                    {{ aud.name }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
 
-    <table v-if="page === 'subtitles'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Subtitles") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeSubtitle('')"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': '' !== subtitles }"
-          ></i>
-          {{ renderSubtitle("", rTick) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="sub in metadata.subtitles"
-        :key="sub.id"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeSubtitle(sub.id)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': sub.id !== subtitles }"
-          ></i>
-          {{ sub.name }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
+        <table v-if="page === 'subtitles'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSubtitle('')">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== subtitles }"></i>
+                    {{ renderSubtitle("", rTick) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="sub in metadata.subtitles"
+                :key="sub.id"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="changeSubtitle(sub.id)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': sub.id !== subtitles }"></i>
+                    {{ sub.name }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
 
-    <table v-if="page === 'subSizes'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="s in subtitlesSizes"
-        :key="s"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="updateSubtitleSize(s)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== subSize }"
-          ></i>
-          {{ renderSubtitleSize(s) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
+        <table v-if="page === 'subSizes'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr v-for="s in subtitlesSizes" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="updateSubtitleSize(s)">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== subSize }"></i>
+                    {{ renderSubtitleSize(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
 
-    <table v-if="page === 'subBackground'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Subtitles") }} ({{ $t("Background") }}) </b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="s in subtitlesBackgrounds"
-        :key="s"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="updateSubtitleBackground(s)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== subBackground }"
-          ></i>
-          {{ renderSubtitleBackground(s) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
+        <table v-if="page === 'subBackground'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Background") }}) </b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="s in subtitlesBackgrounds"
+                :key="s"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="updateSubtitleBackground(s)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== subBackground }"></i>
+                    {{ renderSubtitleBackground(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
 
-    <table v-if="page === 'time-delays'">
-      <tr
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="goBack"
-      >
-        <td>
-          <i class="fas fa-chevron-left icon-config"></i>
-          <b>{{ $t("Toggle play delay") }}</b>
-        </td>
-        <td class="td-right"></td>
-      </tr>
-      <tr
-        v-for="s in toggleDelayOptions"
-        :key="s"
-        class="tr-button"
-        tabindex="0"
-        @keydown="clickOnEnter"
-        @click="changeToggleDelay(s)"
-      >
-        <td>
-          <i
-            class="fas fa-check icon-config"
-            :class="{ 'check-uncheck': s !== toggleDelay }"
-          ></i>
-          {{ renderToggleDelay(s) }}
-        </td>
-        <td class="td-right"></td>
-      </tr>
-    </table>
-  </div>
+        <table v-if="page === 'time-delays'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Toggle play delay") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="s in toggleDelayOptions"
+                :key="s"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="changeToggleDelay(s)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== toggleDelay }"></i>
+                    {{ renderToggleDelay(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+    </div>
 </template>
 
 <script lang="ts">
@@ -587,26 +476,26 @@ export default defineComponent({
             if (res < 0) {
                 return (
                     this.metadata.width +
-          "x" +
-          this.metadata.height +
-          ", " +
-          this.metadata.fps +
-          " fps (" +
-          this.$t("Original") +
-          ")" +
-          (this.metadata.encoded ? "" : " (" + this.$t("Pending") + ")")
+                    "x" +
+                    this.metadata.height +
+                    ", " +
+                    this.metadata.fps +
+                    " fps (" +
+                    this.$t("Original") +
+                    ")" +
+                    (this.metadata.encoded ? "" : " (" + this.$t("Pending") + ")")
                 );
             } else {
                 let resData = this.metadata.resolutions[res];
                 if (resData) {
                     return (
                         resData.width +
-            "x" +
-            resData.height +
-            ", " +
-            resData.fps +
-            " fps " +
-            (resData.ready ? "" : " (" + this.$t("Pending") + ")")
+                        "x" +
+                        resData.height +
+                        ", " +
+                        resData.fps +
+                        " fps " +
+                        (resData.ready ? "" : " (" + this.$t("Pending") + ")")
                     );
                 } else {
                     return this.$t("Unknown");
@@ -732,11 +621,7 @@ export default defineComponent({
     mounted: function () {
         this.updateResolutions();
         this.subtitles = PlayerPreferences.SelectedSubtitles;
-        this.$options.focusTrap = new FocusTrap(
-            this.$el,
-            this.close.bind(this),
-            "player-settings-no-trap"
-        );
+        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
     },
     beforeUnmount: function () {
         if (this.$options.focusTrap) {

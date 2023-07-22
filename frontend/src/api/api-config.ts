@@ -4,19 +4,19 @@ import { GetApiURL, RequestParams } from "@/utils/request";
 
 export interface VaultUserConfig {
     title: string;
-    max_tasks: number,
-    encoding_threads: number,
-    video_previews_interval: number,
+    max_tasks: number;
+    encoding_threads: number;
+    video_previews_interval: number;
     resolutions: {
-        width: number,
-        height: number,
-        fps: number,
-    }[],
+        width: number;
+        height: number;
+        fps: number;
+    }[];
     image_resolutions: {
-        width: number,
-        height: number,
-    }[],
-    css: string,
+        width: number;
+        height: number;
+    }[];
+    css: string;
 }
 
 export class ConfigAPI {

@@ -19,9 +19,9 @@ export class PlayerPreferences {
         height: 0,
     };
 
-    public static PlayTimeCache: { mid: number, time: number }[] = [];
+    public static PlayTimeCache: { mid: number; time: number }[] = [];
 
-    public static AlbumCurrentCache: { id: number, pos: number }[] = [];
+    public static AlbumCurrentCache: { id: number; pos: number }[] = [];
 
     public static PlayerVolume = 1;
     public static PlayerMuted = false;
@@ -46,12 +46,12 @@ export class PlayerPreferences {
     public static PlayerTogglePlayDelay = 250;
 
     public static LoadPreferences() {
-        const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
+        const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
         if (userRes) {
             PlayerPreferences.UserSelectedResolution = userRes;
         }
 
-        const userResImage = LocalStorage.Get("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage)
+        const userResImage = LocalStorage.Get("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
         if (userResImage) {
             PlayerPreferences.UserSelectedResolutionImage = userResImage;
         }
@@ -61,7 +61,6 @@ export class PlayerPreferences {
         if (playTimeCache) {
             PlayerPreferences.PlayTimeCache = playTimeCache;
         }
-
 
         const albumPosCache = LocalStorage.Get("player-album-pos-cache", []);
 
@@ -97,7 +96,10 @@ export class PlayerPreferences {
             return -1;
         }
         let currentVal = metadata.width * metadata.height * metadata.fps;
-        const prefVal = PlayerPreferences.UserSelectedResolution.width * PlayerPreferences.UserSelectedResolution.height * PlayerPreferences.UserSelectedResolution.fps;
+        const prefVal =
+            PlayerPreferences.UserSelectedResolution.width *
+            PlayerPreferences.UserSelectedResolution.height *
+            PlayerPreferences.UserSelectedResolution.fps;
         let currenRes = -1;
         for (let i = 0; i < metadata.resolutions.length; i++) {
             const res = metadata.resolutions[i];
@@ -153,7 +155,7 @@ export class PlayerPreferences {
             };
         }
 
-        LocalStorage.Set("player-pref-resolution", PlayerPreferences.UserSelectedResolution)
+        LocalStorage.Set("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
     }
 
     public static SetResolutionIndexImage(metadata: any, index: number) {
@@ -171,7 +173,7 @@ export class PlayerPreferences {
             };
         }
 
-        LocalStorage.Set("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage)
+        LocalStorage.Set("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
     }
 
     public static GetInitialTime(mid: number) {
@@ -192,7 +194,7 @@ export class PlayerPreferences {
 
     public static SetInitialTime(mid: number, time: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter(e => {
+        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter((e) => {
             return e.mid !== mid;
         });
 
@@ -210,7 +212,7 @@ export class PlayerPreferences {
 
     public static ClearInitialTime(mid: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter(e => {
+        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter((e) => {
             return e.mid !== mid;
         });
 
@@ -234,7 +236,7 @@ export class PlayerPreferences {
     }
 
     public static SetAlbumPos(id: number, pos: number) {
-        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []).filter(e => {
+        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []).filter((e) => {
             return e.id !== id;
         });
 

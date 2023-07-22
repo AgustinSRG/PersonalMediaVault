@@ -64,31 +64,34 @@ export class SubtitlesController {
         }
 
         Timeouts.Abort("subtitles-load");
-        Request.Pending("subtitles-load",{
+        Request.Pending("subtitles-load", {
             method: "GET",
-            url:  SubtitlesController.SubtitlesFileURL,
-        }).onSuccess(srtText => {
-            SubtitlesController.Subtitles = parseSRT(srtText);
-            AppEvents.Emit("subtitles-update");
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add(404, "*", () => {
-                    SubtitlesController.Subtitles = [];
-                    AppEvents.Emit("subtitles-update");
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
-        });
+            url: SubtitlesController.SubtitlesFileURL,
+        })
+            .onSuccess((srtText) => {
+                SubtitlesController.Subtitles = parseSRT(srtText);
+                AppEvents.Emit("subtitles-update");
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add(404, "*", () => {
+                        SubtitlesController.Subtitles = [];
+                        AppEvents.Emit("subtitles-update");
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("subtitles-load", 1500, SubtitlesController.Load);
+            });
     }
 
     public static OnSubtitlesChanged() {

@@ -1,35 +1,42 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">
-          {{ $t("Delete media") }}
-        </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{
-            $t(
-              "Remember. If you delete the media by accident you would have to re-upload it. Make sure you actually want to delete it."
-            )
-          }}</label>
-        </div>
-        <div class="form-group">
-          <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
-          <input type="text" name="confirmation" autocomplete="off" v-model="confirmation" :disabled="busy" maxlength="255" class="form-control form-control-full-width auto-focus" />
-        </div>
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button :disabled="busy" type="submit" class="modal-footer-btn">
-          <i class="fas fa-trash-alt"></i> {{ $t("Delete media") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    {{ $t("Delete media") }}
+                </div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>
+                        {{ $t("Remember. If you delete the media by accident you would have to re-upload it.") }}
+                        {{ $t("Make sure you actually want to delete it.") }}
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
+                    <input
+                        type="text"
+                        name="confirmation"
+                        autocomplete="off"
+                        v-model="confirmation"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width auto-focus"
+                    />
+                </div>
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button :disabled="busy" type="submit" class="modal-footer-btn">
+                    <i class="fas fa-trash-alt"></i> {{ $t("Delete media") }}
+                </button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -96,9 +103,7 @@ export default defineComponent({
             }
 
             if (this.confirmation.toLowerCase() !== "confirm") {
-                this.error = this.$t(
-                    "You must type 'confirm' in order to confirm the deletion of the media"
-                );
+                this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the media");
                 return;
             }
 
@@ -109,10 +114,7 @@ export default defineComponent({
 
             Request.Do(MediaAPI.DeleteMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.Emit(
-                        "snack",
-                        this.$t("Media deleted") + ": " + this.oldName
-                    );
+                    AppEvents.Emit("snack", this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.close();
@@ -154,10 +156,7 @@ export default defineComponent({
         this.$options.mediaUpdateH = this.onMediaUpdate.bind(this);
         AppEvents.AddEventListener("app-status-update", this.$options.mediaUpdateH);
 
-        AppEvents.AddEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
 
         this.onMediaUpdate();
 
@@ -168,15 +167,9 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "app-status-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.RemoveEventListener("app-status-update", this.$options.mediaUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
     },
     watch: {
         display: function () {

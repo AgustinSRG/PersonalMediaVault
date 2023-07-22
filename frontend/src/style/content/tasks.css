@@ -1,68 +1,68 @@
 /* Task list style */
 
 .task-status {
-  color: gray;
+    color: gray;
 }
 
 .task-status.task-running {
-  color: lime;
+    color: lime;
 }
 
 .task-progress-bar-container {
-  width: 120px;
-  height: 1rem;
-  display: flex;
-  border: solid 1px var(--theme-border-color);
+    width: 120px;
+    height: 1rem;
+    display: flex;
+    border: solid 1px var(--theme-border-color);
 }
 
 .task-progress-bar-current {
-  height: 100%;
-  background: lime;
+    height: 100%;
+    background: lime;
 }
 
 /* Progress task style */
 
 .player-pending-checker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--player-loader-background);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--player-loader-background);
 }
 
 .player-task-info {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
 }
 
 .player-task-info-row {
-  padding: 1rem;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  text-align: center;
+    padding: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
 }
 
 .player-task-progress-bar {
-  height: 2.5rem;
-  width: 100%;
-  max-width: 500px;
-  border: solid 1px var(--theme-border-color);
-  padding: 0.1rem;
-  display: flex;
+    height: 2.5rem;
+    width: 100%;
+    max-width: 500px;
+    border: solid 1px var(--theme-border-color);
+    padding: 0.1rem;
+    display: flex;
 }
 
 .player-task-progress-bar-current {
-  height: 100%;
-  background: var(--progress-bar-bg);
-  transition: width 0.2s;
+    height: 100%;
+    background: var(--progress-bar-bg);
+    transition: width 0.2s;
 }

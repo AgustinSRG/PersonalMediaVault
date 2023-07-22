@@ -81,7 +81,9 @@
     max-width: 100%;
 
     border-radius: 0.25rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition:
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
 
     border: 1px solid var(--theme-border-color);
     color: var(--theme-fg-color);

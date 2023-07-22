@@ -173,7 +173,8 @@
     padding: 1rem;
 }
 
-.modal-body.no-padding, .modal-footer.no-padding {
+.modal-body.no-padding,
+.modal-footer.no-padding {
     padding: 0;
 }
 

@@ -9,7 +9,6 @@ import { AppEvents } from "./app-events";
 import { PlayerPreferences } from "./player-preferences";
 
 export class AppStatus {
-
     public static CurrentLayout = "initial";
     public static CurrentFocus = "left";
 
@@ -64,7 +63,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && (["home", "search", "random", "albums", "upload", "adv-search"].includes(page))) {
+        if (page && ["home", "search", "random", "albums", "upload", "adv-search"].includes(page)) {
             AppStatus.CurrentPage = page;
         } else {
             AppStatus.CurrentPage = "home";
@@ -88,7 +87,7 @@ export class AppStatus {
 
         const split = getParameterByName("split");
 
-        AppStatus.ListSplitMode = (split === "yes");
+        AppStatus.ListSplitMode = split === "yes";
     }
 
     public static UpdateLayout() {
@@ -184,9 +183,9 @@ export class AppStatus {
             // Update URL
             if (newURL !== location.href) {
                 if (replaceState) {
-                    window.history.replaceState({ path: newURL }, '', newURL);
+                    window.history.replaceState({ path: newURL }, "", newURL);
                 } else {
-                    window.history.pushState({ path: newURL }, '', newURL);
+                    window.history.pushState({ path: newURL }, "", newURL);
                 }
             }
         }
@@ -394,7 +393,7 @@ export class AppStatus {
         return page + "," + pageSize + "," + order;
     }
 
-    public static UnPackSearchParams(params: string): { page: number, pageSize: number, order: string } {
+    public static UnPackSearchParams(params: string): { page: number; pageSize: number; order: string } {
         const res = {
             page: 0,
             pageSize: 25,

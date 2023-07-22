@@ -1,6 +1,6 @@
 // Focus trap
 
-"use strict"
+"use strict";
 
 /**
  * Traps focus
@@ -56,4 +56,3 @@ export class FocusTrap {
         this.deactivate();
     }
 }
-

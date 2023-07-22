@@ -1,330 +1,374 @@
 <template>
-  <div class="player-media-editor" tabindex="-1">
-    <!--- Title -->
+    <div class="player-media-editor" tabindex="-1">
+        <!--- Title -->
 
-    <form @submit="changeTitle">
-      <div class="form-group">
-        <label>{{ $t("Title") }}:</label>
-        <input type="text" autocomplete="off" :readonly="!canWrite" maxlength="255" :disabled="busy" v-model="title" class="form-control form-control-full-width" />
-      </div>
-      <div class="form-group" v-if="canWrite">
-        <button type="submit" class="btn btn-primary" :disabled="busy || !title || originalTitle === title">
-          <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
-        </button>
-      </div>
-    </form>
+        <form @submit="changeTitle">
+            <div class="form-group">
+                <label>{{ $t("Title") }}:</label>
+                <input
+                    type="text"
+                    autocomplete="off"
+                    :readonly="!canWrite"
+                    maxlength="255"
+                    :disabled="busy"
+                    v-model="title"
+                    class="form-control form-control-full-width"
+                />
+            </div>
+            <div class="form-group" v-if="canWrite">
+                <button type="submit" class="btn btn-primary" :disabled="busy || !title || originalTitle === title">
+                    <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
+                </button>
+            </div>
+        </form>
 
-    <!--- Description -->
+        <!--- Description -->
 
-    <div class="form-group border-top">
-      <label>{{ $t("Description") }}:</label>
-      <textarea v-model="desc" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" rows="3" :disabled="busy"></textarea>
-    </div>
-    <div class="form-group" v-if="canWrite">
-      <button type="button" class="btn btn-primary" :disabled="busy || originalDesc === desc" @click="changeDescription">
-        <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
-      </button>
-    </div>
+        <div class="form-group border-top">
+            <label>{{ $t("Description") }}:</label>
+            <textarea
+                v-model="desc"
+                :readonly="!canWrite"
+                class="form-control form-control-full-width form-textarea"
+                rows="3"
+                :disabled="busy"
+            ></textarea>
+        </div>
+        <div class="form-group" v-if="canWrite">
+            <button type="button" class="btn btn-primary" :disabled="busy || originalDesc === desc" @click="changeDescription">
+                <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
+            </button>
+        </div>
 
-    <!--- Tags -->
+        <!--- Tags -->
 
-    <div class="form-group border-top">
-      <label>{{ $t("Tags") }}:</label>
-    </div>
-    <div class="form-group media-tags">
-      <label v-if="tags.length === 0">{{
-        $t("There are no tags yet for this media.")
-      }}</label>
-      <div v-for="tag in tags" :key="tag" class="media-tag">
-        <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-        <button v-if="canWrite" type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="busy" @click="removeTag(tag)">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
-    <form @submit="addTag" v-if="canWrite">
-      <div class="form-group">
-        <label>{{ $t("Tag to add") }}:</label>
-        <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="busy" @input="onTagAddChanged" @keydown="onTagAddKeyDown" class="form-control tag-to-add" />
-      </div>
-      <div class="form-group" v-if="matchingTags.length > 0">
-        <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" :disabled="busy" @click="addMatchingTag(mt.name)">
-          <i class="fas fa-plus"></i> {{ mt.name }}
-        </button>
-      </div>
-      <div class="form-group">
-        <button type="submit" class="btn btn-primary" :disabled="busy || !tagToAdd">
-          <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
-        </button>
-      </div>
-    </form>
+        <div class="form-group border-top">
+            <label>{{ $t("Tags") }}:</label>
+        </div>
+        <div class="form-group media-tags">
+            <label v-if="tags.length === 0">{{ $t("There are no tags yet for this media.") }}</label>
+            <div v-for="tag in tags" :key="tag" class="media-tag">
+                <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                <button
+                    v-if="canWrite"
+                    type="button"
+                    :title="$t('Remove tag')"
+                    class="media-tag-btn"
+                    :disabled="busy"
+                    @click="removeTag(tag)"
+                >
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <form @submit="addTag" v-if="canWrite">
+            <div class="form-group">
+                <label>{{ $t("Tag to add") }}:</label>
+                <input
+                    type="text"
+                    autocomplete="off"
+                    maxlength="255"
+                    v-model="tagToAdd"
+                    :disabled="busy"
+                    @input="onTagAddChanged"
+                    @keydown="onTagAddKeyDown"
+                    class="form-control tag-to-add"
+                />
+            </div>
+            <div class="form-group" v-if="matchingTags.length > 0">
+                <button
+                    v-for="mt in matchingTags"
+                    :key="mt.id"
+                    type="button"
+                    class="btn btn-primary btn-sm btn-tag-mini"
+                    :disabled="busy"
+                    @click="addMatchingTag(mt.name)"
+                >
+                    <i class="fas fa-plus"></i> {{ mt.name }}
+                </button>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" :disabled="busy || !tagToAdd">
+                    <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
+                </button>
+            </div>
+        </form>
 
-    <!--- Thumbnail -->
+        <!--- Thumbnail -->
 
-    <div class="form-group border-top">
-      <label>{{ $t("Thumbnail") }}:</label>
-    </div>
-    <div class="form-group" @drop="onDrop">
-      <label v-if="!thumbnail">{{
-        $t("No thumbnail set for this media")
-      }}</label>
-      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail" loading="lazy" />
-    </div>
-    <div class="form-group" v-if="canWrite">
-      <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
-      <button type="button" class="btn btn-primary" :disabled="busy" @click="uploadThumbnail">
-        <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
-      </button>
-    </div>
+        <div class="form-group border-top">
+            <label>{{ $t("Thumbnail") }}:</label>
+        </div>
+        <div class="form-group" @drop="onDrop">
+            <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}</label>
+            <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="originalTitle" class="form-group-thumbnail" loading="lazy" />
+        </div>
+        <div class="form-group" v-if="canWrite">
+            <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
+            <button type="button" class="btn btn-primary" :disabled="busy" @click="uploadThumbnail">
+                <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
+            </button>
+        </div>
 
+        <!--- Subtitles -->
 
-    <!--- Subtitles -->
+        <div class="form-group border-top" v-if="type === 2 || type === 3">
+            <label>{{ $t("Subtitles") }}:</label>
+        </div>
 
-    <div class="form-group border-top" v-if="type === 2 || type === 3">
-      <label>{{ $t("Subtitles") }}:</label>
-    </div>
+        <div v-if="type === 2 || type === 3" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">{{ $t("ID") }}</th>
+                        <th class="text-left">{{ $t("Name") }}</th>
+                        <th class="text-right td-shrink"></th>
+                        <th class="text-right td-shrink" v-if="canWrite"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sub in subtitles" :key="sub.id">
+                        <td class="bold">{{ sub.id }}</td>
+                        <td class="bold">{{ sub.name }}</td>
+                        <td class="text-right td-shrink">
+                            <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadSubtitles(sub)">
+                                <i class="fas fa-download"></i> {{ $t("Download") }}
+                            </button>
+                        </td>
+                        <td class="text-right td-shrink" v-if="canWrite">
+                            <button type="button" class="btn btn-danger btn-xs" @click="removeSubtitles(sub)">
+                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <div v-if="type === 2 || type === 3" class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-left">{{ $t("ID") }}</th>
-            <th class="text-left">{{ $t("Name") }}</th>
-            <th class="text-right td-shrink"></th>
-            <th class="text-right td-shrink" v-if="canWrite"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="sub in subtitles" :key="sub.id">
-            <td class="bold">{{ sub.id }}</td>
-            <td class="bold">{{ sub.name }}</td>
-            <td class="text-right td-shrink">
-              <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadSubtitles(sub)">
-                <i class="fas fa-download"></i> {{ $t("Download") }}
-              </button>
-            </td>
-            <td class="text-right td-shrink" v-if="canWrite">
-              <button type="button" class="btn btn-danger btn-xs" @click="removeSubtitles(sub)">
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
+            <input type="file" class="file-hidden srt-file-hidden" @change="srtFileChanged" name="srt-upload" accept=".srt" />
+            <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
+                <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
+            </button>
+
+            <button v-if="srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
+                <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
+            </button>
+        </div>
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <label>{{ $t("Subtitles identifier") }}:</label>
+            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtId" class="form-control" />
+        </div>
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <label>{{ $t("Subtitles name") }}:</label>
+            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtName" class="form-control" />
+        </div>
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <button type="button" class="btn btn-primary" :disabled="busy || !srtId || !srtName || !srtFile" @click="addSubtitles">
+                <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
+            </button>
+        </div>
+
+        <!--- Audio tracks -->
+
+        <div class="form-group border-top" v-if="type === 2">
+            <label>{{ $t("Extra audio tracks") }}:</label>
+        </div>
+
+        <div v-if="type === 2" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">{{ $t("ID") }}</th>
+                        <th class="text-left">{{ $t("Name") }}</th>
+                        <th class="text-right td-shrink"></th>
+                        <th class="text-right td-shrink" v-if="canWrite"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="aud in audios" :key="aud.id">
+                        <td class="bold">{{ aud.id }}</td>
+                        <td class="bold">{{ aud.name }}</td>
+                        <td class="text-right td-shrink">
+                            <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadAudio(aud)">
+                                <i class="fas fa-download"></i> {{ $t("Download") }}
+                            </button>
+                        </td>
+                        <td class="text-right td-shrink" v-if="canWrite">
+                            <button type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
+                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-group" v-if="canWrite && type === 2">
+            <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
+            <input type="file" class="file-hidden audio-file-hidden" @change="audioFileChanged" name="mp3-upload" accept=".mp3" />
+            <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+                <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
+            </button>
+
+            <button v-if="audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
+                <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
+            </button>
+        </div>
+        <div class="form-group" v-if="canWrite && type === 2">
+            <label>{{ $t("Audio track identifier") }}:</label>
+            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioId" class="form-control" />
+        </div>
+        <div class="form-group" v-if="canWrite && type === 2">
+            <label>{{ $t("Audio track name") }}:</label>
+            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioName" class="form-control" />
+        </div>
+        <div class="form-group" v-if="canWrite && type === 2">
+            <button type="button" class="btn btn-primary" :disabled="busy || !audioId || !audioName || !audioFile" @click="addAudio">
+                <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
+            </button>
+        </div>
+
+        <!--- Time slices -->
+
+        <div class="form-group border-top" v-if="type === 2 || type === 3">
+            <label>{{ $t("Time slices") }}:</label>
+            <textarea
+                v-model="timeSlices"
+                :readonly="!canWrite"
+                class="form-control form-control-full-width form-textarea"
+                :placeholder="'00:00:00 A\n00:01:00 B'"
+                rows="5"
+                :disabled="busy"
+            ></textarea>
+        </div>
+
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <button type="button" class="btn btn-primary" :disabled="busy || originalTimeSlices === timeSlices" @click="changeTimeSlices">
+                <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
+            </button>
+        </div>
+
+        <!--- Resolutions -->
+
+        <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
+            <label v-if="type === 2"
+                >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}:</label
+            >
+            <label v-if="type === 1"
+                >{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}:</label
+            >
+        </div>
+
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
+            <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
+            <label v-if="type === 2"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
+        </div>
+
+        <div v-if="canWrite && (type === 2 || type === 1)" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="text-left">{{ $t("Name") }}</th>
+                        <th class="text-left">{{ $t("Properties") }}</th>
+                        <th class="text-right"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="res in resolutions" :key="res.name">
+                        <td class="bold">{{ res.name }}</td>
+                        <td v-if="type === 1">
+                            {{ renderResolutionProperties(res.width, res.height, width, height) }}
+                        </td>
+                        <td v-if="type === 2">{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
+                        <td class="text-right">
+                            <button
+                                v-if="!res.enabled"
+                                type="button"
+                                class="btn btn-primary btn-xs"
+                                :disabled="busy"
+                                @click="addResolution(res)"
+                            >
+                                <i class="fas fa-plus"></i> {{ $t("Encode") }}
+                            </button>
+                            <button
+                                v-if="res.enabled"
+                                type="button"
+                                class="btn btn-danger btn-xs"
+                                :disabled="busy"
+                                @click="deleteResolution(res)"
+                            >
+                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!--- Extra config -->
+
+        <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
+            <label>{{ $t("Extra media configuration") }}:</label>
+        </div>
+        <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
+            <table class="table">
+                <tr v-if="type === 2 || type === 3">
+                    <td class="">
+                        {{ $t("Reset time to the beginning every time the media reloads?") }}
+                    </td>
+                    <td class="text-right">
+                        <toggle-switch v-model:val="startBeginning" :disabled="busy"></toggle-switch>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="busy || originalStartBeginning === startBeginning"
+                @click="changeExtraParams"
+            >
+                <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
+            </button>
+        </div>
+
+        <!--- Re-Encode -->
+
+        <div class="form-group border-top" v-if="canWrite">
+            <label>
+                {{ $t("If the media resource did not encode properly, try using the button below.") }}
+                {{ $t("If it still does not work, try re-uploading the media.") }}
+            </label>
+        </div>
+        <div class="form-group" v-if="canWrite">
+            <button type="button" class="btn btn-primary" :disabled="busy" @click="encodeMedia">
+                <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
+            </button>
+        </div>
+
+        <!--- Delete -->
+
+        <div class="form-group border-top" v-if="canWrite">
+            <label>{{ $t("If you want to delete this media resource, click the button below.") }}</label>
+        </div>
+        <div class="form-group" v-if="canWrite">
+            <button type="button" class="btn btn-danger" :disabled="busy" @click="deleteMedia">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            </button>
+        </div>
 
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
-      <input type="file" class="file-hidden srt-file-hidden" @change="srtFileChanged" name="srt-upload" accept=".srt" />
-      <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
-        <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
-      </button>
-
-      <button v-if="srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
-        <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
-      </button>
+        <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
+        <ResolutionConfirmationModal
+            ref="resolutionConfirmationModal"
+            v-model:display="displayResolutionConfirmation"
+        ></ResolutionConfirmationModal>
+        <SubtitlesDeleteModal ref="subtitlesDeleteModal" v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
+        <AudioTrackDeleteModal ref="audioTrackDeleteModal" v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
+        <ReEncodeConfirmationModal v-model:display="displayReEncode" @confirm="doEncodeMedia"></ReEncodeConfirmationModal>
     </div>
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <label>{{ $t("Subtitles identifier") }}:</label>
-      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtId" class="form-control" />
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <label>{{ $t("Subtitles name") }}:</label>
-      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtName" class="form-control" />
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button type="button" class="btn btn-primary" :disabled="busy || !srtId || !srtName || !srtFile" @click="addSubtitles">
-        <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
-      </button>
-    </div>
-
-    <!--- Audio tracks -->
-
-    <div class="form-group border-top" v-if="type === 2">
-      <label>{{ $t("Extra audio tracks") }}:</label>
-    </div>
-
-    <div v-if="type === 2" class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-left">{{ $t("ID") }}</th>
-            <th class="text-left">{{ $t("Name") }}</th>
-            <th class="text-right td-shrink"></th>
-            <th class="text-right td-shrink" v-if="canWrite"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="aud in audios" :key="aud.id">
-            <td class="bold">{{ aud.id }}</td>
-            <td class="bold">{{ aud.name }}</td>
-            <td class="text-right td-shrink">
-              <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadAudio(aud)">
-                <i class="fas fa-download"></i> {{ $t("Download") }}
-              </button>
-            </td>
-            <td class="text-right td-shrink" v-if="canWrite">
-              <button type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
-                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="form-group" v-if="canWrite && (type === 2)">
-      <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
-      <input type="file" class="file-hidden audio-file-hidden" @change="audioFileChanged" name="mp3-upload" accept=".mp3" />
-      <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
-        <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
-      </button>
-
-      <button v-if="audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
-        <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
-      </button>
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2)">
-      <label>{{ $t("Audio track identifier") }}:</label>
-      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioId" class="form-control" />
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2)">
-      <label>{{ $t("Audio track name") }}:</label>
-      <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioName" class="form-control" />
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2)">
-      <button type="button" class="btn btn-primary" :disabled="busy || !audioId || !audioName || !audioFile" @click="addAudio">
-        <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
-      </button>
-    </div>
-
-    <!--- Time slices -->
-
-    <div class="form-group border-top" v-if="type === 2 || type === 3">
-      <label>{{ $t("Time slices") }}:</label>
-      <textarea v-model="timeSlices" :readonly="!canWrite" class="form-control form-control-full-width form-textarea" :placeholder="'00:00:00 A\n00:01:00 B'" rows="5" :disabled="busy"></textarea>
-    </div>
-
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button type="button" class="btn btn-primary" :disabled="busy || originalTimeSlices === timeSlices" @click="changeTimeSlices">
-        <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
-      </button>
-    </div>
-
-    <!--- Resolutions -->
-
-    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 1)">
-      <label v-if="type === 2">{{
-        $t(
-          "Extra resolutions for videos. These resolutions can be used for slow connections or small screens"
-        )
-      }}:</label>
-      <label v-if="type === 1">{{
-        $t(
-          "Extra resolutions for images. These resolutions can be used for slow connections or small screens"
-        )
-      }}:</label>
-    </div>
-
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
-      <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
-      <label v-if="type === 2">
-        {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps
-      </label>
-    </div>
-
-    <div v-if="canWrite && (type === 2 || type === 1)" class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="text-left">{{ $t("Name") }}</th>
-            <th class="text-left">{{ $t("Properties") }}</th>
-            <th class="text-right"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="res in resolutions" :key="res.name">
-            <td class="bold">{{ res.name }}</td>
-            <td v-if="type === 1">
-              {{
-                renderResolutionProperties(res.width, res.height, width, height)
-              }}
-            </td>
-            <td v-if="type === 2">
-              {{ res.width }}x{{ res.height }}, {{ res.fps }} fps
-            </td>
-            <td class="text-right">
-              <button v-if="!res.enabled" type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="addResolution(res)">
-                <i class="fas fa-plus"></i> {{ $t("Encode") }}
-              </button>
-              <button v-if="res.enabled" type="button" class="btn btn-danger btn-xs" :disabled="busy" @click="deleteResolution(res)">
-                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!--- Extra config -->
-
-    <div class="form-group border-top" v-if="canWrite && (type === 2 || type === 3)">
-      <label>{{ $t("Extra media configuration") }}:</label>
-    </div>
-    <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
-      <table class="table">
-        <tr v-if="type === 2 || type === 3">
-          <td class="">
-            {{
-              $t("Reset time to the beginning every time the media reloads?")
-            }}
-          </td>
-          <td class="text-right">
-            <toggle-switch v-model:val="startBeginning" :disabled="busy"></toggle-switch>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-      <button type="button" class="btn btn-primary" :disabled="busy || originalStartBeginning === startBeginning" @click="changeExtraParams">
-        <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
-      </button>
-    </div>
-
-    <!--- Re-Encode -->
-
-    <div class="form-group border-top" v-if="canWrite">
-      <label>{{
-        $t(
-          "If the media resource did not encode properly, try using the button below. If it still does not work, try re-uploading the media."
-        )
-      }}</label>
-    </div>
-    <div class="form-group" v-if="canWrite">
-      <button type="button" class="btn btn-primary" :disabled="busy" @click="encodeMedia">
-        <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
-      </button>
-    </div>
-
-    <!--- Delete -->
-
-    <div class="form-group border-top" v-if="canWrite">
-      <label>{{
-        $t("If you want to delete this media resource, click the button below.")
-      }}</label>
-    </div>
-    <div class="form-group" v-if="canWrite">
-      <button type="button" class="btn btn-danger" :disabled="busy" @click="deleteMedia">
-        <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-      </button>
-    </div>
-
-    <MediaDeleteModal v-model:display="displayMediaDelete"></MediaDeleteModal>
-    <ResolutionConfirmationModal ref="resolutionConfirmationModal" v-model:display="displayResolutionConfirmation"></ResolutionConfirmationModal>
-    <SubtitlesDeleteModal ref="subtitlesDeleteModal" v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
-    <AudioTrackDeleteModal ref="audioTrackDeleteModal" v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
-    <ReEncodeConfirmationModal v-model:display="displayReEncode" @confirm="doEncodeMedia"></ReEncodeConfirmationModal>
-  </div>
 </template>
 
 <script lang="ts">
@@ -346,7 +390,7 @@ import MediaDeleteModal from "../modals/MediaDeleteModal.vue";
 import ResolutionConfirmationModal from "../modals/ResolutionConfirmationModal.vue";
 import ReEncodeConfirmationModal from "../modals/ReEncodeConfirmationModal.vue";
 import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
-import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue"
+import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 
 export default defineComponent({
@@ -506,8 +550,7 @@ export default defineComponent({
             this.originalDesc = MediaController.MediaData.description;
             this.desc = this.originalDesc;
 
-            this.originalStartBeginning =
-        MediaController.MediaData.force_start_beginning;
+            this.originalStartBeginning = MediaController.MediaData.force_start_beginning;
             this.startBeginning = this.originalStartBeginning;
 
             this.width = MediaController.MediaData.width;
@@ -518,7 +561,7 @@ export default defineComponent({
 
             this.thumbnail = MediaController.MediaData.thumbnail;
 
-            this.subtitles = (MediaController.MediaData.subtitles || []).map(a => {
+            this.subtitles = (MediaController.MediaData.subtitles || []).map((a) => {
                 return {
                     id: a.id,
                     name: a.name,
@@ -526,7 +569,7 @@ export default defineComponent({
                 };
             });
 
-            this.audios = (MediaController.MediaData.audios || []).map(a => {
+            this.audios = (MediaController.MediaData.audios || []).map((a) => {
                 return {
                     id: a.id,
                     name: a.name,
@@ -555,11 +598,7 @@ export default defineComponent({
                     let enabled = false;
                     let fps = r.fps;
                     for (let res of resolutions) {
-                        if (
-                            res.width === r.width &&
-              res.height === r.height &&
-              (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)
-                        ) {
+                        if (res.width === r.width && res.height === r.height && (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)) {
                             enabled = true;
                             fps = res.fps;
                             break;
@@ -609,10 +648,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.ChangeMediaThumbnail(mediaId, file)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaThumbnail(mediaId, file))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
                     this.busy = false;
@@ -644,10 +680,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -671,10 +704,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.ChangeMediaTitle(mediaId, this.title)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaTitle(mediaId, this.title))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed title"));
                     this.busy = false;
@@ -706,10 +736,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -729,10 +756,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.ChangeMediaDescription(mediaId, this.desc)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaDescription(mediaId, this.desc))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed description"));
                     this.busy = false;
@@ -762,10 +786,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -787,10 +808,7 @@ export default defineComponent({
 
             const slices = parseTimeSlices(this.timeSlices);
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.ChangeTimeSlices(mediaId, slices)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.ChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
                     this.busy = false;
@@ -821,10 +839,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -844,15 +859,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.ChangeExtraParams(mediaId, this.startBeginning)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
                 .onSuccess(() => {
-                    AppEvents.Emit(
-                        "snack",
-                        this.$t("Successfully changed media extra params")
-                    );
+                    AppEvents.Emit("snack", this.$t("Successfully changed media extra params"));
                     this.busy = false;
                     this.originalStartBeginning = this.startBeginning;
                     this.$emit("changed");
@@ -880,10 +889,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -905,10 +911,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.Emit(
-                        "snack",
-                        this.$t("Successfully requested pending encoding tasks")
-                    );
+                    AppEvents.Emit("snack", this.$t("Successfully requested pending encoding tasks"));
                     this.busy = false;
                     MediaController.Load();
                 })
@@ -932,10 +935,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1011,10 +1011,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1080,10 +1077,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1137,10 +1131,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1231,15 +1222,9 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(
-                        "media-editor-busy",
-                        MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps)
-                    )
+                    Request.Pending("media-editor-busy", MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Added resolution") + ": " + r.name
-                            );
+                            AppEvents.Emit("snack", this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = true;
                             r.fps = result.fps;
@@ -1268,10 +1253,7 @@ export default defineComponent({
                                     AppEvents.Emit("snack", this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit(
-                                        "snack",
-                                        this.$t("Could not connect to the server")
-                                    );
+                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
@@ -1301,15 +1283,9 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(
-                        "media-editor-busy",
-                        MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps)
-                    )
+                    Request.Pending("media-editor-busy", MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Removed resolution") + ": " + r.name
-                            );
+                            AppEvents.Emit("snack", this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = false;
                             this.$emit("changed");
@@ -1337,10 +1313,7 @@ export default defineComponent({
                                     AppEvents.Emit("snack", this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit(
-                                        "snack",
-                                        this.$t("Could not connect to the server")
-                                    );
+                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
@@ -1386,12 +1359,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                AppEvents.Emit(
-                    "snack",
-                    this.$t(
-                        "There is already another subtitles file with the same identifier"
-                    )
-                );
+                AppEvents.Emit("snack", this.$t("There is already another subtitles file with the same identifier"));
                 return;
             }
 
@@ -1403,10 +1371,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
@@ -1436,13 +1401,7 @@ export default defineComponent({
                             AppEvents.Emit("unauthorized");
                         })
                         .add(413, "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Subtitles file too big (max is $MAX)").replace(
-                                    "$MAX",
-                                    "10MB"
-                                )
-                            );
+                            AppEvents.Emit("snack", this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"));
                         })
                         .add(403, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
@@ -1454,10 +1413,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1481,15 +1437,9 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = sub.id;
 
-                    Request.Pending(
-                        "media-editor-busy",
-                        MediaAPI.RemoveSubtitles(mediaId, id)
-                    )
+                    Request.Pending("media-editor-busy", MediaAPI.RemoveSubtitles(mediaId, id))
                         .onSuccess(() => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Removed subtitles") + ": " + sub.name
-                            );
+                            AppEvents.Emit("snack", this.$t("Removed subtitles") + ": " + sub.name);
                             this.busy = false;
                             for (let i = 0; i < this.subtitles.length; i++) {
                                 if (this.subtitles[i].id === id) {
@@ -1522,10 +1472,7 @@ export default defineComponent({
                                     AppEvents.Emit("snack", this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit(
-                                        "snack",
-                                        this.$t("Could not connect to the server")
-                                    );
+                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
@@ -1580,12 +1527,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                AppEvents.Emit(
-                    "snack",
-                    this.$t(
-                        "There is already another audio track with the same identifier"
-                    )
-                );
+                AppEvents.Emit("snack", this.$t("There is already another audio track with the same identifier"));
                 return;
             }
 
@@ -1597,10 +1539,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(
-                "media-editor-busy",
-                MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile)
-            )
+            Request.Pending("media-editor-busy", MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
@@ -1639,10 +1578,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -1666,15 +1602,9 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = aud.id;
 
-                    Request.Pending(
-                        "media-editor-busy",
-                        MediaAPI.RemoveAudioTrack(mediaId, id)
-                    )
+                    Request.Pending("media-editor-busy", MediaAPI.RemoveAudioTrack(mediaId, id))
                         .onSuccess(() => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Removed audio track") + ": " + aud.name
-                            );
+                            AppEvents.Emit("snack", this.$t("Removed audio track") + ": " + aud.name);
                             this.busy = false;
                             for (let i = 0; i < this.audios.length; i++) {
                                 if (this.audios[i].id === id) {
@@ -1707,10 +1637,7 @@ export default defineComponent({
                                     AppEvents.Emit("snack", this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit(
-                                        "snack",
-                                        this.$t("Could not connect to the server")
-                                    );
+                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
@@ -1732,19 +1659,13 @@ export default defineComponent({
             link.click();
         },
 
-
         // --
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
 
-        renderResolutionProperties: function (
-            resWidth: number,
-            resHeight: number,
-            originalWidth: number,
-            originalHeight: number
-        ): string {
+        renderResolutionProperties: function (resWidth: number, resHeight: number, originalWidth: number, originalHeight: number): string {
             let width = originalWidth;
             let height = originalHeight;
 
@@ -1780,10 +1701,7 @@ export default defineComponent({
 
         this.$options.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
 
         this.$options.tagUpdateH = this.updateTagData.bind(this);
 
@@ -1791,26 +1709,17 @@ export default defineComponent({
 
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         TagsController.Load();
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
 
         AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
 
         if (this.$options.findTagTimeout) {
             clearTimeout(this.$options.findTagTimeout);

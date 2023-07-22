@@ -1,7 +1,7 @@
 <template>
-  <div class="album-container">
-    <LoadingOverlay></LoadingOverlay>
-  </div>
+    <div class="album-container">
+        <LoadingOverlay></LoadingOverlay>
+    </div>
 </template>
 
 <script lang="ts">
@@ -14,7 +14,6 @@ export default defineComponent({
         LoadingOverlay,
     },
     name: "AlbumContainerLoader",
-    props: {
-    },
+    props: {},
 });
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="snackbar" :class="{ hidden: !shown }" @mouseenter="hide" @click="hide">{{ message }}</div>
+    <div class="snackbar" :class="{ hidden: !shown }" @mouseenter="hide" @click="hide">{{ message }}</div>
 </template>
 
 <script lang="ts">

@@ -1,74 +1,90 @@
 <template>
-  <div class="modal-container modal-container-corner no-transition" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display" @mousedown="close" @touchstart="close" @keydown="keyDownHandle">
-    <div v-if="display" class="modal-dialog modal-sm" role="document" @click="stopPropagationEvent" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent">
-      <div class="modal-header-corner">
-        <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
-      </div>
-      <div class="modal-body with-menu">
-        <table class="modal-menu">
-          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('theme')">
-            <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change theme (Dark / Light)") }}
-            </td>
-          </tr>
+    <div
+        class="modal-container modal-container-corner no-transition"
+        :class="{ hidden: !display }"
+        tabindex="-1"
+        role="dialog"
+        :aria-hidden="!display"
+        @mousedown="close"
+        @touchstart="close"
+        @keydown="keyDownHandle"
+    >
+        <div
+            v-if="display"
+            class="modal-dialog modal-sm"
+            role="document"
+            @click="stopPropagationEvent"
+            @mousedown="stopPropagationEvent"
+            @touchstart="stopPropagationEvent"
+        >
+            <div class="modal-header-corner">
+                <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
+            </div>
+            <div class="modal-body with-menu">
+                <table class="modal-menu">
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('theme')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change theme (Dark / Light)") }}
+                        </td>
+                    </tr>
 
-          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('lang')">
-            <td class="modal-menu-item-icon">
-              <i class="fas fa-language"></i>
-            </td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change language") }}
-            </td>
-          </tr>
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('lang')">
+                        <td class="modal-menu-item-icon">
+                            <i class="fas fa-language"></i>
+                        </td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change language") }}
+                        </td>
+                    </tr>
 
-          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
-            <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change username") }}
-            </td>
-          </tr>
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change username") }}
+                        </td>
+                    </tr>
 
-          <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
-            <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Change password") }}
-            </td>
-          </tr>
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change password") }}
+                        </td>
+                    </tr>
 
-          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
-            <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Administrate accounts") }}
-            </td>
-          </tr>
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Administrate accounts") }}
+                        </td>
+                    </tr>
 
-          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
-            <td class="modal-menu-item-icon">
-              <i class="fas fa-bars-progress"></i>
-            </td>
-            <td class="modal-menu-item-title">
-              {{ $t("Tasks") }}
-            </td>
-          </tr>
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
+                        <td class="modal-menu-item-icon">
+                            <i class="fas fa-bars-progress"></i>
+                        </td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Tasks") }}
+                        </td>
+                    </tr>
 
-          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('advanced')">
-            <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Advanced settings") }}
-            </td>
-          </tr>
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('advanced')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Advanced settings") }}
+                        </td>
+                    </tr>
 
-          <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('batch')">
-            <td class="modal-menu-item-icon"><i class="fas fa-list"></i></td>
-            <td class="modal-menu-item-title">
-              {{ $t("Batch operation") }}
-            </td>
-          </tr>
-        </table>
-      </div>
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('batch')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-list"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Batch operation") }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -134,10 +150,7 @@ export default defineComponent({
     mounted: function () {
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
@@ -149,10 +162,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
 
         if (this.$options.focusTrap) {
             this.$options.focusTrap.destroy();

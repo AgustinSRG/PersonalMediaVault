@@ -1,8 +1,19 @@
 <template>
-  <div class="modal-container modal-container-dialog" :class="{ hidden: !display, closing: closing }" tabindex="-1" role="dialog" :aria-hidden="!display" @keydown="keyDownHandle" @animationend="onAnimationEnd" @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent" @click="stopPropagationEvent">
-    <div class="modal-out-close-area" @mousedown="onMouseDown" @touchstart="onTouchOutside"></div>
-    <slot @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent" @click="stopPropagationEvent"></slot>
-  </div>
+    <div
+        class="modal-container modal-container-dialog"
+        :class="{ hidden: !display, closing: closing }"
+        tabindex="-1"
+        role="dialog"
+        :aria-hidden="!display"
+        @keydown="keyDownHandle"
+        @animationend="onAnimationEnd"
+        @mousedown="stopPropagationEvent"
+        @touchstart="stopPropagationEvent"
+        @click="stopPropagationEvent"
+    >
+        <div class="modal-out-close-area" @mousedown="onMouseDown" @touchstart="onTouchOutside"></div>
+        <slot @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent" @click="stopPropagationEvent"></slot>
+    </div>
 </template>
 
 <script lang="ts">

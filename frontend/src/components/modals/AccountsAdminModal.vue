@@ -1,60 +1,58 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-lg" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Administrate accounts") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div v-if="loading" class="modal-body">
-        <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
-      </div>
-      <div v-if="!loading" class="modal-body no-padding">
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-lg" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Administrate accounts") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div v-if="loading" class="modal-body">
+                <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
+            </div>
+            <div v-if="!loading" class="modal-body no-padding">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">{{ $t("Username") }}</th>
+                                <th class="text-left">{{ $t("Account type") }}</th>
+                                <th class="text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="a in accounts" :key="a.username" class="tr-align-middle">
+                                <td class="bold">{{ a.username }}</td>
+                                <td v-if="!a.write">{{ $t("Read only") }}</td>
+                                <td v-if="a.write">{{ $t("Read / Write") }}</td>
+                                <td class="text-right">
+                                    <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
+                                        <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="tr-align-middle">
+                                <td colspan="4" class="text-right">
+                                    <button type="button" @click="createAccount" :disabled="busy" class="btn btn-primary btn-xs">
+                                        <i class="fas fa-plus"></i> {{ $t("Create account") }}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="text-left">{{ $t("Username") }}</th>
-                <th class="text-left">{{ $t("Account type") }}</th>
-                <th class="text-right"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="a in accounts" :key="a.username" class="tr-align-middle">
-                <td class="bold">{{ a.username }}</td>
-                <td v-if="!a.write">{{ $t("Read only") }}</td>
-                <td v-if="a.write">{{ $t("Read / Write") }}</td>
-                <td class="text-right">
-                  <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
-                    <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-                  </button>
-                </td>
-              </tr>
-              <tr class="tr-align-middle">
-                <td colspan="4" class="text-right">
-                  <button type="button" @click="createAccount" :disabled="busy" class="btn btn-primary btn-xs">
-                    <i class="fas fa-plus"></i> {{ $t("Create account") }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            <div class="modal-footer no-padding">
+                <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
+                    <i class="fas fa-check"></i> {{ $t("Done") }}
+                </button>
+            </div>
         </div>
-      </div>
 
-      <div class="modal-footer no-padding">
-        <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Done") }}
-        </button>
-      </div>
-
-    </div>
-
-    <AccountDeleteModal ref="deleteModal" v-model:display="displayAccountDelete"></AccountDeleteModal>
-    <AccountCreateModal v-model:display="displayAccountCreate" @account-created="load"></AccountCreateModal>
-  </ModalDialogContainer>
+        <AccountDeleteModal ref="deleteModal" v-model:display="displayAccountDelete"></AccountDeleteModal>
+        <AccountCreateModal v-model:display="displayAccountCreate" @account-created="load"></AccountCreateModal>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

@@ -1,110 +1,129 @@
 <template>
-  <div class="page-inner" :class="{ hidden: !display }">
-    <div class="search-results" tabindex="-1">
-      <div class="search-results-options">
-        <div class="search-results-option">
-          <input type="text" class="form-control form-control-full-width" autocomplete="off" v-model="filter" :placeholder="$t('Filter by name') + '...'" @input="changeFilter" />
-        </div>
-        <div class="search-results-option text-right">
-          <button v-if="canWrite" type="button" @click="createAlbum" class="btn btn-primary">
-            <i class="fas fa-plus"></i> {{ $t("Create album") }}
-          </button>
-        </div>
-      </div>
-
-      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
-
-      <div v-if="loading" class="search-results-loading-display">
-        <div v-for="f in loadingFiller" :key="f" class="search-result-item">
-          <div class="search-result-thumb">
-            <div class="search-result-thumb-inner">
-              <div class="search-result-loader">
-                <i class="fa fa-spinner fa-spin"></i>
-              </div>
+    <div class="page-inner" :class="{ hidden: !display }">
+        <div class="search-results" tabindex="-1">
+            <div class="search-results-options">
+                <div class="search-results-option">
+                    <input
+                        type="text"
+                        class="form-control form-control-full-width"
+                        autocomplete="off"
+                        v-model="filter"
+                        :placeholder="$t('Filter by name') + '...'"
+                        @input="changeFilter"
+                    />
+                </div>
+                <div class="search-results-option text-right">
+                    <button v-if="canWrite" type="button" @click="createAlbum" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> {{ $t("Create album") }}
+                    </button>
+                </div>
             </div>
-          </div>
-          <div class="search-result-title">{{ $t("Loading") }}...</div>
-        </div>
-      </div>
 
-      <div v-if="!loading && total <= 0 && !filter" class="search-results-msg-display">
-        <div class="search-results-msg-icon">
-          <i class="fas fa-box-open"></i>
-        </div>
-        <div class="search-results-msg-text">
-          {{ $t("This vault does not have any albums yet") }}
-        </div>
-        <div class="search-results-msg-btn">
-          <button type="button" @click="refreshAlbums" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-          </button>
-        </div>
-      </div>
+            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
-      <div v-if="!loading && total <= 0 && filter" class="search-results-msg-display">
-        <div class="search-results-msg-icon">
-          <i class="fas fa-box-open"></i>
-        </div>
-        <div class="search-results-msg-text">
-          {{ $t("Could not find any albums matching your filter") }}
-        </div>
-        <div class="search-results-msg-btn">
-          <button type="button" @click="clearFilter" class="btn btn-primary">
-            <i class="fas fa-times"></i> {{ $t("Clear filter") }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="!loading && total > 0" class="search-results-final-display">
-        <a v-for="item in pageItems" :key="item.id" class="search-result-item clickable" @click="goToAlbum(item, $event)" :href="getAlbumURL(item.id)" target="_blank" rel="noopener noreferrer">
-          <div class="search-result-thumb" :title="(item.name || $t('Untitled album')) + (item.lm ? ('\n' + $t('Last modified') + ': ' + renderDate(item.lm)) : '')">
-            <div class="search-result-thumb-inner">
-              <div v-if="!item.thumbnail" class="no-thumb">
-                <i class="fas fa-list-ol"></i>
-              </div>
-              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled album')" loading="lazy" />
-              <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">
-                ({{ $t("Empty") }})
-              </div>
-              <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
-                1 {{ $t("item") }}
-              </div>
-              <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
-                {{ item.size }} {{ $t("items") }}
-              </div>
+            <div v-if="loading" class="search-results-loading-display">
+                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
+                    <div class="search-result-thumb">
+                        <div class="search-result-thumb-inner">
+                            <div class="search-result-loader">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                </div>
             </div>
-          </div>
-          <div class="search-result-title">
-            {{ item.name || $t("Untitled") }}
-          </div>
-        </a>
-      </div>
 
-      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <div v-if="!loading && total <= 0 && !filter" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("This vault does not have any albums yet") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" @click="refreshAlbums" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+                    </button>
+                </div>
+            </div>
 
-      <div v-if="total > 0" class="search-results-total">
-        {{ $t("Total") }}: {{ total }}
-      </div>
+            <div v-if="!loading && total <= 0 && filter" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("Could not find any albums matching your filter") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" @click="clearFilter" class="btn btn-primary">
+                        <i class="fas fa-times"></i> {{ $t("Clear filter") }}
+                    </button>
+                </div>
+            </div>
 
-      <div v-if="total > 0" class="search-results-options">
-        <div class="search-results-option">
-          <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
-            <option :value="'desc'">{{ $t("Order by last modified date") }}</option>
-            <option :value="'asc'">{{ $t("Order alphabetically") }}</option>
-          </select>
+            <div v-if="!loading && total > 0" class="search-results-final-display">
+                <a
+                    v-for="item in pageItems"
+                    :key="item.id"
+                    class="search-result-item clickable"
+                    @click="goToAlbum(item, $event)"
+                    :href="getAlbumURL(item.id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <div
+                        class="search-result-thumb"
+                        :title="
+                            (item.name || $t('Untitled album')) + (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
+                        "
+                    >
+                        <div class="search-result-thumb-inner">
+                            <div v-if="!item.thumbnail" class="no-thumb">
+                                <i class="fas fa-list-ol"></i>
+                            </div>
+                            <img
+                                v-if="item.thumbnail"
+                                :src="getThumbnail(item.thumbnail)"
+                                :alt="item.title || $t('Untitled album')"
+                                loading="lazy"
+                            />
+                            <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
+                            <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
+                                1 {{ $t("item") }}
+                            </div>
+                            <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
+                                {{ item.size }} {{ $t("items") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-result-title">
+                        {{ item.name || $t("Untitled") }}
+                    </div>
+                </a>
+            </div>
+
+            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+
+            <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
+
+            <div v-if="total > 0" class="search-results-options">
+                <div class="search-results-option">
+                    <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
+                        <option :value="'desc'">{{ $t("Order by last modified date") }}</option>
+                        <option :value="'asc'">{{ $t("Order alphabetically") }}</option>
+                    </select>
+                </div>
+                <div class="search-results-option text-right">
+                    <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
+                        <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="search-results-option text-right">
-          <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
-            <option v-for="po in pageSizeOptions" :key="po" :value="po">
-              {{ po }} {{ $t("items per page") }}
-            </option>
-          </select>
-        </div>
-      </div>
+
+        <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
     </div>
-
-    <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
-  </div>
 </template>
 
 <script lang="ts">
@@ -226,7 +245,9 @@ export default defineComponent({
                 return;
             }
 
-            let filter = normalizeString(this.filter + "").trim().toLowerCase();
+            let filter = normalizeString(this.filter + "")
+                .trim()
+                .toLowerCase();
 
             let albumsList = this.albumsList.map((a: AlbumEntry) => {
                 return {
@@ -241,8 +262,8 @@ export default defineComponent({
 
             if (filter) {
                 const filterWords = filterToWords(filter);
-                albumsList = albumsList.filter(a => {
-                    return matchSearchFilter(a.name, filter, filterWords)  >= 0;
+                albumsList = albumsList.filter((a) => {
+                    return matchSearchFilter(a.name, filter, filterWords) >= 0;
                 });
             }
 
@@ -307,11 +328,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(
-                this.page,
-                this.pageSize,
-                this.order
-            );
+            this.searchParams = AppStatus.PackSearchParams(this.page, this.pageSize, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -353,17 +370,17 @@ export default defineComponent({
         getAlbumURL: function (albumId: number): string {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            album: albumId + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    album: albumId + "",
+                })
             );
         },
 
         renderDate: function (ts: number): string {
-            return (new Date(ts)).toLocaleString();
+            return new Date(ts).toLocaleString();
         },
 
         clickOnEnter: function (event) {
@@ -379,13 +396,7 @@ export default defineComponent({
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-        !AppStatus.IsPageVisible() ||
-        !this.display ||
-        !event.key ||
-        event.ctrlKey
-            ) {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
                 return false;
             }
 
@@ -424,17 +435,11 @@ export default defineComponent({
         KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
 
         AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.AddEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
 
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
 
@@ -449,17 +454,11 @@ export default defineComponent({
         Timeouts.Abort("page-albums-load");
         Request.Abort("page-albums-load");
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.RemoveEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
 
         AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
 
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
 
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
     },

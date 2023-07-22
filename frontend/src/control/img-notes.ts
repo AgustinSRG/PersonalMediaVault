@@ -30,7 +30,7 @@ function parseImageNotes(json: string): ImageNote[] {
         return [];
     }
     if (o && Array.isArray(o)) {
-        return o.map(note => {
+        return o.map((note) => {
             if (note && typeof note === "object") {
                 return {
                     id: ImageNotesController.GetNewId(),
@@ -119,32 +119,35 @@ export class ImageNotesController {
         Request.Pending("img-notes-load", {
             method: "GET",
             url: ImageNotesController.NotesFileURL,
-        }).onSuccess(jsonNotes => {
-            ImageNotesController.Notes = parseImageNotes(jsonNotes);
-            AppEvents.Emit("img-notes-update");
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add(404, "*", () => {
-                    ImageNotesController.Notes = [];
-                    AppEvents.Emit("img-notes-update");
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("img-notes-load", 1500, ImageNotesController.Load);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("img-notes-load", 1500, ImageNotesController.Load);
-        });
+        })
+            .onSuccess((jsonNotes) => {
+                ImageNotesController.Notes = parseImageNotes(jsonNotes);
+                AppEvents.Emit("img-notes-update");
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add(404, "*", () => {
+                        ImageNotesController.Notes = [];
+                        AppEvents.Emit("img-notes-update");
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("img-notes-load", 1500, ImageNotesController.Load);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("img-notes-load", 1500, ImageNotesController.Load);
+            });
     }
 
     public static GetNotes(): ImageNote[] {
-        return ImageNotesController.Notes.map(n => {
+        return ImageNotesController.Notes.map((n) => {
             return {
                 id: n.id,
                 x: n.x,
@@ -214,7 +217,6 @@ export class ImageNotesController {
             });
     }
 
-
     public static AddNote(x: number, y: number, w: number, h: number) {
         const note: ImageNote = {
             id: ImageNotesController.GetNewId(),
@@ -251,7 +253,13 @@ export class ImageNotesController {
             return;
         }
 
-        if (actualNote.x === note.x && actualNote.y === note.y && actualNote.w === note.w && actualNote.h === note.h && actualNote.text === note.text) {
+        if (
+            actualNote.x === note.x &&
+            actualNote.y === note.y &&
+            actualNote.w === note.w &&
+            actualNote.h === note.h &&
+            actualNote.text === note.text
+        ) {
             return; // Nothing changed
         }
 
@@ -268,7 +276,6 @@ export class ImageNotesController {
 
         ImageNotesController.SaveNotes();
     }
-
 
     public static RemoveNote(note: ImageNote) {
         let noteIndex = -1;

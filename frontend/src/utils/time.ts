@@ -1,4 +1,3 @@
-
 // Time utils
 
 "use strict";

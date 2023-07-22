@@ -5,8 +5,8 @@ import { AppEvents } from "./app-events";
 import { LocalStorage } from "./local-storage";
 
 function defaultBrowserTheme(): string {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return "dark"
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
     } else if (window.matchMedia) {
         return "light";
     } else {
@@ -17,11 +17,11 @@ function defaultBrowserTheme(): string {
 export class AppPreferences {
     public static Language = "en";
     public static Theme = "dark";
-    public static AlbumPositionMap: {[id: string]: number} = Object.create(null);
+    public static AlbumPositionMap: { [id: string]: number } = Object.create(null);
     public static FavAlbums: string[] = [];
 
     public static LoadPreferences() {
-        const locale = (navigator.language || "en");
+        const locale = navigator.language || "en";
 
         AppPreferences.Language = LocalStorage.Get("app-pref-lang", locale);
         AppPreferences.Theme = LocalStorage.Get("app-pref-theme", defaultBrowserTheme());
@@ -49,7 +49,7 @@ export class AppPreferences {
                 delete AppPreferences.AlbumPositionMap[id];
             }
         }
-        AppPreferences.FavAlbums = AppPreferences.FavAlbums.filter(id => {
+        AppPreferences.FavAlbums = AppPreferences.FavAlbums.filter((id) => {
             return !!albums[id];
         });
         LocalStorage.Set("app-pref-albums-order", AppPreferences.AlbumPositionMap);
@@ -74,7 +74,7 @@ export class AppPreferences {
     }
 
     public static albumRemoveFav(id: string) {
-        const index = AppPreferences.FavAlbums.indexOf(id); 
+        const index = AppPreferences.FavAlbums.indexOf(id);
         if (index >= 0) {
             AppPreferences.FavAlbums.splice(index, 1);
             LocalStorage.Set("app-pref-albums-fav", AppPreferences.FavAlbums);

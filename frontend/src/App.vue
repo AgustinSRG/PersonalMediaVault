@@ -1,5 +1,5 @@
 <template>
-  <MainLayout></MainLayout>
+    <MainLayout></MainLayout>
 </template>
 
 <script lang="ts">
@@ -29,60 +29,36 @@ import { AuthController } from "./control/auth";
                     // Media with album list
                     if (AlbumsController.CurrentAlbumData) {
                         document.title =
-              MediaController.MediaData.title +
-              " | " +
-              AlbumsController.CurrentAlbumData.name +
-              " | " +
-              this.getAppTitle();
+                            MediaController.MediaData.title + " | " + AlbumsController.CurrentAlbumData.name + " | " + this.getAppTitle();
                     } else {
-                        document.title =
-              MediaController.MediaData.title +
-              " | " +
-              this.getAppTitle();
+                        document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
                     }
                 } else if (AppStatus.ListSplitMode) {
                     // Media with list
-                    document.title =
-            MediaController.MediaData.title +
-            " | " +
-            this.getAppTitle();
+                    document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
                 } else {
                     // Media alone
-                    document.title =
-            MediaController.MediaData.title +
-            " | " +
-            this.getAppTitle();
+                    document.title = MediaController.MediaData.title + " | " + this.getAppTitle();
                 }
             } else if (AppStatus.CurrentAlbum >= 0) {
                 if (AlbumsController.CurrentAlbumData) {
-                    document.title =
-            AlbumsController.CurrentAlbumData.name +
-            " | " +
-            this.getAppTitle();
+                    document.title = AlbumsController.CurrentAlbumData.name + " | " + this.getAppTitle();
                 } else {
                     document.title = this.getAppTitle();
                 }
             } else {
                 switch (AppStatus.CurrentPage) {
                 case "search":
-                    document.title =
-              this.$t("Search results") +
-              ": " +
-              AppStatus.CurrentSearch +
-              " | " +
-              this.getAppTitle();
+                    document.title = this.$t("Search results") + ": " + AppStatus.CurrentSearch + " | " + this.getAppTitle();
                     break;
                 case "upload":
-                    document.title =
-              this.$t("Upload") + " | " + this.getAppTitle();
+                    document.title = this.$t("Upload") + " | " + this.getAppTitle();
                     break;
                 case "random":
-                    document.title =
-              this.$t("Random") + " | " + this.getAppTitle();
+                    document.title = this.$t("Random") + " | " + this.getAppTitle();
                     break;
                 case "albums":
-                    document.title =
-              this.$t("Albums") + " | " + this.getAppTitle();
+                    document.title = this.$t("Albums") + " | " + this.getAppTitle();
                     break;
                 default:
                     document.title = this.getAppTitle();
@@ -101,8 +77,13 @@ import { AuthController } from "./control/auth";
             if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
                 window.navigator.mediaSession.metadata = new MediaMetadata({
                     title: MediaController.MediaData.title,
-                    album: (AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData) ? AlbumsController.CurrentAlbumData.name : undefined,
-                    artwork: MediaController.MediaData.thumbnail ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: '250x250', type: 'image/jpeg' }] : undefined,
+                    album:
+                        AppStatus.CurrentAlbum >= 0 && AlbumsController.CurrentAlbumData
+                            ? AlbumsController.CurrentAlbumData.name
+                            : undefined,
+                    artwork: MediaController.MediaData.thumbnail
+                        ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
+                        : undefined,
                 });
             } else {
                 window.navigator.mediaSession.metadata = null;
@@ -135,18 +116,12 @@ import { AuthController } from "./control/auth";
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("app-status-update", this.$options.updateH);
-        AppEvents.RemoveEventListener(
-            "current-album-update",
-            this.$options.updateH
-        );
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.updateH
-        );
+        AppEvents.RemoveEventListener("current-album-update", this.$options.updateH);
+        AppEvents.RemoveEventListener("current-media-update", this.$options.updateH);
         AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
     },
 })
-export default class App extends Vue { }
+export default class App extends Vue {}
 </script>
 
 <style>

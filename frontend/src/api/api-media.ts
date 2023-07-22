@@ -60,7 +60,6 @@ export interface MediaSubtitle {
     url: string;
 }
 
-
 export interface MediaAudioTrack {
     id: string;
     name: string;
@@ -139,7 +138,7 @@ export class MediaAPI {
         };
     }
 
-    public static ChangeTimeSlices(id: number, time_slices: { time: number, name: string, }[]): RequestParams<void> {
+    public static ChangeTimeSlices(id: number, time_slices: { time: number; name: string }[]): RequestParams<void> {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/time_slices"),
@@ -218,7 +217,14 @@ export class MediaAPI {
         form.append("file", srt);
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/set?id=" + encodeURIComponent(id) + "&name=" + encodeURIComponent(name)),
+            url: GetApiURL(
+                "/api/media/" +
+                    encodeURIComponent(mediaId + "") +
+                    "/subtitles/set?id=" +
+                    encodeURIComponent(id) +
+                    "&name=" +
+                    encodeURIComponent(name),
+            ),
             form: form,
         };
     }
@@ -235,7 +241,14 @@ export class MediaAPI {
         form.append("file", audio);
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/set?id=" + encodeURIComponent(id) + "&name=" + encodeURIComponent(name)),
+            url: GetApiURL(
+                "/api/media/" +
+                    encodeURIComponent(mediaId + "") +
+                    "/audios/set?id=" +
+                    encodeURIComponent(id) +
+                    "&name=" +
+                    encodeURIComponent(name),
+            ),
             form: form,
         };
     }

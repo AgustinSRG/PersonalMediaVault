@@ -1,34 +1,54 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Change username") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("Current username") }}:</label>
-          <input type="text" name="current-username" v-model="currentUsername" :disabled="busy" maxlength="255" readonly class="form-control form-control-full-width" />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("New username") }}:</label>
-          <input type="text" name="username" v-model="username" :disabled="busy" maxlength="255" class="form-control form-control-full-width auto-focus" />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("Password") }}:</label>
-          <input type="password" name="password" v-model="password" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
-        </div>
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button type="submit" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Change username") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Change username") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{ $t("Current username") }}:</label>
+                    <input
+                        type="text"
+                        name="current-username"
+                        v-model="currentUsername"
+                        :disabled="busy"
+                        maxlength="255"
+                        readonly
+                        class="form-control form-control-full-width"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("New username") }}:</label>
+                    <input
+                        type="text"
+                        name="username"
+                        v-model="username"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width auto-focus"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("Password") }}:</label>
+                    <input
+                        type="password"
+                        name="password"
+                        v-model="password"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width"
+                    />
+                </div>
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Change username") }}</button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -136,20 +156,14 @@ export default defineComponent({
     mounted: function () {
         this.currentUsername = AuthController.Username;
         this.$options.usernameUpdatedH = this.usernameUpdated.bind(this);
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.usernameUpdatedH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.usernameUpdatedH);
         if (this.display) {
             this.error = "";
             this.autoFocus();
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.usernameUpdatedH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.usernameUpdatedH);
     },
     watch: {
         display: function () {

@@ -277,7 +277,9 @@
     width: 100%;
     max-width: 500px;
     height: 100%;
-    transition: left 0.1s, visibility 0.1s;
+    transition:
+        left 0.1s,
+        visibility 0.1s;
     background: var(--player-editor-background);
     visibility: hidden;
 }

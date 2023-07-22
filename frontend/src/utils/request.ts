@@ -10,7 +10,7 @@ interface StatusCodeError {
 }
 
 export function GetApiURL(path: string): string {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
         return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
         return location.protocol + "//" + location.host + path;
@@ -18,7 +18,7 @@ export function GetApiURL(path: string): string {
 }
 
 export function GetAssetURL(path: string): string {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
         return (process.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
         return location.protocol + "//" + location.host + path;
@@ -59,7 +59,6 @@ export interface RequestParams<Return_Type = any> {
 }
 
 export class Request<Return_Type = any> {
-
     public static pending: { [key: string]: Request } = {};
 
     public static ErrorHandler(): RequestErrorHandler {
@@ -108,65 +107,76 @@ export class Request<Return_Type = any> {
             headers: {
                 "x-session-token": authToken,
             },
-        }).then(response => {
-            if (response.status !== 200) {
-                if (key) {
-                    delete Request.pending[key];
+        })
+            .then((response) => {
+                if (response.status !== 200) {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    response
+                        .text()
+                        .then((txt) => {
+                            r._onRequestError({
+                                status: response.status,
+                                body: txt,
+                            });
+                        })
+                        .catch(() => {
+                            r._onRequestError({
+                                status: 0,
+                                body: "",
+                            });
+                        });
+                    return;
                 }
-                response.text().then(txt => {
-                    r._onRequestError({
-                        status: response.status,
-                        body: txt,
-                    });
-                }).catch(() => {
+
+                if (response.headers.get("content-type") === "application/json") {
+                    response
+                        .json()
+                        .then((data) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+
+                            r._onSuccess(data);
+                        })
+                        .catch((err) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+                            r._onUnexpectedError(err);
+                        });
+                } else {
+                    response
+                        .text()
+                        .then((txt) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+
+                            r._onSuccess(txt);
+                        })
+                        .catch((err) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+                            r._onUnexpectedError(err);
+                        });
+                }
+            })
+            .catch((err) => {
+                if (err.name === "AbortError") {
+                    r._onCancel();
+                } else {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
                     r._onRequestError({
                         status: 0,
                         body: "",
                     });
-                });
-                return;
-            }
-
-            if (response.headers.get("content-type") === "application/json") {
-                response.json().then(data => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-
-                    r._onSuccess(data);
-                }).catch(err => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-                    r._onUnexpectedError(err);
-                });
-            } else {
-                response.text().then(txt => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-
-                    r._onSuccess(txt)
-                }).catch(err => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-                    r._onUnexpectedError(err);
-                });
-            }
-        }).catch(err => {
-            if (err.name === "AbortError") {
-                r._onCancel();
-            } else {
-                if (key) {
-                    delete Request.pending[key];
                 }
-                r._onRequestError({
-                    status: 0,
-                    body: "",
-                });
-            }
-        });
+            });
 
         return r;
     }
@@ -191,65 +201,76 @@ export class Request<Return_Type = any> {
                 "x-session-token": authToken,
             },
             body: JSON.stringify(json),
-        }).then(response => {
-            if (response.status !== 200) {
-                if (key) {
-                    delete Request.pending[key];
+        })
+            .then((response) => {
+                if (response.status !== 200) {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
+                    response
+                        .text()
+                        .then((txt) => {
+                            r._onRequestError({
+                                status: response.status,
+                                body: txt,
+                            });
+                        })
+                        .catch(() => {
+                            r._onRequestError({
+                                status: 0,
+                                body: "",
+                            });
+                        });
+                    return;
                 }
-                response.text().then(txt => {
-                    r._onRequestError({
-                        status: response.status,
-                        body: txt,
-                    });
-                }).catch(() => {
+
+                if (response.headers.get("content-type") === "application/json") {
+                    response
+                        .json()
+                        .then((data) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+
+                            r._onSuccess(data);
+                        })
+                        .catch((err) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+                            r._onUnexpectedError(err);
+                        });
+                } else {
+                    response
+                        .text()
+                        .then((txt) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+
+                            r._onSuccess(txt);
+                        })
+                        .catch((err) => {
+                            if (key) {
+                                delete Request.pending[key];
+                            }
+                            r._onUnexpectedError(err);
+                        });
+                }
+            })
+            .catch((err) => {
+                if (err.name === "AbortError") {
+                    r._onCancel();
+                } else {
+                    if (key) {
+                        delete Request.pending[key];
+                    }
                     r._onRequestError({
                         status: 0,
                         body: "",
                     });
-                });
-                return;
-            }
-
-            if (response.headers.get("content-type") === "application/json") {
-                response.json().then(data => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-
-                    r._onSuccess(data);
-                }).catch(err => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-                    r._onUnexpectedError(err);
-                });
-            } else {
-                response.text().then(txt => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-
-                    r._onSuccess(txt)
-                }).catch(err => {
-                    if (key) {
-                        delete Request.pending[key];
-                    }
-                    r._onUnexpectedError(err);
-                });
-            }
-        }).catch(err => {
-            if (err.name === "AbortError") {
-                r._onCancel();
-            } else {
-                if (key) {
-                    delete Request.pending[key];
                 }
-                r._onRequestError({
-                    status: 0,
-                    body: "",
-                });
-            }
-        });
+            });
 
         return r;
     }
@@ -271,7 +292,7 @@ export class Request<Return_Type = any> {
             r._onCancel();
         };
 
-        request.upload.onprogress = evt => {
+        request.upload.onprogress = (evt) => {
             if (!evt.lengthComputable) {
                 return;
             }
@@ -293,7 +314,7 @@ export class Request<Return_Type = any> {
                     return;
                 }
 
-                let data: any  = request.responseText;
+                let data: any = request.responseText;
 
                 if (request.getResponseHeader("content-type") === "application/json") {
                     try {
@@ -357,11 +378,11 @@ export class Request<Return_Type = any> {
         this.url = url;
         this.abortController = abortController;
         this.xhr = xhr;
-        this._onSuccess = function () { };
-        this._onCancel = function () { };
-        this._onRequestError = function () { };
-        this._onUnexpectedError = function () { };
-        this._onUploadProgress = function () { };
+        this._onSuccess = function () {};
+        this._onCancel = function () {};
+        this._onRequestError = function () {};
+        this._onUnexpectedError = function () {};
+        this._onUploadProgress = function () {};
     }
 
     public abort() {

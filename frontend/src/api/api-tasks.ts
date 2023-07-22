@@ -8,10 +8,10 @@ export interface TaskStatus {
     media_id: number;
     type: number;
     resolution: {
-        width: number,
-        height: number,
-        fps: number,
-    },
+        width: number;
+        height: number;
+        fps: number;
+    };
     stage: number;
     stage_start: number;
     time_now: number;

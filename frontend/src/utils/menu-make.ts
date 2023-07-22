@@ -5,9 +5,9 @@
 const MAX_MENU_ITEMS = 9;
 
 interface PageNode {
-    type: "page" | "skip",
-    current: boolean,
-    page: number,
+    type: "page" | "skip";
+    current: boolean;
+    page: number;
 }
 
 export function generateMenuForPages(page: number, totalPages: number): PageNode[] {
@@ -32,7 +32,7 @@ export function generateMenuForPages(page: number, totalPages: number): PageNode
     let amountNodesRight = Math.max(0, totalPages - page - 1);
 
     if (amountNodesLeft > 0 && amountNodesRight > 0) {
-        if ((amountNodesLeft + amountNodesRight) <= remainingNodes) {
+        if (amountNodesLeft + amountNodesRight <= remainingNodes) {
             for (let i = 0; i < amountNodesLeft; i++) {
                 leftNodes.push({
                     type: "page",

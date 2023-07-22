@@ -1,18 +1,14 @@
 <template>
-  <div class="switch-button-container" tabindex="0" :disabled="disabled" @keydown="keyToggle">
-    <div class="switch-button-control">
-      <div
-        class="switch-button"
-        :class="{ enabled: val }"
-        @click="toggle"
-      >
-        <div class="button"></div>
-      </div>
+    <div class="switch-button-container" tabindex="0" :disabled="disabled" @keydown="keyToggle">
+        <div class="switch-button-control">
+            <div class="switch-button" :class="{ enabled: val }" @click="toggle">
+                <div class="button"></div>
+            </div>
+        </div>
+        <div class="switch-button-label">
+            <slot></slot>
+        </div>
     </div>
-    <div class="switch-button-label">
-      <slot></slot>
-    </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -32,8 +28,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        return {
-        };
+        return {};
     },
     methods: {
         toggle: function () {

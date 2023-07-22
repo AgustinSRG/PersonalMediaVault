@@ -1,22 +1,22 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Close vault") }}</div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>{{ $t("Do you want to close your session and lock the vault?") }}</p>
-      </div>
-      <div class="modal-footer no-padding">
-        <button type="button" class="modal-footer-btn auto-focus" @click="logout">
-          <i class="fas fa-sign-out-alt"></i> {{ $t("Close vault") }}
-        </button>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Close vault") }}</div>
+                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>{{ $t("Do you want to close your session and lock the vault?") }}</p>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="button" class="modal-footer-btn auto-focus" @click="logout">
+                    <i class="fas fa-sign-out-alt"></i> {{ $t("Close vault") }}
+                </button>
+            </div>
+        </div>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

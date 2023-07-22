@@ -1,60 +1,44 @@
 <template>
-  <div
-    class="album-body-item-options-menu"
-    :class="{
-      hidden: !shown,
-    }"
-    :style="{
-      top: top,
-      left: left,
-      right: right,
-      bottom: bottom,
-      width: width,
-      'max-width': maxWidth,
-      'max-height': maxHeight,
-    }"
-    tabindex="-1"
-    @mousedown="stopPropagationEvent"
-    @toutchstart.passive="stopPropagationEvent"
-    @click="stopPropagationEvent"
-    @dblclick="stopPropagationEvent"
-  >
     <div
-      v-if="mediaIndex > 0"
-      tabindex="0"
-      @click="moveMediaUp"
-      @keydown="clickOnEnter"
-      class="album-body-item-options-menu-btn"
+        class="album-body-item-options-menu"
+        :class="{
+            hidden: !shown,
+        }"
+        :style="{
+            top: top,
+            left: left,
+            right: right,
+            bottom: bottom,
+            width: width,
+            'max-width': maxWidth,
+            'max-height': maxHeight,
+        }"
+        tabindex="-1"
+        @mousedown="stopPropagationEvent"
+        @toutchstart.passive="stopPropagationEvent"
+        @click="stopPropagationEvent"
+        @dblclick="stopPropagationEvent"
     >
-      <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
+        <div v-if="mediaIndex > 0" tabindex="0" @click="moveMediaUp" @keydown="clickOnEnter" class="album-body-item-options-menu-btn">
+            <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
+        </div>
+        <div
+            v-if="mediaIndex < albumLength - 1"
+            tabindex="0"
+            @keydown="clickOnEnter"
+            @click="moveMediaDown"
+            class="album-body-item-options-menu-btn"
+        >
+            <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
+        </div>
+        <div tabindex="0" @keydown="clickOnEnter" @click="changePosition" class="album-body-item-options-menu-btn">
+            <i class="fas fa-arrows-up-down-left-right"></i>
+            {{ $t("Change position") }}
+        </div>
+        <div tabindex="0" @keydown="clickOnEnter" @click="removeMedia" class="album-body-item-options-menu-btn">
+            <i class="fas fa-trash-alt"></i> {{ $t("Remove from the album") }}
+        </div>
     </div>
-    <div
-      v-if="mediaIndex < albumLength - 1"
-      tabindex="0"
-      @keydown="clickOnEnter"
-      @click="moveMediaDown"
-      class="album-body-item-options-menu-btn"
-    >
-      <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
-    </div>
-    <div
-      tabindex="0"
-      @keydown="clickOnEnter"
-      @click="changePosition"
-      class="album-body-item-options-menu-btn"
-    >
-      <i class="fas fa-arrows-up-down-left-right"></i>
-      {{ $t("Change position") }}
-    </div>
-    <div
-      tabindex="0"
-      @keydown="clickOnEnter"
-      @click="removeMedia"
-      class="album-body-item-options-menu-btn"
-    >
-      <i class="fas fa-trash-alt"></i> {{ $t("Remove from the album") }}
-    </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -177,11 +161,7 @@ export default defineComponent({
         document.addEventListener("mousedown", this.$options.hideHandler);
         document.addEventListener("touchstart", this.$options.hideHandler);
 
-        this.$options.focusTrap = new FocusTrap(
-            this.$el,
-            this.hide.bind(this),
-            "album-body-btn"
-        );
+        this.$options.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
     },
     beforeUnmount: function () {
         document.removeEventListener("mousedown", this.$options.hideHandler);

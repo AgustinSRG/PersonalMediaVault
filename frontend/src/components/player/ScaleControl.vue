@@ -1,40 +1,28 @@
 <template>
-  <div
-    class="player-scale-control"
-    :class="{ expanded: expanded, 'player-min': min }"
-    :style="{ width: computeFullWidth(width, min, expanded) }"
-    @mouseenter="onEnter"
-    @mouseleave="onLeave"
-  >
-    <button class="player-scale-btn" @click="clickOnScaleButton">
-      <i class="fas fa-magnifying-glass"></i>
-    </button>
     <div
-      class="player-scale-btn-expand"
-      :class="{ hidden: !expanded }"
-      :style="{ width: computeBarContainerWidth(width) }"
-      @mousedown="grabScale"
-      @touchstart.passive="grabScale"
+        class="player-scale-control"
+        :class="{ expanded: expanded, 'player-min': min }"
+        :style="{ width: computeFullWidth(width, min, expanded) }"
+        @mouseenter="onEnter"
+        @mouseleave="onLeave"
     >
-      <div
-        class="player-scale-bar-container"
-        :style="{ width: computeBarContainerInnerWidth(width) }"
-      >
+        <button class="player-scale-btn" @click="clickOnScaleButton">
+            <i class="fas fa-magnifying-glass"></i>
+        </button>
         <div
-          class="player-scale-bar"
-          :style="{ width: getScaleBarWidth(width) }"
-        ></div>
-        <div
-          class="player-scale-current"
-          :style="{ width: getScaleBarCurrentWidth(width, scale, fit) }"
-        ></div>
-        <div
-          class="player-scale-thumb"
-          :style="{ left: getScaleThumbLeft(width, scale, fit) }"
-        ></div>
-      </div>
+            class="player-scale-btn-expand"
+            :class="{ hidden: !expanded }"
+            :style="{ width: computeBarContainerWidth(width) }"
+            @mousedown="grabScale"
+            @touchstart.passive="grabScale"
+        >
+            <div class="player-scale-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
+                <div class="player-scale-bar" :style="{ width: getScaleBarWidth(width) }"></div>
+                <div class="player-scale-current" :style="{ width: getScaleBarCurrentWidth(width, scale, fit) }"></div>
+                <div class="player-scale-thumb" :style="{ left: getScaleThumbLeft(width, scale, fit) }"></div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -72,11 +60,7 @@ export default defineComponent({
         onLeave: function () {
             this.$emit("leave");
         },
-        computeFullWidth: function (
-            width: number,
-            min: boolean,
-            expanded: boolean
-        ) {
+        computeFullWidth: function (width: number, min: boolean, expanded: boolean) {
             let margins = 40;
             let barWidth = width;
             let btnWidth = 40;
@@ -85,7 +69,7 @@ export default defineComponent({
                 btnWidth = 24;
             }
 
-            return btnWidth + (expanded ? barWidth + margins : (margins / 2)) + "px";
+            return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
         },
         computeBarContainerWidth(width: number) {
             let margins = 32;
@@ -154,12 +138,7 @@ export default defineComponent({
             }
         },
         modifyScaleByMouse: function (x, y) {
-            if (
-                typeof x !== "number" ||
-        typeof y !== "number" ||
-        isNaN(x) ||
-        isNaN(y)
-            ) {
+            if (typeof x !== "number" || typeof y !== "number" || isNaN(x) || isNaN(y)) {
                 return;
             }
             const offset = this.$el.getBoundingClientRect();

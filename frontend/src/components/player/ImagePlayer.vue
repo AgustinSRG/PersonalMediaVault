@@ -1,23 +1,47 @@
 <template>
-    <div class="image-player player-settings-no-trap" :class="{
-        'player-min': min,
-        'no-controls': !showControls,
-        'full-screen': fullscreen,
-        'bg-black': background === 'black',
-        'bg-white': background === 'white',
-    }" @mousemove="playerMouseMove" @click="clickPlayer" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @touchmove="playerMouseMove" @contextmenu="onContextMenu" @wheel="onMouseWheel">
+    <div
+        class="image-player player-settings-no-trap"
+        :class="{
+            'player-min': min,
+            'no-controls': !showControls,
+            'full-screen': fullscreen,
+            'bg-black': background === 'black',
+            'bg-white': background === 'white',
+        }"
+        @mousemove="playerMouseMove"
+        @click="clickPlayer"
+        @dblclick="toggleFullScreen"
+        @mouseleave="mouseLeavePlayer"
+        @touchmove="playerMouseMove"
+        @contextmenu="onContextMenu"
+        @wheel="onMouseWheel"
+    >
         <div class="image-prefetch-container">
             <img v-if="prefetchURL" :src="prefetchURL" />
         </div>
         <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
-            <img v-if="imageURL" :src="imageURL" :key="rTick" @load="onImageLoaded" @error="onImageLoaded" :style="{
-                width: imageWidth,
-                height: imageHeight,
-                top: imageTop,
-                left: imageLeft,
-            }" />
+            <img
+                v-if="imageURL"
+                :src="imageURL"
+                :key="rTick"
+                @load="onImageLoaded"
+                @error="onImageLoaded"
+                :style="{
+                    width: imageWidth,
+                    height: imageHeight,
+                    top: imageTop,
+                    left: imageLeft,
+                }"
+            />
 
-            <ImageNotes :editing="notesEditMode" :contextOpen="contextMenuShown" :width="imageWidth" :height="imageHeight" :top="imageTop" :left="imageLeft"></ImageNotes>
+            <ImageNotes
+                :editing="notesEditMode"
+                :contextOpen="contextMenuShown"
+                :width="imageWidth"
+                :height="imageHeight"
+                :top="imageTop"
+                :left="imageLeft"
+            ></ImageNotes>
         </div>
 
         <div class="player-loader" v-if="loading">
@@ -29,11 +53,32 @@
             </div>
         </div>
 
-        <PlayerEncodingPending v-if="!loading && !imageURL && imagePending" :mid="mid" :tid="imagePendingTask" :res="currentResolution"></PlayerEncodingPending>
+        <PlayerEncodingPending
+            v-if="!loading && !imageURL && imagePending"
+            :mid="mid"
+            :tid="imagePendingTask"
+            :res="currentResolution"
+        ></PlayerEncodingPending>
 
-        <div class="player-controls" :class="{ hidden: !showControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
+        <div
+            class="player-controls"
+            :class="{ hidden: !showControls }"
+            @click="clickControls"
+            @dblclick="stopPropagationEvent"
+            @mouseenter="enterControls"
+            @mouseleave="leaveControls"
+        >
             <div class="player-controls-left">
-                <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!prev && !pagePrev"
+                    type="button"
+                    :title="$t('Previous')"
+                    class="player-btn"
+                    @click="goPrev"
+                    @mouseenter="enterTooltip('prev')"
+                    @mouseleave="leaveTooltip('prev')"
+                >
                     <i class="fas fa-backward-step"></i>
                 </button>
 
@@ -41,26 +86,76 @@
                     <i class="fas fa-play"></i>
                 </button>
 
-                <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!next && !pageNext"
+                    type="button"
+                    :title="$t('Next')"
+                    class="player-btn"
+                    @click="goNext"
+                    @mouseenter="enterTooltip('next')"
+                    @mouseleave="leaveTooltip('next')"
+                >
                     <i class="fas fa-forward-step"></i>
                 </button>
 
-                <ScaleControl ref="scaleControl" :min="min" :width="min ? 70 : 100" v-model:fit="fit" v-model:scale="scale" v-model:expanded="scaleShown" @update:scale="onUserScaleUpdated" @update:fit="onUserFitUpdated" @enter="enterTooltip('scale')" @leave="leaveTooltip('scale')"></ScaleControl>
+                <ScaleControl
+                    ref="scaleControl"
+                    :min="min"
+                    :width="min ? 70 : 100"
+                    v-model:fit="fit"
+                    v-model:scale="scale"
+                    v-model:expanded="scaleShown"
+                    @update:scale="onUserScaleUpdated"
+                    @update:fit="onUserFitUpdated"
+                    @enter="enterTooltip('scale')"
+                    @leave="leaveTooltip('scale')"
+                ></ScaleControl>
             </div>
 
             <div class="player-controls-right">
-                <button type="button" :title="$t('Manage albums')" class="player-btn" @click="manageAlbums" @mouseenter="enterTooltip('albums')" @mouseleave="leaveTooltip('albums')">
+                <button
+                    type="button"
+                    :title="$t('Manage albums')"
+                    class="player-btn"
+                    @click="manageAlbums"
+                    @mouseenter="enterTooltip('albums')"
+                    @mouseleave="leaveTooltip('albums')"
+                >
                     <i class="fas fa-list-ol"></i>
                 </button>
 
-                <button type="button" :title="$t('Player Configuration')" class="player-btn player-settings-no-trap" @click="showConfig" @mouseenter="enterTooltip('config')" @mouseleave="leaveTooltip('config')">
+                <button
+                    type="button"
+                    :title="$t('Player Configuration')"
+                    class="player-btn player-settings-no-trap"
+                    @click="showConfig"
+                    @mouseenter="enterTooltip('config')"
+                    @mouseleave="leaveTooltip('config')"
+                >
                     <i class="fas fa-cog"></i>
                 </button>
 
-                <button v-if="!fullscreen" type="button" :title="$t('Full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen')" @mouseleave="leaveTooltip('full-screen')">
+                <button
+                    v-if="!fullscreen"
+                    type="button"
+                    :title="$t('Full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen')"
+                    @mouseleave="leaveTooltip('full-screen')"
+                >
                     <i class="fas fa-expand"></i>
                 </button>
-                <button v-if="fullscreen" type="button" :title="$t('Exit full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen-exit')" @mouseleave="leaveTooltip('full-screen-exit')">
+                <button
+                    v-if="fullscreen"
+                    type="button"
+                    :title="$t('Exit full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen-exit')"
+                    @mouseleave="leaveTooltip('full-screen-exit')"
+                >
                     <i class="fas fa-compress"></i>
                 </button>
             </div>
@@ -93,11 +188,47 @@
             {{ $t("Exit full screen") }}
         </div>
 
-        <ImagePlayerConfig v-model:shown="displayConfig" v-model:resolution="currentResolution" v-model:background="background" @update:resolution="onResolutionUpdated" @update:background="onBackgroundChanged" @update-auto-next="setupAutoNextTimer" :rTick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls"></ImagePlayerConfig>
+        <ImagePlayerConfig
+            v-model:shown="displayConfig"
+            v-model:resolution="currentResolution"
+            v-model:background="background"
+            @update:resolution="onResolutionUpdated"
+            @update:background="onBackgroundChanged"
+            @update-auto-next="setupAutoNextTimer"
+            :rTick="internalTick"
+            :metadata="metadata"
+            @enter="enterControls"
+            @leave="leaveControls"
+        ></ImagePlayerConfig>
 
-        <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
+        <PlayerTopBar
+            v-if="metadata"
+            :mid="mid"
+            :metadata="metadata"
+            :shown="showControls"
+            :fullscreen="fullscreen"
+            v-model:expanded="expandedTitle"
+            v-model:albumExpanded="expandedAlbum"
+            :inAlbum="inAlbum"
+            @click-player="clickControls"
+        ></PlayerTopBar>
 
-        <PlayerContextMenu type="image" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:fit="fit" @update:fit="onUserFitUpdated" :url="imageURL" v-model:controls="showControlsState" :canWrite="canWrite" :hasExtendedDescription="hasExtendedDescription" v-model:notesEdit="notesEditMode" @stats="openStats" @open-tags="openTags" @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
+        <PlayerContextMenu
+            type="image"
+            v-model:shown="contextMenuShown"
+            :x="contextMenuX"
+            :y="contextMenuY"
+            v-model:fit="fit"
+            @update:fit="onUserFitUpdated"
+            :url="imageURL"
+            v-model:controls="showControlsState"
+            :canWrite="canWrite"
+            :hasExtendedDescription="hasExtendedDescription"
+            v-model:notesEdit="notesEditMode"
+            @stats="openStats"
+            @open-tags="openTags"
+            @open-ext-desc="openExtendedDescription"
+        ></PlayerContextMenu>
     </div>
 </template>
 
@@ -139,16 +270,7 @@ export default defineComponent({
         ImageNotes,
     },
     name: "ImagePlayer",
-    emits: [
-        "go-next",
-        "go-prev",
-        "update:fullscreen",
-        "update:showControls",
-        "albums-open",
-        "stats-open",
-        "tags-open",
-        "ext-desc-open",
-    ],
+    emits: ["go-next", "go-prev", "update:fullscreen", "update:showControls", "albums-open", "stats-open", "tags-open", "ext-desc-open"],
     props: {
         mid: Number,
         metadata: Object,
@@ -290,14 +412,8 @@ export default defineComponent({
             const diffX = x - this.scrollGrabX;
             const diffY = y - this.scrollGrabY;
 
-            scroller.scrollTop = Math.max(
-                0,
-                Math.min(maxScrollTop, this.scrollGrabTop - diffY)
-            );
-            scroller.scrollLeft = Math.max(
-                0,
-                Math.min(maxScrollLeft, this.scrollGrabLeft - diffX)
-            );
+            scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
+            scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
         },
 
         dropScroll: function (e) {
@@ -332,10 +448,8 @@ export default defineComponent({
                 return;
             }
 
-            scroller.scrollTop =
-                (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
-            scroller.scrollLeft =
-                (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
+            scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
+            scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
         },
 
         computeImageDimensions() {
@@ -360,38 +474,28 @@ export default defineComponent({
             if (scrollerDimensions.width > scrollerDimensions.height) {
                 fitDimensions.fitWidth = true;
                 fitDimensions.height = scrollerDimensions.height;
-                fitDimensions.width =
-                    (scrollerDimensions.height * this.width) / this.height;
+                fitDimensions.width = (scrollerDimensions.height * this.width) / this.height;
 
                 if (fitDimensions.width > scrollerDimensions.width) {
                     fitDimensions.fitWidth = false;
                     fitDimensions.width = scrollerDimensions.width;
-                    fitDimensions.height =
-                        (scrollerDimensions.width * this.height) / this.width;
+                    fitDimensions.height = (scrollerDimensions.width * this.height) / this.width;
                 }
             } else {
                 fitDimensions.fitWidth = false;
                 fitDimensions.width = scrollerDimensions.width;
-                fitDimensions.height =
-                    (scrollerDimensions.width * this.height) / this.width;
+                fitDimensions.height = (scrollerDimensions.width * this.height) / this.width;
 
                 if (fitDimensions.height > scrollerDimensions.height) {
                     fitDimensions.fitWidth = true;
                     fitDimensions.height = scrollerDimensions.height;
-                    fitDimensions.width =
-                        (scrollerDimensions.height * this.width) / this.height;
+                    fitDimensions.width = (scrollerDimensions.height * this.width) / this.height;
                 }
             }
 
             if (this.fit) {
-                let top = Math.max(
-                    0,
-                    (scrollerDimensions.height - fitDimensions.height) / 2
-                );
-                let left = Math.max(
-                    0,
-                    (scrollerDimensions.width - fitDimensions.width) / 2
-                );
+                let top = Math.max(0, (scrollerDimensions.height - fitDimensions.height) / 2);
+                let left = Math.max(0, (scrollerDimensions.width - fitDimensions.width) / 2);
 
                 this.imageTop = Math.floor(top) + "px";
                 this.imageLeft = Math.floor(left) + "px";
@@ -498,25 +602,13 @@ export default defineComponent({
 
         tick() {
             this.computeImageDimensions();
-            if (
-                !this.mouseInControls &&
-                this.helpTooltip &&
-                Date.now() - this.lastControlsInteraction > 2000
-            ) {
+            if (!this.mouseInControls && this.helpTooltip && Date.now() - this.lastControlsInteraction > 2000) {
                 this.helpTooltip = "";
             }
-            if (
-                !this.mouseInControls &&
-                this.scaleShown &&
-                Date.now() - this.lastControlsInteraction > 2000
-            ) {
+            if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
                 this.scaleShown = false;
             }
-            if (
-                !this.mouseInControls &&
-                this.cursorShown &&
-                Date.now() - this.lastControlsInteraction > 2000
-            ) {
+            if (!this.mouseInControls && this.cursorShown && Date.now() - this.lastControlsInteraction > 2000) {
                 this.cursorShown = false;
             }
             if (this.helpTooltip && !this.showControls) {
@@ -574,10 +666,7 @@ export default defineComponent({
                 return false;
             }
 
-            const maxScroll = Math.max(
-                0,
-                el.scrollHeight - el.getBoundingClientRect().height
-            );
+            const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
 
             if (maxScroll <= 0) {
                 return false;
@@ -604,10 +693,7 @@ export default defineComponent({
                 return false;
             }
 
-            const maxScroll = Math.max(
-                0,
-                el.scrollWidth - el.getBoundingClientRect().width
-            );
+            const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
 
             if (maxScroll <= 0) {
                 return false;
@@ -767,17 +853,12 @@ export default defineComponent({
             }
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.loading = true;
-            this.currentResolution = PlayerPreferences.GetResolutionIndexImage(
-                this.metadata
-            );
+            this.currentResolution = PlayerPreferences.GetResolutionIndexImage(this.metadata);
             this.setImageURL();
         },
 
         onResolutionUpdated: function () {
-            PlayerPreferences.SetResolutionIndexImage(
-                this.metadata,
-                this.currentResolution
-            );
+            PlayerPreferences.SetResolutionIndexImage(this.metadata, this.currentResolution);
             this.setImageURL();
         },
 
@@ -803,10 +884,7 @@ export default defineComponent({
                     this.loading = false;
                 }
             } else {
-                if (
-                    this.metadata.resolutions &&
-                    this.metadata.resolutions.length > this.currentResolution
-                ) {
+                if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
                     let res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
                         this.imageURL = GetAssetURL(res.url);
@@ -882,10 +960,7 @@ export default defineComponent({
         },
 
         onAlbumPrefetch: function () {
-            if (
-                AlbumsController.NextMediaData &&
-                AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE
-            ) {
+            if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
                 if (this.currentResolution < 0) {
                     if (AlbumsController.NextMediaData.encoded) {
                         this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.url);
@@ -894,16 +969,10 @@ export default defineComponent({
                     }
                 } else {
                     if (
-                        AlbumsController.NextMediaData.resolutions[
-                            this.currentResolution
-                        ] &&
-                        AlbumsController.NextMediaData.resolutions[this.currentResolution]
-                            .ready
+                        AlbumsController.NextMediaData.resolutions[this.currentResolution] &&
+                        AlbumsController.NextMediaData.resolutions[this.currentResolution].ready
                     ) {
-                        this.prefetchURL = GetAssetURL(
-                            AlbumsController.NextMediaData.resolutions[this.currentResolution]
-                                .url
-                        );
+                        this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
                     } else {
                         this.prefetchURL = "";
                     }
@@ -913,12 +982,7 @@ export default defineComponent({
             }
         },
 
-        handleMediaSessionEvent: function (event: {
-            action: string;
-            fastSeek: boolean;
-            seekTime: number;
-            seekOffset: number;
-        }) {
+        handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {
             if (!event || !event.action) {
                 return;
             }
@@ -945,28 +1009,13 @@ export default defineComponent({
         this.$options.keyHandler = this.onKeyPress.bind(this);
         KeyboardManager.AddHandler(this.$options.keyHandler, 100);
 
-        this.$options.timer = setInterval(
-            this.tick.bind(this),
-            Math.floor(1000 / 30)
-        );
+        this.$options.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
 
         this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
 
         this.$options.dropScrollHandler = this.dropScroll.bind(this);
         document.addEventListener("mouseup", this.$options.dropScrollHandler);
@@ -976,10 +1025,7 @@ export default defineComponent({
         document.addEventListener("mousemove", this.$options.moveScrollHandler);
 
         this.$options.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
-        AppEvents.AddEventListener(
-            "album-next-prefetch",
-            this.$options.onAlbumPrefetchH
-        );
+        AppEvents.AddEventListener("album-next-prefetch", this.$options.onAlbumPrefetchH);
 
         this.initializeImage();
 
@@ -992,31 +1038,16 @@ export default defineComponent({
         this.imageURL = "";
         clearInterval(this.$options.timer);
 
-        document.removeEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
 
         document.removeEventListener("mouseup", this.$options.dropScrollHandler);
 
         document.removeEventListener("mousemove", this.$options.moveScrollHandler);
 
-        AppEvents.RemoveEventListener(
-            "album-next-prefetch",
-            this.$options.onAlbumPrefetchH
-        );
+        AppEvents.RemoveEventListener("album-next-prefetch", this.$options.onAlbumPrefetchH);
 
         KeyboardManager.RemoveHandler(this.$options.keyHandler);
 

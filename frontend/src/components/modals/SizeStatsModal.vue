@@ -1,43 +1,43 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">
-          {{ $t("Size Statistics") }}
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    {{ $t("Size Statistics") }}
+                </div>
+                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div v-if="loading" class="modal-body">
+                <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
+            </div>
+            <div v-if="!loading" class="modal-body no-padding table-responsive">
+                <table class="table table-text-overflow">
+                    <thead>
+                        <tr>
+                            <th class="text-left">{{ $t("Asset") }}</th>
+                            <th class="text-left">{{ $t("Size") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>METADATA</td>
+                            <td>{{ renderSize(metaSize) }}</td>
+                        </tr>
+                        <tr v-for="a in assets" :key="a.key">
+                            <td>{{ a.name }}</td>
+                            <td>{{ renderSize(a.size) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="bold">{{ $t("Total") }}</td>
+                            <td class="bold">{{ renderSize(total) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div v-if="loading" class="modal-body">
-        <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
-      </div>
-      <div v-if="!loading" class="modal-body no-padding table-responsive">
-        <table class="table table-text-overflow">
-          <thead>
-            <tr>
-              <th class="text-left">{{ $t("Asset") }}</th>
-              <th class="text-left">{{ $t("Size") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>METADATA</td>
-              <td>{{ renderSize(metaSize) }}</td>
-            </tr>
-            <tr v-for="a in assets" :key="a.key">
-              <td>{{ a.name }}</td>
-              <td>{{ renderSize(a.size) }}</td>
-            </tr>
-            <tr>
-              <td class="bold">{{ $t("Total") }}</td>
-              <td class="bold">{{ renderSize(total) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -84,10 +84,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(
-                "media-size-stats-load",
-                MediaAPI.GetMediaSizeStats(this.mid)
-            )
+            Request.Pending("media-size-stats-load", MediaAPI.GetMediaSizeStats(this.mid))
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;

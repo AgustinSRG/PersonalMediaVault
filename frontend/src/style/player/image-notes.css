@@ -139,7 +139,7 @@
 .image-notes-hover {
     display: block;
     background: var(--player-editor-background);
-    position: absolute; 
+    position: absolute;
     width: auto;
     white-space: nowrap;
     min-width: fit-content;
@@ -147,4 +147,3 @@
     height: auto;
     text-align: center;
 }
-

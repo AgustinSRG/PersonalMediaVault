@@ -1,15 +1,24 @@
 <template>
-    <div class="player-context-menu" :class="{
-        hidden: !shown,
-    }" :style="{
-    top: top,
-    left: left,
-    right: right,
-    bottom: bottom,
-    width: width,
-    'max-width': maxWidth,
-    'max-height': maxHeight,
-}" tabindex="-1" @mousedown="stopPropagationEvent" @toutchstart.passive="stopPropagationEvent" @click="stopPropagationEvent" @dblclick="stopPropagationEvent">
+    <div
+        class="player-context-menu"
+        :class="{
+            hidden: !shown,
+        }"
+        :style="{
+            top: top,
+            left: left,
+            right: right,
+            bottom: bottom,
+            width: width,
+            'max-width': maxWidth,
+            'max-height': maxHeight,
+        }"
+        tabindex="-1"
+        @mousedown="stopPropagationEvent"
+        @toutchstart.passive="stopPropagationEvent"
+        @click="stopPropagationEvent"
+        @dblclick="stopPropagationEvent"
+    >
         <table class="player-context-menu-table">
             <tr v-if="type === 'video' || type === 'audio'" class="tr-button" tabindex="0" @click="toggleLoop" @keydown="clickOnEnter">
                 <td>
@@ -21,7 +30,13 @@
                 </td>
             </tr>
 
-            <tr v-if="(type === 'video' || type === 'audio') && hasSlices" class="tr-button" tabindex="0" @click="toggleSliceLoop" @keydown="clickOnEnter">
+            <tr
+                v-if="(type === 'video' || type === 'audio') && hasSlices"
+                class="tr-button"
+                tabindex="0"
+                @click="toggleSliceLoop"
+                @keydown="clickOnEnter"
+            >
                 <td>
                     <i class="fas fa-repeat icon-config"></i>
                     <span class="context-entry-title">{{ $t("Time slice loop") }}</span>
@@ -61,23 +76,26 @@
                 </td>
             </tr>
 
-
             <tr class="tr-button" tabindex="0" @click="showTags" @keydown="clickOnEnter">
                 <td>
                     <i class="fas fa-tag icon-config"></i>
                     <span class="context-entry-title">{{ $t("Tags") }}</span>
                 </td>
-                <td class="td-right">
-                </td>
+                <td class="td-right"></td>
             </tr>
 
-            <tr v-if="hasExtendedDescription || canWrite" class="tr-button" tabindex="0" @click="showExtendedDescription" @keydown="clickOnEnter">
+            <tr
+                v-if="hasExtendedDescription || canWrite"
+                class="tr-button"
+                tabindex="0"
+                @click="showExtendedDescription"
+                @keydown="clickOnEnter"
+            >
                 <td>
                     <i class="fas fa-info icon-config"></i>
                     <span class="context-entry-title">{{ $t("Extended description") }}</span>
                 </td>
-                <td class="td-right">
-                </td>
+                <td class="td-right"></td>
             </tr>
 
             <tr v-if="url" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="download">

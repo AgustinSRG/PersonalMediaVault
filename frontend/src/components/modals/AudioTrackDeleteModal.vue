@@ -1,30 +1,28 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">
-          {{ $t("Delete audio track") }}
-        </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("Do you want to delete this audio track file?") }}</label>
-        </div>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    {{ $t("Delete audio track") }}
+                </div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{ $t("Do you want to delete this audio track file?") }}</label>
+                </div>
 
-        <div class="form-group">
-          <label>{{ name }}</label>
-        </div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button type="submit" class="modal-footer-btn auto-focus">
-          <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+                <div class="form-group">
+                    <label>{{ name }}</label>
+                </div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="submit" class="modal-footer-btn auto-focus"><i class="fas fa-trash-alt"></i> {{ $t("Delete") }}</button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -50,7 +48,7 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: {name: string, callback: () => void}) {
+        show: function (options: { name: string; callback: () => void }) {
             this.name = options.name;
             this.callback = options.callback;
             this.displayStatus = true;

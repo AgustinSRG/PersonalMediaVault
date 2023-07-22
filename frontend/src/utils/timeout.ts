@@ -1,9 +1,7 @@
 // Timeouts manager
 
 export class Timeouts {
-
-    public static pending: {[key: string]: number} = {};
-
+    public static pending: { [key: string]: number } = {};
 
     public static Set(key: string, ms: number, handler: () => void) {
         Timeouts.Abort(key);
@@ -12,7 +10,6 @@ export class Timeouts {
             handler();
         }, ms);
     }
-
 
     public static Abort(key: string) {
         if (Timeouts.pending[key] !== undefined) {

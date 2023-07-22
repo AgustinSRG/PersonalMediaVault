@@ -1,56 +1,57 @@
 <template>
-  <div class="main-layout" :class="{
-    'light-theme': theme !== 'dark',
-    'dark-theme': theme === 'dark',
-    'layout-initial': layout === 'initial',
-    'layout-album': layout === 'album',
-    'layout-media-split': layout === 'media-split',
-    'layout-media': layout === 'media',
-    'sidebar-hidden': !displaySidebar,
-    'focus-left': focus === 'left',
-    'focus-right': focus === 'right',
-    'vault-locked': locked,
-  }">
-    <a v-if="!locked" href="javascript:;" @click="skipToMainContent" class="skip-to-main-content">{{ $t("Skip to main content") }}</a>
-    <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
-    <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar" @search-open="openSearchModal" @help="showHelp"></TopBar>
-    <PlayerContainer v-if="
-      layout === 'media-split' || layout === 'media' || layout === 'album'
-    "></PlayerContainer>
-    <PageContent v-if="layout === 'initial' || layout === 'media-split'" :min="layout === 'media-split'"></PageContent>
-    <AlbumContainer v-if="layout === 'album'"></AlbumContainer>
+    <div
+        class="main-layout"
+        :class="{
+            'light-theme': theme !== 'dark',
+            'dark-theme': theme === 'dark',
+            'layout-initial': layout === 'initial',
+            'layout-album': layout === 'album',
+            'layout-media-split': layout === 'media-split',
+            'layout-media': layout === 'media',
+            'sidebar-hidden': !displaySidebar,
+            'focus-left': focus === 'left',
+            'focus-right': focus === 'right',
+            'vault-locked': locked,
+        }"
+    >
+        <a v-if="!locked" href="javascript:;" @click="skipToMainContent" class="skip-to-main-content">{{ $t("Skip to main content") }}</a>
+        <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
+        <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar" @search-open="openSearchModal" @help="showHelp"></TopBar>
+        <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'"></PlayerContainer>
+        <PageContent v-if="layout === 'initial' || layout === 'media-split'" :min="layout === 'media-split'"></PageContent>
+        <AlbumContainer v-if="layout === 'album'"></AlbumContainer>
 
-    <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
-    <div class="sidebar-float-overlay" :class="{ hidden: !displaySidebar }" @click="hideSidebar"></div>
+        <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
+        <div class="sidebar-float-overlay" :class="{ hidden: !displaySidebar }" @click="hideSidebar"></div>
 
-    <SettingsDropdown v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsDropdown>
-    <LanguageDropdown v-if="displayLang" v-model:display="displayLang"></LanguageDropdown>
-    <ThemeDropdown v-if="displayTheme" v-model:display="displayTheme"></ThemeDropdown>
-    <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
-    <ChangePasswordModal v-if="displayPasswordModal" v-model:display="displayPasswordModal"></ChangePasswordModal>
-    <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
-    <BatchOperationModal v-if="displayBatchOperation" v-model:display="displayBatchOperation"></BatchOperationModal>
+        <SettingsDropdown v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsDropdown>
+        <LanguageDropdown v-if="displayLang" v-model:display="displayLang"></LanguageDropdown>
+        <ThemeDropdown v-if="displayTheme" v-model:display="displayTheme"></ThemeDropdown>
+        <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
+        <ChangePasswordModal v-if="displayPasswordModal" v-model:display="displayPasswordModal"></ChangePasswordModal>
+        <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
+        <BatchOperationModal v-if="displayBatchOperation" v-model:display="displayBatchOperation"></BatchOperationModal>
 
-    <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
+        <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
-    <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
+        <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
 
-    <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
+        <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
 
-    <HelpHubDropdown v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubDropdown>
+        <HelpHubDropdown v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubDropdown>
 
-    <AboutModal v-if="displayAboutModal" v-model:display="displayAboutModal"></AboutModal>
+        <AboutModal v-if="displayAboutModal" v-model:display="displayAboutModal"></AboutModal>
 
-    <KeyboardGuideModal v-if="displayKeyboardHelpModal" v-model:display="displayKeyboardHelpModal"></KeyboardGuideModal>
+        <KeyboardGuideModal v-if="displayKeyboardHelpModal" v-model:display="displayKeyboardHelpModal"></KeyboardGuideModal>
 
-    <LogoutModal v-if="displayLogout" v-model:display="displayLogout"></LogoutModal>
+        <LogoutModal v-if="displayLogout" v-model:display="displayLogout"></LogoutModal>
 
-    <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums" :fixed="true"></LoadingOverlay>
+        <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums" :fixed="true"></LoadingOverlay>
 
-    <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
+        <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
 
-    <SnackBar></SnackBar>
-  </div>
+        <SnackBar></SnackBar>
+    </div>
 </template>
 
 <script lang="ts">

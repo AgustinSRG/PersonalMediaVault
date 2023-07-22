@@ -1,116 +1,180 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :close-callback="askClose">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Advanced settings") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close" :disabled="busy">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div v-if="loading" class="modal-body">
-        <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
-      </div>
-      <div v-if="!loading" class="modal-body">
-
-        <div class="horizontal-filter-menu">
-          <a href="javascript:;" @click="changePage('general')" class="horizontal-filter-menu-item" :class="{ selected: page === 'general' }">{{ $t("General") }}</a>
-          <a href="javascript:;" @click="changePage('resolutions')" class="horizontal-filter-menu-item" :class="{ selected: page == 'resolutions' }">{{ $t("Extra resolutions") }}</a>
-          <a href="javascript:;" @click="changePage('css')" class="horizontal-filter-menu-item" :class="{ selected: page === 'css' }">{{ $t("Custom style") }}</a>
-        </div>
-
-        <div class="form-group"></div>
-
-        <div v-if="page === 'general'">
-          <div class="form-group">
-            <label>{{ $t("Vault title") }}:</label>
-            <input type="text" autocomplete="off" v-model="title" :disabled="busy" placeholder="PMV" @change="onChangesMade" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Max number of tasks in parallel (0 for unlimited)") }}:</label>
-            <input type="number" autocomplete="off" v-model.number="maxTasks" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Max number threads for each task (0 to use the number of cores)") }}:</label>
-            <input type="number" autocomplete="off" v-model.number="encodingThreads" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Video previews interval (seconds) (if set to 0, by default is 3 seconds)") }}:</label>
-            <input type="number" autocomplete="off" v-model.number="videoPreviewsInterval" :disabled="busy" min="0" @change="onChangesMade" class="form-control form-control-full-width" />
-          </div>
-        </div>
-
-        <div v-if="page === 'resolutions'">
-          <div class="form-group">
-            <label>{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}:</label>
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th class="text-left">{{ $t("Name") }}</th>
-                    <th class="text-left">{{ $t("Properties") }}</th>
-                    <th class="text-right">{{ $t("Enabled") }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="res in resolutions" :key="res.name">
-                    <td class="bold">{{ res.name }}</td>
-                    <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
-                    <td class="text-right">
-                      <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :close-callback="askClose">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Advanced settings") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close" :disabled="busy">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-          </div>
-          <div class="form-group">
-            <label>{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}:</label>
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th class="text-left">{{ $t("Name") }}</th>
-                    <th class="text-left">{{ $t("Properties") }}</th>
-                    <th class="text-right">{{ $t("Enabled") }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="res in imageResolutions" :key="res.name">
-                    <td class="bold">{{ res.name }}</td>
-                    <td>{{ res.width }}x{{ res.height }}</td>
-                    <td class="text-right">
-                      <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div v-if="loading" class="modal-body">
+                <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
             </div>
-          </div>
-        </div>
+            <div v-if="!loading" class="modal-body">
+                <div class="horizontal-filter-menu">
+                    <a
+                        href="javascript:;"
+                        @click="changePage('general')"
+                        class="horizontal-filter-menu-item"
+                        :class="{ selected: page === 'general' }"
+                        >{{ $t("General") }}</a
+                    >
+                    <a
+                        href="javascript:;"
+                        @click="changePage('resolutions')"
+                        class="horizontal-filter-menu-item"
+                        :class="{ selected: page == 'resolutions' }"
+                        >{{ $t("Extra resolutions") }}</a
+                    >
+                    <a
+                        href="javascript:;"
+                        @click="changePage('css')"
+                        class="horizontal-filter-menu-item"
+                        :class="{ selected: page === 'css' }"
+                        >{{ $t("Custom style") }}</a
+                    >
+                </div>
 
-        <div v-if="page === 'css'">
-          <div class="form-group">
-            <label>{{ $t("Custom style (css)") }}:</label>
-            <textarea v-model="css" :disabled="busy" rows="12" @change="onChangesMade" class="form-control form-control-full-width form-textarea" :placeholder="'.main-layout.dark-theme {\n\tbackground: blue;\n}'"></textarea>
-          </div>
-          <div>{{ $t("Note: this is an advanced and possibly dangerous feature. Do not change this unless you know what you are doing.") }}</div>
-        </div>
+                <div class="form-group"></div>
 
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer  no-padding">
-        <button type="submit" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Save changes") }}
-        </button>
-      </div>
-    </form>
+                <div v-if="page === 'general'">
+                    <div class="form-group">
+                        <label>{{ $t("Vault title") }}:</label>
+                        <input
+                            type="text"
+                            autocomplete="off"
+                            v-model="title"
+                            :disabled="busy"
+                            placeholder="PMV"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
 
-    <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>
+                    <div class="form-group">
+                        <label>{{ $t("Max number of tasks in parallel (0 for unlimited)") }}:</label>
+                        <input
+                            type="number"
+                            autocomplete="off"
+                            v-model.number="maxTasks"
+                            :disabled="busy"
+                            min="0"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
 
-  </ModalDialogContainer>
+                    <div class="form-group">
+                        <label>{{ $t("Max number threads for each task (0 to use the number of cores)") }}:</label>
+                        <input
+                            type="number"
+                            autocomplete="off"
+                            v-model.number="encodingThreads"
+                            :disabled="busy"
+                            min="0"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ $t("Video previews interval (seconds) (if set to 0, by default is 3 seconds)") }}:</label>
+                        <input
+                            type="number"
+                            autocomplete="off"
+                            v-model.number="videoPreviewsInterval"
+                            :disabled="busy"
+                            min="0"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
+                </div>
+
+                <div v-if="page === 'resolutions'">
+                    <div class="form-group">
+                        <label
+                            >{{
+                                $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens")
+                            }}:</label
+                        >
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">{{ $t("Name") }}</th>
+                                        <th class="text-left">{{ $t("Properties") }}</th>
+                                        <th class="text-right">{{ $t("Enabled") }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="res in resolutions" :key="res.name">
+                                        <td class="bold">{{ res.name }}</td>
+                                        <td>{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
+                                        <td class="text-right">
+                                            <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label
+                            >{{
+                                $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens")
+                            }}:</label
+                        >
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">{{ $t("Name") }}</th>
+                                        <th class="text-left">{{ $t("Properties") }}</th>
+                                        <th class="text-right">{{ $t("Enabled") }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="res in imageResolutions" :key="res.name">
+                                        <td class="bold">{{ res.name }}</td>
+                                        <td>{{ res.width }}x{{ res.height }}</td>
+                                        <td class="text-right">
+                                            <ToggleSwitch v-model:val="res.enabled" @update:val="onChangesMade"></ToggleSwitch>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="page === 'css'">
+                    <div class="form-group">
+                        <label>{{ $t("Custom style (css)") }}:</label>
+                        <textarea
+                            v-model="css"
+                            :disabled="busy"
+                            rows="12"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width form-textarea"
+                            :placeholder="'.main-layout.dark-theme {\n\tbackground: blue;\n}'"
+                        ></textarea>
+                    </div>
+                    <div>
+                        {{ $t("Note: This is an advanced and possibly dangerous feature.") }}
+                         {{ $t("Do not change this unless you know what you are doing.") }}
+                    </div>
+                </div>
+
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Save changes") }}</button>
+            </div>
+        </form>
+
+        <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -142,7 +206,7 @@ export default defineComponent({
     },
     data: function () {
         return {
-            page: 'general',
+            page: "general",
 
             dirty: false,
             displayAskSave: false,
@@ -268,11 +332,7 @@ export default defineComponent({
             this.resolutions = this.standardResolutions.map((r) => {
                 let enabled = false;
                 for (let res of resolutions) {
-                    if (
-                        res.width === r.width &&
-            res.height === r.height &&
-            res.fps === r.fps
-                    ) {
+                    if (res.width === r.width && res.height === r.height && res.fps === r.fps) {
                         enabled = true;
                         break;
                     }
@@ -351,10 +411,7 @@ export default defineComponent({
                     this.maxTasks = response.max_tasks;
                     this.encodingThreads = response.encoding_threads;
                     this.videoPreviewsInterval = response.video_previews_interval;
-                    this.updateResolutions(
-                        response.resolutions,
-                        response.image_resolutions
-                    );
+                    this.updateResolutions(response.resolutions, response.image_resolutions);
                     this.loading = false;
 
                     this.autoFocus();
@@ -400,7 +457,7 @@ export default defineComponent({
                     resolutions: this.getResolutions(),
                     image_resolutions: this.getImageResolutions(),
                     video_previews_interval: this.videoPreviewsInterval,
-                })
+                }),
             )
                 .onSuccess(() => {
                     this.busy = false;

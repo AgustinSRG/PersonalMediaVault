@@ -1,79 +1,103 @@
 <template>
-  <div class="album-container" tabindex="-1">
-    <div v-if="!loading && albumData" class="album-header">
-      <div class="album-header-title">
-        <div class="album-title">
-          <i class="fas fa-list-ol"></i> {{ albumData.name }}
+    <div class="album-container" tabindex="-1">
+        <div v-if="!loading && albumData" class="album-header">
+            <div class="album-header-title">
+                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumData.name }}</div>
+                <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="closePage">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="album-header-controls">
+                <div class="album-buttons">
+                    <button type="button" :title="$t('Loop')" class="album-header-btn" :class="{ toggled: loop }" @click="toggleLoop">
+                        <i class="fas fa-repeat"></i>
+                    </button>
+
+                    <button type="button" :title="$t('Random')" class="album-header-btn" :class="{ toggled: random }" @click="toggleRandom">
+                        <i class="fas fa-shuffle"></i>
+                    </button>
+
+                    <button v-if="canWrite" type="button" :title="$t('Add media')" class="album-header-btn" @click="addMediaToAlbum">
+                        <i class="fas fa-plus"></i>
+                    </button>
+
+                    <button v-if="canWrite" type="button" :title="$t('Rename')" class="album-header-btn" @click="renameAlbum">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+
+                    <button type="button" :title="$t('Favorite')" class="album-header-btn" :class="{ toggled: isFav }" @click="toggleFav">
+                        <i class="fas fa-star"></i>
+                    </button>
+
+                    <button v-if="canWrite" type="button" :title="$t('Delete')" class="album-header-btn" @click="deleteAlbum">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumList.length }}</div>
+            </div>
         </div>
-        <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="closePage">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="album-header-controls">
-        <div class="album-buttons">
-          <button type="button" :title="$t('Loop')" class="album-header-btn" :class="{ toggled: loop }" @click="toggleLoop">
-            <i class="fas fa-repeat"></i>
-          </button>
+        <div v-show="!loading && albumData" class="album-body" @scroll.passive="closeOptionsMenu" tabindex="-1">
+            <a
+                v-for="(item, i) in albumList"
+                :key="item.list_id"
+                :href="getMediaURL(item)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="album-body-item"
+                :class="{ current: i === currentPos }"
+                :title="item.title || $t('Untitled')"
+                @click="clickMedia(item, $event)"
+            >
+                <div class="album-body-item-thumbnail">
+                    <div v-if="!item.thumbnail" class="no-thumb">
+                        <i v-if="item.type === 1" class="fas fa-image"></i>
+                        <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                        <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                        <i v-else class="fas fa-ban"></i>
+                    </div>
+                    <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
+                    <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                        {{ renderTime(item.duration) }}
+                    </div>
+                    <div class="album-body-item-thumb-pos">
+                        {{ renderPos(i) }}
+                    </div>
+                </div>
 
-          <button type="button" :title="$t('Random')" class="album-header-btn" :class="{ toggled: random }" @click="toggleRandom">
-            <i class="fas fa-shuffle"></i>
-          </button>
+                <div class="album-body-item-title">
+                    {{ item.title || $t("Untitled") }}
+                </div>
 
-          <button v-if="canWrite" type="button" :title="$t('Add media')" class="album-header-btn" @click="addMediaToAlbum">
-            <i class="fas fa-plus"></i>
-          </button>
-
-          <button v-if="canWrite" type="button" :title="$t('Rename')" class="album-header-btn" @click="renameAlbum">
-            <i class="fas fa-pencil-alt"></i>
-          </button>
-
-          <button type="button" :title="$t('Favorite')" class="album-header-btn" :class="{ toggled: isFav }" @click="toggleFav">
-            <i class="fas fa-star"></i>
-          </button>
-
-          <button v-if="canWrite" type="button" :title="$t('Delete')" class="album-header-btn" @click="deleteAlbum">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+                <button
+                    v-if="canWrite"
+                    type="button"
+                    :title="$t('Options')"
+                    class="album-body-btn"
+                    @click="showOptions(item, i, $event)"
+                    @mousedown="stopPropagationEvent"
+                    @toutchstart.passive="stopPropagationEvent"
+                >
+                    <i class="fas fa-bars"></i>
+                </button>
+            </a>
         </div>
-        <div class="album-post-text">
-          {{ renderPos(currentPos) }} / {{ albumList.length }}
-        </div>
-      </div>
+        <AlbumContextMenu
+            v-model:shown="contextShown"
+            :mediaIndex="contextIndex"
+            :albumLength="albumList.length"
+            :x="contextX"
+            :y="contextY"
+            @move-up="moveMediaUp"
+            @move-down="moveMediaDown"
+            @change-pos="changeMediaPos"
+            @media-remove="removeMedia"
+        ></AlbumContextMenu>
+        <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
+        <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
+        <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+        <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
+        <LoadingOverlay v-if="loading"></LoadingOverlay>
     </div>
-    <div v-show="!loading && albumData" class="album-body" @scroll.passive="closeOptionsMenu" tabindex="-1">
-      <a v-for="(item, i) in albumList" :key="item.list_id" :href="getMediaURL(item)" target="_blank" rel="noopener noreferrer" class="album-body-item" :class="{ current: i === currentPos }" :title="item.title || $t('Untitled')" @click="clickMedia(item, $event)">
-        <div class="album-body-item-thumbnail">
-          <div v-if="!item.thumbnail" class="no-thumb">
-            <i v-if="item.type === 1" class="fas fa-image"></i>
-            <i v-else-if="item.type === 2" class="fas fa-video"></i>
-            <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-            <i v-else class="fas fa-ban"></i>
-          </div>
-          <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
-          <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
-            {{ renderTime(item.duration) }}
-          </div>
-          <div class="album-body-item-thumb-pos">
-            {{ renderPos(i) }}
-          </div>
-        </div>
-
-        <div class="album-body-item-title">
-          {{ item.title || $t("Untitled") }}
-        </div>
-
-        <button v-if="canWrite" type="button" :title="$t('Options')" class="album-body-btn" @click="showOptions(item, i, $event)" @mousedown="stopPropagationEvent" @toutchstart.passive="stopPropagationEvent">
-          <i class="fas fa-bars"></i>
-        </button>
-      </a>
-    </div>
-    <AlbumContextMenu v-model:shown="contextShown" :mediaIndex="contextIndex" :albumLength="albumList.length" :x="contextX" :y="contextY" @move-up="moveMediaUp" @move-down="moveMediaDown" @change-pos="changeMediaPos" @media-remove="removeMedia"></AlbumContextMenu>
-    <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
-    <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
-    <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
-    <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
-    <LoadingOverlay v-if="loading"></LoadingOverlay>
-  </div>
 </template>
 
 <script lang="ts">
@@ -113,7 +137,7 @@ const AlbumAddMediaModal = defineAsyncComponent({
     delay: 1000,
 });
 
-import Sortable from 'sortablejs';
+import Sortable from "sortablejs";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -133,9 +157,7 @@ export default defineComponent({
 
             albumList: [],
 
-            isFav: AppPreferences.FavAlbums.includes(
-                AlbumsController.CurrentAlbum + ""
-            ),
+            isFav: AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + ""),
 
             loading: AlbumsController.CurrentAlbumLoading,
 
@@ -166,9 +188,7 @@ export default defineComponent({
             }
             this.albumId = AlbumsController.CurrentAlbum;
             this.albumData = AlbumsController.CurrentAlbumData;
-            this.isFav = AppPreferences.FavAlbums.includes(
-                AlbumsController.CurrentAlbum + ""
-            );
+            this.isFav = AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + "");
             this.updateAlbumsList();
         },
 
@@ -278,13 +298,13 @@ export default defineComponent({
         getMediaURL: function (item) {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            media: item.id + "",
-            album: this.albumId + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    media: item.id + "",
+                    album: this.albumId + "",
+                })
             );
         },
 
@@ -318,10 +338,7 @@ export default defineComponent({
 
             let mustScroll = false;
 
-            if (
-                this.mustScroll ||
-        this.currentPos !== AlbumsController.CurrentAlbumPos
-            ) {
+            if (this.mustScroll || this.currentPos !== AlbumsController.CurrentAlbumPos) {
                 this.mustScroll = false;
                 mustScroll = true;
             }
@@ -407,10 +424,7 @@ export default defineComponent({
 
             const expectedTop = height / 2 - itemHeight / 2;
 
-            const scroll = Math.max(
-                0,
-                Math.min(scrollHeight - height, itemTop - expectedTop)
-            );
+            const scroll = Math.max(0, Math.min(scrollHeight - height, itemTop - expectedTop));
 
             element.scrollTop = scroll;
         },
@@ -431,18 +445,11 @@ export default defineComponent({
         },
 
         updateFav: function () {
-            this.isFav = AppPreferences.FavAlbums.includes(
-                AlbumsController.CurrentAlbum + ""
-            );
+            this.isFav = AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + "");
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-        AppStatus.CurrentLayout !== "album" ||
-        !event.key ||
-        event.ctrlKey
-            ) {
+            if (AuthController.Locked || AppStatus.CurrentLayout !== "album" || !event.key || event.ctrlKey) {
                 return false;
             }
 
@@ -485,10 +492,7 @@ export default defineComponent({
     },
     mounted: function () {
         this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(
-            "current-album-update",
-            this.$options.albumUpdateH
-        );
+        AppEvents.AddEventListener("current-album-update", this.$options.albumUpdateH);
 
         this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
@@ -505,10 +509,7 @@ export default defineComponent({
 
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         this.$options.favUpdateH = this.updateFav.bind(this);
         AppEvents.AddEventListener("albums-fav-updated", this.$options.favUpdateH);
@@ -526,26 +527,14 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "current-album-update",
-            this.$options.albumUpdateH
-        );
-        AppEvents.RemoveEventListener(
-            "current-album-loading",
-            this.$options.loadingH
-        );
+        AppEvents.RemoveEventListener("current-album-update", this.$options.albumUpdateH);
+        AppEvents.RemoveEventListener("current-album-loading", this.$options.loadingH);
 
         AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
 
-        AppEvents.RemoveEventListener(
-            "albums-fav-updated",
-            this.$options.favUpdateH
-        );
+        AppEvents.RemoveEventListener("albums-fav-updated", this.$options.favUpdateH);
 
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
 
@@ -557,4 +546,3 @@ export default defineComponent({
     },
 });
 </script>
-

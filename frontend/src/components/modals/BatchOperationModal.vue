@@ -1,163 +1,194 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-xl" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Batch operation") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-
-        <div class="batch-op-group-search">
-
-          <div class="form-group">
-            <label>{{ $t("Title or description must contain") }}:</label>
-            <input type="text" name="title-search" autocomplete="off" maxlength="255" v-model="textSearch" class="form-control form-control-full-width" />
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Media type") }}:</label>
-            <select class="form-control form-select form-control-full-width" v-model="typeSearch">
-              <option :value="0">{{ $t("Any media") }}</option>
-              <option :value="1">{{ $t("Images") }}</option>
-              <option :value="2">{{ $t("Videos") }}</option>
-              <option :value="3">{{ $t("Audios") }}</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Album") }}:</label>
-            <select v-model="albumSearch" class="form-control form-select form-control-full-width">
-              <option :value="-1">--</option>
-              <option v-for="a in albums" :key="a.id" :value="a.id">
-                {{ a.name }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>{{ $t("Tags") }}:</label>
-          </div>
-          <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
-            <label v-if="tagsSearch.length === 0">{{
-              $t("There are no tags yet for this filter.")
-            }}</label>
-            <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
-              <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-              <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-          <div class="form-group">
-            <select class="form-control form-select form-control-full-width" v-model="tagModeSearch">
-              <option :value="'all'">
-                {{ $t("Media must contain ALL of the selected tags") }}
-              </option>
-              <option :value="'any'">
-                {{ $t("Media must contain ANY of the selected tags") }}
-              </option>
-              <option :value="'none'">
-                {{ $t("Media must contain NONE of the selected tags") }}
-              </option>
-              <option :value="'untagged'">
-                {{ $t("Media must be untagged") }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group" v-if="tagModeSearch !== 'untagged'">
-            <input type="text" autocomplete="off" maxlength="255" v-model="tagToAddSearch" @input="onTagSearchChanged(false)" @keydown="onTagSearchKeyDown" class="form-control" :placeholder="$t('Search for tags') + '...'" />
-          </div>
-          <div class="form-group" v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0">
-            <button v-for="mt in matchingTagsSearch" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTagSearch(mt)">
-              <i class="fas fa-plus"></i> {{ mt.name }}
-            </button>
-          </div>
-
-
-        </div>
-
-        <hr>
-
-        <div class="batch-op-group-action">
-          <div class="form-group"></div>
-          <div class="form-group">
-            <label>{{ $t("Select and action to apply") }}:</label>
-            <select class="form-control form-select form-control-full-width" v-model="action">
-              <option :value="''">
-                {{ $t("--- Select an action ---") }}
-              </option>
-              <option :value="'tag-add'">
-                {{ $t("Add tags to the media assets") }}
-              </option>
-              <option :value="'tag-remove'">
-                {{ $t("Remove tags from the media assets") }}
-              </option>
-              <option :value="'album-add'">
-                {{ $t("Add media assets to album") }}
-              </option>
-              <option :value="'album-remove'">
-                {{ $t("Remove media assets from album") }}
-              </option>
-              <option :value="'delete'">
-                {{ $t("Delete media assets") }}
-              </option>
-            </select>
-          </div>
-
-
-          <div v-if="action === 'tag-add' || action === 'tag-remove'">
-            <div class="form-group media-tags">
-              <label v-if="tagsAction.length === 0">{{
-                $t("There are no selected tags yet.")
-              }}</label>
-              <div v-for="tag in tagsAction" :key="tag" class="media-tag">
-                <div class="media-tag-name">{{ tag }}</div>
-                <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagAction(tag)">
-                  <i class="fas fa-times"></i>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-xl" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Batch operation") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
                 </button>
-              </div>
             </div>
+            <div class="modal-body">
+                <div class="batch-op-group-search">
+                    <div class="form-group">
+                        <label>{{ $t("Title or description must contain") }}:</label>
+                        <input
+                            type="text"
+                            name="title-search"
+                            autocomplete="off"
+                            maxlength="255"
+                            v-model="textSearch"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
 
-            <div class="form-group">
-              <input type="text" autocomplete="off" maxlength="255" v-model="tagToAddAction" @input="onTagActionChanged(false)" @keydown="onTagActionKeyDown" class="form-control" :placeholder="$t('Search for tags') + '...'" />
+                    <div class="form-group">
+                        <label>{{ $t("Media type") }}:</label>
+                        <select class="form-control form-select form-control-full-width" v-model="typeSearch">
+                            <option :value="0">{{ $t("Any media") }}</option>
+                            <option :value="1">{{ $t("Images") }}</option>
+                            <option :value="2">{{ $t("Videos") }}</option>
+                            <option :value="3">{{ $t("Audios") }}</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ $t("Album") }}:</label>
+                        <select v-model="albumSearch" class="form-control form-select form-control-full-width">
+                            <option :value="-1">--</option>
+                            <option v-for="a in albums" :key="a.id" :value="a.id">
+                                {{ a.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ $t("Tags") }}:</label>
+                    </div>
+                    <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
+                        <label v-if="tagsSearch.length === 0">{{ $t("There are no tags yet for this filter.") }}</label>
+                        <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
+                            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control form-select form-control-full-width" v-model="tagModeSearch">
+                            <option :value="'all'">
+                                {{ $t("Media must contain ALL of the selected tags") }}
+                            </option>
+                            <option :value="'any'">
+                                {{ $t("Media must contain ANY of the selected tags") }}
+                            </option>
+                            <option :value="'none'">
+                                {{ $t("Media must contain NONE of the selected tags") }}
+                            </option>
+                            <option :value="'untagged'">
+                                {{ $t("Media must be untagged") }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group" v-if="tagModeSearch !== 'untagged'">
+                        <input
+                            type="text"
+                            autocomplete="off"
+                            maxlength="255"
+                            v-model="tagToAddSearch"
+                            @input="onTagSearchChanged(false)"
+                            @keydown="onTagSearchKeyDown"
+                            class="form-control"
+                            :placeholder="$t('Search for tags') + '...'"
+                        />
+                    </div>
+                    <div class="form-group" v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0">
+                        <button
+                            v-for="mt in matchingTagsSearch"
+                            :key="mt.id"
+                            type="button"
+                            class="btn btn-primary btn-sm btn-tag-mini"
+                            @click="addMatchingTagSearch(mt)"
+                        >
+                            <i class="fas fa-plus"></i> {{ mt.name }}
+                        </button>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="batch-op-group-action">
+                    <div class="form-group"></div>
+                    <div class="form-group">
+                        <label>{{ $t("Select and action to apply") }}:</label>
+                        <select class="form-control form-select form-control-full-width" v-model="action">
+                            <option :value="''">
+                                {{ $t("--- Select an action ---") }}
+                            </option>
+                            <option :value="'tag-add'">
+                                {{ $t("Add tags to the media assets") }}
+                            </option>
+                            <option :value="'tag-remove'">
+                                {{ $t("Remove tags from the media assets") }}
+                            </option>
+                            <option :value="'album-add'">
+                                {{ $t("Add media assets to album") }}
+                            </option>
+                            <option :value="'album-remove'">
+                                {{ $t("Remove media assets from album") }}
+                            </option>
+                            <option :value="'delete'">
+                                {{ $t("Delete media assets") }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div v-if="action === 'tag-add' || action === 'tag-remove'">
+                        <div class="form-group media-tags">
+                            <label v-if="tagsAction.length === 0">{{ $t("There are no selected tags yet.") }}</label>
+                            <div v-for="tag in tagsAction" :key="tag" class="media-tag">
+                                <div class="media-tag-name">{{ tag }}</div>
+                                <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagAction(tag)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                maxlength="255"
+                                v-model="tagToAddAction"
+                                @input="onTagActionChanged(false)"
+                                @keydown="onTagActionKeyDown"
+                                class="form-control"
+                                :placeholder="$t('Search for tags') + '...'"
+                            />
+                        </div>
+                        <div class="form-group" v-if="matchingTagsAction.length > 0">
+                            <button
+                                v-for="mt in matchingTagsAction"
+                                :key="mt.id"
+                                type="button"
+                                class="btn btn-primary btn-sm btn-tag-mini"
+                                @click="addMatchingTagAction(mt)"
+                            >
+                                <i class="fas fa-plus"></i> {{ mt.name }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="action === 'album-add' || action === 'album-remove'">
+                        <div class="form-group">
+                            <label>{{ $t("Album") }}:</label>
+                            <select v-model="albumToAdd" class="form-control form-select form-control-full-width">
+                                <option :value="-1">--</option>
+                                <option v-for="a in albums" :key="a.id" :value="a.id">
+                                    {{ a.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group" v-if="matchingTagsAction.length > 0">
-              <button v-for="mt in matchingTagsAction" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTagAction(mt)">
-                <i class="fas fa-plus"></i> {{ mt.name }}
-              </button>
+            <div class="modal-footer no-padding">
+                <button type="button" class="modal-footer-btn" :disabled="displayProgress" @click="start">
+                    <i class="fas fa-check"></i> {{ $t("Apply") }}
+                </button>
             </div>
-          </div>
-
-
-          <div v-if="action === 'album-add' || action === 'album-remove'">
-
-            <div class="form-group">
-              <label>{{ $t("Album") }}:</label>
-              <select v-model="albumToAdd" class="form-control form-select form-control-full-width">
-                <option :value="-1">--</option>
-                <option v-for="a in albums" :key="a.id" :value="a.id">
-                  {{ a.name }}
-                </option>
-              </select>
-            </div>
-
-          </div>
-
-
         </div>
 
-      </div>
-      <div class="modal-footer  no-padding">
-        <button type="button" class="modal-footer-btn" :disabled="displayProgress" @click="start">
-          <i class="fas fa-check"></i> {{ $t("Apply") }}
-        </button>
-      </div>
-    </div>
-
-    <BatchOperationProgressModal v-if="displayProgress" v-model:display="displayProgress" :status="status" :progress="progress" :error="error" :actionCount="actionCount" @cancel="cancel" @confirm="confirm"></BatchOperationProgressModal>
-  </ModalDialogContainer>
+        <BatchOperationProgressModal
+            v-if="displayProgress"
+            v-model:display="displayProgress"
+            :status="status"
+            :progress="progress"
+            :error="error"
+            :actionCount="actionCount"
+            @cancel="cancel"
+            @confirm="confirm"
+        ></BatchOperationProgressModal>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -314,7 +345,6 @@ export default defineComponent({
                 })
                 .slice(0, 10);
         },
-
 
         onTagActionChanged: function (forced?: boolean) {
             if (forced) {
@@ -499,10 +529,7 @@ export default defineComponent({
         loadAlbumSearch: function () {
             Request.Abort("modal-batch-request");
 
-            Request.Pending(
-                "modal-batch-request",
-                AlbumsAPI.GetAlbum(this.albumSearch)
-            )
+            Request.Pending("modal-batch-request", AlbumsAPI.GetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     this.filterElements(result.list);
                     this.finishSearch();
@@ -550,21 +577,13 @@ export default defineComponent({
         searchNext: function (page: number) {
             Request.Abort("modal-batch-request");
 
-            Request.Pending(
-                "modal-batch-request",
-                SearchAPI.Search(
-                    this.getFirstTag(),
-                    "asc",
-                    page,
-                    PAGE_SIZE
-                )
-            )
+            Request.Pending("modal-batch-request", SearchAPI.Search(this.getFirstTag(), "asc", page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
 
-                    this.progress = (page + 1) * 100 / (result.page_count || 1);
+                    this.progress = ((page + 1) * 100) / (result.page_count || 1);
 
-                    if (page >= (result.page_count - 1)) {
+                    if (page >= result.page_count - 1) {
                         // Finished
                         this.finishSearch();
                     } else {
@@ -614,7 +633,10 @@ export default defineComponent({
 
             for (let e of results) {
                 if (filterText) {
-                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
+                    if (
+                        matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
+                        matchSearchFilter(e.description, filterText, filterTextWords) < 0
+                    ) {
                         continue;
                     }
                 }
@@ -704,23 +726,23 @@ export default defineComponent({
 
             switch (this.action) {
             case "tag-add":
-                this.actionAddTag(mediaId, this.tagsAction.slice(), i + 1)
+                this.actionAddTag(mediaId, this.tagsAction.slice(), i + 1);
                 break;
             case "tag-remove":
-                this.actionRemoveTag(mediaId, this.tagsAction.slice(), i + 1)
+                this.actionRemoveTag(mediaId, this.tagsAction.slice(), i + 1);
                 break;
             case "album-add":
-                this.actionAddAlbum(mediaId, i + 1)
+                this.actionAddAlbum(mediaId, i + 1);
                 break;
             case "album-remove":
-                this.actionRemoveAlbum(mediaId, i + 1)
+                this.actionRemoveAlbum(mediaId, i + 1);
                 break;
             case "delete":
                 this.actionDelete(mediaId, i + 1);
                 break;
             }
 
-            this.progress = (i + 1) * 100 / (this.actionItems.length || 1);
+            this.progress = ((i + 1) * 100) / (this.actionItems.length || 1);
         },
 
         actionDelete: function (mid: number, next: number) {
@@ -755,7 +777,6 @@ export default defineComponent({
                     this.status = "error";
                 });
         },
-
 
         actionAddAlbum: function (mid: number, next: number) {
             Request.Pending("modal-batch-request", AlbumsAPI.AddMediaToAlbum(this.albumToAdd, mid))

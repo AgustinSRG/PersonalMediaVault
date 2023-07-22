@@ -1,7 +1,7 @@
 // Translation file maker
 // Search for uses of translation function and adds them to translation files
 
-'use strict';
+"use strict";
 
 const FS = require("fs");
 const Path = require("path");
@@ -14,7 +14,7 @@ function generateTranslationConfigurationFile(lang, resources) {
         result[key] = resources[key] || key;
     }
 
-    return JSON.stringify(result, null, 2)
+    return JSON.stringify(result, null, 2);
 }
 
 function getResourcesFromTranslationsFile(file) {
@@ -25,16 +25,18 @@ function getResourcesFromTranslationsFile(file) {
 function searchTranslationUsages(file) {
     const str = FS.readFileSync(file).toString();
 
-    const matches = (str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\"([^\\"]*)\"([\s\n\t]+)*\)/gi) || [])
-        .concat((str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\'[^\\']*\'([\s\n\t]+)*\)/gi) || []));
+    const matches = (str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\"([^\\"]*)\"([\s\n\t]+)*\)/gi) || []).concat(
+        str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\'[^\\']*\'([\s\n\t]+)*\)/gi) || [],
+    );
     const usages = {};
 
     for (let match of matches) {
-        match = match.replace(/\(([\s\n\t]+)*\"/gi, '("')
-            .replace(/\(([\s\n\t]+)*\'/gi, '(\'')
+        match = match
+            .replace(/\(([\s\n\t]+)*\"/gi, '("')
+            .replace(/\(([\s\n\t]+)*\'/gi, "('")
             .replace(/\"([\s\n\t]+)*\)/gi, '")')
-            .replace(/\'([\s\n\t]+)*\)/gi, '\')')
-            .trim()
+            .replace(/\'([\s\n\t]+)*\)/gi, "')")
+            .trim();
         // console.log(match);
         const tKey = JSON.parse('"' + match.substr(4, match.length - 6) + '"');
 
@@ -111,7 +113,7 @@ function main() {
     console.log("Generating language files...");
 
     const translationFiles = findTranslationConfigFiles();
-    const scanned = scanDirectories(Path.resolve(__dirname, 'src'));
+    const scanned = scanDirectories(Path.resolve(__dirname, "src"));
 
     // Scan directories looking for translation keys
     let usedKeys = Object.create(null);

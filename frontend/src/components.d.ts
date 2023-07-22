@@ -2,8 +2,8 @@
 
 import ModalDialogContainer from "@/components/utils/ModalDialogContainer.vue";
 
-declare module '@vue/runtime-core' {
+declare module "@vue/runtime-core" {
     export interface GlobalComponents {
-        ModalDialogContainer: typeof ModalDialogContainer
+        ModalDialogContainer: typeof ModalDialogContainer;
     }
 }

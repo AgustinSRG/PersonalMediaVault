@@ -12,7 +12,7 @@ First, install the dependencies using npm:
 npm install
 ```
 
-After installing the dependencies, compile the code for production  with the following command:
+After installing the dependencies, compile the code for production with the following command:
 
 ```
 npm run build

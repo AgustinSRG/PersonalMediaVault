@@ -3,7 +3,7 @@
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
 export class AppEvents {
-    public static events: {[key: string]: CallbackFunctionVariadic[]} = {};
+    public static events: { [key: string]: CallbackFunctionVariadic[] } = {};
 
     public static AddEventListener(eventName: string, handler: CallbackFunctionVariadic) {
         if (!AppEvents.events[eventName]) {

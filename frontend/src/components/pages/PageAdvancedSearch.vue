@@ -1,142 +1,189 @@
 <template>
-  <div :class="{ 'page-inner': !inModal, hidden: !display }">
-    <form class="adv-search-form" @submit="startSearch">
-      <div class="form-group">
-        <label>{{ $t("Title or description must contain") }}:</label>
-        <input type="text" name="title-search" autocomplete="off" maxlength="255" :disabled="loading" v-model="textSearch" class="form-control form-control-full-width" @input="markDirty" />
-      </div>
-
-      <div v-if="advancedSearch">
-        <div class="form-group">
-          <label>{{ $t("Media type") }}:</label>
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type" @change="markDirty">
-            <option :value="0">{{ $t("Any media") }}</option>
-            <option :value="1">{{ $t("Images") }}</option>
-            <option :value="2">{{ $t("Videos") }}</option>
-            <option :value="3">{{ $t("Audios") }}</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>{{ $t("Album") }}:</label>
-          <select v-model="albumSearch" class="form-control form-select form-control-full-width" :disabled="loading" @change="markDirty">
-            <option :value="-1">--</option>
-            <option v-for="a in albums" :key="a.id" :value="a.id">
-              {{ a.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>{{ $t("Tags") }}:</label>
-        </div>
-        <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
-          <label v-if="tags.length === 0">{{
-            $t("There are no tags yet for this filter.")
-          }}</label>
-          <div v-for="tag in tags" :key="tag" class="media-tag">
-            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading" @click="removeTag(tag)">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
-            <option :value="'all'">
-              {{ $t("Media must contain ALL of the selected tags") }}
-            </option>
-            <option :value="'any'">
-              {{ $t("Media must contain ANY of the selected tags") }}
-            </option>
-            <option :value="'none'">
-              {{ $t("Media must contain NONE of the selected tags") }}
-            </option>
-            <option :value="'untagged'">
-              {{ $t("Media must be untagged") }}
-            </option>
-          </select>
-        </div>
-        <div class="form-group" v-if="tagMode !== 'untagged'">
-          <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="loading" @input="onTagAddChanged(false)" @keydown="onTagAddKeyDown" class="form-control" :placeholder="$t('Search for tags') + '...'" />
-        </div>
-        <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
-          <button v-for="mt in matchingTags" :key="mt.id" type="button" :disabled="loading" class="btn btn-primary btn-sm btn-tag-mini" @click="addMatchingTag(mt)">
-            <i class="fas fa-plus"></i> {{ mt.name }}
-          </button>
-        </div>
-
-        <div class="form-group">
-          <label>{{ $t("Order") }}:</label>
-          <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="order" @change="markDirty">
-            <option :value="'desc'">{{ $t("Show most recent") }}</option>
-            <option :value="'asc'">{{ $t("Show oldest") }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="">
-        <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
-          <i class="fas fa-search"></i> {{ $t("Search") }}
-        </button>
-        <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
-          <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
-        </button>
-        <button v-if="!advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
-          <i class="fas fa-cog"></i> {{ $t("More options") }}
-        </button>
-        <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
-          <i class="fas fa-cog"></i> {{ $t("Less options") }}
-        </button>
-        <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
-          <i class="fas fa-times"></i> {{ $t("Cancel") }}
-        </button>
-      </div>
-    </form>
-
-    <div class="search-results" tabindex="-1">
-      <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
-        <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
-        <div class="search-results-msg-text">
-          {{ $t("Could not find any result") }}
-        </div>
-        <div class="search-results-msg-btn">
-          <button type="button" @click="startSearch()" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="pageItems.length > 0" class="search-results-final-display">
-        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
-          <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
-            <div class="search-result-thumb-inner">
-              <div v-if="!item.thumbnail" class="no-thumb">
-                <i v-if="item.type === 1" class="fas fa-image"></i>
-                <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                <i v-else class="fas fa-ban"></i>
-              </div>
-              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
-              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
-                {{ renderTime(item.duration) }}
-              </div>
+    <div :class="{ 'page-inner': !inModal, hidden: !display }">
+        <form class="adv-search-form" @submit="startSearch">
+            <div class="form-group">
+                <label>{{ $t("Title or description must contain") }}:</label>
+                <input
+                    type="text"
+                    name="title-search"
+                    autocomplete="off"
+                    maxlength="255"
+                    :disabled="loading"
+                    v-model="textSearch"
+                    class="form-control form-control-full-width"
+                    @input="markDirty"
+                />
             </div>
-          </div>
-          <div class="search-result-title">
-            {{ item.title || $t("Untitled") }}
-          </div>
-        </a>
-      </div>
 
+            <div v-if="advancedSearch">
+                <div class="form-group">
+                    <label>{{ $t("Media type") }}:</label>
+                    <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type" @change="markDirty">
+                        <option :value="0">{{ $t("Any media") }}</option>
+                        <option :value="1">{{ $t("Images") }}</option>
+                        <option :value="2">{{ $t("Videos") }}</option>
+                        <option :value="3">{{ $t("Audios") }}</option>
+                    </select>
+                </div>
 
-      <div v-if="!finished && pageItems.length >= PAGE_SIZE" class="search-continue-mark">
-        <button type="button" class="btn btn-primary btn-mr" disabled>
-          <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
-        </button>
-      </div>
+                <div class="form-group">
+                    <label>{{ $t("Album") }}:</label>
+                    <select
+                        v-model="albumSearch"
+                        class="form-control form-select form-control-full-width"
+                        :disabled="loading"
+                        @change="markDirty"
+                    >
+                        <option :value="-1">--</option>
+                        <option v-for="a in albums" :key="a.id" :value="a.id">
+                            {{ a.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ $t("Tags") }}:</label>
+                </div>
+                <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
+                    <label v-if="tags.length === 0">{{ $t("There are no tags yet for this filter.") }}</label>
+                    <div v-for="tag in tags" :key="tag" class="media-tag">
+                        <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                        <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading" @click="removeTag(tag)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
+                        <option :value="'all'">
+                            {{ $t("Media must contain ALL of the selected tags") }}
+                        </option>
+                        <option :value="'any'">
+                            {{ $t("Media must contain ANY of the selected tags") }}
+                        </option>
+                        <option :value="'none'">
+                            {{ $t("Media must contain NONE of the selected tags") }}
+                        </option>
+                        <option :value="'untagged'">
+                            {{ $t("Media must be untagged") }}
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group" v-if="tagMode !== 'untagged'">
+                    <input
+                        type="text"
+                        autocomplete="off"
+                        maxlength="255"
+                        v-model="tagToAdd"
+                        :disabled="loading"
+                        @input="onTagAddChanged(false)"
+                        @keydown="onTagAddKeyDown"
+                        class="form-control"
+                        :placeholder="$t('Search for tags') + '...'"
+                    />
+                </div>
+                <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
+                    <button
+                        v-for="mt in matchingTags"
+                        :key="mt.id"
+                        type="button"
+                        :disabled="loading"
+                        class="btn btn-primary btn-sm btn-tag-mini"
+                        @click="addMatchingTag(mt)"
+                    >
+                        <i class="fas fa-plus"></i> {{ mt.name }}
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ $t("Order") }}:</label>
+                    <select
+                        class="form-control form-select form-control-full-width"
+                        :disabled="loading"
+                        v-model="order"
+                        @change="markDirty"
+                    >
+                        <option :value="'desc'">{{ $t("Show most recent") }}</option>
+                        <option :value="'asc'">{{ $t("Show oldest") }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="">
+                <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
+                    <i class="fas fa-search"></i> {{ $t("Search") }}
+                </button>
+                <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
+                </button>
+                <button v-if="!advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
+                    <i class="fas fa-cog"></i> {{ $t("More options") }}
+                </button>
+                <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
+                    <i class="fas fa-cog"></i> {{ $t("Less options") }}
+                </button>
+                <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
+                    <i class="fas fa-times"></i> {{ $t("Cancel") }}
+                </button>
+            </div>
+        </form>
+
+        <div class="search-results" tabindex="-1">
+            <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
+                <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
+                <div class="search-results-msg-text">
+                    {{ $t("Could not find any result") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" @click="startSearch()" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="pageItems.length > 0" class="search-results-final-display">
+                <a
+                    v-for="(item, i) in pageItems"
+                    :key="i"
+                    class="search-result-item clickable"
+                    :class="{ current: currentMedia == item.id }"
+                    @click="goToMedia(item.id, $event)"
+                    :href="getMediaURL(item.id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
+                        <div class="search-result-thumb-inner">
+                            <div v-if="!item.thumbnail" class="no-thumb">
+                                <i v-if="item.type === 1" class="fas fa-image"></i>
+                                <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                <i v-else class="fas fa-ban"></i>
+                            </div>
+                            <img
+                                v-if="item.thumbnail"
+                                :src="getThumbnail(item.thumbnail)"
+                                :alt="item.title || $t('Untitled')"
+                                loading="lazy"
+                            />
+                            <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                {{ renderTime(item.duration) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-result-title">
+                        {{ item.title || $t("Untitled") }}
+                    </div>
+                </a>
+            </div>
+
+            <div v-if="!finished && pageItems.length >= PAGE_SIZE" class="search-continue-mark">
+                <button type="button" class="btn btn-primary btn-mr" disabled>
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -162,7 +209,7 @@ const PAGE_SIZE = 50;
 
 export default defineComponent({
     name: "PageAdvancedSearch",
-    emits: ['select-media'],
+    emits: ["select-media"],
     props: {
         display: Boolean,
         inModal: Boolean,
@@ -210,9 +257,7 @@ export default defineComponent({
         autoScroll: function () {
             if (!this.inModal) {
                 nextTick(() => {
-                    const currentElem = this.$el.querySelector(
-                        ".search-result-item.current"
-                    );
+                    const currentElem = this.$el.querySelector(".search-result-item.current");
                     if (currentElem) {
                         currentElem.scrollIntoView();
                     }
@@ -235,21 +280,12 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(
-                "page-adv-search-load",
-                SearchAPI.Search(
-                    this.getFirstTag(),
-                    this.order,
-                    this.page,
-                    PAGE_SIZE,
-                )
-            )
+            Request.Pending("page-adv-search-load", SearchAPI.Search(this.getFirstTag(), this.order, this.page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
                     this.page = result.page_index + 1;
                     this.totalPages = result.page_count;
-                    this.progress =
-            ((this.page) / Math.max(1, this.totalPages)) * 100;
+                    this.progress = (this.page / Math.max(1, this.totalPages)) * 100;
                     if (this.pageItems.length >= PAGE_SIZE) {
                         // Done for now
                         this.loading = false;
@@ -300,9 +336,11 @@ export default defineComponent({
             let backlistAlbum = new Set();
 
             if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
-                backlistAlbum = new Set(AlbumsController.CurrentAlbumData.list.map(a => {
-                    return a.id;
-                }));
+                backlistAlbum = new Set(
+                    AlbumsController.CurrentAlbumData.list.map((a) => {
+                        return a.id;
+                    }),
+                );
             }
 
             for (let e of results) {
@@ -315,7 +353,10 @@ export default defineComponent({
                 }
 
                 if (filterText) {
-                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0 && matchSearchFilter(e.description, filterText, filterTextWords) < 0) {
+                    if (
+                        matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
+                        matchSearchFilter(e.description, filterText, filterTextWords) < 0
+                    ) {
                         continue;
                     }
                 }
@@ -401,27 +442,28 @@ export default defineComponent({
         loadAlbumSearch: function () {
             Request.Abort("page-adv-search-load");
 
-            Request.Pending(
-                "page-adv-search-load",
-                AlbumsAPI.GetAlbum(this.albumSearch)
-            )
+            Request.Pending("page-adv-search-load", AlbumsAPI.GetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     if (this.order === "asc") {
-                        this.filterElements(result.list.sort((a, b) => {
-                            if (a.id < b.id) {
-                                return -1;
-                            } else {
-                                return 1;
-                            }
-                        }));
+                        this.filterElements(
+                            result.list.sort((a, b) => {
+                                if (a.id < b.id) {
+                                    return -1;
+                                } else {
+                                    return 1;
+                                }
+                            }),
+                        );
                     } else {
-                        this.filterElements(result.list.sort((a, b) => {
-                            if (a.id > b.id) {
-                                return -1;
-                            } else {
-                                return 1;
-                            }
-                        }));
+                        this.filterElements(
+                            result.list.sort((a, b) => {
+                                if (a.id > b.id) {
+                                    return -1;
+                                } else {
+                                    return 1;
+                                }
+                            }),
+                        );
                     }
 
                     this.page = 1;
@@ -477,7 +519,7 @@ export default defineComponent({
             }
             if (this.inModal) {
                 this.$emit("select-media", mid, () => {
-                    this.pageItems = this.pageItems.filter(i => {
+                    this.pageItems = this.pageItems.filter((i) => {
                         return mid !== i.id;
                     });
                 });
@@ -489,12 +531,12 @@ export default defineComponent({
         getMediaURL: function (mid: number): string {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            media: mid + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    media: mid + "",
+                })
             );
         },
 
@@ -644,9 +686,7 @@ export default defineComponent({
             this.currentMedia = AppStatus.CurrentMedia;
             if (!this.inModal) {
                 nextTick(() => {
-                    const currentElem = this.$el.querySelector(
-                        ".search-result-item.current"
-                    );
+                    const currentElem = this.$el.querySelector(".search-result-item.current");
                     if (currentElem) {
                         currentElem.scrollIntoView();
                     }
@@ -690,13 +730,7 @@ export default defineComponent({
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-        !AppStatus.IsPageVisible() ||
-        !this.display ||
-        !event.key ||
-        event.ctrlKey
-            ) {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
                 return false;
             }
 
@@ -732,7 +766,7 @@ export default defineComponent({
         },
 
         renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-            let parts = [item.title || this.$t('Untitled')];
+            let parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
                 let tagNames = [];
@@ -796,10 +830,7 @@ export default defineComponent({
         AppEvents.AddEventListener("media-delete", this.$options.resetH);
         AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
 
-        AppEvents.AddEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
 
         this.$options.nextMediaH = this.nextMedia.bind(this);
         AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
@@ -830,10 +861,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
         AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
 
-        AppEvents.RemoveEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
 
         AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);

@@ -22,9 +22,7 @@
     --modal-bg-color: white;
     --bar-bg-color: white;
 
-    --modal-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%),
-        0 6px 30px 5px rgb(255 255 255 / 12%),
-        0 8px 10px -5px rgb(255 255 255 / 40%);
+    --modal-shadow: 0 16px 24px 2px rgb(255 255 255 / 14%), 0 6px 30px 5px rgb(255 255 255 / 12%), 0 8px 10px -5px rgb(255 255 255 / 40%);
 
     --hover-color: rgba(0, 0, 0, 0.1);
     --selected-color: rgba(0, 0, 0, 0.2);
@@ -89,8 +87,7 @@
     --modal-bg-color: #212121;
     --bar-bg-color: #212121;
 
-    --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%),
-        0 6px 30px 5px rgb(0 0 0 / 12%), 0 8px 10px -5px rgb(0 0 0 / 40%);
+    --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%), 0 8px 10px -5px rgb(0 0 0 / 40%);
 
     --hover-color: rgba(255, 255, 255, 0.1);
     --selected-color: rgba(255, 255, 255, 0.2);

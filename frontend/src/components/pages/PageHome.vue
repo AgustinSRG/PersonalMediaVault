@@ -1,80 +1,88 @@
 <template>
-  <div class="page-inner" :class="{ hidden: !display }">
-    <div class="search-results" tabindex="-1">
-      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+    <div class="page-inner" :class="{ hidden: !display }">
+        <div class="search-results" tabindex="-1">
+            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
-      <div v-if="loading" class="search-results-loading-display">
-        <div v-for="f in loadingFiller" :key="f" class="search-result-item">
-          <div class="search-result-thumb">
-            <div class="search-result-thumb-inner">
-              <div class="search-result-loader">
-                <i class="fa fa-spinner fa-spin"></i>
-              </div>
+            <div v-if="loading" class="search-results-loading-display">
+                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
+                    <div class="search-result-thumb">
+                        <div class="search-result-thumb-inner">
+                            <div class="search-result-loader">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                </div>
             </div>
-          </div>
-          <div class="search-result-title">{{ $t("Loading") }}...</div>
-        </div>
-      </div>
 
-      <div v-if="!loading && total <= 0" class="search-results-msg-display">
-        <div class="search-results-msg-icon">
-          <i class="fas fa-box-open"></i>
-        </div>
-        <div class="search-results-msg-text">
-          {{ $t("The vault is empty") }}
-        </div>
-        <div class="search-results-msg-btn">
-          <button type="button" @click="load" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="!loading && total > 0" class="search-results-final-display">
-        <a v-for="(item, i) in pageItems" :key="i" class="search-result-item clickable" :class="{ current: currentMedia == item.id }" @click="goToMedia(item.id, $event)" :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">
-          <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
-            <div class="search-result-thumb-inner">
-              <div v-if="!item.thumbnail" class="no-thumb">
-                <i v-if="item.type === 1" class="fas fa-image"></i>
-                <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                <i v-else class="fas fa-ban"></i>
-              </div>
-              <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
-              <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
-                {{ renderTime(item.duration) }}
-              </div>
+            <div v-if="!loading && total <= 0" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("The vault is empty") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" @click="load" class="btn btn-primary"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
             </div>
-          </div>
-          <div class="search-result-title">
-            {{ item.title || $t("Untitled") }}
-          </div>
-        </a>
-      </div>
 
-      <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <div v-if="!loading && total > 0" class="search-results-final-display">
+                <a
+                    v-for="(item, i) in pageItems"
+                    :key="i"
+                    class="search-result-item clickable"
+                    :class="{ current: currentMedia == item.id }"
+                    @click="goToMedia(item.id, $event)"
+                    :href="getMediaURL(item.id)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
+                        <div class="search-result-thumb-inner">
+                            <div v-if="!item.thumbnail" class="no-thumb">
+                                <i v-if="item.type === 1" class="fas fa-image"></i>
+                                <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                <i v-else class="fas fa-ban"></i>
+                            </div>
+                            <img
+                                v-if="item.thumbnail"
+                                :src="getThumbnail(item.thumbnail)"
+                                :alt="item.title || $t('Untitled')"
+                                loading="lazy"
+                            />
+                            <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                {{ renderTime(item.duration) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-result-title">
+                        {{ item.title || $t("Untitled") }}
+                    </div>
+                </a>
+            </div>
 
-      <div v-if="total > 0" class="search-results-total">
-        {{ $t("Total") }}: {{ total }}
-      </div>
+            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
-      <div v-if="total > 0" class="search-results-options">
-        <div class="search-results-option">
-          <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
-            <option :value="'desc'">{{ $t("Show most recent") }}</option>
-            <option :value="'asc'">{{ $t("Show oldest") }}</option>
-          </select>
+            <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
+
+            <div v-if="total > 0" class="search-results-options">
+                <div class="search-results-option">
+                    <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
+                        <option :value="'desc'">{{ $t("Show most recent") }}</option>
+                        <option :value="'asc'">{{ $t("Show oldest") }}</option>
+                    </select>
+                </div>
+                <div class="search-results-option text-right">
+                    <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
+                        <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="search-results-option text-right">
-          <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
-            <option v-for="po in pageSizeOptions" :key="po" :value="po">
-              {{ po }} {{ $t("items per page") }}
-            </option>
-          </select>
-        </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -144,10 +152,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(
-                "page-home-load",
-                SearchAPI.Search("", this.order, this.page, this.pageSize)
-            )
+            Request.Pending("page-home-load", SearchAPI.Search("", this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     TagsController.OnMediaListReceived(result.page_items);
                     this.pageItems = result.page_items;
@@ -176,9 +181,7 @@ export default defineComponent({
                         return;
                     }
                     nextTick(() => {
-                        const currentElem = this.$el.querySelector(
-                            ".search-result-item.current"
-                        );
+                        const currentElem = this.$el.querySelector(".search-result-item.current");
                         if (currentElem) {
                             currentElem.scrollIntoView();
                         }
@@ -224,9 +227,7 @@ export default defineComponent({
                 this.load();
             }
             nextTick(() => {
-                const currentElem = this.$el.querySelector(
-                    ".search-result-item.current"
-                );
+                const currentElem = this.$el.querySelector(".search-result-item.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
@@ -240,11 +241,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(
-                this.page,
-                this.pageSize,
-                this.order
-            );
+            this.searchParams = AppStatus.PackSearchParams(this.page, this.pageSize, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -264,12 +261,12 @@ export default defineComponent({
         getMediaURL: function (mid: number): string {
             return (
                 window.location.protocol +
-        "//" +
-        window.location.host +
-        window.location.pathname +
-        GenerateURIQuery({
-            media: mid + "",
-        })
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                GenerateURIQuery({
+                    media: mid + "",
+                })
             );
         },
 
@@ -345,13 +342,7 @@ export default defineComponent({
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-        !AppStatus.IsPageVisible() ||
-        !this.display ||
-        !event.key ||
-        event.ctrlKey
-            ) {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
                 return false;
             }
 
@@ -389,7 +380,7 @@ export default defineComponent({
             }
 
             if (event.key === "ArrowRight") {
-                this.nextMedia()
+                this.nextMedia();
                 return true;
             }
 
@@ -397,7 +388,7 @@ export default defineComponent({
         },
 
         renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-            let parts = [item.title || this.$t('Untitled')];
+            let parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
                 let tagNames = [];
@@ -430,10 +421,7 @@ export default defineComponent({
         AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
         AppEvents.AddEventListener("media-delete", this.$options.loadH);
         AppEvents.AddEventListener("media-meta-change", this.$options.loadH);
-        AppEvents.AddEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
 
         this.$options.nextMediaH = this.nextMedia.bind(this);
         AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
@@ -458,10 +446,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
         AppEvents.RemoveEventListener("media-meta-change", this.$options.loadH);
         AppEvents.RemoveEventListener("media-delete", this.$options.loadH);
-        AppEvents.RemoveEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
         AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
         AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);

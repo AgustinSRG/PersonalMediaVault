@@ -33,40 +33,43 @@ export class AuthController {
         AuthController.Loading = true;
         AppEvents.Emit("auth-status-loading", true);
         Timeouts.Abort("auth-control-check");
-        Request.Pending("auth-control-check", AccountAPI.GetContext()).onSuccess(response => {
-            AuthController.Locked = false;
-            AuthController.IsRoot = response.root;
-            AuthController.CanWrite = response.write;
-            AuthController.Username = response.username;
-            AuthController.Title = response.title;
-            AuthController.CSS = response.css;
-            AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
-            AuthController.Loading = false;
-            AppEvents.Emit("auth-status-loading", false);
-            AuthController.UpdateCustomStyle();
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AuthController.Locked = true;
-                    AuthController.Username = "";
-                    AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
-                    AuthController.Loading = false;
-                    AppEvents.Emit("auth-status-loading", false);
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("auth-control-check", 1500, AuthController.CheckAuthStatus);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // We assume the credentials are invalid
-            AuthController.Locked = true;
-            AuthController.Username = "";
-            AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
-            AuthController.Loading = false;
-            AppEvents.Emit("auth-status-loading", false);
-        });
+        Request.Pending("auth-control-check", AccountAPI.GetContext())
+            .onSuccess((response) => {
+                AuthController.Locked = false;
+                AuthController.IsRoot = response.root;
+                AuthController.CanWrite = response.write;
+                AuthController.Username = response.username;
+                AuthController.Title = response.title;
+                AuthController.CSS = response.css;
+                AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+                AuthController.Loading = false;
+                AppEvents.Emit("auth-status-loading", false);
+                AuthController.UpdateCustomStyle();
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AuthController.Locked = true;
+                        AuthController.Username = "";
+                        AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+                        AuthController.Loading = false;
+                        AppEvents.Emit("auth-status-loading", false);
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("auth-control-check", 1500, AuthController.CheckAuthStatus);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // We assume the credentials are invalid
+                AuthController.Locked = true;
+                AuthController.Username = "";
+                AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
+                AuthController.Loading = false;
+                AppEvents.Emit("auth-status-loading", false);
+            });
     }
 
     public static UpdateUsername(username: string) {
@@ -88,15 +91,17 @@ export class AuthController {
 
     public static Logout() {
         const currentSession = AuthController.Session;
-        Request.Do(AuthAPI.Logout()).onSuccess(() => {
-            if (AuthController.Session === currentSession) {
-                AuthController.ClearSession();
-            }
-        }).onRequestError(() => {
-            if (AuthController.Session === currentSession) {
-                AuthController.ClearSession();
-            }
-        });
+        Request.Do(AuthAPI.Logout())
+            .onSuccess(() => {
+                if (AuthController.Session === currentSession) {
+                    AuthController.ClearSession();
+                }
+            })
+            .onRequestError(() => {
+                if (AuthController.Session === currentSession) {
+                    AuthController.ClearSession();
+                }
+            });
     }
 
     public static ClearSession() {
@@ -109,7 +114,7 @@ export class AuthController {
     }
 
     public static UpdateCustomStyle() {
-        const head = document.head || document.getElementsByTagName('head')[0];
+        const head = document.head || document.getElementsByTagName("head")[0];
 
         if (!head) {
             return;
@@ -123,8 +128,8 @@ export class AuthController {
 
         styleElement = document.createElement("style");
 
-        styleElement.id = 'custom-style-pmv';
-        styleElement.type = 'text/css';
+        styleElement.id = "custom-style-pmv";
+        styleElement.type = "text/css";
         styleElement.appendChild(document.createTextNode(AuthController.CSS));
 
         head.appendChild(styleElement);

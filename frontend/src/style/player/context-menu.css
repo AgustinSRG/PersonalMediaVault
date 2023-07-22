@@ -21,7 +21,9 @@
 }
 
 .player-context-menu.hidden {
-    transition: opacity 0.1s, visibility 0.1s;
+    transition:
+        opacity 0.1s,
+        visibility 0.1s;
     opacity: 0;
     pointer-events: none;
     visibility: hidden;

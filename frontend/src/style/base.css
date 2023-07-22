@@ -3,7 +3,7 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .bold {
@@ -28,5 +28,5 @@
 
 a,
 a:visited {
-  color: inherit;
+    color: inherit;
 }

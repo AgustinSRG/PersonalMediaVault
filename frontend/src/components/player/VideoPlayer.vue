@@ -1,19 +1,69 @@
 <template>
-    <div class="video-player player-settings-no-trap" :class="{
-        'player-min': min,
-        'no-controls': !showControls || !userControls,
-        'full-screen': fullscreen,
-    }" @mousemove="playerMouseMove" @click="clickPlayer" @mousedown="hideContext" @touchstart.passive="hideContext" @dblclick="toggleFullScreen" @mouseleave="mouseLeavePlayer" @mouseup="playerMouseUp" @touchmove="playerMouseMove" @touchend.passive="playerMouseUp" @contextmenu="onContextMenu">
+    <div
+        class="video-player player-settings-no-trap"
+        :class="{
+            'player-min': min,
+            'no-controls': !showControls || !userControls,
+            'full-screen': fullscreen,
+        }"
+        @mousemove="playerMouseMove"
+        @click="clickPlayer"
+        @mousedown="hideContext"
+        @touchstart.passive="hideContext"
+        @dblclick="toggleFullScreen"
+        @mouseleave="mouseLeavePlayer"
+        @mouseup="playerMouseUp"
+        @touchmove="playerMouseMove"
+        @touchend.passive="playerMouseUp"
+        @contextmenu="onContextMenu"
+    >
+        <video
+            v-if="videoURL"
+            :src="videoURL"
+            crossorigin="use-credentials"
+            :key="rTick"
+            playsinline
+            webkit-playsinline
+            x-webkit-airplay="allow"
+            :muted="muted || !!audioTrackURL"
+            :loop="loop && !sliceLoop"
+            :volume.prop="volume"
+            :playbackRate.prop="speed"
+            @ended="onEnded"
+            @timeupdate="onVideoTimeUpdate"
+            @canplay="onCanPlay"
+            @loadedmetadata="onLoadMetaData"
+            @waiting="onWaitForBuffer(true)"
+            @playing="onWaitForBuffer(false)"
+            @play="onPlay"
+            @pause="onPause"
+            @error="onMediaError"
+        ></video>
 
-        <video v-if="videoURL" :src="videoURL" crossorigin="use-credentials" :key="rTick" playsinline webkit-playsinline x-webkit-airplay="allow" :muted="muted || !!audioTrackURL" :loop="loop && !sliceLoop" :volume.prop="volume" :playbackRate.prop="speed" @ended="onEnded" @timeupdate="onVideoTimeUpdate" @canplay="onCanPlay" @loadedmetadata="onLoadMetaData" @waiting="onWaitForBuffer(true)" @playing="onWaitForBuffer(false)" @play="onPlay" @pause="onPause" @error="onMediaError"></video>
-
-        <audio v-if="audioTrackURL" :src="audioTrackURL" crossorigin="use-credentials" :key="rTick" playsinline webkit-playsinline :muted="muted || !audioTrackURL" :volume.prop="volume" :playbackRate.prop="speed" @loadedmetadata="onAudioLoadMetadata" @canplay="onAudioCanPlay"></audio>
+        <audio
+            v-if="audioTrackURL"
+            :src="audioTrackURL"
+            crossorigin="use-credentials"
+            :key="rTick"
+            playsinline
+            webkit-playsinline
+            :muted="muted || !audioTrackURL"
+            :volume.prop="volume"
+            :playbackRate.prop="speed"
+            @loadedmetadata="onAudioLoadMetadata"
+            @canplay="onAudioCanPlay"
+        ></audio>
 
         <div class="player-feedback-container">
             <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
                 <div><i class="fas fa-play"></i></div>
             </div>
-            <div class="player-feedback player-feedback-pause" key="pause" v-if="feedback === 'pause'" @animationend="onFeedBackAnimationEnd">
+            <div
+                class="player-feedback player-feedback-pause"
+                key="pause"
+                v-if="feedback === 'pause'"
+                @animationend="onFeedBackAnimationEnd"
+            >
                 <div><i class="fas fa-pause"></i></div>
             </div>
         </div>
@@ -27,42 +77,105 @@
             </div>
         </div>
 
-        <PlayerEncodingPending v-if="(!loading && !videoURL && videoPending) || mediaError" :mid="mid" :tid="videoPendingTask" :res="currentResolution" :error="mediaError"></PlayerEncodingPending>
+        <PlayerEncodingPending
+            v-if="(!loading && !videoURL && videoPending) || mediaError"
+            :mid="mid"
+            :tid="videoPendingTask"
+            :res="currentResolution"
+            :error="mediaError"
+        ></PlayerEncodingPending>
 
         <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls || !userControls }">
-            <div class="player-subtitles" v-if="subtitles" v-html="subtitles" :class="{
-                'player-subtitles-s': subtitlesSize === 's',
-                'player-subtitles-m': subtitlesSize === 'm',
-                'player-subtitles-l': subtitlesSize === 'l',
-                'player-subtitles-xl': subtitlesSize === 'xl',
-                'player-subtitles-xxl': subtitlesSize === 'xxl',
+            <div
+                class="player-subtitles"
+                v-if="subtitles"
+                v-html="subtitles"
+                :class="{
+                    'player-subtitles-s': subtitlesSize === 's',
+                    'player-subtitles-m': subtitlesSize === 'm',
+                    'player-subtitles-l': subtitlesSize === 'l',
+                    'player-subtitles-xl': subtitlesSize === 'xl',
+                    'player-subtitles-xxl': subtitlesSize === 'xxl',
 
-                'player-subtitles-bg-0': subtitlesBg === '0',
-                'player-subtitles-bg-25': subtitlesBg === '25',
-                'player-subtitles-bg-50': subtitlesBg === '50',
-                'player-subtitles-bg-75': subtitlesBg === '75',
-                'player-subtitles-bg-100': subtitlesBg === '100',
-            }"></div>
+                    'player-subtitles-bg-0': subtitlesBg === '0',
+                    'player-subtitles-bg-25': subtitlesBg === '25',
+                    'player-subtitles-bg-50': subtitlesBg === '50',
+                    'player-subtitles-bg-75': subtitlesBg === '75',
+                    'player-subtitles-bg-100': subtitlesBg === '100',
+                }"
+            ></div>
         </div>
 
-        <div class="player-controls" :class="{ hidden: !showControls || !userControls }" @click="clickControls" @dblclick="stopPropagationEvent" @mouseenter="enterControls" @mouseleave="leaveControls">
+        <div
+            class="player-controls"
+            :class="{ hidden: !showControls || !userControls }"
+            @click="clickControls"
+            @dblclick="stopPropagationEvent"
+            @mouseenter="enterControls"
+            @mouseleave="leaveControls"
+        >
             <div class="player-controls-left">
-                <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!prev && !pagePrev" type="button" :title="$t('Previous')" class="player-btn" @click="goPrev" @mouseenter="enterTooltip('prev')" @mouseleave="leaveTooltip('prev')">
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!prev && !pagePrev"
+                    type="button"
+                    :title="$t('Previous')"
+                    class="player-btn"
+                    @click="goPrev"
+                    @mouseenter="enterTooltip('prev')"
+                    @mouseleave="leaveTooltip('prev')"
+                >
                     <i class="fas fa-backward-step"></i>
                 </button>
 
-                <button v-if="!playing" type="button" :title="$t('Play')" class="player-btn player-play-btn" @click="togglePlayImmediate" @mouseenter="enterTooltip('play')" @mouseleave="leaveTooltip('play')">
+                <button
+                    v-if="!playing"
+                    type="button"
+                    :title="$t('Play')"
+                    class="player-btn player-play-btn"
+                    @click="togglePlayImmediate"
+                    @mouseenter="enterTooltip('play')"
+                    @mouseleave="leaveTooltip('play')"
+                >
                     <i class="fas fa-play"></i>
                 </button>
-                <button v-if="playing" type="button" :title="$t('Pause')" class="player-btn player-play-btn" @click="togglePlayImmediate" @mouseenter="enterTooltip('pause')" @mouseleave="leaveTooltip('pause')">
+                <button
+                    v-if="playing"
+                    type="button"
+                    :title="$t('Pause')"
+                    class="player-btn player-play-btn"
+                    @click="togglePlayImmediate"
+                    @mouseenter="enterTooltip('pause')"
+                    @mouseleave="leaveTooltip('pause')"
+                >
                     <i class="fas fa-pause"></i>
                 </button>
 
-                <button v-if="!!next || !!prev || pagePrev || pageNext" :disabled="!next && !pageNext" type="button" :title="$t('Next')" class="player-btn" @click="goNext" @mouseenter="enterTooltip('next')" @mouseleave="leaveTooltip('next')">
+                <button
+                    v-if="!!next || !!prev || pagePrev || pageNext"
+                    :disabled="!next && !pageNext"
+                    type="button"
+                    :title="$t('Next')"
+                    class="player-btn"
+                    @click="goNext"
+                    @mouseenter="enterTooltip('next')"
+                    @mouseleave="leaveTooltip('next')"
+                >
                     <i class="fas fa-forward-step"></i>
                 </button>
 
-                <VolumeControl ref="volumeControl" :min="min" :width="min ? 50 : 80" v-model:muted="muted" v-model:volume="volume" v-model:expanded="volumeShown" @update:volume="onUserVolumeUpdated" @update:muted="onUserMutedUpdated" @enter="enterTooltip('volume')" @leave="leaveTooltip('volume')"></VolumeControl>
+                <VolumeControl
+                    ref="volumeControl"
+                    :min="min"
+                    :width="min ? 50 : 80"
+                    v-model:muted="muted"
+                    v-model:volume="volume"
+                    v-model:expanded="volumeShown"
+                    @update:volume="onUserVolumeUpdated"
+                    @update:muted="onUserMutedUpdated"
+                    @enter="enterTooltip('volume')"
+                    @leave="leaveTooltip('volume')"
+                ></VolumeControl>
 
                 <div class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }" v-if="!min">
                     <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
@@ -71,18 +184,48 @@
             </div>
 
             <div class="player-controls-right">
-                <button type="button" :title="$t('Manage albums')" class="player-btn" @click="manageAlbums" @mouseenter="enterTooltip('albums')" @mouseleave="leaveTooltip('albums')">
+                <button
+                    type="button"
+                    :title="$t('Manage albums')"
+                    class="player-btn"
+                    @click="manageAlbums"
+                    @mouseenter="enterTooltip('albums')"
+                    @mouseleave="leaveTooltip('albums')"
+                >
                     <i class="fas fa-list-ol"></i>
                 </button>
 
-                <button type="button" :title="$t('Player Configuration')" class="player-btn player-settings-no-trap" @click="showConfig" @mouseenter="enterTooltip('config')" @mouseleave="leaveTooltip('config')">
+                <button
+                    type="button"
+                    :title="$t('Player Configuration')"
+                    class="player-btn player-settings-no-trap"
+                    @click="showConfig"
+                    @mouseenter="enterTooltip('config')"
+                    @mouseleave="leaveTooltip('config')"
+                >
                     <i class="fas fa-cog"></i>
                 </button>
 
-                <button v-if="!fullscreen" type="button" :title="$t('Full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen')" @mouseleave="leaveTooltip('full-screen')">
+                <button
+                    v-if="!fullscreen"
+                    type="button"
+                    :title="$t('Full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen')"
+                    @mouseleave="leaveTooltip('full-screen')"
+                >
                     <i class="fas fa-expand"></i>
                 </button>
-                <button v-if="fullscreen" type="button" :title="$t('Exit full screen')" class="player-btn player-expand-btn" @click="toggleFullScreen" @mouseenter="enterTooltip('full-screen-exit')" @mouseleave="leaveTooltip('full-screen-exit')">
+                <button
+                    v-if="fullscreen"
+                    type="button"
+                    :title="$t('Exit full screen')"
+                    class="player-btn player-expand-btn"
+                    @click="toggleFullScreen"
+                    @mouseenter="enterTooltip('full-screen-exit')"
+                    @mouseleave="leaveTooltip('full-screen-exit')"
+                >
                     <i class="fas fa-compress"></i>
                 </button>
             </div>
@@ -122,12 +265,28 @@
             {{ $t("Exit full screen") }}
         </div>
 
-        <div class="player-timeline" :class="{ hidden: !showControls || !userControls }" @mouseenter="enterControls" @mouseleave="mouseLeaveTimeline" @mousemove="mouseMoveTimeline" @dblclick="stopPropagationEvent" @click="clickTimeline" @mousedown="grabTimeline" @toutchstart.passive="grabTimeline">
+        <div
+            class="player-timeline"
+            :class="{ hidden: !showControls || !userControls }"
+            @mouseenter="enterControls"
+            @mouseleave="mouseLeaveTimeline"
+            @mousemove="mouseMoveTimeline"
+            @dblclick="stopPropagationEvent"
+            @click="clickTimeline"
+            @mousedown="grabTimeline"
+            @toutchstart.passive="grabTimeline"
+        >
             <div class="player-timeline-back"></div>
             <div class="player-timeline-buffer" :style="{ width: getTimelineBarWidth(bufferedTime, duration) }"></div>
             <div class="player-timeline-current" :style="{ width: getTimelineBarWidth(currentTime, duration) }"></div>
 
-            <div v-for="ts in timeSlices" :key="ts" class="player-timeline-split" :class="{ 'start-split': ts.start <= 0 }" :style="{ left: getTimelineBarWidth(ts.start, duration) }"></div>
+            <div
+                v-for="ts in timeSlices"
+                :key="ts"
+                class="player-timeline-split"
+                :class="{ 'start-split': ts.start <= 0 }"
+                :style="{ left: getTimelineBarWidth(ts.start, duration) }"
+            ></div>
 
             <div class="player-timeline-thumb" :style="{ left: getTimelineThumbLeft(currentTime, duration) }"></div>
         </div>
@@ -142,11 +301,54 @@
             </div>
         </div>
 
-        <VideoPlayerConfig v-model:shown="displayConfig" v-model:speed="speed" v-model:loop="loop" v-model:nextEnd="nextEnd" v-model:resolution="currentResolution" v-model:subSize="subtitlesSize" v-model:subBackground="subtitlesBg" v-model:subHTML="subtitlesHTML" @update:resolution="onResolutionUpdated" @update:subHTML="onUpdateSubHTML" @update:nextEnd="onUpdateNextEnd" :rTick="internalTick" :metadata="metadata" @enter="enterControls" @leave="leaveControls" v-model:audioTrack="audioTrack" @update:audioTrack="onUpdateAudioTrack"></VideoPlayerConfig>
+        <VideoPlayerConfig
+            v-model:shown="displayConfig"
+            v-model:speed="speed"
+            v-model:loop="loop"
+            v-model:nextEnd="nextEnd"
+            v-model:resolution="currentResolution"
+            v-model:subSize="subtitlesSize"
+            v-model:subBackground="subtitlesBg"
+            v-model:subHTML="subtitlesHTML"
+            @update:resolution="onResolutionUpdated"
+            @update:subHTML="onUpdateSubHTML"
+            @update:nextEnd="onUpdateNextEnd"
+            :rTick="internalTick"
+            :metadata="metadata"
+            @enter="enterControls"
+            @leave="leaveControls"
+            v-model:audioTrack="audioTrack"
+            @update:audioTrack="onUpdateAudioTrack"
+        ></VideoPlayerConfig>
 
-        <PlayerTopBar v-if="metadata" :mid="mid" :metadata="metadata" :shown="showControls && userControls" :fullscreen="fullscreen" v-model:expanded="expandedTitle" v-model:albumExpanded="expandedAlbum" :inAlbum="inAlbum" @click-player="clickControls"></PlayerTopBar>
+        <PlayerTopBar
+            v-if="metadata"
+            :mid="mid"
+            :metadata="metadata"
+            :shown="showControls && userControls"
+            :fullscreen="fullscreen"
+            v-model:expanded="expandedTitle"
+            v-model:albumExpanded="expandedAlbum"
+            :inAlbum="inAlbum"
+            @click-player="clickControls"
+        ></PlayerTopBar>
 
-        <PlayerContextMenu type="video" v-model:shown="contextMenuShown" :x="contextMenuX" :y="contextMenuY" v-model:loop="loop" :url="videoURL" :canWrite="canWrite" :hasExtendedDescription="hasExtendedDescription" @stats="openStats" v-model:sliceLoop="sliceLoop" :hasSlices="timeSlices && timeSlices.length > 0" v-model:controls="userControlsState" @open-tags="openTags" @open-ext-desc="openExtendedDescription"></PlayerContextMenu>
+        <PlayerContextMenu
+            type="video"
+            v-model:shown="contextMenuShown"
+            :x="contextMenuX"
+            :y="contextMenuY"
+            v-model:loop="loop"
+            :url="videoURL"
+            :canWrite="canWrite"
+            :hasExtendedDescription="hasExtendedDescription"
+            @stats="openStats"
+            v-model:sliceLoop="sliceLoop"
+            :hasSlices="timeSlices && timeSlices.length > 0"
+            v-model:controls="userControlsState"
+            @open-tags="openTags"
+            @open-ext-desc="openExtendedDescription"
+        ></PlayerContextMenu>
     </div>
 </template>
 
@@ -171,10 +373,7 @@ import { MediaController } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { htmlToText } from "@/utils/html";
 import { AppEvents } from "@/control/app-events";
-import {
-    getUniqueSubtitlesLoadTag,
-    sanitizeSubtitlesHTML,
-} from "@/utils/subtitles-html";
+import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtitles-html";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
@@ -189,16 +388,7 @@ export default defineComponent({
         PlayerEncodingPending,
     },
     name: "VideoPlayer",
-    emits: [
-        "go-next",
-        "go-prev",
-        "ended",
-        "update:fullscreen",
-        "albums-open",
-        "stats-open",
-        "tags-open",
-        "ext-desc-open",
-    ],
+    emits: ["go-next", "go-prev", "ended", "update:fullscreen", "albums-open", "stats-open", "tags-open", "ext-desc-open"],
     props: {
         mid: Number,
         metadata: Object,
@@ -362,17 +552,10 @@ export default defineComponent({
         },
 
         getThumbnailForTime: function (time: number) {
-            if (
-                this.duration <= 0 ||
-                !this.metadata ||
-                !this.metadata.video_previews ||
-                !this.metadata.video_previews_interval
-            ) {
+            if (this.duration <= 0 || !this.metadata || !this.metadata.video_previews || !this.metadata.video_previews_interval) {
                 return "";
             }
-            let thumbCount = Math.floor(
-                this.duration / this.metadata.video_previews_interval
-            );
+            let thumbCount = Math.floor(this.duration / this.metadata.video_previews_interval);
 
             if (thumbCount <= 0) {
                 return "";
@@ -383,16 +566,11 @@ export default defineComponent({
                 part = thumbCount;
             }
 
-            return GetAssetURL(
-                this.metadata.video_previews.replace("{INDEX}", "" + part)
-            );
+            return GetAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
         },
 
         onResolutionUpdated: function () {
-            PlayerPreferences.SetResolutionIndex(
-                this.metadata,
-                this.currentResolution
-            );
+            PlayerPreferences.SetResolutionIndex(this.metadata, this.currentResolution);
             this.setVideoURL();
         },
 
@@ -442,22 +620,13 @@ export default defineComponent({
                 return;
             }
 
-            if (
-                typeof audioElement.duration !== "number" ||
-                isNaN(audioElement.duration) ||
-                !isFinite(audioElement.duration)
-            ) {
+            if (typeof audioElement.duration !== "number" || isNaN(audioElement.duration) || !isFinite(audioElement.duration)) {
                 return;
             }
 
             const duration = audioElement.duration;
 
-            if (
-                typeof this.currentTime === "number" &&
-                !isNaN(this.currentTime) &&
-                isFinite(this.currentTime) &&
-                this.currentTime >= 0
-            ) {
+            if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
                 audioElement.currentTime = Math.min(this.currentTime, duration);
             }
         },
@@ -469,22 +638,13 @@ export default defineComponent({
                 return;
             }
 
-            if (
-                typeof videoElement.duration !== "number" ||
-                isNaN(videoElement.duration) ||
-                !isFinite(videoElement.duration)
-            ) {
+            if (typeof videoElement.duration !== "number" || isNaN(videoElement.duration) || !isFinite(videoElement.duration)) {
                 return;
             }
 
             this.duration = videoElement.duration;
 
-            if (
-                typeof this.currentTime === "number" &&
-                !isNaN(this.currentTime) &&
-                isFinite(this.currentTime) &&
-                this.currentTime >= 0
-            ) {
+            if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
                 videoElement.currentTime = Math.min(this.currentTime, this.duration);
                 this.updateSubtitles();
                 this.updateCurrentTimeSlice();
@@ -515,7 +675,7 @@ export default defineComponent({
                 if (audioElement) {
                     const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
 
-                    if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
+                    if (Math.abs(correspondingTime - audioElement.currentTime) > this.speed / 10) {
                         audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
                     }
 
@@ -560,7 +720,7 @@ export default defineComponent({
 
             const correspondingTime = Math.min(videoElement.currentTime, audioElement.duration);
 
-            if (Math.abs(correspondingTime - audioElement.currentTime) > (this.speed / 10)) {
+            if (Math.abs(correspondingTime - audioElement.currentTime) > this.speed / 10) {
                 audioElement.currentTime = Math.min(videoElement.currentTime, audioElement.duration);
             }
 
@@ -590,10 +750,7 @@ export default defineComponent({
         },
         onEnded: function () {
             this.loading = false;
-            if (
-                this.currentTimeSlice &&
-                this.sliceLoop
-            ) {
+            if (this.currentTimeSlice && this.sliceLoop) {
                 this.setTime(this.currentTimeSlice.start, false);
                 this.play();
                 return;
@@ -645,13 +802,7 @@ export default defineComponent({
                 this.loading = true;
             }
 
-            if (
-                this.showControls &&
-                !this.mouseInControls &&
-                this.playing &&
-                !this.expandedTitle &&
-                !this.expandedAlbum
-            ) {
+            if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
                 if (Date.now() - this.lastControlsInteraction > 2000) {
                     this.showControls = false;
                     this.volumeShown = false;
@@ -854,12 +1005,8 @@ export default defineComponent({
             }
         },
         onTimelineSkip: function (x: number) {
-            const offset = this.$el
-                .querySelector(".player-timeline-back")
-                .getBoundingClientRect().left;
-            const width =
-                this.$el.querySelector(".player-timeline-back").getBoundingClientRect()
-                    .width || 1;
+            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
+            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
             if (x < offset) {
                 this.setTime(0);
             } else {
@@ -874,12 +1021,8 @@ export default defineComponent({
         },
         mouseMoveTimeline: function (event) {
             const x = event.pageX;
-            const offset = this.$el
-                .querySelector(".player-timeline-back")
-                .getBoundingClientRect().left;
-            const width =
-                this.$el.querySelector(".player-timeline-back").getBoundingClientRect()
-                    .width || 1;
+            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
+            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
 
             let time: number;
             if (x < offset) {
@@ -937,12 +1080,7 @@ export default defineComponent({
         },
 
         onKeyPress: function (event: KeyboardEvent): boolean {
-            if (
-                AuthController.Locked ||
-                !AppStatus.IsPlayerVisible() ||
-                !event.key ||
-                event.ctrlKey
-            ) {
+            if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
                 return false;
             }
             let caught = true;
@@ -1127,22 +1265,18 @@ export default defineComponent({
                         return 0;
                     }
                 }),
-                this.metadata.duration
+                this.metadata.duration,
             );
             this.currentTimeSlice = null;
             this.currentTimeSliceName = "";
             this.currentTimeSliceStart = 0;
             this.currentTimeSliceEnd = 0;
             this.sliceLoop = false;
-            this.currentTime = this.canSaveTime
-                ? PlayerPreferences.GetInitialTime(this.mid)
-                : 0;
+            this.currentTime = this.canSaveTime ? PlayerPreferences.GetInitialTime(this.mid) : 0;
             this.duration = 0;
             this.speed = 1;
             this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
-            this.currentResolution = PlayerPreferences.GetResolutionIndex(
-                this.metadata
-            );
+            this.currentResolution = PlayerPreferences.GetResolutionIndex(this.metadata);
             this.loading = true;
             this.playing = true;
             this.setVideoURL();
@@ -1180,10 +1314,7 @@ export default defineComponent({
                     this.loading = false;
                 }
             } else {
-                if (
-                    this.metadata.resolutions &&
-                    this.metadata.resolutions.length > this.currentResolution
-                ) {
+                if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
                     let res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
                         this.videoURL = GetAssetURL(res.url);
@@ -1224,10 +1355,7 @@ export default defineComponent({
         },
 
         updateSubtitles: function () {
-            if (
-                this.currentTime >= this.subtitlesStart &&
-                this.currentTime <= this.subtitlesEnd
-            ) {
+            if (this.currentTime >= this.subtitlesStart && this.currentTime <= this.subtitlesEnd) {
                 return;
             }
             const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
@@ -1264,11 +1392,7 @@ export default defineComponent({
         },
 
         updateCurrentTimeSlice: function () {
-            if (
-                this.currentTimeSlice &&
-                this.sliceLoop &&
-                this.currentTime >= this.currentTimeSlice.end
-            ) {
+            if (this.currentTimeSlice && this.sliceLoop && this.currentTime >= this.currentTimeSlice.end) {
                 this.setTime(this.currentTimeSlice.start, false);
                 return;
             }
@@ -1311,12 +1435,7 @@ export default defineComponent({
             PlayerPreferences.SetNextOnEnd(this.nextEnd);
         },
 
-        handleMediaSessionEvent: function (event: {
-            action: string;
-            fastSeek: boolean;
-            seekTime: number;
-            seekOffset: number;
-        }) {
+        handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {
             if (!event || !event.action) {
                 return;
             }
@@ -1341,7 +1460,7 @@ export default defineComponent({
         },
 
         onMediaError: function () {
-            this.mediaError = true
+            this.mediaError = true;
             this.loading = false;
         },
     },
@@ -1360,48 +1479,21 @@ export default defineComponent({
         this.$options.timer = setInterval(this.tick.bind(this), 100);
 
         this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.addEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
 
         this.$options.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener(
-            "subtitles-update",
-            this.$options.subtitlesReloadH
-        );
+        AppEvents.AddEventListener("subtitles-update", this.$options.subtitlesReloadH);
 
         this.initializeVideo();
 
         if (window.navigator && window.navigator.mediaSession) {
-            navigator.mediaSession.setActionHandler(
-                "play",
-                this.handleMediaSessionEvent.bind(this)
-            );
-            navigator.mediaSession.setActionHandler(
-                "pause",
-                this.handleMediaSessionEvent.bind(this)
-            );
-            navigator.mediaSession.setActionHandler(
-                "nexttrack",
-                this.handleMediaSessionEvent.bind(this)
-            );
-            navigator.mediaSession.setActionHandler(
-                "previoustrack",
-                this.handleMediaSessionEvent.bind(this)
-            );
+            navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
+            navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
+            navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
+            navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
         }
     },
     beforeUnmount: function () {
@@ -1415,27 +1507,12 @@ export default defineComponent({
             this.$options.togglePlayDelayTimeout = null;
         }
 
-        document.removeEventListener(
-            "fullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "webkitfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "mozfullscreenchange",
-            this.$options.exitFullScreenListener
-        );
-        document.removeEventListener(
-            "MSFullscreenChange",
-            this.$options.exitFullScreenListener
-        );
+        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
 
-        AppEvents.RemoveEventListener(
-            "subtitles-update",
-            this.$options.subtitlesReloadH
-        );
+        AppEvents.RemoveEventListener("subtitles-update", this.$options.subtitlesReloadH);
         KeyboardManager.RemoveHandler(this.$options.keyHandler);
 
         if (window.navigator && window.navigator.mediaSession) {

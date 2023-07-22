@@ -1,56 +1,50 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <div v-if="display" class="modal-dialog modal-lg" role="document">
-      <div class="modal-header">
-        <div class="modal-title about-modal-title">
-          <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />
-          {{ $t("Personal Media Vault") }}
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <div v-if="display" class="modal-dialog modal-lg" role="document">
+            <div class="modal-header">
+                <div class="modal-title about-modal-title">
+                    <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />
+                    {{ $t("Personal Media Vault") }}
+                </div>
+                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body no-padding table-responsive">
+                <table class="table table-text-overflow">
+                    <tr>
+                        <td>{{ $t("Version") }}</td>
+                        <td>{{ version }}</td>
+                    </tr>
+                    <tr>
+                        <td>{{ $t("Version date") }}</td>
+                        <td>{{ versionDate }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>{{ $t("Home page") }}</td>
+                        <td>
+                            <a :href="homePage" target="_blank" rel="noopener noreferrer">{{ homePage }}</a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>{{ $t("Git repository") }}</td>
+                        <td>
+                            <a :href="gitRepo" target="_blank" rel="noopener noreferrer">{{ gitRepo }}</a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>{{ $t("License") }}</td>
+                        <td>
+                            <a :href="license" target="_blank" rel="noopener noreferrer">{{ license }}</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body no-padding table-responsive">
-        <table class="table table-text-overflow">
-          <tr>
-            <td>{{ $t("Version") }}</td>
-            <td>{{ version }}</td>
-          </tr>
-          <tr>
-            <td>{{ $t("Version date") }}</td>
-            <td>{{ versionDate }}</td>
-          </tr>
-
-          <tr>
-            <td>{{ $t("Home page") }}</td>
-            <td>
-              <a :href="homePage" target="_blank" rel="noopener noreferrer">{{
-                homePage
-              }}</a>
-            </td>
-          </tr>
-
-          <tr>
-            <td>{{ $t("Git repository") }}</td>
-            <td>
-              <a :href="gitRepo" target="_blank" rel="noopener noreferrer">{{
-                gitRepo
-              }}</a>
-            </td>
-          </tr>
-
-          <tr>
-            <td>{{ $t("License") }}</td>
-            <td>
-              <a :href="license" target="_blank" rel="noopener noreferrer">{{
-                license
-              }}</a>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

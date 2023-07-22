@@ -34,35 +34,38 @@ export class TagsController {
 
         AppEvents.Emit("tags-loading", true);
         Timeouts.Abort("tags-load");
-        Request.Pending("tags-load", TagsAPI.GetTags()).onSuccess(tags => {
-            TagsController.Tags = Object.create(null);
+        Request.Pending("tags-load", TagsAPI.GetTags())
+            .onSuccess((tags) => {
+                TagsController.Tags = Object.create(null);
 
-            for (const tag of tags) {
-                if (tag.id > TagsController.LastTagId) {
-                    TagsController.LastTagId = tag.id;
+                for (const tag of tags) {
+                    if (tag.id > TagsController.LastTagId) {
+                        TagsController.LastTagId = tag.id;
+                    }
+                    TagsController.Tags[tag.id + ""] = tag;
                 }
-                TagsController.Tags[tag.id + ""] = tag;
-            }
 
-            AppEvents.Emit("tags-update", TagsController.Tags);
-            TagsController.Loading = false;
-            AppEvents.Emit("tags-loading", false);
-            TagsController.InitiallyLoaded = true;
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("tags-load", 1500, TagsController.Load);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("tags-load", 1500, TagsController.Load);
-        });
+                AppEvents.Emit("tags-update", TagsController.Tags);
+                TagsController.Loading = false;
+                AppEvents.Emit("tags-loading", false);
+                TagsController.InitiallyLoaded = true;
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("tags-load", 1500, TagsController.Load);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("tags-load", 1500, TagsController.Load);
+            });
     }
 
     public static FindTag(name: string): number {

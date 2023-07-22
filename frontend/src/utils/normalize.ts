@@ -17,7 +17,9 @@ export function normalizeString(str: string): string {
  * @returns The words
  */
 export function filterToWords(filter: string): string[] {
-    return normalizeString(filter).split(" ").filter(w => !!w);
+    return normalizeString(filter)
+        .split(" ")
+        .filter((w) => !!w);
 }
 
 /**

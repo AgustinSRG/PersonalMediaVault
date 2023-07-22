@@ -1,75 +1,74 @@
 <template>
-  <div class="player-pending-checker">
-    <div v-if="error" class="player-task-info">
-      <div class="player-task-info-row">
-        <span>{{ $t("Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.") }}</span>
-      </div>
-      <div class="player-task-info-row">
-        <button type="button" class="btn btn-primary" @click="refreshMedia">
-          <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-        </button>
-      </div>
-    </div>
-    <div v-else-if="status === 'loading'" class="player-lds-ring">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <div v-else-if="status === 'not-ready'" class="player-task-info">
-      <div class="player-task-info-row">
-        <span>{{
-          $t(
-            "It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted."
-          )
-        }}</span>
-      </div>
-      <div class="player-task-info-row">
-        <button type="button" class="btn btn-primary" @click="refreshMedia">
-          <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-        </button>
-      </div>
-    </div>
-    <div v-else-if="status === 'task' && stageNumber < 0" class="player-task-info">
-      <div class="player-task-info-row">
-        <span>{{
-          $t(
-            "The media is still pending to be encoded. The task will start as soon as possible."
-          )
-        }}</span>
-      </div>
-      <div class="player-task-info-row">
-        <button type="button" class="btn btn-primary" @click="refreshMedia">
-          <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
-        </button>
-      </div>
-    </div>
-    <div v-else-if="status === 'task' && stageNumber >= 0" class="player-task-info">
-      <div class="player-task-info-row">
-        <span>{{ $t("The media is being encoded.") }}</span>
-      </div>
-      <div class="player-task-info-row">
-        <span>{{ $t("Stage") }} ({{ stageNumber + 1 }} / 7):&nbsp;</span>
-
-        <span v-if="stage === 'PREPARE'">{{ $t("Preparing task environment") }}...</span>
-        <span v-if="stage === 'COPY'">{{ $t("Copying assets to be encoded") }}...</span>
-        <span v-if="stage === 'PROBE'">{{ $t("Extracting metadata") }}...</span>
-        <span v-if="stage === 'ENCODE'">{{ $t("Encoding media assets") }}...</span>
-        <span v-if="stage === 'ENCRYPT'">{{ $t("Encrypting and storing in the vault") }}...</span>
-        <span v-if="stage === 'UPDATE'">{{ $t("Updating metadata") }}...</span>
-        <span v-if="stage === 'FINISH'">{{ $t("Cleaning up") }}...</span>
-      </div>
-
-      <div class="player-task-info-row" v-if="progress > 0">
-        <span>{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}: {{ renderTime(estimatedRemainingTime) }}</span>
-      </div>
-      <div class="player-task-info-row" v-if="progress > 0">
-        <div class="player-task-progress-bar">
-          <div class="player-task-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
+    <div class="player-pending-checker">
+        <div v-if="error" class="player-task-info">
+            <div class="player-task-info-row">
+                <span>{{
+                    $t("Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.")
+                }}</span>
+            </div>
+            <div class="player-task-info-row">
+                <button type="button" class="btn btn-primary" @click="refreshMedia">
+                    <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+                </button>
+            </div>
         </div>
-      </div>
+        <div v-else-if="status === 'loading'" class="player-lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div v-else-if="status === 'not-ready'" class="player-task-info">
+            <div class="player-task-info-row">
+                <span>{{
+                    $t("It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted.")
+                }}</span>
+            </div>
+            <div class="player-task-info-row">
+                <button type="button" class="btn btn-primary" @click="refreshMedia">
+                    <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+                </button>
+            </div>
+        </div>
+        <div v-else-if="status === 'task' && stageNumber < 0" class="player-task-info">
+            <div class="player-task-info-row">
+                <span>{{ $t("The media is still pending to be encoded. The task will start as soon as possible.") }}</span>
+            </div>
+            <div class="player-task-info-row">
+                <button type="button" class="btn btn-primary" @click="refreshMedia">
+                    <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
+                </button>
+            </div>
+        </div>
+        <div v-else-if="status === 'task' && stageNumber >= 0" class="player-task-info">
+            <div class="player-task-info-row">
+                <span>{{ $t("The media is being encoded.") }}</span>
+            </div>
+            <div class="player-task-info-row">
+                <span>{{ $t("Stage") }} ({{ stageNumber + 1 }} / 7):&nbsp;</span>
+
+                <span v-if="stage === 'PREPARE'">{{ $t("Preparing task environment") }}...</span>
+                <span v-if="stage === 'COPY'">{{ $t("Copying assets to be encoded") }}...</span>
+                <span v-if="stage === 'PROBE'">{{ $t("Extracting metadata") }}...</span>
+                <span v-if="stage === 'ENCODE'">{{ $t("Encoding media assets") }}...</span>
+                <span v-if="stage === 'ENCRYPT'">{{ $t("Encrypting and storing in the vault") }}...</span>
+                <span v-if="stage === 'UPDATE'">{{ $t("Updating metadata") }}...</span>
+                <span v-if="stage === 'FINISH'">{{ $t("Cleaning up") }}...</span>
+            </div>
+
+            <div class="player-task-info-row" v-if="progress > 0">
+                <span
+                    >{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}:
+                    {{ renderTime(estimatedRemainingTime) }}</span
+                >
+            </div>
+            <div class="player-task-info-row" v-if="progress > 0">
+                <div class="player-task-progress-bar">
+                    <div class="player-task-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -143,10 +142,7 @@ export default defineComponent({
                         this.stage = task.stage;
 
                         this.estimatedRemainingTime =
-              (((task.time_now - task.stage_start) / task.stage_progress) *
-                100 -
-                (task.time_now - task.stage_start)) /
-              1000;
+                            (((task.time_now - task.stage_start) / task.stage_progress) * 100 - (task.time_now - task.stage_start)) / 1000;
 
                         switch (this.stage) {
                         case "PREPARE":
@@ -213,10 +209,7 @@ export default defineComponent({
             Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
                 .onSuccess((media: MediaData) => {
                     if (this.res >= 0) {
-                        if (
-                            media.resolutions[this.res] &&
-              media.resolutions[this.res].ready
-                        ) {
+                        if (media.resolutions[this.res] && media.resolutions[this.res].ready) {
                             this.refreshMedia();
                         } else {
                             this.status = "not-ready";
@@ -239,11 +232,7 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(
-                                this.pendingId,
-                                1500,
-                                this.checkMediaStatus.bind(this)
-                            );
+                            Timeouts.Set(this.pendingId, 1500, this.checkMediaStatus.bind(this));
                         })
                         .handle(err);
                 })

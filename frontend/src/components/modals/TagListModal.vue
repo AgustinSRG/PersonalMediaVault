@@ -1,45 +1,66 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy" @close="onClose">
-    <div v-if="display" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ $t("Tags") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy" @close="onClose">
+        <div v-if="display" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ $t("Tags") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-      <div class="modal-body">
-        <div class="form-group media-tags">
-          <label v-if="tags.length === 0">{{
-            $t("There are no tags yet for this media.")
-          }}</label>
-          <div v-for="tag in tags" :key="tag" class="media-tag">
-            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-            <button v-if="canWrite" type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="busy" @click="removeTag(tag)">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-        <div v-if="canWrite">
-          <div class="form-group">
-            <label>{{ $t("Tag to add") }}:</label>
-            <input type="text" autocomplete="off" maxlength="255" v-model="tagToAdd" :disabled="busy" @input="onTagAddChanged" @keydown="onTagAddKeyDown" class="form-control tag-to-add auto-focus" />
-          </div>
-          <div class="form-group" v-if="matchingTags.length > 0">
-            <button v-for="mt in matchingTags" :key="mt.id" type="button" class="btn btn-primary btn-sm btn-tag-mini" :disabled="busy" @click="addMatchingTag(mt.name)">
-              <i class="fas fa-plus"></i> {{ mt.name }}
-            </button>
-          </div>
-        </div>
-      </div>
+            <div class="modal-body">
+                <div class="form-group media-tags">
+                    <label v-if="tags.length === 0">{{ $t("There are no tags yet for this media.") }}</label>
+                    <div v-for="tag in tags" :key="tag" class="media-tag">
+                        <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                        <button
+                            v-if="canWrite"
+                            type="button"
+                            :title="$t('Remove tag')"
+                            class="media-tag-btn"
+                            :disabled="busy"
+                            @click="removeTag(tag)"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div v-if="canWrite">
+                    <div class="form-group">
+                        <label>{{ $t("Tag to add") }}:</label>
+                        <input
+                            type="text"
+                            autocomplete="off"
+                            maxlength="255"
+                            v-model="tagToAdd"
+                            :disabled="busy"
+                            @input="onTagAddChanged"
+                            @keydown="onTagAddKeyDown"
+                            class="form-control tag-to-add auto-focus"
+                        />
+                    </div>
+                    <div class="form-group" v-if="matchingTags.length > 0">
+                        <button
+                            v-for="mt in matchingTags"
+                            :key="mt.id"
+                            type="button"
+                            class="btn btn-primary btn-sm btn-tag-mini"
+                            :disabled="busy"
+                            @click="addMatchingTag(mt.name)"
+                        >
+                            <i class="fas fa-plus"></i> {{ mt.name }}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-      <div class="modal-footer no-padding">
-        <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
-          <i class="fas fa-check"></i> {{ $t("Done") }}
-        </button>
-      </div>
-    </div>
-  </ModalDialogContainer>
+            <div class="modal-footer no-padding">
+                <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
+                    <i class="fas fa-check"></i> {{ $t("Done") }}
+                </button>
+            </div>
+        </div>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -55,8 +76,7 @@ import { TagsAPI } from "@/api/api-tags";
 import { clone } from "@/utils/objects";
 
 export default defineComponent({
-    components: {
-    },
+    components: {},
     name: "TagListModal",
     emits: ["update:display"],
     props: {
@@ -182,10 +202,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -251,10 +268,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -308,10 +322,7 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit(
-                                "snack",
-                                this.$t("Could not connect to the server")
-                            );
+                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
@@ -350,7 +361,7 @@ export default defineComponent({
                         if (this.tags.indexOf(a.id) >= 0) {
                             return false;
                         }
-                        return true
+                        return true;
                     })
                     .sort((a, b) => {
                         if (a.name < b.name) {
@@ -410,17 +421,11 @@ export default defineComponent({
 
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         this.$options.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
 
         this.updateTagData();
         this.load();
@@ -432,14 +437,8 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
     },
     watch: {
         display: function () {

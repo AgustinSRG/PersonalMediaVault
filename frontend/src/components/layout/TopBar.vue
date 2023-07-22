@@ -1,46 +1,64 @@
 <template>
-  <div class="top-bar" tabindex="-1">
-    <div class="top-bar-logo-td">
-      <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
-        <i class="fas fa-bars"></i>
-      </button>
-      <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
-      <span :title="getAppTitle()" class="top-bar-title">PMV</span>
-    </div>
-    <div class="top-bar-search-td">
-      <div class="top-bar-center-div">
-        <form class="top-bar-search-input-container" :class="{ focused: searchFocus }" @submit="submitSearch" tabindex="-1">
-          <input type="text" class="top-bar-search-input" name="pmv-search-input" spellcheck="false" autocorrect="off" autocomplete="off" autocapitalize="none" :placeholder="$t('Search')" v-model="search" @keydown="onKeyDown" @input="onSearchInput" @focus="focusSearch" />
-          <button type="submit" class="top-bar-button top-bar-search-button" :title="$t('Search')" @focus="blurSearch">
-            <i class="fas fa-search"></i>
-          </button>
-          <div class="top-bar-search-suggestions" :class="{ hidden: suggestions.length === 0 }">
-            <div v-for="s in suggestions" :key="s.key" class="top-bar-search-suggestion" @click="clickSearch(s)">
-              <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
-              <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
-              <span>{{ s.name }}</span>
+    <div class="top-bar" tabindex="-1">
+        <div class="top-bar-logo-td">
+            <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
+            <span :title="getAppTitle()" class="top-bar-title">PMV</span>
+        </div>
+        <div class="top-bar-search-td">
+            <div class="top-bar-center-div">
+                <form class="top-bar-search-input-container" :class="{ focused: searchFocus }" @submit="submitSearch" tabindex="-1">
+                    <input
+                        type="text"
+                        class="top-bar-search-input"
+                        name="pmv-search-input"
+                        spellcheck="false"
+                        autocorrect="off"
+                        autocomplete="off"
+                        autocapitalize="none"
+                        :placeholder="$t('Search')"
+                        v-model="search"
+                        @keydown="onKeyDown"
+                        @input="onSearchInput"
+                        @focus="focusSearch"
+                    />
+                    <button type="submit" class="top-bar-button top-bar-search-button" :title="$t('Search')" @focus="blurSearch">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div class="top-bar-search-suggestions" :class="{ hidden: suggestions.length === 0 }">
+                        <div v-for="s in suggestions" :key="s.key" class="top-bar-search-suggestion" @click="clickSearch(s)">
+                            <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
+                            <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
+                            <span>{{ s.name }}</span>
+                        </div>
+                    </div>
+                </form>
             </div>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="top-bar-user-td">
-      <button type="button" class="top-bar-button top-bar-button-dropdown top-bar-button-large-version" :title="$t('Help')" @click="help">
-        <i class="fas fa-question"></i>
-      </button>
+        </div>
+        <div class="top-bar-user-td">
+            <button
+                type="button"
+                class="top-bar-button top-bar-button-dropdown top-bar-button-large-version"
+                :title="$t('Help')"
+                @click="help"
+            >
+                <i class="fas fa-question"></i>
+            </button>
 
-      <button type="button" class="top-bar-button top-bar-button-small-version" :title="$t('Search')" @click="openSearch">
-        <i class="fas fa-search"></i>
-      </button>
+            <button type="button" class="top-bar-button top-bar-button-small-version" :title="$t('Search')" @click="openSearch">
+                <i class="fas fa-search"></i>
+            </button>
 
-      <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Settings')" @click="settings">
-        <i class="fas fa-cog"></i>
-      </button>
-      <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
+            <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Settings')" @click="settings">
+                <i class="fas fa-cog"></i>
+            </button>
+            <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -178,11 +196,13 @@ export default defineComponent({
         },
 
         updateSuggestions: function () {
-            const tagFilter = normalizeString(this.search
-                .replace(/[\n\r]/g, " ")
-                .trim()
-                .replace(/[\s]/g, "_")
-                .toLowerCase());
+            const tagFilter = normalizeString(
+                this.search
+                    .replace(/[\n\r]/g, " ")
+                    .trim()
+                    .replace(/[\s]/g, "_")
+                    .toLowerCase(),
+            );
             const albumFilter = normalizeString(this.search).trim().toLowerCase();
             const albumFilterWords = filterToWords(albumFilter);
             this.suggestions = Object.values(TagsController.Tags)
@@ -210,7 +230,7 @@ export default defineComponent({
                             contains: i >= 0,
                             type: "album",
                         };
-                    })
+                    }),
                 )
                 .filter((a) => {
                     return a.starts || a.contains;
@@ -240,10 +260,7 @@ export default defineComponent({
 
         onKeyDown: function (event) {
             if (event.key === "Tab" && this.search && !event.shiftKey) {
-                if (
-                    this.suggestions.length > 0 &&
-          this.search !== this.suggestions[0].name
-                ) {
+                if (this.suggestions.length > 0 && this.search !== this.suggestions[0].name) {
                     this.search = this.suggestions[0].name;
                     this.onSearchInput();
                     event.preventDefault();
@@ -287,36 +304,21 @@ export default defineComponent({
     mounted: function () {
         this.$options.statusChangeH = this.onSearchChanged.bind(this);
 
-        AppEvents.AddEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
 
         this.$options.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
-        AppEvents.AddEventListener(
-            "search-modal-submit",
-            this.$options.onSearchModalSubmitH
-        );
+        AppEvents.AddEventListener("search-modal-submit", this.$options.onSearchModalSubmitH);
 
         this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
 
-        this.$options.focusTrap = new FocusTrap(
-            this.$el.querySelector(".top-bar-search-input-container"),
-            this.blurSearch.bind(this)
-        );
+        this.$options.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "app-status-update",
-            this.$options.statusChangeH
-        );
+        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
 
-        AppEvents.RemoveEventListener(
-            "search-modal-submit",
-            this.$options.onSearchModalSubmitH
-        );
+        AppEvents.RemoveEventListener("search-modal-submit", this.$options.onSearchModalSubmitH);
 
         if (this.$options.findTagTimeout) {
             clearTimeout(this.$options.findTagTimeout);

@@ -1,35 +1,42 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">
-          {{ $t("Delete album") }}
-        </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{
-            $t(
-              "Remember. If you delete the album by accident you would have to recreate it. Make sure you actually want to delete it."
-            )
-          }}</label>
-        </div>
-        <div class="form-group">
-          <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
-          <input type="text" name="confirmation" autocomplete="off" v-model="confirmation" :disabled="busy" maxlength="255" class="form-control form-control-full-width auto-focus" />
-        </div>
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button :disabled="busy" type="submit" class="modal-footer-btn">
-          <i class="fas fa-trash-alt"></i> {{ $t("Delete album") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    {{ $t("Delete album") }}
+                </div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>
+                        {{ $t("Remember. If you delete the album by accident you would have to recreate it.") }}
+                        {{ $t("Make sure you actually want to delete it.") }}
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
+                    <input
+                        type="text"
+                        name="confirmation"
+                        autocomplete="off"
+                        v-model="confirmation"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width auto-focus"
+                    />
+                </div>
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button :disabled="busy" type="submit" class="modal-footer-btn">
+                    <i class="fas fa-trash-alt"></i> {{ $t("Delete album") }}
+                </button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -94,9 +101,7 @@ export default defineComponent({
             }
 
             if (this.confirmation.toLowerCase() !== "confirm") {
-                this.error = this.$t(
-                    "You must type 'confirm' in order to confirm the deletion of the album"
-                );
+                this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the album");
                 return;
             }
 
@@ -107,10 +112,7 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.DeleteAlbum(albumId))
                 .onSuccess(() => {
-                    AppEvents.Emit(
-                        "snack",
-                        this.$t("Album deleted") + ": " + this.oldName
-                    );
+                    AppEvents.Emit("snack", this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.close();
@@ -149,10 +151,7 @@ export default defineComponent({
     },
     mounted: function () {
         this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(
-            "current-album-update",
-            this.$options.albumUpdateH
-        );
+        AppEvents.AddEventListener("current-album-update", this.$options.albumUpdateH);
 
         this.onAlbumUpdate();
         if (this.display) {
@@ -162,10 +161,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "current-album-update",
-            this.$options.albumUpdateH
-        );
+        AppEvents.RemoveEventListener("current-album-update", this.$options.albumUpdateH);
     },
     watch: {
         display: function () {

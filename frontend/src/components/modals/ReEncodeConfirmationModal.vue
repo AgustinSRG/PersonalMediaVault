@@ -1,26 +1,24 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title">
-          {{ $t("Re-Encode") }}
-        </div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("Do you want to re-encode the media?") }}</label>
-        </div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button type="submit" class="modal-footer-btn auto-focus">
-          <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
-        </button>
-      </div>
-    </form>
-  </ModalDialogContainer>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    {{ $t("Re-Encode") }}
+                </div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{ $t("Do you want to re-encode the media?") }}</label>
+                </div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button type="submit" class="modal-footer-btn auto-focus"><i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}</button>
+            </div>
+        </form>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

@@ -1,27 +1,37 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
-      <div class="modal-header">
-        <div class="modal-title" v-if="!isUpload">
-          {{ $t("Search media to add to the album") }}
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true">
+        <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
+            <div class="modal-header">
+                <div class="modal-title" v-if="!isUpload">
+                    {{ $t("Search media to add to the album") }}
+                </div>
+                <div class="modal-title" v-if="isUpload">
+                    {{ $t("Upload media to add to the album") }}
+                </div>
+                <button class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body no-padding">
+                <div class="modal-top-menu items-2">
+                    <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"
+                        ><i class="fas fa-search"></i> {{ $t("Search") }}</a
+                    >
+                    <a href="javascript:;" @click="changeToUpload" class="modal-top-menu-item" :class="{ selected: isUpload }"
+                        ><i class="fas fa-upload"></i> {{ $t("Upload") }}</a
+                    >
+                </div>
+                <PageAdvancedSearch
+                    v-if="!isUpload"
+                    :display="true"
+                    :inModal="true"
+                    :noAlbum="aid"
+                    @select-media="selectMedia"
+                ></PageAdvancedSearch>
+                <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
+            </div>
         </div>
-        <div class="modal-title" v-if="isUpload">
-          {{ $t("Upload media to add to the album") }}
-        </div>
-        <button class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body no-padding">
-        <div class="modal-top-menu items-2">
-          <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"><i class="fas fa-search"></i> {{ $t("Search") }}</a>
-          <a href="javascript:;" @click="changeToUpload" class="modal-top-menu-item" :class="{ selected: isUpload }"><i class="fas fa-upload"></i> {{ $t("Upload") }}</a>
-        </div>
-        <PageAdvancedSearch v-if="!isUpload" :display="true" :inModal="true" :noAlbum="aid" @select-media="selectMedia"></PageAdvancedSearch>
-        <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">

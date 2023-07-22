@@ -1,24 +1,24 @@
 <template>
-  <div class="player-media-change-preview">
-    <div class="player-media-change-preview-thumbnail">
-      <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="title" loading="lazy" />
-      <div v-if="!thumbnail" class="player-media-change-preview-no-thumbnail">
-        <i v-if="type === 0" class="fas fa-ban"></i>
-        <i v-if="type === 1" class="fas fa-image"></i>
-        <i v-if="type === 2" class="fas fa-video"></i>
-        <i v-if="type === 3" class="fas fa-headphones"></i>
-      </div>
-      <div class="preview-thumb-tag" v-if="type === 2 || type === 3">
-        {{ renderDuration(duration) }}
-      </div>
+    <div class="player-media-change-preview">
+        <div class="player-media-change-preview-thumbnail">
+            <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="title" loading="lazy" />
+            <div v-if="!thumbnail" class="player-media-change-preview-no-thumbnail">
+                <i v-if="type === 0" class="fas fa-ban"></i>
+                <i v-if="type === 1" class="fas fa-image"></i>
+                <i v-if="type === 2" class="fas fa-video"></i>
+                <i v-if="type === 3" class="fas fa-headphones"></i>
+            </div>
+            <div class="preview-thumb-tag" v-if="type === 2 || type === 3">
+                {{ renderDuration(duration) }}
+            </div>
+        </div>
+        <div class="player-media-change-preview-details">
+            <div class="player-media-change-preview-title">
+                {{ next ? $t("Next") : $t("Previous") }}:<br />
+                {{ title || $t("Untitled") }}
+            </div>
+        </div>
     </div>
-    <div class="player-media-change-preview-details">
-      <div class="player-media-change-preview-title">
-        {{ next ? $t("Next") : $t("Previous") }}:<br />
-        {{ title || $t("Untitled") }}
-      </div>
-    </div>
-  </div>
 </template>
 
 <script lang="ts">

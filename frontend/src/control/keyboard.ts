@@ -3,14 +3,14 @@
 type KeyboardEventHandler = (event: KeyboardEvent) => boolean;
 
 export class KeyboardManager {
-    public static handlers: { priority: number, fn: KeyboardEventHandler }[] = [];
+    public static handlers: { priority: number; fn: KeyboardEventHandler }[] = [];
 
     public static Initialize() {
         document.addEventListener("keydown", KeyboardManager.Handle);
     }
 
     public static Handle(event: KeyboardEvent) {
-        if (!event.ctrlKey && event.target && ['input', 'select'].includes(((<Node>event.target).nodeName + "").toLowerCase())) {
+        if (!event.ctrlKey && event.target && ["input", "select"].includes(((<Node>event.target).nodeName + "").toLowerCase())) {
             return;
         }
         for (const handler of KeyboardManager.handlers) {
@@ -24,7 +24,7 @@ export class KeyboardManager {
     private static Sort() {
         KeyboardManager.handlers = KeyboardManager.handlers.sort((a, b) => {
             if (a.priority > b.priority) {
-                return -1
+                return -1;
             } else if (a.priority < b.priority) {
                 return 1;
             } else {

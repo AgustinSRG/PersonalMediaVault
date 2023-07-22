@@ -160,7 +160,9 @@
     width: calc(100% + 0.1rem);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.1s, visibility 0.1s;
+    transition:
+        opacity 0.1s,
+        visibility 0.1s;
 
     display: flex;
     flex-direction: column;

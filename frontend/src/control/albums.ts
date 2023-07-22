@@ -58,32 +58,35 @@ export class AlbumsController {
         }
 
         Timeouts.Abort("albums-load");
-        Request.Pending("albums-load", AlbumsAPI.GetAlbumsMin()).onSuccess(albums => {
-            AlbumsController.Albums = Object.create(null);
+        Request.Pending("albums-load", AlbumsAPI.GetAlbumsMin())
+            .onSuccess((albums) => {
+                AlbumsController.Albums = Object.create(null);
 
-            for (const album of albums) {
-                AlbumsController.Albums[album.id + ""] = album;
-            }
+                for (const album of albums) {
+                    AlbumsController.Albums[album.id + ""] = album;
+                }
 
-            AppEvents.Emit("albums-update", AlbumsController.Albums);
-            AlbumsController.Loading = false;
-            AppEvents.Emit("albums-loading", false);
-            AlbumsController.InitiallyLoaded = true;
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("albums-load", 1500, AlbumsController.Load);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("albums-load", 1500, AlbumsController.Load);
-        });
+                AppEvents.Emit("albums-update", AlbumsController.Albums);
+                AlbumsController.Loading = false;
+                AppEvents.Emit("albums-loading", false);
+                AlbumsController.InitiallyLoaded = true;
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("albums-load", 1500, AlbumsController.Load);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("albums-load", 1500, AlbumsController.Load);
+            });
     }
 
     public static CurrentAlbum = -1;
@@ -122,42 +125,45 @@ export class AlbumsController {
         }
 
         Timeouts.Abort("album-current-load");
-        Request.Pending("album-current-load", AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum)).onSuccess(album => {
-            AlbumsController.CurrentAlbumData = album;
-            AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+        Request.Pending("album-current-load", AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum))
+            .onSuccess((album) => {
+                AlbumsController.CurrentAlbumData = album;
+                AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
 
-            AlbumsController.CurrentAlbumLoading = false;
-            AppEvents.Emit("current-album-loading", false);
+                AlbumsController.CurrentAlbumLoading = false;
+                AppEvents.Emit("current-album-loading", false);
 
-            AlbumsController.UpdateAlbumCurrentPos();
-            AppStatus.UpdateURL();
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add(404, "*", () => {
-                    AlbumsController.CurrentAlbumData = null;
-                    AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+                AlbumsController.UpdateAlbumCurrentPos();
+                AppStatus.UpdateURL();
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add(404, "*", () => {
+                        AlbumsController.CurrentAlbumData = null;
+                        AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
 
-                    AlbumsController.CurrentAlbumLoading = false;
-                    AppEvents.Emit("current-album-loading", false);
+                        AlbumsController.CurrentAlbumLoading = false;
+                        AppEvents.Emit("current-album-loading", false);
 
-                    AppStatus.CloseAlbum();
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
-        });
+                        AppStatus.CloseAlbum();
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
+            });
     }
 
-    public static GetAlbumsListCopy(): { id: number, name: string, nameLowerCase: string }[] {
+    public static GetAlbumsListCopy(): { id: number; name: string; nameLowerCase: string }[] {
         const result = [];
 
         for (const album of Object.values(AlbumsController.Albums)) {
@@ -165,7 +171,7 @@ export class AlbumsController {
                 id: album.id,
                 name: album.name,
                 nameLowerCase: album.name.toLowerCase(),
-            })
+            });
         }
 
         return result;
@@ -197,11 +203,7 @@ export class AlbumsController {
         if (!AlbumsController.CurrentAlbumData) {
             return;
         }
-        AlbumsController.CurrentAlbumData.list.splice(
-            newIndex,
-            0,
-            AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]
-        );
+        AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
 
         AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
 
@@ -209,7 +211,7 @@ export class AlbumsController {
 
         // Update in server
         const albumId = AlbumsController.CurrentAlbumData.id;
-        const albumList = AlbumsController.CurrentAlbumData.list.map(a => {
+        const albumList = AlbumsController.CurrentAlbumData.list.map((a) => {
             return a.id;
         });
         Request.Do(AlbumsAPI.SetAlbumOrder(albumId, albumList))
@@ -259,7 +261,7 @@ export class AlbumsController {
         }
 
         if (mediaId < 0 && AlbumsController.CurrentAlbumData.list.length > 0) {
-            const albumList = AlbumsController.CurrentAlbumData.list.map(a => {
+            const albumList = AlbumsController.CurrentAlbumData.list.map((a) => {
                 return a.id;
             });
             AppStatus.ClickOnAlbumWithList(AlbumsController.CurrentAlbumData.id, albumList);
@@ -279,7 +281,7 @@ export class AlbumsController {
 
         if (mediaPos >= 0) {
             if (AlbumsController.AlbumRandom) {
-                const shuffled = shuffleArray(AlbumsController.CurrentAlbumData.list).filter(a => {
+                const shuffled = shuffleArray(AlbumsController.CurrentAlbumData.list).filter((a) => {
                     return a.id !== mediaId;
                 });
 
@@ -297,7 +299,8 @@ export class AlbumsController {
 
                 if (AlbumsController.AlbumLoop) {
                     if (AlbumsController.CurrentPrev === null) {
-                        AlbumsController.CurrentPrev = AlbumsController.CurrentAlbumData.list[AlbumsController.CurrentAlbumData.list.length - 1] || null;
+                        AlbumsController.CurrentPrev =
+                            AlbumsController.CurrentAlbumData.list[AlbumsController.CurrentAlbumData.list.length - 1] || null;
                     }
 
                     if (AlbumsController.CurrentNext === null) {
@@ -343,32 +346,35 @@ export class AlbumsController {
         const mediaId = AlbumsController.CurrentNext.id;
 
         Timeouts.Abort("album-next-prefetch-load");
-        Request.Pending("album-next-prefetch-load", MediaAPI.GetMedia(mediaId)).onSuccess(media => {
-            AlbumsController.NextMediaData = media;
-            AlbumsController.LoadingNext = false;
-            AlbumsController.AvailableNextPrefetch = true;
-            AppEvents.Emit("album-next-prefetch", mediaId);
-        }).onRequestError(err => {
-            Request.ErrorHandler()
-                .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized", false);
-                })
-                .add(404, "*", () => {
-                    AlbumsController.NextMediaData = null;
-                    AlbumsController.LoadingNext = false;
-                    AlbumsController.AvailableNextPrefetch = true;
-                    AppEvents.Emit("album-next-prefetch", mediaId);
-                })
-                .add("*", "*", () => {
-                    // Retry
-                    Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
-                })
-                .handle(err);
-        }).onUnexpectedError(err => {
-            console.error(err);
-            // Retry
-            Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
-        });
+        Request.Pending("album-next-prefetch-load", MediaAPI.GetMedia(mediaId))
+            .onSuccess((media) => {
+                AlbumsController.NextMediaData = media;
+                AlbumsController.LoadingNext = false;
+                AlbumsController.AvailableNextPrefetch = true;
+                AppEvents.Emit("album-next-prefetch", mediaId);
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AppEvents.Emit("unauthorized", false);
+                    })
+                    .add(404, "*", () => {
+                        AlbumsController.NextMediaData = null;
+                        AlbumsController.LoadingNext = false;
+                        AlbumsController.AvailableNextPrefetch = true;
+                        AppEvents.Emit("album-next-prefetch", mediaId);
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                // Retry
+                Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+            });
     }
 
     public static CheckAlbumNextPrefetch(): boolean {
@@ -397,17 +403,17 @@ export class AlbumsController {
 
     public static OnPageLoad(currentMediaIndex: number, pageSize: number, page: number, totalPages: number) {
         if (currentMediaIndex >= 0) {
-            AlbumsController.HasPagePrev = (currentMediaIndex > 0) || (page > 0);
-            AlbumsController.HasPageNext = (currentMediaIndex < pageSize - 1) || (page < totalPages - 1);
+            AlbumsController.HasPagePrev = currentMediaIndex > 0 || page > 0;
+            AlbumsController.HasPageNext = currentMediaIndex < pageSize - 1 || page < totalPages - 1;
         } else {
-            AlbumsController.HasPagePrev = false
+            AlbumsController.HasPagePrev = false;
             AlbumsController.HasPageNext = false;
         }
         AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
     }
 
     public static OnPageUnload() {
-        AlbumsController.HasPagePrev = false
+        AlbumsController.HasPagePrev = false;
         AlbumsController.HasPageNext = false;
         AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
     }

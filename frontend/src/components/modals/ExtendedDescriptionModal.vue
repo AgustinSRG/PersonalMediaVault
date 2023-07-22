@@ -1,37 +1,54 @@
 <template>
-  <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy">
-    <div v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document">
-      <div class="modal-header">
-        <div class="modal-title">{{ title || $t("Extended description") }}</div>
-        <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy">
+        <div v-if="display" class="modal-dialog modal-xl modal-height-100-wf" role="document">
+            <div class="modal-header">
+                <div class="modal-title">{{ title || $t("Extended description") }}</div>
+                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-      <div class="modal-body no-padding">
-        <LoadingOverlay v-if="loading"></LoadingOverlay>
-        <div v-if="!loading && editing" class="modal-body-textarea-container">
-          <textarea :disabled="busy" class="form-control form-textarea no-resize auto-focus" v-model="contentToChange" :placeholder="$t('Input your description here') + '...'"></textarea>
+            <div class="modal-body no-padding">
+                <LoadingOverlay v-if="loading"></LoadingOverlay>
+                <div v-if="!loading && editing" class="modal-body-textarea-container">
+                    <textarea
+                        :disabled="busy"
+                        class="form-control form-textarea no-resize auto-focus"
+                        v-model="contentToChange"
+                        :placeholder="$t('Input your description here') + '...'"
+                    ></textarea>
+                </div>
+                <div v-if="!loading && !editing" class="extended-description-container" v-html="renderContent(content)"></div>
+            </div>
+
+            <div class="modal-footer text-right">
+                <button
+                    v-if="canWrite && !editing"
+                    type="button"
+                    @click="startEdit"
+                    :disabled="busy || loading"
+                    class="btn btn-primary btn-mr"
+                >
+                    <i class="fas fa-pencil-alt"></i> {{ $t("Edit") }}
+                </button>
+                <button
+                    v-if="canWrite && editing"
+                    type="button"
+                    @click="cancelEdit"
+                    :disabled="busy || loading"
+                    class="btn btn-primary btn-mr"
+                >
+                    <i class="fas fa-times"></i> {{ $t("Cancel") }}
+                </button>
+                <button v-if="canWrite && editing" type="button" @click="saveChanges" :disabled="busy || loading" class="btn btn-primary">
+                    <i class="fas fa-check"></i> {{ $t("Save changes") }}
+                </button>
+                <button v-if="!editing" type="button" @click="close" :disabled="busy" class="btn btn-primary">
+                    <i class="fas fa-check"></i> {{ $t("Done") }}
+                </button>
+            </div>
         </div>
-        <div v-if="!loading && !editing" class="extended-description-container" v-html="renderContent(content)"></div>
-      </div>
-
-      <div class="modal-footer text-right">
-        <button v-if="canWrite && !editing" type="button" @click="startEdit" :disabled="busy || loading" class="btn btn-primary btn-mr">
-          <i class="fas fa-pencil-alt"></i> {{ $t("Edit") }}
-        </button>
-        <button v-if="canWrite && editing" type="button" @click="cancelEdit" :disabled="busy || loading" class="btn btn-primary btn-mr">
-          <i class="fas fa-times"></i> {{ $t("Cancel") }}
-        </button>
-        <button v-if="canWrite && editing" type="button" @click="saveChanges" :disabled="busy || loading" class="btn btn-primary">
-          <i class="fas fa-check"></i> {{ $t("Save changes") }}
-        </button>
-        <button v-if="!editing" type="button" @click="close" :disabled="busy" class="btn btn-primary">
-          <i class="fas fa-check"></i> {{ $t("Done") }}
-        </button>
-      </div>
-    </div>
-  </ModalDialogContainer>
+    </ModalDialogContainer>
 </template>
 
 <script lang="ts">
@@ -108,34 +125,37 @@ export default defineComponent({
             Request.Pending("media-ext-desc-load", {
                 method: "GET",
                 url: GetAssetURL(descFilePath),
-            }).onSuccess(extendedDescText => {
-                this.content = extendedDescText;
-                this.contentToChange = extendedDescText;
-                this.loading = false;
-                this.editing = this.canWrite && !this.content;
-                this.autoFocus();
-            }).onRequestError(err => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
-                    })
-                    .add(404, "*", () => {
-                        this.content = "";
-                        this.contentToChange = "";
-                        this.loading = false;
-                        this.editing = !!this.canWrite;
-                        this.autoFocus();
-                    })
-                    .add("*", "*", () => {
-                        // Retry
-                        Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
-                    })
-                    .handle(err);
-            }).onUnexpectedError(err => {
-                console.error(err);
-                // Retry
-                Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
-            });
+            })
+                .onSuccess((extendedDescText) => {
+                    this.content = extendedDescText;
+                    this.contentToChange = extendedDescText;
+                    this.loading = false;
+                    this.editing = this.canWrite && !this.content;
+                    this.autoFocus();
+                })
+                .onRequestError((err) => {
+                    Request.ErrorHandler()
+                        .add(401, "*", () => {
+                            AppEvents.Emit("unauthorized", false);
+                        })
+                        .add(404, "*", () => {
+                            this.content = "";
+                            this.contentToChange = "";
+                            this.loading = false;
+                            this.editing = !!this.canWrite;
+                            this.autoFocus();
+                        })
+                        .add("*", "*", () => {
+                            // Retry
+                            Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
+                        })
+                        .handle(err);
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
+                });
         },
 
         autoFocus: function () {
@@ -185,17 +205,20 @@ export default defineComponent({
         },
 
         renderContent: function (text: string): string {
-            return text.split("\n\n").map(paragraph => {
-                if (paragraph.startsWith("###")) {
-                    return "<h3>" + escapeHTML(paragraph.substring(3)).replace(/\n/g, "<br>") + "</h3>";
-                } else if (paragraph.startsWith("##")) {
-                    return "<h2>" + escapeHTML(paragraph.substring(2)).replace(/\n/g, "<br>") + "</h2>";
-                } else if (paragraph.startsWith("#")) {
-                    return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
-                } else {
-                    return "<p>" + escapeHTML(paragraph).replace(/\n/g, "<br>") + "</p>";
-                }
-            }).join("");
+            return text
+                .split("\n\n")
+                .map((paragraph) => {
+                    if (paragraph.startsWith("###")) {
+                        return "<h3>" + escapeHTML(paragraph.substring(3)).replace(/\n/g, "<br>") + "</h3>";
+                    } else if (paragraph.startsWith("##")) {
+                        return "<h2>" + escapeHTML(paragraph.substring(2)).replace(/\n/g, "<br>") + "</h2>";
+                    } else if (paragraph.startsWith("#")) {
+                        return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
+                    } else {
+                        return "<p>" + escapeHTML(paragraph).replace(/\n/g, "<br>") + "</p>";
+                    }
+                })
+                .join("");
         },
 
         saveChanges: function () {
@@ -228,31 +251,19 @@ export default defineComponent({
     mounted: function () {
         this.$options.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
+        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
 
         this.$options.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
 
         if (this.display) {
             this.load();
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(
-            "auth-status-changed",
-            this.$options.authUpdateH
-        );
-        AppEvents.RemoveEventListener(
-            "current-media-update",
-            this.$options.mediaUpdateH
-        );
+        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
     },
     watch: {
         display: function () {

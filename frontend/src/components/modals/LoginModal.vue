@@ -1,45 +1,54 @@
 <template>
-  <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
-    <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
-      <div class="modal-header">
-        <div class="modal-title no-close">
-          {{ $t("The media vault is locked") }}
-        </div>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>{{ $t("Username") }}:</label>
-          <input type="text" name="username" v-model="username" :disabled="busy" maxlength="255" class="form-control form-control-full-width auto-focus" />
-        </div>
-        <div class="form-group">
-          <label>{{ $t("Password") }}:</label>
-          <input type="password" name="password" v-model="password" :disabled="busy" maxlength="255" class="form-control form-control-full-width" />
-        </div>
-        <div class="form-error">{{ error }}</div>
-      </div>
-      <div class="modal-footer no-padding">
-        <button v-if="!busy && mustWait <= 0" type="submit" class="modal-footer-btn">
-          <i class="fas fa-unlock"></i> {{ $t("Unlock vault") }}
-        </button>
-        <button v-if="!busy && mustWait === 1" type="button" disabled class="modal-footer-btn">
-          <i class="fas fa-hourglass"></i>
-          {{ $t("You must wait 1 second to try again") }}
-        </button>
-        <button v-if="!busy && mustWait > 1" type="button" disabled class="modal-footer-btn">
-          <i class="fas fa-hourglass"></i>
-          {{
-            $t("You must wait $TIME seconds to try again").replace(
-              "$TIME",
-              mustWait + ""
-            )
-          }}
-        </button>
-        <button v-if="busy" type="button" disabled class="modal-footer-btn">
-          <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
-        </button>
-      </div>
-    </form>
-  </div>
+    <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
+        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+            <div class="modal-header">
+                <div class="modal-title no-close">
+                    {{ $t("The media vault is locked") }}
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>{{ $t("Username") }}:</label>
+                    <input
+                        type="text"
+                        name="username"
+                        v-model="username"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width auto-focus"
+                    />
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("Password") }}:</label>
+                    <input
+                        type="password"
+                        name="password"
+                        v-model="password"
+                        :disabled="busy"
+                        maxlength="255"
+                        class="form-control form-control-full-width"
+                    />
+                </div>
+                <div class="form-error">{{ error }}</div>
+            </div>
+            <div class="modal-footer no-padding">
+                <button v-if="!busy && mustWait <= 0" type="submit" class="modal-footer-btn">
+                    <i class="fas fa-unlock"></i> {{ $t("Unlock vault") }}
+                </button>
+                <button v-if="!busy && mustWait === 1" type="button" disabled class="modal-footer-btn">
+                    <i class="fas fa-hourglass"></i>
+                    {{ $t("You must wait 1 second to try again") }}
+                </button>
+                <button v-if="!busy && mustWait > 1" type="button" disabled class="modal-footer-btn">
+                    <i class="fas fa-hourglass"></i>
+                    {{ $t("You must wait $TIME seconds to try again").replace("$TIME", mustWait + "") }}
+                </button>
+                <button v-if="busy" type="button" disabled class="modal-footer-btn">
+                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
+                </button>
+            </div>
+        </form>
+    </div>
 </template>
 
 <script lang="ts">
@@ -92,10 +101,7 @@ export default defineComponent({
                     this.busy = false;
                     this.username = "";
                     this.password = "";
-                    AuthController.SetSession(
-                        response.session_id,
-                        response.vault_fingerprint
-                    );
+                    AuthController.SetSession(response.session_id, response.vault_fingerprint);
                 })
                 .onCancel(() => {
                     this.busy = false;
@@ -131,10 +137,7 @@ export default defineComponent({
         updateNow: function () {
             this.now = Date.now();
             if (this.now < this.cooldown) {
-                this.mustWait = Math.max(
-                    1,
-                    Math.round((this.cooldown - this.now) / 1000)
-                );
+                this.mustWait = Math.max(1, Math.round((this.cooldown - this.now) / 1000));
             } else {
                 this.mustWait = 0;
             }

@@ -25,7 +25,9 @@
 
 .side-bar.hidden {
     left: -300px;
-    transition: left 0.2s, visibility 0.2s;
+    transition:
+        left 0.2s,
+        visibility 0.2s;
     visibility: hidden;
 }
 

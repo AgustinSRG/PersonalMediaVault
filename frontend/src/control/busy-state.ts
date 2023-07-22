@@ -10,12 +10,15 @@ export class BusyStateController {
     private static BusySet = new Set();
 
     public static Initialize() {
-        window.addEventListener('beforeunload', function (e) {
-            if (BusyStateController.Busy || UploadController.GetEntries().filter(a => a.status !== "error" && a.status !== "ready").length > 0) {
+        window.addEventListener("beforeunload", function (e) {
+            if (
+                BusyStateController.Busy ||
+                UploadController.GetEntries().filter((a) => a.status !== "error" && a.status !== "ready").length > 0
+            ) {
                 // Cancel the event
                 e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
                 // Chrome requires returnValue to be set
-                e.returnValue = '';
+                e.returnValue = "";
             }
         });
     }
