@@ -64,11 +64,11 @@
 }
 
 .modal-out-close-area {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     height: 100%;
-    width: calc(100% - 0.5em);
+    width: calc(100% - 2em);
     z-index: -1;
 }
 
