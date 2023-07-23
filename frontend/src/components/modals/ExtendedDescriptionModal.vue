@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy">
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy" @key="onKeyPress">
         <div
             v-if="display"
             class="modal-dialog modal-height-100-wf"
@@ -8,11 +8,14 @@
         >
             <div class="modal-header">
                 <div class="modal-title with-2-buttons">{{ title || $t("Extended description") }}</div>
-                <button v-if="modalSize === 'lg'" type="button" class="modal-close-btn" :title="$t('Expand')" @click="switchModalSize">
-                    <i class="fas fa-expand"></i>
-                </button>
-                <button v-if="modalSize === 'xl'" type="button" class="modal-close-btn" :title="$t('Compress')" @click="switchModalSize">
-                    <i class="fas fa-compress"></i>
+                <button
+                    type="button"
+                    class="modal-close-btn"
+                    :title="modalSize === 'xl' ? $t('Compress') : $t('Expand')"
+                    @click="switchModalSize"
+                >
+                    <i v-if="modalSize === 'lg'" class="fas fa-expand"></i>
+                    <i v-if="modalSize === 'xl'" class="fas fa-compress"></i>
                 </button>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
                     <i class="fas fa-times"></i>
@@ -209,13 +212,28 @@ export default defineComponent({
             this.load();
         },
 
+        onKeyPress: function (e: KeyboardEvent) {
+            if (this.canWrite && (e.key === "e" || e.key === "E") && !this.editing) {
+                e.preventDefault();
+                this.startEdit();
+            }
+        },
+
         startEdit: function () {
+            if (this.editing) {
+                return;
+            }
             this.editing = true;
+            this.autoFocus();
         },
 
         cancelEdit: function () {
+            if (!this.editing) {
+                return;
+            }
             this.contentToChange = this.content;
             this.editing = false;
+            this.autoFocus();
         },
 
         renderContent: function (text: string): string {
@@ -236,6 +254,10 @@ export default defineComponent({
         },
 
         saveChanges: function () {
+            if (!this.editing) {
+                return;
+            }
+
             if (this.busy) {
                 return;
             }
@@ -249,6 +271,7 @@ export default defineComponent({
                     this.content = this.contentToChange;
                     this.editing = false;
                     this.changed = true;
+                    this.autoFocus();
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()

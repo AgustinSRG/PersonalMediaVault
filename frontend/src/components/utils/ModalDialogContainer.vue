@@ -23,7 +23,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "ModalDialogContainer",
-    emits: ["update:display", "close"],
+    emits: ["update:display", "key", "close"],
     props: {
         display: Boolean,
         lockClose: Boolean,
@@ -68,6 +68,8 @@ export default defineComponent({
             e.stopPropagation();
             if (e.key === "Escape" && this.display && !this.closing) {
                 this.close();
+            } else {
+                this.$emit("key", e);
             }
         },
 
