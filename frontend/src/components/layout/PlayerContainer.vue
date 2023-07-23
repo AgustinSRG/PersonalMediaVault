@@ -61,6 +61,9 @@
             @tags-open="openTags"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
+            :loopForced="loopForced"
+            :loopForcedValue="loopForcedValue"
+            @force-loop="onForceLoop"
         ></VideoPlayer>
         <AudioPlayer
             v-if="mediaData && mediaData.type === 3"
@@ -82,6 +85,9 @@
             @tags-open="openTags"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
+            :loopForced="loopForced"
+            :loopForcedValue="loopForcedValue"
+            @force-loop="onForceLoop"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
@@ -195,6 +201,9 @@ export default defineComponent({
             hasPageNext: AlbumsController.HasPageNext,
 
             minPlayer: false,
+
+            loopForced: false,
+            loopForcedValue: false,
         };
     },
     methods: {
@@ -304,6 +313,11 @@ export default defineComponent({
             } else {
                 this.minPlayer = false;
             }
+        },
+
+        onForceLoop: function (v: boolean) {
+            this.loopForced = true;
+            this.loopForcedValue = v;
         },
     },
     mounted: function () {

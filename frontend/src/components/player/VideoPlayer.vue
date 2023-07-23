@@ -305,6 +305,7 @@
             v-model:shown="displayConfig"
             v-model:speed="speed"
             v-model:loop="loop"
+            @update:loop="() => this.$emit('force-loop', this.loop)"
             v-model:nextEnd="nextEnd"
             v-model:resolution="currentResolution"
             v-model:subSize="subtitlesSize"
@@ -339,6 +340,7 @@
             :x="contextMenuX"
             :y="contextMenuY"
             v-model:loop="loop"
+            @update:loop="() => this.$emit('force-loop', this.loop)"
             :url="videoURL"
             :canWrite="canWrite"
             :hasExtendedDescription="hasExtendedDescription"
@@ -388,7 +390,7 @@ export default defineComponent({
         PlayerEncodingPending,
     },
     name: "VideoPlayer",
-    emits: ["go-next", "go-prev", "ended", "update:fullscreen", "albums-open", "stats-open", "tags-open", "ext-desc-open"],
+    emits: ["go-next", "go-prev", "ended", "update:fullscreen", "albums-open", "stats-open", "tags-open", "ext-desc-open", "force-loop"],
     props: {
         mid: Number,
         metadata: Object,
@@ -408,6 +410,9 @@ export default defineComponent({
         userControls: Boolean,
 
         min: Boolean,
+
+        loopForced: Boolean,
+        loopForcedValue: Boolean,
     },
     setup(props) {
         return {
@@ -1220,6 +1225,7 @@ export default defineComponent({
                     } else {
                         AppEvents.Emit("snack", this.$t("Loop disabled"));
                     }
+                    this.$emit("force-loop", this.loop);
                 }
                 break;
             case "b":
@@ -1275,7 +1281,7 @@ export default defineComponent({
             this.currentTime = this.canSaveTime ? PlayerPreferences.GetInitialTime(this.mid) : 0;
             this.duration = 0;
             this.speed = 1;
-            this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
+            this.setDefaultLoop();
             this.currentResolution = PlayerPreferences.GetResolutionIndex(this.metadata);
             this.loading = true;
             this.playing = true;
@@ -1463,6 +1469,14 @@ export default defineComponent({
             this.mediaError = true;
             this.loading = false;
         },
+
+        setDefaultLoop: function () {
+            if (this.loopForced) {
+                this.loop = this.loopForcedValue;
+            } else {
+                this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
+            }
+        },
     },
     mounted: function () {
         // Load player preferences
@@ -1536,6 +1550,9 @@ export default defineComponent({
             if (this.videoURL) {
                 this.loading = true;
             }
+        },
+        inAlbum: function () {
+            this.setDefaultLoop();
         },
     },
 });
