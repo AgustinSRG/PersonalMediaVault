@@ -38,6 +38,7 @@ export default defineComponent({
     data: function () {
         return {
             closing: false,
+            focusTrap: null,
         };
     },
     methods: {
@@ -96,27 +97,27 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
+        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
 
         if (this.display) {
-            this.$options.focusTrap.activate();
+            this.focusTrap.activate();
         }
     },
     beforeUnmount: function () {
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
+        if (this.focusTrap) {
+            this.focusTrap.destroy();
         }
     },
     watch: {
         display: function () {
             if (this.display) {
                 this.closing = false;
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
+                if (this.focusTrap) {
+                    this.focusTrap.activate();
                 }
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
+                if (this.focusTrap) {
+                    this.focusTrap.deactivate();
                 }
             }
         },
