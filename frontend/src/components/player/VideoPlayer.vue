@@ -1125,6 +1125,10 @@ export default defineComponent({
                 } else {
                     this.changeVolume(Math.min(1, this.volume + 0.01));
                 }
+                if (this.muted) {
+                    this.muted = false;
+                    this.onUserMutedUpdated();
+                }
                 this.volumeShown = true;
                 this.helpTooltip = "volume";
                 break;
@@ -1133,6 +1137,10 @@ export default defineComponent({
                     this.changeVolume(Math.max(0, this.volume - 0.05));
                 } else {
                     this.changeVolume(Math.max(0, this.volume - 0.01));
+                }
+                if (this.muted) {
+                    this.muted = false;
+                    this.onUserMutedUpdated();
                 }
                 this.volumeShown = true;
                 this.helpTooltip = "volume";
