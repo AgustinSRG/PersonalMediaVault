@@ -17,7 +17,7 @@
                             autocomplete="off"
                             maxlength="255"
                             v-model="textSearch"
-                            class="form-control form-control-full-width"
+                            class="form-control form-control-full-width auto-focus"
                         />
                     </div>
 
@@ -181,6 +181,7 @@
         <BatchOperationProgressModal
             v-if="displayProgress"
             v-model:display="displayProgress"
+            @update:display="afterSubModalClosed"
             :status="status"
             :progress="progress"
             :error="error"
@@ -270,6 +271,12 @@ export default defineComponent({
                     elem.focus();
                 }
             });
+        },
+
+        afterSubModalClosed: function (display: boolean) {
+            if (!display && this.display) {
+                this.autoFocus();
+            }
         },
 
         close: function () {

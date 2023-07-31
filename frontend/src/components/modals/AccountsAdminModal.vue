@@ -50,8 +50,16 @@
             </div>
         </div>
 
-        <AccountDeleteModal ref="deleteModal" v-model:display="displayAccountDelete"></AccountDeleteModal>
-        <AccountCreateModal v-model:display="displayAccountCreate" @account-created="load"></AccountCreateModal>
+        <AccountDeleteModal
+            ref="deleteModal"
+            v-model:display="displayAccountDelete"
+            @update:display="afterSubModalClosed"
+        ></AccountDeleteModal>
+        <AccountCreateModal
+            v-model:display="displayAccountCreate"
+            @account-created="load"
+            @update:display="afterSubModalClosed"
+        ></AccountCreateModal>
     </ModalDialogContainer>
 </template>
 
@@ -198,6 +206,14 @@ export default defineComponent({
             this.displayAccountDelete = false;
             this.displayAccountCreate = false;
             this.$refs.modalContainer.close();
+        },
+
+        afterSubModalClosed: function (display: boolean) {
+            if (!display && this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
         },
     },
     mounted: function () {
