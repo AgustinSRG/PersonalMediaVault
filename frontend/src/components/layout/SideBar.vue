@@ -3,6 +3,7 @@
         class="side-bar"
         :class="{ hidden: !display }"
         @click="stopPropagationEvent"
+        @keydown="keyDownHandle"
         tabindex="-1"
         :role="initialLayout ? '' : 'dialog'"
         :aria-hidden="!display"
@@ -333,6 +334,13 @@ export default defineComponent({
 
         lostFocus: function () {
             if (!this.initialLayout) {
+                this.close();
+            }
+        },
+
+        keyDownHandle: function (e) {
+            e.stopPropagation();
+            if (!this.initialLayout && e.key === "Escape") {
                 this.close();
             }
         },
