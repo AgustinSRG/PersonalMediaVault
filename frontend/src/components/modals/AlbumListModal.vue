@@ -111,7 +111,11 @@
                 </button>
             </div>
         </div>
-        <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
+        <AlbumCreateModal
+            v-model:display="displayAlbumCreate"
+            @new-album="onNewAlbum"
+            @update:display="afterModalCreateClosed"
+        ></AlbumCreateModal>
     </ModalDialogContainer>
 </template>
 
@@ -170,6 +174,12 @@ export default defineComponent({
                     el.focus();
                 }
             });
+        },
+
+        afterModalCreateClosed: function (display: boolean) {
+            if (!display && this.display) {
+                this.autoFocus();
+            }
         },
 
         load: function () {
