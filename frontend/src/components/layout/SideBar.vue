@@ -339,8 +339,8 @@ export default defineComponent({
         },
 
         keyDownHandle: function (e) {
-            e.stopPropagation();
             if (!this.initialLayout && e.key === "Escape") {
+                e.stopPropagation();
                 this.close();
             }
         },
@@ -392,9 +392,11 @@ export default defineComponent({
                 if (this.$options.focusTrap) {
                     this.$options.focusTrap.activate();
                 }
-                nextTick(() => {
-                    this.$el.focus();
-                });
+                if (!this.initialLayout) {
+                    nextTick(() => {
+                        this.$el.focus();
+                    });
+                }
             } else {
                 if (this.$options.focusTrap) {
                     this.$options.focusTrap.deactivate();

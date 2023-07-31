@@ -100,10 +100,15 @@ export default defineComponent({
 
         expandPage: function () {
             AppStatus.ExpandPage();
+            this.$el.focus();
         },
 
         closePage: function () {
             AppStatus.ClosePage();
+            const player: any = document.querySelector(".player-container");
+            if (player) {
+                player.focus();
+            }
         },
 
         renderTitle: function (p, s) {

@@ -212,6 +212,9 @@ export default defineComponent({
             if (MediaController.MediaData !== this.mediaData) {
                 this.mediaData = MediaController.MediaData;
                 this.tick++;
+                if (this.mid) {
+                    this.$el.focus();
+                }
             }
             this.updateStatus();
         },
@@ -352,6 +355,10 @@ export default defineComponent({
 
         this.$options.goNextH = this.goNext.bind(this);
         AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
+
+        nextTick(() => {
+            this.$el.focus();
+        });
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-media-loading", this.$options.loadingH);
