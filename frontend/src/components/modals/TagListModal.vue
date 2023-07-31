@@ -407,10 +407,13 @@ export default defineComponent({
                 e.preventDefault();
                 this.addTag();
             } else if (e.key === "Tab") {
-                e.preventDefault();
+                
                 this.findTags();
                 if (this.matchingTags.length > 0) {
-                    this.tagToAdd = this.matchingTags[0].name;
+                    if (this.matchingTags[0].name !== this.tagToAdd) {
+                        e.preventDefault();
+                        this.tagToAdd = this.matchingTags[0].name;
+                    }
                 }
             }
         },

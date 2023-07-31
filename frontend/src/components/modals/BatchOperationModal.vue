@@ -457,11 +457,12 @@ export default defineComponent({
                     this.onTagSearchChanged(true);
                 }
             } else if (e.key === "Tab") {
-                e.preventDefault();
-
                 if (this.matchingTagsSearch.length > 0) {
-                    this.tagToAddSearch = this.matchingTagsSearch[0].name;
-                    this.onTagSearchChanged(true);
+                    if (this.matchingTagsSearch[0].name !== this.tagToAddSearch) {
+                        e.preventDefault();
+                        this.tagToAddSearch = this.matchingTagsSearch[0].name;
+                        this.onTagSearchChanged(true);
+                    }
                 }
             }
         },
@@ -474,13 +475,14 @@ export default defineComponent({
                 this.tagToAddAction = "";
                 this.onTagActionChanged(true);
             } else if (e.key === "Tab") {
-                e.preventDefault();
-
                 this.onTagActionChanged(true);
 
                 if (this.matchingTagsAction.length > 0) {
-                    this.tagToAddAction = this.matchingTagsAction[0].name;
-                    this.onTagActionChanged(true);
+                    if (this.tagToAddAction !== this.matchingTagsAction[0].name) {
+                        e.preventDefault();
+                        this.tagToAddAction = this.matchingTagsAction[0].name;
+                        this.onTagActionChanged(true);
+                    }
                 }
             }
         },
