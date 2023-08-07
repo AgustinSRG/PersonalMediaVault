@@ -148,16 +148,30 @@
                         </tr>
 
                         <tr>
-                            <td>{{ $t("Increment image scale by 10%") }}</td>
+                            <td>{{ $t("Increment image scale by") }} 10%</td>
                             <td>
                                 <span class="key-shortcut">⌘ {{ $t("and") }} +</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <td>{{ $t("Decrement image scale by 10%") }}</td>
+                            <td>{{ $t("Increment image scale by") }} 1%</td>
+                            <td>
+                                <span class="key-shortcut">{{ $t("Shift") }} {{ $t("and") }} +</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>{{ $t("Decrement image scale by") }} 10%</td>
                             <td>
                                 <span class="key-shortcut">⌘ {{ $t("and") }} -</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>{{ $t("Decrement image scale by") }} 1%</td>
+                            <td>
+                                <span class="key-shortcut">{{ $t("Shift") }} {{ $t("and") }} -</span>
                             </td>
                         </tr>
 

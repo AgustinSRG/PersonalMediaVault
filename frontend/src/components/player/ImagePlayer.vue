@@ -258,6 +258,7 @@ import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
 const SCALE_STEP = 0.1 / SCALE_RANGE;
+const SCALE_STEP_MIN = 0.01 / SCALE_RANGE;
 
 export default defineComponent({
     components: {
@@ -797,14 +798,14 @@ export default defineComponent({
                 this.helpTooltip = "scale";
                 break;
             case "+":
-                this.changeScale(Math.min(1, this.scale + SCALE_STEP));
+                this.changeScale(Math.min(1, this.scale + (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
                 this.scaleShown = true;
                 this.helpTooltip = "scale";
                 this.fit = false;
                 this.onUserFitUpdated();
                 break;
             case "-":
-                this.changeScale(Math.max(0, this.scale - SCALE_STEP));
+                this.changeScale(Math.max(0, this.scale - (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
                 this.scaleShown = true;
                 this.helpTooltip = "scale";
                 this.fit = false;
