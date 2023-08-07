@@ -93,7 +93,9 @@ export default defineComponent({
         },
 
         focusLost: function () {
-            this.close();
+            if (this.display) {
+                this.$el.focus();
+            }
         },
     },
     mounted: function () {
