@@ -6,6 +6,8 @@
         role="dialog"
         :aria-hidden="!shown"
         @click="stopPropagationEvent"
+        @mousedown="stopPropagationEvent"
+        @touchstart="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
         @mouseenter="enterConfig"
         @mouseleave="leaveConfig"

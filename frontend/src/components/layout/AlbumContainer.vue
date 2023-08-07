@@ -75,7 +75,7 @@
                     class="album-body-btn"
                     @click="showOptions(item, i, $event)"
                     @mousedown="stopPropagationEvent"
-                    @toutchstart.passive="stopPropagationEvent"
+                    @touchstart="stopPropagationEvent"
                 >
                     <i class="fas fa-bars"></i>
                 </button>

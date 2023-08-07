@@ -17,7 +17,7 @@
             :class="{ hidden: !expanded }"
             :style="{ width: computeBarContainerWidth(width) }"
             @mousedown="grabVolume"
-            @toutchstart.passive="grabVolume"
+            @touchstart="grabVolume"
         >
             <div class="player-volume-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
                 <div class="player-volume-bar" :style="{ width: getVolumeBarWidth(width) }"></div>

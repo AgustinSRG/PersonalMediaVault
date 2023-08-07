@@ -11,6 +11,8 @@
         tabindex="-1"
         @click="clickTopBar"
         @dblclick="stopPropagationEvent"
+        @mousedown="stopPropagationEvent"
+        @touchstart="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
         @keydown="onKeyDown"
     >

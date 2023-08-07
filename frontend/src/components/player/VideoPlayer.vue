@@ -7,9 +7,8 @@
             'full-screen': fullscreen,
         }"
         @mousemove="playerMouseMove"
-        @click="clickPlayer"
-        @mousedown="hideContext"
-        @touchstart.passive="hideContext"
+        @mousedown="onPlayerMouseDown"
+        @touchstart="onPlayerTouchStart"
         @dblclick="toggleFullScreen"
         @mouseleave="mouseLeavePlayer"
         @mouseup="playerMouseUp"
@@ -111,6 +110,8 @@
             :class="{ hidden: !showControls || !userControls }"
             @click="clickControls"
             @dblclick="stopPropagationEvent"
+            @mousedown="stopPropagationEvent"
+            @touchstart="stopPropagationEvent"
             @mouseenter="enterControls"
             @mouseleave="leaveControls"
         >
@@ -274,7 +275,7 @@
             @dblclick="stopPropagationEvent"
             @click="clickTimeline"
             @mousedown="grabTimeline"
-            @toutchstart.passive="grabTimeline"
+            @touchstart="grabTimeline"
         >
             <div class="player-timeline-back"></div>
             <div class="player-timeline-buffer" :style="{ width: getTimelineBarWidth(bufferedTime, duration) }"></div>
@@ -532,10 +533,31 @@ export default defineComponent({
             this.$emit("ext-desc-open");
         },
 
-        hideContext: function (e) {
+        onPlayerMouseDown: function (e: MouseEvent) {
+            if (e.button !== 0) {
+                return;
+            }
             if (this.contextMenuShown) {
                 e.stopPropagation();
             }
+            this.clickPlayer();
+        },
+
+        onPlayerTouchStart: function (e) {
+            if (this.contextMenuShown) {
+                e.stopPropagation();
+            }
+            this.clickPlayer();
+        },
+
+        clickPlayer: function () {
+            if (this.displayConfig || this.contextMenuShown) {
+                this.displayConfig = false;
+                this.contextMenuShown = false;
+            } else {
+                this.togglePlay();
+            }
+            this.interactWithControls();
         },
 
         renderVolume: function (v: number): string {
@@ -915,16 +937,6 @@ export default defineComponent({
             this.displayConfig = false;
         },
 
-        clickPlayer: function () {
-            if (this.displayConfig || this.contextMenuShown) {
-                this.displayConfig = false;
-                this.contextMenuShown = false;
-            } else {
-                this.togglePlay();
-            }
-            this.interactWithControls();
-        },
-
         play: function () {
             if (this.requiresRefresh) {
                 this.requiresRefresh = false;
@@ -987,11 +999,13 @@ export default defineComponent({
 
         /* Timeline */
 
-        grabTimeline: function (e) {
-            this.timelineGrabbed = true;
+        grabTimeline: function (e: MouseEvent & TouchEvent) {
+            e.stopPropagation();
             if (e.touches && e.touches.length > 0) {
+                this.timelineGrabbed = true;
                 this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
+            } else if (e.button === 0) {
+                this.timelineGrabbed = true;
                 this.onTimelineSkip(e.pageX, e.pageY);
             }
         },
