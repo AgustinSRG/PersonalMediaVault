@@ -5,6 +5,7 @@ on:
     branches: [ "master" ]
     paths:
       - backup-tool/**
+      - .github/workflows/**
   pull_request:
     branches: [ "master" ]
     paths:

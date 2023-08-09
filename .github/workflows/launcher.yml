@@ -5,6 +5,7 @@ on:
     branches: [ "master" ]
     paths:
       - launcher/**
+      - .github/workflows/**
   pull_request:
     branches: [ "master" ]
     paths:

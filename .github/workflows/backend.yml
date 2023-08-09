@@ -5,6 +5,7 @@ on:
     branches: [ "master" ]
     paths:
       - backend/**
+      - .github/workflows/**
   pull_request:
     branches: [ "master" ]
     paths:
