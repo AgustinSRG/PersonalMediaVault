@@ -35,5 +35,7 @@ The messages files are named like `active.{LANG}.toml`
 The tool takes as the first argument the path of the vault, and the second argument the path of the backup folder.
 
 ```
-pmv-backup </PATH/TO/VAULT> </PATH/TO/BACKUP>
+pmv-backup </PATH/TO/VAULT> </PATH/TO/BACKUP> [--re-encrypt]
 ```
+
+The `--re-encrypt` option will ask you for the vault password in order to re-encrypt it with a new encryption key. Use it only if you leaked the encryption key.
