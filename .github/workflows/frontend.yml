@@ -1,0 +1,33 @@
+name: Frontend (Vue) CI
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - frontend/**
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - frontend/**
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install NodeJS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - run: cd frontend
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build Vue project
+      run: npm run build
