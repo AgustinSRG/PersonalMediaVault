@@ -25,10 +25,10 @@ jobs:
       with:
         go-version: 1.20.x
 
-    - run: cd backup-tool
-
     - name: Build
+      working-directory: ./backup-tool
       run: go build -v ./...
 
     - name: Test
+      working-directory: ./backup-tool
       run: go test -v ./...

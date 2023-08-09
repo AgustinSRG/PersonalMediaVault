@@ -25,10 +25,10 @@ jobs:
       with:
         node-version: 18
 
-    - run: cd frontend
-
     - name: Install dependencies
+      working-directory: ./frontend
       run: npm install
 
     - name: Build Vue project
+      working-directory: ./frontend
       run: npm run build

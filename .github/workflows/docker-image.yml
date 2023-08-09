@@ -19,7 +19,8 @@ jobs:
         node-version: 18
 
     - name: Build VueJS frontend
-      run: cd frontend && npm install && npm run build && cd ..
+      working-directory: ./frontend
+      run: npm install && npm run build
 
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag asanrom/pmv:latest
