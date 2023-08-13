@@ -46,7 +46,7 @@
 
         <LogoutModal v-if="displayLogout" v-model:display="displayLogout"></LogoutModal>
 
-        <LoadingOverlay v-if="locked || loadingAuth" :fixed="true"></LoadingOverlay>
+        <LoadingOverlay v-if="locked || loadingAuth" :fixed="true" :issues="loadingAuthError"></LoadingOverlay>
 
         <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
 
@@ -213,6 +213,7 @@ export default defineComponent({
 
             locked: AuthController.Locked,
             loadingAuth: AuthController.Loading,
+            loadingAuthError: false,
 
             layout: AppStatus.CurrentLayout,
             focus: AppStatus.CurrentFocus,
@@ -341,6 +342,7 @@ export default defineComponent({
 
         onAuthStatusChanged: function (locked: boolean) {
             this.locked = locked;
+            this.loadingAuthError = false;
 
             if (this.locked) {
                 // Close all modals
@@ -364,6 +366,10 @@ export default defineComponent({
         onAuthStatusLoading: function (l: boolean) {
             this.loadingAuth = l;
         },
+
+        onAuthLoadingError: function() {
+            this.loadingAuthError = true;
+        },
     },
     mounted: function () {
         this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
@@ -377,12 +383,16 @@ export default defineComponent({
 
         this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
         AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+
+        this.$options.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
+        AppEvents.AddEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
         AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
         AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+        AppEvents.RemoveEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
     },
 });
 </script>

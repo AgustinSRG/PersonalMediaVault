@@ -94,3 +94,8 @@
         transform: rotate(360deg);
     }
 }
+
+.load-issues {
+    padding: 1rem;
+    text-align: center;
+}

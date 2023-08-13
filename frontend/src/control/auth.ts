@@ -80,6 +80,7 @@ export class AuthController {
                     })
                     .add("*", "*", () => {
                         // Retry
+                        AppEvents.Emit("auth-status-loading-error")
                         Timeouts.Set("auth-control-check", 1500, AuthController.CheckAuthStatus);
                     })
                     .handle(err);

@@ -6,6 +6,10 @@
             <div></div>
             <div></div>
         </div>
+        <div v-if="issues" class="load-issues">
+            {{ $t("There are problems connecting to the server.") }} <br>
+            {{ $t("Check your Internet connection or the server status.") }}
+        </div>
     </div>
 </template>
 
@@ -20,6 +24,10 @@ export default defineComponent({
             default: true,
         },
         fixed: Boolean,
+        issues: {
+            type: Boolean,
+            default: false,
+        },
     },
 });
 </script>
