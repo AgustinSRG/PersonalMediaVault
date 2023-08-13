@@ -212,7 +212,7 @@ export default defineComponent({
             if (e) {
                 e.preventDefault();
             }
-            AppStatus.GoToSearch(this.search);
+            AppStatus.GoToSearch(this.search, true);
             nextTick(() => {
                 this.$emit("skip-to-content");
             });

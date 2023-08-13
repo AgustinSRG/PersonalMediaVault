@@ -256,11 +256,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static GoToSearch(search: string) {
+    public static GoToSearch(search: string, forced?: boolean) {
         AppStatus.CurrentSearch = search;
 
         if (AppStatus.CurrentSearch) {
-            if (AppStatus.CurrentPage !== "random") {
+            if (forced || AppStatus.CurrentPage !== "random") {
                 AppStatus.CurrentPage = "search";
             }
 
