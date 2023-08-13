@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        <div class="player-loader" v-if="loading">
+        <div class="player-loader" v-if="loading && !mediaError">
             <div class="player-lds-ring">
                 <div></div>
                 <div></div>
@@ -1488,8 +1488,13 @@ export default defineComponent({
         },
 
         onMediaError: function () {
-            this.mediaError = true;
-            this.loading = false;
+            if (AuthController.RefreshSessionCookie()) {
+                MediaController.Load();
+            } else {
+                this.mediaError = true;
+                this.loading = false;
+                AuthController.CheckAuthStatusSilent();
+            }
         },
 
         setDefaultLoop: function () {

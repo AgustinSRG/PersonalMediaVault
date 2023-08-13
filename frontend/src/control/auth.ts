@@ -6,7 +6,7 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { LocalStorage } from "./local-storage";
-import { setAssetsSessionCookie } from "@/utils/cookie";
+import { getCookie, setAssetsSessionCookie } from "@/utils/cookie";
 
 export class AuthController {
     public static Locked = true;
@@ -24,9 +24,20 @@ export class AuthController {
     public static Initialize() {
         AuthController.Session = LocalStorage.Get("x-session-token", "");
         AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
-        setAssetsSessionCookie("st-" + AuthController.Fingerprint, AuthController.Session);
-        AuthController.CheckAuthStatus();
         AppEvents.AddEventListener("unauthorized", AuthController.ClearSession);
+        AuthController.CheckAuthStatus();
+    }
+
+    public static RefreshSessionCookie(): boolean {
+        const cookieName = "st-" + AuthController.Fingerprint;
+        const cookieValue = getCookie(cookieName);
+
+        if (cookieValue !== AuthController.Session) {
+            setAssetsSessionCookie(cookieName, AuthController.Session);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public static CheckAuthStatus() {
@@ -72,6 +83,45 @@ export class AuthController {
             });
     }
 
+    public static CheckingAuthSilent = false;
+
+    public static CheckAuthStatusSilent() {
+        if (AuthController.CheckingAuthSilent) {
+            return;
+        }
+
+        Timeouts.Abort("auth-control-check-silent");
+
+        if (AuthController.Loading) {
+            Request.Abort("auth-control-check-silent");
+            AuthController.CheckingAuthSilent = false;
+        }
+
+        AuthController.CheckingAuthSilent = true;
+
+        Request.Pending("auth-control-check-silent", AccountAPI.GetContext())
+            .onSuccess(() => {
+                AuthController.CheckingAuthSilent = false;
+            })
+            .onRequestError((err) => {
+                Request.ErrorHandler()
+                    .add(401, "*", () => {
+                        AuthController.CheckingAuthSilent = false;
+                        AuthController.CheckAuthStatus();
+                    })
+                    .add("*", "*", () => {
+                        // Retry
+                        Timeouts.Set("auth-control-check-silent", 1500, AuthController.CheckAuthStatusSilent);
+                    })
+                    .handle(err);
+            })
+            .onUnexpectedError((err) => {
+                console.error(err);
+                AuthController.CheckingAuthSilent = false;
+                AuthController.CheckAuthStatus();
+            });
+    }
+
     public static UpdateUsername(username: string) {
         AuthController.Username = username;
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
@@ -83,7 +133,7 @@ export class AuthController {
         LocalStorage.Set("x-session-token", session);
         AuthController.Fingerprint = fingerprint;
         LocalStorage.Set("x-vault-fingerprint", fingerprint);
-        setAssetsSessionCookie("st-" + AuthController.Fingerprint, AuthController.Session);
+        AuthController.RefreshSessionCookie();
         AuthController.Username = "";
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();
@@ -109,7 +159,7 @@ export class AuthController {
         AuthController.Session = "";
         LocalStorage.Set("x-session-token", "");
         AuthController.Username = "";
-        setAssetsSessionCookie("st-" + AuthController.Fingerprint, AuthController.Session);
+        AuthController.RefreshSessionCookie();
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
     }
 

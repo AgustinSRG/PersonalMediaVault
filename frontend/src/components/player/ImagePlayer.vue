@@ -25,7 +25,7 @@
                 :src="imageURL"
                 :key="rTick"
                 @load="onImageLoaded"
-                @error="onImageLoaded"
+                @error="onMediaError"
                 :style="{
                     width: imageWidth,
                     height: imageHeight,
@@ -44,7 +44,7 @@
             ></ImageNotes>
         </div>
 
-        <div class="player-loader" v-if="loading">
+        <div class="player-loader" v-if="loading && !mediaError">
             <div class="player-lds-ring">
                 <div></div>
                 <div></div>
@@ -54,10 +54,11 @@
         </div>
 
         <PlayerEncodingPending
-            v-if="!loading && !imageURL && imagePending"
+            v-if="(!loading && !imageURL && imagePending) || mediaError"
             :mid="mid"
             :tid="imagePendingTask"
             :res="currentResolution"
+            :error="mediaError"
         ></PlayerEncodingPending>
 
         <div
@@ -254,6 +255,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
+import { MediaController } from "@/control/media";
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
@@ -349,6 +351,8 @@ export default defineComponent({
 
             notesEditMode: false,
             hasExtendedDescription: false,
+
+            mediaError: false,
         };
     },
     methods: {
@@ -656,6 +660,16 @@ export default defineComponent({
             e.stopPropagation();
         },
 
+        onMediaError: function () {
+            if (AuthController.RefreshSessionCookie()) {
+                MediaController.Load();
+            } else {
+                this.mediaError = true;
+                this.loading = false;
+                AuthController.CheckAuthStatusSilent();
+            }
+        },
+
         incrementImageScroll: function (a: number | string): boolean {
             if (this.fit) {
                 return false;
@@ -864,6 +878,8 @@ export default defineComponent({
         },
 
         setImageURL() {
+            this.mediaError = false;
+
             if (!this.metadata) {
                 this.imageURL = "";
                 this.loading = false;
