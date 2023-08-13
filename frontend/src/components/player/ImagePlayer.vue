@@ -255,7 +255,6 @@ import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
-import { MediaController } from "@/control/media";
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
@@ -661,9 +660,7 @@ export default defineComponent({
         },
 
         onMediaError: function () {
-            if (AuthController.RefreshSessionCookie()) {
-                MediaController.Load();
-            } else {
+            if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
                 this.loading = false;
                 AuthController.CheckAuthStatusSilent();

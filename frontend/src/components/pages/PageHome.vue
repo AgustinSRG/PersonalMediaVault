@@ -16,7 +16,7 @@
                 </div>
             </div>
 
-            <div v-if="!loading && total <= 0" class="search-results-msg-display">
+            <div v-if="!loading && total <= 0 && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
@@ -116,6 +116,7 @@ export default defineComponent({
             search: AppStatus.CurrentSearch,
 
             loading: false,
+            firstLoaded: false,
 
             pageSize: 50,
             order: "desc",
@@ -146,7 +147,9 @@ export default defineComponent({
                 return;
             }
 
-            this.loading = true;
+            Timeouts.Set("page-home-load", 330, () => {
+                this.loading = true;
+            });
 
             if (AuthController.Locked) {
                 return; // Vault is locked
@@ -159,7 +162,9 @@ export default defineComponent({
                     this.page = result.page_index;
                     this.totalPages = result.page_count;
                     this.total = result.total_count;
+                    Timeouts.Abort("page-home-load");
                     this.loading = false;
+                    this.firstLoaded = true;
                     if (this.switchMediaOnLoad === "next") {
                         this.switchMediaOnLoad = "";
                         if (this.pageItems.length > 0) {
@@ -195,6 +200,7 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
+                            this.loading = true;
                             Timeouts.Set("page-home-load", 1500, this.$options.loadH);
                         })
                         .handle(err);
@@ -202,6 +208,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
+                    this.loading = true;
                     Timeouts.Set("page-home-load", 1500, this.$options.loadH);
                 });
         },

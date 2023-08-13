@@ -1,5 +1,14 @@
 /* Loader style */
 
+@keyframes delayed-loader {
+    0% {
+        visibility: hidden;
+    }
+    100% {
+        visibility: visible;
+    }
+}
+
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -12,8 +21,8 @@
     justify-content: center;
     align-items: center;
 
-    transition: opacity 0.2s;
-    opacity: 1;
+    animation-name: delayed-loader;
+    animation-duration: 0.33s;
 
     z-index: 300;
 
@@ -25,8 +34,7 @@
 }
 
 .loading-overlay.hidden {
-    pointer-events: none;
-    opacity: 0;
+    display: none;
 }
 
 .loading-overlay-loader {

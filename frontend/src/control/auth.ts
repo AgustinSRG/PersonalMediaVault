@@ -6,7 +6,7 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { LocalStorage } from "./local-storage";
-import { getCookie, setAssetsSessionCookie } from "@/utils/cookie";
+import { setAssetsSessionCookie } from "@/utils/cookie";
 
 export class AuthController {
     public static Locked = true;
@@ -22,18 +22,30 @@ export class AuthController {
     public static CSS = "";
 
     public static Initialize() {
-        AuthController.Session = LocalStorage.Get("x-session-token", "");
-        AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
         AppEvents.AddEventListener("unauthorized", AuthController.ClearSession);
+
+        AuthController.LoadAuthStatus();
+        AuthController.SetAssetsCookie();
         AuthController.CheckAuthStatus();
     }
 
-    public static RefreshSessionCookie(): boolean {
-        const cookieName = "st-" + AuthController.Fingerprint;
-        const cookieValue = getCookie(cookieName);
+    public static LoadAuthStatus() {
+        AuthController.Session = LocalStorage.Get("x-session-token", "");
+        AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
+    }
 
-        if (cookieValue !== AuthController.Session) {
-            setAssetsSessionCookie(cookieName, AuthController.Session);
+    public static SetAssetsCookie() {
+        const cookieName = "st-" + AuthController.Fingerprint;
+        setAssetsSessionCookie(cookieName, AuthController.Session);
+    }
+
+    public static RefreshAuthStatus(): boolean {
+        const storedSession = LocalStorage.Get("x-session-token", "");
+
+        if (storedSession !== AuthController.Session) {
+            AuthController.LoadAuthStatus();
+            AuthController.SetAssetsCookie();
+            AuthController.CheckAuthStatus();
             return true;
         } else {
             return false;
@@ -133,7 +145,7 @@ export class AuthController {
         LocalStorage.Set("x-session-token", session);
         AuthController.Fingerprint = fingerprint;
         LocalStorage.Set("x-vault-fingerprint", fingerprint);
-        AuthController.RefreshSessionCookie();
+        AuthController.SetAssetsCookie();
         AuthController.Username = "";
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();
@@ -159,7 +171,7 @@ export class AuthController {
         AuthController.Session = "";
         LocalStorage.Set("x-session-token", "");
         AuthController.Username = "";
-        AuthController.RefreshSessionCookie();
+        AuthController.SetAssetsCookie();
         AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);
     }
 

@@ -46,7 +46,7 @@
 
         <LogoutModal v-if="displayLogout" v-model:display="displayLogout"></LogoutModal>
 
-        <LoadingOverlay :display="locked || loadingAuth || loadingTags || loadingAlbums" :fixed="true"></LoadingOverlay>
+        <LoadingOverlay v-if="locked || loadingAuth" :fixed="true"></LoadingOverlay>
 
         <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
 
@@ -68,8 +68,6 @@ import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
 import { AuthController } from "../../control/auth";
-import { TagsController } from "../../control/tags";
-import { AlbumsController } from "../../control/albums";
 import { AppEvents } from "../../control/app-events";
 import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
@@ -219,9 +217,6 @@ export default defineComponent({
             layout: AppStatus.CurrentLayout,
             focus: AppStatus.CurrentFocus,
 
-            loadingTags: TagsController.Loading,
-            loadingAlbums: AlbumsController.Loading,
-
             displayLogout: false,
             displaySettings: false,
             displayTheme: false,
@@ -369,14 +364,6 @@ export default defineComponent({
         onAuthStatusLoading: function (l: boolean) {
             this.loadingAuth = l;
         },
-
-        onTagsLoading: function (l: boolean) {
-            this.loadingTags = l && !TagsController.InitiallyLoaded;
-        },
-
-        onAlbumsLoading: function (l: boolean) {
-            this.loadingAlbums = l && !AlbumsController.InitiallyLoaded;
-        },
     },
     mounted: function () {
         this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
@@ -390,20 +377,12 @@ export default defineComponent({
 
         this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
         AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
-
-        this.$options.onTagsLoadingH = this.onTagsLoading.bind(this);
-        AppEvents.AddEventListener("tags-loading", this.$options.onTagsLoadingH);
-
-        this.$options.onAlbumsLoadingH = this.onAlbumsLoading.bind(this);
-        AppEvents.AddEventListener("albums-loading", this.$options.onAlbumsLoadingH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
         AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
         AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
-        AppEvents.RemoveEventListener("tags-loading", this.$options.onTagsLoadingH);
-        AppEvents.RemoveEventListener("albums-loading", this.$options.onAlbumsLoadingH);
     },
 });
 </script>

@@ -1488,9 +1488,7 @@ export default defineComponent({
         },
 
         onMediaError: function () {
-            if (AuthController.RefreshSessionCookie()) {
-                MediaController.Load();
-            } else {
+            if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
                 this.loading = false;
                 AuthController.CheckAuthStatusSilent();

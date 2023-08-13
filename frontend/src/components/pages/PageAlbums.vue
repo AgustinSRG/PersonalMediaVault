@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div v-if="!loading && total <= 0 && !filter" class="search-results-msg-display">
+            <div v-if="!loading && total <= 0 && !filter && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div v-if="!loading && total <= 0 && filter" class="search-results-msg-display">
+            <div v-if="!loading && total <= 0 && filter && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
@@ -155,7 +155,8 @@ export default defineComponent({
     },
     data: function () {
         return {
-            loading: true,
+            loading: false,
+            firstLoaded: false,
 
             albumsList: [],
 
@@ -210,7 +211,9 @@ export default defineComponent({
                 return;
             }
 
-            this.loading = true;
+            Timeouts.Set("page-albums-load", 330, () => {
+                this.loading = true;
+            });
 
             if (AuthController.Locked) {
                 return; // Vault is locked
@@ -219,7 +222,9 @@ export default defineComponent({
             Request.Pending("page-albums-load", AlbumsAPI.GetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
+                    Timeouts.Abort("page-albums-load");
                     this.loading = false;
+                    this.firstLoaded = true;
                     this.updateList();
                 })
                 .onRequestError((err) => {
@@ -229,6 +234,7 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
+                            this.loading = true;
                             Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
                         })
                         .handle(err);
@@ -236,6 +242,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
+                    this.loading = true;
                     Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
                 });
         },

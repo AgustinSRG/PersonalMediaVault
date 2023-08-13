@@ -100,7 +100,7 @@ export class Request<Return_Type = any> {
         }
 
         const authToken = AuthController.Session;
-        AuthController.RefreshSessionCookie();
+        AuthController.RefreshAuthStatus();
 
         fetch(url, {
             method: "GET",
@@ -193,7 +193,7 @@ export class Request<Return_Type = any> {
         }
 
         const authToken = AuthController.Session;
-        AuthController.RefreshSessionCookie();
+        AuthController.RefreshAuthStatus();
 
         fetch(url, {
             method: "POST",
@@ -289,7 +289,7 @@ export class Request<Return_Type = any> {
         }
 
         const authToken = AuthController.Session;
-        AuthController.RefreshSessionCookie();
+        AuthController.RefreshAuthStatus();
 
         request.onabort = () => {
             r._onCancel();

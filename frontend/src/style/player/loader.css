@@ -1,5 +1,14 @@
 /* Player Loader */
 
+@keyframes delayed-player-loader {
+    0% {
+        visibility: hidden;
+    }
+    100% {
+        visibility: visible;
+    }
+}
+
 .player-loader {
     position: absolute;
     top: 0;
@@ -10,6 +19,8 @@
     align-items: center;
     justify-content: center;
     background-color: var(--player-loader-background);
+    animation-name: delayed-player-loader;
+    animation-duration: 0.33s;
 }
 
 .player-lds-ring {

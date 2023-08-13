@@ -8,12 +8,6 @@ export function setAssetsSessionCookie(name: string, value: string) {
     document.cookie = name + "=" + value + ";path=/assets/;SameSite=Strict";
 }
 
-export function getCookie(name: string): string {
-    const value = "; " + document.cookie;
-    const parts = value.split("; " + name + "=");
-    if (parts.length == 2) return parts.pop().split(";").shift();
-}
-
 export function getParameterByName(name: string, url?: string): string {
     if (!url) url = window.location.href;
     name = name.replace(/[\[\]]/g, "\\$&");
