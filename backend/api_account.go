@@ -13,6 +13,7 @@ type AccountContextAPIResponse struct {
 	Write    bool   `json:"write"`
 	Title    string `json:"title"`
 	Style    string `json:"css"`
+	Version  string `json:"version"`
 }
 
 type ChangeUsernameBody struct {
@@ -49,6 +50,7 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 	result.Write = session.write
 	result.Title = config.CustomTitle
 	result.Style = config.CustomCSS
+	result.Version = BACKEND_VERSION
 
 	jsonResult, err := json.Marshal(result)
 

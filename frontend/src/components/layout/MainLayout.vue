@@ -51,6 +51,19 @@
         <LoginModal v-if="locked && !loadingAuth" :display="locked && !loadingAuth"></LoginModal>
 
         <SnackBar></SnackBar>
+
+        <div class="new-version-notice" v-if="newVersionAvailable && !newVersionDismissed">
+            <div class="new-version-notice-msg">
+                {{ $t("You are using an older version of PersonalMediaVault than the server's") }}. 
+                {{ $t("Refresh the page in order to use the latest version") }}.
+            </div>
+            <button type="button" class="modal-close-btn" :title="$t('Refresh')" @click="hardReload">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button type="button" class="modal-close-btn" :title="$t('Close')" @click="dismissNewVersion">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -239,6 +252,9 @@ export default defineComponent({
 
             displayAboutModal: false,
             displayKeyboardHelpModal: false,
+
+            newVersionAvailable: false,
+            newVersionDismissed: false,
         };
     },
     methods: {
@@ -370,6 +386,19 @@ export default defineComponent({
         onAuthLoadingError: function() {
             this.loadingAuthError = true;
         },
+
+        onNewAppVersion: function () {
+            this.newVersionAvailable = true;
+        },
+
+        dismissNewVersion: function () {
+            this.newVersionDismissed = true;
+        },
+
+        hardReload: function () {
+            const loc: any = window.location;
+            loc.reload(true);
+        },
     },
     mounted: function () {
         this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
@@ -386,6 +415,9 @@ export default defineComponent({
 
         this.$options.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
         AppEvents.AddEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
+
+        this.$options.onNewAppVersionH = this.onNewAppVersion.bind(this);
+        AppEvents.AddEventListener("app-new-version", this.$options.onNewAppVersionH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
@@ -393,6 +425,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
         AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
         AppEvents.RemoveEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
+        AppEvents.RemoveEventListener("app-new-version", this.$options.onNewAppVersionH);
     },
 });
 </script>

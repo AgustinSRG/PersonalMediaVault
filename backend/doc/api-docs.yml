@@ -139,6 +139,9 @@ paths:
               css:
                 type: string
                 description: "Custom style for the vault"
+              version:
+                type: string
+                description: "Server version"
               root:
                 type: boolean
                 description: "True if the user has root access to the vault"
