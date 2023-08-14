@@ -142,6 +142,10 @@ export default defineComponent({
         };
     },
     methods: {
+        scrollToTop: function () {
+            this.$el.scrollTop = 0;
+        },
+
         load: function () {
             Timeouts.Abort("page-random-load");
             Request.Abort("page-random-load");
@@ -149,6 +153,8 @@ export default defineComponent({
             if (!this.display) {
                 return;
             }
+
+            this.scrollToTop();
 
             Timeouts.Set("page-random-load", 330, () => {
                 this.loading = true;

@@ -139,6 +139,10 @@ export default defineComponent({
         };
     },
     methods: {
+        scrollToTop: function () {
+            this.$el.scrollTop = 0;
+        },
+
         load: function () {
             Timeouts.Abort("page-home-load");
             Request.Abort("page-home-load");
@@ -146,6 +150,8 @@ export default defineComponent({
             if (!this.display) {
                 return;
             }
+
+            this.scrollToTop();
 
             Timeouts.Set("page-home-load", 330, () => {
                 this.loading = true;

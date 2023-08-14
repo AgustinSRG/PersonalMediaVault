@@ -147,6 +147,10 @@ export default defineComponent({
         };
     },
     methods: {
+        scrollToTop: function () {
+            this.$el.scrollTop = 0;
+        },
+
         load: function () {
             Timeouts.Abort("page-search-load");
             Request.Abort("page-search-load");
@@ -154,6 +158,8 @@ export default defineComponent({
             if (!this.display) {
                 return;
             }
+
+            this.scrollToTop();
 
             Timeouts.Set("page-search-load", 330, () => {
                 this.loading = true;

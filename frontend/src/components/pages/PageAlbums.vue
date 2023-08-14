@@ -181,6 +181,10 @@ export default defineComponent({
         };
     },
     methods: {
+        scrollToTop: function () {
+            this.$el.scrollTop = 0;
+        },
+
         createAlbum: function () {
             this.displayAlbumCreate = true;
         },
@@ -210,6 +214,8 @@ export default defineComponent({
             if (!this.display) {
                 return;
             }
+
+            this.scrollToTop();
 
             Timeouts.Set("page-albums-load", 330, () => {
                 this.loading = true;
