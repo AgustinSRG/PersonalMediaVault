@@ -417,4 +417,6 @@ export class AlbumsController {
         AlbumsController.HasPageNext = false;
         AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
     }
+
+    public static AlbumsPageSearch = "";
 }

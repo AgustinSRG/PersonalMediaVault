@@ -5,7 +5,7 @@
                 <div class="search-results-option">
                     <input
                         type="text"
-                        class="form-control form-control-full-width"
+                        class="form-control form-control-full-width auto-focus"
                         autocomplete="off"
                         v-model="filter"
                         :placeholder="$t('Filter by name') + '...'"
@@ -131,12 +131,12 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController } from "@/control/auth";
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumEntry } from "@/control/albums";
+import { AlbumEntry, AlbumsController } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
@@ -160,7 +160,7 @@ export default defineComponent({
 
             albumsList: [],
 
-            filter: "",
+            filter: AlbumsController.AlbumsPageSearch,
 
             pageSize: 50,
             order: "desc",
@@ -185,6 +185,18 @@ export default defineComponent({
             this.$el.scrollTop = 0;
         },
 
+        autoFocus: function () {
+            nextTick(() => {
+                const el = this.$el.querySelector(".auto-focus");
+                if (el) {
+                    el.focus();
+                    if (el.select) {
+                        el.select();
+                    }
+                }
+            });
+        },
+
         createAlbum: function () {
             this.displayAlbumCreate = true;
         },
@@ -203,6 +215,7 @@ export default defineComponent({
         },
 
         changeFilter: function () {
+            AlbumsController.AlbumsPageSearch = this.filter;
             this.page = 0;
             this.updateList();
         },
@@ -462,6 +475,10 @@ export default defineComponent({
 
         this.updateSearchParams();
         this.load();
+
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     beforeUnmount: function () {
         Timeouts.Abort("page-albums-load");
@@ -478,6 +495,9 @@ export default defineComponent({
     watch: {
         display: function () {
             this.load();
+            if (this.display) {
+                this.autoFocus();
+            }
         },
     },
 });
