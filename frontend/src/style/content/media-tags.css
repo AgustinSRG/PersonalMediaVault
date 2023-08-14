@@ -10,7 +10,8 @@
     border-radius: 100vw;
     display: flex;
     align-items: center;
-    margin: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
     padding: 0.25rem;
 }
 
@@ -37,4 +38,11 @@
 .btn-tag-mini {
     margin-right: 0.5rem;
     margin-bottom: 0.5rem;
+}
+
+.media-tags-finder {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
 }

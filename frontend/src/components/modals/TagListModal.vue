@@ -26,18 +26,25 @@
                     </div>
                 </div>
                 <div v-if="canWrite">
-                    <div class="form-group">
-                        <label>{{ $t("Tag to add") }}:</label>
-                        <input
-                            type="text"
-                            autocomplete="off"
-                            maxlength="255"
-                            v-model="tagToAdd"
-                            :disabled="busy"
-                            @input="onTagAddChanged"
-                            @keydown="onTagAddKeyDown"
-                            class="form-control tag-to-add auto-focus"
-                        />
+                    <div class="form-group media-tags">
+                        <div class="media-tags-finder">
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                maxlength="255"
+                                v-model="tagToAdd"
+                                :disabled="busy"
+                                @input="onTagAddChanged"
+                                @keydown="onTagAddKeyDown"
+                                class="form-control tag-to-add auto-focus"
+                                :placeholder="$t('Add tags') + '...'"
+                            />
+                        </div>
+                        <div class="media-tags-adder">
+                            <button type="button" :disabled="!tagToAdd" class="btn btn-primary btn-xs" @click="addTag">
+                                <i class="fas fa-plus"></i> {{ $t("Add tag") }}
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group" v-if="matchingTags.length > 0">
                         <button

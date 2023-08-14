@@ -43,17 +43,6 @@
 
                     <div class="form-group">
                         <label>{{ $t("Tags") }}:</label>
-                    </div>
-                    <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
-                        <label v-if="tagsSearch.length === 0">{{ $t("There are no tags yet for this filter.") }}</label>
-                        <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
-                            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-                            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <select class="form-control form-select form-control-full-width" v-model="tagModeSearch">
                             <option :value="'all'">
                                 {{ $t("Media must contain ALL of the selected tags") }}
@@ -69,17 +58,25 @@
                             </option>
                         </select>
                     </div>
-                    <div class="form-group" v-if="tagModeSearch !== 'untagged'">
-                        <input
-                            type="text"
-                            autocomplete="off"
-                            maxlength="255"
-                            v-model="tagToAddSearch"
-                            @input="onTagSearchChanged(false)"
-                            @keydown="onTagSearchKeyDown"
-                            class="form-control"
-                            :placeholder="$t('Search for tags') + '...'"
-                        />
+                    <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
+                        <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
+                            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                            <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="media-tags-finder">
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                maxlength="255"
+                                v-model="tagToAddSearch"
+                                @input="onTagSearchChanged(false)"
+                                @keydown="onTagSearchKeyDown"
+                                class="form-control"
+                                :placeholder="$t('Search for tags') + '...'"
+                            />
+                        </div>
                     </div>
                     <div class="form-group" v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0">
                         <button
@@ -124,26 +121,29 @@
 
                     <div v-if="action === 'tag-add' || action === 'tag-remove'">
                         <div class="form-group media-tags">
-                            <label v-if="tagsAction.length === 0">{{ $t("There are no selected tags yet.") }}</label>
                             <div v-for="tag in tagsAction" :key="tag" class="media-tag">
                                 <div class="media-tag-name">{{ tag }}</div>
                                 <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagAction(tag)">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <input
-                                type="text"
-                                autocomplete="off"
-                                maxlength="255"
-                                v-model="tagToAddAction"
-                                @input="onTagActionChanged(false)"
-                                @keydown="onTagActionKeyDown"
-                                class="form-control"
-                                :placeholder="$t('Search for tags') + '...'"
-                            />
+                            <div class="media-tags-finder">
+                                <input
+                                    type="text"
+                                    autocomplete="off"
+                                    maxlength="255"
+                                    v-model="tagToAddAction"
+                                    @input="onTagActionChanged(false)"
+                                    @keydown="onTagActionKeyDown"
+                                    class="form-control tags-adder"
+                                    :placeholder="$t('Add tags') + '...'"
+                                />
+                            </div>
+                            <div class="media-tags-adder">
+                                <button type="button" :disabled="!tagToAddAction" class="btn btn-primary btn-xs" @click="addTagAction">
+                                    <i class="fas fa-plus"></i> {{ $t("Add tag") }}
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group" v-if="matchingTagsAction.length > 0">
                             <button
@@ -467,13 +467,20 @@ export default defineComponent({
             }
         },
 
+        addTagAction: function () {
+            if (!this.tagToAddAction) {
+                return;
+            }
+            this.addMatchingTagAction({ name: this.tagToAddAction, id: -1 });
+            this.tagToAddAction = "";
+            this.onTagActionChanged(true);
+        },
+
         onTagActionKeyDown: function (e: KeyboardEvent) {
             if (e.key === "Enter") {
                 e.preventDefault();
 
-                this.addMatchingTagAction({ name: this.tagToAddAction, id: -1 });
-                this.tagToAddAction = "";
-                this.onTagActionChanged(true);
+                this.addTagAction();
             } else if (e.key === "Tab") {
                 this.onTagActionChanged(true);
 

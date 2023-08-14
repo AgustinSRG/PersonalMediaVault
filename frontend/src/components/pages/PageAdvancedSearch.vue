@@ -8,17 +8,65 @@
                     name="title-search"
                     autocomplete="off"
                     maxlength="255"
-                    :disabled="loading"
                     v-model="textSearch"
                     class="form-control form-control-full-width"
                     @input="markDirty"
                 />
             </div>
 
+            <div class="form-group">
+                <label>{{ $t("Tags") }}:</label>
+                <select class="form-control form-select form-control-full-width" v-model="tagMode">
+                    <option :value="'all'">
+                        {{ $t("Media must contain ALL of the selected tags") }}
+                    </option>
+                    <option :value="'any'">
+                        {{ $t("Media must contain ANY of the selected tags") }}
+                    </option>
+                    <option :value="'none'">
+                        {{ $t("Media must contain NONE of the selected tags") }}
+                    </option>
+                    <option :value="'untagged'">
+                        {{ $t("Media must be untagged") }}
+                    </option>
+                </select>
+            </div>
+            <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
+                <div v-for="tag in tags" :key="tag" class="media-tag">
+                    <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                    <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="media-tags-finder">
+                    <input
+                        type="text"
+                        autocomplete="off"
+                        maxlength="255"
+                        v-model="tagToAdd"
+                        @input="onTagAddChanged(false)"
+                        @keydown="onTagAddKeyDown"
+                        class="form-control auto-focus"
+                        :placeholder="$t('Search for tags') + '...'"
+                    />
+                </div>
+            </div>
+            <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
+                <button
+                    v-for="mt in matchingTags"
+                    :key="mt.id"
+                    type="button"
+                    class="btn btn-primary btn-sm btn-tag-mini"
+                    @click="addMatchingTag(mt)"
+                >
+                    <i class="fas fa-plus"></i> {{ mt.name }}
+                </button>
+            </div>
+
             <div v-if="advancedSearch">
                 <div class="form-group">
                     <label>{{ $t("Media type") }}:</label>
-                    <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="type" @change="markDirty">
+                    <select class="form-control form-select form-control-full-width" v-model="type" @change="markDirty">
                         <option :value="0">{{ $t("Any media") }}</option>
                         <option :value="1">{{ $t("Images") }}</option>
                         <option :value="2">{{ $t("Videos") }}</option>
@@ -28,12 +76,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("Album") }}:</label>
-                    <select
-                        v-model="albumSearch"
-                        class="form-control form-select form-control-full-width"
-                        :disabled="loading"
-                        @change="markDirty"
-                    >
+                    <select v-model="albumSearch" class="form-control form-select form-control-full-width" @change="markDirty">
                         <option :value="-1">--</option>
                         <option v-for="a in albums" :key="a.id" :value="a.id">
                             {{ a.name }}
@@ -42,67 +85,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ $t("Tags") }}:</label>
-                </div>
-                <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
-                    <label v-if="tags.length === 0">{{ $t("There are no tags yet for this filter.") }}</label>
-                    <div v-for="tag in tags" :key="tag" class="media-tag">
-                        <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
-                        <button type="button" :title="$t('Remove tag')" class="media-tag-btn" :disabled="loading" @click="removeTag(tag)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <select class="form-control form-select form-control-full-width" :disabled="loading" v-model="tagMode">
-                        <option :value="'all'">
-                            {{ $t("Media must contain ALL of the selected tags") }}
-                        </option>
-                        <option :value="'any'">
-                            {{ $t("Media must contain ANY of the selected tags") }}
-                        </option>
-                        <option :value="'none'">
-                            {{ $t("Media must contain NONE of the selected tags") }}
-                        </option>
-                        <option :value="'untagged'">
-                            {{ $t("Media must be untagged") }}
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group" v-if="tagMode !== 'untagged'">
-                    <input
-                        type="text"
-                        autocomplete="off"
-                        maxlength="255"
-                        v-model="tagToAdd"
-                        :disabled="loading"
-                        @input="onTagAddChanged(false)"
-                        @keydown="onTagAddKeyDown"
-                        class="form-control"
-                        :placeholder="$t('Search for tags') + '...'"
-                    />
-                </div>
-                <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
-                    <button
-                        v-for="mt in matchingTags"
-                        :key="mt.id"
-                        type="button"
-                        :disabled="loading"
-                        class="btn btn-primary btn-sm btn-tag-mini"
-                        @click="addMatchingTag(mt)"
-                    >
-                        <i class="fas fa-plus"></i> {{ mt.name }}
-                    </button>
-                </div>
-
-                <div class="form-group">
                     <label>{{ $t("Order") }}:</label>
-                    <select
-                        class="form-control form-select form-control-full-width"
-                        :disabled="loading"
-                        v-model="order"
-                        @change="markDirty"
-                    >
+                    <select class="form-control form-select form-control-full-width" v-model="order" @change="markDirty">
                         <option :value="'desc'">{{ $t("Show most recent") }}</option>
                         <option :value="'asc'">{{ $t("Show oldest") }}</option>
                     </select>
@@ -245,13 +229,25 @@ export default defineComponent({
             albums: [],
             albumSearch: -1,
             albumFilter: null,
-
-            dirty: false,
         };
     },
     methods: {
         markDirty: function () {
-            this.dirty = true;
+            Timeouts.Set("page-adv-search-dirty", 330, () => {
+                this.startSearch();
+            });
+        },
+
+        autoFocus: function () {
+            nextTick(() => {
+                const el = this.$el.querySelector(".auto-focus");
+                if (el) {
+                    el.focus();
+                    if (el.select) {
+                        el.select();
+                    }
+                }
+            });
         },
 
         autoScroll: function () {
@@ -423,8 +419,8 @@ export default defineComponent({
             if (event) {
                 event.preventDefault();
             }
+            Timeouts.Abort("page-adv-search-dirty");
             this.loading = true;
-            this.dirty = false;
             this.pageItems = [];
             this.page = 0;
             this.totalPages = 0;
@@ -800,11 +796,7 @@ export default defineComponent({
                 return;
             }
 
-            if (this.dirty) {
-                this.startSearch();
-            } else {
-                this.load();
-            }
+            this.load();
         },
 
         updateAlbums: function () {
@@ -849,13 +841,17 @@ export default defineComponent({
 
         this.updateTagData();
 
-        if (this.inModal) {
-            this.startSearch();
+        this.startSearch();
+
+        if (this.display) {
+            this.autoFocus();
         }
     },
     beforeUnmount: function () {
         Timeouts.Abort("page-adv-search-load");
         Request.Abort("page-adv-search-load");
+
+        Timeouts.Abort("page-adv-search-dirty");
 
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
         AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
@@ -888,6 +884,9 @@ export default defineComponent({
                 this.startSearch();
             } else if (this.inModal) {
                 this.cancel();
+            }
+            if (this.display) {
+                this.autoFocus();
             }
         },
     },
