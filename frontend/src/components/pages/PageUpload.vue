@@ -1,79 +1,17 @@
 <template>
-    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }">
-        <div class="form-group">
-            <button v-if="!optionsShown" @click="showOptions(true)" type="button" class="btn btn-primary btn-mr">
-                <i class="fas fa-cog"></i> {{ $t("Show advanced options") }}
+    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }" @drop="onDrop">
+        <div class="upload-parallel-options">
+            <div class="upload-parallel-label">{{ $t("Max number of uploads in parallel") }}:</div>
+            <button
+                v-for="v in parallelOptions"
+                :key="v"
+                type="button"
+                class="upload-parallel-option"
+                :class="{ current: maxParallelUploads === v }"
+                @click="updateMaxParallelUploads(v)"
+            >
+                {{ v }}
             </button>
-            <button v-if="optionsShown" @click="showOptions(false)" type="button" class="btn btn-primary btn-mr">
-                <i class="fas fa-cog"></i> {{ $t("Hide advanced options") }}
-            </button>
-        </div>
-        <div class="upload-options-container" v-if="optionsShown">
-            <div class="form-group">
-                <label>{{ $t("Max number of uploads in parallel") }}:</label>
-                <select v-model="maxParallelUploads" @change="updateMaxParallelUploads" class="form-control form-select">
-                    <option :value="1">1</option>
-                    <option :value="2">2</option>
-                    <option :value="4">4</option>
-                    <option :value="8">8</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
-                <select v-model="album" :disabled="inModal" class="form-control form-select">
-                    <option :value="-1">--</option>
-                    <option v-for="a in albums" :key="a.id" :value="a.id">
-                        {{ a.name }}
-                    </option>
-                </select>
-            </div>
-            <div class="form-group" v-if="!inModal">
-                <button type="button" @click="createAlbum" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> {{ $t("Create album") }}
-                </button>
-            </div>
-            <div class="form-group">
-                <label>{{ $t("Tags to automatically add to the uploaded media") }}:</label>
-            </div>
-            <div class="form-group media-tags">
-                <label v-if="tags.length === 0">({{ $t("none") }})</label>
-                <div v-for="tag in tags" :key="tag" class="media-tag">
-                    <div class="media-tag-name">{{ tag }}</div>
-                    <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <form @submit="addTag">
-                <div class="form-group">
-                    <label>{{ $t("Tag to add") }}:</label>
-                    <input
-                        type="text"
-                        autocomplete="off"
-                        maxlength="255"
-                        v-model="tagToAdd"
-                        @input="onTagAddChanged(false)"
-                        @keydown="onTagInputKeyDown"
-                        class="form-control"
-                    />
-                </div>
-                <div class="form-group" v-if="matchingTags.length > 0">
-                    <button
-                        v-for="mt in matchingTags"
-                        :key="mt.id"
-                        type="button"
-                        class="btn btn-primary btn-sm btn-tag-mini"
-                        @click="addTagByName(mt.name)"
-                    >
-                        <i class="fas fa-plus"></i> {{ mt.name }}
-                    </button>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary" :disabled="!tagToAdd">
-                        <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
-                    </button>
-                </div>
-            </form>
         </div>
         <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
         <div
@@ -188,22 +126,32 @@
             </div>
         </div>
 
-        <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
+        <UploadModal
+            v-if="displayUploadModal"
+            v-model:display="displayUploadModal"
+            :in-modal="inModal"
+            :fixed-album="fixedAlbum"
+            :files="files"
+            @upload="onUploadConfirmed"
+        >
+        </UploadModal>
     </div>
 </template>
 
 <script lang="ts">
-import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { TagsController } from "@/control/tags";
 import { UploadController, UploadEntryMin } from "@/control/upload";
-import { clone } from "@/utils/objects";
 import { GenerateURIQuery } from "@/utils/request";
-import { parseTagName } from "@/utils/tags";
-import { defineComponent } from "vue";
+import { defineAsyncComponent, defineComponent } from "vue";
 
-import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
+
+const UploadModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/UploadModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
 
 const STATE_FILTER_PENDING = ["pending", "uploading", "encrypting", "tag"];
 const STATE_FILTER_READY = ["ready"];
@@ -211,7 +159,7 @@ const STATE_FILTER_ERROR = ["error"];
 
 export default defineComponent({
     components: {
-        AlbumCreateModal,
+        UploadModal,
     },
     name: "PageUpload",
     emits: ["media-go"],
@@ -230,16 +178,6 @@ export default defineComponent({
 
             maxParallelUploads: UploadController.MaxParallelUploads,
 
-            tags: [],
-            tagToAdd: "",
-            tagData: {},
-            matchingTags: [],
-
-            album: -1,
-            albums: [],
-
-            displayAlbumCreate: false,
-
             countPending: 0,
             countReady: 0,
             countError: 0,
@@ -248,6 +186,11 @@ export default defineComponent({
             selectedState: "pending",
 
             filteredEntries: [],
+
+            displayUploadModal: false,
+            files: [],
+
+            parallelOptions: [1, 2, 4, 8, 16, 32, 64],
         };
     },
     methods: {
@@ -280,24 +223,19 @@ export default defineComponent({
             }
         },
 
-        createAlbum: function () {
-            this.displayAlbumCreate = true;
-        },
-
-        onNewAlbum: function (albumId) {
-            this.album = albumId;
-        },
-
-        updateMaxParallelUploads: function () {
-            UploadController.MaxParallelUploads = this.maxParallelUploads;
+        updateMaxParallelUploads: function (m: number) {
+            this.maxParallelUploads = m;
+            UploadController.MaxParallelUploads = m;
         },
 
         inputFileChanged: function (e) {
             const data = e.target.files;
             if (data && data.length > 0) {
+                let files = [];
                 for (let file of data) {
-                    this.addFile(file);
+                    files.push(file);
                 }
+                this.addFiles(files);
             }
         },
 
@@ -306,9 +244,11 @@ export default defineComponent({
             this.dragging = false;
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
+                let files = [];
                 for (let file of data) {
-                    this.addFile(file);
+                    files.push(file);
                 }
+                this.addFiles(files);
             }
         },
 
@@ -342,9 +282,17 @@ export default defineComponent({
             }
         },
 
-        addFile: function (file: File) {
-            UploadController.AddFile(file, this.album, this.tags.slice());
+        addFiles: function (files: File[]) {
+            this.files = files;
+            this.displayUploadModal = true;
             this.updateSelectedState("pending");
+        },
+
+        onUploadConfirmed: function (album: number, tags: string[]) {
+            for (let file of this.files) {
+                UploadController.AddFile(file, album, tags.slice());
+            }
+            this.files = [];
         },
 
         removeFile: function (id: number) {
@@ -436,120 +384,8 @@ export default defineComponent({
             }
         },
 
-        findTags: function () {
-            const tagFilter = this.tagToAdd
-                .replace(/[\n\r]/g, " ")
-                .trim()
-                .replace(/[\s]/g, "_")
-                .toLowerCase();
-            if (!tagFilter) {
-                this.matchingTags = [];
-                return;
-            }
-            this.matchingTags = Object.values(this.tagData)
-                .map((a: any) => {
-                    const i = a.name.indexOf(tagFilter);
-                    return {
-                        id: a.id,
-                        name: a.name,
-                        starts: i === 0,
-                        contains: i >= 0,
-                    };
-                })
-                .filter((a) => {
-                    if (this.tags.indexOf(a.name) >= 0) {
-                        return false;
-                    }
-                    return a.starts || a.contains;
-                })
-                .sort((a, b) => {
-                    if (a.starts && !b.starts) {
-                        return -1;
-                    } else if (b.starts && !a.starts) {
-                        return 1;
-                    } else if (a.name < b.name) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                })
-                .slice(0, 10);
-        },
-
-        updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
-        },
-
-        onTagInputKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
-                this.onTagAddChanged(true);
-                if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
-                    this.tagToAdd = this.matchingTags[0].name;
-                    this.onTagAddChanged(true);
-                    event.preventDefault();
-                }
-            }
-        },
-
-        onTagAddChanged: function (forced: boolean) {
-            if (forced) {
-                if (this.$options.findTagTimeout) {
-                    clearTimeout(this.$options.findTagTimeout);
-                    this.$options.findTagTimeout = null;
-                }
-                this.findTags();
-            } else {
-                if (this.$options.findTagTimeout) {
-                    return;
-                }
-                this.$options.findTagTimeout = setTimeout(() => {
-                    this.$options.findTagTimeout = null;
-                    this.findTags();
-                }, 200);
-            }
-        },
-
-        removeTag: function (tag: string) {
-            for (let i = 0; i < this.tags.length; i++) {
-                if (this.tags[i] === tag) {
-                    this.tags.splice(i, 1);
-                    this.onTagAddChanged(true);
-                    break;
-                }
-            }
-        },
-
-        addTag: function (e) {
-            if (e) {
-                e.preventDefault();
-            }
-            this.addTagByName(this.tagToAdd);
-            this.tagToAdd = "";
-        },
-
-        addTagByName: function (tag: string) {
-            tag = parseTagName(tag);
-            this.removeTag(tag);
-            this.tags.push(tag);
-            this.onTagAddChanged(true);
-        },
-
         showOptions: function (b: boolean) {
             this.optionsShown = b;
-        },
-
-        updateAlbums: function () {
-            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-                if (a.nameLowerCase < b.nameLowerCase) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-
-            if (this.inModal) {
-                this.album = this.fixedAlbum;
-            }
         },
 
         onPendingPush: function (m: UploadEntryMin) {
@@ -670,23 +506,8 @@ export default defineComponent({
         AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
         AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
         AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
-
-        this.updateTagData();
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
-
-        this.updateAlbums();
-        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
-
-        TagsController.Load();
-        AlbumsController.Load();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
-
         AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
         AppEvents.RemoveEventListener("upload-list-rm", this.$options.onPendingRemoveH);
         AppEvents.RemoveEventListener("upload-list-clear", this.$options.onPendingClearH);
