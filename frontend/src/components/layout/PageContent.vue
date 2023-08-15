@@ -1,5 +1,15 @@
 <template>
-    <div class="page-content" tabindex="-1">
+    <div
+        class="page-content"
+        tabindex="-1"
+        :class="{
+            'items-fit-many': pageItemsFit <= 0,
+            'items-size-small': pageItemsSize === 'small',
+            'items-size-big': pageItemsSize === 'big',
+            'items-size-normal': pageItemsSize !== 'small' && pageItemsSize !== 'big',
+        }"
+        :style="{ '--page-items-fit': pageItemsFit }"
+    >
         <div class="page-header">
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
                 <i class="fas fa-chevron-left"></i>
@@ -88,6 +98,7 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
+import { AppPreferences } from "@/control/app-preferences";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -157,6 +168,9 @@ export default defineComponent({
             searchParams: AppStatus.SearchParams,
 
             displayConfigModal: false,
+
+            pageItemsFit: AppPreferences.PageItemsFit,
+            pageItemsSize: AppPreferences.PageItemsSize,
         };
     },
     methods: {
@@ -296,11 +310,18 @@ export default defineComponent({
             }
             this.onSearchParamsChanged();
         },
+
+        updatePageItemsPreferences: function () {
+            this.pageItemsFit = AppPreferences.PageItemsFit;
+            this.pageItemsSize = AppPreferences.PageItemsSize;
+        },
     },
     mounted: function () {
         this.$options.pageUpdater = this.updatePage.bind(this);
-
         AppEvents.AddEventListener("app-status-update", this.$options.pageUpdater);
+
+        this.$options.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
+        AppEvents.AddEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
 
         this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
@@ -309,6 +330,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("app-status-update", this.$options.pageUpdater);
+        AppEvents.RemoveEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
     },
 });

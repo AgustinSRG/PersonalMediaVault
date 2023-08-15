@@ -26,6 +26,26 @@
                         step="1"
                     />
                 </div>
+                <div class="form-group">
+                    <label>{{ $t("Size of the thumbnails") }}:</label>
+                    <select class="form-control form-select form-control-full-width" v-model="pageItemsSize" @change="onChangeItemsSize">
+                        <option :value="'small'">{{ $t("Small thumbnails") }}</option>
+                        <option :value="'normal'">{{ $t("Normal thumbnails") }}</option>
+                        <option :value="'big'">{{ $t("Big thumbnails") }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{{ $t("If possible, fit a number of elements in a single row") }}:</label>
+                    <input
+                        type="number"
+                        class="form-control form-control-full-width"
+                        v-model.number="pageItemsFit"
+                        @change="onChangePageItemsFit"
+                        :max="256"
+                        :min="1"
+                        step="1"
+                    />
+                </div>
             </div>
             <div class="modal-footer no-padding">
                 <button type="button" class="modal-footer-btn" @click="close"><i class="fas fa-check"></i> {{ $t("Done") }}</button>
@@ -64,6 +84,9 @@ export default defineComponent({
             minPageSize: MIN_PAGE_SIZE,
 
             pageSizeOptions: [],
+
+            pageItemsFit: AppPreferences.PageItemsFit,
+            pageItemsSize: AppPreferences.PageItemsSize,
         };
     },
     methods: {
@@ -74,6 +97,19 @@ export default defineComponent({
             if (AppPreferences.PageMaxItems !== truePageSize) {
                 AppPreferences.SetPageMaxItems(truePageSize);
             }
+        },
+
+        onChangePageItemsFit: function () {
+            const itemsFit = parseInt(this.pageItemsFit);
+            const trueItemsFit = Math.min(256, Math.max(0, itemsFit || 5));
+
+            if (AppPreferences.PageItemsFit !== trueItemsFit) {
+                AppPreferences.SetPageItemsFit(trueItemsFit);
+            }
+        },
+
+        onChangeItemsSize: function () {
+            AppPreferences.SetPageItemsSize(this.pageItemsSize);
         },
 
         close: function () {
@@ -90,6 +126,9 @@ export default defineComponent({
                 this.pageSizeCustom = this.pageSize;
                 this.pageSize = 0;
             }
+
+            this.pageItemsFit = AppPreferences.PageItemsFit;
+            this.pageItemsSize = AppPreferences.PageItemsSize;
         },
 
         autoFocus: function () {

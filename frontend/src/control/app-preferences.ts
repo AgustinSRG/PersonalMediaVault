@@ -22,6 +22,9 @@ export class AppPreferences {
 
     public static PageMaxItems = 25;
 
+    public static PageItemsSize = "normal";
+    public static PageItemsFit = 0;
+
     public static LoadPreferences() {
         const locale = navigator.language || "en";
 
@@ -31,6 +34,9 @@ export class AppPreferences {
         AppPreferences.FavAlbums = LocalStorage.Get("app-pref-albums-fav", []);
 
         AppPreferences.PageMaxItems = LocalStorage.Get("app-pref-page-max-items", 25);
+
+        AppPreferences.PageItemsSize = LocalStorage.Get("app-pref-page-items-size", "normal");
+        AppPreferences.PageItemsFit = LocalStorage.Get("app-pref-page-items-fit", 5);
 
         AppEvents.AddEventListener("albums-update", AppPreferences.OnAlbumsUpdate);
         AppEvents.AddEventListener("current-album-update", AppPreferences.OnAlbumLoad);
@@ -90,5 +96,17 @@ export class AppPreferences {
         AppPreferences.PageMaxItems = m;
         LocalStorage.Set("app-pref-page-max-items", m);
         AppEvents.Emit("page-size-pref-updated");
+    }
+
+    public static SetPageItemsSize(s: string) {
+        AppPreferences.PageItemsSize = s;
+        LocalStorage.Set("app-pref-page-items-size", s);
+        AppEvents.Emit("page-items-pref-updated");
+    }
+
+    public static SetPageItemsFit(m: number) {
+        AppPreferences.PageItemsFit = m;
+        LocalStorage.Set("app-pref-page-items-fit", m);
+        AppEvents.Emit("page-items-pref-updated");
     }
 }

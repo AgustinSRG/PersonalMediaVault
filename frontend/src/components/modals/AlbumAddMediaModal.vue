@@ -1,6 +1,17 @@
 <template>
     <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true">
-        <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
+        <div
+            v-if="display"
+            class="modal-dialog modal-xl modal-height-100"
+            role="document"
+            :class="{
+                'items-fit-many': pageItemsFit <= 0,
+                'items-size-small': pageItemsSize === 'small',
+                'items-size-big': pageItemsSize === 'big',
+                'items-size-normal': pageItemsSize !== 'small' && pageItemsSize !== 'big',
+            }"
+            :style="{ '--page-items-fit': pageItemsFit }"
+        >
             <div class="modal-header">
                 <div class="modal-title" v-if="!isUpload">
                     {{ $t("Search media to add to the album") }}
@@ -44,6 +55,7 @@ import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
+import { AppPreferences } from "@/control/app-preferences";
 
 export default defineComponent({
     components: {
@@ -66,6 +78,9 @@ export default defineComponent({
             busy: false,
 
             isUpload: false,
+
+            pageItemsFit: AppPreferences.PageItemsFit,
+            pageItemsSize: AppPreferences.PageItemsSize,
         };
     },
     methods: {
@@ -108,13 +123,24 @@ export default defineComponent({
                     console.error(err);
                 });
         },
+
+        updatePageItemsPreferences: function () {
+            this.pageItemsFit = AppPreferences.PageItemsFit;
+            this.pageItemsSize = AppPreferences.PageItemsSize;
+        },
     },
     mounted: function () {
+        this.$options.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
+        AppEvents.AddEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
+
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
             });
         }
+    },
+    beforeUnmount: function () {
+        AppEvents.RemoveEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
     },
     watch: {
         display: function () {
