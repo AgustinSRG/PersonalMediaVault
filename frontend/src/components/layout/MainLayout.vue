@@ -54,7 +54,7 @@
 
         <div class="new-version-notice" v-if="newVersionAvailable && !newVersionDismissed">
             <div class="new-version-notice-msg">
-                {{ $t("You are using an older version of PersonalMediaVault than the server's") }}. 
+                {{ $t("You are using an older version of PersonalMediaVault than the server's") }}.
                 {{ $t("Refresh the page in order to use the latest version") }}.
             </div>
             <button type="button" class="modal-close-btn" :title="$t('Refresh')" @click="hardReload">
@@ -383,7 +383,7 @@ export default defineComponent({
             this.loadingAuth = l;
         },
 
-        onAuthLoadingError: function() {
+        onAuthLoadingError: function () {
             this.loadingAuthError = true;
         },
 
@@ -396,8 +396,24 @@ export default defineComponent({
         },
 
         hardReload: function () {
-            const loc: any = window.location;
-            loc.reload(true);
+            try {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    registrations.forEach((registration) => {
+                        registration.unregister();
+                    });
+
+                    caches.keys().then((allCaches) => {
+                        allCaches.forEach((cache) => {
+                            caches.delete(cache);
+                        });
+
+                        const loc: any = window.location;
+                        loc.reload(true);
+                    });
+                });
+            } catch (ex) {
+                console.error(ex);
+            }
         },
     },
     mounted: function () {
