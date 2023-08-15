@@ -99,7 +99,7 @@ export default defineComponent({
             }
 
             if (this.name === this.oldName) {
-                this.close();
+                this.$refs.modalContainer.close(true);
                 return;
             }
 
@@ -113,7 +113,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;
                     this.name = "";
-                    this.close();
+                    this.$refs.modalContainer.close(true);
                     AlbumsController.OnChangedAlbum(albumId);
                 })
                 .onCancel(() => {

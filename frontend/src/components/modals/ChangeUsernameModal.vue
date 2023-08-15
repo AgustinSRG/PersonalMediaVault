@@ -109,7 +109,7 @@ export default defineComponent({
                     this.username = "";
                     this.password = "";
                     AppEvents.Emit("snack", this.$t("Vault username changed!"));
-                    this.close();
+                    this.$refs.modalContainer.close(true);
                 })
                 .onCancel(() => {
                     this.busy = false;

@@ -104,7 +104,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
                     this.busy = false;
                     this.name = "";
-                    this.close();
+                    this.$refs.modalContainer.close(true);
                     AppEvents.Emit("albums-list-change");
                     AlbumsController.Load();
                     this.$emit("new-album", response.album_id, albumName);

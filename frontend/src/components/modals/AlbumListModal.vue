@@ -215,7 +215,7 @@ export default defineComponent({
                             AppEvents.Emit("unauthorized", false);
                         })
                         .add(404, "*", () => {
-                            this.close();
+                            this.$refs.modalContainer.close(true);
                         })
                         .add("*", "*", () => {
                             // Retry
@@ -244,7 +244,7 @@ export default defineComponent({
         },
 
         goToAlbum: function (album) {
-            this.close();
+            this.$refs.modalContainer.close(true);
             AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
         },
 

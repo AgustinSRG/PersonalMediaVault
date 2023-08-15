@@ -117,7 +117,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
-                    this.close();
+                    this.$refs.modalContainer.close(true);
                     AlbumsController.LoadCurrentAlbum();
                     AppStatus.OnDeleteMedia();
                 })

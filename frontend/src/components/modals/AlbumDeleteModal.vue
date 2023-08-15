@@ -115,7 +115,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
-                    this.close();
+                    this.$refs.modalContainer.close(true);
                     AlbumsController.OnChangedAlbum(albumId);
                 })
                 .onCancel(() => {
