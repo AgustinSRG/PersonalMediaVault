@@ -67,20 +67,6 @@
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
-
-            <div v-if="total > 0" class="search-results-options">
-                <div class="search-results-option">
-                    <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
-                        <option :value="'desc'">{{ $t("Show most recent") }}</option>
-                        <option :value="'asc'">{{ $t("Show oldest") }}</option>
-                    </select>
-                </div>
-                <div class="search-results-option text-right">
-                    <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
-                        <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
-                    </select>
-                </div>
-            </div>
         </div>
     </div>
 </template>
@@ -101,6 +87,7 @@ import { AlbumsController } from "@/control/albums";
 import { MediaListItem } from "@/api/api-media";
 import { TagEntry, TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
+import { AppPreferences } from "@/control/app-preferences";
 
 export default defineComponent({
     name: "PageHome",
@@ -118,7 +105,7 @@ export default defineComponent({
             loading: false,
             firstLoaded: false,
 
-            pageSize: 50,
+            pageSize: AppPreferences.PageMaxItems,
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -219,17 +206,11 @@ export default defineComponent({
                 });
         },
 
-        onOrderChanged: function () {
-            this.page = 0;
-            this.load();
-            this.onSearchParamsChanged();
-        },
-
-        onPageSizeChanged: function () {
+        updatePageSize: function () {
+            this.pageSize = AppPreferences.PageMaxItems;
             this.updateLoadingFiller();
             this.page = 0;
             this.load();
-            this.onSearchParamsChanged();
         },
 
         onAppStatusChanged: function () {
@@ -254,7 +235,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.page, this.pageSize, this.order);
+            this.searchParams = AppStatus.PackSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -286,7 +267,6 @@ export default defineComponent({
         updateSearchParams: function () {
             const params = AppStatus.UnPackSearchParams(this.searchParams);
             this.page = params.page;
-            this.pageSize = params.pageSize;
             this.order = params.order;
             this.updateLoadingFiller();
         },
@@ -449,6 +429,9 @@ export default defineComponent({
         this.$options.tagUpdateH = this.updateTagData.bind(this);
         AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
+        this.$options.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
+
         this.updateSearchParams();
         this.updateTagData();
         this.load();
@@ -463,6 +446,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
         AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.RemoveEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
         AlbumsController.OnPageUnload();
     },

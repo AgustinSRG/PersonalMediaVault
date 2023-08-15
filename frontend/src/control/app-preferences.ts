@@ -20,6 +20,8 @@ export class AppPreferences {
     public static AlbumPositionMap: { [id: string]: number } = Object.create(null);
     public static FavAlbums: string[] = [];
 
+    public static PageMaxItems = 25;
+
     public static LoadPreferences() {
         const locale = navigator.language || "en";
 
@@ -27,6 +29,8 @@ export class AppPreferences {
         AppPreferences.Theme = LocalStorage.Get("app-pref-theme", defaultBrowserTheme());
         AppPreferences.AlbumPositionMap = LocalStorage.Get("app-pref-albums-order", Object.create(null));
         AppPreferences.FavAlbums = LocalStorage.Get("app-pref-albums-fav", []);
+
+        AppPreferences.PageMaxItems = LocalStorage.Get("app-pref-page-max-items", 25);
 
         AppEvents.AddEventListener("albums-update", AppPreferences.OnAlbumsUpdate);
         AppEvents.AddEventListener("current-album-update", AppPreferences.OnAlbumLoad);
@@ -80,5 +84,11 @@ export class AppPreferences {
             LocalStorage.Set("app-pref-albums-fav", AppPreferences.FavAlbums);
             AppEvents.Emit("albums-fav-updated");
         }
+    }
+
+    public static SetPageMaxItems(m: number) {
+        AppPreferences.PageMaxItems = m;
+        LocalStorage.Set("app-pref-page-max-items", m);
+        AppEvents.Emit("page-size-pref-updated");
     }
 }

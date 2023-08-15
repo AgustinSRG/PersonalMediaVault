@@ -52,20 +52,9 @@ export default defineComponent({
             });
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         logout: function () {
             AuthController.Logout();
             this.close();
-        },
-
-        keyDownHandle: function (e) {
-            e.stopPropagation();
-            if (e.key === "Escape") {
-                this.close();
-            }
         },
     },
     mounted: function () {

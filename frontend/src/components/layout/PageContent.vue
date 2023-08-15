@@ -4,7 +4,60 @@
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <div class="page-title"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
+            <div
+                class="page-title"
+                :title="renderTitle(page, search)"
+                :class="{
+                    'kind-home': page === 'home' || page === 'search',
+                    'kind-albums': page === 'albums',
+                    'kind-random': page === 'random',
+                    'kind-upload': page === 'upload',
+                }"
+            >
+                <i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}
+            </div>
+            <button v-if="page === 'random'" type="button" :title="$t('Refresh')" class="page-header-btn" @click="triggerRefresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button
+                v-if="hasOrderDate(page) && order === 'desc'"
+                type="button"
+                :title="$t('Show oldest')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-arrow-up-short-wide"></i>
+            </button>
+            <button
+                v-if="hasOrderAlbums(page) && order === 'desc'"
+                type="button"
+                :title="$t('Order alphabetically')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-arrow-down-a-z"></i>
+            </button>
+            <button
+                v-if="hasOrderDate(page) && order !== 'desc'"
+                type="button"
+                :title="$t('Show most recent')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-arrow-down-short-wide"></i>
+            </button>
+            <button
+                v-if="hasOrderAlbums(page) && order !== 'desc'"
+                type="button"
+                :title="$t('Order by last modified date')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-arrow-down-short-wide"></i>
+            </button>
+            <button v-if="hasConfigOptions(page)" type="button" :title="$t('Configuration')" class="page-header-btn" @click="openConfig">
+                <i class="fas fa-cog"></i>
+            </button>
             <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage">
                 <i class="fas fa-times"></i>
             </button>
@@ -21,6 +74,8 @@
             :noAlbum="-1"
         ></PageAdvancedSearch>
         <PageAlbums v-if="isDisplayed && page === 'albums'" :display="isDisplayed && page === 'albums'" :min="min"></PageAlbums>
+
+        <PageConfigModal v-if="displayConfigModal" v-model:display="displayConfigModal"></PageConfigModal>
     </div>
 </template>
 
@@ -70,6 +125,12 @@ const PageAdvancedSearch = defineAsyncComponent({
     delay: 200,
 });
 
+const PageConfigModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/PageConfigModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 export default defineComponent({
     components: {
         PageHome,
@@ -78,6 +139,7 @@ export default defineComponent({
         PageUpload,
         PageRandom,
         PageAdvancedSearch,
+        PageConfigModal,
     },
     name: "PageContent",
     emits: [],
@@ -89,6 +151,12 @@ export default defineComponent({
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
             search: AppStatus.CurrentSearch,
+
+            pageN: 1,
+            order: "desc",
+            searchParams: AppStatus.SearchParams,
+
+            displayConfigModal: false,
         };
     },
     methods: {
@@ -96,6 +164,9 @@ export default defineComponent({
             this.page = AppStatus.CurrentPage;
             this.search = AppStatus.CurrentSearch;
             this.isDisplayed = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
+
+            this.searchParams = AppStatus.SearchParams;
+            this.updateSearchParams();
         },
 
         expandPage: function () {
@@ -108,6 +179,38 @@ export default defineComponent({
             const player: any = document.querySelector(".player-container");
             if (player) {
                 player.focus();
+            }
+        },
+
+        hasConfigOptions: function (p: string): boolean {
+            switch (p) {
+            case "home":
+            case "search":
+            case "adv-search":
+            case "albums":
+            case "random":
+                return true;
+            default:
+                return false;
+            }
+        },
+
+        hasOrderDate: function (p: string): boolean {
+            switch (p) {
+            case "home":
+            case "search":
+                return true;
+            default:
+                return false;
+            }
+        },
+
+        hasOrderAlbums: function (p: string): boolean {
+            switch (p) {
+            case "albums":
+                return true;
+            default:
+                return false;
             }
         },
 
@@ -165,6 +268,34 @@ export default defineComponent({
 
             return false;
         },
+
+        updateSearchParams: function () {
+            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            this.pageN = params.page;
+            this.order = params.order;
+        },
+
+        onSearchParamsChanged: function () {
+            this.searchParams = AppStatus.PackSearchParams(this.pageN, this.order);
+            AppStatus.ChangeSearchParams(this.searchParams);
+        },
+
+        triggerRefresh: function () {
+            AppEvents.Emit("random-page-refresh");
+        },
+
+        openConfig: function () {
+            this.displayConfigModal = true;
+        },
+
+        toggleOrder: function () {
+            if (this.order === "desc") {
+                this.order = "asc";
+            } else {
+                this.order = "desc";
+            }
+            this.onSearchParamsChanged();
+        },
     },
     mounted: function () {
         this.$options.pageUpdater = this.updatePage.bind(this);
@@ -173,6 +304,8 @@ export default defineComponent({
 
         this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
+
+        this.updateSearchParams();
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("app-status-update", this.$options.pageUpdater);

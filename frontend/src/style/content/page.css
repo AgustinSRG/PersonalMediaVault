@@ -4,6 +4,7 @@
     width: 100%;
     height: calc(100% - 54px);
     overflow: auto;
+    padding-bottom: 0.5rem;
 }
 
 .page-header {
@@ -23,6 +24,7 @@
     width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .page-title i {
@@ -63,6 +65,30 @@
 
 .layout-media-split .page-title {
     width: calc(100% - 48px - 48px);
+}
+
+.page-title.kind-home {
+    width: calc(100% - 48px - 48px);
+}
+
+.layout-media-split .page-title.kind-home {
+    width: calc(100% - 48px - 48px - 48px);
+}
+
+.page-title.kind-albums {
+    width: calc(100% - 48px - 48px);
+}
+
+.layout-media-split .page-title.kind-albums {
+    width: calc(100% - 48px - 48px - 48px);
+}
+
+.page-title.kind-random {
+    width: calc(100% - 48px - 48px);
+}
+
+.layout-media-split .page-title.kind-random {
+    width: calc(100% - 48px - 48px - 48px);
 }
 
 .page-inner-padded {

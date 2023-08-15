@@ -106,20 +106,6 @@
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
-
-            <div v-if="total > 0" class="search-results-options">
-                <div class="search-results-option">
-                    <select class="form-control form-select form-control-full-width" v-model="order" @change="onOrderChanged">
-                        <option :value="'desc'">{{ $t("Order by last modified date") }}</option>
-                        <option :value="'asc'">{{ $t("Order alphabetically") }}</option>
-                    </select>
-                </div>
-                <div class="search-results-option text-right">
-                    <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
-                        <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
-                    </select>
-                </div>
-            </div>
         </div>
 
         <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
@@ -141,6 +127,7 @@ import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
+import { AppPreferences } from "@/control/app-preferences";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -162,7 +149,7 @@ export default defineComponent({
 
             filter: AlbumsController.AlbumsPageSearch,
 
-            pageSize: 50,
+            pageSize: AppPreferences.PageMaxItems,
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -172,8 +159,6 @@ export default defineComponent({
             pageItems: [],
 
             loadingFiller: [],
-
-            pageSizeOptions: [],
 
             canWrite: AuthController.CanWrite,
 
@@ -332,19 +317,6 @@ export default defineComponent({
             this.pageItems = albumsList.slice(skip, skip + this.pageSize);
         },
 
-        onPageSizeChanged: function () {
-            this.updateLoadingFiller();
-            this.page = 0;
-            this.updateList();
-            this.onSearchParamsChanged();
-        },
-
-        onOrderChanged: function () {
-            this.page = 0;
-            this.updateList();
-            this.onSearchParamsChanged();
-        },
-
         onAppStatusChanged: function () {
             if (AppStatus.SearchParams !== this.searchParams) {
                 this.searchParams = AppStatus.SearchParams;
@@ -354,7 +326,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.page, this.pageSize, this.order);
+            this.searchParams = AppStatus.PackSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -367,7 +339,6 @@ export default defineComponent({
         updateSearchParams: function () {
             const params = AppStatus.UnPackSearchParams(this.searchParams);
             this.page = params.page;
-            this.pageSize = params.pageSize;
             this.order = params.order;
             this.updateLoadingFiller();
         },
@@ -421,6 +392,13 @@ export default defineComponent({
             this.canWrite = AuthController.CanWrite;
         },
 
+        updatePageSize: function () {
+            this.pageSize = AppPreferences.PageMaxItems;
+            this.updateLoadingFiller();
+            this.page = 0;
+            this.load();
+        },
+
         handleGlobalKey: function (event: KeyboardEvent): boolean {
             if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
                 return false;
@@ -469,9 +447,8 @@ export default defineComponent({
 
         AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
 
-        for (let i = 1; i <= 20; i++) {
-            this.pageSizeOptions.push(5 * i);
-        }
+        this.$options.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
 
         this.updateSearchParams();
         this.load();
@@ -489,6 +466,8 @@ export default defineComponent({
         AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
 
         AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+
+        AppEvents.RemoveEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
 
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
     },

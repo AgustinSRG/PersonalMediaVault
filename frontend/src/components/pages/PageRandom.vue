@@ -1,16 +1,5 @@
 <template>
     <div class="page-inner" :class="{ hidden: !display }">
-        <div v-if="total > 0" class="search-results-options">
-            <div class="search-results-option">
-                <button type="button" @click="load" class="btn btn-primary"><i class="fas fa-shuffle"></i> {{ $t("Refresh") }}</button>
-            </div>
-            <div class="search-results-option text-right">
-                <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onPageSizeChanged">
-                    <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
-                </select>
-            </div>
-        </div>
-
         <div class="search-results" tabindex="-1">
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item">
@@ -101,6 +90,7 @@ import { MediaListItem } from "@/api/api-media";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
+import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
@@ -123,7 +113,7 @@ export default defineComponent({
 
             search: AppStatus.CurrentSearch,
 
-            pageSize: 50,
+            pageSize: AppPreferences.PageMaxItems,
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -218,11 +208,10 @@ export default defineComponent({
                 });
         },
 
-        onPageSizeChanged: function () {
+        updatePageSize: function () {
+            this.pageSize = AppPreferences.PageMaxItems;
             this.updateLoadingFiller();
-            this.page = 0;
             this.load();
-            this.onSearchParamsChanged();
         },
 
         onAppStatusChanged: function () {
@@ -248,7 +237,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.page, this.pageSize, this.order);
+            this.searchParams = AppStatus.PackSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -274,7 +263,6 @@ export default defineComponent({
         updateSearchParams: function () {
             const params = AppStatus.UnPackSearchParams(this.searchParams);
             this.page = params.page;
-            this.pageSize = params.pageSize;
             this.order = params.order;
             this.updateLoadingFiller();
         },
@@ -437,6 +425,11 @@ export default defineComponent({
         this.$options.tagUpdateH = this.updateTagData.bind(this);
         AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
 
+        AppEvents.AddEventListener("random-page-refresh", this.$options.loadH);
+
+        this.$options.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
+
         this.updateSearchParams();
         this.updateTagData();
         this.load();
@@ -451,6 +444,8 @@ export default defineComponent({
         AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
         AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.RemoveEventListener("random-page-refresh", this.$options.loadH);
+        AppEvents.RemoveEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
         KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
         AlbumsController.OnPageUnload();
     },

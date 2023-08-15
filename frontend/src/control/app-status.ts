@@ -386,33 +386,32 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static PackSearchParams(page: number, pageSize: number, order: string): string {
-        if (page === 0 && pageSize === 25 && order === "desc") {
+    public static PackSearchParams(page: number, order: string): string {
+        if (page === 0 && order === "desc") {
             return "";
         }
-        return page + "," + pageSize + "," + order;
+
+        if (order === "desc") {
+            return page + "";
+        }
+
+        return page + "-" + order;
     }
 
-    public static UnPackSearchParams(params: string): { page: number; pageSize: number; order: string } {
+    public static UnPackSearchParams(params: string): { page: number; order: string } {
         const res = {
             page: 0,
-            pageSize: 25,
             order: "desc",
         };
 
         if (params) {
-            const spl = params.split(",");
+            const spl = params.split("-");
             res.page = parseInt(spl[0], 10) || 0;
             if (res.page < 0) {
                 res.page = 0;
             }
 
-            res.pageSize = parseInt(spl[1], 10) || 0;
-            if (res.pageSize <= 0) {
-                res.pageSize = 25;
-            }
-
-            res.order = spl[2] || "desc";
+            res.order = spl[1] || "desc";
 
             if (res.order !== "desc" && res.order !== "asc") {
                 res.order = "desc";
