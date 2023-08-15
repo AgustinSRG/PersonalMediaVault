@@ -120,11 +120,11 @@
     }
 }
 
-.modal-height-100 .modal-body {
+.modal-height-100 > .modal-body {
     min-height: calc(100vh - 60px - 1rem);
 }
 
-.modal-height-100-wf .modal-body {
+.modal-height-100-wf > .modal-body {
     min-height: calc(100vh - 60px - 85px - 1rem);
 }
 
