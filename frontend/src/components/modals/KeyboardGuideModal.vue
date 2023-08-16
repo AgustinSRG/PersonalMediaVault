@@ -20,19 +20,19 @@
                     <tbody>
                         <tr>
                             <td>{{ $t("Open the menu") }}</td>
-                            <td><span class="key-shortcut">⌘ + M</span></td>
+                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + M</span></td>
                         </tr>
                         <tr>
                             <td>{{ $t("Search") }}</td>
-                            <td><span class="key-shortcut">⌘ + F</span></td>
+                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + F</span></td>
                         </tr>
                         <tr>
                             <td>{{ $t("Open vault settings") }}</td>
-                            <td><span class="key-shortcut">⌘ + S</span></td>
+                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + S</span></td>
                         </tr>
                         <tr>
                             <td>{{ $t("Close vault") }}</td>
-                            <td><span class="key-shortcut">⌘ + Q</span></td>
+                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + Q</span></td>
                         </tr>
                         <tr>
                             <td>{{ $t("Close current modal or menu") }}</td>
@@ -150,7 +150,7 @@
                         <tr>
                             <td>{{ $t("Increment image scale by") }} 10%</td>
                             <td>
-                                <span class="key-shortcut">⌘ {{ $t("and") }} +</span>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) {{ $t("and") }} +</span>
                             </td>
                         </tr>
 
@@ -164,7 +164,7 @@
                         <tr>
                             <td>{{ $t("Decrement image scale by") }} 10%</td>
                             <td>
-                                <span class="key-shortcut">⌘ {{ $t("and") }} -</span>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) {{ $t("and") }} -</span>
                             </td>
                         </tr>
 
