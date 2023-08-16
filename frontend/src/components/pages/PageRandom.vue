@@ -1,6 +1,6 @@
 <template>
     <div class="page-inner" :class="{ hidden: !display }">
-        <div class="search-results" tabindex="-1">
+        <div class="search-results auto-focus" tabindex="-1">
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item">
                     <div class="search-result-thumb">
@@ -134,6 +134,18 @@ export default defineComponent({
     methods: {
         scrollToTop: function () {
             this.$el.scrollTop = 0;
+        },
+
+        autoFocus: function () {
+            nextTick(() => {
+                const el = this.$el.querySelector(".auto-focus");
+                if (el) {
+                    el.focus();
+                    if (el.select) {
+                        el.select();
+                    }
+                }
+            });
         },
 
         load: function () {
@@ -433,6 +445,10 @@ export default defineComponent({
         this.updateSearchParams();
         this.updateTagData();
         this.load();
+
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     beforeUnmount: function () {
         Timeouts.Abort("page-random-load");
@@ -452,6 +468,9 @@ export default defineComponent({
     watch: {
         display: function () {
             this.load();
+            if (this.display) {
+                this.autoFocus();
+            }
         },
     },
 });

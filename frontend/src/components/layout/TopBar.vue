@@ -74,7 +74,7 @@ import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/norma
 
 export default defineComponent({
     name: "TopBar",
-    emits: ["logout", "settings", "menu", "search-open", "help"],
+    emits: ["logout", "settings", "menu", "menu-focus", "search-open", "help"],
     data: function () {
         return {
             search: AppStatus.CurrentSearch,
@@ -275,7 +275,7 @@ export default defineComponent({
             }
 
             if (event.key.toUpperCase() === "M" && event.ctrlKey) {
-                this.menu();
+                this.$emit("menu-focus");
                 return true;
             }
 

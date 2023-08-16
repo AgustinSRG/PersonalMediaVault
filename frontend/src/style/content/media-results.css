@@ -3,6 +3,10 @@
     flex-direction: column;
 }
 
+.search-results:focus {
+    outline: none;
+}
+
 .search-results-loading-display {
     display: flex;
     flex-wrap: wrap;

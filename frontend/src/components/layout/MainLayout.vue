@@ -16,7 +16,14 @@
     >
         <a v-if="!locked" href="javascript:;" @click="skipToMainContent" class="skip-to-main-content">{{ $t("Skip to main content") }}</a>
         <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
-        <TopBar @logout="logout" @settings="showSettings" @menu="toggleSidebar" @search-open="openSearchModal" @help="showHelp"></TopBar>
+        <TopBar
+            @logout="logout"
+            @settings="showSettings"
+            @menu="toggleSidebar"
+            @menu-focus="openSideBar"
+            @search-open="openSearchModal"
+            @help="showHelp"
+        ></TopBar>
         <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'"></PlayerContainer>
         <PageContent v-if="layout === 'initial' || layout === 'media-split'" :min="layout === 'media-split'"></PageContent>
         <AlbumContainer v-if="layout === 'album'"></AlbumContainer>
@@ -68,7 +75,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, defineAsyncComponent } from "vue";
+import { defineComponent, defineAsyncComponent, nextTick } from "vue";
 
 import TopBar from "./TopBar.vue";
 import BottomBar from "./BottomBar.vue";
@@ -318,6 +325,24 @@ export default defineComponent({
 
         toggleSidebar: function () {
             this.displaySidebar = !this.displaySidebar;
+            if (this.displaySidebar) {
+                nextTick(() => {
+                    const sideBar = this.$el.querySelector(".side-bar");
+                    if (sideBar) {
+                        sideBar.focus();
+                    }
+                });
+            }
+        },
+
+        openSideBar: function () {
+            this.displaySidebar = true;
+            nextTick(() => {
+                const sideBar = this.$el.querySelector(".side-bar");
+                if (sideBar) {
+                    sideBar.focus();
+                }
+            });
         },
 
         hideSidebar: function () {
@@ -341,6 +366,12 @@ export default defineComponent({
                 break;
             default:
                 skipTo = this.$el.querySelector(".page-content");
+                if (skipTo) {
+                    const autoFocused = skipTo.querySelector(".auto-focus");
+                    if (autoFocused) {
+                        skipTo = autoFocused;
+                    }
+                }
             }
             if (skipTo) {
                 skipTo.focus();

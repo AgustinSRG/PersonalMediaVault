@@ -15,7 +15,7 @@
         </div>
         <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
         <div
-            class="upload-box"
+            class="upload-box auto-focus"
             :class="{ dragging: dragging }"
             tabindex="0"
             @click="clickToSelect"
@@ -143,7 +143,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { UploadController, UploadEntryMin } from "@/control/upload";
 import { GenerateURIQuery } from "@/utils/request";
-import { defineAsyncComponent, defineComponent } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 
@@ -196,6 +196,18 @@ export default defineComponent({
     methods: {
         clickToSelect: function () {
             this.$el.querySelector(".file-hidden").click();
+        },
+
+        autoFocus: function () {
+            nextTick(() => {
+                const el = this.$el.querySelector(".auto-focus");
+                if (el) {
+                    el.focus();
+                    if (el.select) {
+                        el.select();
+                    }
+                }
+            });
         },
 
         updateSelectedState: function (s: string) {
@@ -491,6 +503,8 @@ export default defineComponent({
                 })
             );
         },
+
+
     },
     mounted: function () {
         this.pendingToUpload = UploadController.GetEntries();
@@ -506,6 +520,10 @@ export default defineComponent({
         AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
         AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
         AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
+
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
@@ -517,5 +535,12 @@ export default defineComponent({
             clearTimeout(this.$options.findTagTimeout);
         }
     },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    }
 });
 </script>
