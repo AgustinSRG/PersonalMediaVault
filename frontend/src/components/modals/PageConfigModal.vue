@@ -139,6 +139,8 @@ export default defineComponent({
                 const elem = this.$el.querySelector(".auto-focus");
                 if (elem) {
                     elem.focus();
+                } else {
+                    this.$el.focus();
                 }
             });
         },

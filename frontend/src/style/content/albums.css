@@ -69,6 +69,10 @@
     flex-direction: column;
 }
 
+.album-body:focus {
+    outline: none;
+}
+
 /* Buttons */
 
 .album-header-btn {
