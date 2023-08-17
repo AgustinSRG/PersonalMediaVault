@@ -29,6 +29,7 @@
 .items-size-small .search-result-item {
     min-width: 116px;
     max-width: 232px;
+    padding: 12px;
 }
 
 .items-size-normal .search-result-item {
