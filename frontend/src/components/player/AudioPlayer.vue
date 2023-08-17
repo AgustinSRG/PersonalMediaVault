@@ -1041,20 +1041,6 @@ export default defineComponent({
                     this.setTime(this.duration, true);
                 }
                 break;
-            case "PageDown":
-                if (this.prev || this.pagePrev) {
-                    this.goPrev();
-                } else {
-                    caught = false;
-                }
-                break;
-            case "PageUp":
-                if (this.next || this.pageNext) {
-                    this.goNext();
-                } else {
-                    caught = false;
-                }
-                break;
             case "X":
             case "x":
                 this.sliceLoop = !this.sliceLoop;

@@ -834,20 +834,6 @@ export default defineComponent({
             case "c":
                 this.showControlsState = !this.showControlsState;
                 break;
-            case "PageDown":
-                if (this.prev || this.pagePrev) {
-                    this.goPrev();
-                } else {
-                    caught = false;
-                }
-                break;
-            case "PageUp":
-                if (this.next || this.pageNext) {
-                    this.goNext();
-                } else {
-                    caught = false;
-                }
-                break;
             default:
                 caught = false;
             }

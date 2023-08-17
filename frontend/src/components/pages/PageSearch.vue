@@ -375,14 +375,14 @@ export default defineComponent({
                 return false;
             }
 
-            if (event.key === "PageDown") {
+            if (event.key === "PageDown" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
                 if (this.page > 0) {
                     this.changePage(this.page - 1);
                 }
                 return true;
             }
 
-            if (event.key === "PageUp") {
+            if (event.key === "PageUp" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
                 if (this.page < this.totalPages - 1) {
                     this.changePage(this.page + 1);
                 }

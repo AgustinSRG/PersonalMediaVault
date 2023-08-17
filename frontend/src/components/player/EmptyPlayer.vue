@@ -228,7 +228,6 @@ export default defineComponent({
                     this.toggleFullScreen();
                 }
                 break;
-            case "PageDown":
             case "ArrowLeft":
                 if (this.prev || this.pagePrev) {
                     this.goPrev();
@@ -236,7 +235,6 @@ export default defineComponent({
                     caught = false;
                 }
                 break;
-            case "PageUp":
             case "ArrowRight":
                 if (this.next || this.pageNext) {
                     this.goNext();
