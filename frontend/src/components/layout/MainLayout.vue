@@ -253,7 +253,7 @@ export default defineComponent({
 
             displaySearchModal: false,
 
-            displaySidebar: true,
+            displaySidebar: window.innerWidth >= 1000,
 
             displayHelpModal: false,
 
