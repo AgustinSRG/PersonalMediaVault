@@ -21,7 +21,7 @@
 
 .search-result-item {
     width: calc(100% / var(--page-items-fit));
-    padding: 24px;
+    padding: 18px;
     text-decoration: none;
     color: inherit;
 }
@@ -34,11 +34,13 @@
 
 .items-size-normal .search-result-item {
     min-width: 232px;
-    max-width: 464px;
+    max-width: 348px;
 }
 
 .items-size-big .search-result-item {
-    min-width: 464px;
+    min-width: 348px;
+    max-width: 464px;
+    padding: 24px;
 }
 
 .items-fit-many .search-result-item {
@@ -57,7 +59,7 @@
     }
 }
 
-@media (max-width: 464px) {
+@media (max-width: 348px) {
     .items-size-big .search-result-item {
         min-width: 100%;
     }
