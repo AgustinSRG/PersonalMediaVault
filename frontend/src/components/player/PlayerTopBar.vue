@@ -181,11 +181,12 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
+        this._handles = Object.create(null);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
     },
     beforeUnmount: function () {
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },
 });
 </script>

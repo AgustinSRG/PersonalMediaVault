@@ -94,32 +94,27 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this._handles = Object.create(null);
+        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
         if (this.display) {
-            this.$options.focusTrap.activate();
+            this._handles.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        this._handles.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
     },

@@ -203,24 +203,25 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this.$options.albumUpdateH);
+        this._handles = Object.create(null);
+        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
 
         this.onAlbumPosUpdate();
 
         this.updateAlbumsList();
 
-        this.$options.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
+        this._handles.loadingH = this.onAlbumLoading.bind(this);
+        AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
 
-        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this.$options.albumUpdateH);
-        AppEvents.RemoveEventListener("current-album-loading", this.$options.loadingH);
+        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.RemoveEventListener("current-album-loading", this._handles.loadingH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
     },
     watch: {
         expanded: function () {

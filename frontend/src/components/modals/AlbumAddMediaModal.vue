@@ -130,8 +130,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
+        this._handles = Object.create(null);
+        this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
+        AppEvents.AddEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
 
         if (this.display) {
             nextTick(() => {
@@ -140,7 +141,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
+        AppEvents.RemoveEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
     },
     watch: {
         display: function () {

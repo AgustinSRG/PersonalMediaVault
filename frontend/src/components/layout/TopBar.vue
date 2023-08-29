@@ -117,42 +117,42 @@ export default defineComponent({
         },
 
         focusSearch: function () {
-            if (this.$options.blurTimeout) {
-                clearTimeout(this.$options.blurTimeout);
-                this.$options.blurTimeout = null;
+            if (this._handles.blurTimeout) {
+                clearTimeout(this._handles.blurTimeout);
+                this._handles.blurTimeout = null;
             }
             this.searchFocus = true;
             this.$el.querySelector(".top-bar-search-input").select();
             this.updateSuggestions();
-            if (this.$options.focusTrap) {
-                this.$options.focusTrap.activate();
+            if (this._handles.focusTrap) {
+                this._handles.focusTrap.activate();
             }
             AlbumsController.Load();
             TagsController.Load();
         },
 
         blurSearchInstantly: function () {
-            if (this.$options.blurTimeout) {
-                clearTimeout(this.$options.blurTimeout);
-                this.$options.blurTimeout = null;
+            if (this._handles.blurTimeout) {
+                clearTimeout(this._handles.blurTimeout);
+                this._handles.blurTimeout = null;
             }
-            this.$options.blurTimeout = null;
+            this._handles.blurTimeout = null;
             this.searchFocus = false;
-            if (this.$options.focusTrap) {
-                this.$options.focusTrap.deactivate();
+            if (this._handles.focusTrap) {
+                this._handles.focusTrap.deactivate();
             }
         },
 
         blurSearch: function () {
-            if (this.$options.blurTimeout) {
-                clearTimeout(this.$options.blurTimeout);
-                this.$options.blurTimeout = null;
+            if (this._handles.blurTimeout) {
+                clearTimeout(this._handles.blurTimeout);
+                this._handles.blurTimeout = null;
             }
-            this.$options.blurTimeout = setTimeout(() => {
-                this.$options.blurTimeout = null;
+            this._handles.blurTimeout = setTimeout(() => {
+                this._handles.blurTimeout = null;
                 this.searchFocus = false;
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
+                if (this._handles.focusTrap) {
+                    this._handles.focusTrap.deactivate();
                 }
             }, 100);
         },
@@ -249,11 +249,11 @@ export default defineComponent({
         },
 
         onSearchInput: function () {
-            if (this.$options.findTagTimeout) {
+            if (this._handles.findTagTimeout) {
                 return;
             }
-            this.$options.findTagTimeout = setTimeout(() => {
-                this.$options.findTagTimeout = null;
+            this._handles.findTagTimeout = setTimeout(() => {
+                this._handles.findTagTimeout = null;
                 this.updateSuggestions();
             }, 200);
         },
@@ -302,37 +302,38 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this.$options.statusChangeH = this.onSearchChanged.bind(this);
+        this._handles = Object.create(null);
+        this._handles.statusChangeH = this.onSearchChanged.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
 
-        this.$options.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
-        AppEvents.AddEventListener("search-modal-submit", this.$options.onSearchModalSubmitH);
+        this._handles.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
+        AppEvents.AddEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
 
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
 
-        this.$options.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
+        this._handles.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("search-modal-submit", this.$options.onSearchModalSubmitH);
+        AppEvents.RemoveEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
 
-        if (this.$options.findTagTimeout) {
-            clearTimeout(this.$options.findTagTimeout);
+        if (this._handles.findTagTimeout) {
+            clearTimeout(this._handles.findTagTimeout);
         }
 
-        if (this.$options.blurTimeout) {
-            clearTimeout(this.$options.blurTimeout);
-            this.$options.blurTimeout = null;
+        if (this._handles.blurTimeout) {
+            clearTimeout(this._handles.blurTimeout);
+            this._handles.blurTimeout = null;
         }
 
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
+        if (this._handles.focusTrap) {
+            this._handles.focusTrap.destroy();
         }
     },
 });

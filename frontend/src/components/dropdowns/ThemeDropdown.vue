@@ -96,36 +96,31 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.themeHandler = this.themeUpdated.bind(this);
-        AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
-        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this._handles = Object.create(null);
+        this._handles.themeHandler = this.themeUpdated.bind(this);
+        AppEvents.AddEventListener("theme-changed", this._handles.themeHandler);
+        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
         if (this.display) {
-            this.$options.focusTrap.activate();
+            this._handles.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        AppEvents.RemoveEventListener("theme-changed", this._handles.themeHandler);
+        this._handles.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
     },

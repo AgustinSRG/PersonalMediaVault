@@ -154,16 +154,17 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.currentUsername = AuthController.Username;
-        this.$options.usernameUpdatedH = this.usernameUpdated.bind(this);
-        AppEvents.AddEventListener("auth-status-changed", this.$options.usernameUpdatedH);
+        this._handles.usernameUpdatedH = this.usernameUpdated.bind(this);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.usernameUpdatedH);
         if (this.display) {
             this.error = "";
             this.autoFocus();
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.usernameUpdatedH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.usernameUpdatedH);
     },
     watch: {
         display: function () {

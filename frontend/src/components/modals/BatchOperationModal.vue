@@ -293,17 +293,17 @@ export default defineComponent({
 
         onTagSearchChanged: function (forced?: boolean) {
             if (forced) {
-                if (this.$options.findTagSearchTimeout) {
-                    clearTimeout(this.$options.findTagSearchTimeout);
-                    this.$options.findTagSearchTimeout = null;
+                if (this._handles.findTagSearchTimeout) {
+                    clearTimeout(this._handles.findTagSearchTimeout);
+                    this._handles.findTagSearchTimeout = null;
                 }
                 this.findTagsSearch();
             } else {
-                if (this.$options.findTagSearchTimeout) {
+                if (this._handles.findTagSearchTimeout) {
                     return;
                 }
-                this.$options.findTagSearchTimeout = setTimeout(() => {
-                    this.$options.findTagSearchTimeout = null;
+                this._handles.findTagSearchTimeout = setTimeout(() => {
+                    this._handles.findTagSearchTimeout = null;
                     this.findTagsSearch();
                 }, 200);
             }
@@ -355,17 +355,17 @@ export default defineComponent({
 
         onTagActionChanged: function (forced?: boolean) {
             if (forced) {
-                if (this.$options.findTagActionTimeout) {
-                    clearTimeout(this.$options.findTagActionTimeout);
-                    this.$options.findTagActionTimeout = null;
+                if (this._handles.findTagActionTimeout) {
+                    clearTimeout(this._handles.findTagActionTimeout);
+                    this._handles.findTagActionTimeout = null;
                 }
                 this.findTagsAction();
             } else {
-                if (this.$options.findTagActionTimeout) {
+                if (this._handles.findTagActionTimeout) {
                     return;
                 }
-                this.$options.findTagActionTimeout = setTimeout(() => {
-                    this.$options.findTagActionTimeout = null;
+                this._handles.findTagActionTimeout = setTimeout(() => {
+                    this._handles.findTagActionTimeout = null;
                     this.findTagsAction();
                 }, 200);
             }
@@ -945,15 +945,16 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        this._handles = Object.create(null);
+        this._handles.tagUpdateH = this.updateTagData.bind(this);
 
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
         this.updateTagData();
 
         this.updateAlbums();
-        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         if (this.display) {
             this.error = "";
@@ -965,18 +966,18 @@ export default defineComponent({
     beforeUnmount: function () {
         Request.Abort("modal-batch-request");
 
-        if (this.$options.findTagSearchTimeout) {
-            clearTimeout(this.$options.findTagSearchTimeout);
-            this.$options.findTagSearchTimeout = null;
+        if (this._handles.findTagSearchTimeout) {
+            clearTimeout(this._handles.findTagSearchTimeout);
+            this._handles.findTagSearchTimeout = null;
         }
 
-        if (this.$options.findTagActionTimeout) {
-            clearTimeout(this.$options.findTagActionTimeout);
-            this.$options.findTagActionTimeout = null;
+        if (this._handles.findTagActionTimeout) {
+            clearTimeout(this._handles.findTagActionTimeout);
+            this._handles.findTagActionTimeout = null;
         }
 
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
     },
     watch: {
         display: function () {

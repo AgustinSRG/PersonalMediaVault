@@ -98,20 +98,21 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.updateStatusH = this.onStatusUpdate.bind(this);
-        AppEvents.AddEventListener("app-status-update", this.$options.updateStatusH);
+        this._handles = Object.create(null);
+        this._handles.updateStatusH = this.onStatusUpdate.bind(this);
+        AppEvents.AddEventListener("app-status-update", this._handles.updateStatusH);
 
-        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
 
-        this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+        this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+        AppEvents.AddEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.updateStatusH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.updateStatusH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
-        AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
     },
 });
 </script>

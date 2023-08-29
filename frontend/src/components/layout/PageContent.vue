@@ -317,21 +317,22 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.pageUpdater = this.updatePage.bind(this);
-        AppEvents.AddEventListener("app-status-update", this.$options.pageUpdater);
+        this._handles = Object.create(null);
+        this._handles.pageUpdater = this.updatePage.bind(this);
+        AppEvents.AddEventListener("app-status-update", this._handles.pageUpdater);
 
-        this.$options.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
+        this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
+        AppEvents.AddEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
 
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
 
         this.updateSearchParams();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.pageUpdater);
-        AppEvents.RemoveEventListener("page-items-pref-updated", this.$options.updatePageItemsPreferencesH);
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.pageUpdater);
+        AppEvents.RemoveEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },
 });
 </script>

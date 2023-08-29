@@ -886,9 +886,9 @@ export default defineComponent({
         },
 
         togglePlayImmediate() {
-            if (this.$options.togglePlayDelayTimeout) {
-                clearTimeout(this.$options.togglePlayDelayTimeout);
-                this.$options.togglePlayDelayTimeout = null;
+            if (this._handles.togglePlayDelayTimeout) {
+                clearTimeout(this._handles.togglePlayDelayTimeout);
+                this._handles.togglePlayDelayTimeout = null;
             }
             if (this.playing) {
                 this.feedback = "pause";
@@ -903,14 +903,14 @@ export default defineComponent({
 
         togglePlay() {
             if (this.playing) {
-                if (this.$options.togglePlayDelayTimeout) {
-                    clearTimeout(this.$options.togglePlayDelayTimeout);
-                    this.$options.togglePlayDelayTimeout = null;
+                if (this._handles.togglePlayDelayTimeout) {
+                    clearTimeout(this._handles.togglePlayDelayTimeout);
+                    this._handles.togglePlayDelayTimeout = null;
                     this.feedback = "";
                 } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
                     this.feedback = "pause";
-                    this.$options.togglePlayDelayTimeout = setTimeout(() => {
-                        this.$options.togglePlayDelayTimeout = null;
+                    this._handles.togglePlayDelayTimeout = setTimeout(() => {
+                        this._handles.togglePlayDelayTimeout = null;
                         this.pause();
                     }, PlayerPreferences.PlayerTogglePlayDelay);
                 } else {
@@ -918,14 +918,14 @@ export default defineComponent({
                     this.pause();
                 }
             } else {
-                if (this.$options.togglePlayDelayTimeout) {
-                    clearTimeout(this.$options.togglePlayDelayTimeout);
-                    this.$options.togglePlayDelayTimeout = null;
+                if (this._handles.togglePlayDelayTimeout) {
+                    clearTimeout(this._handles.togglePlayDelayTimeout);
+                    this._handles.togglePlayDelayTimeout = null;
                     this.feedback = "";
                 } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
                     this.feedback = "play";
-                    this.$options.togglePlayDelayTimeout = setTimeout(() => {
-                        this.$options.togglePlayDelayTimeout = null;
+                    this._handles.togglePlayDelayTimeout = setTimeout(() => {
+                        this._handles.togglePlayDelayTimeout = null;
                         this.play();
                     }, PlayerPreferences.PlayerTogglePlayDelay);
                 } else {
@@ -1376,20 +1376,20 @@ export default defineComponent({
             if (sub) {
                 if (this.subtitlesHTML) {
                     const subTag = getUniqueSubtitlesLoadTag();
-                    this.$options.subTag = subTag;
+                    this._handles.subTag = subTag;
                     sanitizeSubtitlesHTML(sub.text).then((text) => {
-                        if (this.$options.subTag === subTag) {
+                        if (this._handles.subTag === subTag) {
                             this.subtitles = text;
                         }
                     });
                 } else {
-                    this.$options.subTag = "";
+                    this._handles.subTag = "";
                     this.subtitles = htmlToText(sub.text);
                 }
                 this.subtitlesStart = sub.start;
                 this.subtitlesEnd = sub.end;
             } else {
-                this.$options.subTag = "";
+                this._handles.subTag = "";
                 this.subtitles = "";
                 this.subtitlesStart = 0;
                 this.subtitlesEnd = 0;
@@ -1490,6 +1490,8 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+
         // Load player preferences
         this.muted = PlayerPreferences.PlayerMuted;
         this.volume = PlayerPreferences.PlayerVolume;
@@ -1498,19 +1500,19 @@ export default defineComponent({
         this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
         this.nextEnd = PlayerPreferences.NextOnEnd;
 
-        this.$options.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+        this._handles.keyHandler = this.onKeyPress.bind(this);
+        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
 
-        this.$options.timer = setInterval(this.tick.bind(this), 100);
+        this._handles.timer = setInterval(this.tick.bind(this), 100);
 
-        this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
+        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        this.$options.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener("subtitles-update", this.$options.subtitlesReloadH);
+        this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
+        AppEvents.AddEventListener("subtitles-update", this._handles.subtitlesReloadH);
 
         this.initializeVideo();
 
@@ -1525,20 +1527,20 @@ export default defineComponent({
         this.videoURL = "";
         this.onClearURL();
 
-        clearInterval(this.$options.timer);
+        clearInterval(this._handles.timer);
 
-        if (this.$options.togglePlayDelayTimeout) {
-            clearTimeout(this.$options.togglePlayDelayTimeout);
-            this.$options.togglePlayDelayTimeout = null;
+        if (this._handles.togglePlayDelayTimeout) {
+            clearTimeout(this._handles.togglePlayDelayTimeout);
+            this._handles.togglePlayDelayTimeout = null;
         }
 
-        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        AppEvents.RemoveEventListener("subtitles-update", this.$options.subtitlesReloadH);
-        KeyboardManager.RemoveHandler(this.$options.keyHandler);
+        AppEvents.RemoveEventListener("subtitles-update", this._handles.subtitlesReloadH);
+        KeyboardManager.RemoveHandler(this._handles.keyHandler);
 
         if (window.navigator && window.navigator.mediaSession) {
             navigator.mediaSession.setActionHandler("play", null);

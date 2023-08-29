@@ -439,8 +439,8 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
-            if (this.$options.sortable) {
-                this.$options.sortable.option("disabled", !this.canWrite);
+            if (this._handles.sortable) {
+                this._handles.sortable.option("disabled", !this.canWrite);
             }
         },
 
@@ -491,33 +491,34 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this.$options.albumUpdateH);
+        this._handles = Object.create(null);
+        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
 
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 10);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
 
         this.onAlbumPosUpdate();
 
         this.updateAlbumsList();
 
-        this.$options.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this.$options.loadingH);
+        this._handles.loadingH = this.onAlbumLoading.bind(this);
+        AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
 
-        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
 
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        this.$options.favUpdateH = this.updateFav.bind(this);
-        AppEvents.AddEventListener("albums-fav-updated", this.$options.favUpdateH);
+        this._handles.favUpdateH = this.updateFav.bind(this);
+        AppEvents.AddEventListener("albums-fav-updated", this._handles.favUpdateH);
 
         // Sortable
         if (!isTouchDevice()) {
             const element = this.$el.querySelector(".album-body");
-            this.$options.sortable = Sortable.create(element, {
+            this._handles.sortable = Sortable.create(element, {
                 onUpdate: this.onUpdateSortable.bind(this),
                 disabled: !this.canWrite,
                 scroll: element,
@@ -527,21 +528,21 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this.$options.albumUpdateH);
-        AppEvents.RemoveEventListener("current-album-loading", this.$options.loadingH);
+        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.RemoveEventListener("current-album-loading", this._handles.loadingH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
+        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("albums-fav-updated", this.$options.favUpdateH);
+        AppEvents.RemoveEventListener("albums-fav-updated", this._handles.favUpdateH);
 
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
         // Sortable
-        if (this.$options.sortable) {
-            this.$options.sortable.destroy();
-            this.$options.sortable = null;
+        if (this._handles.sortable) {
+            this._handles.sortable.destroy();
+            this._handles.sortable = null;
         }
     },
 });

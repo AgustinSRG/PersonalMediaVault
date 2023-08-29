@@ -507,32 +507,33 @@ export default defineComponent({
 
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.pendingToUpload = UploadController.GetEntries();
         this.updateCountCancellable(this.pendingToUpload);
         this.updateFilteredEntries();
 
-        this.$options.onPendingPushH = this.onPendingPush.bind(this);
-        this.$options.onPendingRemoveH = this.onPendingRemove.bind(this);
-        this.$options.onPendingClearH = this.onPendingClear.bind(this);
-        this.$options.onPendingUpdateH = this.onPendingUpdate.bind(this);
+        this._handles.onPendingPushH = this.onPendingPush.bind(this);
+        this._handles.onPendingRemoveH = this.onPendingRemove.bind(this);
+        this._handles.onPendingClearH = this.onPendingClear.bind(this);
+        this._handles.onPendingUpdateH = this.onPendingUpdate.bind(this);
 
-        AppEvents.AddEventListener("upload-list-push", this.$options.onPendingPushH);
-        AppEvents.AddEventListener("upload-list-rm", this.$options.onPendingRemoveH);
-        AppEvents.AddEventListener("upload-list-clear", this.$options.onPendingClearH);
-        AppEvents.AddEventListener("upload-list-update", this.$options.onPendingUpdateH);
+        AppEvents.AddEventListener("upload-list-push", this._handles.onPendingPushH);
+        AppEvents.AddEventListener("upload-list-rm", this._handles.onPendingRemoveH);
+        AppEvents.AddEventListener("upload-list-clear", this._handles.onPendingClearH);
+        AppEvents.AddEventListener("upload-list-update", this._handles.onPendingUpdateH);
 
         if (this.display) {
             this.autoFocus();
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("upload-list-push", this.$options.onPendingPushH);
-        AppEvents.RemoveEventListener("upload-list-rm", this.$options.onPendingRemoveH);
-        AppEvents.RemoveEventListener("upload-list-clear", this.$options.onPendingClearH);
-        AppEvents.RemoveEventListener("upload-list-update", this.$options.onPendingUpdateH);
+        AppEvents.RemoveEventListener("upload-list-push", this._handles.onPendingPushH);
+        AppEvents.RemoveEventListener("upload-list-rm", this._handles.onPendingRemoveH);
+        AppEvents.RemoveEventListener("upload-list-clear", this._handles.onPendingClearH);
+        AppEvents.RemoveEventListener("upload-list-update", this._handles.onPendingUpdateH);
 
-        if (this.$options.findTagTimeout) {
-            clearTimeout(this.$options.findTagTimeout);
+        if (this._handles.findTagTimeout) {
+            clearTimeout(this._handles.findTagTimeout);
         }
     },
     watch: {

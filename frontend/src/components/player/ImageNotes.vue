@@ -601,47 +601,48 @@ export default defineComponent({
     },
 
     mounted: function () {
+        this._handles = Object.create(null);
         this.updateRealDimensions();
 
-        this.$options.onNotesUpdateH = this.onNotesUpdate.bind(this);
-        AppEvents.AddEventListener("img-notes-update", this.$options.onNotesUpdateH);
+        this._handles.onNotesUpdateH = this.onNotesUpdate.bind(this);
+        AppEvents.AddEventListener("img-notes-update", this._handles.onNotesUpdateH);
 
-        this.$options.onNotesPushH = this.onNotesPush.bind(this);
-        AppEvents.AddEventListener("img-notes-push", this.$options.onNotesPushH);
+        this._handles.onNotesPushH = this.onNotesPush.bind(this);
+        AppEvents.AddEventListener("img-notes-push", this._handles.onNotesPushH);
 
-        this.$options.onNotesChangeH = this.onNotesChange.bind(this);
-        AppEvents.AddEventListener("img-notes-change", this.$options.onNotesChangeH);
+        this._handles.onNotesChangeH = this.onNotesChange.bind(this);
+        AppEvents.AddEventListener("img-notes-change", this._handles.onNotesChangeH);
 
-        this.$options.onNotesRemoveH = this.onNotesRemove.bind(this);
-        AppEvents.AddEventListener("img-notes-rm", this.$options.onNotesRemoveH);
+        this._handles.onNotesRemoveH = this.onNotesRemove.bind(this);
+        AppEvents.AddEventListener("img-notes-rm", this._handles.onNotesRemoveH);
 
-        this.$options.mouseDropH = this.mouseDrop.bind(this);
-        document.addEventListener("mouseup", this.$options.mouseDropH);
-        document.addEventListener("touchend", this.$options.mouseDropH);
+        this._handles.mouseDropH = this.mouseDrop.bind(this);
+        document.addEventListener("mouseup", this._handles.mouseDropH);
+        document.addEventListener("touchend", this._handles.mouseDropH);
 
-        this.$options.mouseMoveH = this.mouseMove.bind(this);
+        this._handles.mouseMoveH = this.mouseMove.bind(this);
 
-        document.addEventListener("mousemove", this.$options.mouseMoveH);
-        document.addEventListener("touchmove", this.$options.mouseMoveH);
+        document.addEventListener("mousemove", this._handles.mouseMoveH);
+        document.addEventListener("touchmove", this._handles.mouseMoveH);
 
         this.onNotesUpdate();
 
-        this.$options.onNotesSavedH = this.onNotesSaved.bind(this);
-        AppEvents.AddEventListener("image-notes-saved", this.$options.onNotesSavedH);
+        this._handles.onNotesSavedH = this.onNotesSaved.bind(this);
+        AppEvents.AddEventListener("image-notes-saved", this._handles.onNotesSavedH);
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("img-notes-update", this.$options.onNotesUpdateH);
-        AppEvents.RemoveEventListener("img-notes-push", this.$options.onNotesPushH);
-        AppEvents.RemoveEventListener("img-notes-change", this.$options.onNotesChangeH);
-        AppEvents.RemoveEventListener("img-notes-rm", this.$options.onNotesRemoveH);
+        AppEvents.RemoveEventListener("img-notes-update", this._handles.onNotesUpdateH);
+        AppEvents.RemoveEventListener("img-notes-push", this._handles.onNotesPushH);
+        AppEvents.RemoveEventListener("img-notes-change", this._handles.onNotesChangeH);
+        AppEvents.RemoveEventListener("img-notes-rm", this._handles.onNotesRemoveH);
 
-        document.removeEventListener("mouseup", this.$options.mouseDropH);
-        document.removeEventListener("touchend", this.$options.mouseDropH);
-        document.removeEventListener("mousemove", this.$options.mouseMoveH);
-        document.removeEventListener("touchmove", this.$options.mouseMoveH);
+        document.removeEventListener("mouseup", this._handles.mouseDropH);
+        document.removeEventListener("touchend", this._handles.mouseDropH);
+        document.removeEventListener("mousemove", this._handles.mouseMoveH);
+        document.removeEventListener("touchmove", this._handles.mouseMoveH);
 
-        AppEvents.RemoveEventListener("image-notes-saved", this.$options.onNotesSavedH);
+        AppEvents.RemoveEventListener("image-notes-saved", this._handles.onNotesSavedH);
     },
 
     watch: {

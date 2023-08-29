@@ -148,8 +148,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this.$options.albumUpdateH);
+        this._handles = Object.create(null);
+        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
+        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
 
         this.onAlbumUpdate();
 
@@ -160,7 +161,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this.$options.albumUpdateH);
+        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
     },
     watch: {
         display: function () {

@@ -913,9 +913,9 @@ export default defineComponent({
         },
 
         setupAutoNextTimer: function () {
-            if (this.$options.autoNextTimer) {
-                clearTimeout(this.$options.autoNextTimer);
-                this.$options.autoNextTimer = null;
+            if (this._handles.autoNextTimer) {
+                clearTimeout(this._handles.autoNextTimer);
+                this._handles.autoNextTimer = null;
             }
             const timerS = PlayerPreferences.ImageAutoNext;
 
@@ -929,8 +929,8 @@ export default defineComponent({
 
             const ms = timerS * 1000;
 
-            this.$options.autoNextTimer = setTimeout(() => {
-                this.$options.autoNextTimer = null;
+            this._handles.autoNextTimer = setTimeout(() => {
+                this._handles.autoNextTimer = null;
                 if (this.displayConfig) {
                     this.setupAutoNextTimer();
                 } else {
@@ -1001,31 +1001,32 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         // Load player preferences
         this.fit = PlayerPreferences.PlayerFit;
         this.scale = PlayerPreferences.PlayerScale;
         this.background = PlayerPreferences.ImagePlayerBackground;
 
-        this.$options.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+        this._handles.keyHandler = this.onKeyPress.bind(this);
+        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
 
-        this.$options.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
+        this._handles.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
 
-        this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
+        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        this.$options.dropScrollHandler = this.dropScroll.bind(this);
-        document.addEventListener("mouseup", this.$options.dropScrollHandler);
+        this._handles.dropScrollHandler = this.dropScroll.bind(this);
+        document.addEventListener("mouseup", this._handles.dropScrollHandler);
 
-        this.$options.moveScrollHandler = this.moveScroll.bind(this);
+        this._handles.moveScrollHandler = this.moveScroll.bind(this);
 
-        document.addEventListener("mousemove", this.$options.moveScrollHandler);
+        document.addEventListener("mousemove", this._handles.moveScrollHandler);
 
-        this.$options.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
-        AppEvents.AddEventListener("album-next-prefetch", this.$options.onAlbumPrefetchH);
+        this._handles.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
+        AppEvents.AddEventListener("album-next-prefetch", this._handles.onAlbumPrefetchH);
 
         this.initializeImage();
 
@@ -1036,24 +1037,24 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         this.imageURL = "";
-        clearInterval(this.$options.timer);
+        clearInterval(this._handles.timer);
 
-        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        document.removeEventListener("mouseup", this.$options.dropScrollHandler);
+        document.removeEventListener("mouseup", this._handles.dropScrollHandler);
 
-        document.removeEventListener("mousemove", this.$options.moveScrollHandler);
+        document.removeEventListener("mousemove", this._handles.moveScrollHandler);
 
-        AppEvents.RemoveEventListener("album-next-prefetch", this.$options.onAlbumPrefetchH);
+        AppEvents.RemoveEventListener("album-next-prefetch", this._handles.onAlbumPrefetchH);
 
-        KeyboardManager.RemoveHandler(this.$options.keyHandler);
+        KeyboardManager.RemoveHandler(this._handles.keyHandler);
 
-        if (this.$options.autoNextTimer) {
-            clearTimeout(this.$options.autoNextTimer);
-            this.$options.autoNextTimer = null;
+        if (this._handles.autoNextTimer) {
+            clearTimeout(this._handles.autoNextTimer);
+            this._handles.autoNextTimer = null;
         }
 
         if (window.navigator && window.navigator.mediaSession) {

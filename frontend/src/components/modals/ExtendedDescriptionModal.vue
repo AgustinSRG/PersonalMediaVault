@@ -302,13 +302,14 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles = Object.create(null);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        this.$options.mediaUpdateH = this.updateMediaData.bind(this);
+        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
 
         if (this.display) {
             this.updateModalSize();
@@ -316,8 +317,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
-        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },
     watch: {
         display: function () {

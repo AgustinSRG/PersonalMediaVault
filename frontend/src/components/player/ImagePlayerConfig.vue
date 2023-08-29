@@ -298,28 +298,23 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+        this._handles = Object.create(null);
+        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
         this.updateResolutions();
     },
     beforeUnmount: function () {
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        this._handles.focusTrap.destroy();
     },
     watch: {
         shown: function () {
             this.page = "";
             if (this.shown) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
         rTick: function () {

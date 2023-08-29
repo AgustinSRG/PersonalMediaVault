@@ -144,9 +144,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.autoFocus();
 
-        this.$options.timer = setInterval(this.updateNow.bind(this), 200);
+        this._handles.timer = setInterval(this.updateNow.bind(this), 200);
     },
     watch: {
         display: function () {
@@ -155,7 +156,7 @@ export default defineComponent({
         },
     },
     beforeUnmount: function () {
-        clearInterval(this.$options.timer);
+        clearInterval(this._handles.timer);
     },
 });
 </script>

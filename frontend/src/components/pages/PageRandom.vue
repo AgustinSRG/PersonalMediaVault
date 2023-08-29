@@ -208,7 +208,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set("page-random-load", 1500, this.$options.loadH);
+                            Timeouts.Set("page-random-load", 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -216,7 +216,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set("page-random-load", 1500, this.$options.loadH);
+                    Timeouts.Set("page-random-load", 1500, this._handles.loadH);
                 });
         },
 
@@ -413,34 +413,35 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.loadH = this.load.bind(this);
-        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+        this._handles = Object.create(null);
+        this._handles.loadH = this.load.bind(this);
+        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.AddEventListener("media-meta-change", this.$options.loadH);
-        AppEvents.AddEventListener("media-delete", this.$options.loadH);
-        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.AddEventListener("media-meta-change", this._handles.loadH);
+        AppEvents.AddEventListener("media-delete", this._handles.loadH);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
 
-        this.$options.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+        this._handles.nextMediaH = this.nextMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
 
-        this.$options.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
+        this._handles.prevMediaH = this.prevMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-prev", this._handles.prevMediaH);
 
         for (let i = 1; i <= 20; i++) {
             this.pageSizeOptions.push(5 * i);
         }
 
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        this._handles.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
-        AppEvents.AddEventListener("random-page-refresh", this.$options.loadH);
+        AppEvents.AddEventListener("random-page-refresh", this._handles.loadH);
 
-        this.$options.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
+        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
 
         this.updateSearchParams();
         this.updateTagData();
@@ -453,16 +454,16 @@ export default defineComponent({
     beforeUnmount: function () {
         Timeouts.Abort("page-random-load");
         Request.Abort("page-random-load");
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.RemoveEventListener("media-meta-change", this.$options.loadH);
-        AppEvents.RemoveEventListener("media-delete", this.$options.loadH);
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
-        AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
-        AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-        AppEvents.RemoveEventListener("random-page-refresh", this.$options.loadH);
-        AppEvents.RemoveEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.RemoveEventListener("media-meta-change", this._handles.loadH);
+        AppEvents.RemoveEventListener("media-delete", this._handles.loadH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
+        AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
+        AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        AppEvents.RemoveEventListener("random-page-refresh", this._handles.loadH);
+        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
         AlbumsController.OnPageUnload();
     },
     watch: {

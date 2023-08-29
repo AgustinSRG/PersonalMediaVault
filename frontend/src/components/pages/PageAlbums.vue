@@ -239,7 +239,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+                            Timeouts.Set("page-albums-load", 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -247,7 +247,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set("page-albums-load", 1500, this.$options.loadH);
+                    Timeouts.Set("page-albums-load", 1500, this._handles.loadH);
                 });
         },
 
@@ -432,23 +432,24 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.loadH = this.load.bind(this);
-        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+        this._handles = Object.create(null);
+        this._handles.loadH = this.load.bind(this);
+        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
 
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        AppEvents.AddEventListener("albums-list-change", this.$options.loadH);
+        AppEvents.AddEventListener("albums-list-change", this._handles.loadH);
 
-        this.$options.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
+        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
 
         this.updateSearchParams();
         this.load();
@@ -460,16 +461,16 @@ export default defineComponent({
     beforeUnmount: function () {
         Timeouts.Abort("page-albums-load");
         Request.Abort("page-albums-load");
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("albums-list-change", this.$options.loadH);
+        AppEvents.RemoveEventListener("albums-list-change", this._handles.loadH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("page-size-pref-updated", this.$options.updatePageSizeH);
+        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
 
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },
     watch: {
         display: function () {

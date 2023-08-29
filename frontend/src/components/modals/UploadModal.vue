@@ -245,17 +245,17 @@ export default defineComponent({
 
         onTagAddChanged: function (forced: boolean) {
             if (forced) {
-                if (this.$options.findTagTimeout) {
-                    clearTimeout(this.$options.findTagTimeout);
-                    this.$options.findTagTimeout = null;
+                if (this._handles.findTagTimeout) {
+                    clearTimeout(this._handles.findTagTimeout);
+                    this._handles.findTagTimeout = null;
                 }
                 this.findTags();
             } else {
-                if (this.$options.findTagTimeout) {
+                if (this._handles.findTagTimeout) {
                     return;
                 }
-                this.$options.findTagTimeout = setTimeout(() => {
-                    this.$options.findTagTimeout = null;
+                this._handles.findTagTimeout = setTimeout(() => {
+                    this._handles.findTagTimeout = null;
                     this.findTags();
                 }, 200);
             }
@@ -311,13 +311,15 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+        
         this.updateTagData();
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        this._handles.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
         this.updateAlbums();
-        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         this.reset();
 
@@ -326,12 +328,12 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
-        if (this.$options.findTagTimeout) {
-            clearTimeout(this.$options.findTagTimeout);
-            this.$options.findTagTimeout = null;
+        if (this._handles.findTagTimeout) {
+            clearTimeout(this._handles.findTagTimeout);
+            this._handles.findTagTimeout = null;
         }
     },
     watch: {

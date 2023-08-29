@@ -346,61 +346,56 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.statusUpdater = this.updateStatus.bind(this);
+        this._handles = Object.create(null);
+        this._handles.statusUpdater = this.updateStatus.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this.$options.statusUpdater);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusUpdater);
 
-        this.$options.albumsUpdater = this.updateAlbums.bind(this);
+        this._handles.albumsUpdater = this.updateAlbums.bind(this);
 
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdater);
-        AppEvents.AddEventListener("albums-fav-updated", this.$options.albumsUpdater);
+        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdater);
+        AppEvents.AddEventListener("albums-fav-updated", this._handles.albumsUpdater);
 
-        this.$options.albumGoTop = this.putAlbumFirst.bind(this);
+        this._handles.albumGoTop = this.putAlbumFirst.bind(this);
 
-        AppEvents.AddEventListener("album-sidebar-top", this.$options.albumGoTop);
+        AppEvents.AddEventListener("album-sidebar-top", this._handles.albumGoTop);
 
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        this.$options.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
+        this._handles.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
 
         if (this.display) {
-            this.$options.focusTrap.activate();
+            this._handles.focusTrap.activate();
         }
 
         this.updateStatus();
         this.updateAlbums();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusUpdater);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusUpdater);
 
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdater);
-        AppEvents.RemoveEventListener("albums-fav-updated", this.$options.albumsUpdater);
+        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdater);
+        AppEvents.RemoveEventListener("albums-fav-updated", this._handles.albumsUpdater);
 
-        AppEvents.RemoveEventListener("album-sidebar-top", this.$options.albumGoTop);
+        AppEvents.RemoveEventListener("album-sidebar-top", this._handles.albumGoTop);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        this._handles.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 if (!this.initialLayout) {
                     nextTick(() => {
                         this.$el.focus();
                     });
                 }
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
     },

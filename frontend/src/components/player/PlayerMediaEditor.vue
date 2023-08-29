@@ -1143,11 +1143,11 @@ export default defineComponent({
         },
 
         onTagAddChanged: function () {
-            if (this.$options.findTagTimeout) {
+            if (this._handles.findTagTimeout) {
                 return;
             }
-            this.$options.findTagTimeout = setTimeout(() => {
-                this.$options.findTagTimeout = null;
+            this._handles.findTagTimeout = setTimeout(() => {
+                this._handles.findTagTimeout = null;
                 this.findTags();
             }, 200);
         },
@@ -1698,33 +1698,34 @@ export default defineComponent({
     },
 
     mounted: function () {
+        this._handles = Object.create(null);
         this.updateMediaData();
         this.updateTagData();
 
-        this.$options.mediaUpdateH = this.updateMediaData.bind(this);
+        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
 
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
+        this._handles.tagUpdateH = this.updateTagData.bind(this);
 
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
         TagsController.Load();
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
 
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
+        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        if (this.$options.findTagTimeout) {
-            clearTimeout(this.$options.findTagTimeout);
+        if (this._handles.findTagTimeout) {
+            clearTimeout(this._handles.findTagTimeout);
         }
 
         Request.Abort("media-editor-busy");

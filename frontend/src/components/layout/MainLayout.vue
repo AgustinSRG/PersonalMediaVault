@@ -448,31 +448,32 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.onThemeChangedH = this.onThemeChanged.bind(this);
-        AppEvents.AddEventListener("theme-changed", this.$options.onThemeChangedH);
+        this._handles = Object.create(null);
+        this._handles.onThemeChangedH = this.onThemeChanged.bind(this);
+        AppEvents.AddEventListener("theme-changed", this._handles.onThemeChangedH);
 
-        this.$options.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
-        AppEvents.AddEventListener("app-status-update", this.$options.onAppStatusUpdateH);
+        this._handles.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
+        AppEvents.AddEventListener("app-status-update", this._handles.onAppStatusUpdateH);
 
-        this.$options.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
-        AppEvents.AddEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
+        this._handles.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.onAuthStatusChangedH);
 
-        this.$options.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
-        AppEvents.AddEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
+        this._handles.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
+        AppEvents.AddEventListener("auth-status-loading", this._handles.onAuthStatusLoadingH);
 
-        this.$options.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
-        AppEvents.AddEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
+        this._handles.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
+        AppEvents.AddEventListener("auth-status-loading-error", this._handles.onAuthLoadingErrorH);
 
-        this.$options.onNewAppVersionH = this.onNewAppVersion.bind(this);
-        AppEvents.AddEventListener("app-new-version", this.$options.onNewAppVersionH);
+        this._handles.onNewAppVersionH = this.onNewAppVersion.bind(this);
+        AppEvents.AddEventListener("app-new-version", this._handles.onNewAppVersionH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("theme-changed", this.$options.onThemeChangedH);
-        AppEvents.RemoveEventListener("app-status-update", this.$options.onAppStatusUpdateH);
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.onAuthStatusChangedH);
-        AppEvents.RemoveEventListener("auth-status-loading", this.$options.onAuthStatusLoadingH);
-        AppEvents.RemoveEventListener("auth-status-loading-error", this.$options.onAuthLoadingErrorH);
-        AppEvents.RemoveEventListener("app-new-version", this.$options.onNewAppVersionH);
+        AppEvents.RemoveEventListener("theme-changed", this._handles.onThemeChangedH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.onAppStatusUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.onAuthStatusChangedH);
+        AppEvents.RemoveEventListener("auth-status-loading", this._handles.onAuthStatusLoadingH);
+        AppEvents.RemoveEventListener("auth-status-loading-error", this._handles.onAuthLoadingErrorH);
+        AppEvents.RemoveEventListener("app-new-version", this._handles.onNewAppVersionH);
     },
 });
 </script>

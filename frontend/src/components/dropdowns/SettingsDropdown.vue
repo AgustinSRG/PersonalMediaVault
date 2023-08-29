@@ -148,39 +148,33 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles = Object.create(null);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        this.$options.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
         if (this.display) {
-            this.$options.focusTrap.activate();
+            this._handles.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
-
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        this._handles.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
     },

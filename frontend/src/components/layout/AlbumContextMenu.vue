@@ -154,21 +154,20 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.computeDimensions();
 
-        this.$options.hideHandler = this.hide.bind(this);
+        this._handles.hideHandler = this.hide.bind(this);
 
-        document.addEventListener("mousedown", this.$options.hideHandler);
-        document.addEventListener("touchstart", this.$options.hideHandler);
+        document.addEventListener("mousedown", this._handles.hideHandler);
+        document.addEventListener("touchstart", this._handles.hideHandler);
 
-        this.$options.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
+        this._handles.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
     },
     beforeUnmount: function () {
-        document.removeEventListener("mousedown", this.$options.hideHandler);
-        document.removeEventListener("touchstart", this.$options.hideHandler);
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        document.removeEventListener("mousedown", this._handles.hideHandler);
+        document.removeEventListener("touchstart", this._handles.hideHandler);
+        this._handles.focusTrap.destroy();
     },
     watch: {
         x: function () {
@@ -179,16 +178,12 @@ export default defineComponent({
         },
         shown: function () {
             if (this.shown) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
     },

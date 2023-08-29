@@ -408,11 +408,12 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+        this._handles = Object.create(null);
+        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
-        this.$options.statusH = this.onUpdateStatus.bind(this);
-        AppEvents.AddEventListener("app-status-update", this.$options.statusH);
+        this._handles.statusH = this.onUpdateStatus.bind(this);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusH);
 
         this.updateAlbums();
         this.load();
@@ -425,8 +426,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusH);
+        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusH);
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");
     },

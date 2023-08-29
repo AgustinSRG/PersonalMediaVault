@@ -1157,64 +1157,64 @@ export default defineComponent({
         },
 
         clearAudioRenderer: function () {
-            if (this.$options.rendererTimer) {
-                clearInterval(this.$options.rendererTimer);
-                this.$options.rendererTimer = null;
+            if (this._handles.rendererTimer) {
+                clearInterval(this._handles.rendererTimer);
+                this._handles.rendererTimer = null;
             }
 
-            if (this.$options.audioSource) {
-                this.$options.audioSource.disconnect();
+            if (this._handles.audioSource) {
+                this._handles.audioSource.disconnect();
             }
 
-            if (this.$options.audioAnalyser) {
-                this.$options.audioAnalyser.disconnect();
+            if (this._handles.audioAnalyser) {
+                this._handles.audioAnalyser.disconnect();
             }
 
-            this.$options.audioAnalyser = null;
+            this._handles.audioAnalyser = null;
         },
 
         setupAudioRenderer: function () {
-            if (!this.$options.audioContext) {
+            if (!this._handles.audioContext) {
                 this.setupAudioContext();
             }
 
             this.clearAudioRenderer();
 
             if (this.audioURL) {
-                const context = this.$options.audioContext;
-                const source = this.$options.audioSource;
+                const context = this._handles.audioContext;
+                const source = this._handles.audioSource;
 
                 const analyser = context.createAnalyser();
 
-                this.$options.audioSource = source;
-                this.$options.audioAnalyser = analyser;
+                this._handles.audioSource = source;
+                this._handles.audioAnalyser = analyser;
                 source.connect(analyser);
                 analyser.connect(context.destination);
 
                 analyser.fftSize = 256;
 
-                this.$options.rendererTimer = setInterval(this.audioAnimationFrame.bind(this), Math.floor(1000 / 30));
+                this._handles.rendererTimer = setInterval(this.audioAnimationFrame.bind(this), Math.floor(1000 / 30));
             } else {
-                this.$options.audioContext = null;
-                this.$options.audioSource = null;
-                this.$options.audioAnalyser = null;
+                this._handles.audioContext = null;
+                this._handles.audioSource = null;
+                this._handles.audioAnalyser = null;
             }
         },
 
         setupAudioContext: function () {
             const context = new AudioContext();
-            this.$options.audioContext = context;
+            this._handles.audioContext = context;
             const source = context.createMediaElementSource(this.getAudioElement());
-            this.$options.audioSource = source;
+            this._handles.audioSource = source;
         },
 
         closeAudioContext: function () {
-            if (this.$options.audioContext) {
-                this.$options.audioContext.close();
+            if (this._handles.audioContext) {
+                this._handles.audioContext.close();
             }
 
-            this.$options.audioContext = null;
-            this.$options.audioSource = null;
+            this._handles.audioContext = null;
+            this._handles.audioSource = null;
         },
 
         audioAnimationFrame: function () {
@@ -1222,7 +1222,7 @@ export default defineComponent({
                 return;
             }
 
-            const analyser = this.$options.audioAnalyser;
+            const analyser = this._handles.audioAnalyser;
             const canvas = this.$el.querySelector("canvas");
 
             if (!analyser || !canvas) {
@@ -1307,20 +1307,20 @@ export default defineComponent({
             if (sub) {
                 if (this.subtitlesHTML) {
                     const subTag = getUniqueSubtitlesLoadTag();
-                    this.$options.subTag = subTag;
+                    this._handles.subTag = subTag;
                     sanitizeSubtitlesHTML(sub.text).then((text) => {
-                        if (this.$options.subTag === subTag) {
+                        if (this._handles.subTag === subTag) {
                             this.subtitles = text;
                         }
                     });
                 } else {
-                    this.$options.subTag = "";
+                    this._handles.subTag = "";
                     this.subtitles = htmlToText(sub.text);
                 }
                 this.subtitlesStart = sub.start;
                 this.subtitlesEnd = sub.end;
             } else {
-                this.$options.subTag = "";
+                this._handles.subTag = "";
                 this.subtitles = "";
                 this.subtitlesStart = 0;
                 this.subtitlesEnd = 0;
@@ -1409,6 +1409,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         // Load player preferences
         this.muted = PlayerPreferences.PlayerMuted;
         this.volume = PlayerPreferences.PlayerVolume;
@@ -1418,22 +1419,22 @@ export default defineComponent({
         this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
         this.nextEnd = PlayerPreferences.NextOnEnd;
 
-        this.$options.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this.$options.keyHandler, 100);
+        this._handles.keyHandler = this.onKeyPress.bind(this);
+        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
 
-        this.$options.timer = setInterval(this.tick.bind(this), 100);
+        this._handles.timer = setInterval(this.tick.bind(this), 100);
 
-        this.$options.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
+        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        this.$options.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener("subtitles-update", this.$options.subtitlesReloadH);
+        this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
+        AppEvents.AddEventListener("subtitles-update", this._handles.subtitlesReloadH);
 
-        this.$options.themeHandler = this.themeUpdated.bind(this);
-        AppEvents.AddEventListener("theme-changed", this.$options.themeHandler);
+        this._handles.themeHandler = this.themeUpdated.bind(this);
+        AppEvents.AddEventListener("theme-changed", this._handles.themeHandler);
 
         this.initializeAudio();
 
@@ -1447,21 +1448,21 @@ export default defineComponent({
     beforeUnmount: function () {
         this.audioURL = "";
         this.onClearURL();
-        clearInterval(this.$options.timer);
+        clearInterval(this._handles.timer);
 
         this.clearAudioRenderer();
         this.closeAudioContext();
 
-        document.removeEventListener("fullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this.$options.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this.$options.exitFullScreenListener);
+        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
+        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        AppEvents.RemoveEventListener("subtitles-update", this.$options.subtitlesReloadH);
+        AppEvents.RemoveEventListener("subtitles-update", this._handles.subtitlesReloadH);
 
-        AppEvents.RemoveEventListener("theme-changed", this.$options.themeHandler);
+        AppEvents.RemoveEventListener("theme-changed", this._handles.themeHandler);
 
-        KeyboardManager.RemoveHandler(this.$options.keyHandler);
+        KeyboardManager.RemoveHandler(this._handles.keyHandler);
 
         if (window.navigator && window.navigator.mediaSession) {
             navigator.mediaSession.setActionHandler("play", null);

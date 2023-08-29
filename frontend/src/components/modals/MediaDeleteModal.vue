@@ -153,10 +153,11 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.mediaUpdateH = this.onMediaUpdate.bind(this);
-        AppEvents.AddEventListener("app-status-update", this.$options.mediaUpdateH);
+        this._handles = Object.create(null);
+        this._handles.mediaUpdateH = this.onMediaUpdate.bind(this);
+        AppEvents.AddEventListener("app-status-update", this._handles.mediaUpdateH);
 
-        AppEvents.AddEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
 
         this.onMediaUpdate();
 
@@ -167,9 +168,9 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.mediaUpdateH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.mediaUpdateH);
 
-        AppEvents.RemoveEventListener("current-media-update", this.$options.mediaUpdateH);
+        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },
     watch: {
         display: function () {

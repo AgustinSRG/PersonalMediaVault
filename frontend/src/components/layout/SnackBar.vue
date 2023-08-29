@@ -16,36 +16,37 @@ export default defineComponent({
     },
     methods: {
         show: function (msg: string) {
-            if (this.$options.timeout) {
-                clearTimeout(this.$options.timeout);
-                this.$options.timeout = null;
+            if (this._handles.timeout) {
+                clearTimeout(this._handles.timeout);
+                this._handles.timeout = null;
             }
 
             this.shown = true;
             this.message = msg;
 
-            this.$options.timeout = setTimeout(() => {
+            this._handles.timeout = setTimeout(() => {
                 this.shown = false;
             }, 3000);
         },
 
         hide: function () {
-            if (this.$options.timeout) {
-                clearTimeout(this.$options.timeout);
-                this.$options.timeout = null;
+            if (this._handles.timeout) {
+                clearTimeout(this._handles.timeout);
+                this._handles.timeout = null;
             }
             this.shown = false;
         },
     },
     mounted: function () {
-        this.$options.showH = this.show.bind(this);
-        AppEvents.AddEventListener("snack", this.$options.showH);
+        this._handles = Object.create(null);
+        this._handles.showH = this.show.bind(this);
+        AppEvents.AddEventListener("snack", this._handles.showH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("snack", this.$options.showH);
-        if (this.$options.timeout) {
-            clearTimeout(this.$options.timeout);
-            this.$options.timeout = null;
+        AppEvents.RemoveEventListener("snack", this._handles.showH);
+        if (this._handles.timeout) {
+            clearTimeout(this._handles.timeout);
+            this._handles.timeout = null;
         }
     },
 });

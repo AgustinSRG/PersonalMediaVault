@@ -159,25 +159,27 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+
         if (isTouchDevice()) {
             this.expandedState = true;
         }
 
-        this.$options.dropScaleHandler = this.dropScale.bind(this);
-        document.addEventListener("mouseup", this.$options.dropScaleHandler);
-        document.addEventListener("touchend", this.$options.dropScaleHandler);
+        this._handles.dropScaleHandler = this.dropScale.bind(this);
+        document.addEventListener("mouseup", this._handles.dropScaleHandler);
+        document.addEventListener("touchend", this._handles.dropScaleHandler);
 
-        this.$options.moveScaleHandler = this.moveScale.bind(this);
+        this._handles.moveScaleHandler = this.moveScale.bind(this);
 
-        document.addEventListener("mousemove", this.$options.moveScaleHandler);
-        document.addEventListener("touchmove", this.$options.moveScaleHandler);
+        document.addEventListener("mousemove", this._handles.moveScaleHandler);
+        document.addEventListener("touchmove", this._handles.moveScaleHandler);
     },
     beforeUnmount: function () {
-        document.removeEventListener("mouseup", this.$options.dropScaleHandler);
-        document.removeEventListener("touchend", this.$options.dropScaleHandler);
+        document.removeEventListener("mouseup", this._handles.dropScaleHandler);
+        document.removeEventListener("touchend", this._handles.dropScaleHandler);
 
-        document.removeEventListener("mousemove", this.$options.moveScaleHandler);
-        document.removeEventListener("touchmove", this.$options.moveScaleHandler);
+        document.removeEventListener("mousemove", this._handles.moveScaleHandler);
+        document.removeEventListener("touchmove", this._handles.moveScaleHandler);
     },
 });
 </script>

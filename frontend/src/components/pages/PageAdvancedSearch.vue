@@ -306,14 +306,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
+                            Timeouts.Set("page-adv-search-load", 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("page-adv-search-load", 1500, this.$options.loadH);
+                    Timeouts.Set("page-adv-search-load", 1500, this._handles.loadH);
                 });
         },
 
@@ -618,17 +618,17 @@ export default defineComponent({
 
         onTagAddChanged: function (forced?: boolean) {
             if (forced) {
-                if (this.$options.findTagTimeout) {
-                    clearTimeout(this.$options.findTagTimeout);
-                    this.$options.findTagTimeout = null;
+                if (this._handles.findTagTimeout) {
+                    clearTimeout(this._handles.findTagTimeout);
+                    this._handles.findTagTimeout = null;
                 }
                 this.findTags();
             } else {
-                if (this.$options.findTagTimeout) {
+                if (this._handles.findTagTimeout) {
                     return;
                 }
-                this.$options.findTagTimeout = setTimeout(() => {
-                    this.$options.findTagTimeout = null;
+                this._handles.findTagTimeout = setTimeout(() => {
+                    this._handles.findTagTimeout = null;
                     this.findTags();
                 }, 200);
             }
@@ -810,34 +810,35 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.advancedSearch = false;
-        this.$options.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this.$options.handleGlobalKeyH, 20);
+        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
+        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        this.$options.loadH = this.load.bind(this);
-        this.$options.resetH = this.resetSearch.bind(this);
-        this.$options.statusChangeH = this.onAppStatusChanged.bind(this);
+        this._handles.loadH = this.load.bind(this);
+        this._handles.resetH = this.resetSearch.bind(this);
+        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.AddEventListener("media-delete", this.$options.resetH);
-        AppEvents.AddEventListener("media-meta-change", this.$options.resetH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.AddEventListener("media-delete", this._handles.resetH);
+        AppEvents.AddEventListener("media-meta-change", this._handles.resetH);
 
-        AppEvents.AddEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
 
-        this.$options.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-next", this.$options.nextMediaH);
+        this._handles.nextMediaH = this.nextMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
 
-        this.$options.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-prev", this.$options.prevMediaH);
+        this._handles.prevMediaH = this.prevMedia.bind(this);
+        AppEvents.AddEventListener("page-media-nav-prev", this._handles.prevMediaH);
 
-        this.$options.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
+        this._handles.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
 
-        this.$options.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this.$options.tagUpdateH);
+        this._handles.tagUpdateH = this.updateTagData.bind(this);
+        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
         this.updateAlbums();
-        this.$options.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this.$options.albumsUpdateH);
+        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
+        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         this.updateTagData();
 
@@ -853,25 +854,25 @@ export default defineComponent({
 
         Timeouts.Abort("page-adv-search-dirty");
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.loadH);
-        AppEvents.RemoveEventListener("media-delete", this.$options.resetH);
-        AppEvents.RemoveEventListener("media-meta-change", this.$options.resetH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AppEvents.RemoveEventListener("media-delete", this._handles.resetH);
+        AppEvents.RemoveEventListener("media-meta-change", this._handles.resetH);
 
-        AppEvents.RemoveEventListener("app-status-update", this.$options.statusChangeH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("page-media-nav-next", this.$options.nextMediaH);
-        AppEvents.RemoveEventListener("page-media-nav-prev", this.$options.prevMediaH);
+        AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
+        AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
 
-        AppEvents.RemoveEventListener("tags-update", this.$options.tagUpdateH);
-        AppEvents.RemoveEventListener("albums-update", this.$options.albumsUpdateH);
+        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
-        if (this.$options.findTagTimeout) {
-            clearTimeout(this.$options.findTagTimeout);
+        if (this._handles.findTagTimeout) {
+            clearTimeout(this._handles.findTagTimeout);
         }
 
-        clearInterval(this.$options.continueCheckInterval);
+        clearInterval(this._handles.continueCheckInterval);
 
-        KeyboardManager.RemoveHandler(this.$options.handleGlobalKeyH);
+        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
         if (!this.inModal) {
             AlbumsController.OnPageUnload();

@@ -104,21 +104,22 @@ import { AuthController } from "./control/auth";
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
         this.updateAppStatus();
-        this.$options.updateH = this.updateAppStatus.bind(this);
+        this._handles.updateH = this.updateAppStatus.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this.$options.updateH);
-        AppEvents.AddEventListener("current-album-update", this.$options.updateH);
-        AppEvents.AddEventListener("current-media-update", this.$options.updateH);
+        AppEvents.AddEventListener("app-status-update", this._handles.updateH);
+        AppEvents.AddEventListener("current-album-update", this._handles.updateH);
+        AppEvents.AddEventListener("current-media-update", this._handles.updateH);
 
-        this.$options.uploadDoneH = this.onUploadFinished.bind(this);
-        AppEvents.AddEventListener("upload-list-update", this.$options.uploadDoneH);
+        this._handles.uploadDoneH = this.onUploadFinished.bind(this);
+        AppEvents.AddEventListener("upload-list-update", this._handles.uploadDoneH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this.$options.updateH);
-        AppEvents.RemoveEventListener("current-album-update", this.$options.updateH);
-        AppEvents.RemoveEventListener("current-media-update", this.$options.updateH);
-        AppEvents.RemoveEventListener("upload-list-update", this.$options.uploadDoneH);
+        AppEvents.RemoveEventListener("app-status-update", this._handles.updateH);
+        AppEvents.RemoveEventListener("current-album-update", this._handles.updateH);
+        AppEvents.RemoveEventListener("current-media-update", this._handles.updateH);
+        AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
     },
 })
 export default class App extends Vue {}

@@ -289,16 +289,12 @@ export default defineComponent({
 
         onUpdateFullScreen: function () {
             if (this.fullScreen) {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.activate();
-                }
+                this._handles.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                if (this.$options.focusTrap) {
-                    this.$options.focusTrap.deactivate();
-                }
+                this._handles.focusTrap.deactivate();
             }
         },
 
@@ -324,61 +320,60 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$options.loadingH = this.updateLoading.bind(this);
-        this.$options.updateH = this.updateMedia.bind(this);
+        this._handles = Object.create(null);
+        this._handles.loadingH = this.updateLoading.bind(this);
+        this._handles.updateH = this.updateMedia.bind(this);
 
-        this.$options.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
+        this._handles.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
 
-        this.$options.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
+        this._handles.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
         this.checkPlayerSize();
 
         this.updateStatus();
 
-        AppEvents.AddEventListener("current-media-loading", this.$options.loadingH);
-        AppEvents.AddEventListener("current-media-update", this.$options.updateH);
+        AppEvents.AddEventListener("current-media-loading", this._handles.loadingH);
+        AppEvents.AddEventListener("current-media-update", this._handles.updateH);
 
-        this.$options.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this.$options.posUpdateH);
+        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
+        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
 
-        this.$options.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+        this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
+        AppEvents.AddEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
 
-        this.$options.authUpdateH = this.updateAuthInfo.bind(this);
+        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        this.$options.albumLoadingH = this.updateAlbumsLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this.$options.albumLoadingH);
+        this._handles.albumLoadingH = this.updateAlbumsLoading.bind(this);
+        AppEvents.AddEventListener("current-album-loading", this._handles.albumLoadingH);
 
-        this.$options.goPrevH = this.goPrev.bind(this);
-        AppEvents.AddEventListener("media-go-prev", this.$options.goPrevH);
+        this._handles.goPrevH = this.goPrev.bind(this);
+        AppEvents.AddEventListener("media-go-prev", this._handles.goPrevH);
 
-        this.$options.goNextH = this.goNext.bind(this);
-        AppEvents.AddEventListener("media-go-next", this.$options.goNextH);
+        this._handles.goNextH = this.goNext.bind(this);
+        AppEvents.AddEventListener("media-go-next", this._handles.goNextH);
 
         nextTick(() => {
             this.$el.focus();
         });
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-media-loading", this.$options.loadingH);
-        AppEvents.RemoveEventListener("current-media-update", this.$options.updateH);
+        AppEvents.RemoveEventListener("current-media-loading", this._handles.loadingH);
+        AppEvents.RemoveEventListener("current-media-update", this._handles.updateH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this.$options.posUpdateH);
-        AppEvents.RemoveEventListener("page-media-nav-update", this.$options.onPagePosUpdateH);
+        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this.$options.authUpdateH);
+        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("current-album-loading", this.$options.albumLoadingH);
+        AppEvents.RemoveEventListener("current-album-loading", this._handles.albumLoadingH);
 
-        AppEvents.RemoveEventListener("media-go-prev", this.$options.goPrevH);
-        AppEvents.RemoveEventListener("media-go-next", this.$options.goNextH);
+        AppEvents.RemoveEventListener("media-go-prev", this._handles.goPrevH);
+        AppEvents.RemoveEventListener("media-go-next", this._handles.goNextH);
 
-        if (this.$options.focusTrap) {
-            this.$options.focusTrap.destroy();
-        }
+        this._handles.focusTrap.destroy();
 
-        clearInterval(this.$options.timer);
+        clearInterval(this._handles.timer);
     },
 });
 </script>
