@@ -104,6 +104,9 @@ export default defineComponent({
             content: "",
             contentToChange: "",
 
+            contentStoredId: "",
+            contentStored: "",
+
             loading: true,
             busy: false,
             canWrite: AuthController.CanWrite,
@@ -133,6 +136,14 @@ export default defineComponent({
                 this.contentToChange = "";
                 this.loading = false;
                 this.editing = !!this.canWrite;
+
+                if (this.contentStoredId === MediaController.MediaData.id) {
+                    this.contentToChange = this.contentStored;
+                } else {
+                    this.contentStoredId = "";
+                    this.contentStored = "";
+                }
+
                 this.autoFocus();
                 return;
             }
@@ -148,6 +159,15 @@ export default defineComponent({
                     this.contentToChange = extendedDescText;
                     this.loading = false;
                     this.editing = this.canWrite && !this.content;
+
+                    if (this.contentStoredId === MediaController.MediaData.id) {
+                        this.contentToChange = this.contentStored;
+                        this.editing = !!this.canWrite;
+                    } else {
+                        this.contentStoredId = "";
+                        this.contentStored = "";
+                    }
+
                     this.autoFocus();
                 })
                 .onRequestError((err) => {
@@ -160,6 +180,13 @@ export default defineComponent({
                             this.contentToChange = "";
                             this.loading = false;
                             this.editing = !!this.canWrite;
+
+                            if (this.contentStoredId === MediaController.MediaData.id) {
+                                this.contentToChange = this.contentStored;
+                            } else {
+                                this.contentStoredId = "";
+                                this.contentStored = "";
+                            }
                             this.autoFocus();
                         })
                         .add("*", "*", () => {
@@ -264,6 +291,9 @@ export default defineComponent({
 
             this.busy = true;
 
+            this.contentStoredId = this.mid;
+            this.contentStored = this.contentToChange;
+
             Request.Do(MediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
@@ -274,6 +304,7 @@ export default defineComponent({
                     this.autoFocus();
                 })
                 .onRequestError((err) => {
+                    this.busy = false;
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             AppEvents.Emit("unauthorized");
@@ -281,6 +312,7 @@ export default defineComponent({
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
+                    this.busy = false;
                     console.error(err);
                 });
         },
@@ -323,6 +355,8 @@ export default defineComponent({
     watch: {
         display: function () {
             if (this.display) {
+                this.contentStoredId = "";
+                this.contentStored = "";
                 this.updateModalSize();
                 this.load();
             }
