@@ -64,6 +64,7 @@
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
         ></VideoPlayer>
         <AudioPlayer
             v-if="mediaData && mediaData.type === 3"
@@ -88,6 +89,7 @@
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>

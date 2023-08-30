@@ -391,6 +391,8 @@ export default defineComponent({
 
         loopForced: Boolean,
         loopForcedValue: Boolean,
+
+        autoPlay: Boolean,
     },
     setup(props) {
         return {
@@ -604,6 +606,11 @@ export default defineComponent({
         onCanPlay: function () {
             this.loading = false;
             if (this.autoPlayApplied) {
+                return;
+            }
+            if (!this.autoPlay) {
+                this.autoPlayApplied = true;
+                this.playing = false;
                 return;
             }
             const player = this.getAudioElement();
