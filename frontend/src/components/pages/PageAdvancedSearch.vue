@@ -16,7 +16,7 @@
 
             <div class="form-group">
                 <label>{{ $t("Tags") }}:</label>
-                <select class="form-control form-select form-control-full-width" v-model="tagMode">
+                <select class="form-control form-select form-control-full-width" v-model="tagMode" @change="markDirty">
                     <option :value="'all'">
                         {{ $t("Media must contain ALL of the selected tags") }}
                     </option>
