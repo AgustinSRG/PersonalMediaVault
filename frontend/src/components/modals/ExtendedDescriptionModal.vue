@@ -291,9 +291,6 @@ export default defineComponent({
 
             this.busy = true;
 
-            this.contentStoredId = this.mid;
-            this.contentStored = this.contentToChange;
-
             Request.Do(MediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
@@ -307,6 +304,8 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(401, "*", () => {
+                            this.contentStoredId = this.mid;
+                            this.contentStored = this.contentToChange;
                             AppEvents.Emit("unauthorized");
                         })
                         .handle(err);
