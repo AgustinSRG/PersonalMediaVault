@@ -35,6 +35,7 @@ export interface MediaData {
     resolutions: MediaResolution[];
     subtitles: MediaSubtitle[];
     audios: MediaAudioTrack[];
+    attachments: MediaAttachment[];
     force_start_beginning: boolean;
     img_notes: boolean;
     img_notes_url: string;
@@ -63,6 +64,13 @@ export interface MediaSubtitle {
 export interface MediaAudioTrack {
     id: string;
     name: string;
+    url: string;
+}
+
+export interface MediaAttachment {
+    id: number;
+    name: string;
+    size: number;
     url: string;
 }
 
@@ -257,6 +265,34 @@ export class MediaAPI {
         return {
             method: "POST",
             url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/remove?id=" + encodeURIComponent(id)),
+        };
+    }
+
+    public static UploadAttachment(mediaId: number, attachment: File): RequestParams<MediaAudioTrack> {
+        const form = new FormData();
+        form.append("file", attachment);
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/add"),
+            form: form,
+        };
+    }
+
+    public static RenameAttachment(mediaId: number, id: number, name: string): RequestParams<MediaAudioTrack> {
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/rename"),
+            json: {
+                id: id,
+                name: name,
+            },
+        };
+    }
+
+    public static RemoveAttachment(mediaId: number, id: number): RequestParams<void> {
+        return {
+            method: "POST",
+            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/remove?id=" + encodeURIComponent(id + "")),
         };
     }
 }
