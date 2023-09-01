@@ -456,6 +456,27 @@ paths:
                       type: string
                       description: "Audio file URL"
                       example: "/assets/b/0/0/audio.mp3"
+              attachments:
+                type: array
+                description: Available attachments
+                items:
+                  properties:
+                    id:
+                      type: number
+                      format: int64
+                      description: "Attachment ID"
+                    name:
+                      type: string
+                      description: "Attachment file name"
+                      example: "example.txt"
+                    size:
+                      type: number
+                      format: int64
+                      description: "Size of the attachment in bytes"
+                    url:
+                      type: string
+                      description: "Attachment file URL"
+                      example: "/assets/b/0/0/example.txt"
               force_start_beginning:
                 type: boolean
                 description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
@@ -1284,7 +1305,161 @@ paths:
           name: id
           type: string
           required: true
-          description: "ID for the audio track. Example: es"
+          description: "ID of the audio track. Example: es"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/media/{id}/attachments/add":
+    post:
+      summary: Adds attachment
+      description: Add an attachment to the media asset
+      tags:
+        - media
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          schema:
+            properties:
+              id:
+                type: number
+                format: int64
+                description: "Attachment ID"
+              name:
+                type: string
+                description: "Attachment file name"
+                example: "example.txt"
+              size:
+                type: number
+                format: int64
+                description: "Size of the attachment in bytes"
+              url:
+                type: string
+                description: "Attachment file URL"
+                example: "/assets/b/0/0/example.txt"
+                
+  "/api/media/{id}/attachments/rename":
+    post:
+      summary: Removes attachment
+      description: Removes attachment
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: description
+          schema:
+            properties:
+              id:
+                type: number
+                format: int64
+                description: "Attachment ID"
+              name:
+                type: string
+                description: "Attachment file name (max 255 characters)"
+                example: "example.txt"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid attachment name
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Not found
+        200:
+          description: Success
+          schema:
+            properties:
+              id:
+                type: number
+                format: int64
+                description: "Attachment ID"
+              name:
+                type: string
+                description: "Attachment file name"
+                example: "example.txt"
+              size:
+                type: number
+                format: int64
+                description: "Size of the attachment in bytes"
+              url:
+                type: string
+                description: "Attachment file URL"
+                example: "/assets/b/0/0/example.txt"
+                
+  "/api/media/{id}/attachments/remove":
+    post:
+      summary: Removes attachment
+      description: Removes attachment
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: number
+          format: int64
+          required: true
+          description: "ID of the attachment"
       security:
         - SessionTokenHeader: []
       responses:

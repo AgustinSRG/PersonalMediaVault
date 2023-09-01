@@ -218,8 +218,9 @@ The file contains the following fields:
 | `img_notes_asset`       | Number (64 bit unsigned integer)              | Asset ID of the image notes asset. The image notes asset is Single-File                                                       |
 | `resolutions`           | Array&lt;Resolution&gt;                       | List of extra resolutions                                                                                                     |
 | `subtitles`             | Array&lt;Subtitle&gt;                         | List of subtitles files                                                                                                       |
-| `time_splits`           | Array&lt;TimeSplit&gt;                        | List of time splits for videor or audios                                                                                      |
+| `time_splits`           | Array&lt;TimeSplit&gt;                        | List of time splits for videos or audios                                                                                      |
 | `audio_tracks`          | Array&lt;AudioTrack&gt;                       | List of extra audio tracks for videos                                                                                         |
+| `attachments`           | Array&lt;Attachment&gt;                       | List of attachments stored with the media asset                                                                               |
 
 The `Resolution` object has the following fields:
 
@@ -254,6 +255,15 @@ The `AudioTrack` object has the following fields:
 | ---------- | -------------------------------- | ----------------------------------------------- |
 | `id`       | String                           | Audio track language identifier. Example: `eng` |
 | `name`     | String                           | Audio track file name. Example `English`        |
+| `asset`    | Number (64 bit unsigned integer) | Asset ID of the asset. The asset is Single-File |
+
+The `Attachment` object has the following fields:
+
+| Field name | Type                             | Description                                     |
+| ---------- | -------------------------------- | ----------------------------------------------- |
+| `id`       | Number (64 bit unsigned integer) | Unique attachment identifier                    |
+| `name`     | String                           | Attachment file name                            |
+| `size`     | Number (64 bit unsigned integer) | Attachment file size (in bytes)                 |
 | `asset`    | Number (64 bit unsigned integer) | Asset ID of the asset. The asset is Single-File |
 
 The image notes asset is a JSON file, containing an array of `ImageNote` objects, with the following fields:
