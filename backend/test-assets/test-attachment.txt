@@ -1,0 +1,4 @@
+Example attachment file
+
+This is used for the backend tests
+

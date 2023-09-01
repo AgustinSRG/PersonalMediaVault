@@ -790,6 +790,174 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		}
 	}
 
+	// Attachments
+
+	if meta.Type == MediaTypeVideo || meta.Type == MediaTypeAudio || meta.Type == MediaTypeImage {
+		newAttachment, err := os.ReadFile(path.Join("test-assets", "test-attachment.txt"))
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		var b bytes.Buffer
+
+		writer := multipart.NewWriter(&b)
+
+		part, err := writer.CreateFormFile("file", "test-attachment.txt")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err = part.Write(newAttachment)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		writer.Close()
+
+		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/add")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req, err := http.NewRequest("POST", apiURL, &b)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req.Header.Set("x-session-token", session)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := client.Do(req)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer resp.Body.Close()
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		bodyData, err := io.ReadAll(resp.Body)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		res2 := AttachmentAPIResponse{}
+
+		err = json.Unmarshal(bodyData, &res2)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		if !reflect.DeepEqual(newAttachment, bodyResponseBytes) {
+			t.Errorf("Attachment content mismatch")
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Attachments) != 1 {
+			t.Error(ErrorMismatch("len(Attachments)", fmt.Sprint(len(meta.Attachments)), fmt.Sprint(1)))
+		}
+
+		if meta.Attachments[0].Name != "test-attachment.txt" {
+			t.Error(ErrorMismatch("Attachment name", meta.Attachments[0].Name, "test-attachment.txt"))
+		}
+
+		if meta.Attachments[0].Size != uint64(len(newAttachment)) {
+			t.Error(ErrorMismatch("Attachment size", fmt.Sprint(meta.Attachments[0].Size), fmt.Sprint(len(newAttachment))))
+		}
+
+		// Rename attachment
+
+		reqBody, err := json.Marshal(MediaAttachmentEditNameBody{
+			Id:   meta.Attachments[0].Id,
+			Name: "new-name.log",
+		})
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/rename", reqBody, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Attachments) != 1 {
+			t.Error(ErrorMismatch("len(Attachments)", fmt.Sprint(len(meta.Attachments)), fmt.Sprint(1)))
+		}
+
+		if meta.Attachments[0].Name != "new-name.log" {
+			t.Error(ErrorMismatch("Attachment name", meta.Attachments[0].Name, "new-name.log"))
+		}
+
+		if meta.Attachments[0].Size != uint64(len(newAttachment)) {
+			t.Error(ErrorMismatch("Attachment size", fmt.Sprint(meta.Attachments[0].Size), fmt.Sprint(len(newAttachment))))
+		}
+
+		// Delete attachment
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/remove?id="+fmt.Sprint(meta.Attachments[0].Id), nil, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Attachments) != 0 {
+			t.Error(ErrorMismatch("len(Attachments)", fmt.Sprint(len(meta.Attachments)), fmt.Sprint(0)))
+		}
+	}
+
 	// Extra resolutions
 
 	if meta.Type == MediaTypeImage || meta.Type == MediaTypeVideo {
