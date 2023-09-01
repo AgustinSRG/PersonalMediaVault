@@ -30,3 +30,7 @@ a,
 a:visited {
     color: inherit;
 }
+
+.mr-1 {
+    margin-right: 0.5rem;
+}

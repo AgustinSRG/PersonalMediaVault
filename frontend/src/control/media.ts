@@ -69,6 +69,13 @@ export interface MediaData {
         url: string;
     }[];
 
+    attachments: {
+        id: number;
+        name: string;
+        size: number;
+        url: string;
+    }[];
+
     time_slices: {
         time: number;
         name: string;
