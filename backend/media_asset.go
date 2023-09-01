@@ -86,6 +86,13 @@ type MediaAudioTrack struct {
 	Asset uint64 `json:"asset"` // ID of the asset file (MediaAssetFile) where the audio is stored
 }
 
+// Contains data of an attachment
+type MediaAttachment struct {
+	Name  string `json:"name"`  // Name of the attachment
+	Asset uint64 `json:"asset"` // ID of the asset file (MediaAssetFile) where the attachment is stored
+	Size  uint64 `json:"size"`  // Size in bytes
+}
+
 // Contains the metadata of a media asset
 type MediaMetadata struct {
 	Id uint64 `json:"id"` // Media ID
@@ -118,6 +125,7 @@ type MediaMetadata struct {
 	Subtitles   []MediaSubtitle   `json:"subtitles,omitempty"`    // List of subtitle files
 	Splits      []MediaSplit      `json:"time_splits,omitempty"`  // List of time splits
 	AudioTracks []MediaAudioTrack `json:"audio_tracks,omitempty"` // List of audio tracks
+	Attachments []MediaAttachment `json:"attachments,omitempty"`  // List of attachments
 
 	PreviewsReady    bool    `json:"previews_ready,omitempty"`    // True if timeline previews are ready to be displayed
 	PreviewsTask     uint64  `json:"previews_task,omitempty"`     // ID of the task that must create the video previews (only if PreviewsReady = false)
@@ -176,6 +184,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		Subtitles:                make([]MediaSubtitle, 0),
 		AudioTracks:              make([]MediaAudioTrack, 0),
 		Splits:                   make([]MediaSplit, 0),
+		Attachments:              make([]MediaAttachment, 0),
 		PreviewsReady:            false,
 		PreviewsInterval:         0,
 		PreviewsAsset:            0,
@@ -220,7 +229,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 
 // Reads metadata
 // key - Vault decryption key
-// Note: Internal method, do not call this from ouside
+// Note: Internal method, do not call this from outside
 func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 	file := path.Join(media.path, "meta.pmv")
 	if _, err := os.Stat(file); err == nil {
@@ -259,6 +268,10 @@ func (media *MediaAsset) readData(key []byte) (*MediaMetadata, error) {
 
 		if mp.Splits == nil {
 			mp.Splits = make([]MediaSplit, 0)
+		}
+
+		if mp.Attachments == nil {
+			mp.Attachments = make([]MediaAttachment, 0)
 		}
 
 		return &mp, nil
@@ -626,4 +639,43 @@ func (meta *MediaMetadata) AddAudioTrack(id string, name string, asset uint64) {
 		Asset: asset,
 	}
 	meta.AudioTracks = append(meta.AudioTracks, track)
+}
+
+// Adds an attachment
+// name - Display name
+// asset - Asset file ID containing the attachment
+// size - Size in bytes of the attachment
+func (meta *MediaMetadata) AddAttachment(name string, asset uint64, size uint64) {
+	attachment := MediaAttachment{
+		Name:  name,
+		Asset: asset,
+		Size:  size,
+	}
+	meta.Attachments = append(meta.Attachments, attachment)
+}
+
+// Finds an attachment in the array
+// id - Asset ID
+func (meta *MediaMetadata) FindAttachment(id uint64) int {
+	for i := 0; i < len(meta.Attachments); i++ {
+		if meta.Attachments[i].Asset == id {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// Removes an attachment given the index
+// index - Attachment index in the array
+func (meta *MediaMetadata) RemoveAttachment(index int) {
+	newAttachment := make([]MediaAttachment, 0)
+
+	for i := 0; i < len(meta.Attachments); i++ {
+		if i != index {
+			newAttachment = append(newAttachment, meta.Attachments[i])
+		}
+	}
+
+	meta.Attachments = newAttachment
 }

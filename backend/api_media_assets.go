@@ -54,7 +54,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	ext := strings.Split(filename, ".")[1]
+	ext := strings.ToLower(strings.Split(filename, ".")[1])
 
 	mimeType := "application/octet-stream"
 
@@ -102,11 +102,14 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		mimeType = "video/webm"
 	case "mkv":
 		mimeType = "video/x-matroska"
-		// Subtitles
+	// Subtitles
 	case "srt":
 		mimeType = "application/x-subrip"
+	// Other
 	case "json":
 		mimeType = "application/json"
+	case "pdf":
+		mimeType = "application/pdf"
 	case "txt":
 		mimeType = "text/pain"
 	}
@@ -189,6 +192,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	// Send response
 
 	response.Header().Add("Content-Type", mimeType)
+	response.Header().Add("X-Content-Type-Options", "nosniff")
 	response.Header().Add("Content-Length", fmt.Sprint(contentLength))
 	response.Header().Add("Cache-Control", "max-age=31536000")
 

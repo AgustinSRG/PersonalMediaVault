@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -83,6 +84,13 @@ type MediaAPIMetaAudio struct {
 	Url  string `json:"url"`
 }
 
+type MediaAPIMetaAttachment struct {
+	Id   uint64 `json:"id"`
+	Name string `json:"name"`
+	Size uint64 `json:"size"`
+	Url  string `json:"url"`
+}
+
 type MediaAPIMetaTimeSplit struct {
 	Time float64 `json:"time"`
 	Name string  `json:"name"`
@@ -118,6 +126,8 @@ type MediaAPIMetaResponse struct {
 	Subtitles []MediaAPIMetaSubtitle `json:"subtitles"`
 
 	Audios []MediaAPIMetaAudio `json:"audios"`
+
+	Attachments []MediaAPIMetaAttachment `json:"attachments"`
 
 	ForceStartBeginning bool `json:"force_start_beginning"`
 
@@ -330,6 +340,32 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	result.Audios = audios
 
+	// Attachments
+
+	var attachments []MediaAPIMetaAttachment
+
+	if meta.Attachments != nil {
+		attachments = make([]MediaAPIMetaAttachment, len(meta.Attachments))
+
+		for i := 0; i < len(meta.Attachments); i++ {
+			var s MediaAPIMetaAttachment
+
+			s.Id = meta.Attachments[i].Asset
+
+			s.Name = meta.Attachments[i].Name
+
+			s.Size = meta.Attachments[i].Size
+
+			s.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.Attachments[i].Asset) + "/" + url.PathEscape(meta.Attachments[i].Name) + "?fp=" + GetVault().credentials.GetFingerprint()
+
+			attachments[i] = s
+		}
+	} else {
+		attachments = make([]MediaAPIMetaAttachment, 0)
+	}
+
+	result.Attachments = attachments
+
 	// Extra
 
 	result.ForceStartBeginning = meta.ForceStartBeginning
@@ -482,6 +518,28 @@ func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) 
 				Id:   meta.Subtitles[i].Asset,
 				Type: ASSET_SINGLE_FILE,
 				Name: fmt.Sprintf("SUBTITLES_%v", strings.ToUpper(meta.Subtitles[i].Id)),
+				Size: 0,
+			})
+		}
+	}
+
+	if meta.AudioTracks != nil {
+		for i := 0; i < len(meta.AudioTracks); i++ {
+			result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+				Id:   meta.AudioTracks[i].Asset,
+				Type: ASSET_SINGLE_FILE,
+				Name: fmt.Sprintf("AUDIO_TRACK_%v", strings.ToUpper(meta.AudioTracks[i].Id)),
+				Size: 0,
+			})
+		}
+	}
+
+	if meta.Attachments != nil {
+		for i := 0; i < len(meta.Attachments); i++ {
+			result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
+				Id:   meta.Attachments[i].Asset,
+				Type: ASSET_SINGLE_FILE,
+				Name: fmt.Sprintf("ATTACHMENT: %v", strings.ToUpper(meta.Attachments[i].Name)),
 				Size: 0,
 			})
 		}
