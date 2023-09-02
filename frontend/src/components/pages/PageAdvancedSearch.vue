@@ -172,7 +172,7 @@
 
 <script lang="ts">
 import { AlbumsAPI } from "@/api/api-albums";
-import { MediaListItem } from "@/api/api-media";
+import { MediaListItem } from "@/api/models";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";

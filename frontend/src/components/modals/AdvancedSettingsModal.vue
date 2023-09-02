@@ -178,7 +178,8 @@
 </template>
 
 <script lang="ts">
-import { ConfigAPI, VaultUserConfig } from "@/api/api-config";
+import { ConfigAPI } from "@/api/api-config";
+import { VaultUserConfig } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";

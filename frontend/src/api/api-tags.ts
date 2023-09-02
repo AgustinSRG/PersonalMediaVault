@@ -1,11 +1,7 @@
 // Tags API
 
 import { GetApiURL, RequestParams } from "@/utils/request";
-
-export interface MediaTag {
-    id: number;
-    name: string;
-}
+import { MediaTag } from "./models";
 
 export class TagsAPI {
     public static GetTags(): RequestParams<MediaTag[]> {

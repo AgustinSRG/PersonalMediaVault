@@ -73,7 +73,8 @@
 
 <script lang="ts">
 import { MediaAPI } from "@/api/api-media";
-import { TasksAPI, TaskStatus } from "@/api/api-tasks";
+import { TasksAPI } from "@/api/api-tasks";
+import { TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { MediaController, MediaData } from "@/control/media";
 import { Request } from "@/utils/request";

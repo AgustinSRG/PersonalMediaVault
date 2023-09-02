@@ -84,7 +84,7 @@ import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
-import { MediaListItem } from "@/api/api-media";
+import { MediaListItem } from "@/api/models";
 import { TagEntry, TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
 import { AppPreferences } from "@/control/app-preferences";

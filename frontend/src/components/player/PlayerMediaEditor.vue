@@ -474,7 +474,7 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI, MediaAttachment, MediaAudioTrack, MediaSubtitle } from "@/api/api-media";
+import { MediaAttachment, MediaAudioTrack, MediaSubtitle } from "@/api/models";
 import { TagsAPI } from "@/api/api-tags";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
@@ -495,6 +495,7 @@ import SubtitlesDeleteModal from "../modals/SubtitlesDeleteModal.vue";
 import AudioTrackDeleteModal from "../modals/AudioTrackDeleteModal.vue";
 import AttachmentDeleteModal from "../modals/AttachmentDeleteModal.vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
+import { EditMediaAPI } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -771,7 +772,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaThumbnail(mediaId, file))
+            Request.Pending("media-editor-busy", EditMediaAPI.ChangeMediaThumbnail(mediaId, file))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
                     this.busy = false;
@@ -827,7 +828,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaTitle(mediaId, this.title))
+            Request.Pending("media-editor-busy", EditMediaAPI.ChangeMediaTitle(mediaId, this.title))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed title"));
                     this.busy = false;
@@ -879,7 +880,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.ChangeMediaDescription(mediaId, this.desc))
+            Request.Pending("media-editor-busy", EditMediaAPI.ChangeMediaDescription(mediaId, this.desc))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed description"));
                     this.busy = false;
@@ -931,7 +932,7 @@ export default defineComponent({
 
             const slices = parseTimeSlices(this.timeSlices);
 
-            Request.Pending("media-editor-busy", MediaAPI.ChangeTimeSlices(mediaId, slices))
+            Request.Pending("media-editor-busy", EditMediaAPI.ChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
                     this.busy = false;
@@ -982,7 +983,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
+            Request.Pending("media-editor-busy", EditMediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully changed media extra params"));
                     this.busy = false;
@@ -1032,7 +1033,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.EncodeMedia(mediaId))
+            Request.Pending("media-editor-busy", EditMediaAPI.EncodeMedia(mediaId))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Successfully requested pending encoding tasks"));
                     this.busy = false;
@@ -1347,7 +1348,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending("media-editor-busy", MediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending("media-editor-busy", EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
                             AppEvents.Emit("snack", this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
@@ -1408,7 +1409,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending("media-editor-busy", MediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending("media-editor-busy", EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
                             AppEvents.Emit("snack", this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
@@ -1496,7 +1497,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
+            Request.Pending("media-editor-busy", EditMediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
@@ -1562,7 +1563,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = sub.id;
 
-                    Request.Pending("media-editor-busy", MediaAPI.RemoveSubtitles(mediaId, id))
+                    Request.Pending("media-editor-busy", EditMediaAPI.RemoveSubtitles(mediaId, id))
                         .onSuccess(() => {
                             AppEvents.Emit("snack", this.$t("Removed subtitles") + ": " + sub.name);
                             this.busy = false;
@@ -1663,7 +1664,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
+            Request.Pending("media-editor-busy", EditMediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
@@ -1726,7 +1727,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = aud.id;
 
-                    Request.Pending("media-editor-busy", MediaAPI.RemoveAudioTrack(mediaId, id))
+                    Request.Pending("media-editor-busy", EditMediaAPI.RemoveAudioTrack(mediaId, id))
                         .onSuccess(() => {
                             AppEvents.Emit("snack", this.$t("Removed audio track") + ": " + aud.name);
                             this.busy = false;
@@ -1805,7 +1806,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", MediaAPI.UploadAttachment(mediaId, file))
+            Request.Pending("media-editor-busy", EditMediaAPI.UploadAttachment(mediaId, file))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
@@ -1865,7 +1866,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = att.id;
 
-                    Request.Pending("media-editor-busy", MediaAPI.RemoveAttachment(mediaId, id))
+                    Request.Pending("media-editor-busy", EditMediaAPI.RemoveAttachment(mediaId, id))
                         .onSuccess(() => {
                             AppEvents.Emit("snack", this.$t("Removed attachment") + ": " + att.name);
                             this.busy = false;
@@ -1941,7 +1942,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = this.attachmentEdit;
 
-            Request.Pending("media-editor-busy", MediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
+            Request.Pending("media-editor-busy", EditMediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;

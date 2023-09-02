@@ -76,9 +76,9 @@ import { MediaController } from "@/control/media";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { Timeouts } from "@/utils/timeout";
 import { GetAssetURL, Request } from "@/utils/request";
-import { MediaAPI } from "@/api/api-media";
 import { escapeHTML } from "@/utils/html";
 import { PlayerPreferences } from "@/control/player-preferences";
+import { EditMediaAPI } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -291,7 +291,7 @@ export default defineComponent({
 
             this.busy = true;
 
-            Request.Do(MediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
+            Request.Do(EditMediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
                     AppEvents.Emit("snack", this.$t("Successfully saved extended description"));

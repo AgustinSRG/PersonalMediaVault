@@ -205,9 +205,9 @@ import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { SearchAPI } from "@/api/api-search";
 import { MediaController, MediaEntry } from "@/control/media";
-import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
+import { EditMediaAPI } from "@/api/api-media-edit";
 
 const PAGE_SIZE = 50;
 
@@ -762,7 +762,7 @@ export default defineComponent({
         },
 
         actionDelete: function (mid: number, next: number) {
-            Request.Pending("modal-batch-request", MediaAPI.DeleteMedia(mid))
+            Request.Pending("modal-batch-request", EditMediaAPI.DeleteMedia(mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })

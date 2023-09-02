@@ -5,7 +5,7 @@ import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AuthController } from "./auth";
-import { MediaListItem } from "@/api/api-media";
+import { MediaListItem } from "@/api/models";
 import { MediaEntry } from "./media";
 
 export interface TagEntry {

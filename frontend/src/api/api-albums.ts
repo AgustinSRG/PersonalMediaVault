@@ -1,27 +1,7 @@
 // Albums API
 
 import { GetApiURL, RequestParams } from "@/utils/request";
-import { MediaListItem } from "./api-media";
-
-export interface AlbumListItem {
-    id: number;
-    name: string;
-    size: number;
-    thumbnail: string;
-    lm: number;
-}
-
-export interface AlbumListItemMin {
-    id: number;
-    name: string;
-}
-
-export interface Album {
-    id: number;
-    name: string;
-    list: MediaListItem[];
-    lm: number;
-}
+import { AlbumListItem, AlbumListItemMin, Album } from "./models";
 
 export class AlbumsAPI {
     public static GetAlbums(): RequestParams<AlbumListItem[]> {

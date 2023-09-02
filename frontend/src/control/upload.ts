@@ -9,6 +9,7 @@ import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
+import { UploadMediaAPI } from "@/api/api-media-upload";
 
 const TICK_DELAY_MS = 500;
 
@@ -224,7 +225,7 @@ export class UploadController {
         m.progress = 0;
         AppEvents.Emit("upload-list-update", index, m);
 
-        Request.Pending("upload-media-" + m.id, MediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        Request.Pending("upload-media-" + m.id, UploadMediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
                 AppEvents.Emit("upload-list-update", index, m);

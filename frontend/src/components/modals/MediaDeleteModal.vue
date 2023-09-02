@@ -40,7 +40,6 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
@@ -48,6 +47,7 @@ import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { EditMediaAPI } from "@/api/api-media-edit";
 
 export default defineComponent({
     name: "MediaDeleteModal",
@@ -112,7 +112,7 @@ export default defineComponent({
 
             const mediaId = this.currentMedia;
 
-            Request.Do(MediaAPI.DeleteMedia(mediaId))
+            Request.Do(EditMediaAPI.DeleteMedia(mediaId))
                 .onSuccess(() => {
                     AppEvents.Emit("snack", this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;

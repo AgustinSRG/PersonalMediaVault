@@ -1,12 +1,12 @@
 // Subtitles controller
 
-import { MediaAPI } from "@/api/api-media";
 import { GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { BusyStateController } from "./busy-state";
 import { MediaController } from "./media";
+import { EditMediaAPI } from "@/api/api-media-edit";
 
 export interface ImageNote {
     id: number;
@@ -173,7 +173,7 @@ export class ImageNotesController {
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
-        Request.Pending("notes-save", MediaAPI.SetNotes(mediaId, ImageNotesController.Notes))
+        Request.Pending("notes-save", EditMediaAPI.SetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess(() => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy("image-notes-save");
