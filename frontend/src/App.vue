@@ -3,9 +3,7 @@
 </template>
 
 <script lang="ts">
-import { Options, Vue } from "vue-class-component";
 
-// Player components
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController } from "./control/albums";
 import { AppEvents } from "./control/app-events";
@@ -14,8 +12,10 @@ import { MediaController } from "./control/media";
 import { UploadEntryMin } from "./control/upload";
 import { GetAssetURL } from "./utils/request";
 import { AuthController } from "./control/auth";
+import { defineComponent } from "vue";
 
-@Options({
+export default defineComponent({
+    name: "App",
     components: {
         MainLayout,
     },
@@ -122,7 +122,6 @@ import { AuthController } from "./control/auth";
         AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
     },
 })
-export default class App extends Vue {}
 </script>
 
 <style>

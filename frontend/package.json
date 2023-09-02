@@ -11,13 +11,12 @@
         "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
     },
     "dependencies": {
-        "core-js": "^3.8.3",
+        "core-js": "3.32.1",
         "prettier": "3.0.0",
-        "register-service-worker": "^1.7.2",
+        "register-service-worker": "1.7.2",
         "sanitize-html": "2.7.0",
         "sortablejs": "1.15.0",
-        "vue": "^3.2.13",
-        "vue-class-component": "^8.0.0-0",
+        "vue": "3.3.4",
         "vue-i18n": "^9.1.0"
     },
     "devDependencies": {
