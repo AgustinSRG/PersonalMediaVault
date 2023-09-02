@@ -102,6 +102,10 @@ export default defineComponent({
                 AppEvents.Emit("snack", this.$t("Error uploading file") + ": " + m.name);
             }
         },
+
+        onLoadedLocale: function (locale: string) {
+            this.$updateLocale(locale);
+        },
     },
     mounted: function () {
         this._handles = Object.create(null);
@@ -114,12 +118,16 @@ export default defineComponent({
 
         this._handles.uploadDoneH = this.onUploadFinished.bind(this);
         AppEvents.AddEventListener("upload-list-update", this._handles.uploadDoneH);
+
+        this._handles.onLoadedLocaleH = this.onLoadedLocale.bind(this);
+        AppEvents.AddEventListener("loaded-locale", this._handles.onLoadedLocaleH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("app-status-update", this._handles.updateH);
         AppEvents.RemoveEventListener("current-album-update", this._handles.updateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.updateH);
         AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
+        AppEvents.RemoveEventListener("loaded-locale", this._handles.onLoadedLocaleH);
     },
 })
 </script>

@@ -1,7 +1,14 @@
-import { nextTick } from "vue";
-import { createI18n } from "vue-i18n";
+import { App, Ref, nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
 import { LocalStorage } from "./control/local-storage";
+
+declare module "vue" {
+    interface ComponentCustomProperties {
+        $locale: Ref<string>;
+        $t: (key: string) => string;
+        $updateLocale: (locale: string) => void;
+    }
+}
 
 export const SUPPORT_LOCALES = ["en", "es"];
 
@@ -12,32 +19,49 @@ if (!SUPPORT_LOCALES.includes(defaultLanguage)) {
     defaultLanguage = fallbackLocale;
 }
 
-export const i18n = createI18n({
-    locale: <any>"",
-});
+const i18nData: {
+    locale: string,
+    messages: Map<string, string>,
+} = {
+    locale: "",
+    messages: new Map(),
+}
+
+// Plugin
+export const i18n = {
+    install: (app: App) => {
+        app.config.globalProperties.$locale = ref("");
+        app.config.globalProperties.$updateLocale = (locale: string) => {
+            app.config.globalProperties.$locale.value = locale;
+        }
+
+        app.config.globalProperties.$t = key => {
+            if (app.config.globalProperties.$locale.value !== i18nData.locale) {
+                return key;
+            }
+            if (i18nData.messages.has(key)) {
+                return i18nData.messages.get(key);
+            } else {
+                return key;
+            }
+        };
+    },
+};
 
 function setI18nLanguage(locale: string) {
-    if (i18n.mode === "legacy") {
-        i18n.global.locale = locale;
-    } else {
-        i18n.global.locale.value = locale;
-    }
-    /**
-     * NOTE:
-     * If you need to specify the language setting for headers, such as the `fetch` API, set it here.
-     * The following is an example for axios.
-     *
-     * axios.defaults.headers.common['Accept-Language'] = locale
-     */
+    i18nData.locale = locale;
+
     document.querySelector("html").setAttribute("lang", locale);
+
+    AppEvents.Emit("loaded-locale", locale);
 }
 
 async function loadLocaleMessages(locale: string) {
     // load locale messages with dynamic import
     const messages = await import(/* webpackChunkName: "locale-[request]" */ `./locales/${locale}.json`);
 
-    // set locale and locale message
-    i18n.global.setLocaleMessage(locale, messages.default);
+    // Set messages
+    i18nData.messages = new Map(Object.entries(messages.default));
 
     return nextTick();
 }
@@ -49,9 +73,7 @@ async function setLocale(locale: string) {
     }
 
     // load locale messages
-    if (!i18n.global.availableLocales.includes(locale)) {
-        await loadLocaleMessages(locale);
-    }
+    await loadLocaleMessages(locale);
 
     // set i18n language
     setI18nLanguage(locale);
