@@ -50,7 +50,7 @@
                             v-model="tagToAdd"
                             @input="onTagAddChanged(false)"
                             @keydown="onTagInputKeyDown"
-                            class="form-control tag-to-add"
+                            class="form-control tag-to-add auto-focus"
                             :placeholder="$t('Add tags') + '...'"
                         />
                     </div>
@@ -74,7 +74,7 @@
             </div>
 
             <div class="modal-footer no-padding">
-                <button type="button" class="modal-footer-btn auto-focus" @click="doUpload">
+                <button type="button" class="modal-footer-btn" @click="doUpload">
                     <i class="fas fa-upload"></i> {{ $t("Upload") }}
                 </button>
             </div>
@@ -170,6 +170,7 @@ export default defineComponent({
             this.album = -1;
             this.tags = [];
             this.tagToAdd = "";
+            this.matchingTags = [];
 
             TagsController.Load();
             AlbumsController.Load();
@@ -225,7 +226,9 @@ export default defineComponent({
 
         updateTagData: function () {
             this.tagData = clone(TagsController.Tags);
-            this.onTagAddChanged(true);
+            if (this.tagToAdd) {
+                this.onTagAddChanged(true);
+            }
         },
 
         onTagInputKeyDown: function (event: KeyboardEvent) {
