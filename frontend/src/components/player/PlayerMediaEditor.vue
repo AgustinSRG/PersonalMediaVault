@@ -250,7 +250,13 @@
                     <tr v-for="att in attachments" :key="att.id">
                         <td class="bold" v-if="attachmentEdit != att.id">{{ att.name }}</td>
                         <td v-if="attachmentEdit == att.id">
-                            <input type="text" maxlength="255" class="form-control form-control-full-width" v-model="attachmentEditName" />
+                            <input
+                                type="text"
+                                maxlength="255"
+                                :disabled="busy"
+                                class="form-control form-control-full-width"
+                                v-model="attachmentEditName"
+                            />
                         </td>
                         <td>{{ renderSize(att.size) }}</td>
                         <td class="text-right td-shrink one-line">
@@ -303,10 +309,21 @@
 
         <div class="form-group" v-if="canWrite">
             <input type="file" class="file-hidden attachment-file-hidden" @change="attachmentFileChanged" name="attachment-upload" />
-            <button v-if="!busy || attachmentUploadProgress <= 0" type="button" class="btn btn-primary" :disabled="busy" @click="selectAttachmentFile">
+            <button
+                v-if="!busy || attachmentUploadProgress <= 0"
+                type="button"
+                class="btn btn-primary"
+                :disabled="busy"
+                @click="selectAttachmentFile"
+            >
                 <i class="fas fa-upload"></i> {{ $t("Upload attachment") }}
             </button>
-            <button v-if="busy && attachmentUploadProgress > 0 && attachmentUploadProgress < 100" type="button" class="btn btn-primary" disabled>
+            <button
+                v-if="busy && attachmentUploadProgress > 0 && attachmentUploadProgress < 100"
+                type="button"
+                class="btn btn-primary"
+                disabled
+            >
                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading") }}... ({{ attachmentUploadProgress }}%)
             </button>
             <button v-if="busy && attachmentUploadProgress >= 100" type="button" class="btn btn-primary" disabled>
