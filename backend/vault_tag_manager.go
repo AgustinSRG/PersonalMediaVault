@@ -18,12 +18,13 @@ import (
 type VaultTagManager struct {
 	path string // Vault path
 
-	tag_list_file string         // Path to the tag list file
-	tag_list_lock *ReadWriteLock // Lock to control acess to the file
+	tag_list_file string            // Path to the tag list file
+	cache         *VaultTagListData // Cache
+	tag_list_lock *ReadWriteLock    // Lock to control access to the file
 
 	indexes map[uint64]*VaultTagIndexEntry // Indexes for each tag
 
-	lock *sync.Mutex // Lock to control acess to the indexes map
+	lock *sync.Mutex // Lock to control access to the indexes map
 }
 
 // Tag Index manager data struct
@@ -81,11 +82,12 @@ func ResolveTagIndexFilePath(base_path string, tag_id uint64) string {
 	return path.Join(base_path, "tags", "tag_"+fmt.Sprint(tag_id)+".index")
 }
 
-// Initailizes the tag manager
+// Initializes the tag manager
 // base_path - Vault path
 func (tm *VaultTagManager) Initialize(base_path string) error {
 	tm.path = base_path
 	tm.tag_list_file = path.Join(base_path, "tag_list.pmv")
+	tm.cache = nil
 	tm.tag_list_lock = CreateReadWriteLock()
 	tm.lock = &sync.Mutex{}
 	tm.indexes = make(map[uint64]*VaultTagIndexEntry)
@@ -105,6 +107,10 @@ func (tm *VaultTagManager) Initialize(base_path string) error {
 // Returns the tag list data
 // Warning: Thread unsafe. do not call this method externally, this is used internally
 func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
+	if tm.cache != nil {
+		return tm.cache, nil
+	}
+
 	if _, err := os.Stat(tm.tag_list_file); err == nil {
 		// Load file
 		b, err := os.ReadFile(tm.tag_list_file)
@@ -127,6 +133,8 @@ func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 			return nil, err
 		}
 
+		tm.cache = &mp
+
 		return &mp, nil
 	} else if errors.Is(err, os.ErrNotExist) {
 		// No tags
@@ -135,6 +143,8 @@ func (tm *VaultTagManager) readData(key []byte) (*VaultTagListData, error) {
 			NextId: 0,
 			Tags:   make(map[uint64]string),
 		}
+
+		tm.cache = &mp
 
 		return &mp, nil
 	} else {
@@ -159,7 +169,17 @@ func (tm *VaultTagManager) ReadList(key []byte) (*VaultTagListData, error) {
 func (tm *VaultTagManager) StartWrite(key []byte) (*VaultTagListData, error) {
 	tm.tag_list_lock.RequestWrite() // Request write
 
-	return tm.readData(key)
+	var data_copy VaultTagListData
+
+	data, err := tm.readData(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data_copy = *data
+
+	return &data_copy, nil
 }
 
 // Applies a modification in the tag list file
@@ -195,6 +215,8 @@ func (tm *VaultTagManager) EndWrite(data *VaultTagListData, key []byte) error {
 
 	err = RenameAndReplace(tmpFile, tm.tag_list_file)
 
+	tm.cache = data
+
 	return err
 }
 
@@ -206,7 +228,7 @@ func (tm *VaultTagManager) CancelWrite() {
 // Acquires an index file for a tag
 // tag_id - Id for the tag
 // Returns a reference to the index
-// After this methos is called, an entry is reserved in memory.
+// After this method is called, an entry is reserved in memory.
 // To release it, make sure to call ReleaseIndexFile()
 func (tm *VaultTagManager) AcquireIndexFile(tag_id uint64) (*VaultMainIndex, error) {
 	tm.lock.Lock()

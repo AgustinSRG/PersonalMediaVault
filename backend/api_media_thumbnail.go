@@ -212,6 +212,8 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	media.ReleaseAsset(thumb_asset)
 
+	GetVault().albums.OnMediaThumbnailUpdate(media_id, session.key)
+
 	if err != nil {
 		LogError(err)
 

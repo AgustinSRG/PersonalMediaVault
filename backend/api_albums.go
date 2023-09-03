@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,6 +24,52 @@ type AlbumAPIItemMinified struct {
 	Name string `json:"name"`
 }
 
+func getAlbumThumbnail(album_id uint64, album *VaultAlbumData, session *ActiveSession) string {
+	if album.List == nil || len(album.List) == 0 {
+		return ""
+	}
+
+	media_id := album.List[0]
+
+	ok, has_thumbnail, thumbnail_asset := GetVault().albums.FindCachedThumbnailAsset(album_id)
+
+	if ok {
+		if has_thumbnail {
+			return "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+		} else {
+			return ""
+		}
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	meta, err := media.ReadMetadata(session.key)
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	if err != nil {
+		LogError(err)
+	}
+
+	if meta == nil {
+		return ""
+	}
+
+	has_thumbnail = meta.ThumbnailReady
+	thumbnail_asset = meta.ThumbnailAsset
+
+	GetVault().albums.thumbnail_cache[album_id] = ThumbnailCacheEntry{
+		has_thumbnail: has_thumbnail,
+		asset:         thumbnail_asset,
+	}
+
+	if has_thumbnail {
+		return "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+	} else {
+		return ""
+	}
+}
+
 func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
@@ -31,38 +78,44 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	minMode := request.URL.Query().Get("mode") == "min"
+
+	if !minMode {
+		GetVault().albums.thumbnail_cache_lock.Lock()
+	}
+
 	albums, err := GetVault().albums.ReadAlbums(session.key)
 
 	if err != nil {
+		if !minMode {
+			GetVault().albums.thumbnail_cache_lock.Unlock()
+		}
+
 		LogError(err)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
-	if request.URL.Query().Get("mode") != "min" {
+	if !minMode {
 		result := make([]AlbumAPIItem, len(albums.Albums))
 
 		i := 0
 
 		for album_id, album := range albums.Albums {
-			thumbnail := ""
-
-			if len(album.List) > 0 {
-				media_info := GetMediaMinInfo(album.List[0], session)
-				thumbnail = media_info.Thumbnail
-			}
 
 			result[i] = AlbumAPIItem{
 				Id:           album_id,
 				Name:         album.Name,
 				Size:         len(album.List),
-				Thumbnail:    thumbnail,
+				Thumbnail:    getAlbumThumbnail(album_id, album, session),
 				LastModified: album.LastModified,
 			}
 
 			i++
 		}
+
+		GetVault().albums.thumbnail_cache_lock.Unlock()
 
 		jsonResult, err := json.Marshal(result)
 

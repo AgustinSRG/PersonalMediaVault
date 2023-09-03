@@ -52,13 +52,15 @@ type UserConfig struct {
 
 // User configuration manager
 type UserConfigManager struct {
-	file string         // User config file
-	lock *ReadWriteLock // Lock to control access to the file
+	file  string         // User config file
+	cache *UserConfig    // Cache
+	lock  *ReadWriteLock // Lock to control access to the file
 }
 
 // Initializes user config manager
 // base_path - Vault path
 func (uc *UserConfigManager) Initialize(base_path string) {
+	uc.cache = nil
 	uc.file = path.Join(base_path, "user_config.pmv")
 	uc.lock = CreateReadWriteLock()
 }
@@ -67,6 +69,10 @@ func (uc *UserConfigManager) Initialize(base_path string) {
 // key - Vault decryption key
 // Returns user config data
 func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
+	if uc.cache != nil {
+		return uc.cache, nil
+	}
+
 	if _, err := os.Stat(uc.file); err == nil {
 		// Load file
 		b, err := os.ReadFile(uc.file)
@@ -89,6 +95,8 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 			return nil, err
 		}
 
+		uc.cache = &mp
+
 		return &mp, nil
 	} else if errors.Is(err, os.ErrNotExist) {
 		// Default config
@@ -99,6 +107,8 @@ func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
 			Resolutions:      make([]UserConfigResolution, 0),
 			ImageResolutions: make([]UserConfigImageResolution, 0),
 		}
+
+		uc.cache = &mp
 
 		return &mp, nil
 	} else {
@@ -139,6 +149,8 @@ func (uc *UserConfigManager) Write(data *UserConfig, key []byte) error {
 	uc.lock.StartWrite()
 
 	err = RenameAndReplace(tmpFile, uc.file)
+
+	uc.cache = data
 
 	return err
 }
