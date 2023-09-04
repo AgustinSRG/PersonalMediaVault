@@ -194,6 +194,10 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
+            if (!tagFilter) {
+                this.matchingTags = [];
+                return;
+            }
             this.matchingTags = Object.values(this.tagData)
                 .map((a: any) => {
                     const i = a.name.indexOf(tagFilter);
@@ -226,9 +230,7 @@ export default defineComponent({
 
         updateTagData: function () {
             this.tagData = clone(TagsController.Tags);
-            if (this.tagToAdd) {
-                this.onTagAddChanged(true);
-            }
+            this.onTagAddChanged(true);
         },
 
         onTagInputKeyDown: function (event: KeyboardEvent) {
@@ -277,6 +279,7 @@ export default defineComponent({
         addTag: function () {
             this.addTagByName(this.tagToAdd);
             this.tagToAdd = "";
+            this.onTagAddChanged(true);
         },
 
         addTagByName: function (tag: string) {
