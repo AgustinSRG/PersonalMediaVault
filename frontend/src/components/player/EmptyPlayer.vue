@@ -131,7 +131,7 @@ export default defineComponent({
         PlayerTopBar,
     },
     name: "EmptyPlayer",
-    emits: ["go-next", "go-prev", "update:fullscreen"],
+    emits: ["go-next", "go-prev", "update:fullscreen", "delete"],
     props: {
         mid: Number,
         status: String,
@@ -220,30 +220,33 @@ export default defineComponent({
             }
             let caught = true;
             switch (event.key) {
-            case "F":
-            case "f":
-                if (event.altKey || event.shiftKey) {
+                case "F":
+                case "f":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else {
+                        this.toggleFullScreen();
+                    }
+                    break;
+                case "ArrowLeft":
+                    if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    } else {
+                        caught = false;
+                    }
+                    break;
+                case "ArrowRight":
+                    if (this.next || this.pageNext) {
+                        this.goNext();
+                    } else {
+                        caught = false;
+                    }
+                    break;
+                case "Delete":
+                    this.$emit("delete");
+                    break;
+                default:
                     caught = false;
-                } else {
-                    this.toggleFullScreen();
-                }
-                break;
-            case "ArrowLeft":
-                if (this.prev || this.pagePrev) {
-                    this.goPrev();
-                } else {
-                    caught = false;
-                }
-                break;
-            case "ArrowRight":
-                if (this.next || this.pageNext) {
-                    this.goNext();
-                } else {
-                    caught = false;
-                }
-                break;
-            default:
-                caught = false;
             }
 
             return caught;

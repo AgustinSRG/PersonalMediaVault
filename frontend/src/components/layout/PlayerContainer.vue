@@ -17,6 +17,7 @@
             v-model:fullscreen="fullScreen"
             @update:fullscreen="onUpdateFullScreen"
             :min="minPlayer"
+            @delete="openDelete"
         ></EmptyPlayer>
         <ImagePlayer
             v-if="mediaData && mediaData.type === 1"
@@ -39,6 +40,7 @@
             @tags-open="openTags"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
+            @delete="openDelete"
         ></ImagePlayer>
         <VideoPlayer
             v-if="mediaData && mediaData.type === 2"
@@ -65,6 +67,7 @@
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
             :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
+            @delete="openDelete"
         ></VideoPlayer>
         <AudioPlayer
             v-if="mediaData && mediaData.type === 3"
@@ -90,6 +93,7 @@
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
             :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
+            @delete="openDelete"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
@@ -99,6 +103,8 @@
         <TagListModal v-if="displayTagList" v-model:display="displayTagList"></TagListModal>
 
         <ExtendedDescriptionModal v-if="displayExtendedDescription" v-model:display="displayExtendedDescription"></ExtendedDescriptionModal>
+
+        <MediaDeleteModal v-if="displayDelete" v-model:display="displayDelete"></MediaDeleteModal>
     </div>
 </template>
 
@@ -163,6 +169,12 @@ const ExtendedDescriptionModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const MediaDeleteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/MediaDeleteModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 export default defineComponent({
     name: "PlayerContainer",
     emits: [],
@@ -175,6 +187,7 @@ export default defineComponent({
         SizeStatsModal,
         TagListModal,
         ExtendedDescriptionModal,
+        MediaDeleteModal,
     },
     data: function () {
         return {
@@ -198,6 +211,7 @@ export default defineComponent({
             displaySizeStats: false,
             displayTagList: false,
             displayExtendedDescription: false,
+            displayDelete: false,
 
             hasPagePrev: AlbumsController.HasPagePrev,
             hasPageNext: AlbumsController.HasPageNext,
@@ -210,6 +224,7 @@ export default defineComponent({
     },
     methods: {
         updateMedia: function () {
+            this.displayDelete = false;
             this.mid = MediaController.MediaId;
             if (MediaController.MediaData !== this.mediaData) {
                 this.mediaData = MediaController.MediaData;
@@ -256,6 +271,10 @@ export default defineComponent({
 
         openExtendedDescription: function () {
             this.displayExtendedDescription = true;
+        },
+
+        openDelete: function () {
+            this.displayDelete = true;
         },
 
         goNext: function () {

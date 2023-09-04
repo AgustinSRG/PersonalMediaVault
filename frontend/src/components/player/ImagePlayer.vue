@@ -272,7 +272,17 @@ export default defineComponent({
         ImageNotes,
     },
     name: "ImagePlayer",
-    emits: ["go-next", "go-prev", "update:fullscreen", "update:showControls", "albums-open", "stats-open", "tags-open", "ext-desc-open"],
+    emits: [
+        "go-next",
+        "go-prev",
+        "update:fullscreen",
+        "update:showControls",
+        "albums-open",
+        "stats-open",
+        "tags-open",
+        "ext-desc-open",
+        "delete",
+    ],
     props: {
         mid: Number,
         metadata: Object,
@@ -734,108 +744,111 @@ export default defineComponent({
             let caught = true;
             const shifting = event.shiftKey;
             switch (event.key) {
-            case "A":
-            case "a":
-                this.manageAlbums();
-                break;
-            case "i":
-            case "I":
-                this.openExtendedDescription();
-                break;
-            case "t":
-            case "T":
-                this.openTags();
-                break;
-            case "S":
-            case "s":
-                this.showConfig();
-                break;
-            case "ArrowUp":
-                this.incrementImageScroll(-40);
-                break;
-            case "ArrowDown":
-                this.incrementImageScroll(40);
-                break;
-            case "ArrowRight":
-                if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
-                    if (this.next || this.pageNext) {
-                        this.goNext();
+                case "A":
+                case "a":
+                    this.manageAlbums();
+                    break;
+                case "i":
+                case "I":
+                    this.openExtendedDescription();
+                    break;
+                case "t":
+                case "T":
+                    this.openTags();
+                    break;
+                case "S":
+                case "s":
+                    this.showConfig();
+                    break;
+                case "ArrowUp":
+                    this.incrementImageScroll(-40);
+                    break;
+                case "ArrowDown":
+                    this.incrementImageScroll(40);
+                    break;
+                case "ArrowRight":
+                    if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
+                        if (this.next || this.pageNext) {
+                            this.goNext();
+                        } else {
+                            caught = false;
+                        }
+                    }
+                    break;
+                case "ArrowLeft":
+                    if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
+                        if (this.prev || this.pagePrev) {
+                            this.goPrev();
+                        } else {
+                            caught = false;
+                        }
+                    }
+                    break;
+                case "Home":
+                    if (event.altKey) {
+                        caught = false;
+                    } else if (shifting) {
+                        if (!this.tryHorizontalScroll("home")) {
+                            caught = false;
+                        }
                     } else {
-                        caught = false;
+                        if (!this.incrementImageScroll("home")) {
+                            caught = false;
+                        }
                     }
-                }
-                break;
-            case "ArrowLeft":
-                if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
-                    if (this.prev || this.pagePrev) {
-                        this.goPrev();
+                    break;
+                case "End":
+                    if (event.altKey) {
+                        caught = false;
+                    } else if (shifting) {
+                        if (!this.tryHorizontalScroll("end")) {
+                            caught = false;
+                        }
                     } else {
-                        caught = false;
+                        if (!this.incrementImageScroll("end")) {
+                            caught = false;
+                        }
                     }
-                }
-                break;
-            case "Home":
-                if (event.altKey) {
+                    break;
+                case " ":
+                case "K":
+                case "k":
+                case "Enter":
+                    this.toggleFit();
+                    this.scaleShown = true;
+                    this.helpTooltip = "scale";
+                    break;
+                case "+":
+                    this.changeScale(Math.min(1, this.scale + (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
+                    this.scaleShown = true;
+                    this.helpTooltip = "scale";
+                    this.fit = false;
+                    this.onUserFitUpdated();
+                    break;
+                case "-":
+                    this.changeScale(Math.max(0, this.scale - (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
+                    this.scaleShown = true;
+                    this.helpTooltip = "scale";
+                    this.fit = false;
+                    this.onUserFitUpdated();
+                    break;
+                case "F":
+                case "f":
+                    if (event.altKey || shifting) {
+                        caught = false;
+                    } else {
+                        this.toggleFullScreen();
+                    }
+                    break;
+                case "C":
+                case "c":
+                    this.showControlsState = !this.showControlsState;
+                    break;
+                case "Delete":
+                    this.$emit("delete");
+                    break;
+                default:
                     caught = false;
-                } else if (shifting) {
-                    if (!this.tryHorizontalScroll("home")) {
-                        caught = false;
-                    }
-                } else {
-                    if (!this.incrementImageScroll("home")) {
-                        caught = false;
-                    }
-                }
-                break;
-            case "End":
-                if (event.altKey) {
-                    caught = false;
-                } else if (shifting) {
-                    if (!this.tryHorizontalScroll("end")) {
-                        caught = false;
-                    }
-                } else {
-                    if (!this.incrementImageScroll("end")) {
-                        caught = false;
-                    }
-                }
-                break;
-            case " ":
-            case "K":
-            case "k":
-            case "Enter":
-                this.toggleFit();
-                this.scaleShown = true;
-                this.helpTooltip = "scale";
-                break;
-            case "+":
-                this.changeScale(Math.min(1, this.scale + (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
-                this.scaleShown = true;
-                this.helpTooltip = "scale";
-                this.fit = false;
-                this.onUserFitUpdated();
-                break;
-            case "-":
-                this.changeScale(Math.max(0, this.scale - (shifting ? SCALE_STEP_MIN : SCALE_STEP)));
-                this.scaleShown = true;
-                this.helpTooltip = "scale";
-                this.fit = false;
-                this.onUserFitUpdated();
-                break;
-            case "F":
-            case "f":
-                if (event.altKey || shifting) {
-                    caught = false;
-                } else {
-                    this.toggleFullScreen();
-                }
-                break;
-            case "C":
-            case "c":
-                this.showControlsState = !this.showControlsState;
-                break;
-            default:
-                caught = false;
             }
 
             if (caught) {
@@ -987,16 +1000,16 @@ export default defineComponent({
                 return;
             }
             switch (event.action) {
-            case "nexttrack":
-                if (this.next || this.pageNext) {
-                    this.goNext();
-                }
-                break;
-            case "previoustrack":
-                if (this.prev || this.pagePrev) {
-                    this.goPrev();
-                }
-                break;
+                case "nexttrack":
+                    if (this.next || this.pageNext) {
+                        this.goNext();
+                    }
+                    break;
+                case "previoustrack":
+                    if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    }
+                    break;
             }
         },
     },

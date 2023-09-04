@@ -370,7 +370,18 @@ export default defineComponent({
         PlayerEncodingPending,
     },
     name: "AudioPlayer",
-    emits: ["go-next", "go-prev", "ended", "update:fullscreen", "albums-open", "stats-open", "tags-open", "ext-desc-open", "force-loop"],
+    emits: [
+        "go-next",
+        "go-prev",
+        "ended",
+        "update:fullscreen",
+        "albums-open",
+        "stats-open",
+        "tags-open",
+        "ext-desc-open",
+        "force-loop",
+        "delete",
+    ],
     props: {
         mid: Number,
         metadata: Object,
@@ -940,151 +951,154 @@ export default defineComponent({
             let caught = true;
             const shifting = event.shiftKey;
             switch (event.key) {
-            case "A":
-            case "a":
-                this.manageAlbums();
-                break;
-            case "i":
-            case "I":
-                this.openExtendedDescription();
-                break;
-            case "t":
-            case "T":
-                this.openTags();
-                break;
-            case "S":
-            case "s":
-                this.showConfig();
-                break;
-            case "M":
-            case "m":
-                this.toggleMuted();
-                this.volumeShown = true;
-                this.helpTooltip = "volume";
-                break;
-            case " ":
-            case "K":
-            case "k":
-            case "Enter":
-                this.togglePlay();
-                break;
-            case "ArrowUp":
-                if (!shifting) {
-                    this.changeVolume(Math.min(1, this.volume + 0.05));
-                } else {
-                    this.changeVolume(Math.min(1, this.volume + 0.01));
-                }
-                if (this.muted) {
-                    this.muted = false;
-                    this.onUserMutedUpdated();
-                }
-                this.volumeShown = true;
-                this.helpTooltip = "volume";
-                break;
-            case "ArrowDown":
-                if (!shifting) {
-                    this.changeVolume(Math.max(0, this.volume - 0.05));
-                } else {
-                    this.changeVolume(Math.max(0, this.volume - 0.01));
-                }
-                if (this.muted) {
-                    this.muted = false;
-                    this.onUserMutedUpdated();
-                }
-                this.volumeShown = true;
-                this.helpTooltip = "volume";
-                break;
-            case "F":
-            case "f":
-                if (event.altKey || shifting) {
-                    caught = false;
-                } else {
-                    this.toggleFullScreen();
-                }
-                break;
-            case "ArrowRight":
-                if (shifting || event.altKey) {
-                    if (this.next || this.pageNext) {
-                        this.goNext();
+                case "A":
+                case "a":
+                    this.manageAlbums();
+                    break;
+                case "i":
+                case "I":
+                    this.openExtendedDescription();
+                    break;
+                case "t":
+                case "T":
+                    this.openTags();
+                    break;
+                case "S":
+                case "s":
+                    this.showConfig();
+                    break;
+                case "M":
+                case "m":
+                    this.toggleMuted();
+                    this.volumeShown = true;
+                    this.helpTooltip = "volume";
+                    break;
+                case " ":
+                case "K":
+                case "k":
+                case "Enter":
+                    this.togglePlay();
+                    break;
+                case "ArrowUp":
+                    if (!shifting) {
+                        this.changeVolume(Math.min(1, this.volume + 0.05));
                     } else {
+                        this.changeVolume(Math.min(1, this.volume + 0.01));
+                    }
+                    if (this.muted) {
+                        this.muted = false;
+                        this.onUserMutedUpdated();
+                    }
+                    this.volumeShown = true;
+                    this.helpTooltip = "volume";
+                    break;
+                case "ArrowDown":
+                    if (!shifting) {
+                        this.changeVolume(Math.max(0, this.volume - 0.05));
+                    } else {
+                        this.changeVolume(Math.max(0, this.volume - 0.01));
+                    }
+                    if (this.muted) {
+                        this.muted = false;
+                        this.onUserMutedUpdated();
+                    }
+                    this.volumeShown = true;
+                    this.helpTooltip = "volume";
+                    break;
+                case "F":
+                case "f":
+                    if (event.altKey || shifting) {
                         caught = false;
-                    }
-                } else {
-                    this.setTime(this.currentTime + 5, true);
-                }
-                break;
-            case "ArrowLeft":
-                if (shifting || event.altKey) {
-                    if (this.prev || this.pagePrev) {
-                        this.goPrev();
                     } else {
+                        this.toggleFullScreen();
+                    }
+                    break;
+                case "ArrowRight":
+                    if (shifting || event.altKey) {
+                        if (this.next || this.pageNext) {
+                            this.goNext();
+                        } else {
+                            caught = false;
+                        }
+                    } else {
+                        this.setTime(this.currentTime + 5, true);
+                    }
+                    break;
+                case "ArrowLeft":
+                    if (shifting || event.altKey) {
+                        if (this.prev || this.pagePrev) {
+                            this.goPrev();
+                        } else {
+                            caught = false;
+                        }
+                    } else {
+                        this.setTime(this.currentTime - 5, true);
+                    }
+                    break;
+                case ".":
+                    if (!this.playing) {
+                        this.setTime(this.currentTime - 1 / 30);
+                    }
+                    break;
+                case ",":
+                    if (!this.playing) {
+                        this.setTime(this.currentTime + 1 / 30);
+                    }
+                    break;
+                case "Home":
+                    if (event.altKey || shifting) {
                         caught = false;
-                    }
-                } else {
-                    this.setTime(this.currentTime - 5, true);
-                }
-                break;
-            case ".":
-                if (!this.playing) {
-                    this.setTime(this.currentTime - 1 / 30);
-                }
-                break;
-            case ",":
-                if (!this.playing) {
-                    this.setTime(this.currentTime + 1 / 30);
-                }
-                break;
-            case "Home":
-                if (event.altKey || shifting) {
-                    caught = false;
-                } else {
-                    this.setTime(0, true);
-                }
-                break;
-            case "End":
-                if (event.altKey || shifting) {
-                    caught = false;
-                } else {
-                    this.setTime(this.duration, true);
-                }
-                break;
-            case "X":
-            case "x":
-                this.sliceLoop = !this.sliceLoop;
-                if (this.sliceLoop) {
-                    AppEvents.Emit("snack", this.$t("Slice loop enabled"));
-                } else {
-                    AppEvents.Emit("snack", this.$t("Slice loop disabled"));
-                }
-                break;
-            case "l":
-            case "L":
-                if (event.altKey || shifting) {
-                    caught = false;
-                } else {
-                    this.loop = !this.loop;
-                    if (this.loop) {
-                        AppEvents.Emit("snack", this.$t("Loop enabled"));
                     } else {
-                        AppEvents.Emit("snack", this.$t("Loop disabled"));
+                        this.setTime(0, true);
                     }
-                    this.$emit("force-loop", this.loop);
-                }
-                break;
-            case "b":
-            case "B":
-                if (this.currentTimeSlice) {
-                    this.setTime(this.currentTimeSlice.start, true);
-                }
-                break;
-            case "j":
-            case "J":
-                if (this.currentTimeSlice) {
-                    this.setTime(this.currentTimeSlice.end, true);
-                }
-                break;
-            default:
-                caught = false;
+                    break;
+                case "End":
+                    if (event.altKey || shifting) {
+                        caught = false;
+                    } else {
+                        this.setTime(this.duration, true);
+                    }
+                    break;
+                case "X":
+                case "x":
+                    this.sliceLoop = !this.sliceLoop;
+                    if (this.sliceLoop) {
+                        AppEvents.Emit("snack", this.$t("Slice loop enabled"));
+                    } else {
+                        AppEvents.Emit("snack", this.$t("Slice loop disabled"));
+                    }
+                    break;
+                case "l":
+                case "L":
+                    if (event.altKey || shifting) {
+                        caught = false;
+                    } else {
+                        this.loop = !this.loop;
+                        if (this.loop) {
+                            AppEvents.Emit("snack", this.$t("Loop enabled"));
+                        } else {
+                            AppEvents.Emit("snack", this.$t("Loop disabled"));
+                        }
+                        this.$emit("force-loop", this.loop);
+                    }
+                    break;
+                case "b":
+                case "B":
+                    if (this.currentTimeSlice) {
+                        this.setTime(this.currentTimeSlice.start, true);
+                    }
+                    break;
+                case "j":
+                case "J":
+                    if (this.currentTimeSlice) {
+                        this.setTime(this.currentTimeSlice.end, true);
+                    }
+                    break;
+                case "Delete":
+                    this.$emit("delete");
+                    break;
+                default:
+                    caught = false;
             }
 
             if (caught) {
@@ -1268,23 +1282,23 @@ export default defineComponent({
                 barHeight = dataArray[i];
 
                 switch (this.animationColors) {
-                case "gradient":
-                    {
-                        if (this.theme === "light") {
-                            let r = Math.min(255, barHeight + 80 * (i / bufferLength));
-                            let g = 250 * (i / bufferLength);
-                            let b = 180;
-                            ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-                        } else {
-                            let r = Math.min(255, barHeight + 25 * (i / bufferLength));
-                            let g = 250 * (i / bufferLength);
-                            let b = 50;
-                            ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+                    case "gradient":
+                        {
+                            if (this.theme === "light") {
+                                let r = Math.min(255, barHeight + 80 * (i / bufferLength));
+                                let g = 250 * (i / bufferLength);
+                                let b = 180;
+                                ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+                            } else {
+                                let r = Math.min(255, barHeight + 25 * (i / bufferLength));
+                                let g = 250 * (i / bufferLength);
+                                let b = 50;
+                                ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+                            }
                         }
-                    }
-                    break;
-                default:
-                    ctx.fillStyle = this.theme === "light" ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.5)";
+                        break;
+                    default:
+                        ctx.fillStyle = this.theme === "light" ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.5)";
                 }
 
                 let trueHeight = Math.floor(HEIGHT * (barHeight / 255));
@@ -1380,22 +1394,22 @@ export default defineComponent({
                 return;
             }
             switch (event.action) {
-            case "play":
-                this.play();
-                break;
-            case "pause":
-                this.pause();
-                break;
-            case "nexttrack":
-                if (this.next || this.pageNext) {
-                    this.goNext();
-                }
-                break;
-            case "previoustrack":
-                if (this.prev || this.pagePrev) {
-                    this.goPrev();
-                }
-                break;
+                case "play":
+                    this.play();
+                    break;
+                case "pause":
+                    this.pause();
+                    break;
+                case "nexttrack":
+                    if (this.next || this.pageNext) {
+                        this.goNext();
+                    }
+                    break;
+                case "previoustrack":
+                    if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    }
+                    break;
             }
         },
 
