@@ -195,34 +195,34 @@ export default defineComponent({
             let baseProgress = 0;
             let progressCap = 100;
             switch (stage) {
-            case "PREPARE":
-                baseProgress = 0;
-                progressCap = 0;
-                break;
-            case "COPY":
-                baseProgress = 0;
-                progressCap = 10;
-                break;
-            case "PROBE":
-                baseProgress = 10;
-                progressCap = 0;
-                break;
-            case "ENCODE":
-                baseProgress = 10;
-                progressCap = 60;
-                break;
-            case "ENCRYPT":
-                baseProgress = 70;
-                progressCap = 25;
-                break;
-            case "UPDATE":
-                baseProgress = 95;
-                progressCap = 5;
-                break;
-            case "FINISH":
-                baseProgress = 100;
-                progressCap = 0;
-                break;
+                case "PREPARE":
+                    baseProgress = 0;
+                    progressCap = 0;
+                    break;
+                case "COPY":
+                    baseProgress = 0;
+                    progressCap = 10;
+                    break;
+                case "PROBE":
+                    baseProgress = 10;
+                    progressCap = 0;
+                    break;
+                case "ENCODE":
+                    baseProgress = 10;
+                    progressCap = 60;
+                    break;
+                case "ENCRYPT":
+                    baseProgress = 70;
+                    progressCap = 25;
+                    break;
+                case "UPDATE":
+                    baseProgress = 95;
+                    progressCap = 5;
+                    break;
+                case "FINISH":
+                    baseProgress = 100;
+                    progressCap = 0;
+                    break;
             }
 
             const realP = baseProgress + (p * progressCap) / 100;
@@ -236,14 +236,14 @@ export default defineComponent({
 
         renderType: function (t: number) {
             switch (t) {
-            case 0:
-                return this.$t("Encode media");
-            case 1:
-                return this.$t("Encode extra resolution");
-            case 2:
-                return this.$t("Generate video previews");
-            default:
-                return "???";
+                case 0:
+                    return this.$t("Encode media");
+                case 1:
+                    return this.$t("Encode extra resolution");
+                case 2:
+                    return this.$t("Generate video previews");
+                default:
+                    return "???";
             }
         },
 
@@ -252,27 +252,27 @@ export default defineComponent({
                 let stageNumber = 0;
 
                 switch (stage) {
-                case "PREPARE":
-                    stageNumber = 0;
-                    break;
-                case "COPY":
-                    stageNumber = 1;
-                    break;
-                case "PROBE":
-                    stageNumber = 2;
-                    break;
-                case "ENCODE":
-                    stageNumber = 3;
-                    break;
-                case "ENCRYPT":
-                    stageNumber = 4;
-                    break;
-                case "UPDATE":
-                    stageNumber = 5;
-                    break;
-                case "FINISH":
-                    stageNumber = 6;
-                    break;
+                    case "PREPARE":
+                        stageNumber = 0;
+                        break;
+                    case "COPY":
+                        stageNumber = 1;
+                        break;
+                    case "PROBE":
+                        stageNumber = 2;
+                        break;
+                    case "ENCODE":
+                        stageNumber = 3;
+                        break;
+                    case "ENCRYPT":
+                        stageNumber = 4;
+                        break;
+                    case "UPDATE":
+                        stageNumber = 5;
+                        break;
+                    case "FINISH":
+                        stageNumber = 6;
+                        break;
                 }
 
                 const progressPercent = this.getProgressPercent(p);

@@ -116,22 +116,22 @@ export class AppStatus {
 
     public static IsPlayerVisible(): boolean {
         switch (AppStatus.CurrentLayout) {
-        case "album":
-        case "media-split":
-        case "media":
-            return true;
-        default:
-            return false;
+            case "album":
+            case "media-split":
+            case "media":
+                return true;
+            default:
+                return false;
         }
     }
 
     public static IsPageVisible(): boolean {
         switch (AppStatus.CurrentLayout) {
-        case "initial":
-        case "media-split":
-            return true;
-        default:
-            return false;
+            case "initial":
+            case "media-split":
+                return true;
+            default:
+                return false;
         }
     }
 

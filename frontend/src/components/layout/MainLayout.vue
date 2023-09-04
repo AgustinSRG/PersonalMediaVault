@@ -285,41 +285,41 @@ export default defineComponent({
 
         onGoSettings: function (o: string) {
             switch (o) {
-            case "theme":
-                this.displayTheme = true;
-                break;
-            case "lang":
-                this.displayLang = true;
-                break;
-            case "username":
-                this.displayUsernameModal = true;
-                break;
-            case "password":
-                this.displayPasswordModal = true;
-                break;
-            case "advanced":
-                this.displayAdvancedSettings = true;
-                break;
-            case "batch":
-                this.displayBatchOperation = true;
-                break;
-            case "tasks":
-                this.displayTaskList = true;
-                break;
-            case "admin":
-                this.displayAccountAdmin = true;
-                break;
+                case "theme":
+                    this.displayTheme = true;
+                    break;
+                case "lang":
+                    this.displayLang = true;
+                    break;
+                case "username":
+                    this.displayUsernameModal = true;
+                    break;
+                case "password":
+                    this.displayPasswordModal = true;
+                    break;
+                case "advanced":
+                    this.displayAdvancedSettings = true;
+                    break;
+                case "batch":
+                    this.displayBatchOperation = true;
+                    break;
+                case "tasks":
+                    this.displayTaskList = true;
+                    break;
+                case "admin":
+                    this.displayAccountAdmin = true;
+                    break;
             }
         },
 
         onGoHelp: function (o: string) {
             switch (o) {
-            case "about":
-                this.displayAboutModal = true;
-                break;
-            case "keyboard":
-                this.displayKeyboardHelpModal = true;
-                break;
+                case "about":
+                    this.displayAboutModal = true;
+                    break;
+                case "keyboard":
+                    this.displayKeyboardHelpModal = true;
+                    break;
             }
         },
 
@@ -359,19 +359,19 @@ export default defineComponent({
             }
             let skipTo = null;
             switch (AppStatus.CurrentLayout) {
-            case "media":
-            case "media-split":
-            case "album":
-                skipTo = this.$el.querySelector(".player-container");
-                break;
-            default:
-                skipTo = this.$el.querySelector(".page-content");
-                if (skipTo) {
-                    const autoFocused = skipTo.querySelector(".auto-focus");
-                    if (autoFocused) {
-                        skipTo = autoFocused;
+                case "media":
+                case "media-split":
+                case "album":
+                    skipTo = this.$el.querySelector(".player-container");
+                    break;
+                default:
+                    skipTo = this.$el.querySelector(".page-content");
+                    if (skipTo) {
+                        const autoFocused = skipTo.querySelector(".auto-focus");
+                        if (autoFocused) {
+                            skipTo = autoFocused;
+                        }
                     }
-                }
             }
             if (skipTo) {
                 skipTo.focus();

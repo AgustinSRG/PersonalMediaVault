@@ -48,20 +48,20 @@ export default defineComponent({
                 }
             } else {
                 switch (AppStatus.CurrentPage) {
-                case "search":
-                    document.title = this.$t("Search results") + ": " + AppStatus.CurrentSearch + " | " + this.getAppTitle();
-                    break;
-                case "upload":
-                    document.title = this.$t("Upload") + " | " + this.getAppTitle();
-                    break;
-                case "random":
-                    document.title = this.$t("Random") + " | " + this.getAppTitle();
-                    break;
-                case "albums":
-                    document.title = this.$t("Albums") + " | " + this.getAppTitle();
-                    break;
-                default:
-                    document.title = this.getAppTitle();
+                    case "search":
+                        document.title = this.$t("Search results") + ": " + AppStatus.CurrentSearch + " | " + this.getAppTitle();
+                        break;
+                    case "upload":
+                        document.title = this.$t("Upload") + " | " + this.getAppTitle();
+                        break;
+                    case "random":
+                        document.title = this.$t("Random") + " | " + this.getAppTitle();
+                        break;
+                    case "albums":
+                        document.title = this.$t("Albums") + " | " + this.getAppTitle();
+                        break;
+                    default:
+                        document.title = this.getAppTitle();
                 }
             }
         },

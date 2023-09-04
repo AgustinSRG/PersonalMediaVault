@@ -344,12 +344,12 @@ export default defineComponent({
 
         renderAnimStyle: function (s) {
             switch (s) {
-            case "gradient":
-                return this.$t("Gradient");
-            case "none":
-                return this.$t("None");
-            default:
-                return this.$t("Monochrome");
+                case "gradient":
+                    return this.$t("Gradient");
+                case "none":
+                    return this.$t("None");
+                default:
+                    return this.$t("Monochrome");
             }
         },
 
@@ -365,16 +365,16 @@ export default defineComponent({
 
         renderSubtitleSize: function (s: string) {
             switch (s) {
-            case "s":
-                return this.$t("Small");
-            case "l":
-                return this.$t("Large");
-            case "xl":
-                return this.$t("Extra large");
-            case "xxl":
-                return this.$t("Extra extra large");
-            default:
-                return this.$t("Medium");
+                case "s":
+                    return this.$t("Small");
+                case "l":
+                    return this.$t("Large");
+                case "xl":
+                    return this.$t("Extra large");
+                case "xxl":
+                    return this.$t("Extra extra large");
+                default:
+                    return this.$t("Medium");
             }
         },
 
@@ -385,16 +385,16 @@ export default defineComponent({
 
         renderSubtitleBackground: function (s: string) {
             switch (s) {
-            case "0":
-                return this.$t("Transparent");
-            case "25":
-                return this.$t("Translucid") + " (75%)";
-            case "50":
-                return this.$t("Translucid") + " (50%)";
-            case "75":
-                return this.$t("Translucid") + " (25%)";
-            default:
-                return this.$t("Opaque");
+                case "0":
+                    return this.$t("Transparent");
+                case "25":
+                    return this.$t("Translucid") + " (75%)";
+                case "50":
+                    return this.$t("Translucid") + " (50%)";
+                case "75":
+                    return this.$t("Translucid") + " (25%)";
+                default:
+                    return this.$t("Opaque");
             }
         },
 

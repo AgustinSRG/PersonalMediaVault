@@ -146,29 +146,29 @@ export default defineComponent({
                             (((task.time_now - task.stage_start) / task.stage_progress) * 100 - (task.time_now - task.stage_start)) / 1000;
 
                         switch (this.stage) {
-                        case "PREPARE":
-                            this.stageNumber = 0;
-                            break;
-                        case "COPY":
-                            this.stageNumber = 1;
-                            break;
-                        case "PROBE":
-                            this.stageNumber = 2;
-                            break;
-                        case "ENCODE":
-                            this.stageNumber = 3;
-                            break;
-                        case "ENCRYPT":
-                            this.stageNumber = 4;
-                            break;
-                        case "UPDATE":
-                            this.stageNumber = 5;
-                            break;
-                        case "FINISH":
-                            this.stageNumber = 6;
-                            break;
-                        default:
-                            this.stageNumber = 0;
+                            case "PREPARE":
+                                this.stageNumber = 0;
+                                break;
+                            case "COPY":
+                                this.stageNumber = 1;
+                                break;
+                            case "PROBE":
+                                this.stageNumber = 2;
+                                break;
+                            case "ENCODE":
+                                this.stageNumber = 3;
+                                break;
+                            case "ENCRYPT":
+                                this.stageNumber = 4;
+                                break;
+                            case "UPDATE":
+                                this.stageNumber = 5;
+                                break;
+                            case "FINISH":
+                                this.stageNumber = 6;
+                                break;
+                            default:
+                                this.stageNumber = 0;
                         }
 
                         this.stageProgress = (this.stageNumber * 100) / 6;

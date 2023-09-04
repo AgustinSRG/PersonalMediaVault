@@ -13,7 +13,7 @@ module.exports = {
         "no-useless-escape": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-empty-function": "off",
-        indent: ["warn", 4],
+        indent: ["warn", 4, { "SwitchCase": 1 }],
         "vue/max-len": [
             "warn",
             {

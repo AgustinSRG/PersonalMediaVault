@@ -535,33 +535,33 @@ export default defineComponent({
 
         renderSubtitleSize: function (s: string) {
             switch (s) {
-            case "s":
-                return this.$t("Small");
-            case "l":
-                return this.$t("Large");
-            case "xl":
-                return this.$t("Extra large");
-            case "xxl":
-                return this.$t("Extra extra large");
-            default:
-                return this.$t("Medium");
+                case "s":
+                    return this.$t("Small");
+                case "l":
+                    return this.$t("Large");
+                case "xl":
+                    return this.$t("Extra large");
+                case "xxl":
+                    return this.$t("Extra extra large");
+                default:
+                    return this.$t("Medium");
             }
         },
 
         renderToggleDelay: function (d: number) {
             switch (d) {
-            case 0:
-                return this.$t("No delay");
-            case 250:
-                return "0.25 s";
-            case 500:
-                return "0.5 s";
-            case 750:
-                return "0.75 s";
-            case 1000:
-                return "1 s";
-            default:
-                return "" + d;
+                case 0:
+                    return this.$t("No delay");
+                case 250:
+                    return "0.25 s";
+                case 500:
+                    return "0.5 s";
+                case 750:
+                    return "0.75 s";
+                case 1000:
+                    return "1 s";
+                default:
+                    return "" + d;
             }
         },
 
@@ -572,16 +572,16 @@ export default defineComponent({
 
         renderSubtitleBackground: function (s: string) {
             switch (s) {
-            case "0":
-                return this.$t("Transparent");
-            case "25":
-                return this.$t("Translucid") + " (75%)";
-            case "50":
-                return this.$t("Translucid") + " (50%)";
-            case "75":
-                return this.$t("Translucid") + " (25%)";
-            default:
-                return this.$t("Opaque");
+                case "0":
+                    return this.$t("Transparent");
+                case "25":
+                    return this.$t("Translucid") + " (75%)";
+                case "50":
+                    return this.$t("Translucid") + " (50%)";
+                case "75":
+                    return this.$t("Translucid") + " (25%)";
+                default:
+                    return this.$t("Opaque");
             }
         },
 

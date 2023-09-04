@@ -197,12 +197,12 @@ export default defineComponent({
 
         renderBackground: function (b: string) {
             switch (b) {
-            case "white":
-                return this.$t("White");
-            case "black":
-                return this.$t("Black");
-            default:
-                return this.$t("Default (Theme)");
+                case "white":
+                    return this.$t("White");
+                case "black":
+                    return this.$t("Black");
+                default:
+                    return this.$t("Default (Theme)");
             }
         },
 

@@ -152,20 +152,20 @@ export default defineComponent({
         renderStatus(status: string, p: number) {
             const renderP = Math.round(p * 100) / 100;
             switch (status) {
-            case "search":
-                if (p > 0) {
-                    return this.$t("Searching") + "... (" + renderP + "%)";
-                } else {
-                    return this.$t("Searching") + "...";
-                }
-            case "action":
-                if (p > 0) {
-                    return this.$t("Applying") + "... (" + renderP + "%)";
-                } else {
-                    return this.$t("Applying") + "...";
-                }
-            default:
-                return "-";
+                case "search":
+                    if (p > 0) {
+                        return this.$t("Searching") + "... (" + renderP + "%)";
+                    } else {
+                        return this.$t("Searching") + "...";
+                    }
+                case "action":
+                    if (p > 0) {
+                        return this.$t("Applying") + "... (" + renderP + "%)";
+                    } else {
+                        return this.$t("Applying") + "...";
+                    }
+                default:
+                    return "-";
             }
         },
     },

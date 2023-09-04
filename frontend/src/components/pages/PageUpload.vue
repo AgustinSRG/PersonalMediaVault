@@ -213,14 +213,14 @@ export default defineComponent({
         updateSelectedState: function (s: string) {
             this.selectedState = s;
             switch (s) {
-            case "ready":
-                this.stateFilter = STATE_FILTER_READY.slice();
-                break;
-            case "error":
-                this.stateFilter = STATE_FILTER_ERROR.slice();
-                break;
-            default:
-                this.stateFilter = STATE_FILTER_PENDING.slice();
+                case "ready":
+                    this.stateFilter = STATE_FILTER_READY.slice();
+                    break;
+                case "error":
+                    this.stateFilter = STATE_FILTER_ERROR.slice();
+                    break;
+                default:
+                    this.stateFilter = STATE_FILTER_PENDING.slice();
             }
             this.updateFilteredEntries();
         },
@@ -336,55 +336,55 @@ export default defineComponent({
 
         renderStatus(status: string, p: number, err: string) {
             switch (status) {
-            case "ready":
-                return this.$t("Ready");
-            case "pending":
-                return this.$t("Pending");
-            case "uploading":
-                if (p > 0) {
-                    return this.$t("Uploading") + "... (" + p + "%)";
-                } else {
-                    return this.$t("Uploading") + "...";
-                }
-            case "encrypting":
-                if (p > 0) {
-                    return this.$t("Encrypting") + "... (" + p + "%)";
-                } else {
-                    return this.$t("Encrypting") + "...";
-                }
-            case "tag":
-                return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
-            case "error":
-                switch (err) {
-                case "invalid-media":
-                    return this.$t("Error") + ": " + this.$t("Invalid media file provided");
-                case "access-denied":
-                    return this.$t("Error") + ": " + this.$t("Access denied");
-                case "deleted":
-                    return this.$t("Error") + ": " + this.$t("The media asset was deleted");
-                case "no-internet":
-                    return this.$t("Error") + ": " + this.$t("Could not connect to the server");
+                case "ready":
+                    return this.$t("Ready");
+                case "pending":
+                    return this.$t("Pending");
+                case "uploading":
+                    if (p > 0) {
+                        return this.$t("Uploading") + "... (" + p + "%)";
+                    } else {
+                        return this.$t("Uploading") + "...";
+                    }
+                case "encrypting":
+                    if (p > 0) {
+                        return this.$t("Encrypting") + "... (" + p + "%)";
+                    } else {
+                        return this.$t("Encrypting") + "...";
+                    }
+                case "tag":
+                    return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
+                case "error":
+                    switch (err) {
+                        case "invalid-media":
+                            return this.$t("Error") + ": " + this.$t("Invalid media file provided");
+                        case "access-denied":
+                            return this.$t("Error") + ": " + this.$t("Access denied");
+                        case "deleted":
+                            return this.$t("Error") + ": " + this.$t("The media asset was deleted");
+                        case "no-internet":
+                            return this.$t("Error") + ": " + this.$t("Could not connect to the server");
+                        default:
+                            return this.$t("Error") + ": " + this.$t("Internal server error");
+                    }
                 default:
-                    return this.$t("Error") + ": " + this.$t("Internal server error");
-                }
-            default:
-                return "-";
+                    return "-";
             }
         },
 
         cssProgress: function (status: string, p: number) {
             p = Math.min(100, Math.max(0, p));
             switch (status) {
-            case "uploading":
-                return Math.round((p * 50) / 100) + "%";
-            case "encrypting":
-                return Math.round(50 + (p * 50) / 100) + "%";
-            case "ready":
-            case "error":
-            case "tag":
-                return "100%";
-            default:
-                return "0";
+                case "uploading":
+                    return Math.round((p * 50) / 100) + "%";
+                case "encrypting":
+                    return Math.round(50 + (p * 50) / 100) + "%";
+                case "ready":
+                case "error":
+                case "tag":
+                    return "100%";
+                default:
+                    return "0";
             }
         },
 

@@ -198,70 +198,70 @@ export default defineComponent({
 
         hasConfigOptions: function (p: string): boolean {
             switch (p) {
-            case "home":
-            case "search":
-            case "adv-search":
-            case "albums":
-            case "random":
-                return true;
-            default:
-                return false;
+                case "home":
+                case "search":
+                case "adv-search":
+                case "albums":
+                case "random":
+                    return true;
+                default:
+                    return false;
             }
         },
 
         hasOrderDate: function (p: string): boolean {
             switch (p) {
-            case "home":
-            case "search":
-                return true;
-            default:
-                return false;
+                case "home":
+                case "search":
+                    return true;
+                default:
+                    return false;
             }
         },
 
         hasOrderAlbums: function (p: string): boolean {
             switch (p) {
-            case "albums":
-                return true;
-            default:
-                return false;
+                case "albums":
+                    return true;
+                default:
+                    return false;
             }
         },
 
         renderTitle: function (p, s) {
             switch (p) {
-            case "home":
-                return this.$t("Home");
-            case "search":
-                return this.$t("Search results") + ": " + s;
-            case "adv-search":
-                return this.$t("Advanced search");
-            case "upload":
-                return this.$t("Upload media");
-            case "albums":
-                return this.$t("Albums list");
-            case "random":
-                return this.$t("Random results");
-            default:
-                return "";
+                case "home":
+                    return this.$t("Home");
+                case "search":
+                    return this.$t("Search results") + ": " + s;
+                case "adv-search":
+                    return this.$t("Advanced search");
+                case "upload":
+                    return this.$t("Upload media");
+                case "albums":
+                    return this.$t("Albums list");
+                case "random":
+                    return this.$t("Random results");
+                default:
+                    return "";
             }
         },
 
         getIcon: function (p) {
             switch (p) {
-            case "home":
-                return "fas fa-home";
-            case "search":
-            case "adv-search":
-                return "fas fa-search";
-            case "upload":
-                return "fas fa-upload";
-            case "albums":
-                return "fas fa-list";
-            case "random":
-                return "fas fa-shuffle";
-            default:
-                return "";
+                case "home":
+                    return "fas fa-home";
+                case "search":
+                case "adv-search":
+                    return "fas fa-search";
+                case "upload":
+                    return "fas fa-upload";
+                case "albums":
+                    return "fas fa-list";
+                case "random":
+                    return "fas fa-shuffle";
+                default:
+                    return "";
             }
         },
 

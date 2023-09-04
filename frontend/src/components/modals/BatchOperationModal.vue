@@ -516,18 +516,18 @@ export default defineComponent({
             }
 
             switch (this.action) {
-            case "tag-add":
-            case "tag-remove":
-                if (this.tagsAction.length === 0) {
-                    return;
-                }
-                break;
-            case "album-add":
-            case "album-remove":
-                if (this.albumToAdd < 0) {
-                    return;
-                }
-                break;
+                case "tag-add":
+                case "tag-remove":
+                    if (this.tagsAction.length === 0) {
+                        return;
+                    }
+                    break;
+                case "album-add":
+                case "album-remove":
+                    if (this.albumToAdd < 0) {
+                        return;
+                    }
+                    break;
             }
 
             this.displayProgress = true;
@@ -741,21 +741,21 @@ export default defineComponent({
             const mediaId = this.actionItems[i];
 
             switch (this.action) {
-            case "tag-add":
-                this.actionAddTag(mediaId, this.tagsAction.slice(), i + 1);
-                break;
-            case "tag-remove":
-                this.actionRemoveTag(mediaId, this.tagsAction.slice(), i + 1);
-                break;
-            case "album-add":
-                this.actionAddAlbum(mediaId, i + 1);
-                break;
-            case "album-remove":
-                this.actionRemoveAlbum(mediaId, i + 1);
-                break;
-            case "delete":
-                this.actionDelete(mediaId, i + 1);
-                break;
+                case "tag-add":
+                    this.actionAddTag(mediaId, this.tagsAction.slice(), i + 1);
+                    break;
+                case "tag-remove":
+                    this.actionRemoveTag(mediaId, this.tagsAction.slice(), i + 1);
+                    break;
+                case "album-add":
+                    this.actionAddAlbum(mediaId, i + 1);
+                    break;
+                case "album-remove":
+                    this.actionRemoveAlbum(mediaId, i + 1);
+                    break;
+                case "delete":
+                    this.actionDelete(mediaId, i + 1);
+                    break;
             }
 
             this.progress = ((i + 1) * 100) / (this.actionItems.length || 1);

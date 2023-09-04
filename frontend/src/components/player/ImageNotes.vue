@@ -419,34 +419,34 @@ export default defineComponent({
                 let y2 = y1 + this.resizeOriginalH;
 
                 switch (this.resizeMode) {
-                case "t":
-                    y1 -= diffY;
-                    break;
-                case "b":
-                    y2 -= diffY;
-                    break;
-                case "l":
-                    x1 -= diffX;
-                    break;
-                case "r":
-                    x2 -= diffX;
-                    break;
-                case "tl":
-                    y1 -= diffY;
-                    x1 -= diffX;
-                    break;
-                case "tr":
-                    y1 -= diffY;
-                    x2 -= diffX;
-                    break;
-                case "bl":
-                    y2 -= diffY;
-                    x1 -= diffX;
-                    break;
-                case "br":
-                    y2 -= diffY;
-                    x2 -= diffX;
-                    break;
+                    case "t":
+                        y1 -= diffY;
+                        break;
+                    case "b":
+                        y2 -= diffY;
+                        break;
+                    case "l":
+                        x1 -= diffX;
+                        break;
+                    case "r":
+                        x2 -= diffX;
+                        break;
+                    case "tl":
+                        y1 -= diffY;
+                        x1 -= diffX;
+                        break;
+                    case "tr":
+                        y1 -= diffY;
+                        x2 -= diffX;
+                        break;
+                    case "bl":
+                        y2 -= diffY;
+                        x1 -= diffX;
+                        break;
+                    case "br":
+                        y2 -= diffY;
+                        x2 -= diffX;
+                        break;
                 }
 
                 x1 = Math.min(this.imageHeight, Math.max(0, x1));
