@@ -324,6 +324,13 @@
                                 <span class="key-shortcut">{{ $t("Backspace") }}</span>
                             </td>
                         </tr>
+
+                        <tr>
+                            <td>{{ $t("Delete media") }}</td>
+                            <td>
+                                <span class="key-shortcut">{{ $t("Delete") }}</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
