@@ -20,13 +20,26 @@
     border-top: 1px solid var(--theme-border-color);
 }
 
+.table.no-border th,
+.table.no-border td {
+    border-top: none;
+}
+
 .table thead th {
     vertical-align: bottom;
     border-bottom: 2px solid var(--theme-border-color);
 }
 
-.table tbody + tbody {
+.table tbody+tbody {
     border-top: 2px solid var(--theme-border-color);
+}
+
+.table.no-border thead th {
+    border-bottom: none;
+}
+
+.table.no-border tbody+tbody {
+    border-top: none;
 }
 
 .table.table-vmiddle td {

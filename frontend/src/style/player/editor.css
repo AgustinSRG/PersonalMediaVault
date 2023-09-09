@@ -16,10 +16,11 @@
     left: 0;
     width: 100%;
     height: calc(100% - 57px);
-    overflow: auto;
+    overflow-y: scroll;
     background: var(--player-editor-background);
     color: var(--theme-fg-color);
-    padding: 1rem;
+    padding-left: 1rem;
+    padding-bottom: 1rem;
     animation-name: player-media-editor-anim;
     animation-duration: 0.1s;
 }
@@ -35,7 +36,39 @@
 
 .form-group-thumbnail {
     max-width: 100%;
-    width: auto;
-    height: auto;
+    width: 252px;
+    height: 252px;
     border: solid 1px var(--theme-border-color);
+}
+
+.player-editor-sub-content {
+    padding-top: 1rem;
+}
+
+.player-editor-sub-content.content-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.row-general-left {
+    width: calc(100% - 252px - 2rem);
+    padding-right: 1rem;
+} 
+
+.row-general-right {
+    width: calc(252px + 2rem);
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media(max-width: 600px) {
+    .row-general-left,
+    .row-general-right {
+        width: 100%;
+    }
+}
+
+.row-100p {
+    width: 100%;
 }

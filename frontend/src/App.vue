@@ -152,6 +152,7 @@ export default defineComponent({
 /* Common styles */
 
 @import "./style/common/forms.css";
+@import "./style/common/h-menu.css";
 @import "./style/common/modals.css";
 @import "./style/common/switch.css";
 @import "./style/common/tables.css";

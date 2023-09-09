@@ -15,6 +15,7 @@
         @touchstart="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
         @keydown="onKeyDown"
+        @animationend="onAnimationEnd"
     >
         <div v-if="!albumExpanded" class="player-title-container">
             <div class="player-title-left">
@@ -50,7 +51,7 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 
 const PlayerMediaEditor = defineAsyncComponent({
-    loader: () => import("./PlayerMediaEditor.vue"),
+    loader: () => import("@/components/player/editor/PlayerMediaEditor.vue"),
 });
 
 export default defineComponent({
@@ -143,6 +144,15 @@ export default defineComponent({
             }
 
             return false;
+        },
+
+        onAnimationEnd: function (event: AnimationEvent) {
+            if (event.animationName == "player-top-bar-expand" && this.expanded) {
+                const autoFocus = this.$el.querySelector(".auto-focus");
+                if (autoFocus) {
+                    autoFocus.focus();
+                }
+            }
         },
     },
     watch: {
