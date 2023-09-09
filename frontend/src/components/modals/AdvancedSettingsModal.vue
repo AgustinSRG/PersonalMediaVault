@@ -162,7 +162,7 @@
                     </div>
                     <div>
                         {{ $t("Note: This is an advanced and possibly dangerous feature.") }}
-                         {{ $t("Do not change this unless you know what you are doing.") }}
+                        {{ $t("Do not change this unless you know what you are doing.") }}
                     </div>
                 </div>
 

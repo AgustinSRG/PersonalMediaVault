@@ -74,9 +74,7 @@
             </div>
 
             <div class="modal-footer no-padding">
-                <button type="button" class="modal-footer-btn" @click="doUpload">
-                    <i class="fas fa-upload"></i> {{ $t("Upload") }}
-                </button>
+                <button type="button" class="modal-footer-btn" @click="doUpload"><i class="fas fa-upload"></i> {{ $t("Upload") }}</button>
             </div>
         </div>
 
@@ -133,9 +131,11 @@ export default defineComponent({
         },
 
         renderFiles: function (files) {
-            return files.map((file) => {
-                return file.name + " (" + this.renderSize(file.size) + ")";
-            }).join("\n");
+            return files
+                .map((file) => {
+                    return file.name + " (" + this.renderSize(file.size) + ")";
+                })
+                .join("\n");
         },
 
         computeTotalSize: function (files) {
@@ -318,7 +318,7 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
-        
+
         this.updateTagData();
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);

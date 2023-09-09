@@ -30,7 +30,7 @@
     border-bottom: 2px solid var(--theme-border-color);
 }
 
-.table tbody+tbody {
+.table tbody + tbody {
     border-top: 2px solid var(--theme-border-color);
 }
 
@@ -38,7 +38,7 @@
     border-bottom: none;
 }
 
-.table.no-border tbody+tbody {
+.table.no-border tbody + tbody {
     border-top: none;
 }
 

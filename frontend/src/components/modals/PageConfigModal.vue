@@ -147,7 +147,7 @@ export default defineComponent({
     },
     mounted: function () {
         this.pageSizeOption = [];
-        
+
         for (let i = 1; i <= 20; i++) {
             this.pageSizeOptions.push(5 * i);
         }

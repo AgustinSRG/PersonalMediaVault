@@ -411,7 +411,7 @@ export default defineComponent({
                 return true;
             }
 
-            if (event.key === "PageUp" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0) ) {
+            if (event.key === "PageUp" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
                 if (this.page < this.totalPages - 1) {
                     this.changePage(this.page + 1);
                 }

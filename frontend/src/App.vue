@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts">
-
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController } from "./control/albums";
 import { AppEvents } from "./control/app-events";
@@ -129,7 +128,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
         AppEvents.RemoveEventListener("loaded-locale", this._handles.onLoadedLocaleH);
     },
-})
+});
 </script>
 
 <style>

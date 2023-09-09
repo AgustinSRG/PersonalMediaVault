@@ -20,19 +20,27 @@
                     <tbody>
                         <tr>
                             <td>{{ $t("Open the menu") }}</td>
-                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + M</span></td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + M</span>
+                            </td>
                         </tr>
                         <tr>
                             <td>{{ $t("Search") }}</td>
-                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + F</span></td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + F</span>
+                            </td>
                         </tr>
                         <tr>
                             <td>{{ $t("Open vault settings") }}</td>
-                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + S</span></td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + S</span>
+                            </td>
                         </tr>
                         <tr>
                             <td>{{ $t("Close vault") }}</td>
-                            <td><span class="key-shortcut">⌘ ({{ $t("Control") }}) + Q</span></td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + Q</span>
+                            </td>
                         </tr>
                         <tr>
                             <td>{{ $t("Close current modal or menu") }}</td>

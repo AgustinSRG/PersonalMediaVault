@@ -54,7 +54,7 @@
 .row-general-left {
     width: calc(100% - 252px - 2rem);
     padding-right: 1rem;
-} 
+}
 
 .row-general-right {
     width: calc(252px + 2rem);
@@ -62,7 +62,7 @@
     padding-right: 1rem;
 }
 
-@media(max-width: 600px) {
+@media (max-width: 600px) {
     .row-general-left,
     .row-general-right {
         width: 100%;

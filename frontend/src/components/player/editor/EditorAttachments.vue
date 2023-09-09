@@ -123,7 +123,6 @@ import { defineComponent } from "vue";
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 
-
 export default defineComponent({
     components: {
         AttachmentDeleteModal,

@@ -1,6 +1,7 @@
 .fa {
-  font-family: var(--fa-style-family, "Font Awesome 6 Free");
-  font-weight: var(--fa-style, 900); }
+    font-family: var(--fa-style-family, "Font Awesome 6 Free");
+    font-weight: var(--fa-style, 900);
+}
 
 .fa,
 .fas,
@@ -15,349 +16,470 @@
 .fa-duotone,
 .fab,
 .fa-brands {
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  display: var(--fa-display, inline-block);
-  font-style: normal;
-  font-variant: normal;
-  line-height: 1;
-  text-rendering: auto; }
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: var(--fa-display, inline-block);
+    font-style: normal;
+    font-variant: normal;
+    line-height: 1;
+    text-rendering: auto;
+}
 
 .fa-spin {
-  -webkit-animation-name: fa-spin;
-          animation-name: fa-spin;
-  -webkit-animation-delay: var(--fa-animation-delay, 0);
-          animation-delay: var(--fa-animation-delay, 0);
-  -webkit-animation-direction: var(--fa-animation-direction, normal);
-          animation-direction: var(--fa-animation-direction, normal);
-  -webkit-animation-duration: var(--fa-animation-duration, 2s);
-          animation-duration: var(--fa-animation-duration, 2s);
-  -webkit-animation-iteration-count: var(--fa-animation-iteration-count, infinite);
-          animation-iteration-count: var(--fa-animation-iteration-count, infinite);
-  -webkit-animation-timing-function: var(--fa-animation-timing, linear);
-          animation-timing-function: var(--fa-animation-timing, linear); }
+    -webkit-animation-name: fa-spin;
+    animation-name: fa-spin;
+    -webkit-animation-delay: var(--fa-animation-delay, 0);
+    animation-delay: var(--fa-animation-delay, 0);
+    -webkit-animation-direction: var(--fa-animation-direction, normal);
+    animation-direction: var(--fa-animation-direction, normal);
+    -webkit-animation-duration: var(--fa-animation-duration, 2s);
+    animation-duration: var(--fa-animation-duration, 2s);
+    -webkit-animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+    animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+    -webkit-animation-timing-function: var(--fa-animation-timing, linear);
+    animation-timing-function: var(--fa-animation-timing, linear);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .fa-beat,
-  .fa-bounce,
-  .fa-fade,
-  .fa-beat-fade,
-  .fa-flip,
-  .fa-pulse,
-  .fa-shake,
-  .fa-spin,
-  .fa-spin-pulse {
-    -webkit-animation-delay: -1ms;
-            animation-delay: -1ms;
-    -webkit-animation-duration: 1ms;
-            animation-duration: 1ms;
-    -webkit-animation-iteration-count: 1;
-            animation-iteration-count: 1;
-    transition-delay: 0s;
-    transition-duration: 0s; } }
+    .fa-beat,
+    .fa-bounce,
+    .fa-fade,
+    .fa-beat-fade,
+    .fa-flip,
+    .fa-pulse,
+    .fa-shake,
+    .fa-spin,
+    .fa-spin-pulse {
+        -webkit-animation-delay: -1ms;
+        animation-delay: -1ms;
+        -webkit-animation-duration: 1ms;
+        animation-duration: 1ms;
+        -webkit-animation-iteration-count: 1;
+        animation-iteration-count: 1;
+        transition-delay: 0s;
+        transition-duration: 0s;
+    }
+}
 
 @-webkit-keyframes fa-spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-            transform: rotate(0deg); }
-  100% {
-    -webkit-transform: rotate(360deg);
-            transform: rotate(360deg); } }
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
 
 @keyframes fa-spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-            transform: rotate(0deg); }
-  100% {
-    -webkit-transform: rotate(360deg);
-            transform: rotate(360deg); } }
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
 
 .fa-angles-left::before {
-  content: "\f100"; }
+    content: "\f100";
+}
 
 .fa-angles-right::before {
-  content: "\f101"; }
+    content: "\f101";
+}
 
 .fa-arrow-down::before {
-  content: "\f063"; }
+    content: "\f063";
+}
 
 .fa-arrow-down-a-z::before {
-  content: "\f15d"; }
+    content: "\f15d";
+}
 
 .fa-arrow-down-short-wide::before {
-  content: "\f884"; }
+    content: "\f884";
+}
 
 .fa-arrow-up::before {
-  content: "\f062"; }
+    content: "\f062";
+}
 
 .fa-arrow-up-short-wide::before {
-  content: "\f885"; }
+    content: "\f885";
+}
 
 .fa-arrows-up-down-left-right::before {
-  content: "\f047"; }
+    content: "\f047";
+}
 
 .fa-backward-step::before {
-  content: "\f048"; }
+    content: "\f048";
+}
 
 .fa-ban::before {
-  content: "\f05e"; }
+    content: "\f05e";
+}
 
 .fa-bars::before {
-  content: "\f0c9"; }
+    content: "\f0c9";
+}
 
 .fa-bars-progress::before {
-  content: "\f828"; }
+    content: "\f828";
+}
 
 .fa-box-open::before {
-  content: "\f49e"; }
+    content: "\f49e";
+}
 
 .fa-broom::before {
-  content: "\f51a"; }
+    content: "\f51a";
+}
 
 .fa-chart-column::before {
-  content: "\e0e3"; }
+    content: "\e0e3";
+}
 
 .fa-check::before {
-  content: "\f00c"; }
+    content: "\f00c";
+}
 
 .fa-chevron-down::before {
-  content: "\f078"; }
+    content: "\f078";
+}
 
 .fa-chevron-left::before {
-  content: "\f053"; }
+    content: "\f053";
+}
 
 .fa-chevron-right::before {
-  content: "\f054"; }
+    content: "\f054";
+}
 
 .fa-chevron-up::before {
-  content: "\f077"; }
+    content: "\f077";
+}
 
 .fa-circle::before {
-  content: "\f111"; }
+    content: "\f111";
+}
 
 .fa-clock::before {
-  content: "\f017"; }
+    content: "\f017";
+}
 
 .fa-closed-captioning::before {
-  content: "\f20a"; }
+    content: "\f20a";
+}
 
 .fa-compress::before {
-  content: "\f066"; }
+    content: "\f066";
+}
 
 .fa-download::before {
-  content: "\f019"; }
+    content: "\f019";
+}
 
 .fa-expand::before {
-  content: "\f065"; }
+    content: "\f065";
+}
 
 .fa-eye::before {
-  content: "\f06e"; }
+    content: "\f06e";
+}
 
 .fa-eye-slash::before {
-  content: "\f070"; }
+    content: "\f070";
+}
 
 .fa-forward::before {
-  content: "\f04e"; }
+    content: "\f04e";
+}
 
 .fa-forward-step::before {
-  content: "\f051"; }
+    content: "\f051";
+}
 
 .fa-gauge::before {
-  content: "\f624"; }
+    content: "\f624";
+}
 
 .fa-cog::before {
-  content: "\f013"; }
+    content: "\f013";
+}
 
 .fa-headphones::before {
-  content: "\f025"; }
+    content: "\f025";
+}
 
 .fa-hourglass::before {
-  content: "\f254"; }
+    content: "\f254";
+}
 
 .fa-home::before {
-  content: "\f015"; }
+    content: "\f015";
+}
 
 .fa-image::before {
-  content: "\f03e"; }
+    content: "\f03e";
+}
 
 .fa-info::before {
-  content: "\f129"; }
+    content: "\f129";
+}
 
 .fa-key::before {
-  content: "\f084"; }
+    content: "\f084";
+}
 
 .fa-keyboard::before {
-  content: "\f11c"; }
+    content: "\f11c";
+}
 
 .fa-language::before {
-  content: "\f1ab"; }
+    content: "\f1ab";
+}
 
 .fa-list::before {
-  content: "\f03a"; }
+    content: "\f03a";
+}
 
 .fa-list-ol::before {
-  content: "\f0cb"; }
+    content: "\f0cb";
+}
 
 .fa-magnifying-glass::before {
-  content: "\f002"; }
+    content: "\f002";
+}
 
 .fa-search::before {
-  content: "\f002"; }
+    content: "\f002";
+}
 
 .fa-moon::before {
-  content: "\f186"; }
+    content: "\f186";
+}
 
 .fa-palette::before {
-  content: "\f53f"; }
+    content: "\f53f";
+}
 
 .fa-pause::before {
-  content: "\f04c"; }
+    content: "\f04c";
+}
 
 .fa-pencil-alt::before {
-  content: "\f303"; }
+    content: "\f303";
+}
 
 .fa-photo-film::before {
-  content: "\f87c"; }
+    content: "\f87c";
+}
 
 .fa-play::before {
-  content: "\f04b"; }
+    content: "\f04b";
+}
 
 .fa-plus::before {
-  content: "\2b"; }
+    content: "\2b";
+}
 
 .fa-question::before {
-  content: "\3f"; }
+    content: "\3f";
+}
 
 .fa-repeat::before {
-  content: "\f363"; }
+    content: "\f363";
+}
 
 .fa-sign-out-alt::before {
-  content: "\f2f5"; }
+    content: "\f2f5";
+}
 
 .fa-rotate::before {
-  content: "\f2f1"; }
+    content: "\f2f1";
+}
 
 .fa-sync-alt::before {
-  content: "\f2f1"; }
+    content: "\f2f1";
+}
 
 .fa-shuffle::before {
-  content: "\f074"; }
+    content: "\f074";
+}
 
 .fa-spinner::before {
-  content: "\f110"; }
+    content: "\f110";
+}
 
 .fa-square::before {
-  content: "\f0c8"; }
+    content: "\f0c8";
+}
 
 .fa-square-check::before {
-  content: "\f14a"; }
+    content: "\f14a";
+}
 
 .fa-star::before {
-  content: "\f005"; }
+    content: "\f005";
+}
 
 .fa-tag::before {
-  content: "\f02b"; }
+    content: "\f02b";
+}
 
 .fa-trash-alt::before {
-  content: "\f2ed"; }
+    content: "\f2ed";
+}
 
 .fa-unlock::before {
-  content: "\f09c"; }
+    content: "\f09c";
+}
 
 .fa-upload::before {
-  content: "\f093"; }
+    content: "\f093";
+}
 
 .fa-user::before {
-  content: "\f007"; }
+    content: "\f007";
+}
 
 .fa-users::before {
-  content: "\f0c0"; }
+    content: "\f0c0";
+}
 
 .fa-video::before {
-  content: "\f03d"; }
+    content: "\f03d";
+}
 
 .fa-volume-up::before {
-  content: "\f028"; }
+    content: "\f028";
+}
 
 .fa-volume-down::before {
-  content: "\f027"; }
+    content: "\f027";
+}
 
 .fa-volume-off::before {
-  content: "\f026"; }
+    content: "\f026";
+}
 
 .fa-volume-mute::before {
-  content: "\f6a9"; }
+    content: "\f6a9";
+}
 
 .fa-times::before {
-  content: "\f00d"; }
+    content: "\f00d";
+}
 
 @font-face {
-  font-family: 'Font Awesome 6 Brands';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url("./fa-brands-400.woff2") format("woff2"), url("./fa-brands-400.ttf") format("truetype"); }
+    font-family: "Font Awesome 6 Brands";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src:
+        url("./fa-brands-400.woff2") format("woff2"),
+        url("./fa-brands-400.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url("./fa-regular-400.woff2") format("woff2"), url("./fa-regular-400.ttf") format("truetype"); }
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src:
+        url("./fa-regular-400.woff2") format("woff2"),
+        url("./fa-regular-400.ttf") format("truetype");
+}
 
 .far,
 .fa-regular {
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 400; }
+    font-family: "Font Awesome 6 Free";
+    font-weight: 400;
+}
 
 @font-face {
-  font-family: 'Font Awesome 6 Free';
-  font-style: normal;
-  font-weight: 900;
-  font-display: block;
-  src: url("./fa-solid-900.woff2") format("woff2"), url("./fa-solid-900.ttf") format("truetype"); }
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+    src:
+        url("./fa-solid-900.woff2") format("woff2"),
+        url("./fa-solid-900.ttf") format("truetype");
+}
 
 .fas,
 .fa-solid {
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 900; }
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
 
 @font-face {
-  font-family: "Font Awesome 5 Brands";
-  font-display: block;
-  font-weight: 400;
-  src: url("./fa-brands-400.woff2") format("woff2"), url("./fa-brands-400.ttf") format("truetype"); }
+    font-family: "Font Awesome 5 Brands";
+    font-display: block;
+    font-weight: 400;
+    src:
+        url("./fa-brands-400.woff2") format("woff2"),
+        url("./fa-brands-400.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: "Font Awesome 5 Free";
-  font-display: block;
-  font-weight: 900;
-  src: url("./fa-solid-900.woff2") format("woff2"), url("./fa-solid-900.ttf") format("truetype"); }
+    font-family: "Font Awesome 5 Free";
+    font-display: block;
+    font-weight: 900;
+    src:
+        url("./fa-solid-900.woff2") format("woff2"),
+        url("./fa-solid-900.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: "Font Awesome 5 Free";
-  font-display: block;
-  font-weight: 400;
-  src: url("./fa-regular-400.woff2") format("woff2"), url("./fa-regular-400.ttf") format("truetype"); }
+    font-family: "Font Awesome 5 Free";
+    font-display: block;
+    font-weight: 400;
+    src:
+        url("./fa-regular-400.woff2") format("woff2"),
+        url("./fa-regular-400.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: "FontAwesome";
-  font-display: block;
-  src: url("./fa-solid-900.woff2") format("woff2"), url("./fa-solid-900.ttf") format("truetype"); }
+    font-family: "FontAwesome";
+    font-display: block;
+    src:
+        url("./fa-solid-900.woff2") format("woff2"),
+        url("./fa-solid-900.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: "FontAwesome";
-  font-display: block;
-  src: url("./fa-brands-400.woff2") format("woff2"), url("./fa-brands-400.ttf") format("truetype"); }
+    font-family: "FontAwesome";
+    font-display: block;
+    src:
+        url("./fa-brands-400.woff2") format("woff2"),
+        url("./fa-brands-400.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: "FontAwesome";
-  font-display: block;
-  src: url("./fa-regular-400.woff2") format("woff2"), url("./fa-regular-400.ttf") format("truetype");
-  unicode-range: U+F003,U+F006,U+F014,U+F016-F017,U+F01A-F01B,U+F01D,U+F022,U+F03E,U+F044,U+F046,U+F05C-F05D,U+F06E,U+F070,U+F087-F088,U+F08A,U+F094,U+F096-F097,U+F09D,U+F0A0,U+F0A2,U+F0A4-F0A7,U+F0C5,U+F0C7,U+F0E5-F0E6,U+F0EB,U+F0F6-F0F8,U+F10C,U+F114-F115,U+F118-F11A,U+F11C-F11D,U+F133,U+F147,U+F14E,U+F150-F152,U+F185-F186,U+F18E,U+F190-F192,U+F196,U+F1C1-F1C9,U+F1D9,U+F1DB,U+F1E3,U+F1EA,U+F1F7,U+F1F9,U+F20A,U+F247-F248,U+F24A,U+F24D,U+F255-F25B,U+F25D,U+F271-F274,U+F278,U+F27B,U+F28C,U+F28E,U+F29C,U+F2B5,U+F2B7,U+F2BA,U+F2BC,U+F2BE,U+F2C0-F2C1,U+F2C3,U+F2D0,U+F2D2,U+F2D4,U+F2DC; }
+    font-family: "FontAwesome";
+    font-display: block;
+    src:
+        url("./fa-regular-400.woff2") format("woff2"),
+        url("./fa-regular-400.ttf") format("truetype");
+    unicode-range: U+F003, U+F006, U+F014, U+F016-F017, U+F01A-F01B, U+F01D, U+F022, U+F03E, U+F044, U+F046, U+F05C-F05D, U+F06E, U+F070,
+        U+F087-F088, U+F08A, U+F094, U+F096-F097, U+F09D, U+F0A0, U+F0A2, U+F0A4-F0A7, U+F0C5, U+F0C7, U+F0E5-F0E6, U+F0EB, U+F0F6-F0F8,
+        U+F10C, U+F114-F115, U+F118-F11A, U+F11C-F11D, U+F133, U+F147, U+F14E, U+F150-F152, U+F185-F186, U+F18E, U+F190-F192, U+F196,
+        U+F1C1-F1C9, U+F1D9, U+F1DB, U+F1E3, U+F1EA, U+F1F7, U+F1F9, U+F20A, U+F247-F248, U+F24A, U+F24D, U+F255-F25B, U+F25D, U+F271-F274,
+        U+F278, U+F27B, U+F28C, U+F28E, U+F29C, U+F2B5, U+F2B7, U+F2BA, U+F2BC, U+F2BE, U+F2C0-F2C1, U+F2C3, U+F2D0, U+F2D2, U+F2D4, U+F2DC;
+}
 
 @font-face {
-  font-family: "FontAwesome";
-  font-display: block;
-  src: url("./fa-v4compatibility.woff2") format("woff2"), url("./fa-v4compatibility.ttf") format("truetype");
-  unicode-range: U+F041,U+F047,U+F065-F066,U+F07D-F07E,U+F080,U+F08B,U+F08E,U+F090,U+F09A,U+F0AC,U+F0AE,U+F0B2,U+F0D0,U+F0D6,U+F0E4,U+F0EC,U+F10A-F10B,U+F123,U+F13E,U+F148-F149,U+F14C,U+F156,U+F15E,U+F160-F161,U+F163,U+F175-F178,U+F195,U+F1F8,U+F219,U+F250,U+F252,U+F27A; }
+    font-family: "FontAwesome";
+    font-display: block;
+    src:
+        url("./fa-v4compatibility.woff2") format("woff2"),
+        url("./fa-v4compatibility.ttf") format("truetype");
+    unicode-range: U+F041, U+F047, U+F065-F066, U+F07D-F07E, U+F080, U+F08B, U+F08E, U+F090, U+F09A, U+F0AC, U+F0AE, U+F0B2, U+F0D0, U+F0D6,
+        U+F0E4, U+F0EC, U+F10A-F10B, U+F123, U+F13E, U+F148-F149, U+F14C, U+F156, U+F15E, U+F160-F161, U+F163, U+F175-F178, U+F195, U+F1F8,
+        U+F219, U+F250, U+F252, U+F27A;
+}

@@ -7,7 +7,7 @@
             <div></div>
         </div>
         <div v-if="issues" class="load-issues">
-            {{ $t("There are problems connecting to the server.") }} <br>
+            {{ $t("There are problems connecting to the server.") }} <br />
             {{ $t("Check your Internet connection or the server status.") }}
         </div>
     </div>

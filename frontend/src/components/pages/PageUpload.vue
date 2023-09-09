@@ -503,8 +503,6 @@ export default defineComponent({
                 })
             );
         },
-
-
     },
     mounted: function () {
         this._handles = Object.create(null);
@@ -542,6 +540,6 @@ export default defineComponent({
                 this.autoFocus();
             }
         },
-    }
+    },
 });
 </script>

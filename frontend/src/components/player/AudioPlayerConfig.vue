@@ -5,7 +5,7 @@
         :class="{ hidden: !shown }"
         role="dialog"
         :aria-hidden="!shown"
-        @click="stopPropagationEvent" 
+        @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"

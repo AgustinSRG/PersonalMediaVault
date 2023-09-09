@@ -414,7 +414,6 @@ export default defineComponent({
                 e.preventDefault();
                 this.addTag();
             } else if (e.key === "Tab") {
-                
                 this.findTags();
                 if (this.matchingTags.length > 0) {
                     if (this.matchingTags[0].name !== this.tagToAdd) {

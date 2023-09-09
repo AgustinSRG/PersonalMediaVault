@@ -20,12 +20,12 @@ if (!SUPPORT_LOCALES.includes(defaultLanguage)) {
 }
 
 const i18nData: {
-    locale: string,
-    messages: Map<string, string>,
+    locale: string;
+    messages: Map<string, string>;
 } = {
     locale: "",
     messages: new Map(),
-}
+};
 
 // Plugin
 export const i18n = {
@@ -33,9 +33,9 @@ export const i18n = {
         app.config.globalProperties.$locale = ref("");
         app.config.globalProperties.$updateLocale = (locale: string) => {
             app.config.globalProperties.$locale.value = locale;
-        }
+        };
 
-        app.config.globalProperties.$t = key => {
+        app.config.globalProperties.$t = (key) => {
             if (app.config.globalProperties.$locale.value !== i18nData.locale) {
                 return key;
             }
