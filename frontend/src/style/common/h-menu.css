@@ -17,18 +17,24 @@
     font-weight: bold;
     text-align: center;
 
-    width: 33.33%;
+    width: calc(33.33% - 0.5rem);
+    margin: 0.25rem;
+
+    border: solid 1px var(--theme-border-color);
+
+    border-radius: 0.25rem;
+
     min-width: fit-content;
 
     text-decoration: none;
 }
 
 .horizontal-filter-menu.four-child .horizontal-filter-menu-item {
-    width: 25%;
+    width: calc(25% - 0.5rem);
 }
 
 .horizontal-filter-menu.five-child .horizontal-filter-menu-item {
-    width: 20%;
+    width: calc(20% - 0.5rem);
 }
 
 .horizontal-filter-menu-item:hover {
@@ -38,6 +44,7 @@
 .horizontal-filter-menu-item.selected,
 .horizontal-filter-menu-item.selected:hover {
     background: var(--theme-option-selected-color);
+    border: solid 1px var(--theme-fg-color);
 }
 
 .horizontal-filter-menu-item:visited {
