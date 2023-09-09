@@ -92,7 +92,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { defineAsyncComponent, defineComponent } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
@@ -185,7 +185,18 @@ export default defineComponent({
 
         expandPage: function () {
             AppStatus.ExpandPage();
-            this.$el.focus();
+
+            nextTick(() => {
+                const page: any = document.querySelector(".page-content");
+                if (page) {
+                    const autoFocused = page.querySelector(".auto-focus");
+                    if (autoFocused) {
+                        autoFocused.focus();
+                    } else {
+                        page.focus();
+                    }
+                }
+            });
         },
 
         closePage: function () {
