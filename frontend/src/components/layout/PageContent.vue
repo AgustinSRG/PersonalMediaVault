@@ -185,7 +185,10 @@ export default defineComponent({
 
         expandPage: function () {
             AppStatus.ExpandPage();
+            this.focusPage();
+        },
 
+        focusPage: function () {
             nextTick(() => {
                 const page: any = document.querySelector(".page-content");
                 if (page) {
@@ -307,6 +310,7 @@ export default defineComponent({
 
         triggerRefresh: function () {
             AppEvents.Emit("random-page-refresh");
+            this.focusPage();
         },
 
         openConfig: function () {
