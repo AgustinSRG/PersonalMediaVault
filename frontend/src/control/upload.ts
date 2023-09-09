@@ -308,7 +308,7 @@ export class UploadController {
 
                     UploadController.UploadingCount--;
                 } else {
-                    m.progress = media.ready_p;
+                    m.progress = Math.max(m.progress, media.ready_p);
                     AppEvents.Emit("upload-list-update", index, m);
                 }
             })
