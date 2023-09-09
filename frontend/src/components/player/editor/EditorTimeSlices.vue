@@ -7,7 +7,7 @@
             <textarea
                 v-model="timeSlices"
                 :readonly="!canWrite"
-                class="form-control form-control-full-width form-textarea"
+                class="form-control form-control-full-width form-textarea auto-focus"
                 :placeholder="'00:00:00 A\n00:01:00 B'"
                 rows="5"
                 :disabled="busy"
@@ -28,7 +28,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { EditMediaAPI } from "@/api/api-media-edit";
 
@@ -50,6 +50,15 @@ export default defineComponent({
     },
 
     methods: {
+        autoFocus: function () {
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+                if (elem) {
+                    elem.focus();
+                }
+            });
+        },
+
         updateMediaData: function () {
             if (!MediaController.MediaData) {
                 return;
@@ -130,6 +139,8 @@ export default defineComponent({
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
         AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+
+        this.autoFocus();
     },
 
     beforeUnmount: function () {
