@@ -331,6 +331,7 @@
             :fullscreen="fullscreen"
             v-model:expanded="expandedTitle"
             v-model:albumExpanded="expandedAlbum"
+            @update:expanded="onTopBarExpand"
             :inAlbum="inAlbum"
             @click-player="clickControls"
         ></PlayerTopBar>
@@ -734,7 +735,7 @@ export default defineComponent({
             if (this.autoPlayApplied) {
                 return;
             }
-            if (!this.autoPlay) {
+            if (!this.autoPlay || this.expandedTitle) {
                 this.autoPlayApplied = true;
                 this.playing = false;
                 return;
@@ -1507,6 +1508,12 @@ export default defineComponent({
                 this.loop = this.loopForcedValue;
             } else {
                 this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
+            }
+        },
+
+        onTopBarExpand: function () {
+            if (this.expandedTitle) {
+                this.pause();
             }
         },
     },

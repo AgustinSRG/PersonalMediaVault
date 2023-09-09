@@ -944,7 +944,7 @@ export default defineComponent({
 
             this._handles.autoNextTimer = setTimeout(() => {
                 this._handles.autoNextTimer = null;
-                if (this.displayConfig) {
+                if (this.displayConfig || this.expandedTitle) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();
