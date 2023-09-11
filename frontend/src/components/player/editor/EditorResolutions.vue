@@ -204,7 +204,7 @@ export default defineComponent({
                 .map((r) => {
                     let enabled = false;
                     let fps = r.fps;
-                    for (let res of resolutions) {
+                    for (const res of resolutions) {
                         if (res.width === r.width && res.height === r.height && (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)) {
                             enabled = true;
                             fps = res.fps;

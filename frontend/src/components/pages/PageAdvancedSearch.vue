@@ -339,7 +339,7 @@ export default defineComponent({
                 );
             }
 
-            for (let e of results) {
+            for (const e of results) {
                 if (backlistAlbum.has(e.id)) {
                     continue;
                 }
@@ -366,7 +366,7 @@ export default defineComponent({
                 if (filterTagMode === "all") {
                     if (filterTags.length > 0) {
                         let passesTags = true;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (!e.tags || !e.tags.includes(tag)) {
                                 passesTags = false;
                                 break;
@@ -380,7 +380,7 @@ export default defineComponent({
                 } else if (filterTagMode === "none") {
                     if (filterTags.length > 0) {
                         let passesTags = true;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (e.tags && e.tags.includes(tag)) {
                                 passesTags = false;
                                 break;
@@ -394,7 +394,7 @@ export default defineComponent({
                 } else if (filterTagMode === "any") {
                     if (filterTags.length > 0) {
                         let passesTags = false;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (!e.tags || e.tags.includes(tag)) {
                                 passesTags = true;
                                 break;
@@ -762,12 +762,12 @@ export default defineComponent({
         },
 
         renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-            let parts = [item.title || this.$t("Untitled")];
+            const parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
-                let tagNames = [];
+                const tagNames = [];
 
-                for (let tag of item.tags) {
+                for (const tag of item.tags) {
                     if (tags[tag + ""]) {
                         tagNames.push(tags[tag + ""].name);
                     } else {

@@ -1,15 +1,6 @@
-const { defineConfig } = require("@vue/cli-service");
-module.exports = defineConfig({
+module.exports = {
     transpileDependencies: true,
     publicPath: "./",
-
-    pwa: {
-        name: "Personal Media Vault",
-        themeColor: "#FF0000",
-        manifestOptions: {
-            display: "minimal-ui",
-        },
-    },
 
     chainWebpack: (config) => {
         config.module.rule("images").set("parser", {
@@ -24,4 +15,4 @@ module.exports = defineConfig({
             },
         });
     },
-});
+};

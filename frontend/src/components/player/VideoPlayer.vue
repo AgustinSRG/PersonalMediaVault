@@ -596,7 +596,7 @@ export default defineComponent({
             if (this.duration <= 0 || !this.metadata || !this.metadata.video_previews || !this.metadata.video_previews_interval) {
                 return "";
             }
-            let thumbCount = Math.floor(this.duration / this.metadata.video_previews_interval);
+            const thumbCount = Math.floor(this.duration / this.metadata.video_previews_interval);
 
             if (thumbCount <= 0) {
                 return "";
@@ -1351,7 +1351,7 @@ export default defineComponent({
                 }
             } else {
                 if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
-                    let res = this.metadata.resolutions[this.currentResolution];
+                    const res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
                         this.videoURL = GetAssetURL(res.url);
                         this.videoPending = false;
@@ -1452,7 +1452,7 @@ export default defineComponent({
                 return;
             }
 
-            for (let audio of this.metadata.audios) {
+            for (const audio of this.metadata.audios) {
                 if (audio.id === this.audioTrack) {
                     this.audioTrackURL = GetAssetURL(audio.url);
                     return;

@@ -64,8 +64,8 @@ export default defineComponent({
             this.$emit("leave");
         },
         computeFullWidth: function (width: number, min: boolean, expanded: boolean) {
-            let margins = 40;
-            let barWidth = width;
+            const margins = 40;
+            const barWidth = width;
             let btnWidth = 40;
 
             if (min) {
@@ -75,11 +75,11 @@ export default defineComponent({
             return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
         },
         computeBarContainerWidth(width: number) {
-            let margins = 32;
+            const margins = 32;
             return width + margins + "px";
         },
         computeBarContainerInnerWidth(width: number) {
-            let margins = 16;
+            const margins = 16;
             return width + margins + "px";
         },
         clickOnVolumeButton() {

@@ -256,7 +256,7 @@ export default defineComponent({
                 return;
             }
 
-            let filter = normalizeString(this.filter + "")
+            const filter = normalizeString(this.filter + "")
                 .trim()
                 .toLowerCase();
 

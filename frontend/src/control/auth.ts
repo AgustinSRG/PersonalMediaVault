@@ -64,7 +64,7 @@ export class AuthController {
                 AuthController.Username = response.username;
                 AuthController.Title = response.title;
                 AuthController.CSS = response.css;
-                if (process.env.VUE_APP_VERSION !== response.version) {
+                if (import.meta.env.VITE__VERSION !== response.version) {
                     AppEvents.Emit("app-new-version");
                 }
                 AppEvents.Emit("auth-status-changed", AuthController.Locked, AuthController.Username);

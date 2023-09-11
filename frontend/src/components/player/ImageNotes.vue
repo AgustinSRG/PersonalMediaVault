@@ -276,13 +276,13 @@ export default defineComponent({
 
             const bounds = this.$el.getBoundingClientRect();
 
-            let realY = y - bounds.top;
-            let realX = x - bounds.left;
+            const realY = y - bounds.top;
+            const realX = x - bounds.left;
 
             const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
             const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
 
-            for (let note of this.notes) {
+            for (const note of this.notes) {
                 if (this.hoverPinned && this.selectedNote === note) {
                     continue;
                 }

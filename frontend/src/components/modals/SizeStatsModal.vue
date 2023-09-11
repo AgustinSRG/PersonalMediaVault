@@ -94,7 +94,7 @@ export default defineComponent({
 
                     total += result.meta_size;
 
-                    for (let asset of result.assets) {
+                    for (const asset of result.assets) {
                         total += asset.size;
                     }
 

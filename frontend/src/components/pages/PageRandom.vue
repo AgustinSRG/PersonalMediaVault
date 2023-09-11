@@ -389,12 +389,12 @@ export default defineComponent({
         },
 
         renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
-            let parts = [item.title || this.$t("Untitled")];
+            const parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
-                let tagNames = [];
+                const tagNames = [];
 
-                for (let tag of item.tags) {
+                for (const tag of item.tags) {
                     if (tags[tag + ""]) {
                         tagNames.push(tags[tag + ""].name);
                     } else {

@@ -8,7 +8,18 @@
             content="Web application to store and visualize media files (video, audio and pictures), meant to be run on a personal server or computer."
         />
         <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-        <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
+        <link rel="icon" href="/favicon.ico" />
+
+        <meta name="theme-color" content="#FF0000">
+        
+        <meta name="apple-mobile-web-app-capable" content="no">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="Personal Media Vault">
+        <link rel="apple-touch-icon" href="img/icons/apple-touch-icon-152x152.png">
+        <link rel="mask-icon" href="img/icons/safari-pinned-tab.svg" color="#FF0000">
+        <meta name="msapplication-TileImage" content="img/icons/msapplication-icon-144x144.png">
+        <meta name="msapplication-TileColor" content="#000000">
+
         <title>Personal Media Vault</title>
     </head>
     <body>
@@ -19,6 +30,6 @@
             >
         </noscript>
         <div id="app"></div>
-        <!-- built files will be auto injected -->
+        <script type="module" src="/src/main.ts"></script>
     </body>
 </html>

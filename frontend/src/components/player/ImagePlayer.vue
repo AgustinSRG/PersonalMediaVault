@@ -508,8 +508,8 @@ export default defineComponent({
             }
 
             if (this.fit) {
-                let top = Math.max(0, (scrollerDimensions.height - fitDimensions.height) / 2);
-                let left = Math.max(0, (scrollerDimensions.width - fitDimensions.width) / 2);
+                const top = Math.max(0, (scrollerDimensions.height - fitDimensions.height) / 2);
+                const left = Math.max(0, (scrollerDimensions.width - fitDimensions.width) / 2);
 
                 this.imageTop = Math.floor(top) + "px";
                 this.imageLeft = Math.floor(left) + "px";
@@ -527,8 +527,8 @@ export default defineComponent({
                     width = (height * this.width) / this.height;
                 }
 
-                let top = Math.max(0, (scrollerDimensions.height - height) / 2);
-                let left = Math.max(0, (scrollerDimensions.width - width) / 2);
+                const top = Math.max(0, (scrollerDimensions.height - height) / 2);
+                const left = Math.max(0, (scrollerDimensions.width - width) / 2);
 
                 this.imageTop = Math.floor(top) + "px";
                 this.imageLeft = Math.floor(left) + "px";
@@ -898,7 +898,7 @@ export default defineComponent({
                 }
             } else {
                 if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
-                    let res = this.metadata.resolutions[this.currentResolution];
+                    const res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
                         this.imageURL = GetAssetURL(res.url);
                         this.imagePending = false;

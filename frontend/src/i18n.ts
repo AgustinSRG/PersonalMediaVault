@@ -12,8 +12,8 @@ declare module "vue" {
 
 export const SUPPORT_LOCALES = ["en", "es"];
 
-let defaultLanguage = LocalStorage.Get("app-pref-lang", process.env.VUE_APP_I18N_LOCALE || "en");
-const fallbackLocale = process.env.VUE_APP_I18N_FALLBACK_LOCALE || "en";
+let defaultLanguage = LocalStorage.Get("app-pref-lang", import.meta.env.VITE__I18N_LOCALE || "en");
+const fallbackLocale = import.meta.env.VITE__I18N_FALLBACK_LOCALE || "en";
 
 if (!SUPPORT_LOCALES.includes(defaultLanguage)) {
     defaultLanguage = fallbackLocale;

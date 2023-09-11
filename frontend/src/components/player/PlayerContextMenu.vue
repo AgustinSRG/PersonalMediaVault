@@ -268,12 +268,12 @@ export default defineComponent({
             const x = this.x;
             const y = this.y;
 
-            let top = y;
-            let left = x;
+            const top = y;
+            const left = x;
 
-            let maxWidth = pageWidth - left;
+            const maxWidth = pageWidth - left;
 
-            let maxHeight = pageHeight - top;
+            const maxHeight = pageHeight - top;
 
             this.top = top + "px";
             this.left = left + "px";

@@ -30,7 +30,7 @@ BusyStateController.Initialize();
 import { createApp } from "vue";
 
 import { i18n } from "./i18n";
-import "./registerServiceWorker";
+
 import App from "./App.vue";
 import ModalDialogContainer from "@/components/utils/ModalDialogContainer.vue";
 
@@ -44,4 +44,14 @@ document.addEventListener("dragover", function (e) {
     e.stopPropagation();
 });
 
+// Create app
+
 createApp(App).use(i18n).component("ModalDialogContainer", ModalDialogContainer).mount("#app");
+
+// Register service worker
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    });
+}

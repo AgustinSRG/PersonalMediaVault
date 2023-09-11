@@ -44,8 +44,8 @@ function main() {
 
     updateFile(Path.resolve(__dirname, "frontend", ".env"), contents => {
         return contents
-            .replace(/VUE\_APP\_VERSION=[0-9]+\.[0-9]+\.[0-9]+/, `VUE_APP_VERSION=${VERSION}`)
-            .replace(/VUE\_APP\_VERSION\_DATE=[0-9]+\-[0-9]+\-[0-9]+/, `VUE_APP_VERSION_DATE=${DATE}`);
+            .replace(/VITE\_\_VERSION=[0-9]+\.[0-9]+\.[0-9]+/, `VITE__VERSION=${VERSION}`)
+            .replace(/VITE\_\_VERSION\_DATE=[0-9]+\-[0-9]+\-[0-9]+/, `VITE__VERSION_DATE=${DATE}`);
     });
 
     updateFile(Path.resolve(__dirname, "frontend", "package.json"), contents => {

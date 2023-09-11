@@ -243,8 +243,8 @@ export default defineComponent({
         inputFileChanged: function (e) {
             const data = e.target.files;
             if (data && data.length > 0) {
-                let files = [];
-                for (let file of data) {
+                const files = [];
+                for (const file of data) {
                     files.push(file);
                 }
                 this.addFiles(files);
@@ -256,8 +256,8 @@ export default defineComponent({
             this.dragging = false;
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
-                let files = [];
-                for (let file of data) {
+                const files = [];
+                for (const file of data) {
                     files.push(file);
                 }
                 this.addFiles(files);
@@ -301,7 +301,7 @@ export default defineComponent({
         },
 
         onUploadConfirmed: function (album: number, tags: string[]) {
-            for (let file of this.files) {
+            for (const file of this.files) {
                 UploadController.AddFile(file, album, tags.slice());
             }
             this.files = [];
@@ -434,7 +434,7 @@ export default defineComponent({
         },
 
         onPendingUpdate: function (i: number, m: UploadEntryMin) {
-            let mustUpdate = this.pendingToUpload[i].status !== m.status;
+            const mustUpdate = this.pendingToUpload[i].status !== m.status;
             this.pendingToUpload[i].status = m.status;
             this.pendingToUpload[i].error = m.error;
             this.pendingToUpload[i].progress = m.progress;
@@ -473,7 +473,7 @@ export default defineComponent({
             let countPending = 0;
             let countReady = 0;
             let countError = 0;
-            for (let l of list) {
+            for (const l of list) {
                 if (l.status !== "ready" && l.status !== "error") {
                     count++;
                 }

@@ -10,16 +10,16 @@ interface StatusCodeError {
 }
 
 export function GetApiURL(path: string): string {
-    if (process.env.NODE_ENV === "development") {
-        return (process.env.DEV_TEST_HOST || "http://localhost") + path;
+    if (import.meta.env.DEV) {
+        return (import.meta.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
         return location.protocol + "//" + location.host + path;
     }
 }
 
 export function GetAssetURL(path: string): string {
-    if (process.env.NODE_ENV === "development") {
-        return (process.env.DEV_TEST_HOST || "http://localhost") + path;
+    if (import.meta.env.DEV) {
+        return (import.meta.env.DEV_TEST_HOST || "http://localhost") + path;
     } else {
         return location.protocol + "//" + location.host + path;
     }

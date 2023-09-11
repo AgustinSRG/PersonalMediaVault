@@ -233,7 +233,7 @@ export default defineComponent({
                     (this.metadata.encoded ? "" : "(" + this.$t("Pending") + ")")
                 );
             } else {
-                let resData = this.metadata.resolutions[res];
+                const resData = this.metadata.resolutions[res];
 
                 let width = this.metadata.width;
                 let height = this.metadata.height;

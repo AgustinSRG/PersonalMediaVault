@@ -149,7 +149,7 @@ export default defineComponent({
             const name = this.srtName;
 
             let duped = false;
-            for (let sub of this.subtitles) {
+            for (const sub of this.subtitles) {
                 if (sub.id === id) {
                     duped = true;
                     break;

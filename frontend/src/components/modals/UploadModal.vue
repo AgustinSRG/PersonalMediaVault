@@ -141,7 +141,7 @@ export default defineComponent({
         computeTotalSize: function (files) {
             let size = 0;
 
-            for (let file of files) {
+            for (const file of files) {
                 size += file.size || 0;
             }
 

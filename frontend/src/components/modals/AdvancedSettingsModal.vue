@@ -332,7 +332,7 @@ export default defineComponent({
         updateResolutions: function (resolutions, imageResolutions) {
             this.resolutions = this.standardResolutions.map((r) => {
                 let enabled = false;
-                for (let res of resolutions) {
+                for (const res of resolutions) {
                     if (res.width === r.width && res.height === r.height && res.fps === r.fps) {
                         enabled = true;
                         break;
@@ -353,7 +353,7 @@ export default defineComponent({
                 })
                 .map((r) => {
                     let enabled = false;
-                    for (let res of imageResolutions) {
+                    for (const res of imageResolutions) {
                         if (res.width === r.width && res.height === r.height) {
                             enabled = true;
                             break;

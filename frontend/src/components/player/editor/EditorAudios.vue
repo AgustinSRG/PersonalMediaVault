@@ -148,7 +148,7 @@ export default defineComponent({
             const name = this.audioName;
 
             let duped = false;
-            for (let aud of this.audios) {
+            for (const aud of this.audios) {
                 if (aud.id === id) {
                     duped = true;
                     break;

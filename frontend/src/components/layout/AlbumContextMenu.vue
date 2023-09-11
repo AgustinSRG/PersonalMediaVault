@@ -113,12 +113,12 @@ export default defineComponent({
             const y = this.y;
 
             if (y > pageHeight / 2) {
-                let bottom = pageHeight - y;
-                let right = pageWidth - x;
+                const bottom = pageHeight - y;
+                const right = pageWidth - x;
 
-                let maxWidth = pageWidth - right;
+                const maxWidth = pageWidth - right;
 
-                let maxHeight = pageHeight - bottom;
+                const maxHeight = pageHeight - bottom;
 
                 this.top = "auto";
                 this.left = "auto";
@@ -128,12 +128,12 @@ export default defineComponent({
                 this.maxWidth = maxWidth + "px";
                 this.maxHeight = maxHeight + "px";
             } else {
-                let top = y;
-                let right = pageWidth - x;
+                const top = y;
+                const right = pageWidth - x;
 
-                let maxWidth = pageWidth - right;
+                const maxWidth = pageWidth - right;
 
-                let maxHeight = pageHeight - top;
+                const maxHeight = pageHeight - top;
 
                 this.top = top + "px";
                 this.left = "auto";

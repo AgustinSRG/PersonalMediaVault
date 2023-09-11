@@ -1264,7 +1264,7 @@ export default defineComponent({
             const WIDTH = canvas.width;
             const HEIGHT = canvas.height;
 
-            let barWidth = (WIDTH / bufferLength) * 2.5;
+            const barWidth = (WIDTH / bufferLength) * 2.5;
             let barHeight;
             let x = 0;
 
@@ -1286,14 +1286,14 @@ export default defineComponent({
                     case "gradient":
                         {
                             if (this.theme === "light") {
-                                let r = Math.min(255, barHeight + 80 * (i / bufferLength));
-                                let g = 250 * (i / bufferLength);
-                                let b = 180;
+                                const r = Math.min(255, barHeight + 80 * (i / bufferLength));
+                                const g = 250 * (i / bufferLength);
+                                const b = 180;
                                 ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
                             } else {
-                                let r = Math.min(255, barHeight + 25 * (i / bufferLength));
-                                let g = 250 * (i / bufferLength);
-                                let b = 50;
+                                const r = Math.min(255, barHeight + 25 * (i / bufferLength));
+                                const g = 250 * (i / bufferLength);
+                                const b = 50;
                                 ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
                             }
                         }
@@ -1302,7 +1302,7 @@ export default defineComponent({
                         ctx.fillStyle = this.theme === "light" ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.5)";
                 }
 
-                let trueHeight = Math.floor(HEIGHT * (barHeight / 255));
+                const trueHeight = Math.floor(HEIGHT * (barHeight / 255));
 
                 ctx.fillRect(x, HEIGHT - trueHeight, barWidth, trueHeight);
 

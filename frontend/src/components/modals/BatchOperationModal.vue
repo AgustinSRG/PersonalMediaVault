@@ -647,7 +647,7 @@ export default defineComponent({
             const filterTags = this.tagsSearch.slice();
             const filterTagMode = this.tagModeSearch;
 
-            for (let e of results) {
+            for (const e of results) {
                 if (filterText) {
                     if (
                         matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
@@ -666,7 +666,7 @@ export default defineComponent({
                 if (filterTagMode === "all") {
                     if (filterTags.length > 0) {
                         let passesTags = true;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (!e.tags || !e.tags.includes(tag)) {
                                 passesTags = false;
                                 break;
@@ -680,7 +680,7 @@ export default defineComponent({
                 } else if (filterTagMode === "none") {
                     if (filterTags.length > 0) {
                         let passesTags = true;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (e.tags && e.tags.includes(tag)) {
                                 passesTags = false;
                                 break;
@@ -694,7 +694,7 @@ export default defineComponent({
                 } else if (filterTagMode === "any") {
                     if (filterTags.length > 0) {
                         let passesTags = false;
-                        for (let tag of filterTags) {
+                        for (const tag of filterTags) {
                             if (!e.tags || e.tags.includes(tag)) {
                                 passesTags = true;
                                 break;

@@ -64,11 +64,11 @@ export default defineComponent({
     },
     data: function () {
         return {
-            version: process.env.VUE_APP_VERSION || "-",
-            versionDate: process.env.VUE_APP_VERSION_DATE || "-",
-            homePage: process.env.VUE_APP_HOME_URL || "#",
-            gitRepo: process.env.VUE_APP_GIT_URL || "#",
-            license: process.env.VUE_APP_LICENSE_URL || "#",
+            version: import.meta.env.VITE__VERSION || "-",
+            versionDate: import.meta.env.VITE__VERSION_DATE || "-",
+            homePage: import.meta.env.VITE__HOME_URL || "#",
+            gitRepo: import.meta.env.VITE__GIT_URL || "#",
+            license: import.meta.env.VITE__LICENSE_URL || "#",
         };
     },
     methods: {

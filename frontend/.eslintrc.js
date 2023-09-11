@@ -2,6 +2,7 @@ module.exports = {
     root: true,
     env: {
         node: true,
+        es2022: true,
     },
     extends: ["plugin:vue/vue3-essential", "eslint:recommended", "@vue/typescript/recommended"],
     parserOptions: {
@@ -9,7 +10,7 @@ module.exports = {
     },
     rules: {
         "no-console": "off",
-        "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
+        "no-debugger": "warn",
         "no-useless-escape": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-empty-function": "off",

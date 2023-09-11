@@ -408,7 +408,7 @@ export default defineComponent({
                 return this.$t("No subtitles");
             }
 
-            for (let sub of this.metadata.subtitles) {
+            for (const sub of this.metadata.subtitles) {
                 if (sub.id === subId) {
                     return sub.name;
                 }
