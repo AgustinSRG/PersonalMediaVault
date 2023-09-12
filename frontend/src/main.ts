@@ -50,7 +50,7 @@ createApp(App).use(i18n).component("ModalDialogContainer", ModalDialogContainer)
 
 // Register service worker
 
-if ("serviceWorker" in navigator) {
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js", { scope: "/" });
     });
