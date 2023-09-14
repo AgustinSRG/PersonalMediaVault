@@ -25,11 +25,11 @@
             </div>
             <div class="modal-body no-padding">
                 <div class="modal-top-menu items-2">
-                    <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"
-                        ><i class="fas fa-search"></i> {{ $t("Search") }}</a
-                    >
                     <a href="javascript:;" @click="changeToUpload" class="modal-top-menu-item" :class="{ selected: isUpload }"
                         ><i class="fas fa-upload"></i> {{ $t("Upload") }}</a
+                    >
+                    <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"
+                        ><i class="fas fa-search"></i> {{ $t("Search") }}</a
                     >
                 </div>
                 <PageAdvancedSearch
@@ -77,7 +77,7 @@ export default defineComponent({
         return {
             busy: false,
 
-            isUpload: false,
+            isUpload: true,
 
             pageItemsFit: AppPreferences.PageItemsFit,
             pageItemsSize: AppPreferences.PageItemsSize,
