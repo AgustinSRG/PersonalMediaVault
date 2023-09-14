@@ -6,6 +6,7 @@
             'with-album': inAlbum,
             'album-expand': albumExpanded,
             expanded: expanded && !albumExpanded,
+            expanding: expanding,
             contracting: clickedContract,
         }"
         tabindex="-1"
@@ -15,6 +16,7 @@
         @touchstart="stopPropagationEvent"
         @contextmenu="stopPropagationEvent"
         @keydown="onKeyDown"
+        @animationstart="onAnimationStart"
         @animationend="onAnimationEnd"
     >
         <div v-if="!albumExpanded" class="player-title-container">
@@ -81,6 +83,7 @@ export default defineComponent({
     data: function () {
         return {
             dirty: false,
+            expanding: false,
 
             clickedContract: false,
         };
@@ -146,8 +149,15 @@ export default defineComponent({
             return false;
         },
 
+        onAnimationStart: function (event: AnimationEvent) {
+            if (event.animationName == "player-top-bar-expand" && this.expanded) {
+                this.expanding = true;
+            }
+        },
+
         onAnimationEnd: function (event: AnimationEvent) {
             if (event.animationName == "player-top-bar-expand" && this.expanded) {
+                this.expanding = false;
                 const autoFocus = this.$el.querySelector(".auto-focus");
                 if (autoFocus) {
                     autoFocus.focus();

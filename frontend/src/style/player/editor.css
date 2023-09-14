@@ -17,12 +17,17 @@
     width: 100%;
     height: calc(100% - 57px);
     overflow-y: scroll;
+    scrollbar-gutter: stable;
     background: var(--player-editor-background);
     color: var(--theme-fg-color);
     padding-left: 1rem;
     padding-bottom: 1rem;
     animation-name: player-media-editor-anim;
     animation-duration: 0.1s;
+}
+
+.player-top-bar.expanding .player-media-editor {
+    overflow-y: hidden;
 }
 
 .player-media-editor:focus {
