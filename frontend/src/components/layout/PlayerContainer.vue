@@ -66,7 +66,7 @@
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList || displayUpload)"
             @delete="openDelete"
         ></VideoPlayer>
         <AudioPlayer
@@ -92,7 +92,7 @@
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList)"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList || displayUpload)"
             @delete="openDelete"
         ></AudioPlayer>
 
@@ -188,6 +188,9 @@ export default defineComponent({
         TagListModal,
         ExtendedDescriptionModal,
         MediaDeleteModal,
+    },
+    props: {
+        displayUpload: Boolean,
     },
     data: function () {
         return {

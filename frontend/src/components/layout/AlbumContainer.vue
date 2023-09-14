@@ -138,10 +138,11 @@ const AlbumAddMediaModal = defineAsyncComponent({
 });
 
 import Sortable from "sortablejs";
+import { useVModel } from "@/utils/v-model";
 
 export default defineComponent({
     name: "AlbumContainer",
-    emits: [],
+    emits: ["update:displayUpload"],
     components: {
         AlbumContextMenu,
         LoadingOverlay,
@@ -149,6 +150,14 @@ export default defineComponent({
         AlbumDeleteModal,
         AlbumMovePosModal,
         AlbumAddMediaModal,
+    },
+    props: {
+        displayUpload: Boolean,
+    },
+    setup(props) {
+        return {
+            displayAlbumAddMedia: useVModel(props, "displayUpload"),
+        };
     },
     data: function () {
         return {
@@ -178,7 +187,6 @@ export default defineComponent({
             displayAlbumRename: false,
             displayAlbumDelete: false,
             displayAlbumMovePos: false,
-            displayAlbumAddMedia: false,
         };
     },
     methods: {
@@ -491,6 +499,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        if (this.displayAlbumAddMedia) {
+            this.displayAlbumAddMedia = false;
+        }
         this._handles = Object.create(null);
         this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
         AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
