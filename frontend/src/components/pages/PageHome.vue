@@ -190,12 +190,7 @@ export default defineComponent({
                         this.load();
                         return;
                     }
-                    nextTick(() => {
-                        const currentElem = this.$el.querySelector(".search-result-item.current");
-                        if (currentElem) {
-                            currentElem.scrollIntoView();
-                        }
-                    });
+                    this.scrollToCurrentMedia()
                     this.onCurrentMediaChanged();
                 })
                 .onRequestError((err) => {
@@ -226,19 +221,26 @@ export default defineComponent({
         },
 
         onAppStatusChanged: function () {
+            const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
             if (AppStatus.SearchParams !== this.searchParams) {
                 this.searchParams = AppStatus.SearchParams;
                 this.updateSearchParams();
                 this.load();
             }
+            if (changed) {
+                this.scrollToCurrentMedia();
+            }
+            this.onCurrentMediaChanged();
+        },
+
+        scrollToCurrentMedia: function () {
             nextTick(() => {
                 const currentElem = this.$el.querySelector(".search-result-item.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
             });
-            this.onCurrentMediaChanged();
         },
 
         onCurrentMediaChanged: function () {

@@ -192,12 +192,7 @@ export default defineComponent({
                             this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
                         }
                     }
-                    nextTick(() => {
-                        const currentElem = this.$el.querySelector(".search-result-item.current");
-                        if (currentElem) {
-                            currentElem.scrollIntoView();
-                        }
-                    });
+                    this.scrollToCurrentMedia();
                     this.onCurrentMediaChanged();
                 })
                 .onRequestError((err) => {
@@ -227,6 +222,7 @@ export default defineComponent({
         },
 
         onAppStatusChanged: function () {
+            const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
             if (AppStatus.CurrentSearch !== this.search) {
                 this.search = AppStatus.CurrentSearch;
@@ -239,13 +235,19 @@ export default defineComponent({
                 this.load();
             }
 
+            if (changed) {
+                this.scrollToCurrentMedia();
+            }
+            this.onCurrentMediaChanged();
+        },
+
+        scrollToCurrentMedia: function () {
             nextTick(() => {
                 const currentElem = this.$el.querySelector(".search-result-item.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
             });
-            this.onCurrentMediaChanged();
         },
 
         onSearchParamsChanged: function () {

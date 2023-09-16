@@ -252,14 +252,18 @@ export default defineComponent({
 
         autoScroll: function () {
             if (!this.inModal) {
-                nextTick(() => {
-                    const currentElem = this.$el.querySelector(".search-result-item.current");
-                    if (currentElem) {
-                        currentElem.scrollIntoView();
-                    }
-                });
+                this.scrollToCurrentMedia();
                 this.onCurrentMediaChanged();
             }
+        },
+
+        scrollToCurrentMedia: function () {
+            nextTick(() => {
+                const currentElem = this.$el.querySelector(".search-result-item.current");
+                if (currentElem) {
+                    currentElem.scrollIntoView();
+                }
+            });
         },
 
         load: function () {
@@ -679,14 +683,12 @@ export default defineComponent({
         },
 
         onAppStatusChanged: function () {
+            const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
             if (!this.inModal) {
-                nextTick(() => {
-                    const currentElem = this.$el.querySelector(".search-result-item.current");
-                    if (currentElem) {
-                        currentElem.scrollIntoView();
-                    }
-                });
+                if (changed) {
+                    this.scrollToCurrentMedia();
+                }
                 this.onCurrentMediaChanged();
             }
         },
