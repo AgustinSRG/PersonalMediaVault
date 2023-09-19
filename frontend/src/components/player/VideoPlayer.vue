@@ -565,6 +565,7 @@ export default defineComponent({
         },
 
         clickPlayer: function () {
+            this.leaveControls();
             if (this.displayConfig || this.contextMenuShown) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
