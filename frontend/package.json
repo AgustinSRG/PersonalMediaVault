@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "serve": "vite",
+        "dev": "vite",
         "build": "vite build",
         "lint": "eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
         "prettier": "prettier --write .",
