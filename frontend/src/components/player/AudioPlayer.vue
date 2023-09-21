@@ -21,7 +21,7 @@
             playsinline
             webkit-playsinline
             x-webkit-airplay="allow"
-            :loop="loop && !sliceLoop"
+            :loop="(loop || isShort) && !sliceLoop"
             crossorigin="use-credentials"
             :muted="muted"
             :volume.prop="volume"
@@ -300,6 +300,8 @@
             @update:nextEnd="onUpdateNextEnd"
             @enter="enterControls"
             @leave="leaveControls"
+            :isShort="isShort"
+            @update-auto-next="setupAutoNextTimer"
         ></AudioPlayerConfig>
 
         <PlayerTopBar
@@ -328,6 +330,7 @@
             @stats="openStats"
             v-model:sliceLoop="sliceLoop"
             :hasSlices="timeSlices && timeSlices.length > 0"
+            :isShort="isShort"
             @open-tags="openTags"
             @open-ext-desc="openExtendedDescription"
         ></PlayerContextMenu>
@@ -360,6 +363,7 @@ import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
 import { AppPreferences } from "@/control/app-preferences";
+import { AUTO_LOOP_MIN_DURATION } from "@/utils/constants";
 
 export default defineComponent({
     components: {
@@ -446,6 +450,8 @@ export default defineComponent({
 
             loop: false,
             nextEnd: false,
+
+            isShort: false,
 
             sliceLoop: false,
 
@@ -653,7 +659,7 @@ export default defineComponent({
             if (this.canSaveTime) {
                 PlayerPreferences.SetInitialTime(this.mid, 0);
             }
-            if (!this.loop) {
+            if (!this.loop && !this.isShort) {
                 this.pause();
                 this.ended = true;
                 if (this.nextEnd) {
@@ -1072,7 +1078,7 @@ export default defineComponent({
                     break;
                 case "l":
                 case "L":
-                    if (event.altKey || shifting) {
+                    if (event.altKey || shifting || this.isShort) {
                         caught = false;
                     } else {
                         this.loop = !this.loop;
@@ -1114,6 +1120,7 @@ export default defineComponent({
             if (!this.metadata) {
                 return;
             }
+            this.isShort = this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
             this.canSaveTime = !this.metadata.force_start_beginning;
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.timeSlices = normalizeTimeSlices(
@@ -1167,6 +1174,7 @@ export default defineComponent({
                 this.audioPending = false;
                 this.audioPendingTask = 0;
                 this.getAudioElement().load();
+                this.setupAutoNextTimer();
             } else {
                 this.audioURL = "";
                 this.onClearURL();
@@ -1427,7 +1435,7 @@ export default defineComponent({
             if (this.loopForced) {
                 this.loop = this.loopForcedValue;
             } else {
-                this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
+                this.loop = (!this.next && !this.pageNext) || !this.nextEnd;
             }
         },
 
@@ -1435,6 +1443,33 @@ export default defineComponent({
             if (this.expandedTitle) {
                 this.pause();
             }
+        },
+
+        setupAutoNextTimer: function () {
+            if (this._handles.autoNextTimer) {
+                clearTimeout(this._handles.autoNextTimer);
+                this._handles.autoNextTimer = null;
+            }
+            const timerS = PlayerPreferences.ImageAutoNext;
+
+            if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
+                return;
+            }
+
+            if (!this.next && !this.pageNext) {
+                return;
+            }
+
+            const ms = timerS * 1000;
+
+            this._handles.autoNextTimer = setTimeout(() => {
+                this._handles.autoNextTimer = null;
+                if (this.displayConfig || this.expandedTitle) {
+                    this.setupAutoNextTimer();
+                } else {
+                    this.goNext();
+                }
+            }, ms);
         },
     },
     mounted: function () {
@@ -1479,6 +1514,11 @@ export default defineComponent({
         this.onClearURL();
         clearInterval(this._handles.timer);
 
+        if (this._handles.autoNextTimer) {
+            clearTimeout(this._handles.autoNextTimer);
+            this._handles.autoNextTimer = null;
+        }
+
         this.clearAudioRenderer();
         this.closeAudioContext();
 
@@ -1515,8 +1555,13 @@ export default defineComponent({
                 this.loading = true;
             }
         },
-        inAlbum: function () {
+        next: function () {
             this.setDefaultLoop();
+            this.setupAutoNextTimer();
+        },
+        pageNext: function () {
+            this.setDefaultLoop();
+            this.setupAutoNextTimer();
         },
     },
 });

@@ -14,7 +14,7 @@
         @keydown="keyDownHandle"
     >
         <table v-if="page === ''">
-            <tr>
+            <tr v-if="!isShort">
                 <td>
                     <i class="fas fa-repeat icon-config"></i>
                     <b>{{ $t("Loop") }}</b>
@@ -23,13 +23,23 @@
                     <ToggleSwitch v-model:val="loopState"></ToggleSwitch>
                 </td>
             </tr>
-            <tr>
+            <tr v-if="!isShort">
                 <td>
                     <i class="fas fa-forward icon-config"></i>
                     <b>{{ $t("Auto next") }}</b>
                 </td>
                 <td class="td-right">
                     <ToggleSwitch v-model:val="nextEndState"></ToggleSwitch>
+                </td>
+            </tr>
+            <tr v-if="isShort" class="tr-button" tabindex="0" @click="goToAutoNext" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-forward icon-config"></i>
+                    <b>{{ $t("Auto next") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderAutoNext(autoNext) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
             <tr class="tr-button" tabindex="0" @click="goToSpeeds" @keydown="clickOnEnter">
@@ -217,6 +227,23 @@
                 <td class="td-right"></td>
             </tr>
         </table>
+
+        <table v-if="page === 'auto-next'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Auto next") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr v-for="b in autoNextOptions" :key="b" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeAutoNext(b)">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': b !== autoNext }"></i>
+                    {{ renderAutoNext(b) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
     </div>
 </template>
 
@@ -254,6 +281,7 @@ export default defineComponent({
         subBackground: String,
         subHTML: Boolean,
         rTick: Number,
+        isShort: Boolean,
     },
     setup(props) {
         return {
@@ -277,6 +305,9 @@ export default defineComponent({
 
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+
+            autoNext: PlayerPreferences.ImageAutoNext,
+            autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
         };
     },
     methods: {
@@ -330,6 +361,17 @@ export default defineComponent({
         goToSubBackgrounds: function () {
             this.page = "subBackground";
             this.focus();
+        },
+
+        goToAutoNext: function () {
+            this.page = "auto-next";
+            this.focus();
+        },
+
+        changeAutoNext: function (b) {
+            this.autoNext = b;
+            PlayerPreferences.SetImageAutoNext(b);
+            this.$emit("update-auto-next");
         },
 
         renderSpeed: function (speed: number) {
@@ -395,6 +437,18 @@ export default defineComponent({
                     return this.$t("Translucid") + " (25%)";
                 default:
                     return this.$t("Opaque");
+            }
+        },
+
+        renderAutoNext: function (s: number) {
+            if (!isNaN(s) && isFinite(s) && s > 0) {
+                if (s === 1) {
+                    return s + " " + this.$t("second");
+                } else {
+                    return s + " " + this.$t("seconds");
+                }
+            } else {
+                return this.$t("Disabled");
             }
         },
 

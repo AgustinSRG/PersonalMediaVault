@@ -25,7 +25,7 @@
             webkit-playsinline
             x-webkit-airplay="allow"
             :muted="muted || !!audioTrackURL"
-            :loop="loop && !sliceLoop"
+            :loop="(loop || isShort) && !sliceLoop"
             :volume.prop="volume"
             :playbackRate.prop="speed"
             @ended="onEnded"
@@ -321,6 +321,8 @@
             @leave="leaveControls"
             v-model:audioTrack="audioTrack"
             @update:audioTrack="onUpdateAudioTrack"
+            :isShort="isShort"
+            @update-auto-next="setupAutoNextTimer"
         ></VideoPlayerConfig>
 
         <PlayerTopBar
@@ -349,6 +351,7 @@
             @stats="openStats"
             v-model:sliceLoop="sliceLoop"
             :hasSlices="timeSlices && timeSlices.length > 0"
+            :isShort="isShort"
             v-model:controls="userControlsState"
             @open-tags="openTags"
             @open-ext-desc="openExtendedDescription"
@@ -381,6 +384,7 @@ import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtit
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
+import { AUTO_LOOP_MIN_DURATION } from "@/utils/constants";
 
 export default defineComponent({
     components: {
@@ -473,6 +477,8 @@ export default defineComponent({
             loop: false,
             nextEnd: false,
             sliceLoop: false,
+
+            isShort: false,
 
             currentResolution: -1,
 
@@ -805,7 +811,7 @@ export default defineComponent({
             if (this.canSaveTime) {
                 PlayerPreferences.SetInitialTime(this.mid, 0);
             }
-            if (!this.loop) {
+            if (!this.loop && !this.isShort) {
                 this.pause();
                 this.ended = true;
                 if (this.nextEnd) {
@@ -1244,7 +1250,7 @@ export default defineComponent({
                     break;
                 case "l":
                 case "L":
-                    if (event.altKey || shifting) {
+                    if (event.altKey || shifting || this.isShort) {
                         caught = false;
                     } else {
                         this.loop = !this.loop;
@@ -1290,6 +1296,7 @@ export default defineComponent({
             if (!this.metadata) {
                 return;
             }
+            this.isShort = this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
             this.canSaveTime = !this.metadata.force_start_beginning;
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.timeSlices = normalizeTimeSlices(
@@ -1342,6 +1349,7 @@ export default defineComponent({
                     this.videoURL = GetAssetURL(this.metadata.url);
                     this.videoPending = false;
                     this.videoPendingTask = 0;
+                    this.setupAutoNextTimer();
                 } else {
                     this.videoURL = "";
                     this.onClearURL();
@@ -1357,6 +1365,7 @@ export default defineComponent({
                         this.videoURL = GetAssetURL(res.url);
                         this.videoPending = false;
                         this.videoPendingTask = 0;
+                        this.setupAutoNextTimer();
                     } else {
                         this.videoURL = "";
                         this.onClearURL();
@@ -1508,7 +1517,7 @@ export default defineComponent({
             if (this.loopForced) {
                 this.loop = this.loopForcedValue;
             } else {
-                this.loop = AppStatus.CurrentAlbum < 0 || !this.nextEnd;
+                this.loop = (!this.next && !this.pageNext) || !this.nextEnd;
             }
         },
 
@@ -1517,6 +1526,39 @@ export default defineComponent({
                 this.pause();
             }
         },
+
+        setupAutoNextTimer: function () {
+            if (this._handles.autoNextTimer) {
+                clearTimeout(this._handles.autoNextTimer);
+                this._handles.autoNextTimer = null;
+            }
+
+            if (!this.isShort) {
+                return;
+            }
+
+            const timerS = PlayerPreferences.ImageAutoNext;
+
+            if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
+                return;
+            }
+
+            if (!this.next && !this.pageNext) {
+                return;
+            }
+
+            const ms = timerS * 1000;
+
+            this._handles.autoNextTimer = setTimeout(() => {
+                this._handles.autoNextTimer = null;
+                if (this.displayConfig || this.expandedTitle) {
+                    this.setupAutoNextTimer();
+                } else {
+                    this.goNext();
+                }
+            }, ms);
+        },
+
     },
     mounted: function () {
         this._handles = Object.create(null);
@@ -1563,6 +1605,11 @@ export default defineComponent({
             this._handles.togglePlayDelayTimeout = null;
         }
 
+        if (this._handles.autoNextTimer) {
+            clearTimeout(this._handles.autoNextTimer);
+            this._handles.autoNextTimer = null;
+        }
+
         document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
@@ -1593,8 +1640,13 @@ export default defineComponent({
                 this.loading = true;
             }
         },
-        inAlbum: function () {
+        next: function () {
             this.setDefaultLoop();
+            this.setupAutoNextTimer();
+        },
+        pageNext: function () {
+            this.setDefaultLoop();
+            this.setupAutoNextTimer();
         },
     },
 });
