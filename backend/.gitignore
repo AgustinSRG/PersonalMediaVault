@@ -7,6 +7,10 @@ pmvd
 backend
 backend.exe
 
+backend.test.exe
+mem.out
+cpu.out
+
 # Ignore temp files
 
 temp
