@@ -100,6 +100,7 @@ import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
+import { MediaController } from "@/control/media";
 
 export default defineComponent({
     name: "PageRandom",
@@ -184,12 +185,20 @@ export default defineComponent({
                     if (this.switchMediaOnLoad === "next") {
                         this.switchMediaOnLoad = "";
                         if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[0].id);
+                            if (MediaController.MediaId === this.pageItems[0].id) {
+                                MediaController.Load();
+                            } else {
+                                this.goToMedia(this.pageItems[0].id);
+                            }
                         }
                     } else if (this.switchMediaOnLoad === "prev") {
                         this.switchMediaOnLoad = "";
                         if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                            if (MediaController.MediaId === this.pageItems[this.pageItems.length - 1].id) {
+                                MediaController.Load();
+                            } else {
+                                this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                            }
                         }
                     }
                     this.scrollToCurrentMedia();
