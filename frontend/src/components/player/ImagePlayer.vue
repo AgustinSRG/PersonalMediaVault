@@ -874,6 +874,11 @@ export default defineComponent({
         },
 
         setImageURL() {
+            if (this._handles.autoNextTimer) {
+                clearTimeout(this._handles.autoNextTimer);
+                this._handles.autoNextTimer = null;
+            }
+
             this.mediaError = false;
 
             if (!this.metadata) {

@@ -195,3 +195,33 @@
 .player-help-tip-right {
     right: 8px;
 }
+
+.player-auto-next-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: var(--player-loader-background);
+}
+
+.player-auto-next-overlay .next-end-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: var(--player-tooltip-background);
+    padding: 1rem;
+}
+
+.next-end-wait-msg {
+    padding-bottom: 1rem;
+}
+
+.next-end-wait-buttons button {
+    margin: 0.5rem;
+}

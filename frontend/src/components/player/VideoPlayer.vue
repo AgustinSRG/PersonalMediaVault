@@ -76,6 +76,36 @@
             </div>
         </div>
 
+        <div
+            class="player-auto-next-overlay"
+            v-if="pendingNextEnd"
+            @click="stopPropagationEvent"
+            @mousedown="stopPropagationEvent"
+            @touchstart="stopPropagationEvent"
+        >
+            <div class="next-end-container">
+                <div class="next-end-wait-msg">
+                    {{ $t("Next media will play in") }} <b>{{ pendingNextEndSeconds }}</b>
+                </div>
+                <div class="next-end-wait-buttons">
+                    <button type="button" class="btn btn-primary" @click="hideNextEnd">
+                        <i class="fas fa-times"></i> {{ $t("Cancel") }}
+                    </button>
+                    <button type="button" class="btn btn-primary" @click="goNext">
+                        <i class="fas fa-forward-step"></i> {{ $t("Next") }}
+                    </button>
+                </div>
+                <div class="next-end-wait-buttons">
+                    <button type="button" class="btn btn-primary" @click="play">
+                        <i class="fas fa-repeat"></i> {{ $t("Play again") }}
+                    </button>
+                    <button type="button" class="btn btn-primary" @click="enableLoopAndPlay">
+                        <i class="fas fa-repeat"></i> {{ $t("Loop") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <PlayerEncodingPending
             v-if="(!loading && !videoURL && videoPending) || mediaError"
             :mid="mid"
@@ -384,7 +414,7 @@ import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtit
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
-import { AUTO_LOOP_MIN_DURATION } from "@/utils/constants";
+import { AUTO_LOOP_MIN_DURATION, NEXT_END_WAIT_DURATION } from "@/utils/constants";
 
 export default defineComponent({
     components: {
@@ -524,6 +554,9 @@ export default defineComponent({
             mediaError: false,
 
             hasExtendedDescription: false,
+
+            pendingNextEnd: false,
+            pendingNextEndSeconds: 0,
         };
     },
     methods: {
@@ -699,6 +732,7 @@ export default defineComponent({
             }
         },
         onVideoTimeUpdate: function (ev) {
+            this.hideNextEnd();
             if (this.loading) return;
             const videoElement = ev.target;
             if (
@@ -815,7 +849,11 @@ export default defineComponent({
                 this.pause();
                 this.ended = true;
                 if (this.nextEnd) {
-                    this.goNext();
+                    if (this.next) {
+                        this.goNext();
+                    } else {
+                        this.showNextEnd();
+                    }
                 }
             }
         },
@@ -964,6 +1002,7 @@ export default defineComponent({
         },
 
         play: function () {
+            this.hideNextEnd();
             if (this.requiresRefresh) {
                 this.requiresRefresh = false;
                 MediaController.Load();
@@ -1335,6 +1374,13 @@ export default defineComponent({
         },
 
         setVideoURL() {
+            this.hideNextEnd();
+
+            if (this._handles.autoNextTimer) {
+                clearTimeout(this._handles.autoNextTimer);
+                this._handles.autoNextTimer = null;
+            }
+
             this.mediaError = false;
             if (!this.metadata) {
                 this.videoURL = "";
@@ -1523,6 +1569,7 @@ export default defineComponent({
 
         onTopBarExpand: function () {
             if (this.expandedTitle) {
+                this.hideNextEnd();
                 this.pause();
             }
         },
@@ -1559,6 +1606,46 @@ export default defineComponent({
             }, ms);
         },
 
+        showNextEnd: function () {
+            this.pendingNextEnd = true;
+            this.pendingNextEndSeconds = NEXT_END_WAIT_DURATION;
+
+            if (this._handles.nextEndTimer) {
+                clearTimeout(this._handles.nextEndTimer);
+                this._handles.nextEndTimer = null;
+            }
+
+            this._handles.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
+        },
+
+        tickNextEnd: function () {
+            this._handles.nextEndTimer = null;
+
+            this.pendingNextEndSeconds = Math.max(0, this.pendingNextEndSeconds - 1);
+
+            if (this.pendingNextEndSeconds <= 0) {
+                this.pendingNextEnd = false;
+                this.goNext();
+                return;
+            }
+
+            this._handles.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
+        },
+
+        hideNextEnd: function () {
+            this.pendingNextEnd = false;
+
+            if (this._handles.nextEndTimer) {
+                clearTimeout(this._handles.nextEndTimer);
+                this._handles.nextEndTimer = null;
+            }
+        },
+
+        enableLoopAndPlay: function () {
+            this.loop = true;
+            this.$emit("force-loop", this.loop);
+            this.play();
+        },
     },
     mounted: function () {
         this._handles = Object.create(null);
@@ -1610,6 +1697,11 @@ export default defineComponent({
             this._handles.autoNextTimer = null;
         }
 
+        if (this._handles.nextEndTimer) {
+            clearTimeout(this._handles.nextEndTimer);
+            this._handles.nextEndTimer = null;
+        }
+
         document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
@@ -1643,10 +1735,16 @@ export default defineComponent({
         next: function () {
             this.setDefaultLoop();
             this.setupAutoNextTimer();
+            if (!this.next && !this.pageNext) {
+                this.hideNextEnd();
+            }
         },
         pageNext: function () {
             this.setDefaultLoop();
             this.setupAutoNextTimer();
+            if (!this.next && !this.pageNext) {
+                this.hideNextEnd();
+            }
         },
     },
 });
