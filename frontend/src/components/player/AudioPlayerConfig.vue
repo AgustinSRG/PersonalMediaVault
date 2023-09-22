@@ -267,6 +267,7 @@ export default defineComponent({
         "update:subSize",
         "update:subBackground",
         "update:subHTML",
+        "update-auto-next",
         "enter",
         "leave",
     ],

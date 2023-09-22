@@ -363,6 +363,7 @@ export default defineComponent({
         "update:subBackground",
         "update:subHTML",
         "update:audioTrack",
+        "update-auto-next",
         "enter",
         "leave",
     ],
