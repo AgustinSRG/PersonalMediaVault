@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 	"path"
-	"sync"
 	"time"
 
 	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
@@ -39,12 +38,6 @@ func (data *VaultAlbumData) HasMedia(media_id uint64) bool {
 	return false
 }
 
-// Thumbnail cache entry
-type ThumbnailCacheEntry struct {
-	has_thumbnail bool   // Has thumbnail?
-	asset         uint64 // Thumbnail asset
-}
-
 // Album manager
 type VaultAlbumsManager struct {
 	path string // Vault path
@@ -53,8 +46,7 @@ type VaultAlbumsManager struct {
 	cache       *VaultAlbumsData // Cache
 	lock        *ReadWriteLock   // Lock to control access to the file
 
-	thumbnail_cache      map[uint64]ThumbnailCacheEntry // Thumbnail cache (Album ID -> Thumbnail asset ID)
-	thumbnail_cache_lock *sync.Mutex                    // Mutex to control the access to thumbnail_cache
+	thumbnail_cache *ThumbnailCache // Thumbnail cache
 }
 
 // Initializes albums manager
@@ -64,8 +56,7 @@ func (am *VaultAlbumsManager) Initialize(base_path string) {
 	am.albums_file = path.Join(base_path, "albums.pmv")
 	am.cache = nil
 	am.lock = CreateReadWriteLock()
-	am.thumbnail_cache = make(map[uint64]ThumbnailCacheEntry)
-	am.thumbnail_cache_lock = &sync.Mutex{}
+	am.thumbnail_cache = makeThumbnailCache()
 }
 
 // Reads albums list data
@@ -252,7 +243,7 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	err = am.EndWrite(data, key)
 
 	if len(old_list) == 0 {
-		am.RemoveCachedThumbnailAsset(album_id)
+		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
 	}
 
 	return true, err
@@ -298,7 +289,7 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 	err = am.EndWrite(data, key)
 
 	if first_changed {
-		am.RemoveCachedThumbnailAsset(album_id)
+		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
 	}
 
 	return true, err
@@ -326,7 +317,7 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 
 	err = am.EndWrite(data, key)
 
-	am.RemoveCachedThumbnailAsset(album_id)
+	am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
 
 	return true, err
 }
@@ -375,7 +366,7 @@ func (am *VaultAlbumsManager) DeleteAlbum(album_id uint64, key []byte) error {
 
 	err = am.EndWrite(data, key)
 
-	am.RemoveCachedThumbnailAsset(album_id)
+	am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
 
 	return err
 }
@@ -414,7 +405,7 @@ func (am *VaultAlbumsManager) OnMediaDelete(media_id uint64, key []byte) error {
 	err = am.EndWrite(data, key)
 
 	for i := 0; i < len(album_thumbnail_caches_to_remove); i++ {
-		am.RemoveCachedThumbnailAsset(album_thumbnail_caches_to_remove[i])
+		am.thumbnail_cache.removeEntryOrMarkInvalid(album_thumbnail_caches_to_remove[i])
 	}
 
 	return err
@@ -430,9 +421,6 @@ func (am *VaultAlbumsManager) OnMediaThumbnailUpdate(media_id uint64, key []byte
 		return err
 	}
 
-	am.thumbnail_cache_lock.Lock()
-	defer am.thumbnail_cache_lock.Unlock()
-
 	for album_id := range data.Albums {
 		if data.Albums[album_id].List == nil || len(data.Albums[album_id].List) == 0 {
 			continue
@@ -442,31 +430,8 @@ func (am *VaultAlbumsManager) OnMediaThumbnailUpdate(media_id uint64, key []byte
 			continue
 		}
 
-		delete(am.thumbnail_cache, album_id)
+		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
 	}
 
 	return nil
-}
-
-// Find cached thumbnail asset
-// Returns a boolean indicating if cached
-// If true, the second return is the ID of the thumbnail asset
-// Warning: This method is not thread safe, make sure to lock thumbnail_cache_lock before using it
-func (am *VaultAlbumsManager) FindCachedThumbnailAsset(album_id uint64) (exists bool, has_thumbnail bool, asset uint64) {
-	val, ok := am.thumbnail_cache[album_id]
-
-	if !ok {
-		return false, false, 0
-	}
-
-	return true, val.has_thumbnail, val.asset
-}
-
-// Removes a cached thumbnail
-// Use when the media or the thumbnail changes
-func (am *VaultAlbumsManager) RemoveCachedThumbnailAsset(album_id uint64) {
-	am.thumbnail_cache_lock.Lock()
-	defer am.thumbnail_cache_lock.Unlock()
-
-	delete(am.thumbnail_cache, album_id)
 }
