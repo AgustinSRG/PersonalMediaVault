@@ -1,4 +1,4 @@
-// Media assset manager
+// Media asset manager
 
 package main
 
@@ -29,7 +29,7 @@ type MediaAssetsManager struct {
 	lock *sync.Mutex // Mutex to control access to the assets mapping
 
 	ready_progress_map  map[uint64]int32 // Mapping to store upload progress
-	ready_progress_lock *sync.Mutex      // Mutex to control acess to ready_progress_map
+	ready_progress_lock *sync.Mutex      // Mutex to control access to ready_progress_map
 }
 
 // Manager initialization

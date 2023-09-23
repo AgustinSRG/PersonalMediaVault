@@ -30,6 +30,7 @@
                 <textarea
                     v-model="desc"
                     :readonly="!canWrite"
+                    maxlength="1024"
                     class="form-control form-control-full-width form-textarea"
                     rows="3"
                     :disabled="busyDescription"

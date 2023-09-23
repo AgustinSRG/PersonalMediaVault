@@ -15,6 +15,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const MEDIA_TITLE_MAX_LENGTH = 255
+const MEDIA_DESCRIPTION_MAX_LENGTH = 1024
+
 type MediaListAPIItem struct {
 	Id          uint64    `json:"id"`
 	Type        MediaType `json:"type"`
@@ -677,7 +680,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if len(p.Title) == 0 || len(p.Title) > 255 {
+	if len(p.Title) == 0 || len(p.Title) > MEDIA_TITLE_MAX_LENGTH {
 		ReturnAPIError(response, 400, "INVALID_TITLE", "Invalid title provided")
 		return
 	}
@@ -761,7 +764,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if len(p.Description) > (5 * 1024 * 1024) {
+	if len(p.Description) > MEDIA_DESCRIPTION_MAX_LENGTH {
 		ReturnAPIError(response, 400, "INVALID_DESCRIPTION", "Invalid description provided")
 		return
 	}
