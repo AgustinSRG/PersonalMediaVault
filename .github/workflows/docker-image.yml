@@ -48,14 +48,14 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Tag version (GitHub Packages)
-      run: docker tag asanrom/pmv:latest ghcr.io/agustinsrg/pmv:$GITHUB_REF_NAME
+      run: docker tag asanrom/pmv:latest ghcr.io/agustinsrg/personalmediavault:$GITHUB_REF_NAME
 
     - name: Tag latest (GitHub Packages)
-      run: docker tag asanrom/pmv:latest ghcr.io/agustinsrg/pmv:latest
+      run: docker tag asanrom/pmv:latest ghcr.io/agustinsrg/personalmediavault:latest
 
     - name: Push the Docker image (GitHub Packages) (Current Version)
-      run: docker push ghcr.io/agustinsrg/pmv:$GITHUB_REF_NAME
+      run: docker push ghcr.io/agustinsrg/personalmediavault:$GITHUB_REF_NAME
         
     - name: Push the Docker image (GitHub Packages) (Latest)
-      run: docker push ghcr.io/agustinsrg/pmv:latest
+      run: docker push ghcr.io/agustinsrg/personalmediavault:latest
     
