@@ -610,3 +610,15 @@ func (tm *VaultTagManager) RandomTaggedMedia(tag_name string, key []byte, seed i
 
 	return values, tag_id, nil
 }
+
+// Reads the tags and pre-caches them on vault unlock
+// key - Vault decryption key
+func (tm *VaultTagManager) PreCacheTags(key []byte) {
+	_, err := tm.ReadList(key)
+
+	if err != nil {
+		LogError(err)
+	}
+
+	LogDebug("Pre-cached tags")
+}

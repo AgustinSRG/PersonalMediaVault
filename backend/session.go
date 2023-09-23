@@ -57,6 +57,8 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 
 	sm.lock.Lock()
 
+	isFirstSession := len(sm.sessions) == 0
+
 	newSession := ActiveSession{
 		id:        sessionId,
 		user:      user,
@@ -75,6 +77,12 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 
 	if err != nil {
 		LogError(err)
+	}
+
+	if isFirstSession {
+		// Pre-cache tags and albums
+		go sm.vault.tags.PreCacheTags(key)
+		go sm.vault.albums.PreCacheAlbums(key)
 	}
 
 	return sessionId

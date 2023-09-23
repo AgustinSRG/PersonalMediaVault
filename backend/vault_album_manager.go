@@ -435,3 +435,21 @@ func (am *VaultAlbumsManager) OnMediaThumbnailUpdate(media_id uint64, key []byte
 
 	return nil
 }
+
+// Reads the albums and pre-caches them on vault unlock
+// key - Vault decryption key
+func (am *VaultAlbumsManager) PreCacheAlbums(key []byte) {
+	data, err := am.ReadAlbums(key)
+
+	if err != nil {
+		LogError(err)
+		return
+	}
+
+	// Pre-cache thumbnails
+	for album_id := range data.Albums {
+		am.thumbnail_cache.GetAlbumThumbnail(album_id, key)
+	}
+
+	LogDebug("Pre-cached albums")
+}
