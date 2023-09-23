@@ -907,11 +907,20 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			Name: "new-name.log",
 		})
 
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
 		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/rename", reqBody, session)
 
 		if err != nil {
 			t.Error(err)
 			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 		}
 
 		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
