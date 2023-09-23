@@ -129,6 +129,10 @@ func api_tagMedia(response http.ResponseWriter, request *http.Request) {
 
 			GetVault().media.ReleaseMediaResource(p.Media)
 
+			// Clear cache
+
+			GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(p.Media)
+
 			if err != nil {
 				LogError(err)
 
@@ -218,6 +222,10 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 			err = media.EndWrite(meta, session.key, false)
 
 			GetVault().media.ReleaseMediaResource(p.Media)
+
+			// Clear cache
+
+			GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(p.Media)
 
 			if err != nil {
 				LogError(err)

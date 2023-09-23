@@ -74,7 +74,7 @@ func InitializeTestVault() error {
 	ClearTemporalFilesPath()
 
 	vault := Vault{}
-	err = vault.Initialize("test-vault")
+	err = vault.Initialize("test-vault", 2)
 
 	if err != nil {
 		return err

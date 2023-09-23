@@ -243,7 +243,7 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	err = am.EndWrite(data, key)
 
 	if len(old_list) == 0 {
-		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
+		am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
 	}
 
 	return true, err
@@ -289,7 +289,7 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 	err = am.EndWrite(data, key)
 
 	if first_changed {
-		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
+		am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
 	}
 
 	return true, err
@@ -317,7 +317,7 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 
 	err = am.EndWrite(data, key)
 
-	am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
+	am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
 
 	return true, err
 }
@@ -366,7 +366,7 @@ func (am *VaultAlbumsManager) DeleteAlbum(album_id uint64, key []byte) error {
 
 	err = am.EndWrite(data, key)
 
-	am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
+	am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
 
 	return err
 }
@@ -405,7 +405,7 @@ func (am *VaultAlbumsManager) OnMediaDelete(media_id uint64, key []byte) error {
 	err = am.EndWrite(data, key)
 
 	for i := 0; i < len(album_thumbnail_caches_to_remove); i++ {
-		am.thumbnail_cache.removeEntryOrMarkInvalid(album_thumbnail_caches_to_remove[i])
+		am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_thumbnail_caches_to_remove[i])
 	}
 
 	return err
@@ -430,7 +430,7 @@ func (am *VaultAlbumsManager) OnMediaThumbnailUpdate(media_id uint64, key []byte
 			continue
 		}
 
-		am.thumbnail_cache.removeEntryOrMarkInvalid(album_id)
+		am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
 	}
 
 	return nil

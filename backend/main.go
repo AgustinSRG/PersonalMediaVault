@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
@@ -42,7 +43,12 @@ type BackendOptions struct {
 	// Temp path
 	tempPath            string
 	unencryptedTempPath string
+
+	// Preview cache size
+	previewsCacheSize int
 }
+
+const DEFAULT_PREVIEWS_CACHE_SIZE = 1024
 
 var (
 	GLOBAL_VAULT *Vault = nil
@@ -65,6 +71,7 @@ func main() {
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
 		port:                "",
 		bindAddr:            "",
+		previewsCacheSize:   DEFAULT_PREVIEWS_CACHE_SIZE,
 	}
 
 	if options.ffmpegPath == "" {
@@ -150,6 +157,21 @@ func main() {
 			options.fix = true
 		} else if arg == "--recover" {
 			options.recover = true
+		} else if arg == "--cache-size" {
+			if i == len(args)-1 {
+				fmt.Println("The option '--cache-size' requires a value")
+				os.Exit(1)
+			}
+
+			cacheSize, err := strconv.Atoi(args[i+1])
+
+			if err != nil {
+				fmt.Println("The option '--cache-size' requires a valid integer as an argument")
+				os.Exit(1)
+			}
+
+			options.previewsCacheSize = cacheSize
+			i++
 		} else {
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
@@ -203,7 +225,7 @@ func main() {
 		// Create and initialize vault
 
 		vault := Vault{}
-		err = vault.Initialize(options.vaultPath)
+		err = vault.Initialize(options.vaultPath, options.previewsCacheSize)
 
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
@@ -244,7 +266,7 @@ func main() {
 		RunHTTPServer(options.port, options.bindAddr, false)
 	} else if options.clean || options.fix || options.recover {
 		vault := Vault{}
-		err := vault.Initialize(options.vaultPath)
+		err := vault.Initialize(options.vaultPath, options.previewsCacheSize)
 
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
@@ -291,6 +313,7 @@ func printHelp() {
 	fmt.Println("        --port -p <port>           Sets the listening port. By default 80 (or 443 if using SSL).")
 	fmt.Println("        --bind -b <bind-addr>      Sets the bind address. By default it binds all interfaces.")
 	fmt.Println("        --vault-path, -vp <path>   Sets the data storage path for the vault.")
+	fmt.Println("        --cache-size <size>        Sets the LRU cache size. By default is can hold 1024 elements.")
 
 	fmt.Println("    DEBUG OPTIONS:")
 	fmt.Println("        --skip-lock                Ignores vault lockfile.")

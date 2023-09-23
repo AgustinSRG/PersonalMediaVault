@@ -30,11 +30,14 @@ type MediaAssetsManager struct {
 
 	ready_progress_map  map[uint64]int32 // Mapping to store upload progress
 	ready_progress_lock *sync.Mutex      // Mutex to control access to ready_progress_map
+
+	preview_cache *MediaPreviewCache
 }
 
 // Manager initialization
 // base_path - Vault base path
-func (mm *MediaAssetsManager) Initialize(base_path string) {
+// preview_cache_size - Max size of the preview cache
+func (mm *MediaAssetsManager) Initialize(base_path string, preview_cache_size int) {
 	mm.lock = &sync.Mutex{}
 
 	mm.path = base_path
@@ -46,6 +49,8 @@ func (mm *MediaAssetsManager) Initialize(base_path string) {
 	mm.ready_progress_lock = &sync.Mutex{}
 
 	mm.assets = make(map[uint64]*MediaAsset)
+
+	mm.preview_cache = makeMediaPreviewCache(preview_cache_size)
 }
 
 // Read manager data

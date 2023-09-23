@@ -267,6 +267,10 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	GetVault().media.ReleaseMediaResource(media_id)
 
+	// Clear cache
+
+	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
+
 	// Response
 
 	var result ThumbnailAPIResponse

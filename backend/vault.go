@@ -24,7 +24,8 @@ type Vault struct {
 
 // Vault initialization process
 // base_path - Vault path
-func (vault *Vault) Initialize(base_path string) error {
+// preview_cache_size - Max size of the preview cache
+func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 	vault.path = base_path
 
 	vault.credentials = &VaultCredentialsManager{}
@@ -38,7 +39,7 @@ func (vault *Vault) Initialize(base_path string) error {
 	vault.sessions.Initialize(vault)
 
 	vault.media = &MediaAssetsManager{}
-	vault.media.Initialize(base_path)
+	vault.media.Initialize(base_path, preview_cache_size)
 
 	vault.tasks = &TaskManager{}
 	err = vault.tasks.Initialize(base_path, vault)

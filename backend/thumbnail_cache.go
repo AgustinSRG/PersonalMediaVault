@@ -60,6 +60,7 @@ func (c *ThumbnailCache) getEntryOrMarkAsPending(album uint64) (result_entry *Th
 	return entry, wg
 }
 
+// Removes cache entry
 func (c *ThumbnailCache) removeEntry(album uint64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -67,7 +68,8 @@ func (c *ThumbnailCache) removeEntry(album uint64) {
 	delete(c.cache, album)
 }
 
-func (c *ThumbnailCache) removeEntryOrMarkInvalid(album uint64) {
+// Removes cache entry, or marks as invalid if pending
+func (c *ThumbnailCache) RemoveEntryOrMarkInvalid(album uint64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -85,6 +87,7 @@ func (c *ThumbnailCache) removeEntryOrMarkInvalid(album uint64) {
 	delete(c.cache, album)
 }
 
+// Resolves cache entry
 func (c *ThumbnailCache) resolveEntry(album uint64, has_thumbnail bool, media uint64, asset uint64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

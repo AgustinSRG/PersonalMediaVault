@@ -28,42 +28,9 @@ type MediaListAPIItem struct {
 	Duration    float64   `json:"duration"`
 }
 
+// Gets media minified info (preview) for lists
 func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
-	var result MediaListAPIItem
-
-	result.Id = media_id
-
-	media := GetVault().media.AcquireMediaResource(media_id)
-
-	meta, err := media.ReadMetadata(session.key)
-
-	if err != nil {
-		LogError(err)
-	}
-
-	if meta != nil {
-		result.Type = meta.Type
-		result.Title = meta.Title
-		if meta.ThumbnailReady {
-			result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
-		} else {
-			result.Thumbnail = ""
-		}
-		result.Duration = meta.MediaDuration
-		result.Description = meta.Description
-		result.Tags = meta.Tags
-	} else {
-		result.Type = MediaTypeDeleted
-		result.Title = ""
-		result.Thumbnail = ""
-		result.Duration = 0
-		result.Description = ""
-		result.Tags = make([]uint64, 0)
-	}
-
-	GetVault().media.ReleaseMediaResource(media_id)
-
-	return &result
+	return GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
 }
 
 type MediaAPIMetaResolution struct {
@@ -734,6 +701,10 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 	GetVault().media.ReleaseMediaResource(media_id)
 
+	// Clear cache
+
+	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
+
 	response.WriteHeader(200)
 }
 
@@ -817,6 +788,10 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)
+
+	// Clear cache
+
+	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
 	response.WriteHeader(200)
 }
@@ -1495,6 +1470,10 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 	media.Delete()
 
 	GetVault().media.ReleaseMediaResource(media_id)
+
+	// Clear cache
+
+	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
 	// Kill any task pending for that media
 	GetVault().tasks.KillTaskByMedia(media_id)

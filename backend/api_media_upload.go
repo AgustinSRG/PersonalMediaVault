@@ -215,6 +215,8 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	go func() {
 		BackgroundTaskGenerateThumbnail(session, media_id, tempFile, probe_data)
 
+		GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
+
 		BackgroundTaskSaveOriginal(session, media_id, tempFile, ext, probe_data, userConfig)
 
 		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
