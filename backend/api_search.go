@@ -140,10 +140,10 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 
 	// Read metadata
 
-	page_items_meta := make([]*MediaListAPIItem, len(page_items))
+	page_items_meta := GetMediaMinInfoList(page_items, session)
 
-	for i := 0; i < len(page_items); i++ {
-		mediaInfo := GetMediaMinInfo(page_items[i], session)
+	for i := 0; i < len(page_items_meta); i++ {
+		mediaInfo := page_items_meta[i]
 
 		if mediaInfo.Type == MediaTypeDeleted {
 			if tagToSearch != "" {
@@ -160,8 +160,6 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 				}
 			}
 		}
-
-		page_items_meta[i] = mediaInfo
 	}
 
 	// Send response
@@ -271,10 +269,10 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 
 	// Read meta of media items
 
-	page_items_meta := make([]*MediaListAPIItem, len(page_items))
+	page_items_meta := GetMediaMinInfoList(page_items, session)
 
-	for i := 0; i < len(page_items); i++ {
-		mediaInfo := GetMediaMinInfo(page_items[i], session)
+	for i := 0; i < len(page_items_meta); i++ {
+		mediaInfo := page_items_meta[i]
 
 		if mediaInfo.Type == MediaTypeDeleted {
 			if tagToSearch != "" {
@@ -291,8 +289,6 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 				}
 			}
 		}
-
-		page_items_meta[i] = mediaInfo
 	}
 
 	// Send response

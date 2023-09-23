@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
 )
@@ -28,9 +29,38 @@ type MediaListAPIItem struct {
 	Duration    float64   `json:"duration"`
 }
 
-// Gets media minified info (preview) for lists
+// Gets media minified info (preview)
 func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
 	return GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
+}
+
+// Gets media minified info (preview) for a single item in a list
+// Runs in a co-routine
+func GetMediaMinInfoListTask(list []uint64, session *ActiveSession, result []*MediaListAPIItem, index int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	result[index] = GetMediaMinInfo(list[index], session)
+}
+
+// Gets media minified info (preview) for a list
+// Uses co-routines
+func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPIItem {
+	result := make([]*MediaListAPIItem, len(list))
+
+	if len(list) == 0 {
+		return result
+	}
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(len(list))
+
+	for i := 0; i < len(list); i++ {
+		go GetMediaMinInfoListTask(list, session, result, i, wg)
+	}
+
+	wg.Wait()
+
+	return result
 }
 
 type MediaAPIMetaResolution struct {

@@ -154,13 +154,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		LastModified: album.LastModified,
 	}
 
-	list := make([]*MediaListAPIItem, len(album.List))
-
-	for i := 0; i < len(album.List); i++ {
-		list[i] = GetMediaMinInfo(album.List[i], session)
-	}
-
-	result.List = list
+	result.List = GetMediaMinInfoList(album.List, session)
 
 	jsonResult, err := json.Marshal(result)
 
