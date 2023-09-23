@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -22,10 +23,14 @@ var (
 // Logging middleware to log requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Log request
-		LogRequest(r)
+		// Mark stating time
+		startTime := time.Now()
+
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(w, r)
+
+		// Log request
+		LogRequest(r, time.Since(startTime))
 	})
 }
 

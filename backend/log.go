@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 var (
@@ -54,8 +55,8 @@ func LogDebug(line string) {
 	}
 }
 
-func LogRequest(r *http.Request) {
+func LogRequest(r *http.Request, duration time.Duration) {
 	if log_requests_enabled {
-		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path)
+		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path + " (" + duration.String() + ")")
 	}
 }
