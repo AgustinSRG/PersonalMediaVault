@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	FILE_PERMISSION   = 0600 // Read/Write
-	FOLDER_PERMISSION = 0700 // Read/Write/Run
+	FILE_PERMISSION    = 0600 // Read/Write
+	FOLDER_PERMISSION  = 0700 // Read/Write/Run
+	DEFAULT_CACHE_SIZE = 1024 // Default cache size
 )
 
 func fileExists(file string) bool {

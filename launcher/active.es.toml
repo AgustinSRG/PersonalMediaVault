@@ -6,6 +6,14 @@ other = "Se va a crear una copia de seguridad de la galería multimedia en el di
 hash = "sha1-e3c4b9dff35d8a483c4c75d7185fff3040119733"
 other = "Advertencia: Está usando el modo de re-encriptado. Se cambiará la clave de encriptado de la galería. Además, las cuentas adicionales no se moverán a la copia de seguridad."
 
+[CacheSize]
+hash = "sha1-1a729467e687558e146fb3433e7adfb936876168"
+other = "Tamaño de la caché: {{.Elements}} elementos"
+
+[CacheSizeSet]
+hash = "sha1-72472d5c035f6d646ed47bc7d129c162251f5e44"
+other = "Tamaño de la caché cambiado a {{.Elements}} elementos."
+
 [CertificateFile]
 hash = "sha1-38059f1a5dbf538d37104a7baa5526a728694df5"
 other = "Fichero de certificado"
@@ -61,6 +69,10 @@ other = "Uso: backup [directorio] [--re-encrypt] - Crea una copia de seguridad d
 [ErrorBrowser]
 hash = "sha1-da7c1fd0c0d54733790f8123554431eadd886b76"
 other = "Error: No se pudo abrir el navegador: {{.Message}}"
+
+[ErrorCacheSizeUsage]
+hash = "sha1-8a0eefe42535382a6c137b740dcec01b855e524b"
+other = "Uso: cache-size [tamaño] - Establece el tamaño de la caché"
 
 [ErrorCodecBin]
 hash = "sha1-4407ffe7f09c4d50f4be960bcc7a88dd9ca0251e"
@@ -157,6 +169,10 @@ other = "si selecciona no, el servidor se pondrá a la escucha en todas las inte
 [LogFile]
 hash = "sha1-cf17e7fdee1c20b4f3d976516bdcc121cf229f9c"
 other = "Fichero de log: {{.File}}"
+
+[ManualCacheSize]
+hash = "sha1-bf1920bebbd1af1f72b82ee502e2843f211bab9a"
+other = "cache-size [tamaño] - Establece el tamaño de la caché"
 
 [ManualCommandBackup]
 hash = "sha1-01d28d9e4f273bf2123d46736efe820a143922d0"

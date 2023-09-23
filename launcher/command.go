@@ -373,6 +373,49 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
+	case "cache-size", "cs":
+		if len(args) == 1 {
+			currentCacheSize := DEFAULT_CACHE_SIZE
+
+			if vc.launchConfig.CacheSize != nil {
+				currentCacheSize = *(vc.launchConfig.CacheSize)
+			}
+
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "CacheSize",
+					Other: "Current cache size: {{.Elements}} elements",
+				},
+				TemplateData: map[string]interface{}{
+					"Elements": fmt.Sprint(currentCacheSize),
+				},
+			})
+			fmt.Println(msg)
+		} else if len(args) == 2 {
+			s, err := strconv.Atoi(args[1])
+
+			if err != nil || s < 0 {
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorCacheSizeUsage",
+						Other: "Usage: cache-size [size] - Sets the cache size",
+					},
+				})
+				fmt.Println(msg)
+			} else {
+				if vc.SetCacheSize(s) {
+					askRestart(vc)
+				}
+			}
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorCacheSizeUsage",
+					Other: "Usage: cache-size [size] - Sets the cache size",
+				},
+			})
+			fmt.Println(msg)
+		}
 	case "help", "h", "commands", "man", "?":
 		printCommandList()
 	case "exit", "quit", "q":
@@ -550,6 +593,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSecDel",
 			Other: "sec-del [y/n] - Enables / disables secure deletion of temp files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCacheSize",
+			Other: "cache-size [size] - Sets the cache size",
 		},
 	})
 	manList = append(manList, msg)
