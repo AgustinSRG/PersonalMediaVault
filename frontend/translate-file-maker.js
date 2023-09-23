@@ -14,7 +14,7 @@ function generateTranslationConfigurationFile(lang, resources) {
         result[key] = resources[key] || key;
     }
 
-    return JSON.stringify(result, null, 2);
+    return JSON.stringify(result, null, 4) + "\n";
 }
 
 function getResourcesFromTranslationsFile(file) {
