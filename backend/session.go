@@ -49,10 +49,15 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 // key - Vault decryption key
 // root - Root access
 // write - Write access
-// Returns the session ID
-func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool) string {
+// Returns an error if failed, and the session ID if successful
+func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool) (error, string) {
 	sessionBytes := make([]byte, 32)
-	rand.Read(sessionBytes) //nolint:errcheck
+	_, err_rand := rand.Read(sessionBytes)
+
+	if err_rand != nil {
+		return err_rand, ""
+	}
+
 	sessionId := hex.EncodeToString(sessionBytes)
 
 	sm.lock.Lock()
@@ -85,7 +90,7 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 		go sm.vault.albums.PreCacheAlbums(key)
 	}
 
-	return sessionId
+	return nil, sessionId
 }
 
 // Closes a session
