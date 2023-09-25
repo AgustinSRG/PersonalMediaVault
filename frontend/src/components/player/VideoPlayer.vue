@@ -1571,6 +1571,8 @@ export default defineComponent({
             if (this.expandedTitle) {
                 this.hideNextEnd();
                 this.pause();
+            } else {
+                this.play();
             }
         },
 
