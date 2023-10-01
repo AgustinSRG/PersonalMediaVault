@@ -23,6 +23,11 @@
     background: var(--player-controls-background);
 }
 
+.image-notes-container.always-visible .image-notes {
+    border: solid 2px var(--theme-border-color);
+    background: var(--player-controls-background);
+}
+
 .image-notes-container.edit-active .image-notes.selected {
     background: var(--player-feedback-background);
     z-index: 2;

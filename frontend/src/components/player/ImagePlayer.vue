@@ -35,6 +35,7 @@
             />
 
             <ImageNotes
+                :visible="notesVisible"
                 :editing="notesEditMode"
                 :contextOpen="contextMenuShown"
                 :width="imageWidth"
@@ -196,6 +197,7 @@
             @update:resolution="onResolutionUpdated"
             @update:background="onBackgroundChanged"
             @update-auto-next="setupAutoNextTimer"
+            @update-notes-visible="imageNotesVisibleUpdated"
             :rTick="internalTick"
             :metadata="metadata"
             @enter="enterControls"
@@ -360,6 +362,7 @@ export default defineComponent({
 
             notesEditMode: false,
             hasExtendedDescription: false,
+            notesVisible: PlayerPreferences.ImageNotesVisible,
 
             mediaError: false,
         };
@@ -1016,6 +1019,10 @@ export default defineComponent({
                     }
                     break;
             }
+        },
+
+        imageNotesVisibleUpdated: function () {
+            this.notesVisible = PlayerPreferences.ImageNotesVisible;
         },
     },
     mounted: function () {

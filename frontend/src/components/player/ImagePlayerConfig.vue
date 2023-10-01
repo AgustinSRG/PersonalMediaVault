@@ -12,6 +12,15 @@
         @keydown="keyDownHandle"
     >
         <table v-if="page === ''">
+            <tr>
+                <td>
+                    <i class="fas fa-eye-slash icon-config"></i>
+                    <b>{{ $t("Hide image notes") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="hideNotes" @update:val="changeNotesVisible"></ToggleSwitch>
+                </td>
+            </tr>
             <tr class="tr-button" tabindex="0" @click="goToResolutions" @keydown="clickOnEnter">
                 <td>
                     <i class="fas fa-photo-film icon-config"></i>
@@ -115,10 +124,12 @@ import { PlayerPreferences } from "@/control/player-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+    components: { ToggleSwitch },
     name: "ImagePlayerConfig",
-    emits: ["update:shown", "update:resolution", "update:background", "update-auto-next", "enter", "leave"],
+    emits: ["update:shown", "update:resolution", "update:background", "update-auto-next", "update-notes-visible", "enter", "leave"],
     props: {
         shown: Boolean,
         metadata: Object,
@@ -140,6 +151,7 @@ export default defineComponent({
             bgOptions: ["default", "black", "white"],
             autoNext: PlayerPreferences.ImageAutoNext,
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
+            hideNotes: !PlayerPreferences.ImageNotesVisible,
         };
     },
     methods: {
@@ -155,6 +167,11 @@ export default defineComponent({
             this.autoNext = b;
             PlayerPreferences.SetImageAutoNext(b);
             this.$emit("update-auto-next");
+        },
+
+        changeNotesVisible: function () {
+            PlayerPreferences.SetImageNotesVisible(!this.hideNotes);
+            this.$emit("update-notes-visible");
         },
 
         enterConfig: function () {

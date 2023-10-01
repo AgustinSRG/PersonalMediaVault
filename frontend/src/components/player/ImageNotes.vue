@@ -1,7 +1,7 @@
 <template>
     <div
         class="image-notes-container"
-        :class="{ 'edit-active': editing, 'add-active': adding }"
+        :class="{ 'edit-active': editing, 'add-active': adding, 'always-visible': visible && !editing && !adding }"
         :style="{ top: top, left: left, width: width, height: height }"
         @mousedown="startAdding"
         @touchstart.passive="startAdding"
@@ -146,6 +146,8 @@ export default defineComponent({
         left: String,
         width: String,
         height: String,
+
+        visible: Boolean,
 
         editing: Boolean,
 
