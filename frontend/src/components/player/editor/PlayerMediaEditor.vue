@@ -1,6 +1,13 @@
 <template>
     <div class="player-media-editor" tabindex="-1">
-        <div class="horizontal-filter-menu" :class="{ 'four-child': type === 2, 'five-child': type === 1 }">
+        <div
+            class="horizontal-filter-menu"
+            :class="{
+                'three-child': !canWrite,
+                'four-child': type === 2 && canWrite,
+                'five-child': (type === 1 && canWrite) || (type == 3 && !canWrite),
+            }"
+        >
             <a
                 href="javascript:;"
                 @click="changePage('general')"
@@ -43,7 +50,7 @@
                 >{{ $t("Attachments") }}</a
             >
             <a
-                v-if="type === 1 || type === 2"
+                v-if="(type === 1 || type === 2) && canWrite"
                 href="javascript:;"
                 @click="changePage('resolutions')"
                 class="horizontal-filter-menu-item"
@@ -51,6 +58,7 @@
                 >{{ $t("Resolutions") }}</a
             >
             <a
+                v-if="canWrite"
                 href="javascript:;"
                 @click="changePage('danger')"
                 class="horizontal-filter-menu-item"

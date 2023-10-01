@@ -3,7 +3,7 @@
         <!--- Attachments -->
 
         <div class="form-group">
-            <label>{{ $t("Attachments") }}:</label>
+            <label>{{ $t("Attachments") }}. {{ $t("You can attach arbitrary files for safe keeping in the vault.") }}</label>
         </div>
 
         <div class="table-responsive">

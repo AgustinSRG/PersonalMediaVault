@@ -2,7 +2,7 @@
     <div class="player-editor-sub-content">
         <!--- Subtitles -->
 
-        <div class="form-group" v-if="type === 2 || type === 3">
+        <div class="form-group">
             <label>{{ $t("Subtitles") }}:</label>
         </div>
 

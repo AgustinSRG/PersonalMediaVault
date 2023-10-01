@@ -29,6 +29,14 @@
     text-decoration: none;
 }
 
+.horizontal-filter-menu.two-child .horizontal-filter-menu-item {
+    width: calc(50% - 0.5rem);
+}
+
+.horizontal-filter-menu.three-child .horizontal-filter-menu-item {
+    width: calc(33.33% - 0.5rem);
+}
+
 .horizontal-filter-menu.four-child .horizontal-filter-menu-item {
     width: calc(25% - 0.5rem);
 }

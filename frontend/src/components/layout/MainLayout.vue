@@ -24,7 +24,10 @@
             @search-open="openSearchModal"
             @help="showHelp"
         ></TopBar>
-        <PlayerContainer v-if="layout === 'media-split' || layout === 'media' || layout === 'album'" :display-upload="displayUpload"></PlayerContainer>
+        <PlayerContainer
+            v-if="layout === 'media-split' || layout === 'media' || layout === 'album'"
+            :display-upload="displayUpload"
+        ></PlayerContainer>
         <PageContent v-if="layout === 'initial' || layout === 'media-split'" :min="layout === 'media-split'"></PageContent>
         <AlbumContainer v-if="layout === 'album'" v-model:display-upload="displayUpload"></AlbumContainer>
 

@@ -24,11 +24,11 @@
                 </button>
             </div>
             <div class="modal-body no-padding">
-                <div class="modal-top-menu items-2">
-                    <a href="javascript:;" @click="changeToUpload" class="modal-top-menu-item" :class="{ selected: isUpload }"
+                <div class="horizontal-filter-menu two-child modal-top-menu">
+                    <a href="javascript:;" @click="changeToUpload" class="horizontal-filter-menu-item" :class="{ selected: isUpload }"
                         ><i class="fas fa-upload"></i> {{ $t("Upload") }}</a
                     >
-                    <a href="javascript:;" @click="changeToSearch" class="modal-top-menu-item" :class="{ selected: !isUpload }"
+                    <a href="javascript:;" @click="changeToSearch" class="horizontal-filter-menu-item" :class="{ selected: !isUpload }"
                         ><i class="fas fa-search"></i> {{ $t("Search") }}</a
                     >
                 </div>

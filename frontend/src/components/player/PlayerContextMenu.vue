@@ -20,7 +20,13 @@
         @dblclick="stopPropagationEvent"
     >
         <table class="player-context-menu-table">
-            <tr v-if="(type === 'video' || type === 'audio') && !isShort" class="tr-button" tabindex="0" @click="toggleLoop" @keydown="clickOnEnter">
+            <tr
+                v-if="(type === 'video' || type === 'audio') && !isShort"
+                class="tr-button"
+                tabindex="0"
+                @click="toggleLoop"
+                @keydown="clickOnEnter"
+            >
                 <td>
                     <i class="fas fa-repeat icon-config"></i>
                     <span class="context-entry-title">{{ $t("Loop") }}</span>

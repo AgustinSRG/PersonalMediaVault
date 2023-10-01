@@ -323,44 +323,5 @@
 /* Modal menu */
 
 .modal-top-menu {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     padding: 0.5rem;
-    border-bottom: solid 1px var(--theme-border-color);
-    justify-content: space-between;
-}
-
-.modal-top-menu-item {
-    color: var(--theme-fg-color);
-    display: block;
-    padding: 0.75rem;
-    font-size: large;
-    font-weight: bold;
-    text-align: center;
-
-    min-width: fit-content;
-
-    text-decoration: none;
-}
-
-.modal-top-menu.items-2 .modal-top-menu-item {
-    width: calc(50% - 0.25rem);
-}
-
-.modal-top-menu-item i {
-    margin-right: 0.5rem;
-}
-
-.modal-top-menu-item:hover {
-    background: var(--theme-option-hover-color);
-}
-
-.modal-top-menu-item.selected,
-.modal-top-menu-item.selected:hover {
-    background: var(--theme-option-selected-color);
-}
-
-.modal-top-menu-item:visited {
-    color: var(--theme-fg-color);
 }

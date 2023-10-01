@@ -2,8 +2,8 @@
     <div class="player-editor-sub-content">
         <!--- Audio tracks -->
 
-        <div class="form-group" v-if="type === 2">
-            <label>{{ $t("Extra audio tracks") }}:</label>
+        <div class="form-group">
+            <label>{{ $t("Extra audio tracks for the video.") }} {{ $t("You can use this to add multiple audio languages.") }}</label>
         </div>
 
         <div v-if="type === 2" class="table-responsive">
