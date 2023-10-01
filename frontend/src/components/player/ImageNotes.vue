@@ -9,18 +9,6 @@
         @mouseleave="onMouseLeave"
     >
         <div
-            class="image-notes-hover"
-            v-if="!editing && selectedNote"
-            v-html="escapeText(selectedNote.text)"
-            :style="{
-                top: hoverTop,
-                bottom: hoverBottom,
-                left: hoverLeft,
-                right: hoverRight,
-            }"
-        ></div>
-
-        <div
             v-for="note in notes"
             :key="note.id"
             class="image-notes"
@@ -127,6 +115,18 @@
                 left: mapDim(addX, 0, realWidth, imageWidth),
                 width: mapDim(addW, 0, realWidth, imageWidth),
                 height: mapDim(addH, 0, realHeight, imageHeight),
+            }"
+        ></div>
+
+        <div
+            class="image-notes-hover"
+            v-if="!editing && selectedNote"
+            v-html="escapeText(selectedNote.text)"
+            :style="{
+                top: hoverTop,
+                bottom: hoverBottom,
+                left: hoverLeft,
+                right: hoverRight,
             }"
         ></div>
     </div>
