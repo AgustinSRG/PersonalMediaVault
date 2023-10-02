@@ -774,6 +774,19 @@ export default defineComponent({
         onCanPlay: function () {
             this.loading = false;
             if (this.autoPlayApplied) {
+                if (this.playing) {
+                    const player = this.getVideoElement();
+                    if (!player) {
+                        return;
+                    }
+                    const promise = player.play();
+                    if (promise) {
+                        promise.catch(() => {
+                            this.playing = false;
+                            this.requiresRefresh = true;
+                        });
+                    }
+                }
                 return;
             }
             if (!this.autoPlay || this.expandedTitle) {

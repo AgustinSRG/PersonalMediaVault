@@ -658,6 +658,21 @@ export default defineComponent({
         onCanPlay: function () {
             this.loading = false;
             if (this.autoPlayApplied) {
+                if (this.playing) {
+                    const player = this.getAudioElement();
+                    if (!player) {
+                        return;
+                    }
+                    const promise = player.play();
+                    if (promise) {
+                        promise.catch(
+                            function () {
+                                this.playing = false;
+                                this.requiresRefresh = true;
+                            }.bind(this),
+                        );
+                    }
+                }
                 return;
             }
             if (!this.autoPlay || this.expandedTitle) {
