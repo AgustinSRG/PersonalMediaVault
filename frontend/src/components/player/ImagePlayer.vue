@@ -769,6 +769,24 @@ export default defineComponent({
                 case "ArrowDown":
                     this.incrementImageScroll(40);
                     break;
+                case "ArrowLeft":
+                    if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
+                        if (this.prev || this.pagePrev) {
+                            this.goPrev();
+                        } else {
+                            caught = false;
+                        }
+                    }
+                    break;
+                case "PageUp":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    } else {
+                        caught = false;
+                    }
+                    break;
                 case "ArrowRight":
                     if (shifting || event.altKey || !this.tryHorizontalScroll(40)) {
                         if (this.next || this.pageNext) {
@@ -778,13 +796,13 @@ export default defineComponent({
                         }
                     }
                     break;
-                case "ArrowLeft":
-                    if (shifting || event.altKey || !this.tryHorizontalScroll(-40)) {
-                        if (this.prev || this.pagePrev) {
-                            this.goPrev();
-                        } else {
-                            caught = false;
-                        }
+                case "PageDown":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.next || this.pageNext) {
+                        this.goNext();
+                    } else {
+                        caught = false;
                     }
                     break;
                 case "Home":

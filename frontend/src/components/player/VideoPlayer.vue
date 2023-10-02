@@ -1245,6 +1245,26 @@ export default defineComponent({
                         this.toggleFullScreen();
                     }
                     break;
+                case "ArrowLeft":
+                    if (shifting || event.altKey) {
+                        if (this.prev || this.pagePrev) {
+                            this.goPrev();
+                        } else {
+                            caught = false;
+                        }
+                    } else {
+                        this.setTime(this.currentTime - 5, true);
+                    }
+                    break;
+                case "PageUp":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    } else {
+                        caught = false;
+                    }
+                    break;
                 case "ArrowRight":
                     if (shifting || event.altKey) {
                         if (this.next || this.pageNext) {
@@ -1256,15 +1276,13 @@ export default defineComponent({
                         this.setTime(this.currentTime + 5, true);
                     }
                     break;
-                case "ArrowLeft":
-                    if (shifting || event.altKey) {
-                        if (this.prev || this.pagePrev) {
-                            this.goPrev();
-                        } else {
-                            caught = false;
-                        }
+                case "PageDown":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.next || this.pageNext) {
+                        this.goNext();
                     } else {
-                        this.setTime(this.currentTime - 5, true);
+                        caught = false;
                     }
                     break;
                 case ".":
