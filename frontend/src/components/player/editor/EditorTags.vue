@@ -138,6 +138,9 @@ export default defineComponent({
                             break;
                         }
                     }
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.tags = clone(this.tags);
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {
@@ -197,6 +200,9 @@ export default defineComponent({
                     }
                     this.findTags();
                     TagsController.AddTag(res.id, res.name);
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.tags = clone(this.tags);
+                    }
                     this.$emit("changed");
                     nextTick(() => {
                         const elemFocus = this.$el.querySelector(".tag-to-add");
@@ -258,6 +264,9 @@ export default defineComponent({
                     }
                     this.findTags();
                     TagsController.AddTag(res.id, res.name);
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.tags = clone(this.tags);
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {

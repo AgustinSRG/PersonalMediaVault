@@ -235,8 +235,26 @@ export default defineComponent({
                         caught = false;
                     }
                     break;
+                case "PageUp":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.prev || this.pagePrev) {
+                        this.goPrev();
+                    } else {
+                        caught = false;
+                    }
+                    break;
                 case "ArrowRight":
                     if (this.next || this.pageNext) {
+                        this.goNext();
+                    } else {
+                        caught = false;
+                    }
+                    break;    
+                case "PageDown":
+                    if (event.altKey || event.shiftKey) {
+                        caught = false;
+                    } else if (this.next || this.pageNext) {
                         this.goNext();
                     } else {
                         caught = false;

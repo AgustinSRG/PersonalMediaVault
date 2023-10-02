@@ -244,6 +244,22 @@ export default defineComponent({
                             this.busy = false;
                             r.enabled = true;
                             r.fps = result.fps;
+                            if (MediaController.MediaData) {
+                                MediaController.MediaData.resolutions = this.resolutions
+                                    .filter((re) => {
+                                        return re.enabled;
+                                    })
+                                    .map((re) => {
+                                        return {
+                                            width: re.width,
+                                            height: re.height,
+                                            fps: re.fps,
+                                            ready: false,
+                                            task: 0,
+                                            url: "",
+                                        };
+                                    });
+                            }
                             this.$emit("changed");
                         })
                         .onCancel(() => {
@@ -304,6 +320,22 @@ export default defineComponent({
                             AppEvents.Emit("snack", this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = false;
+                            if (MediaController.MediaData) {
+                                MediaController.MediaData.resolutions = this.resolutions
+                                    .filter((re) => {
+                                        return re.enabled;
+                                    })
+                                    .map((re) => {
+                                        return {
+                                            width: re.width,
+                                            height: re.height,
+                                            fps: re.fps,
+                                            ready: false,
+                                            task: 0,
+                                            url: "",
+                                        };
+                                    });
+                            }
                             this.$emit("changed");
                         })
                         .onCancel(() => {

@@ -208,6 +208,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Successfully changed thumbnail"));
                     this.busyThumbnail = false;
                     this.thumbnail = res.url;
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.thumbnail = res.url;
+                    }
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
                     AppEvents.Emit("media-meta-change");
@@ -264,6 +267,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Successfully changed title"));
                     this.busyTitle = false;
                     this.originalTitle = this.title;
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.title = this.title;
+                    }
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
                     AppEvents.Emit("media-meta-change");
@@ -316,6 +322,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Successfully changed description"));
                     this.busyDescription = false;
                     this.originalDesc = this.desc;
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.description = this.desc;
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {
@@ -366,6 +375,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Successfully changed media extra params"));
                     this.busyExtra = false;
                     this.originalStartBeginning = this.startBeginning;
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.force_start_beginning = this.startBeginning;
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {

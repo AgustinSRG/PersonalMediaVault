@@ -122,6 +122,7 @@ import { defineComponent } from "vue";
 
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { clone } from "@/utils/objects";
 
 export default defineComponent({
     components: {
@@ -196,6 +197,11 @@ export default defineComponent({
                     this.busy = false;
                     this.attachmentUploadProgress = 0;
                     this.attachments.push(res);
+
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.attachments = clone(this.attachments);
+                    }
+
                     this.$emit("changed");
                 })
                 .onUploadProgress((loaded, total) => {
@@ -259,6 +265,9 @@ export default defineComponent({
                                     this.attachments.splice(i, 1);
                                     break;
                                 }
+                            }
+                            if (MediaController.MediaData) {
+                                MediaController.MediaData.attachments = clone(this.attachments);
                             }
                             this.$emit("changed");
                         })
@@ -338,6 +347,9 @@ export default defineComponent({
                             this.attachments[i].url = res.url;
                             break;
                         }
+                    }
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.attachments = clone(this.attachments);
                     }
                     this.$emit("changed");
                 })

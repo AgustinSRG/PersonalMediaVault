@@ -81,6 +81,7 @@ import { defineComponent } from "vue";
 
 import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { clone } from "@/utils/objects";
 
 export default defineComponent({
     components: {
@@ -173,6 +174,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
                     this.audios.push(res);
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.audios = clone(this.audios);
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {
@@ -240,6 +244,9 @@ export default defineComponent({
                                     this.audios.splice(i, 1);
                                     break;
                                 }
+                            }
+                            if (MediaController.MediaData) {
+                                MediaController.MediaData.audios = clone(this.audios);
                             }
                             this.$emit("changed");
                         })

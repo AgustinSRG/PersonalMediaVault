@@ -80,6 +80,7 @@ import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
 import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { clone } from "@/utils/objects";
 
 export default defineComponent({
     components: {
@@ -174,6 +175,9 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
                     this.subtitles.push(res);
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.subtitles = clone(this.subtitles);
+                    }
                     this.$emit("changed");
                 })
                 .onCancel(() => {
@@ -244,6 +248,9 @@ export default defineComponent({
                                     this.subtitles.splice(i, 1);
                                     break;
                                 }
+                            }
+                            if (MediaController.MediaData) {
+                                MediaController.MediaData.subtitles = clone(this.subtitles);
                             }
                             this.$emit("changed");
                         })
