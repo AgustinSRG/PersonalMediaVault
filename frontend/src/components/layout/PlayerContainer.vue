@@ -430,4 +430,6 @@ export default defineComponent({
 @import "@/style/player/image-notes.css";
 
 @import "@/style/player/ext-desc.css";
+
+@import "@/style/player/time-slices-edit.css";
 </style>

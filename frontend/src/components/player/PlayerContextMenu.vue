@@ -72,6 +72,14 @@
                 </td>
             </tr>
 
+            <tr class="tr-button" tabindex="0" @click="showTags" @keydown="clickOnEnter">
+                <td>
+                    <i class="fas fa-tag icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Tags") }}</span>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+
             <tr v-if="type === 'image' && canWrite" class="tr-button" tabindex="0" @click="toggleNotes" @keydown="clickOnEnter">
                 <td>
                     <i class="fas fa-pencil-alt icon-config"></i>
@@ -82,12 +90,14 @@
                 </td>
             </tr>
 
-            <tr class="tr-button" tabindex="0" @click="showTags" @keydown="clickOnEnter">
+            <tr v-if="(type === 'video' || type === 'audio') && canWrite" class="tr-button" tabindex="0" @click="toggleTimeSlices" @keydown="clickOnEnter">
                 <td>
-                    <i class="fas fa-tag icon-config"></i>
-                    <span class="context-entry-title">{{ $t("Tags") }}</span>
+                    <i class="fas fa-pencil-alt icon-config"></i>
+                    <span class="context-entry-title">{{ $t("Edit time slices") }}</span>
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <i class="fas fa-check" :class="{ 'check-uncheck': !timeSlicesEdit }"></i>
+                </td>
             </tr>
 
             <tr
@@ -145,6 +155,7 @@ export default defineComponent({
         "update:fit",
         "update:notesEdit",
         "update:sliceLoop",
+        "update:timeSlicesEdit",
         "open-tags",
         "open-ext-desc",
         "stats",
@@ -171,6 +182,8 @@ export default defineComponent({
         canWrite: Boolean,
 
         hasExtendedDescription: Boolean,
+
+        timeSlicesEdit: Boolean,
     },
     setup(props) {
         return {
@@ -180,6 +193,7 @@ export default defineComponent({
             controlsState: useVModel(props, "controls"),
             notesState: useVModel(props, "notesEdit"),
             sliceLoopState: useVModel(props, "sliceLoop"),
+            timeSlicesEditState: useVModel(props, "timeSlicesEdit"),
         };
     },
     data: function () {
@@ -220,6 +234,12 @@ export default defineComponent({
 
         toggleNotes: function () {
             this.notesState = !this.notesState;
+            this.shownState = false;
+            this.$emit("close");
+        },
+
+        toggleTimeSlices: function () {
+            this.timeSlicesEditState = !this.timeSlicesEditState;
             this.shownState = false;
             this.$emit("close");
         },

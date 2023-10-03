@@ -1,0 +1,67 @@
+
+/* Time slices editor helper */
+
+.time-slices-edit-helper {
+    position: absolute;
+    background-color: var(--player-editor-background);
+    right: 0.5rem;
+
+    top: calc(56px + 0.5rem);
+    bottom: 76px;
+
+    width: calc(100% - 1rem);
+    max-width: 800px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.player-min .time-slices-edit-helper {
+    top: calc(32px + 0.5rem);
+    bottom: 52px;
+}
+
+.time-slices-edit-helper-btn {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    background: transparent;
+    color: var(--theme-btn-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.time-slices-edit-helper-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.time-slices-edit-helper-btn:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}
+
+.time-slices-edit-helper .helper-header {
+    height: 56px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: solid 1px var(--theme-border-color);
+}
+
+.time-slices-edit-helper .helper-title {
+    flex: 1;
+    font-size: large;
+}
+
+.time-slices-edit-helper .helper-body {
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+
+    height: calc(100% - 56px);
+}

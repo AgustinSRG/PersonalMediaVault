@@ -121,6 +121,13 @@
             ></div>
         </div>
 
+        <TimeSlicesEditHelper
+            v-if="timeSlicesEdit"
+            v-model:display="timeSlicesEdit"
+            :current-time="currentTime"
+            @update-time-slices="refreshTimeSlices"
+        ></TimeSlicesEditHelper>
+
         <div
             class="player-controls"
             :class="{ hidden: !showControls }"
@@ -363,6 +370,7 @@
             :isShort="isShort"
             @open-tags="openTags"
             @open-ext-desc="openExtendedDescription"
+            v-model:timeSlicesEdit="timeSlicesEdit"
         ></PlayerContextMenu>
     </div>
 </template>
@@ -382,6 +390,7 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import TimeSlicesEditHelper from "./TimeSlicesEditHelper.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
@@ -403,6 +412,7 @@ export default defineComponent({
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,
+        TimeSlicesEditHelper,
     },
     name: "AudioPlayer",
     emits: [
@@ -519,6 +529,8 @@ export default defineComponent({
             currentTimeSliceName: "",
             currentTimeSliceStart: 0,
             currentTimeSliceEnd: 0,
+
+            timeSlicesEdit: false,
 
             theme: AppPreferences.Theme,
 
@@ -1594,6 +1606,32 @@ export default defineComponent({
             this.loop = true;
             this.$emit("force-loop", this.loop);
             this.play();
+        },
+
+        refreshTimeSlices: function () {
+            const metadata = MediaController.MediaData;
+
+            if (!metadata) {
+                return;
+            }
+
+            this.timeSlices = normalizeTimeSlices(
+                (metadata.time_slices || []).sort((a, b) => {
+                    if (a.time < b.time) {
+                        return -1;
+                    } else if (a.time > b.time) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }),
+                metadata.duration,
+            );
+            this.currentTimeSlice = null;
+            this.currentTimeSliceName = "";
+            this.currentTimeSliceStart = 0;
+            this.currentTimeSliceEnd = 0;
+            this.updateCurrentTimeSlice();
         },
     },
     mounted: function () {
