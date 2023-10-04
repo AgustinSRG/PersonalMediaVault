@@ -195,7 +195,11 @@ export default defineComponent({
     },
     methods: {
         clickToSelect: function () {
-            this.$el.querySelector(".file-hidden").click();
+            const fileElem = this.$el.querySelector(".file-hidden");
+            if (fileElem) {
+                fileElem.value = null;
+                fileElem.click();
+            }
         },
 
         autoFocus: function () {

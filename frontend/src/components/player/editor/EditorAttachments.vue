@@ -171,7 +171,11 @@ export default defineComponent({
         // Attachments
 
         selectAttachmentFile: function () {
-            this.$el.querySelector(".attachment-file-hidden").click();
+            const fileElem = this.$el.querySelector(".attachment-file-hidden");
+            if (fileElem) {
+                fileElem.value = null;
+                fileElem.click();
+            }
         },
 
         attachmentFileChanged: function (e) {

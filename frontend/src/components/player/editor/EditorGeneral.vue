@@ -174,7 +174,11 @@ export default defineComponent({
         },
 
         uploadThumbnail: function () {
-            this.$el.querySelector(".file-hidden").click();
+            const fileElem = this.$el.querySelector(".file-hidden");
+            if (fileElem) {
+                fileElem.value = null;
+                fileElem.click();
+            }
         },
 
         inputFileChanged: function (e) {
