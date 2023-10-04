@@ -3,9 +3,9 @@
         <div
             class="horizontal-filter-menu"
             :class="{
-                'three-child': !canWrite,
-                'four-child': type === 2 && canWrite,
-                'five-child': (type === 1 && canWrite) || (type == 3 && !canWrite),
+                'three-child': (!canWrite && type === 2) || (!canWrite && type === 3) || (type === 1 && canWrite),
+                'four-child': (type === 2 && canWrite) || (type === 1 && !canWrite),
+                'five-child': (type == 3 && !canWrite),
             }"
         >
             <a
@@ -43,6 +43,14 @@
                 >{{ $t("Time slices") }}</a
             >
             <a
+                v-if="type === 1"
+                href="javascript:;"
+                @click="changePage('image-notes')"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'image-notes' }"
+                >{{ $t("Image notes") }}</a
+            >
+            <a
                 href="javascript:;"
                 @click="changePage('attachments')"
                 class="horizontal-filter-menu-item"
@@ -73,6 +81,7 @@
         <EditorAudios v-else-if="page === 'audios'" @changed="onChanged"></EditorAudios>
         <EditorAttachments v-else-if="page === 'attachments'" @changed="onChanged"></EditorAttachments>
         <EditorTimeSlices v-else-if="page === 'time-slices'" @changed="onChanged"></EditorTimeSlices>
+        <EditorImageNotes v-else-if="page === 'image-notes'" @changed="onChanged"></EditorImageNotes>
         <EditorResolutions v-else-if="page === 'resolutions'" @changed="onChanged"></EditorResolutions>
         <EditorDangerZone v-else-if="page === 'danger'" @changed="onChanged"></EditorDangerZone>
     </div>
@@ -108,6 +117,10 @@ const EditorTimeSlices = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorTimeSlices.vue"),
 });
 
+const EditorImageNotes = defineAsyncComponent({
+    loader: () => import("@/components/player/editor/EditorImageNotes.vue"),
+});
+
 const EditorResolutions = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorResolutions.vue"),
 });
@@ -124,6 +137,7 @@ export default defineComponent({
         EditorAudios,
         EditorAttachments,
         EditorTimeSlices,
+        EditorImageNotes,
         EditorResolutions,
         EditorDangerZone,
     },
