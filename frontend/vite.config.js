@@ -44,7 +44,7 @@ export default defineConfig({
                 ],
             },
             workbox: {
-                navigateFallbackAllowlist: [/^\/(\?.*)?$/],
+                navigateFallbackAllowlist: [/^\/$/],
             },
         }),
     ],
