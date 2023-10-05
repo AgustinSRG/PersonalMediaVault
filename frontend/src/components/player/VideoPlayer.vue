@@ -17,7 +17,7 @@
         @contextmenu="onContextMenu"
         @wheel="onMouseWheel"
     >
-        <div class="video-scroller" @mousedown="grabScroll">
+        <div class="video-scroller" @mousedown="grabScroll" @touchstart="onScrollerTouchStart">
             <video
                 v-if="videoURL"
                 :src="videoURL"
@@ -582,6 +582,7 @@ export default defineComponent({
             scrollGrabY: 0,
             scrollGrabTop: 0,
             scrollGrabLeft: 0,
+            scrollMoved: false,
         };
     },
     methods: {
@@ -1333,7 +1334,7 @@ export default defineComponent({
                     }
                     break;
                 case "Home":
-                    if (event.altKey || shifting) {
+                    if (event.altKey) {
                         caught = false;
                     } else if (shifting) {
                         if (!this.incrementVerticalScroll("home")) {
@@ -1403,7 +1404,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
-                case "Z": 
+                case "Z":
                     this.scale = 1;
                     AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
@@ -1788,8 +1789,21 @@ export default defineComponent({
         },
 
         grabScroll: function (e) {
+            if (e.button !== 0) {
+                return;
+            }
+
             if (this.scale <= 1) {
                 return; // Not scaled
+            }
+
+            this.leaveControls();
+
+            if (this.displayConfig || this.contextMenuShown) {
+                this.displayConfig = false;
+                this.contextMenuShown = false;
+                e.stopPropagation();
+                return;
             }
 
             const scroller = this.$el.querySelector(".video-scroller");
@@ -1802,6 +1816,7 @@ export default defineComponent({
             this.scrollGrabLeft = scroller.scrollLeft;
 
             this.scrollGrabbed = true;
+            this.scrollMoved = false;
             if (e.touches && e.touches.length > 0) {
                 this.scrollGrabX = e.touches[0].pageX;
                 this.scrollGrabY = e.touches[0].pageY;
@@ -1830,13 +1845,26 @@ export default defineComponent({
 
             scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
             scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
+            this.scrollMoved = true;
         },
 
         dropScroll: function (e) {
+            if (e.button !== 0) {
+                return;
+            }
+
             if (!this.scrollGrabbed) {
                 return;
             }
+
             this.scrollGrabbed = false;
+
+            if (!this.scrollMoved) {
+                this.clickPlayer();
+                return;
+            }
+
+            this.scrollMoved = false;
 
             if (e.touches && e.touches.length > 0) {
                 this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
@@ -1916,7 +1944,7 @@ export default defineComponent({
                 return false;
             }
 
-            const el = this.$el.querySelector(".video-scroller");;
+            const el = this.$el.querySelector(".video-scroller");
 
             if (!el) {
                 return false;
@@ -1937,6 +1965,14 @@ export default defineComponent({
             }
 
             return true;
+        },
+
+        onScrollerTouchStart: function (e) {
+            if (this.scale <= 1) {
+                return;
+            }
+
+            e.stopPropagation();
         },
     },
     mounted: function () {

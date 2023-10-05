@@ -39,7 +39,7 @@ export function textToImageNotes(text: string): ImageNote[] {
 
     let state = 0;
 
-    for (let line of lines) {
+    for (const line of lines) {
         switch (state) {
             case 0:
                 {

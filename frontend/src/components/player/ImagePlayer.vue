@@ -395,6 +395,17 @@ export default defineComponent({
         },
 
         grabScroll: function (e) {
+            if (e.button !== 0) {
+                return;
+            }
+
+            if (this.displayConfig || this.contextMenuShown) {
+                this.displayConfig = false;
+                this.contextMenuShown = false;
+                e.stopPropagation();
+                return;
+            }
+
             const scroller = this.$el.querySelector(".image-scroller");
 
             if (!scroller) {
@@ -434,6 +445,10 @@ export default defineComponent({
         },
 
         dropScroll: function (e) {
+            if (e.button !== 0) {
+                return;
+            }
+
             if (!this.scrollGrabbed) {
                 return;
             }

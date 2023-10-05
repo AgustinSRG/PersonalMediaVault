@@ -90,7 +90,13 @@
                 </td>
             </tr>
 
-            <tr v-if="(type === 'video' || type === 'audio') && canWrite" class="tr-button" tabindex="0" @click="toggleTimeSlices" @keydown="clickOnEnter">
+            <tr
+                v-if="(type === 'video' || type === 'audio') && canWrite"
+                class="tr-button"
+                tabindex="0"
+                @click="toggleTimeSlices"
+                @keydown="clickOnEnter"
+            >
                 <td>
                     <i class="fas fa-pencil-alt icon-config"></i>
                     <span class="context-entry-title">{{ $t("Edit time slices") }}</span>
