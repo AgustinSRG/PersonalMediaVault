@@ -52,6 +52,16 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToScales">
+                <td>
+                    <i class="fas fa-magnifying-glass icon-config"></i>
+                    <b>{{ $t("Scale") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderScale(scale) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToResolutions">
                 <td>
                     <i class="fas fa-photo-film icon-config"></i>
@@ -149,6 +159,7 @@
                 </td>
             </tr>
         </table>
+
         <table v-if="page === 'speed'">
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
                 <td>
@@ -165,6 +176,24 @@
                 <td class="td-right"></td>
             </tr>
         </table>
+
+        <table v-if="page === 'scales'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Scale") }}</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr v-for="s in scales" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeScale(s)">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== scale }"></i>
+                    {{ renderScale(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+
         <table v-if="page === 'resolution'">
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
                 <td>
@@ -358,6 +387,7 @@ export default defineComponent({
         "update:loop",
         "update:nextEnd",
         "update:speed",
+        "update:scale",
         "update:resolution",
         "update:subSize",
         "update:subBackground",
@@ -373,6 +403,7 @@ export default defineComponent({
         loop: Boolean,
         nextEnd: Boolean,
         speed: Number,
+        scale: Number,
         resolution: Number,
         subSize: String,
         subBackground: String,
@@ -387,6 +418,7 @@ export default defineComponent({
             loopState: useVModel(props, "loop"),
             nextEndState: useVModel(props, "nextEnd"),
             speedState: useVModel(props, "speed"),
+            scaleState: useVModel(props, "scale"),
             resolutionState: useVModel(props, "resolution"),
             subSizeState: useVModel(props, "subSize"),
             subBackgroundState: useVModel(props, "subBackground"),
@@ -398,6 +430,7 @@ export default defineComponent({
         return {
             page: "",
             speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+            scales: [1, 1.25, 1.5, 1.75, 2, 4, 8],
             resolutions: [],
 
             subtitles: "",
@@ -470,6 +503,15 @@ export default defineComponent({
             this.focus();
         },
 
+        changeScale: function (s) {
+            this.scaleState = s;
+        },
+
+        goToScales: function () {
+            this.page = "scales";
+            this.focus();
+        },
+
         goToResolutions: function () {
             this.page = "resolution";
             this.focus();
@@ -514,6 +556,17 @@ export default defineComponent({
                 return this.$t("Normal");
             }
         },
+
+        renderScale: function (scale: number) {
+            if (scale > 1) {
+                return Math.floor(scale * 100) + "%";
+            } else if (scale < 1) {
+                return Math.floor(scale * 100) + "%";
+            } else {
+                return this.$t("Normal");
+            }
+        },
+
         renderResolution: function (res: number, rTick: number) {
             if (rTick < 0 || !this.metadata) {
                 return this.$t("Unknown");

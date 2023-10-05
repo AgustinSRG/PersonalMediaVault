@@ -15,29 +15,33 @@
         @touchmove="playerMouseMove"
         @touchend.passive="playerMouseUp"
         @contextmenu="onContextMenu"
+        @wheel="onMouseWheel"
     >
-        <video
-            v-if="videoURL"
-            :src="videoURL"
-            crossorigin="use-credentials"
-            :key="rTick"
-            playsinline
-            webkit-playsinline
-            x-webkit-airplay="allow"
-            :muted="muted || !!audioTrackURL"
-            :loop="(loop || isShort) && !sliceLoop"
-            :volume.prop="volume"
-            :playbackRate.prop="speed"
-            @ended="onEnded"
-            @timeupdate="onVideoTimeUpdate"
-            @canplay="onCanPlay"
-            @loadedmetadata="onLoadMetaData"
-            @waiting="onWaitForBuffer(true)"
-            @playing="onWaitForBuffer(false)"
-            @play="onPlay"
-            @pause="onPause"
-            @error="onMediaError"
-        ></video>
+        <div class="video-scroller" @mousedown="grabScroll">
+            <video
+                v-if="videoURL"
+                :src="videoURL"
+                crossorigin="use-credentials"
+                :key="rTick"
+                playsinline
+                webkit-playsinline
+                x-webkit-airplay="allow"
+                :muted="muted || !!audioTrackURL"
+                :loop="(loop || isShort) && !sliceLoop"
+                :volume.prop="volume"
+                :playbackRate.prop="speed"
+                @ended="onEnded"
+                @timeupdate="onVideoTimeUpdate"
+                @canplay="onCanPlay"
+                @loadedmetadata="onLoadMetaData"
+                @waiting="onWaitForBuffer(true)"
+                @playing="onWaitForBuffer(false)"
+                @play="onPlay"
+                @pause="onPause"
+                @error="onMediaError"
+                :style="{ width: getScaleCss(scale), height: getScaleCss(scale) }"
+            ></video>
+        </div>
 
         <audio
             v-if="audioTrackURL"
@@ -342,6 +346,8 @@
         <VideoPlayerConfig
             v-model:shown="displayConfig"
             v-model:speed="speed"
+            v-model:scale="scale"
+            @update:scale="onScaleUpdated"
             v-model:loop="loop"
             @update:loop="() => this.$emit('force-loop', this.loop)"
             v-model:nextEnd="nextEnd"
@@ -528,6 +534,7 @@ export default defineComponent({
             internalTick: 0,
 
             speed: 1,
+            scale: 1,
 
             feedback: "",
 
@@ -569,6 +576,12 @@ export default defineComponent({
 
             pendingNextEnd: false,
             pendingNextEndSeconds: 0,
+
+            scrollGrabbed: false,
+            scrollGrabX: 0,
+            scrollGrabY: 0,
+            scrollGrabTop: 0,
+            scrollGrabLeft: 0,
         };
     },
     methods: {
@@ -904,6 +917,7 @@ export default defineComponent({
                 }
             }
         },
+
         mouseLeavePlayer: function () {
             this.timelineGrabbed = false;
             if (!this.playing || this.expandedTitle || this.expandedAlbum) return;
@@ -1189,7 +1203,12 @@ export default defineComponent({
         },
 
         onKeyPress: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPlayerVisible() || !event.key || event.ctrlKey) {
+            if (
+                AuthController.Locked ||
+                !AppStatus.IsPlayerVisible() ||
+                !event.key ||
+                (event.ctrlKey && event.key !== "+" && event.key !== "-")
+            ) {
                 return false;
             }
             let caught = true;
@@ -1225,6 +1244,9 @@ export default defineComponent({
                     break;
                 case "ArrowUp":
                     if (!shifting) {
+                        if (this.incrementVerticalScroll(-40)) {
+                            break;
+                        }
                         this.changeVolume(Math.min(1, this.volume + 0.05));
                     } else {
                         this.changeVolume(Math.min(1, this.volume + 0.01));
@@ -1238,6 +1260,9 @@ export default defineComponent({
                     break;
                 case "ArrowDown":
                     if (!shifting) {
+                        if (this.incrementVerticalScroll(40)) {
+                            break;
+                        }
                         this.changeVolume(Math.max(0, this.volume - 0.05));
                     } else {
                         this.changeVolume(Math.max(0, this.volume - 0.01));
@@ -1264,7 +1289,7 @@ export default defineComponent({
                         } else {
                             caught = false;
                         }
-                    } else {
+                    } else if (!this.incrementHorizontalScroll(-40)) {
                         this.setTime(this.currentTime - 5, true);
                     }
                     break;
@@ -1284,7 +1309,7 @@ export default defineComponent({
                         } else {
                             caught = false;
                         }
-                    } else {
+                    } else if (!this.incrementHorizontalScroll(40)) {
                         this.setTime(this.currentTime + 5, true);
                     }
                     break;
@@ -1310,14 +1335,22 @@ export default defineComponent({
                 case "Home":
                     if (event.altKey || shifting) {
                         caught = false;
-                    } else {
+                    } else if (shifting) {
+                        if (!this.incrementVerticalScroll("home")) {
+                            caught = false;
+                        }
+                    } else if (!this.incrementHorizontalScroll("home")) {
                         this.setTime(0, true);
                     }
                     break;
                 case "End":
-                    if (event.altKey || shifting) {
+                    if (event.altKey) {
                         caught = false;
-                    } else {
+                    } else if (shifting) {
+                        if (!this.incrementVerticalScroll("end")) {
+                            caught = false;
+                        }
+                    } else if (!this.incrementHorizontalScroll("end")) {
                         this.setTime(this.duration, true);
                     }
                     break;
@@ -1360,6 +1393,21 @@ export default defineComponent({
                 case "c":
                     this.userControlsState = !this.userControlsState;
                     break;
+                case "+":
+                    this.scale = Math.min(8, this.scale + (shifting ? 0.01 : 0.1));
+                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    this.onScaleUpdated();
+                    break;
+                case "-":
+                    this.scale = Math.max(1, this.scale - (shifting ? 0.01 : 0.1));
+                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    this.onScaleUpdated();
+                    break;
+                case "Z": 
+                    this.scale = 1;
+                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    this.onScaleUpdated();
+                    break;
                 case "Delete":
                     this.$emit("delete");
                     break;
@@ -1401,6 +1449,7 @@ export default defineComponent({
             this.currentTime = this.canSaveTime ? PlayerPreferences.GetInitialTime(this.mid) : 0;
             this.duration = 0;
             this.speed = 1;
+            this.scale = 1;
             this.setDefaultLoop();
             this.currentResolution = PlayerPreferences.GetResolutionIndex(this.metadata);
             this.loading = true;
@@ -1717,6 +1766,178 @@ export default defineComponent({
             this.currentTimeSliceEnd = 0;
             this.updateCurrentTimeSlice();
         },
+
+        renderScale: function (scale: number) {
+            if (scale > 1) {
+                return Math.floor(scale * 100) + "%";
+            } else if (scale < 1) {
+                return Math.floor(scale * 100) + "%";
+            } else {
+                return this.$t("Normal");
+            }
+        },
+
+        getScaleCss: function (scale: number) {
+            return Math.floor(scale * 100) + "%";
+        },
+
+        onScaleUpdated: function () {
+            if (this.scale > 1) {
+                nextTick(this.centerScroll.bind(this));
+            }
+        },
+
+        grabScroll: function (e) {
+            if (this.scale <= 1) {
+                return; // Not scaled
+            }
+
+            const scroller = this.$el.querySelector(".video-scroller");
+
+            if (!scroller) {
+                return;
+            }
+
+            this.scrollGrabTop = scroller.scrollTop;
+            this.scrollGrabLeft = scroller.scrollLeft;
+
+            this.scrollGrabbed = true;
+            if (e.touches && e.touches.length > 0) {
+                this.scrollGrabX = e.touches[0].pageX;
+                this.scrollGrabY = e.touches[0].pageY;
+            } else {
+                this.scrollGrabX = e.pageX;
+                this.scrollGrabY = e.pageY;
+            }
+
+            e.stopPropagation();
+        },
+
+        moveScrollByMouse: function (x: number, y: number) {
+            const scroller = this.$el.querySelector(".video-scroller");
+
+            if (!scroller) {
+                return;
+            }
+
+            const rect = scroller.getBoundingClientRect();
+
+            const maxScrollLeft = scroller.scrollWidth - rect.width;
+            const maxScrollTop = scroller.scrollHeight - rect.height;
+
+            const diffX = x - this.scrollGrabX;
+            const diffY = y - this.scrollGrabY;
+
+            scroller.scrollTop = Math.max(0, Math.min(maxScrollTop, this.scrollGrabTop - diffY));
+            scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
+        },
+
+        dropScroll: function (e) {
+            if (!this.scrollGrabbed) {
+                return;
+            }
+            this.scrollGrabbed = false;
+
+            if (e.touches && e.touches.length > 0) {
+                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
+            } else {
+                this.moveScrollByMouse(e.pageX, e.pageY);
+            }
+        },
+
+        moveScroll: function (e) {
+            if (!this.scrollGrabbed) {
+                return;
+            }
+
+            if (e.touches && e.touches.length > 0) {
+                this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
+            } else {
+                this.moveScrollByMouse(e.pageX, e.pageY);
+            }
+        },
+
+        centerScroll: function () {
+            const scroller = this.$el.querySelector(".video-scroller");
+
+            if (!scroller) {
+                return;
+            }
+
+            scroller.scrollTop = (scroller.scrollHeight - scroller.getBoundingClientRect().height) / 2;
+            scroller.scrollLeft = (scroller.scrollWidth - scroller.getBoundingClientRect().width) / 2;
+        },
+
+        onMouseWheel: function (e: WheelEvent) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.deltaY > 0) {
+                    this.scale = Math.max(1, this.scale - 0.1);
+                } else {
+                    this.scale = Math.min(8, this.scale + 0.1);
+                }
+
+                AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                this.onScaleUpdated();
+            }
+        },
+
+        incrementVerticalScroll: function (a: number | string): boolean {
+            if (this.scale <= 1) {
+                return false;
+            }
+
+            const el = this.$el.querySelector(".video-scroller");
+
+            if (!el) {
+                return false;
+            }
+
+            const maxScroll = Math.max(0, el.scrollHeight - el.getBoundingClientRect().height);
+
+            if (maxScroll <= 0) {
+                return false;
+            }
+
+            if (typeof a === "number") {
+                el.scrollTop = Math.min(Math.max(0, el.scrollTop + a), maxScroll);
+            } else if (a === "home") {
+                el.scrollTop = 0;
+            } else if (a === "end") {
+                el.scrollTop = maxScroll;
+            }
+
+            return true;
+        },
+
+        incrementHorizontalScroll: function (a: number | string): boolean {
+            if (this.scale <= 1) {
+                return false;
+            }
+
+            const el = this.$el.querySelector(".video-scroller");;
+
+            if (!el) {
+                return false;
+            }
+
+            const maxScroll = Math.max(0, el.scrollWidth - el.getBoundingClientRect().width);
+
+            if (maxScroll <= 0) {
+                return false;
+            }
+
+            if (typeof a === "number") {
+                el.scrollLeft = Math.min(Math.max(0, el.scrollLeft + a), maxScroll);
+            } else if (a === "home") {
+                el.scrollLeft = 0;
+            } else if (a === "end") {
+                el.scrollLeft = maxScroll;
+            }
+
+            return true;
+        },
     },
     mounted: function () {
         this._handles = Object.create(null);
@@ -1742,6 +1963,12 @@ export default defineComponent({
 
         this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
         AppEvents.AddEventListener("subtitles-update", this._handles.subtitlesReloadH);
+
+        this._handles.dropScrollHandler = this.dropScroll.bind(this);
+        document.addEventListener("mouseup", this._handles.dropScrollHandler);
+
+        this._handles.moveScrollHandler = this.moveScroll.bind(this);
+        document.addEventListener("mousemove", this._handles.moveScrollHandler);
 
         this.initializeVideo();
 
@@ -1777,6 +2004,9 @@ export default defineComponent({
         document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
+
+        document.removeEventListener("mouseup", this._handles.dropScrollHandler);
+        document.removeEventListener("mousemove", this._handles.moveScrollHandler);
 
         AppEvents.RemoveEventListener("subtitles-update", this._handles.subtitlesReloadH);
         KeyboardManager.RemoveHandler(this._handles.keyHandler);

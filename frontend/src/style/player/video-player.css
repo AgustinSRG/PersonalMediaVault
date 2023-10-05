@@ -7,27 +7,29 @@
     display: block;
     position: relative;
     overflow: hidden;
+
     width: 100%;
     height: 100%;
+
     -webkit-touch-callout: none;
-    /* iOS Safari */
     -webkit-user-select: none;
-    /* Safari */
     -khtml-user-select: none;
-    /* Konqueror HTML */
     -moz-user-select: none;
-    /* Old versions of Firefox */
     -ms-user-select: none;
-    /* Internet Explorer/Edge */
     user-select: none;
-    /* Non-prefixed version, currently
-                                    supported by Chrome, Edge, Opera and Firefox */
 }
 
-.video-player video {
+.video-scroller {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: auto;
+}
+
+.video-player video {
     width: 100%;
     height: 100%;
     pointer-events: none;
@@ -52,4 +54,36 @@
     width: 100%;
     height: 100%;
     z-index: 100;
+}
+
+/* Scroll bar */
+
+.video-scroller::-webkit-scrollbar {
+    width: 5px;
+    height: 3px;
+}
+
+.no-controls .video-scroller::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+/* Track */
+
+.video-scroller::-webkit-scrollbar-track {
+    background: #bdbdbd;
+}
+
+.no-controls .video-scroller::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Handle */
+
+.video-scroller::-webkit-scrollbar-thumb {
+    background: #757575;
+}
+
+.no-controls .video-scroller::-webkit-scrollbar-thumb {
+    background: transparent;
 }

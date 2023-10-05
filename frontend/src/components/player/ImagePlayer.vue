@@ -1065,7 +1065,6 @@ export default defineComponent({
         document.addEventListener("mouseup", this._handles.dropScrollHandler);
 
         this._handles.moveScrollHandler = this.moveScroll.bind(this);
-
         document.addEventListener("mousemove", this._handles.moveScrollHandler);
 
         this._handles.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
@@ -1088,7 +1087,6 @@ export default defineComponent({
         document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
         document.removeEventListener("mouseup", this._handles.dropScrollHandler);
-
         document.removeEventListener("mousemove", this._handles.moveScrollHandler);
 
         AppEvents.RemoveEventListener("album-next-prefetch", this._handles.onAlbumPrefetchH);
