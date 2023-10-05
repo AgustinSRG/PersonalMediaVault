@@ -47,7 +47,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 	filename := vars["filename"]
 
-	match, _ := regexp.MatchString("[a-z0-9\\_]\\.[a-z0-9]+", filename)
+	match, _ := regexp.MatchString(".*\\.[a-z0-9]+", filename)
 
 	if !match {
 		response.WriteHeader(404)
