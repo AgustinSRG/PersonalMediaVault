@@ -46,16 +46,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	filename := vars["filename"]
-
-	match, _ := regexp.MatchString(".*\\.[a-z0-9]+", filename)
-
-	if !match {
-		response.WriteHeader(404)
-		return
-	}
-
-	ext := strings.ToLower(strings.Split(filename, ".")[1])
-
+	ext := GetExtensionFromFileName(filename)
 	mimeType := "application/octet-stream"
 
 	switch ext {
