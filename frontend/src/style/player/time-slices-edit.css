@@ -9,7 +9,7 @@
     top: calc(56px + 0.5rem);
     bottom: 76px;
 
-    width: calc(100% - 1rem);
+    width: calc(50% - 1rem);
     max-width: 800px;
 
     display: flex;
@@ -18,6 +18,7 @@
 
 .player-min .time-slices-edit-helper {
     top: calc(32px + 0.5rem);
+    width: calc(100% - 1rem);
     bottom: 52px;
 }
 
