@@ -17,7 +17,7 @@
         @wheel="onMouseWheel"
     >
         <div class="image-prefetch-container">
-            <img v-if="prefetchURL" :src="prefetchURL" />
+            <img v-if="prefetchURL" decoding="async" :src="prefetchURL" />
         </div>
         <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
             <img
@@ -32,6 +32,7 @@
                     top: imageTop,
                     left: imageLeft,
                 }"
+                decoding="async"
             />
 
             <ImageNotes
