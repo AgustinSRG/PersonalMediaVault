@@ -59,7 +59,7 @@
     --bg-opaque-100: white;
 
     --search-input-border-color: hsl(0, 0%, 18.82%);
-    --search-input-background: white;
+    --search-input-background: #f8f8f8;
     --search-input-inner-background: white;
     --search-suggestions-background: rgba(255, 255, 255, 0.8);
 }

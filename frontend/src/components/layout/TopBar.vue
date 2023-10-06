@@ -9,7 +9,12 @@
         </div>
         <div class="top-bar-search-td">
             <div class="top-bar-center-div">
-                <form class="top-bar-search-input-container" :class="{ focused: searchFocus }" @submit="submitSearch" tabindex="-1">
+                <form
+                    class="top-bar-search-input-container"
+                    :class="{ focused: searchFocus, 'has-search': hasSearch }"
+                    @submit="submitSearch"
+                    tabindex="-1"
+                >
                     <input
                         type="text"
                         class="top-bar-search-input"
@@ -24,10 +29,23 @@
                         @input="onSearchInput"
                         @focus="focusSearch"
                     />
+                    <button
+                        v-if="hasSearch"
+                        type="button"
+                        class="top-bar-search-clear-btn"
+                        :title="$t('Clear search')"
+                        @click="clearSearch"
+                    >
+                        <i class="fas fa-times"></i>
+                    </button>
                     <button type="submit" class="top-bar-button top-bar-search-button" :title="$t('Search')" @focus="blurSearch">
                         <i class="fas fa-search"></i>
                     </button>
-                    <div class="top-bar-search-suggestions" :class="{ hidden: suggestions.length === 0 }">
+                    <div
+                        class="top-bar-search-suggestions"
+                        :class="{ hidden: suggestions.length === 0 }"
+                        @scroll.passive="onSuggestionsScroll"
+                    >
                         <div v-for="s in suggestions" :key="s.key" class="top-bar-search-suggestion" @click="clickSearch(s)">
                             <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
                             <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
@@ -71,6 +89,8 @@ import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 import { FocusTrap } from "../../utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
+import { BigListScroller } from "@/utils/big-list-scroller";
+import { nextTick } from "vue";
 
 export default defineComponent({
     name: "TopBar",
@@ -78,6 +98,7 @@ export default defineComponent({
     data: function () {
         return {
             search: AppStatus.CurrentSearch,
+            hasSearch: !!AppStatus.CurrentSearch,
             searchFocus: false,
             suggestions: [],
         };
@@ -114,6 +135,7 @@ export default defineComponent({
 
         onSearchChanged: function () {
             this.search = AppStatus.CurrentSearch;
+            this.hasSearch = !!AppStatus.CurrentSearch;
         },
 
         focusSearch: function () {
@@ -195,6 +217,12 @@ export default defineComponent({
             }
         },
 
+        clearSearch: function () {
+            this.blurSearchInstantly();
+            this.search = "";
+            this.goSearch();
+        },
+
         updateSuggestions: function () {
             const tagFilter = normalizeString(
                 this.search
@@ -205,7 +233,8 @@ export default defineComponent({
             );
             const albumFilter = normalizeString(this.search).trim().toLowerCase();
             const albumFilterWords = filterToWords(albumFilter);
-            this.suggestions = Object.values(TagsController.Tags)
+
+            const suggestions = Object.values(TagsController.Tags)
                 .map((a: any) => {
                     const i = tagFilter ? normalizeString(a.name).indexOf(tagFilter) : 0;
                     return {
@@ -246,6 +275,20 @@ export default defineComponent({
                         return 1;
                     }
                 });
+
+            this._handles.bigListScroller.reset();
+            this._handles.bigListScroller.addElements(suggestions);
+
+            nextTick(() => {
+                const elem = this.$el.querySelector(".top-bar-search-suggestions");
+                if (elem) {
+                    elem.scrollTop = 0;
+                }
+            });
+        },
+
+        onSuggestionsScroll: function (e) {
+            this._handles.bigListScroller.checkElementScroll(e.target);
         },
 
         onSearchInput: function () {
@@ -314,6 +357,15 @@ export default defineComponent({
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
 
         this._handles.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
+
+        this._handles.bigListScroller = new BigListScroller(25, {
+            get: (): any[] => {
+                return this.suggestions;
+            },
+            set: (list) => {
+                this.suggestions = list;
+            },
+        });
     },
 
     beforeUnmount: function () {
