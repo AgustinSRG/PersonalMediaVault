@@ -11,12 +11,14 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    user-select: none;
 }
 
 .search-results-final-display {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    user-select: none;
 }
 
 .search-result-item {
