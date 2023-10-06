@@ -1404,6 +1404,7 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
+                case "z":
                 case "Z":
                     this.scale = 1;
                     AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
