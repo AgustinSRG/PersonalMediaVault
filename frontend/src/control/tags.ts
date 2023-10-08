@@ -8,13 +8,9 @@ import { AuthController } from "./auth";
 import { MediaListItem } from "@/api/models";
 import { MediaEntry } from "./media";
 
-export interface TagEntry {
-    id: number;
-    name: string;
-}
-
 export class TagsController {
-    public static Tags: { [id: string]: TagEntry } = Object.create(null);
+    public static TagsVersion = 0;
+    public static Tags: Map<number, string> = new Map();
     public static LastTagId = -1;
 
     public static Loading = true;
@@ -23,6 +19,15 @@ export class TagsController {
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", TagsController.Load);
         TagsController.Load();
+    }
+
+    public static GetTagName(id: number, v: number) {
+        if (import.meta.env.DEV) {
+            if (TagsController.TagsVersion !== v) {
+                console.warn("Tag version not properly updated. Current: " + TagsController.TagsVersion + " | Given: " + v);
+            }
+        }
+        return TagsController.Tags.get(id) || "???";
     }
 
     public static Load() {
@@ -36,16 +41,17 @@ export class TagsController {
         Timeouts.Abort("tags-load");
         Request.Pending("tags-load", TagsAPI.GetTags())
             .onSuccess((tags) => {
-                TagsController.Tags = Object.create(null);
+                TagsController.Tags = new Map();
 
                 for (const tag of tags) {
                     if (tag.id > TagsController.LastTagId) {
                         TagsController.LastTagId = tag.id;
                     }
-                    TagsController.Tags[tag.id + ""] = tag;
+                    TagsController.Tags.set(tag.id, tag.name);
                 }
 
-                AppEvents.Emit("tags-update", TagsController.Tags);
+                TagsController.TagsVersion++;
+                AppEvents.Emit("tags-update", TagsController.TagsVersion);
                 TagsController.Loading = false;
                 AppEvents.Emit("tags-loading", false);
                 TagsController.InitiallyLoaded = true;
@@ -69,11 +75,9 @@ export class TagsController {
     }
 
     public static FindTag(name: string): number {
-        const tags = Object.values(TagsController.Tags);
-
-        for (const tag of tags) {
-            if (tag.name === name) {
-                return tag.id;
+        for (const [tagId, tagName] of TagsController.Tags) {
+            if (tagName === name) {
+                return tagId;
             }
         }
 
@@ -82,21 +86,17 @@ export class TagsController {
 
     public static AddTag(id: number, name: string) {
         // Remove any other tag with that name
-        const tags = Object.values(TagsController.Tags);
-
-        for (const tag of tags) {
-            if (tag.name === name) {
-                delete TagsController.Tags[tag.id + ""];
+        for (const [tagId, tagName] of TagsController.Tags) {
+            if (tagName === name) {
+                TagsController.Tags.delete(tagId);
                 break;
             }
         }
 
-        TagsController.Tags[id + ""] = {
-            id: id,
-            name: name,
-        };
+        TagsController.Tags.set(id, name);
 
-        AppEvents.Emit("tags-update", TagsController.Tags);
+        TagsController.TagsVersion++;
+        AppEvents.Emit("tags-update", TagsController.TagsVersion);
 
         if (TagsController.LastTagId < id) {
             if (TagsController.LastTagId === id - 1) {
@@ -107,6 +107,13 @@ export class TagsController {
                 TagsController.Load();
             }
         }
+    }
+
+    public static RemoveTag(id: number) {
+        TagsController.Tags.delete(id);
+
+        TagsController.TagsVersion++;
+        AppEvents.Emit("tags-update", TagsController.TagsVersion);
     }
 
     public static OnMediaListReceived(list: (MediaListItem | MediaEntry)[]) {

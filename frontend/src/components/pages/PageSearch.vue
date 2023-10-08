@@ -47,7 +47,7 @@
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
+                    <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                         <div class="search-result-thumb-inner">
                             <div v-if="!item.thumbnail" class="no-thumb">
                                 <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -93,8 +93,7 @@ import { renderTimeSeconds } from "@/utils/time";
 import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { MediaListItem } from "@/api/models";
-import { TagEntry, TagsController } from "@/control/tags";
-import { clone } from "@/utils/objects";
+import { TagsController } from "@/control/tags";
 import { AppPreferences } from "@/control/app-preferences";
 
 export default defineComponent({
@@ -128,7 +127,7 @@ export default defineComponent({
 
             switchMediaOnLoad: "",
 
-            tagData: {},
+            tagVersion: TagsController.TagsVersion,
         };
     },
     methods: {
@@ -418,18 +417,14 @@ export default defineComponent({
             return false;
         },
 
-        renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
+        renderHintTitle(item: MediaListItem, tagVersion: number): string {
             const parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
                 const tagNames = [];
 
                 for (const tag of item.tags) {
-                    if (tags[tag + ""]) {
-                        tagNames.push(tags[tag + ""].name);
-                    } else {
-                        tagNames.push("???");
-                    }
+                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
                 }
 
                 parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
@@ -439,7 +434,7 @@ export default defineComponent({
         },
 
         updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
+            this.tagVersion = TagsController.TagsVersion;
         },
     },
     mounted: function () {

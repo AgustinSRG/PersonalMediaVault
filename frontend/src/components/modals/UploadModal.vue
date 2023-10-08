@@ -86,7 +86,6 @@
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { parseTagName } from "@/utils/tags";
-import { clone } from "@/utils/objects";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
@@ -116,7 +115,7 @@ export default defineComponent({
         return {
             tags: [],
             tagToAdd: "",
-            tagData: {},
+            tagVersion: TagsController.TagsVersion,
             matchingTags: [],
 
             album: -1,
@@ -198,12 +197,12 @@ export default defineComponent({
                 this.matchingTags = [];
                 return;
             }
-            this.matchingTags = Object.values(this.tagData)
-                .map((a: any) => {
-                    const i = a.name.indexOf(tagFilter);
+            this.matchingTags = Array.from(TagsController.Tags.entries())
+                .map(a => {
+                    const i = a[1].indexOf(tagFilter);
                     return {
-                        id: a.id,
-                        name: a.name,
+                        id: a[0],
+                        name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                     };
@@ -229,7 +228,7 @@ export default defineComponent({
         },
 
         updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
+            this.tagVersion = TagsController.TagsVersion;
             this.onTagAddChanged(true);
         },
 

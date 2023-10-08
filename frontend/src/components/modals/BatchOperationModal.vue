@@ -60,7 +60,7 @@
                     </div>
                     <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
                         <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
-                            <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                            <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                             <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -197,9 +197,8 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { TagEntry, TagsController } from "@/control/tags";
+import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { clone } from "@/utils/objects";
 import { AlbumsController } from "@/control/albums";
 import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
@@ -229,7 +228,7 @@ export default defineComponent({
         return {
             busy: false,
 
-            tagData: {},
+            tagVersion: TagsController.TagsVersion,
             albums: [],
 
             matchingTagsSearch: [],
@@ -283,12 +282,8 @@ export default defineComponent({
             this.$refs.modalContainer.close();
         },
 
-        getTagName: function (tag, data) {
-            if (data[tag + ""]) {
-                return data[tag + ""].name;
-            } else {
-                return "???";
-            }
+        getTagName: function (tag: number, v: number) {
+            return TagsController.GetTagName(tag, v);
         },
 
         onTagSearchChanged: function (forced?: boolean) {
@@ -315,20 +310,20 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
-            this.matchingTagsSearch = Object.values(this.tagData)
-                .map((a: any) => {
+            this.matchingTagsSearch = Array.from(TagsController.Tags.entries())
+                .map(a => {
                     if (!tagFilter) {
                         return {
-                            id: a.id,
-                            name: a.name,
+                            id: a[0],
+                            name: a[1],
                             starts: true,
                             contains: true,
                         };
                     }
-                    const i = a.name.indexOf(tagFilter);
+                    const i = a[1].indexOf(tagFilter);
                     return {
-                        id: a.id,
-                        name: a.name,
+                        id: a[0],
+                        name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                     };
@@ -377,20 +372,20 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
-            this.matchingTagsAction = Object.values(this.tagData)
-                .map((a: any) => {
+            this.matchingTagsAction = Array.from(TagsController.Tags.entries())
+                .map(a => {
                     if (!tagFilter) {
                         return {
-                            id: a.id,
-                            name: a.name,
+                            id: a[0],
+                            name: a[1],
                             starts: true,
                             contains: true,
                         };
                     }
-                    const i = a.name.indexOf(tagFilter);
+                    const i = a[1].indexOf(tagFilter);
                     return {
-                        id: a.id,
-                        name: a.name,
+                        id: a[0],
+                        name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                     };
@@ -422,7 +417,7 @@ export default defineComponent({
             this.onTagSearchChanged(true);
         },
 
-        addMatchingTagSearch: function (tag: TagEntry) {
+        addMatchingTagSearch: function (tag) {
             if (this.tagsSearch.indexOf(tag.id) >= 0) {
                 return;
             }
@@ -437,7 +432,7 @@ export default defineComponent({
             this.onTagActionChanged(true);
         },
 
-        addMatchingTagAction: function (tag: TagEntry) {
+        addMatchingTagAction: function (tag) {
             if (this.tagsAction.indexOf(tag.name) >= 0) {
                 return;
             }
@@ -495,7 +490,7 @@ export default defineComponent({
         },
 
         updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
+            this.tagVersion = TagsController.TagsVersion;
             this.onTagSearchChanged(false);
             this.onTagActionChanged(false);
         },
@@ -584,7 +579,7 @@ export default defineComponent({
 
         getFirstTag: function () {
             if (this.tagModeSearch === "all" && this.tagsSearch.length > 0) {
-                return this.getTagName(this.tagsSearch[0], this.tagData);
+                return this.getTagName(this.tagsSearch[0], this.tagVersion);
             } else {
                 return "";
             }

@@ -234,14 +234,14 @@ export default defineComponent({
             const albumFilter = normalizeString(this.search).trim().toLowerCase();
             const albumFilterWords = filterToWords(albumFilter);
 
-            const suggestions = Object.values(TagsController.Tags)
+            const suggestions = Array.from(TagsController.Tags.entries())
                 .map((a: any) => {
-                    const i = tagFilter ? normalizeString(a.name).indexOf(tagFilter) : 0;
+                    const i = tagFilter ? normalizeString(a[1]).indexOf(tagFilter) : 0;
                     return {
-                        key: "tag:" + a.id,
-                        id: a.id,
-                        name: a.name,
-                        nameLower: a.name,
+                        key: "tag:" + a[0],
+                        id: a[0],
+                        name: a[1],
+                        nameLower: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                         type: "tag",

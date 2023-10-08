@@ -8,7 +8,7 @@
         <div class="form-group media-tags">
             <label v-if="tags.length === 0">{{ $t("There are no tags yet for this media.") }}</label>
             <div v-for="tag in tags" :key="tag" class="media-tag">
-                <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                 <button
                     v-if="canWrite"
                     type="button"
@@ -77,7 +77,7 @@ export default defineComponent({
 
             tags: [],
             tagToAdd: "",
-            tagData: {},
+            tagVersion: TagsController.TagsVersion,
             matchingTags: [],
 
             busy: false,
@@ -107,15 +107,11 @@ export default defineComponent({
         },
 
         updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
+            this.tagVersion = TagsController.TagsVersion;
         },
 
-        getTagName: function (tag, data) {
-            if (data[tag + ""]) {
-                return data[tag + ""].name;
-            } else {
-                return "???";
-            }
+        getTagName: function (tag: number, v: number) {
+            return TagsController.GetTagName(tag, v);
         },
 
         removeTag: function (tag) {
@@ -126,7 +122,7 @@ export default defineComponent({
             this.busy = true;
 
             const mediaId = AppStatus.CurrentMedia;
-            const tagName = this.getTagName(tag, this.tagData);
+            const tagName = this.getTagName(tag, this.tagVersion);
 
             Request.Pending("media-editor-busy-tags", TagsAPI.UntagMedia(mediaId, tag))
                 .onSuccess(() => {
@@ -323,12 +319,12 @@ export default defineComponent({
                 this.matchingTags = [];
                 return;
             }
-            this.matchingTags = Object.values(this.tagData)
-                .map((a: any) => {
-                    const i = a.name.indexOf(tagFilter);
+            this.matchingTags = Array.from(TagsController.Tags.entries())
+                .map(a => {
+                    const i = a[1].indexOf(tagFilter);
                     return {
-                        id: a.id,
-                        name: a.name,
+                        id: a[0],
+                        name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                     };

@@ -33,7 +33,7 @@
             </div>
             <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
                 <div v-for="tag in tags" :key="tag" class="media-tag">
-                    <div class="media-tag-name">{{ getTagName(tag, tagData) }}</div>
+                    <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                     <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
                         <i class="fas fa-times"></i>
                     </button>
@@ -136,7 +136,7 @@
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    <div class="search-result-thumb" :title="renderHintTitle(item, tagData)">
+                    <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                         <div class="search-result-thumb-inner">
                             <div v-if="!item.thumbnail" class="no-thumb">
                                 <i v-if="item.type === 1" class="fas fa-image"></i>
@@ -180,10 +180,9 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { MediaEntry } from "@/control/media";
-import { TagEntry, TagsController } from "@/control/tags";
+import { TagsController } from "@/control/tags";
 import { elementInView } from "@/utils/in-view";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
@@ -219,7 +218,7 @@ export default defineComponent({
 
             advancedSearch: false,
 
-            tagData: {},
+            tagVersion: TagsController.TagsVersion,
             tags: [],
             tagToAdd: "",
             matchingTags: [],
@@ -561,24 +560,20 @@ export default defineComponent({
         },
 
         updateTagData: function () {
-            this.tagData = clone(TagsController.Tags);
+            this.tagVersion = TagsController.TagsVersion;
             this.onTagAddChanged(false);
         },
 
         getFirstTag: function () {
             if (this.tagMode === "all" && this.tags.length > 0) {
-                return this.getTagName(this.tags[0], this.tagData);
+                return this.getTagName(this.tags[0], this.tagVersion);
             } else {
                 return "";
             }
         },
 
-        getTagName: function (tag, data) {
-            if (data[tag + ""]) {
-                return data[tag + ""].name;
-            } else {
-                return "???";
-            }
+        getTagName: function (tag: number, v: number) {
+            return TagsController.GetTagName(tag, v);
         },
 
         removeTag: function (tag) {
@@ -644,20 +639,20 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
-            this.matchingTags = Object.values(this.tagData)
-                .map((a: any) => {
+            this.matchingTags = Array.from(TagsController.Tags.entries())
+                .map(a => {
                     if (!tagFilter) {
                         return {
-                            id: a.id,
-                            name: a.name,
+                            id: a[0],
+                            name: a[1],
                             starts: true,
                             contains: true,
                         };
                     }
-                    const i = a.name.indexOf(tagFilter);
+                    const i = a[1].indexOf(tagFilter);
                     return {
-                        id: a.id,
-                        name: a.name,
+                        id: a[0],
+                        name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
                     };
@@ -763,18 +758,14 @@ export default defineComponent({
             return false;
         },
 
-        renderHintTitle(item: MediaListItem, tags: { [id: string]: TagEntry }): string {
+        renderHintTitle(item: MediaListItem, tagVersion: number): string {
             const parts = [item.title || this.$t("Untitled")];
 
             if (item.tags.length > 0) {
                 const tagNames = [];
 
                 for (const tag of item.tags) {
-                    if (tags[tag + ""]) {
-                        tagNames.push(tags[tag + ""].name);
-                    } else {
-                        tagNames.push("???");
-                    }
+                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
                 }
 
                 parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
