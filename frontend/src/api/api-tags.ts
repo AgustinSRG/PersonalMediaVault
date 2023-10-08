@@ -22,7 +22,7 @@ export class TagsAPI {
         };
     }
 
-    public static UntagMedia(media: number, tagId: number): RequestParams<void> {
+    public static UntagMedia(media: number, tagId: number): RequestParams<{ removed: boolean }> {
         return {
             method: "POST",
             url: GetApiURL("/api/tags/remove"),

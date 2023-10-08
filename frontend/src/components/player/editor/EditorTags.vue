@@ -114,7 +114,7 @@ export default defineComponent({
             return TagsController.GetTagName(tag, v);
         },
 
-        removeTag: function (tag) {
+        removeTag: function (tag: number) {
             if (this.busy) {
                 return;
             }
@@ -125,7 +125,7 @@ export default defineComponent({
             const tagName = this.getTagName(tag, this.tagVersion);
 
             Request.Pending("media-editor-busy-tags", TagsAPI.UntagMedia(mediaId, tag))
-                .onSuccess(() => {
+                .onSuccess(({ removed }) => {
                     AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
                     for (let i = 0; i < this.tags.length; i++) {
@@ -136,6 +136,9 @@ export default defineComponent({
                     }
                     if (MediaController.MediaData) {
                         MediaController.MediaData.tags = clone(this.tags);
+                    }
+                    if (removed) {
+                        TagsController.RemoveTag(tag);
                     }
                     this.$emit("changed");
                 })
@@ -320,7 +323,7 @@ export default defineComponent({
                 return;
             }
             this.matchingTags = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     const i = a[1].indexOf(tagFilter);
                     return {
                         id: a[0],
