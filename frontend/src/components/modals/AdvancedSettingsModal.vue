@@ -45,7 +45,7 @@
                             autocomplete="off"
                             v-model="title"
                             :disabled="busy"
-                            placeholder="PMV"
+                            :placeholder="$t('Personal Media Vault')"
                             @change="onChangesMade"
                             class="form-control form-control-full-width"
                         />
