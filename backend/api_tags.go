@@ -167,6 +167,10 @@ type UntagMediaBody struct {
 	Tag   uint64 `json:"tag_id"`
 }
 
+type UntagMediaResponse struct {
+	Removed bool `json:"removed"`
+}
+
 func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
@@ -191,7 +195,7 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = GetVault().tags.UnTagMedia(p.Media, p.Tag, session.key)
+	err, tagWasRemoved := GetVault().tags.UnTagMedia(p.Media, p.Tag, session.key)
 
 	if err != nil {
 		LogError(err)
@@ -239,5 +243,18 @@ func api_untagMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	response.WriteHeader(200)
+	var result UntagMediaResponse
+
+	result.Removed = tagWasRemoved
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
 }

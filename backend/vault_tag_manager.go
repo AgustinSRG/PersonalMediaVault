@@ -259,7 +259,8 @@ func (tm *VaultTagManager) AcquireIndexFile(tag_id uint64) (*VaultMainIndex, err
 // tag_id - Id of the tag
 // check_delete - True if the modification made deleted the file
 // key - Vault encryption key
-func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, key []byte) {
+// Returns true if the tag index file was removed
+func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, key []byte) bool {
 	tm.lock.Lock()
 	defer tm.lock.Unlock()
 
@@ -271,25 +272,32 @@ func (tm *VaultTagManager) ReleaseIndexFile(tag_id uint64, check_delete bool, ke
 		}
 
 		if tm.indexes[tag_id].count <= 0 {
+			delResult := false
+
 			if tm.indexes[tag_id].check_delete {
-				tm.checkTagIndexToRemove(tag_id, tm.indexes[tag_id].index, key)
+				delResult = tm.checkTagIndexToRemove(tag_id, tm.indexes[tag_id].index, key)
 			}
 
 			delete(tm.indexes, tag_id)
+
+			return delResult
 		}
 	}
+
+	return false
 }
 
 // Internal method, called to check if a tag index file requires deletion
 // tag_id - Id of the tag
 // index - Reference to the index
 // key - Vault encryption key
-func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMainIndex, key []byte) {
+// Returns true if the tag index file was removed
+func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMainIndex, key []byte) bool {
 	r, err := index.StartRead()
 
 	if err != nil {
 		LogError(err)
-		return
+		return false
 	}
 
 	c, err := r.Count()
@@ -297,7 +305,7 @@ func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMain
 	if err != nil {
 		index.EndRead(r)
 		LogError(err)
-		return
+		return false
 	}
 
 	index.EndRead(r)
@@ -308,7 +316,7 @@ func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMain
 
 		if err != nil {
 			LogError(err)
-			return
+			return false
 		}
 
 		// Remove file
@@ -317,7 +325,11 @@ func (tm *VaultTagManager) checkTagIndexToRemove(tag_id uint64, index *VaultMain
 		if err != nil {
 			LogError(err)
 		}
+
+		return true
 	}
+
+	return false
 }
 
 // Adds a tag
@@ -421,37 +433,42 @@ func (tm *VaultTagManager) TagMedia(media_id uint64, tag_name string, key []byte
 // media_id - ID of the media file
 // tag_name - Name of the tag
 // key - Vault encryption key
-func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte) error {
+// Returns the error (if any), and true if the tag got removed
+func (tm *VaultTagManager) UnTagMedia(media_id uint64, tag_id uint64, key []byte) (error, bool) {
 	indexFile, err := tm.AcquireIndexFile(tag_id)
 
 	if err != nil {
-		return err
+		return err, false
 	}
-
-	defer tm.ReleaseIndexFile(tag_id, true, key)
 
 	r, err := indexFile.StartWrite()
 
 	if err != nil {
-		return err
+		tm.ReleaseIndexFile(tag_id, true, key)
+		return err, false
 	}
 
 	removed, _, err := r.file.RemoveValue(media_id)
 
 	if err != nil {
 		indexFile.CancelWrite(r)
-		return err
+		tm.ReleaseIndexFile(tag_id, true, key)
+		return err, false
 	}
 
 	if !removed {
 		// Was not tagged, no change
 		indexFile.CancelWrite(r)
-		return nil
+
+		delResult := tm.ReleaseIndexFile(tag_id, true, key)
+
+		return nil, delResult
 	}
 
 	err = indexFile.EndWrite(r)
+	delResult := tm.ReleaseIndexFile(tag_id, true, key)
 
-	return err
+	return err, delResult
 }
 
 // Checks if a media file is tagged by a specific tag

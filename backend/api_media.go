@@ -1434,7 +1434,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 	if meta.Tags != nil {
 		for i := 0; i < len(meta.Tags); i++ {
-			err = GetVault().tags.UnTagMedia(media_id, meta.Tags[i], session.key)
+			err, _ = GetVault().tags.UnTagMedia(media_id, meta.Tags[i], session.key)
 
 			if err != nil {
 				LogError(err)

@@ -134,7 +134,7 @@ func TestVaultTagManager(t *testing.T) {
 		t.Errorf("Tag not found")
 	}
 
-	err = tm.UnTagMedia(2, tag_example, key)
+	err, _ = tm.UnTagMedia(2, tag_example, key)
 
 	if err != nil {
 		t.Error(err)

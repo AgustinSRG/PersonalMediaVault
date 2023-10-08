@@ -1587,6 +1587,11 @@ paths:
           description: Unauthorized (No valid session)
         200:
           description: Success.
+          schema:
+            properties:
+              removed:
+                type: boolean
+                description: "True if the tag was removed, in case this was the last media having the tag."
           
   "/api/search":
     get:

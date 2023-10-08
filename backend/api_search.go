@@ -147,7 +147,7 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 
 		if mediaInfo.Type == MediaTypeDeleted {
 			if tagToSearch != "" {
-				err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
+				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
 
 				if err != nil {
 					LogError(err)
@@ -276,7 +276,7 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 
 		if mediaInfo.Type == MediaTypeDeleted {
 			if tagToSearch != "" {
-				err = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
+				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
 
 				if err != nil {
 					LogError(err)
