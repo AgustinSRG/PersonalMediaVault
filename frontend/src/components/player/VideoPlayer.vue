@@ -407,20 +407,17 @@
 
 <script lang="ts">
 import { PlayerPreferences } from "@/control/player-preferences";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
-import PlayerEncodingPending from "./PlayerEncodingPending.vue";
-
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
 import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import TimeSlicesEditHelper from "./TimeSlicesEditHelper.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
@@ -432,6 +429,14 @@ import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
 import { AUTO_LOOP_MIN_DURATION, NEXT_END_WAIT_DURATION } from "@/utils/constants";
+
+const TimeSlicesEditHelper = defineAsyncComponent({
+    loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
+});
+
+const PlayerEncodingPending = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerEncodingPending.vue"),
+});
 
 export default defineComponent({
     components: {

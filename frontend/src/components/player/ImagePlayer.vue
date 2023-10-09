@@ -238,12 +238,11 @@
 
 <script lang="ts">
 import { PlayerPreferences } from "@/control/player-preferences";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import ScaleControl from "./ScaleControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
-import PlayerEncodingPending from "./PlayerEncodingPending.vue";
 import ImageNotes from "./ImageNotes.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
@@ -258,6 +257,10 @@ import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
+
+const PlayerEncodingPending = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerEncodingPending.vue"),
+});
 
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
