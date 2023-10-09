@@ -144,6 +144,8 @@
             v-model:display="timeSlicesEdit"
             :current-time="currentTime"
             @update-time-slices="refreshTimeSlices"
+            :contextOpen="contextMenuShown"
+            @clicked="clickControls"
         ></TimeSlicesEditHelper>
 
         <div

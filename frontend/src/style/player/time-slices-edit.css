@@ -1,24 +1,18 @@
-
 /* Time slices editor helper */
 
-.time-slices-edit-helper {
+.time-slices-edit-helper-container {
     position: absolute;
-    background-color: var(--player-editor-background);
+
     right: 0.5rem;
 
     top: calc(56px + 0.5rem);
     bottom: 76px;
 
-    width: calc(50% - 1rem);
-    max-width: 800px;
-
-    display: flex;
-    flex-direction: column;
+    width: calc(100% - 1rem);
 }
 
-.player-min .time-slices-edit-helper {
+.player-min .time-slices-edit-helper-container {
     top: calc(32px + 0.5rem);
-    width: calc(100% - 1rem);
     bottom: 52px;
 }
 
@@ -46,23 +40,6 @@
     color: var(--theme-btn-hover-color);
 }
 
-.time-slices-edit-helper .helper-header {
-    height: 56px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: solid 1px var(--theme-border-color);
-}
-
-.time-slices-edit-helper .helper-title {
-    flex: 1;
-    font-size: large;
-}
-
-.time-slices-edit-helper .helper-body {
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-
-    height: calc(100% - 56px);
+.time-slices-table {
+    user-select: text;
 }

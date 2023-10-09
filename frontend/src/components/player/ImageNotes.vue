@@ -451,8 +451,8 @@ export default defineComponent({
                         break;
                 }
 
-                x1 = Math.min(this.imageHeight, Math.max(0, x1));
-                x2 = Math.min(this.imageHeight, Math.max(0, x2));
+                x1 = Math.min(this.imageWidth, Math.max(0, x1));
+                x2 = Math.min(this.imageWidth, Math.max(0, x2));
 
                 y1 = Math.min(this.imageHeight, Math.max(0, y1));
                 y2 = Math.min(this.imageHeight, Math.max(0, y2));

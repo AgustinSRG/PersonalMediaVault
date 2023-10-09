@@ -1,0 +1,132 @@
+/* Resizable widget */
+
+.resizable-widget {
+    position: absolute;
+    background-color: var(--player-editor-background);
+    display: flex;
+    flex-direction: column;
+    border: solid 1px var(--theme-border-color);
+}
+
+.resizable-widget-header {
+    height: 56px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: solid 1px var(--theme-border-color);
+    cursor: move;
+}
+
+.resizable-widget-title {
+    flex: 1;
+    font-size: large;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.resizable-widget-body {
+    overflow-x: auto;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+
+    height: calc(100% - 56px);
+}
+
+/* Close button */
+
+.resizable-widget .close-button {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    background: transparent;
+    color: var(--theme-btn-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.resizable-widget .close-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.resizable-widget .close-button:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}
+
+/* Resizable divs */
+
+.resizable-widget .resize {
+    position: absolute;
+    --resize-size: 8px;
+    --resize-pos: -4px;
+}
+
+.resizable-widget .resize-left {
+    top: 0;
+    left: var(--resize-pos);
+    height: 100%;
+    width: var(--resize-size);
+    cursor: w-resize;
+}
+
+.resizable-widget .resize-right {
+    top: 0;
+    right: var(--resize-pos);
+    height: 100%;
+    width: var(--resize-size);
+    cursor: e-resize;
+}
+
+.resizable-widget .resize-top {
+    top: var(--resize-pos);
+    right: 0;
+    height: var(--resize-size);
+    width: 100%;
+    cursor: n-resize;
+}
+
+.resizable-widget .resize-bottom {
+    bottom: var(--resize-pos);
+    right: 0;
+    height: var(--resize-size);
+    width: 100%;
+    cursor: n-resize;
+}
+
+.resizable-widget .resize-corner-top-left {
+    top: var(--resize-pos);
+    left: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: nw-resize;
+}
+
+.resizable-widget .resize-corner-top-right {
+    top: var(--resize-pos);
+    right: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: ne-resize;
+}
+
+.resizable-widget .resize-corner-bottom-left {
+    bottom: var(--resize-pos);
+    left: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: sw-resize;
+}
+
+.resizable-widget .resize-corner-bottom-right {
+    bottom: var(--resize-pos);
+    right: var(--resize-pos);
+    height: var(--resize-size);
+    width: var(--resize-size);
+    cursor: se-resize;
+}

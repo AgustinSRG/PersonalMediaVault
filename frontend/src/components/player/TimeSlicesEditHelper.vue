@@ -1,129 +1,123 @@
 <template>
-    <div
-        class="time-slices-edit-helper"
-        @click="stopPropagationEvent"
-        @dblclick="stopPropagationEvent"
-        @mousedown="stopPropagationEvent"
-        @touchstart="stopPropagationEvent"
-    >
-        <div class="helper-header">
-            <div class="helper-title">{{ $t("Time slices") }}</div>
-            <div class="helper-close-btn">
-                <button type="button" class="time-slices-edit-helper-btn" @click="close" :title="$t('Close')">
-                    <i class="fas fa-times"></i>
-                </button>
+    <div class="time-slices-edit-helper-container">
+        <ResizableWidget
+            :title="$t('Time slices')"
+            v-model:display="displayStatus"
+            :contextOpen="contextOpen"
+            :position-key="'time-slices-helper-pos'"
+            @clicked="propagateClick"
+        >
+            <div class="table-responsive time-slices-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-left one-line">
+                                {{ $t("Timestamp") }}
+                            </th>
+                            <th class="text-left one-line">
+                                {{ $t("Slice name") }}
+                            </th>
+                            <th class="td-shrink"></th>
+                            <th class="td-shrink"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(slice, i) in timeSlicesArray" :key="i">
+                            <td v-if="slice.deleted" colspan="4">
+                                <a href="javascript:;" @click="undoDelete(i)">{{ $t("Undo delete") }}</a>
+                            </td>
+                            <td v-if="!slice.deleted" class="one-line">
+                                <input
+                                    v-if="sliceEditIndex === i"
+                                    type="text"
+                                    v-model="sliceEditTimestamp"
+                                    class="form-control form-control-full-width"
+                                    placeholder="00:00:00"
+                                />
+                                <span v-else>{{ slice.timeStr }}</span>
+                            </td>
+                            <td v-if="!slice.deleted">
+                                <input
+                                    v-if="sliceEditIndex === i"
+                                    type="text"
+                                    v-model="sliceEditName"
+                                    class="form-control form-control-full-width auto-focus"
+                                    @keydown="keyDownEdit"
+                                />
+                                <span v-else>{{ slice.name }}</span>
+                            </td>
+                            <td v-if="!slice.deleted" class="td-shrink text-right one-line">
+                                <button
+                                    v-if="sliceEditIndex < 0"
+                                    type="button"
+                                    class="time-slices-edit-helper-btn mr-1"
+                                    @click="editSlice(i)"
+                                    :title="$t('Edit')"
+                                >
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button
+                                    v-if="sliceEditIndex === i"
+                                    type="button"
+                                    class="time-slices-edit-helper-btn mr-1"
+                                    @click="finishEdit"
+                                    :title="$t('Save')"
+                                >
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </td>
+                            <td v-if="!slice.deleted" class="td-shrink text-right one-line">
+                                <button
+                                    v-if="sliceEditIndex < 0"
+                                    type="button"
+                                    class="time-slices-edit-helper-btn"
+                                    @click="deleteSlice(i)"
+                                    :title="$t('Delete')"
+                                >
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button
+                                    v-if="sliceEditIndex === i"
+                                    type="button"
+                                    class="time-slices-edit-helper-btn"
+                                    @click="cancelEdit"
+                                    :title="$t('Cancel')"
+                                >
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-if="timeSlicesArray.length === 0">
+                            <td colspan="3">{{ $t("There are no time slices yet for this media.") }}</td>
+                        </tr>
+                        <tr v-if="canWrite && sliceEditIndex < 0">
+                            <td>
+                                <input
+                                    type="text"
+                                    v-model="sliceAddTimestamp"
+                                    class="form-control form-control-full-width"
+                                    :placeholder="timeSlicesArray.length > 0 ? '00:01:00' : '00:00:00'"
+                                />
+                            </td>
+                            <td colspan="2">
+                                <input
+                                    type="text"
+                                    v-model="sliceAddName"
+                                    class="form-control form-control-full-width"
+                                    :placeholder="timeSlicesArray.length > 0 ? $t('Rest of the video') : $t('Opening')"
+                                    @keydown="keyDownAdd"
+                                />
+                            </td>
+                            <td class="td-shrink text-right">
+                                <button type="button" class="time-slices-edit-helper-btn" @click="addSlice" :title="$t('Add')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
-        <div class="helper-body table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th class="text-left one-line">
-                            {{ $t("Timestamp") }}
-                        </th>
-                        <th class="text-left one-line">
-                            {{ $t("Slice name") }}
-                        </th>
-                        <th class="td-shrink"></th>
-                        <th class="td-shrink"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(slice, i) in timeSlicesArray" :key="i">
-                        <td v-if="slice.deleted" colspan="4">
-                            <a href="javascript:;" @click="undoDelete(i)">{{ $t("Undo delete") }}</a>
-                        </td>
-                        <td v-if="!slice.deleted" class="one-line">
-                            <input
-                                v-if="sliceEditIndex === i"
-                                type="text"
-                                v-model="sliceEditTimestamp"
-                                class="form-control form-control-full-width"
-                                placeholder="00:00:00"
-                            />
-                            <span v-else>{{ slice.timeStr }}</span>
-                        </td>
-                        <td v-if="!slice.deleted">
-                            <input
-                                v-if="sliceEditIndex === i"
-                                type="text"
-                                v-model="sliceEditName"
-                                class="form-control form-control-full-width"
-                                @keydown="keyDownEdit"
-                            />
-                            <span v-else>{{ slice.name }}</span>
-                        </td>
-                        <td v-if="!slice.deleted" class="td-shrink text-right one-line">
-                            <button
-                                v-if="sliceEditIndex < 0"
-                                type="button"
-                                class="time-slices-edit-helper-btn mr-1"
-                                @click="editSlice(i)"
-                                :title="$t('Edit')"
-                            >
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button
-                                v-if="sliceEditIndex === i"
-                                type="button"
-                                class="time-slices-edit-helper-btn mr-1"
-                                @click="finishEdit"
-                                :title="$t('Save')"
-                            >
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </td>
-                        <td v-if="!slice.deleted" class="td-shrink text-right one-line">
-                            <button
-                                v-if="sliceEditIndex < 0"
-                                type="button"
-                                class="time-slices-edit-helper-btn"
-                                @click="deleteSlice(i)"
-                                :title="$t('Delete')"
-                            >
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                            <button
-                                v-if="sliceEditIndex === i"
-                                type="button"
-                                class="time-slices-edit-helper-btn"
-                                @click="cancelEdit"
-                                :title="$t('Cancel')"
-                            >
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr v-if="timeSlicesArray.length === 0">
-                        <td colspan="3">{{ $t("There are no time slices yet for this media.") }}</td>
-                    </tr>
-                    <tr v-if="canWrite && sliceEditIndex < 0">
-                        <td>
-                            <input
-                                type="text"
-                                v-model="sliceAddTimestamp"
-                                class="form-control form-control-full-width"
-                                :placeholder="timeSlicesArray.length > 0 ? '00:01:00' : '00:00:00'"
-                            />
-                        </td>
-                        <td colspan="2">
-                            <input
-                                type="text"
-                                v-model="sliceAddName"
-                                class="form-control form-control-full-width"
-                                :placeholder="timeSlicesArray.length > 0 ? $t('Rest of the video') : $t('Opening')"
-                                @keydown="keyDownAdd"
-                            />
-                        </td>
-                        <td class="td-shrink text-right">
-                            <button type="button" class="time-slices-edit-helper-btn" @click="addSlice" :title="$t('Add')">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        </ResizableWidget>
     </div>
 </template>
 
@@ -138,6 +132,9 @@ import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
+
+import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import { nextTick } from "vue";
 
 interface SaveRequestState {
     saving: boolean;
@@ -208,11 +205,14 @@ function saveTimeSlices(state: SaveRequestState) {
 }
 
 export default defineComponent({
+    components: {
+        ResizableWidget,
+    },
     name: "TimeSlicesEditHelper",
-    emits: ["update:display", "update-time-slices"],
+    emits: ["update:display", "update-time-slices", "clicked"],
     props: {
         display: Boolean,
-
+        contextOpen: Boolean,
         currentTime: Number,
     },
     setup(props) {
@@ -236,6 +236,10 @@ export default defineComponent({
     },
 
     methods: {
+        propagateClick: function () {
+            this.$emit("clicked");
+        },
+
         reset: function () {
             this.sliceEditIndex = -1;
         },
@@ -355,6 +359,14 @@ export default defineComponent({
             this.sliceEditIndex = i;
             this.sliceEditTimestamp = this.timeSlicesArray[i].timeStr;
             this.sliceEditName = this.timeSlicesArray[i].name;
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+
+                if (elem) {
+                    elem.focus();
+                    elem.select();
+                }
+            });
         },
 
         cancelEdit: function () {
@@ -452,3 +464,7 @@ export default defineComponent({
     },
 });
 </script>
+
+<style>
+@import "@/style/player/time-slices-edit.css";
+</style>
