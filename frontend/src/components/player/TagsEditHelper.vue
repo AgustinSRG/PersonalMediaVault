@@ -1,14 +1,13 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy" @close="onClose">
-        <div v-if="display" class="modal-dialog modal-md" role="document">
-            <div class="modal-header">
-                <div class="modal-title">{{ $t("Tags") }}</div>
-                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="modal-body">
+    <div class="tags-edit-helper-container">
+        <ResizableWidget
+            :title="$t('Tags')"
+            v-model:display="displayStatus"
+            :contextOpen="contextOpen"
+            :position-key="'tags-edit-helper-pos'"
+            @clicked="propagateClick"
+        >
+            <div class="tags-editor-body">
                 <div class="form-group media-tags">
                     <label v-if="tags.length === 0">{{ $t("There are no tags yet for this media.") }}</label>
                     <div v-for="tag in tags" :key="tag" class="media-tag">
@@ -60,33 +59,34 @@
                     </div>
                 </div>
             </div>
-
-            <div class="modal-footer no-padding">
-                <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
-                    <i class="fas fa-check"></i> {{ $t("Done") }}
-                </button>
-            </div>
-        </div>
-    </ModalDialogContainer>
+        </ResizableWidget>
+    </div>
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { useVModel } from "@/utils/v-model";
+import { defineComponent } from "vue";
+
+import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import { nextTick } from "vue";
 import { AuthController } from "@/control/auth";
-import { Request } from "@/utils/request";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { MediaController } from "@/control/media";
+import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
+import { AppEvents } from "@/control/app-events";
+import { Request } from "@/utils/request";
 import { TagsAPI } from "@/api/api-tags";
+import { MediaController } from "@/control/media";
 
 export default defineComponent({
-    components: {},
-    name: "TagListModal",
-    emits: ["update:display"],
+    components: {
+        ResizableWidget,
+    },
+    name: "TagsEditHelper",
+    emits: ["update:display", "tags-update", "clicked"],
     props: {
         display: Boolean,
+        contextOpen: Boolean,
+        currentTime: Number,
     },
     setup(props) {
         return {
@@ -104,18 +104,26 @@ export default defineComponent({
 
             loading: true,
             busy: false,
-            canWrite: AuthController.CanWrite,
 
-            changed: false,
+            canWrite: AuthController.CanWrite,
         };
     },
     methods: {
+        propagateClick: function () {
+            this.$emit("clicked");
+        },
+
+        close: function () {
+            this.displayStatus = false;
+        },
+
         load: function () {
             if (!MediaController.MediaData) {
                 return;
             }
             this.tags = (MediaController.MediaData.tags || []).slice();
             this.onTagAddChanged();
+            this.autoFocus();
         },
 
         autoFocus: function () {
@@ -134,16 +142,6 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
-        },
-
-        close: function () {
-            this.$refs.modalContainer.close();
-        },
-
-        onClose: function () {
-            if (this.changed) {
-                MediaController.Load();
-            }
         },
 
         updateMediaData: function () {
@@ -182,7 +180,14 @@ export default defineComponent({
                     if (removed) {
                         TagsController.RemoveTag(tag);
                     }
-                    this.changed = true;
+                    if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                        if (!MediaController.MediaData.tags.includes(tag)) {
+                            MediaController.MediaData.tags = MediaController.MediaData.tags.filter((t) => {
+                                return t !== tag;
+                            });
+                        }
+                    }
+                    this.$emit("tags-update");
                 })
                 .onCancel(() => {
                     this.busy = false;
@@ -231,7 +236,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tag = this.tagToAdd;
 
-            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
@@ -241,7 +246,12 @@ export default defineComponent({
                     }
                     this.findTags();
                     TagsController.AddTag(res.id, res.name);
-                    this.changed = true;
+                    if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                        if (!MediaController.MediaData.tags.includes(res.id)) {
+                            MediaController.MediaData.tags.push(res.id);
+                        }
+                    }
+                    this.$emit("tags-update");
                     nextTick(() => {
                         const elemFocus = this.$el.querySelector(".tag-to-add");
 
@@ -293,7 +303,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
@@ -302,7 +312,12 @@ export default defineComponent({
                     }
                     this.findTags();
                     TagsController.AddTag(res.id, res.name);
-                    this.changed = true;
+                    if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                        if (!MediaController.MediaData.tags.includes(res.id)) {
+                            MediaController.MediaData.tags.push(res.id);
+                        }
+                    }
+                    this.$emit("tags-update");
                 })
                 .onCancel(() => {
                     this.busy = false;
@@ -354,29 +369,6 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
-            if (!tagFilter) {
-                this.matchingTags = Array.from(TagsController.Tags.entries())
-                    .map((a) => {
-                        return {
-                            id: a[0],
-                            name: a[1],
-                        };
-                    })
-                    .filter((a) => {
-                        if (this.tags.indexOf(a.id) >= 0) {
-                            return false;
-                        }
-                        return true;
-                    })
-                    .sort((a, b) => {
-                        if (a.name < b.name) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
-                    })
-                    .slice(0, 10);
-            }
             this.matchingTags = Array.from(TagsController.Tags.entries())
                 .map((a) => {
                     const i = a[1].indexOf(tagFilter);
@@ -444,6 +436,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
+        Request.Abort("tags-editor-busy");
         AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
@@ -459,3 +452,7 @@ export default defineComponent({
     },
 });
 </script>
+
+<style>
+@import "@/style/player/tags-edit.css";
+</style>

@@ -148,6 +148,13 @@
             @clicked="clickControls"
         ></TimeSlicesEditHelper>
 
+        <TagsEditHelper
+            v-if="displayTagList"
+            v-model:display="displayTagListStatus"
+            :contextOpen="contextMenuShown"
+            @clicked="clickControls"
+        ></TagsEditHelper>
+
         <div
             class="player-controls"
             :class="{ hidden: !showControls || !userControls }"
@@ -438,6 +445,10 @@ const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),
 });
 
+const TagsEditHelper = defineAsyncComponent({
+    loader: () => import("@/components/player/TagsEditHelper.vue"),
+});
+
 export default defineComponent({
     components: {
         VolumeControl,
@@ -447,6 +458,7 @@ export default defineComponent({
         PlayerContextMenu,
         PlayerEncodingPending,
         TimeSlicesEditHelper,
+        TagsEditHelper,
     },
     name: "VideoPlayer",
     emits: [
@@ -456,10 +468,10 @@ export default defineComponent({
         "update:fullscreen",
         "albums-open",
         "stats-open",
-        "tags-open",
         "ext-desc-open",
         "force-loop",
         "delete",
+        "update:displayTagList",
     ],
     props: {
         mid: Number,
@@ -485,11 +497,14 @@ export default defineComponent({
         loopForcedValue: Boolean,
 
         autoPlay: Boolean,
+
+        displayTagList: Boolean,
     },
     setup(props) {
         return {
             fullScreenState: useVModel(props, "fullscreen"),
             userControlsState: useVModel(props, "userControls"),
+            displayTagListStatus: useVModel(props, "displayTagList"),
         };
     },
     data: function () {
@@ -609,7 +624,7 @@ export default defineComponent({
         },
 
         openTags: function () {
-            this.$emit("tags-open");
+            this.displayTagListStatus = true;
         },
 
         openExtendedDescription: function () {

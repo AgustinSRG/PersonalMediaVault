@@ -9,6 +9,7 @@
     bottom: 76px;
 
     width: calc(100% - 1rem);
+    pointer-events: none;
 }
 
 .player-min .time-slices-edit-helper-container {

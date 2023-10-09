@@ -3,7 +3,7 @@
         class="resizable-widget"
         :class="{ hidden: !display }"
         tabindex="-1"
-        @keydown="stopPropagationEvent"
+        @keydown="onKeyDown"
         @dblclick="stopPropagationEvent"
         @mousedown="propagateClick"
         @touchstart="propagateTouch"
@@ -15,7 +15,7 @@
         }"
     >
         <div class="resizable-widget-header" @mousedown="startMoving($event, true)" @touchstart.passive="startMoving($event, false)">
-            <div class="resizable-widget-title">{{ $t("Time slices") }}</div>
+            <div class="resizable-widget-title">{{ title }}</div>
             <div class="resizable-widget-close-btn">
                 <button type="button" class="close-button" @click="close" :title="$t('Close')">
                     <i class="fas fa-times"></i>
@@ -128,6 +128,14 @@ export default defineComponent({
 
         stopPropagationEvent: function (e) {
             e.stopPropagation();
+        },
+
+        onKeyDown: function (e: KeyboardEvent) {
+            e.stopPropagation();
+
+            if (e.key === "Escape") {
+                this.close();
+            }
         },
 
         propagateClick: function (e) {

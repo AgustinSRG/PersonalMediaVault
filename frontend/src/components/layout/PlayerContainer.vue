@@ -37,7 +37,7 @@
             v-model:showControls="showControls"
             @albums-open="openAlbums"
             @stats-open="openStats"
-            @tags-open="openTags"
+            v-model:display-tag-list="displayTagList"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
             @delete="openDelete"
@@ -60,13 +60,13 @@
             v-model:userControls="showControls"
             @albums-open="openAlbums"
             @stats-open="openStats"
-            @tags-open="openTags"
+            v-model:display-tag-list="displayTagList"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList || displayUpload)"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></VideoPlayer>
         <AudioPlayer
@@ -86,21 +86,19 @@
             @update:fullscreen="onUpdateFullScreen"
             @albums-open="openAlbums"
             @stats-open="openStats"
-            @tags-open="openTags"
+            v-model:display-tag-list="displayTagList"
             @ext-desc-open="openExtendedDescription"
             :min="minPlayer"
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayTagList || displayUpload)"
+            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
         <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
-
-        <TagListModal v-if="displayTagList" v-model:display="displayTagList"></TagListModal>
 
         <ExtendedDescriptionModal v-if="displayExtendedDescription" v-model:display="displayExtendedDescription"></ExtendedDescriptionModal>
 
@@ -157,12 +155,6 @@ const SizeStatsModal = defineAsyncComponent({
     delay: 1000,
 });
 
-const TagListModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/TagListModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
-});
-
 const ExtendedDescriptionModal = defineAsyncComponent({
     loader: () => import("@/components/modals/ExtendedDescriptionModal.vue"),
     loadingComponent: LoadingOverlay,
@@ -185,7 +177,6 @@ export default defineComponent({
         ImagePlayer,
         AlbumListModal,
         SizeStatsModal,
-        TagListModal,
         ExtendedDescriptionModal,
         MediaDeleteModal,
     },
@@ -266,10 +257,6 @@ export default defineComponent({
 
         openStats: function () {
             this.displaySizeStats = true;
-        },
-
-        openTags: function () {
-            this.displayTagList = true;
         },
 
         openExtendedDescription: function () {

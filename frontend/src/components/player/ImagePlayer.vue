@@ -63,6 +63,13 @@
             :error="mediaError"
         ></PlayerEncodingPending>
 
+        <TagsEditHelper
+            v-if="displayTagList"
+            v-model:display="displayTagListStatus"
+            :contextOpen="contextMenuShown"
+            @clicked="clickControls"
+        ></TagsEditHelper>
+
         <div
             class="player-controls"
             :class="{ hidden: !showControls }"
@@ -262,6 +269,10 @@ const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),
 });
 
+const TagsEditHelper = defineAsyncComponent({
+    loader: () => import("@/components/player/TagsEditHelper.vue"),
+});
+
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
 const SCALE_STEP = 0.1 / SCALE_RANGE;
@@ -276,6 +287,7 @@ export default defineComponent({
         PlayerContextMenu,
         PlayerEncodingPending,
         ImageNotes,
+        TagsEditHelper,
     },
     name: "ImagePlayer",
     emits: [
@@ -285,9 +297,9 @@ export default defineComponent({
         "update:showControls",
         "albums-open",
         "stats-open",
-        "tags-open",
         "ext-desc-open",
         "delete",
+        "update:displayTagList",
     ],
     props: {
         mid: Number,
@@ -308,11 +320,14 @@ export default defineComponent({
         canWrite: Boolean,
 
         min: Boolean,
+
+        displayTagList: Boolean,
     },
     setup(props) {
         return {
             fullScreenState: useVModel(props, "fullscreen"),
             showControlsState: useVModel(props, "showControls"),
+            displayTagListStatus: useVModel(props, "displayTagList"),
         };
     },
     data: function () {
@@ -388,7 +403,7 @@ export default defineComponent({
         },
 
         openTags: function () {
-            this.$emit("tags-open");
+            this.displayTagListStatus = true;
         },
 
         openExtendedDescription: function () {

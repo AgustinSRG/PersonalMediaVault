@@ -103,7 +103,7 @@
                                 <input
                                     type="text"
                                     v-model="sliceAddName"
-                                    class="form-control form-control-full-width"
+                                    class="form-control form-control-full-width auto-focus"
                                     :placeholder="timeSlicesArray.length > 0 ? $t('Rest of the video') : $t('Opening')"
                                     @keydown="keyDownAdd"
                                 />
@@ -449,6 +449,17 @@ export default defineComponent({
         this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
 
         this.updateMediaData();
+
+        if (this.display) {
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+
+                if (elem) {
+                    elem.focus();
+                    elem.select();
+                }
+            });
+        }
     },
 
     beforeUnmount: function () {
@@ -460,6 +471,19 @@ export default defineComponent({
     watch: {
         currentTime: function () {
             this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
+        },
+
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    const elem = this.$el.querySelector(".auto-focus");
+
+                    if (elem) {
+                        elem.focus();
+                        elem.select();
+                    }
+                });
+            }
         },
     },
 });
