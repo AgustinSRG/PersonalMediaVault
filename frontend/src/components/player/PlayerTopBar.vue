@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <PlayerAlbumFullScreen :expanded="albumExpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
+        <PlayerAlbumFullScreen v-if="albumExpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
         <PlayerMediaEditor v-if="expanded" @changed="onEditDone"></PlayerMediaEditor>
     </div>
 </template>

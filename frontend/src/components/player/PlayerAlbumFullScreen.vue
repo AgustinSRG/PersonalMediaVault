@@ -1,8 +1,8 @@
 <template>
-    <div class="player-album-container" :class="{ expanded: expanded }" tabindex="-1">
-        <div v-if="!loading && albumData" class="album-header">
+    <div class="player-album-container" tabindex="-1">
+        <div v-if="!loading && loadedAlbum" class="album-header">
             <div class="album-header-title">
-                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumData.name }}</div>
+                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumName }}</div>
                 <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
@@ -18,16 +18,16 @@
                         <i class="fas fa-shuffle"></i>
                     </button>
                 </div>
-                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumList.length }}</div>
+                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumListLength }}</div>
             </div>
         </div>
 
-        <div v-show="!loading && albumData" class="album-body">
+        <div v-show="!loading && loadedAlbum" class="album-body" @scroll.passive="onScroll" tabindex="-1">
             <div
-                v-for="(item, i) in albumList"
-                :key="item.list_id"
+                v-for="item in albumList"
+                :key="item.pos"
                 class="album-body-item"
-                :class="{ current: i === currentPos }"
+                :class="{ current: item.pos === currentPos }"
                 :title="item.title || $t('Untitled')"
                 tabindex="0"
                 @click="clickMedia(item)"
@@ -45,7 +45,7 @@
                         {{ renderTime(item.duration) }}
                     </div>
                     <div class="album-body-item-thumb-pos">
-                        {{ renderPos(i) }}
+                        {{ renderPos(item.pos) }}
                     </div>
                 </div>
 
@@ -70,21 +70,22 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { clone } from "@/utils/objects";
+import { BigListScroller } from "@/utils/big-list-scroller";
 import { GetAssetURL } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
+const INITIAL_WINDOW_SIZE = 100;
+
 export default defineComponent({
     name: "PlayerAlbumFullScreen",
     emits: ["close"],
-    props: {
-        expanded: Boolean,
-    },
     data: function () {
         return {
             albumId: AlbumsController.CurrentAlbum,
-            albumData: AlbumsController.CurrentAlbumData,
+            albumName: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "",
+            albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
+            loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
             albumList: [],
 
@@ -99,8 +100,30 @@ export default defineComponent({
     methods: {
         onAlbumUpdate: function () {
             this.albumId = AlbumsController.CurrentAlbum;
-            this.albumData = AlbumsController.CurrentAlbumData;
-            this.updateAlbumsList();
+            this.loadedAlbum = !!AlbumsController.CurrentAlbumData;
+            this.albumName = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
+            this.albumListLength = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
+            this.updateAlbumList();
+        },
+
+        updateAlbumList: function () {
+            this._handles.listScroller.reset();
+
+            if (this.loadedAlbum) {
+                let i = 0;
+                this._handles.listScroller.addElements(
+                    AlbumsController.CurrentAlbumData.list.map((m) => {
+                        return {
+                            pos: i++,
+                            id: m.id,
+                            type: m.type,
+                            title: m.title,
+                            thumbnail: m.thumbnail,
+                            duration: m.duration,
+                        };
+                    }),
+                );
+            }
         },
 
         onAlbumLoading: function (l) {
@@ -137,21 +160,6 @@ export default defineComponent({
             return GetAssetURL(thumb);
         },
 
-        updateAlbumsList: function () {
-            const prefix = "" + Date.now() + "-";
-            let i = 0;
-            if (this.albumData) {
-                this.albumList = this.albumData.list.map((a) => {
-                    const o = clone(a);
-                    o.list_id = prefix + i;
-                    i++;
-                    return o;
-                });
-            } else {
-                this.albumList = [];
-            }
-        },
-
         clickMedia: function (item) {
             AppStatus.ClickOnMedia(item.id, false);
             this.$emit("close");
@@ -165,29 +173,35 @@ export default defineComponent({
             this.loop = AlbumsController.AlbumLoop;
             this.random = AlbumsController.AlbumRandom;
             this.currentPos = AlbumsController.CurrentAlbumPos;
+            this._handles.listScroller.moveWindowToElement(this.currentPos);
             nextTick(() => {
                 this.scrollToSelected();
             });
         },
 
         scrollToSelected: function () {
-            const itemHeight = 130;
-            const element = this.$el.querySelector(".album-body");
+            const cont = this.$el.querySelector(".album-body");
 
-            if (!element) {
+            if (!cont) {
                 return;
             }
 
-            const scrollHeight = element.scrollHeight;
-            const height = element.getBoundingClientRect().height;
+            const contBounds = cont.getBoundingClientRect();
 
-            const itemTop = this.currentPos * itemHeight;
+            const el = this.$el.querySelector(".album-body-item.current");
 
-            const expectedTop = height / 2 - itemHeight / 2;
+            if (!el) {
+                return;
+            }
 
-            const scroll = Math.max(0, Math.min(scrollHeight - height, itemTop - expectedTop));
+            const elBounds = el.getBoundingClientRect();
+            const elTopRel = elBounds.top - contBounds.top + cont.scrollTop;
 
-            element.scrollTop = scroll;
+            const expectedTop = contBounds.height / 2 - elBounds.height / 2;
+
+            const scroll = Math.max(0, Math.min(cont.scrollHeight - contBounds.height, elTopRel - expectedTop));
+
+            cont.scrollTop = scroll;
         },
 
         stopPropagationEvent: function (e) {
@@ -201,37 +215,72 @@ export default defineComponent({
                 event.target.click();
             }
         },
+
+        onScroll: function (e) {
+            this._handles.listScroller.checkElementScroll(e.target);
+        },
+
+        checkContainerHeight: function () {
+            const cont = this.$el.querySelector(".album-body");
+
+            if (!cont) {
+                return;
+            }
+
+            const el = this.$el.querySelector(".album-body-item");
+
+            if (!el) {
+                return;
+            }
+
+            this._handles.listScroller.checkScrollContainerHeight(cont, el);
+        },
+
+        autoFocus: function () {
+            nextTick(() => {
+                const focusEl = this.$el.querySelector(".album-body");
+                if (focusEl) {
+                    focusEl.focus();
+                    this.checkContainerHeight();
+                }
+            });
+        },
     },
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
         AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
 
-        this.onAlbumPosUpdate();
+        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.albumList;
+            },
+            set: (l) => {
+                this.albumList = l;
+            },
+        });
 
-        this.updateAlbumsList();
+        this.updateAlbumList();
+
+        this.onAlbumPosUpdate();
 
         this._handles.loadingH = this.onAlbumLoading.bind(this);
         AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
         AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
+
+        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this.autoFocus();
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
         AppEvents.RemoveEventListener("current-album-loading", this._handles.loadingH);
 
         AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
-    },
-    watch: {
-        expanded: function () {
-            if (this.expanded) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.scrollToSelected();
-            }
-        },
+
+        clearInterval(this._handles.checkContainerTimer);
     },
 });
 </script>

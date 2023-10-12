@@ -128,4 +128,44 @@ export class BigListScroller<T = any> {
             this.moveWindowDown();
         }
     }
+
+    /**
+     * Moves window to specified index
+     * @param index The index
+     */
+    public moveWindowToElement(index: number) {
+        this.windowPosition = Math.max(0, index - Math.floor(this.windowSize / 2));
+        this.setListWindow(this.list.slice(this.windowPosition, this.windowPosition + this.windowSize));
+    }
+
+    /**
+     * Increases window size
+     * @param newSize The new size
+     */
+    public changeWindowSize(newSize: number) {
+        if (newSize <= 0 || newSize === this.windowSize) {
+            return;
+        }
+
+        const middlePos = this.windowPosition + Math.floor(this.windowSize / 2);
+
+        this.windowSize = newSize;
+        this.moveWindowToElement(middlePos);
+    }
+
+    /**
+     * Checks container height and increases window size if necessary
+     * @param container The container
+     * @param anyItem Any of the items
+     */
+    public checkScrollContainerHeight(container: HTMLElement, anyItem: HTMLElement) {
+        const containerHeight = container.getBoundingClientRect().height;
+        const itemHeight = anyItem.getBoundingClientRect().height || 1;
+
+        const itemsFit = Math.floor(containerHeight / itemHeight) || 1;
+
+        const minSize = itemsFit * 8;
+
+        this.changeWindowSize(minSize);
+    }
 }

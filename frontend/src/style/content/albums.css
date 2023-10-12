@@ -294,7 +294,7 @@
     outline: none;
 }
 
-.full-screen .player-album-container.expanded {
+.full-screen .player-album-container {
     left: 0;
     visibility: visible;
     transition: left 0.1s;
