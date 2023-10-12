@@ -12,6 +12,10 @@ import (
 	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
+const ALBUM_MAX_SIZE = 1024
+
+var ALBUM_MAX_SIZE_REACHED_ERR = errors.New("Max size reached for the album")
+
 // Album data
 type VaultAlbumData struct {
 	Name         string   `json:"name"` // Name of the album
@@ -235,6 +239,12 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 	}
 
 	old_list := data.Albums[album_id].List
+
+	if len(old_list) >= ALBUM_MAX_SIZE {
+		am.CancelWrite()
+		return false, ALBUM_MAX_SIZE_REACHED_ERR
+	}
+
 	new_list := append(old_list, media_id)
 
 	data.Albums[album_id].List = new_list
@@ -314,6 +324,13 @@ func (am *VaultAlbumsManager) MoveMediaToPositionInAlbum(album_id uint64, media_
 
 	old_list := data.Albums[album_id].List
 
+	if !data.Albums[album_id].HasMedia(media_id) {
+		if len(old_list) >= ALBUM_MAX_SIZE {
+			am.CancelWrite()
+			return false, ALBUM_MAX_SIZE_REACHED_ERR
+		}
+	}
+
 	if position < 0 {
 		position = 0
 	}
@@ -361,6 +378,10 @@ func (am *VaultAlbumsManager) MoveMediaToPositionInAlbum(album_id uint64, media_
 // key - Vault encryption key
 // Returns true if success
 func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64, key []byte) (bool, error) {
+	if len(media_list) > ALBUM_MAX_SIZE {
+		return false, ALBUM_MAX_SIZE_REACHED_ERR
+	}
+
 	data, err := am.StartWrite(key)
 
 	if err != nil {
@@ -372,7 +393,7 @@ func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64,
 		return false, nil // Not found
 	}
 
-	data.Albums[album_id].List = media_list
+	data.Albums[album_id].List = AlbumListPruneRepeatedElements(media_list)
 	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)

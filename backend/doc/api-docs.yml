@@ -1962,8 +1962,10 @@ paths:
                 description: >
                   Error code:
                     * INVALID_LIST - Invalid album list
+                    * MAX_SIZE_REACHED - The list has more than 1024 elements
                 enum:
                   - INVALID_LIST
+                  - MAX_SIZE_REACHED
               message:
                 type: string
                 description: "Error message"
@@ -2003,6 +2005,21 @@ paths:
       security:
         - SessionTokenHeader: []
       responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * MAX_SIZE_REACHED - The list has more than 1024 elements
+                enum:
+                  - MAX_SIZE_REACHED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         404:
@@ -2077,6 +2094,21 @@ paths:
       security:
         - SessionTokenHeader: []
       responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * MAX_SIZE_REACHED - The list has more than 1024 elements
+                enum:
+                  - MAX_SIZE_REACHED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         404:

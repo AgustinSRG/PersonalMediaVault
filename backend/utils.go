@@ -103,3 +103,25 @@ func RenameAndReplace(tmpFile string, destFile string) error {
 
 	return err
 }
+
+// Checks if an album list has repeated elements, and removes them
+// list - The media IDs list
+// Returns the list without repeated elements
+func AlbumListPruneRepeatedElements(list []uint64) []uint64 {
+	m := make(map[uint64]struct{})
+	res := make([]uint64, 0)
+
+	for i := 0; i < len(list); i++ {
+		e := list[i]
+		_, repeated := m[e]
+
+		if repeated {
+			continue
+		}
+
+		res = append(res, e)
+		m[e] = struct{}{}
+	}
+
+	return res
+}
