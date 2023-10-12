@@ -347,6 +347,8 @@ export class UploadController {
             UploadController.CheckEmptyList();
             if (MediaController.MediaId === m.mid) {
                 MediaController.OnMediaChanged();
+            } else if (AlbumsController.CurrentNext && AlbumsController.CurrentNext.id === m.mid) {
+                AlbumsController.PreFetchAlbumNext();
             }
             return;
         }
