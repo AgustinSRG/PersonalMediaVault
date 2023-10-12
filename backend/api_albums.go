@@ -478,3 +478,57 @@ func api_albumRemoveMedia(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(404)
 	}
 }
+
+type AlbumMediaMoveAPIBody struct {
+	Id       uint64 `json:"media_id"`
+	Position int    `json:"position"`
+}
+
+func api_albumMoveMedia(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if !session.write {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p AlbumMediaMoveAPIBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	album_id, err := strconv.ParseUint(vars["id"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	// Start Write
+	album_found, err := GetVault().albums.MoveMediaToPositionInAlbum(album_id, p.Id, p.Position, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if album_found {
+		response.WriteHeader(200)
+	} else {
+		response.WriteHeader(404)
+	}
+}

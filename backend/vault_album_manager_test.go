@@ -98,6 +98,36 @@ func TestVaultAlbumManager(t *testing.T) {
 		t.Errorf("Expected list = (%v), but found (%v)", []uint64{1, 2, 3}, albums.Albums[album_id].List)
 	}
 
+	moved, err := tm.MoveMediaToPositionInAlbum(album_id, 2, 0, key)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !moved {
+		t.Errorf("Media was not moved")
+	}
+
+	albums, err = tm.ReadAlbums(key)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if albums.Albums[album_id] == nil {
+		t.Errorf("Album is not in the list")
+	}
+
+	if albums.Albums[album_id].Name != "Example album" {
+		t.Errorf("Expected name = (%s), but found (%s)", "Example album", albums.Albums[album_id].Name)
+	}
+
+	if !compareAlbumLists(albums.Albums[album_id].List, []uint64{2, 1, 3}) {
+		t.Errorf("Expected list = (%v), but found (%v)", []uint64{2, 1, 3}, albums.Albums[album_id].List)
+	}
+
 	removed, err := tm.RemoveMediaFromAlbum(album_id, 2, key)
 
 	if err != nil {

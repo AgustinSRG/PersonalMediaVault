@@ -425,6 +425,165 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 		}
 	}
 
+	// Move media
+
+	body, err = json.Marshal(AlbumMediaMoveAPIBody{
+		Id:       media1,
+		Position: 1,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/move", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/albums/"+fmt.Sprint(album2), nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	err = json.Unmarshal(bodyResponseBytes, &res2)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	exceptedList = []uint64{media3, media1, media2}
+
+	if len(res2.List) != len(exceptedList) {
+		t.Error(ErrorMismatch("AlbumListLength", fmt.Sprint(len(res2.List)), fmt.Sprint(len(exceptedList))))
+	}
+
+	for i := 0; i < len(res2.List); i++ {
+		if res2.List[i].Id != exceptedList[i] {
+			t.Error(ErrorMismatch("List["+fmt.Sprint(i)+"]", fmt.Sprint(res2.List[i].Id), fmt.Sprint(exceptedList[i])))
+		}
+	}
+
+	// Move media (2)
+
+	body, err = json.Marshal(AlbumMediaMoveAPIBody{
+		Id:       media1,
+		Position: 2,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/move", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/albums/"+fmt.Sprint(album2), nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	err = json.Unmarshal(bodyResponseBytes, &res2)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	exceptedList = []uint64{media3, media2, media1}
+
+	if len(res2.List) != len(exceptedList) {
+		t.Error(ErrorMismatch("AlbumListLength", fmt.Sprint(len(res2.List)), fmt.Sprint(len(exceptedList))))
+	}
+
+	for i := 0; i < len(res2.List); i++ {
+		if res2.List[i].Id != exceptedList[i] {
+			t.Error(ErrorMismatch("List["+fmt.Sprint(i)+"]", fmt.Sprint(res2.List[i].Id), fmt.Sprint(exceptedList[i])))
+		}
+	}
+
+	// Move media (3)
+
+	body, err = json.Marshal(AlbumMediaMoveAPIBody{
+		Id:       media1,
+		Position: 0,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/move", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/albums/"+fmt.Sprint(album2), nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	err = json.Unmarshal(bodyResponseBytes, &res2)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	exceptedList = []uint64{media1, media3, media2}
+
+	if len(res2.List) != len(exceptedList) {
+		t.Error(ErrorMismatch("AlbumListLength", fmt.Sprint(len(res2.List)), fmt.Sprint(len(exceptedList))))
+	}
+
+	for i := 0; i < len(res2.List); i++ {
+		if res2.List[i].Id != exceptedList[i] {
+			t.Error(ErrorMismatch("List["+fmt.Sprint(i)+"]", fmt.Sprint(res2.List[i].Id), fmt.Sprint(exceptedList[i])))
+		}
+	}
+
 	// Delete album
 
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/delete", nil, session)

@@ -295,6 +295,66 @@ func (am *VaultAlbumsManager) RemoveMediaFromAlbum(album_id uint64, media_id uin
 	return true, err
 }
 
+// Removes a media file from an album
+// album_id - Album ID
+// media_id - Media file ID
+// key - Vault encryption key
+// Returns true if the media was moved, false if the media was not moved
+func (am *VaultAlbumsManager) MoveMediaToPositionInAlbum(album_id uint64, media_id uint64, position int, key []byte) (bool, error) {
+	data, err := am.StartWrite(key)
+
+	if err != nil {
+		return false, err
+	}
+
+	if data.Albums[album_id] == nil {
+		am.CancelWrite()
+		return false, nil // Not found
+	}
+
+	old_list := data.Albums[album_id].List
+
+	if position < 0 {
+		position = 0
+	}
+
+	if position > len(old_list) {
+		position = len(old_list)
+	}
+
+	first_changed := position == 0
+
+	new_list := make([]uint64, 0)
+
+	j := 0 // Position in the new list
+
+	for i := 0; i < len(old_list); i++ {
+		if j == position {
+			new_list = append(new_list, media_id)
+			j++
+		}
+		if old_list[i] != media_id {
+			new_list = append(new_list, old_list[i])
+			j++
+		}
+	}
+
+	if position >= len(new_list) {
+		new_list = append(new_list, media_id)
+	}
+
+	data.Albums[album_id].List = new_list
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
+
+	err = am.EndWrite(data, key)
+
+	if first_changed {
+		am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
+	}
+
+	return true, err
+}
+
 // Sets album media list
 // album_id - Album ID
 // media_list - List of media files
