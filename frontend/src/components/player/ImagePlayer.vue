@@ -899,6 +899,12 @@ export default defineComponent({
                 case "c":
                     this.showControlsState = !this.showControlsState;
                     break;
+                case "n":
+                case "N":
+                    if (this.canWrite) {
+                        this.notesEditMode = !this.notesEditMode;
+                    }
+                    break;
                 case "Delete":
                     this.$emit("delete");
                     break;

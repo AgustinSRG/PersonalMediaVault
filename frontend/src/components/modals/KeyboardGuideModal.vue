@@ -255,6 +255,13 @@
                         </tr>
 
                         <tr>
+                            <td>{{ $t("Open time slices or image notes editor") }}</td>
+                            <td>
+                                <span class="key-shortcut">N</span>
+                            </td>
+                        </tr>
+
+                        <tr>
                             <td>{{ $t("Add current media to an album") }}</td>
                             <td>
                                 <span class="key-shortcut">A</span>

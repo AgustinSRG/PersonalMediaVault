@@ -1426,6 +1426,12 @@ export default defineComponent({
                     AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
+                case "n":
+                case "N":
+                    if (this.canWrite) {
+                        this.timeSlicesEdit = true;
+                    }
+                    break;
                 case "z":
                 case "Z":
                     this.scale = 1;

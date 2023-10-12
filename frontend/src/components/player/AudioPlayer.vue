@@ -1208,6 +1208,12 @@ export default defineComponent({
                         this.setTime(this.currentTimeSlice.end, true);
                     }
                     break;
+                case "n":
+                case "N":
+                    if (this.canWrite) {
+                        this.timeSlicesEdit = true;
+                    }
+                    break;
                 case "Delete":
                     this.$emit("delete");
                     break;
