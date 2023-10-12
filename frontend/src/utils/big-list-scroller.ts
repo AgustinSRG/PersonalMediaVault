@@ -142,15 +142,14 @@ export class BigListScroller<T = any> {
      * Increases window size
      * @param newSize The new size
      */
-    public changeWindowSize(newSize: number) {
+    public changeWindowSize(newSize: number): boolean {
         if (newSize <= 0 || newSize === this.windowSize) {
-            return;
+            return false;
         }
 
-        const middlePos = this.windowPosition + Math.floor(this.windowSize / 2);
-
         this.windowSize = newSize;
-        this.moveWindowToElement(middlePos);
+
+        return true;
     }
 
     /**
@@ -158,14 +157,18 @@ export class BigListScroller<T = any> {
      * @param container The container
      * @param anyItem Any of the items
      */
-    public checkScrollContainerHeight(container: HTMLElement, anyItem: HTMLElement) {
+    public checkScrollContainerHeight(container: HTMLElement, anyItem: HTMLElement): boolean {
+        const containerWidth = container.getBoundingClientRect().width;
         const containerHeight = container.getBoundingClientRect().height;
+
         const itemHeight = anyItem.getBoundingClientRect().height || 1;
+        const itemWidth = anyItem.getBoundingClientRect().width || 1;
 
-        const itemsFit = Math.floor(containerHeight / itemHeight) || 1;
+        const itemsFitWidth = Math.floor(containerWidth / itemWidth) || 1;
+        const itemsFitHeight = Math.floor(containerHeight / itemHeight) || 1;
+        
+        const minSize = itemsFitWidth * itemsFitHeight * 8;
 
-        const minSize = itemsFit * 8;
-
-        this.changeWindowSize(minSize);
+        return this.changeWindowSize(minSize);
     }
 }

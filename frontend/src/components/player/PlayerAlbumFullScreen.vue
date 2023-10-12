@@ -233,7 +233,11 @@ export default defineComponent({
                 return;
             }
 
-            this._handles.listScroller.checkScrollContainerHeight(cont, el);
+            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+
+            if (changed) {
+                this.onAlbumPosUpdate();
+            }
         },
 
         autoFocus: function () {
