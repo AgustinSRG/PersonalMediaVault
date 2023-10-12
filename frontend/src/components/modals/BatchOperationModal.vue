@@ -801,6 +801,9 @@ export default defineComponent({
                             this.error = this.$t("Access denied");
                             AppEvents.Emit("unauthorized");
                         })
+                        .add(400, "MAX_SIZE_REACHED", () => {
+                            this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
+                        })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");
                         })

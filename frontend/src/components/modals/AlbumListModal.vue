@@ -312,6 +312,17 @@ export default defineComponent({
                             .add(401, "*", () => {
                                 AppEvents.Emit("unauthorized");
                             })
+                            .add(400, "MAX_SIZE_REACHED", () => {
+                                AppEvents.Emit(
+                                    "snack",
+                                    this.$t("Error") +
+                                        ":" +
+                                        this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
+                                );
+                            })
+                            .add(403, "*", () => {
+                                AppEvents.Emit("snack", this.$t("Error") + ":" + this.$t("Access denied"));
+                            })
                             .handle(err);
                     })
                     .onUnexpectedError((err) => {

@@ -402,6 +402,7 @@
     "Task is in queue": "Task is in queue",
     "Tasks": "Tasks",
     "The album is empty": "The album is empty",
+    "The album reached the limit of 1024 elements. Please, consider creating another album.": "The album reached the limit of 1024 elements. Please, consider creating another album.",
     "The batch operation was completed successfully.": "The batch operation was completed successfully.",
     "The media asset was deleted": "The media asset was deleted",
     "The media is being encoded.": "The media is being encoded.",

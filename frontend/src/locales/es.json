@@ -402,6 +402,7 @@
     "Task is in queue": "La tarea está en cola",
     "Tasks": "Tareas",
     "The album is empty": "El álbum está vacío",
+    "The album reached the limit of 1024 elements. Please, consider creating another album.": "El album ha alcanzado el límite de 1024 elementos. Por favor, considere crear un nuevo album.",
     "The batch operation was completed successfully.": "La operación por lotes fue completada con éxito.",
     "The media asset was deleted": "El recurso multimedia fue eliminado",
     "The media is being encoded.": "El recurso multimedia está siendo codificado.",
