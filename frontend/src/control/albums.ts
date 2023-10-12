@@ -203,6 +203,14 @@ export class AlbumsController {
         if (!AlbumsController.CurrentAlbumData) {
             return;
         }
+
+        if (oldIndex < 0 || oldIndex >= AlbumsController.CurrentAlbumData.list.length) {
+            return;
+        }
+
+        const albumId = AlbumsController.CurrentAlbumData.id;
+        const mediaId = AlbumsController.CurrentAlbumData.list[oldIndex].id;
+
         AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
 
         AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
@@ -210,11 +218,8 @@ export class AlbumsController {
         AlbumsController.UpdateAlbumCurrentPos();
 
         // Update in server
-        const albumId = AlbumsController.CurrentAlbumData.id;
-        const albumList = AlbumsController.CurrentAlbumData.list.map((a) => {
-            return a.id;
-        });
-        Request.Do(AlbumsAPI.SetAlbumOrder(albumId, albumList))
+
+        Request.Do(AlbumsAPI.MoveMediaInAlbum(albumId, mediaId, newIndex))
             .onSuccess(() => {
                 AppEvents.Emit("album-order-saved");
                 AppEvents.Emit("albums-list-change");

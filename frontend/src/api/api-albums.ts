@@ -52,16 +52,6 @@ export class AlbumsAPI {
         };
     }
 
-    public static SetAlbumOrder(id: number, list: number[]): RequestParams<void> {
-        return {
-            method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/set"),
-            json: {
-                list: list,
-            },
-        };
-    }
-
     public static AddMediaToAlbum(id: number, media: number): RequestParams<void> {
         return {
             method: "POST",
@@ -78,6 +68,17 @@ export class AlbumsAPI {
             url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/remove"),
             json: {
                 media_id: media,
+            },
+        };
+    }
+
+    public static MoveMediaInAlbum(id: number, media: number, position: number): RequestParams<void> {
+        return {
+            method: "POST",
+            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/move"),
+            json: {
+                media_id: media,
+                position: position,
             },
         };
     }
