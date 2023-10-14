@@ -154,6 +154,7 @@
         <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
         <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
         <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+        <AlbumGoToPosModal v-if="displayAlbumGoPos" v-model:display="displayAlbumGoPos"></AlbumGoToPosModal>
         <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
         <LoadingOverlay v-if="loading"></LoadingOverlay>
     </div>
@@ -177,6 +178,12 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
 
 const INITIAL_WINDOW_SIZE = 100;
+
+const AlbumGoToPosModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
 
 const AlbumRenameModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumRenameModal.vue"),
@@ -219,6 +226,7 @@ export default defineComponent({
         AlbumDeleteModal,
         AlbumMovePosModal,
         AlbumAddMediaModal,
+        AlbumGoToPosModal,
     },
     props: {
         displayUpload: Boolean,
@@ -259,6 +267,7 @@ export default defineComponent({
             displayAlbumRename: false,
             displayAlbumDelete: false,
             displayAlbumMovePos: false,
+            displayAlbumGoPos: false,
 
             dragging: false,
             draggingPosition: -1,
@@ -527,6 +536,7 @@ export default defineComponent({
                     if (isNaN(newPos) || !isFinite(newPos)) {
                         return;
                     }
+                    newPos = Math.floor(newPos);
                     newPos = Math.min(newPos, this.albumListLength - 1);
                     newPos = Math.max(0, newPos);
                     if (newPos === i) {
@@ -630,6 +640,10 @@ export default defineComponent({
                 case "f":
                 case "F":
                     this.toggleFav();
+                    return true;
+                case "g":
+                case "G":
+                    this.displayAlbumGoPos = true;
                     return true;
                 case "Home":
                     if (completeAlbumList.length > 0) {
