@@ -36,7 +36,13 @@
                 <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumListLength }}</div>
             </div>
         </div>
-        <div v-show="!loading && loadedAlbum" class="album-body" @scroll.passive="onScroll" tabindex="-1">
+        <div
+            v-show="!loading && loadedAlbum"
+            class="album-body"
+            :class="{ 'is-dragging': dragging }"
+            @scroll.passive="onScroll"
+            tabindex="-1"
+        >
             <a
                 v-for="item in albumList"
                 :key="item.pos"
@@ -44,9 +50,14 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="album-body-item"
-                :class="{ current: item.pos === currentPos }"
+                :class="{
+                    current: item.pos === currentPos,
+                    dragging: item.pos === draggingPosition,
+                    'dragging-over': item.pos === draggingOverPosition,
+                }"
                 :title="item.title || $t('Untitled')"
                 @click="clickMedia(item, $event)"
+                @dragstart="onDrag(item, $event)"
             >
                 <div class="album-body-item-thumbnail">
                     <div v-if="!item.thumbnail" class="no-thumb">
@@ -80,6 +91,54 @@
                     <i class="fas fa-bars"></i>
                 </button>
             </a>
+            <div
+                v-if="dragging && albumList.length > 0 && draggingOverPosition > albumList[albumList.length - 1].pos"
+                class="dragging-padding-bottom"
+            ></div>
+        </div>
+        <div
+            v-if="dragging && draggingItem"
+            class="album-dragging-helper"
+            :style="{ top: mouseY - 65 + 'px', left: mouseX - 65 + 'px' }"
+            @click="stopPropagationEvent"
+        >
+            <div
+                :href="getMediaURL(draggingItem)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="album-body-item"
+                :class="{ current: draggingItem.pos === currentPos }"
+                :title="draggingItem.title || $t('Untitled')"
+            >
+                <div class="album-body-item-thumbnail">
+                    <div v-if="!draggingItem.thumbnail" class="no-thumb">
+                        <i v-if="draggingItem.type === 1" class="fas fa-image"></i>
+                        <i v-else-if="draggingItem.type === 2" class="fas fa-video"></i>
+                        <i v-else-if="draggingItem.type === 3" class="fas fa-headphones"></i>
+                        <i v-else class="fas fa-ban"></i>
+                    </div>
+                    <img
+                        v-if="draggingItem.thumbnail"
+                        :src="getThumbnail(draggingItem.thumbnail)"
+                        :alt="draggingItem.title || $t('Untitled')"
+                        loading="lazy"
+                    />
+                    <div class="album-body-item-thumb-tag" v-if="draggingItem.type === 2 || draggingItem.type === 3">
+                        {{ renderTime(draggingItem.duration) }}
+                    </div>
+                    <div class="album-body-item-thumb-pos">
+                        {{ renderPos(draggingItem.pos) }}
+                    </div>
+                </div>
+
+                <div class="album-body-item-title">
+                    {{ draggingItem.title || $t("Untitled") }}
+                </div>
+
+                <button v-if="canWrite" type="button" :title="$t('Options')" class="album-body-btn" disabled>
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
         <AlbumContextMenu
             v-model:shown="contextShown"
@@ -137,8 +196,18 @@ const AlbumAddMediaModal = defineAsyncComponent({
     delay: 1000,
 });
 
+interface AlbumListItem {
+    pos: number;
+    id: number;
+    type: number;
+    title: string;
+    thumbnail: string;
+    duration: number;
+}
+
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
+import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -166,7 +235,7 @@ export default defineComponent({
             albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
             loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: [],
+            albumList: <AlbumListItem[]>[],
 
             isFav: AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + ""),
 
@@ -190,6 +259,13 @@ export default defineComponent({
             displayAlbumRename: false,
             displayAlbumDelete: false,
             displayAlbumMovePos: false,
+
+            dragging: false,
+            draggingPosition: -1,
+            draggingItem: <AlbumListItem>null,
+            mouseX: 0,
+            mouseY: 0,
+            draggingOverPosition: -1,
         };
     },
     methods: {
@@ -214,6 +290,14 @@ export default defineComponent({
 
             const centerPosition = this._handles.listScroller.getCenterPosition();
 
+            let currentScroll = 0;
+
+            const conEl = this.$el.querySelector(".album-body");
+
+            if (conEl) {
+                currentScroll = conEl.scrollTop;
+            }
+
             this._handles.listScroller.reset();
 
             if (this.loadedAlbum) {
@@ -233,6 +317,13 @@ export default defineComponent({
 
                 if (preserveWindowScroll) {
                     this._handles.listScroller.moveWindowToElement(centerPosition);
+                    nextTick(() => {
+                        const conEl = this.$el.querySelector(".album-body");
+
+                        if (conEl) {
+                            conEl.scrollTop = currentScroll;
+                        }
+                    });
                 }
             }
 
@@ -325,7 +416,7 @@ export default defineComponent({
             this.displayAlbumRename = true;
         },
 
-        renderPos: function (p) {
+        renderPos: function (p: number) {
             if (p < 0) {
                 return "?";
             } else {
@@ -345,11 +436,7 @@ export default defineComponent({
             return GetAssetURL(thumb);
         },
 
-        onUpdateSortable: function (event) {
-            AlbumsController.MoveCurrentAlbumOrder(event.oldIndex, event.newIndex);
-        },
-
-        clickMedia: function (item, e) {
+        clickMedia: function (item: AlbumListItem, e: MouseEvent) {
             if (e) {
                 e.preventDefault();
             }
@@ -369,7 +456,7 @@ export default defineComponent({
             );
         },
 
-        showOptions: function (item: { pos: number }, i: number, event) {
+        showOptions: function (item: { pos: number }, i: number, event: MouseEvent) {
             event.preventDefault();
             event.stopPropagation();
 
@@ -381,7 +468,7 @@ export default defineComponent({
                 this.contextShown = true;
                 this.contextIndex = i;
 
-                const targetRect = event.target.getBoundingClientRect();
+                const targetRect = (<HTMLElement>event.target).getBoundingClientRect();
 
                 this.contextX = targetRect.left + targetRect.width;
 
@@ -417,7 +504,7 @@ export default defineComponent({
             }
         },
 
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
@@ -500,11 +587,11 @@ export default defineComponent({
             cont.scrollTop = scroll;
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (<HTMLElement>event.target).click();
             }
         },
 
@@ -558,6 +645,120 @@ export default defineComponent({
                     return false;
             }
         },
+
+        onDrag: function (item: AlbumListItem, e: DragEvent) {
+            e.preventDefault();
+
+            if (isTouchDevice()) {
+                return; // Disabled for touch devices
+            }
+
+            if (!this.canWrite) {
+                return; // Cannot alter the album
+            }
+
+            this.dragging = true;
+            this.draggingItem = item;
+            this.draggingPosition = item.pos;
+            this.draggingOverPosition = item.pos;
+            if (this._handles.dragCheckInterval) {
+                clearInterval(this._handles.dragCheckInterval);
+                this._handles.dragCheckInterval = null;
+            }
+            this._handles.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+        },
+
+        onDocumentMouseMove: function (e: MouseEvent) {
+            this.mouseX = e.pageX;
+            this.mouseY = e.pageY;
+        },
+
+        onDocumentMouseUp: function () {
+            if (!this.dragging) {
+                return;
+            }
+
+            if (this._handles.dragCheckInterval) {
+                clearInterval(this._handles.dragCheckInterval);
+                this._handles.dragCheckInterval = null;
+            }
+
+            // Check drop position
+
+            this.checkDropPosition();
+
+            // Move element if needed
+
+            if (this.draggingOverPosition >= 0 && this.draggingPosition >= 0) {
+                const initialPosition = this.draggingPosition;
+                const finalPosition =
+                    this.draggingOverPosition > this.draggingPosition ? this.draggingOverPosition - 1 : this.draggingOverPosition;
+
+                if (initialPosition !== finalPosition) {
+                    AlbumsController.MoveCurrentAlbumOrder(initialPosition, finalPosition);
+                }
+            }
+
+            // Reset dragging
+            this.dragging = false;
+            this.draggingPosition = -1;
+            this.draggingOverPosition = -1;
+        },
+
+        onDragCheck: function () {
+            const con = this.$el.querySelector(".album-body");
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            // Auto scroll
+
+            const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
+            const scrollStep = Math.floor(conBounds.height / 10);
+
+            if (relTop <= 0.1) {
+                con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+            } else if (relTop >= 0.9) {
+                con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+            }
+
+            // Check drop position
+            this.checkDropPosition();
+        },
+
+        checkDropPosition: function () {
+            const con = this.$el.querySelector(".album-body");
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.albumList.length === 0) {
+                return;
+            }
+
+            const item = con.querySelector(".album-body-item:not(.dragging)");
+
+            if (!item) {
+                return;
+            }
+
+            const itemHeight = item.getBoundingClientRect().height;
+
+            const firstPos = this.albumList[0].pos;
+            const lastPos = this.albumList[this.albumList.length - 1].pos;
+            const containerScrollTop = con.scrollTop;
+
+            this.draggingOverPosition = Math.min(
+                lastPos + 1,
+                Math.max(firstPos, firstPos + Math.round((this.mouseY - conBounds.top + containerScrollTop) / itemHeight)),
+            );
+        },
     },
     mounted: function () {
         if (this.displayAlbumAddMedia) {
@@ -598,19 +799,13 @@ export default defineComponent({
         this._handles.favUpdateH = this.updateFav.bind(this);
         AppEvents.AddEventListener("albums-fav-updated", this._handles.favUpdateH);
 
-        // Sortable
-        /*if (!isTouchDevice()) {
-            const element = this.$el.querySelector(".album-body");
-            this._handles.sortable = Sortable.create(element, {
-                onUpdate: this.onUpdateSortable.bind(this),
-                disabled: !this.canWrite,
-                scroll: element,
-                forceAutoscrollFallback: true,
-                scrollSensitivity: 100,
-            });
-        }*/
-
         this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this._handles.onDocumentMouseMoveH = this.onDocumentMouseMove.bind(this);
+        document.addEventListener("mousemove", this._handles.onDocumentMouseMoveH);
+
+        this._handles.onDocumentMouseUpH = this.onDocumentMouseUp.bind(this);
+        document.addEventListener("mouseup", this._handles.onDocumentMouseUpH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
@@ -624,13 +819,15 @@ export default defineComponent({
 
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
-        // Sortable
-        /*if (this._handles.sortable) {
-            this._handles.sortable.destroy();
-            this._handles.sortable = null;
-        }*/
-
         clearInterval(this._handles.checkContainerTimer);
+
+        document.removeEventListener("mousemove", this._handles.onDocumentMouseMoveH);
+        document.removeEventListener("mouseup", this._handles.onDocumentMouseUpH);
+
+        if (this._handles.dragCheckInterval) {
+            clearInterval(this._handles.dragCheckInterval);
+            this._handles.dragCheckInterval = null;
+        }
     },
 });
 </script>
