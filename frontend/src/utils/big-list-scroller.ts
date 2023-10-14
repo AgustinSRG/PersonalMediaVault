@@ -170,7 +170,7 @@ export class BigListScroller<T = any> {
      * @param newSize The new size
      */
     public changeWindowSize(newSize: number): boolean {
-        if (newSize <= this.minWindowSize || newSize === this.windowSize) {
+        if (newSize <= 0 || newSize === this.windowSize) {
             return false;
         }
 
@@ -196,6 +196,6 @@ export class BigListScroller<T = any> {
         
         const minSize = BigListScroller.GetWindowSize(itemsFitWidth * itemsFitHeight);
 
-        return this.changeWindowSize(minSize);
+        return this.changeWindowSize(Math.max(this.minWindowSize, minSize));
     }
 }
