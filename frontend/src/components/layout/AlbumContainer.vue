@@ -615,7 +615,7 @@ export default defineComponent({
 
             switch (event.key) {
                 case "l":
-                case "l":
+                case "L":
                     this.toggleLoop();
                     return true;
                 case "r":
