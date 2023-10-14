@@ -235,7 +235,7 @@ export default defineComponent({
             albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
             loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: <AlbumListItem[]>[],
+            albumList: [] as AlbumListItem[],
 
             isFav: AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + ""),
 
@@ -262,7 +262,7 @@ export default defineComponent({
 
             dragging: false,
             draggingPosition: -1,
-            draggingItem: <AlbumListItem>null,
+            draggingItem: null as AlbumListItem,
             mouseX: 0,
             mouseY: 0,
             draggingOverPosition: -1,
@@ -468,7 +468,7 @@ export default defineComponent({
                 this.contextShown = true;
                 this.contextIndex = i;
 
-                const targetRect = (<HTMLElement>event.target).getBoundingClientRect();
+                const targetRect = (event.target as HTMLElement).getBoundingClientRect();
 
                 this.contextX = targetRect.left + targetRect.width;
 
@@ -591,7 +591,7 @@ export default defineComponent({
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                (<HTMLElement>event.target).click();
+                (event.target as HTMLElement).click();
             }
         },
 
