@@ -2,10 +2,21 @@
 
 "use strict";
 
+const SCROLL_BUFFER_SIZE_MULTIPLIER = 5;
+
 /**
  * Utility to scroll big lists
  */
 export class BigListScroller<T = any> {
+    /**
+     * Computes the window size from the number
+     * of item fitting in the container without scrolling
+     * @param itemsFit Number of items fitting in the container
+     */
+    public static GetWindowSize(itemsFit: number): number {
+        return itemsFit + 2 * Math.floor(itemsFit * SCROLL_BUFFER_SIZE_MULTIPLIER);
+    }
+
     /**
      * Obtains the list window
      */
@@ -15,6 +26,11 @@ export class BigListScroller<T = any> {
      * Sets the list window
      */
     public setListWindow: (list: T[]) => void;
+
+    /**
+     * Minimal window size
+     */
+    private minWindowSize: number;
 
     /**
      * Max number of elements in the list window
@@ -39,6 +55,7 @@ export class BigListScroller<T = any> {
      */
     constructor(windowSize: number, callbacks: {get: () => T[], set:  (list: T[]) => void}) {
         this.windowSize = windowSize;
+        this.minWindowSize = windowSize;
         this.getListWindow = callbacks.get;
         this.setListWindow = callbacks.set;
         this.list = [];
@@ -153,7 +170,7 @@ export class BigListScroller<T = any> {
      * @param newSize The new size
      */
     public changeWindowSize(newSize: number): boolean {
-        if (newSize <= 0 || newSize === this.windowSize) {
+        if (newSize <= this.minWindowSize || newSize === this.windowSize) {
             return false;
         }
 
@@ -177,7 +194,7 @@ export class BigListScroller<T = any> {
         const itemsFitWidth = Math.floor(containerWidth / itemWidth) || 1;
         const itemsFitHeight = Math.floor(containerHeight / itemHeight) || 1;
         
-        const minSize = itemsFitWidth * itemsFitHeight * 11;
+        const minSize = BigListScroller.GetWindowSize(itemsFitWidth * itemsFitHeight);
 
         return this.changeWindowSize(minSize);
     }

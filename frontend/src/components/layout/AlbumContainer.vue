@@ -176,7 +176,7 @@ import LoadingOverlay from "./LoadingOverlay.vue";
 
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
 
-const INITIAL_WINDOW_SIZE = 20;
+const INITIAL_WINDOW_SIZE = 100;
 
 const AlbumRenameModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumRenameModal.vue"),

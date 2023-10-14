@@ -75,7 +75,7 @@ import { GetAssetURL } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
-const INITIAL_WINDOW_SIZE = 20;
+const INITIAL_WINDOW_SIZE = 100;
 
 export default defineComponent({
     name: "PlayerAlbumFullScreen",
