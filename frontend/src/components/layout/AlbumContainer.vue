@@ -714,15 +714,17 @@ export default defineComponent({
 
             const conBounds = con.getBoundingClientRect();
 
-            // Auto scroll
+            if (this.mouseX >= conBounds.left - 420) {
+                // Auto scroll
 
-            const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
-            const scrollStep = Math.floor(conBounds.height / 10);
+                const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
+                const scrollStep = Math.floor(conBounds.height / 10);
 
-            if (relTop <= 0.1) {
-                con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
-            } else if (relTop >= 0.9) {
-                con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+                if (relTop <= 0.1) {
+                    con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+                } else if (relTop >= 0.9) {
+                    con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+                }
             }
 
             // Check drop position
@@ -745,6 +747,11 @@ export default defineComponent({
             const item = con.querySelector(".album-body-item:not(.dragging)");
 
             if (!item) {
+                return;
+            }
+
+            if (this.mouseX < conBounds.left - 420) {
+                this.draggingOverPosition = -1;
                 return;
             }
 
