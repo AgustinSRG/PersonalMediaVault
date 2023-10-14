@@ -46,6 +46,14 @@ export class BigListScroller<T = any> {
     }
 
     /**
+     * Gets the current center position of the window
+     * @returns The window center position
+     */
+    public getCenterPosition(): number {
+        return this.windowPosition + Math.floor(this.windowSize / 2);
+    }
+
+    /**
      * Resets the list
      * After you do this, make sure to get the new listWindow
      */
@@ -114,6 +122,7 @@ export class BigListScroller<T = any> {
      */
     public checkElementScroll(elem: HTMLElement) {
         const elementBounds = elem.getBoundingClientRect();
+
         const overflowLength = elem.scrollHeight - elementBounds.height;
 
         if (overflowLength < 1) {
@@ -122,9 +131,10 @@ export class BigListScroller<T = any> {
 
         const relScroll = elem.scrollTop / overflowLength;
 
-        if (relScroll <= 0.25) {
+
+        if (relScroll <= 0.1) {
             this.moveWindowUp();
-        } else if (relScroll >= 0.75) {
+        } else if (relScroll >= 0.9) {
             this.moveWindowDown();
         }
     }
@@ -167,7 +177,7 @@ export class BigListScroller<T = any> {
         const itemsFitWidth = Math.floor(containerWidth / itemWidth) || 1;
         const itemsFitHeight = Math.floor(containerHeight / itemHeight) || 1;
         
-        const minSize = itemsFitWidth * itemsFitHeight * 8;
+        const minSize = itemsFitWidth * itemsFitHeight * 11;
 
         return this.changeWindowSize(minSize);
     }
