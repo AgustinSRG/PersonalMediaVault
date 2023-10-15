@@ -18,6 +18,15 @@ export class BigListScroller<T = any> {
     }
 
     /**
+     * Computes the window step
+     * @param windowSize The window size
+     * @returns The window step
+     */
+    public static GetWindowStep(windowSize: number): number {
+        return Math.floor(windowSize / (SCROLL_BUFFER_SIZE_MULTIPLIER * 2 + 1)) || 1;
+    }
+
+    /**
      * Obtains the list window
      */
     public getListWindow: () => T[];
@@ -102,7 +111,7 @@ export class BigListScroller<T = any> {
      */
     private moveWindowDown() {
         const listWindow = this.getListWindow();
-        const step = Math.floor(this.windowSize / 4) || 1;
+        const step = BigListScroller.GetWindowStep(this.windowSize);
 
         let windowNext = this.windowPosition + listWindow.length;
         let moveCount = 0;
@@ -121,7 +130,7 @@ export class BigListScroller<T = any> {
      */
     private moveWindowUp() {
         const listWindow = this.getListWindow();
-        const step = Math.floor(this.windowSize / 4) || 1;
+        const step = BigListScroller.GetWindowStep(this.windowSize);
         let moveCount = 0;
 
         while (moveCount < step && this.windowPosition > 0) {
@@ -148,7 +157,9 @@ export class BigListScroller<T = any> {
 
         const relScroll = elem.scrollTop / overflowLength;
 
-        if (relScroll <= 0.1) {
+        if (relScroll == 0) {
+            this.moveWindowToElement(0);
+        } else if (relScroll <= 0.1) {
             this.moveWindowUp();
         } else if (relScroll >= 0.9) {
             this.moveWindowDown();
@@ -190,8 +201,8 @@ export class BigListScroller<T = any> {
         const itemHeight = anyItem.getBoundingClientRect().height || 1;
         const itemWidth = anyItem.getBoundingClientRect().width || 1;
 
-        const itemsFitWidth = Math.floor(containerWidth / itemWidth) || 1;
-        const itemsFitHeight = Math.floor(containerHeight / itemHeight) || 1;
+        const itemsFitWidth = Math.round(containerWidth / itemWidth) || 1;
+        const itemsFitHeight = Math.round(containerHeight / itemHeight) || 1;
 
         const minSize = BigListScroller.GetWindowSize(itemsFitWidth * itemsFitHeight);
 

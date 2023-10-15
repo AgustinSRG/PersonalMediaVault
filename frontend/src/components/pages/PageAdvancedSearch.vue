@@ -191,7 +191,7 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 
 const PAGE_SIZE = 50;
 
-const INITIAL_WINDOW_SIZE = 150;
+const INITIAL_WINDOW_SIZE = 50;
 
 export default defineComponent({
     name: "PageAdvancedSearch",
@@ -260,24 +260,27 @@ export default defineComponent({
             });
         },
 
-        autoScroll: function () {
-            if (!this.inModal) {
-                this.scrollToCurrentMedia();
-                this.onCurrentMediaChanged();
-            }
-        },
-
-        scrollToCurrentMedia: function () {
+        scrollToCurrentMedia: function (): boolean {
             if (!this._handles.mediaIndexMap.has(this.currentMedia)) {
-                return;
+                return false;
             }
-            this._handles.listScroller.moveWindowToElement(this._handles.mediaIndexMap.get(this.currentMedia));
+            const index = this._handles.mediaIndexMap.get(this.currentMedia);
+
+            if (
+                index < this._handles.listScroller.windowPosition ||
+                index >= this._handles.listScroller.windowPosition + this._handles.listScroller.windowSize
+            ) {
+                this._handles.listScroller.moveWindowToElement(this._handles.mediaIndexMap.get(this.currentMedia));
+            }
+
             nextTick(() => {
                 const currentElem = this.$el.querySelector(".search-result-item.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
             });
+
+            return true;
         },
 
         load: function () {
@@ -309,13 +312,17 @@ export default defineComponent({
                             this.finished = true;
                         }
 
-                        this.autoScroll();
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
                     } else if (this.page < this.totalPages) {
                         this.load();
                     } else {
                         this.loading = false;
                         this.finished = true;
-                        this.autoScroll();
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
                     }
                 })
                 .onRequestError((err) => {
@@ -503,7 +510,9 @@ export default defineComponent({
                     this.progress = 100;
                     this.loading = false;
                     this.finished = true;
-                    this.autoScroll();
+                    if (!this.inModal) {
+                        this.onCurrentMediaChanged();
+                    }
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -729,7 +738,11 @@ export default defineComponent({
             this.currentMedia = AppStatus.CurrentMedia;
             if (!this.inModal) {
                 if (changed) {
-                    this.scrollToCurrentMedia();
+                    nextTick(() => {
+                        if (!this.checkContainerHeight()) {
+                            this.scrollToCurrentMedia();
+                        }
+                    });
                 }
                 this.onCurrentMediaChanged();
             }
@@ -882,22 +895,32 @@ export default defineComponent({
             }
         },
 
-        checkContainerHeight: function () {
+        checkContainerHeight: function (): boolean {
             const cont = this.getContainer();
 
             if (!cont) {
-                return;
+                return false;
             }
 
             this._handles.listScroller.checkElementScroll(cont);
 
+            const centerPosition = this._handles.listScroller.getCenterPosition();
+
             const el = this.$el.querySelector(".search-result-item");
 
             if (!el) {
-                return;
+                return false;
             }
 
-            this._handles.listScroller.checkScrollContainerHeight(cont, el);
+            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+
+            if (changed) {
+                if (!this.scrollToCurrentMedia()) {
+                    this._handles.listScroller.moveWindowToElement(centerPosition);
+                }
+            }
+
+            return changed;
         },
     },
     mounted: function () {
