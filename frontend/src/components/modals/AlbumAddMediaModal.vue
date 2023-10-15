@@ -34,6 +34,7 @@
                 </div>
                 <PageAdvancedSearch
                     v-if="!isUpload"
+                    ref="advSearch"
                     :display="true"
                     :inModal="true"
                     :noAlbum="aid"
@@ -150,11 +151,24 @@ export default defineComponent({
 
         onPageScroll: function (e: Event) {
             this.pageScroll = (e.target as HTMLElement).scrollTop;
+
+            if (!this.isUpload && this.$refs.advSearch) {
+                this.$refs.advSearch.onScroll(e);
+            }
         },
 
         goTop: function () {
-            this.$el.scrollTop = 0;
-            this.$el.focus();
+            if (!this.isUpload && this.$refs.advSearch) {
+                this.$refs.advSearch.goTop();
+
+                nextTick(() => {
+                    this.$el.scrollTop = 0;
+                    this.$el.focus();
+                });
+            } else {
+                this.$el.scrollTop = 0;
+                this.$el.focus();
+            }
         },
     },
     mounted: function () {
