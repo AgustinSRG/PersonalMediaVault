@@ -24,7 +24,6 @@
     border-top: 1px solid var(--theme-border-color);
 }
 
-
 .table.no-border th,
 .table.no-border td {
     border-top: none;

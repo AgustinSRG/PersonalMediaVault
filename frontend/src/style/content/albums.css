@@ -303,3 +303,36 @@
 .album-body-item-title.no-btn {
     width: calc(100% - 114px);
 }
+
+/* Dragging */
+
+.album-dragging-helper {
+    position: fixed;
+    width: 500px;
+    height: 130px;
+    opacity: 0.95;
+    border: solid 1px var(--theme-border-color);
+    cursor: move;
+}
+
+.album-dragging-helper .album-body-item {
+    cursor: move;
+}
+
+.album-body-item.dragging:not(.dragging-over) {
+    display: none;
+}
+
+.album-body-item.dragging.dragging-over {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.album-body-item.dragging-over:not(.dragging) {
+    margin-top: 130px;
+}
+
+.dragging-padding-bottom {
+    width: 100%;
+    padding-top: 130px;
+}

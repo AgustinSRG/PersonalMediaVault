@@ -297,6 +297,13 @@
                         </tr>
 
                         <tr>
+                            <td>{{ $t("Go to position") }}</td>
+                            <td>
+                                <span class="key-shortcut">G</span>
+                            </td>
+                        </tr>
+
+                        <tr>
                             <td>{{ $t("Toggle album loop") }}</td>
                             <td>
                                 <span class="key-shortcut">{{ $t("Shift") }} + L</span>

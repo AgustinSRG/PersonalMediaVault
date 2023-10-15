@@ -5,7 +5,7 @@
             :class="{
                 'three-child': (!canWrite && type === 2) || (!canWrite && type === 3) || (type === 1 && canWrite),
                 'four-child': (type === 2 && canWrite) || (type === 1 && !canWrite),
-                'five-child': (type == 3 && !canWrite),
+                'five-child': type == 3 && !canWrite,
             }"
         >
             <a

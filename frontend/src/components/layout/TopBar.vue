@@ -358,7 +358,7 @@ export default defineComponent({
 
         this._handles.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
 
-        this._handles.bigListScroller = new BigListScroller(25, {
+        this._handles.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
             get: (): any[] => {
                 return this.suggestions;
             },

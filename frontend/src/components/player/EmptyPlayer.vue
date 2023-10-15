@@ -250,7 +250,7 @@ export default defineComponent({
                     } else {
                         caught = false;
                     }
-                    break;    
+                    break;
                 case "PageDown":
                     if (event.altKey || event.shiftKey) {
                         caught = false;

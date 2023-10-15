@@ -198,7 +198,7 @@ export default defineComponent({
                 return;
             }
             this.matchingTags = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     const i = a[1].indexOf(tagFilter);
                     return {
                         id: a[0],

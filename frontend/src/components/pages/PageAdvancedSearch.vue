@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, hidden: !display }">
+    <div :class="{ 'page-inner': !inModal, hidden: !display }" @scroll.passive="onPageScroll">
         <form class="adv-search-form" @submit="startSearch">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
@@ -113,7 +113,7 @@
         </form>
 
         <div class="search-results" tabindex="-1">
-            <div v-if="!loading && started && pageItems.length === 0" class="search-results-msg-display">
+            <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
                     {{ $t("Could not find any result") }}
@@ -127,8 +127,8 @@
 
             <div v-if="pageItems.length > 0" class="search-results-final-display">
                 <a
-                    v-for="(item, i) in pageItems"
-                    :key="i"
+                    v-for="item in pageItems"
+                    :key="item.id"
                     class="search-result-item clickable"
                     :class="{ current: currentMedia == item.id }"
                     @click="goToMedia(item.id, $event)"
@@ -161,7 +161,7 @@
                 </a>
             </div>
 
-            <div v-if="!finished && pageItems.length >= PAGE_SIZE" class="search-continue-mark">
+            <div v-if="!finished && fullListLength >= PAGE_SIZE" class="search-continue-mark">
                 <button type="button" class="btn btn-primary btn-mr" disabled>
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
                 </button>
@@ -181,22 +181,31 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { MediaEntry } from "@/control/media";
 import { TagsController } from "@/control/tags";
-import { elementInView } from "@/utils/in-view";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
+import { useVModel } from "@/utils/v-model";
+import { BigListScroller } from "@/utils/big-list-scroller";
 
 const PAGE_SIZE = 50;
 
+const INITIAL_WINDOW_SIZE = 50;
+
 export default defineComponent({
     name: "PageAdvancedSearch",
-    emits: ["select-media"],
+    emits: ["select-media", "update:pageScroll"],
     props: {
         display: Boolean,
         inModal: Boolean,
         noAlbum: Number,
+        pageScroll: Number,
+    },
+    setup(props) {
+        return {
+            pageScrollStatus: useVModel(props, "pageScroll"),
+        };
     },
     data: function () {
         return {
@@ -212,6 +221,8 @@ export default defineComponent({
             page: 0,
             totalPages: 0,
             progress: 0,
+
+            fullListLength: 0,
 
             started: false,
             finished: true,
@@ -249,20 +260,27 @@ export default defineComponent({
             });
         },
 
-        autoScroll: function () {
-            if (!this.inModal) {
-                this.scrollToCurrentMedia();
-                this.onCurrentMediaChanged();
+        scrollToCurrentMedia: function (): boolean {
+            if (!this._handles.mediaIndexMap.has(this.currentMedia)) {
+                return false;
             }
-        },
+            const index = this._handles.mediaIndexMap.get(this.currentMedia);
 
-        scrollToCurrentMedia: function () {
+            if (
+                index < this._handles.listScroller.windowPosition ||
+                index >= this._handles.listScroller.windowPosition + this._handles.listScroller.windowSize
+            ) {
+                this._handles.listScroller.moveWindowToElement(this._handles.mediaIndexMap.get(this.currentMedia));
+            }
+
             nextTick(() => {
                 const currentElem = this.$el.querySelector(".search-result-item.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
             });
+
+            return true;
         },
 
         load: function () {
@@ -281,11 +299,12 @@ export default defineComponent({
 
             Request.Pending("page-adv-search-load", SearchAPI.Search(this.getFirstTag(), this.order, this.page, PAGE_SIZE))
                 .onSuccess((result) => {
+                    const completePageList = this._handles.listScroller.list;
                     this.filterElements(result.page_items);
                     this.page = result.page_index + 1;
                     this.totalPages = result.page_count;
                     this.progress = (this.page / Math.max(1, this.totalPages)) * 100;
-                    if (this.pageItems.length >= PAGE_SIZE) {
+                    if (completePageList.length >= PAGE_SIZE) {
                         // Done for now
                         this.loading = false;
 
@@ -293,13 +312,17 @@ export default defineComponent({
                             this.finished = true;
                         }
 
-                        this.autoScroll();
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
                     } else if (this.page < this.totalPages) {
                         this.load();
                     } else {
                         this.loading = false;
                         this.finished = true;
-                        this.autoScroll();
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
                     }
                 })
                 .onRequestError((err) => {
@@ -342,8 +365,14 @@ export default defineComponent({
                 );
             }
 
+            const resultsToAdd = [];
+
             for (const e of results) {
                 if (backlistAlbum.has(e.id)) {
+                    continue;
+                }
+
+                if (this._handles.mediaIndexMap.has(e.id)) {
                     continue;
                 }
 
@@ -414,8 +443,17 @@ export default defineComponent({
                     }
                 }
 
-                this.pageItems.push(e);
+                this._handles.mediaIndexMap.set(e.id, this._handles.listScroller.list.length + resultsToAdd.length);
+
+                resultsToAdd.push(e);
             }
+
+            this._handles.listScroller.addElements(resultsToAdd);
+            this.fullListLength = this._handles.listScroller.list.length;
+
+            nextTick(() => {
+                this.checkContainerHeight();
+            });
         },
 
         startSearch: function (event?: Event) {
@@ -424,7 +462,9 @@ export default defineComponent({
             }
             Timeouts.Abort("page-adv-search-dirty");
             this.loading = true;
-            this.pageItems = [];
+            this._handles.listScroller.reset();
+            this.fullListLength = 0;
+            this._handles.mediaIndexMap.clear();
             this.page = 0;
             this.totalPages = 0;
             this.progress = 0;
@@ -470,7 +510,9 @@ export default defineComponent({
                     this.progress = 100;
                     this.loading = false;
                     this.finished = true;
-                    this.autoScroll();
+                    if (!this.inModal) {
+                        this.onCurrentMediaChanged();
+                    }
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -503,7 +545,9 @@ export default defineComponent({
         resetSearch: function () {
             Timeouts.Abort("page-adv-search-load");
             Request.Abort("page-adv-search-load");
-            this.pageItems = [];
+            this._handles.listScroller.reset();
+            this.fullListLength = 0;
+            this._handles.mediaIndexMap.clear();
             this.page = 0;
             this.totalPages = 0;
             this.progress = 0;
@@ -512,15 +556,27 @@ export default defineComponent({
             this.started = false;
         },
 
-        goToMedia: function (mid, e) {
+        goToMedia: function (mid: number, e: Event) {
             if (e) {
                 e.preventDefault();
             }
             if (this.inModal) {
                 this.$emit("select-media", mid, () => {
-                    this.pageItems = this.pageItems.filter((i) => {
-                        return mid !== i.id;
-                    });
+                    const fullList = this._handles.listScroller.list;
+                    const centerPosition = this._handles.listScroller.getCenterPosition();
+
+                    const mediaIndex = this._handles.mediaIndexMap.get(mid);
+
+                    if (mediaIndex !== undefined) {
+                        fullList.splice(mediaIndex, 1);
+                        this._handles.mediaIndexMap.delete(mid);
+
+                        this._handles.listScroller.moveWindowToElement(centerPosition);
+
+                        for (let i = mediaIndex; i < fullList.length; i++) {
+                            this._handles.mediaIndexMap.set(fullList[i].id, i);
+                        }
+                    }
                 });
             } else {
                 AppStatus.ClickOnMedia(mid, true);
@@ -640,7 +696,7 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             this.matchingTags = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     if (!tagFilter) {
                         return {
                             id: a[0],
@@ -682,43 +738,49 @@ export default defineComponent({
             this.currentMedia = AppStatus.CurrentMedia;
             if (!this.inModal) {
                 if (changed) {
-                    this.scrollToCurrentMedia();
+                    nextTick(() => {
+                        if (!this.checkContainerHeight()) {
+                            this.scrollToCurrentMedia();
+                        }
+                    });
                 }
                 this.onCurrentMediaChanged();
             }
         },
 
         findCurrentMediaIndex: function (): number {
-            for (let i = 0; i < this.pageItems.length; i++) {
-                if (this.pageItems[i].id === this.currentMedia) {
-                    return i;
-                }
+            if (this._handles.mediaIndexMap.has(this.currentMedia)) {
+                return this._handles.mediaIndexMap.get(this.currentMedia);
+            } else {
+                return -1;
             }
-            return -1;
         },
 
         onCurrentMediaChanged: function () {
             if (!this.inModal) {
+                const completePageList = this._handles.listScroller.list;
                 const i = this.findCurrentMediaIndex();
-                AlbumsController.OnPageLoad(i, this.pageItems.length, 0, 1);
+                AlbumsController.OnPageLoad(i, completePageList.length, 0, 1);
             }
         },
 
         nextMedia: function () {
+            const completePageList = this._handles.listScroller.list;
             const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i < this.pageItems.length - 1) {
-                this.goToMedia(this.pageItems[i + 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
+            if (i !== -1 && i < completePageList.length - 1) {
+                this.goToMedia(completePageList[i + 1].id);
+            } else if (i === -1 && completePageList.length > 0) {
+                this.goToMedia(completePageList[0].id);
             }
         },
 
         prevMedia: function () {
+            const completePageList = this._handles.listScroller.list;
             const i = this.findCurrentMediaIndex();
             if (i !== -1 && i > 0) {
-                this.goToMedia(this.pageItems[i - 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
+                this.goToMedia(completePageList[i - 1].id);
+            } else if (i === -1 && completePageList.length > 0) {
+                this.goToMedia(completePageList[0].id);
             }
         },
 
@@ -729,20 +791,6 @@ export default defineComponent({
 
             if (this.inModal) {
                 return false;
-            }
-
-            if (event.key === "Home") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[0].id);
-                }
-                return true;
-            }
-
-            if (event.key === "End") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                }
-                return true;
             }
 
             if (event.key === "ArrowLeft") {
@@ -775,17 +823,28 @@ export default defineComponent({
         },
 
         checkContinueSearch: function () {
-            if (this.finished || this.loading || this.pageItems.length === 0) {
+            if (this.finished || this.loading || this.fullListLength === 0) {
                 return;
             }
 
-            const elem = this.$el.querySelector(".search-continue-mark");
+            const con = this.getContainer();
 
-            if (!elem) {
+            if (!con) {
                 return;
             }
 
-            if (!elementInView(elem)) {
+            const conBounds = con.getBoundingClientRect();
+
+            const overflowLength = con.scrollHeight - conBounds.height;
+
+            if (overflowLength < 1) {
+                this.load();
+                return;
+            }
+
+            const relScroll = con.scrollTop / overflowLength;
+
+            if (relScroll < 0.8) {
                 return;
             }
 
@@ -801,8 +860,71 @@ export default defineComponent({
                 }
             });
         },
+
+        onPageScroll: function (e: Event) {
+            if (this.inModal) {
+                return;
+            }
+
+            this.pageScrollStatus = (e.target as HTMLElement).scrollTop || 0;
+            this.onScroll(e);
+        },
+
+        goTop: function () {
+            if (!this.inModal) {
+                this._handles.listScroller.moveWindowToElement(0);
+                nextTick(() => {
+                    this.$el.scrollTop = 0;
+                });
+            } else {
+                this._handles.listScroller.moveWindowToElement(0);
+            }
+        },
+
+        onScroll: function (e: Event) {
+            this._handles.listScroller.checkElementScroll(e.target);
+        },
+
+        getContainer: function () {
+            if (this.inModal) {
+                if (this.$el.parentElement && this.$el.parentElement.parentElement && this.$el.parentElement.parentElement.parentElement) {
+                    return this.$el.parentElement.parentElement.parentElement;
+                }
+            } else {
+                return this.$el;
+            }
+        },
+
+        checkContainerHeight: function (): boolean {
+            const cont = this.getContainer();
+
+            if (!cont) {
+                return false;
+            }
+
+            this._handles.listScroller.checkElementScroll(cont);
+
+            const centerPosition = this._handles.listScroller.getCenterPosition();
+
+            const el = this.$el.querySelector(".search-result-item");
+
+            if (!el) {
+                return false;
+            }
+
+            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+
+            if (changed) {
+                if (!this.scrollToCurrentMedia()) {
+                    this._handles.listScroller.moveWindowToElement(centerPosition);
+                }
+            }
+
+            return changed;
+        },
     },
     mounted: function () {
+        this.pageScrollStatus = 0;
         this._handles = Object.create(null);
         this.advancedSearch = false;
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
@@ -829,11 +951,27 @@ export default defineComponent({
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
 
+        this._handles.goTopH = this.goTop.bind(this);
+        AppEvents.AddEventListener("adv-search-go-top", this._handles.goTopH);
+
         this.updateAlbums();
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
         AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         this.updateTagData();
+
+        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.pageItems;
+            },
+            set: (l) => {
+                this.pageItems = l;
+            },
+        });
+
+        this._handles.mediaIndexMap = new Map();
+
+        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
         this.startSearch();
 
@@ -856,6 +994,8 @@ export default defineComponent({
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
 
+        AppEvents.RemoveEventListener("adv-search-go-top", this._handles.goTopH);
+
         AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
@@ -864,6 +1004,8 @@ export default defineComponent({
         }
 
         clearInterval(this._handles.continueCheckInterval);
+
+        clearInterval(this._handles.checkContainerTimer);
 
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 

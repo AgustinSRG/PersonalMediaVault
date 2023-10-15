@@ -1,8 +1,8 @@
 <template>
     <div class="album-container" tabindex="-1">
-        <div v-if="!loading && albumData" class="album-header">
+        <div v-if="!loading && loadedAlbum" class="album-header">
             <div class="album-header-title">
-                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumData.name }}</div>
+                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumName }}</div>
                 <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="closePage">
                     <i class="fas fa-times"></i>
                 </button>
@@ -33,20 +33,31 @@
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
-                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumList.length }}</div>
+                <div class="album-post-text">{{ renderPos(currentPos) }} / {{ albumListLength }}</div>
             </div>
         </div>
-        <div v-show="!loading && albumData" class="album-body" @scroll.passive="closeOptionsMenu" tabindex="-1">
+        <div
+            v-show="!loading && loadedAlbum"
+            class="album-body"
+            :class="{ 'is-dragging': dragging }"
+            @scroll.passive="onScroll"
+            tabindex="-1"
+        >
             <a
-                v-for="(item, i) in albumList"
-                :key="item.list_id"
+                v-for="item in albumList"
+                :key="item.pos"
                 :href="getMediaURL(item)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="album-body-item"
-                :class="{ current: i === currentPos }"
+                :class="{
+                    current: item.pos === currentPos,
+                    dragging: item.pos === draggingPosition,
+                    'dragging-over': item.pos === draggingOverPosition,
+                }"
                 :title="item.title || $t('Untitled')"
                 @click="clickMedia(item, $event)"
+                @dragstart="onDrag(item, $event)"
             >
                 <div class="album-body-item-thumbnail">
                     <div v-if="!item.thumbnail" class="no-thumb">
@@ -60,7 +71,7 @@
                         {{ renderTime(item.duration) }}
                     </div>
                     <div class="album-body-item-thumb-pos">
-                        {{ renderPos(i) }}
+                        {{ renderPos(item.pos) }}
                     </div>
                 </div>
 
@@ -73,18 +84,66 @@
                     type="button"
                     :title="$t('Options')"
                     class="album-body-btn"
-                    @click="showOptions(item, i, $event)"
+                    @click="showOptions(item, item.pos, $event)"
                     @mousedown="stopPropagationEvent"
                     @touchstart="stopPropagationEvent"
                 >
                     <i class="fas fa-bars"></i>
                 </button>
             </a>
+            <div
+                v-if="dragging && albumList.length > 0 && draggingOverPosition > albumList[albumList.length - 1].pos"
+                class="dragging-padding-bottom"
+            ></div>
+        </div>
+        <div
+            v-if="dragging && draggingItem"
+            class="album-dragging-helper"
+            :style="{ top: mouseY - 65 + 'px', left: mouseX - 65 + 'px' }"
+            @click="stopPropagationEvent"
+        >
+            <div
+                :href="getMediaURL(draggingItem)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="album-body-item"
+                :class="{ current: draggingItem.pos === currentPos }"
+                :title="draggingItem.title || $t('Untitled')"
+            >
+                <div class="album-body-item-thumbnail">
+                    <div v-if="!draggingItem.thumbnail" class="no-thumb">
+                        <i v-if="draggingItem.type === 1" class="fas fa-image"></i>
+                        <i v-else-if="draggingItem.type === 2" class="fas fa-video"></i>
+                        <i v-else-if="draggingItem.type === 3" class="fas fa-headphones"></i>
+                        <i v-else class="fas fa-ban"></i>
+                    </div>
+                    <img
+                        v-if="draggingItem.thumbnail"
+                        :src="getThumbnail(draggingItem.thumbnail)"
+                        :alt="draggingItem.title || $t('Untitled')"
+                        loading="lazy"
+                    />
+                    <div class="album-body-item-thumb-tag" v-if="draggingItem.type === 2 || draggingItem.type === 3">
+                        {{ renderTime(draggingItem.duration) }}
+                    </div>
+                    <div class="album-body-item-thumb-pos">
+                        {{ renderPos(draggingItem.pos) }}
+                    </div>
+                </div>
+
+                <div class="album-body-item-title">
+                    {{ draggingItem.title || $t("Untitled") }}
+                </div>
+
+                <button v-if="canWrite" type="button" :title="$t('Options')" class="album-body-btn" disabled>
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
         <AlbumContextMenu
             v-model:shown="contextShown"
             :mediaIndex="contextIndex"
-            :albumLength="albumList.length"
+            :albumLength="albumListLength"
             :x="contextX"
             :y="contextY"
             @move-up="moveMediaUp"
@@ -95,6 +154,7 @@
         <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
         <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
         <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
+        <AlbumGoToPosModal v-if="displayAlbumGoPos" v-model:display="displayAlbumGoPos"></AlbumGoToPosModal>
         <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
         <LoadingOverlay v-if="loading"></LoadingOverlay>
     </div>
@@ -108,16 +168,22 @@ import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
-import { clone } from "@/utils/objects";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
-import { isTouchDevice } from "@/utils/touch";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import AlbumContextMenu from "./AlbumContextMenu.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
+
+const INITIAL_WINDOW_SIZE = 100;
+
+const AlbumGoToPosModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AlbumGoToPosModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
 
 const AlbumRenameModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumRenameModal.vue"),
@@ -137,8 +203,18 @@ const AlbumAddMediaModal = defineAsyncComponent({
     delay: 1000,
 });
 
-import Sortable from "sortablejs";
+interface AlbumListItem {
+    pos: number;
+    id: number;
+    type: number;
+    title: string;
+    thumbnail: string;
+    duration: number;
+}
+
 import { useVModel } from "@/utils/v-model";
+import { BigListScroller } from "@/utils/big-list-scroller";
+import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -150,6 +226,7 @@ export default defineComponent({
         AlbumDeleteModal,
         AlbumMovePosModal,
         AlbumAddMediaModal,
+        AlbumGoToPosModal,
     },
     props: {
         displayUpload: Boolean,
@@ -162,18 +239,21 @@ export default defineComponent({
     data: function () {
         return {
             albumId: AlbumsController.CurrentAlbum,
-            albumData: AlbumsController.CurrentAlbumData,
+            albumName: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "",
+            albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
+            loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: [],
+            albumList: [] as AlbumListItem[],
 
             isFav: AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + ""),
 
             loading: AlbumsController.CurrentAlbumLoading,
 
             currentPos: AlbumsController.CurrentAlbumPos,
+            currentPosMedia: AlbumsController.CurrentAlbumPos >= 0 ? AppStatus.CurrentMedia : -1,
             mustScroll: true,
 
-            currentMenuOpen: "",
+            currentMenuOpen: -1,
             contextShown: false,
             contextIndex: -1,
             contextX: 0,
@@ -187,6 +267,14 @@ export default defineComponent({
             displayAlbumRename: false,
             displayAlbumDelete: false,
             displayAlbumMovePos: false,
+            displayAlbumGoPos: false,
+
+            dragging: false,
+            draggingPosition: -1,
+            draggingItem: null as AlbumListItem,
+            mouseX: 0,
+            mouseY: 0,
+            draggingOverPosition: -1,
         };
     },
     methods: {
@@ -194,10 +282,91 @@ export default defineComponent({
             if (this.albumId !== AlbumsController.CurrentAlbum) {
                 this.mustScroll = true;
             }
+
             this.albumId = AlbumsController.CurrentAlbum;
-            this.albumData = AlbumsController.CurrentAlbumData;
+            this.loadedAlbum = !!AlbumsController.CurrentAlbumData;
+
+            this.albumName = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
+            this.albumListLength = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
+
             this.isFav = AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + "");
-            this.updateAlbumsList();
+
+            this.updateAlbumList(!this.mustScroll);
+        },
+
+        updateAlbumList: function (preserveWindowScroll?: boolean) {
+            this.currentMenuOpen = -1;
+
+            const centerPosition = this._handles.listScroller.getCenterPosition();
+
+            let currentScroll = 0;
+
+            const conEl = this.$el.querySelector(".album-body");
+
+            if (conEl) {
+                currentScroll = conEl.scrollTop;
+            }
+
+            this._handles.listScroller.reset();
+
+            if (this.loadedAlbum) {
+                let i = 0;
+                this._handles.listScroller.addElements(
+                    AlbumsController.CurrentAlbumData.list.map((m) => {
+                        return {
+                            pos: i++,
+                            id: m.id,
+                            type: m.type,
+                            title: m.title,
+                            thumbnail: m.thumbnail,
+                            duration: m.duration,
+                        };
+                    }),
+                );
+
+                if (preserveWindowScroll) {
+                    this._handles.listScroller.moveWindowToElement(centerPosition);
+                    nextTick(() => {
+                        const conEl = this.$el.querySelector(".album-body");
+
+                        if (conEl) {
+                            conEl.scrollTop = currentScroll;
+                        }
+                    });
+                }
+            }
+
+            nextTick(() => {
+                this.checkContainerHeight();
+            });
+        },
+
+        onScroll: function (e) {
+            this.closeOptionsMenu();
+            this._handles.listScroller.checkElementScroll(e.target);
+        },
+
+        checkContainerHeight: function () {
+            const cont = this.$el.querySelector(".album-body");
+
+            if (!cont) {
+                return;
+            }
+
+            this._handles.listScroller.checkElementScroll(cont);
+
+            const el = this.$el.querySelector(".album-body-item");
+
+            if (!el) {
+                return;
+            }
+
+            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+
+            if (changed) {
+                this.mustScroll = true;
+                this.onAlbumPosUpdate();
+            }
         },
 
         closeOptionsMenu: function () {
@@ -206,7 +375,7 @@ export default defineComponent({
             }
         },
 
-        onAlbumLoading: function (l) {
+        onAlbumLoading: function (l: boolean) {
             if (l) {
                 if (this.albumId !== AlbumsController.CurrentAlbum) {
                     this.loading = true;
@@ -256,7 +425,7 @@ export default defineComponent({
             this.displayAlbumRename = true;
         },
 
-        renderPos: function (p) {
+        renderPos: function (p: number) {
             if (p < 0) {
                 return "?";
             } else {
@@ -276,27 +445,7 @@ export default defineComponent({
             return GetAssetURL(thumb);
         },
 
-        onUpdateSortable: function (event) {
-            AlbumsController.MoveCurrentAlbumOrder(event.oldIndex, event.newIndex);
-        },
-
-        updateAlbumsList: function () {
-            this.currentMenuOpen = "";
-            const prefix = "" + Date.now() + "-";
-            let i = 0;
-            if (this.albumData) {
-                this.albumList = this.albumData.list.map((a) => {
-                    const o = clone(a);
-                    o.list_id = prefix + i;
-                    i++;
-                    return o;
-                });
-            } else {
-                this.albumList = [];
-            }
-        },
-
-        clickMedia: function (item, e) {
+        clickMedia: function (item: AlbumListItem, e: MouseEvent) {
             if (e) {
                 e.preventDefault();
             }
@@ -316,19 +465,19 @@ export default defineComponent({
             );
         },
 
-        showOptions: function (item, i, event) {
+        showOptions: function (item: { pos: number }, i: number, event: MouseEvent) {
             event.preventDefault();
             event.stopPropagation();
 
-            if (this.contextShown && this.currentMenuOpen === item.list_id) {
+            if (this.contextShown && this.currentMenuOpen === item.pos) {
                 this.currentMenuOpen = "";
                 this.contextShown = false;
             } else {
-                this.currentMenuOpen = item.list_id;
+                this.currentMenuOpen = item.pos;
                 this.contextShown = true;
                 this.contextIndex = i;
 
-                const targetRect = event.target.getBoundingClientRect();
+                const targetRect = (event.target as HTMLElement).getBoundingClientRect();
 
                 this.contextX = targetRect.left + targetRect.width;
 
@@ -344,23 +493,27 @@ export default defineComponent({
             this.loop = AlbumsController.AlbumLoop;
             this.random = AlbumsController.AlbumRandom;
 
+            const newPosMedia = AlbumsController.CurrentAlbumPos >= 0 ? AppStatus.CurrentMedia : -1;
+
             let mustScroll = false;
 
-            if (this.mustScroll || this.currentPos !== AlbumsController.CurrentAlbumPos) {
+            if (this.mustScroll || this.currentPosMedia !== newPosMedia) {
                 this.mustScroll = false;
                 mustScroll = true;
             }
 
             this.currentPos = AlbumsController.CurrentAlbumPos;
+            this.currentPosMedia = newPosMedia;
 
             if (mustScroll) {
+                this._handles.listScroller.moveWindowToElement(this.currentPos);
                 nextTick(() => {
                     this.scrollToSelected();
                 });
             }
         },
 
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
@@ -371,7 +524,7 @@ export default defineComponent({
         },
 
         moveMediaDown: function (i: number) {
-            if (i < this.albumList.length - 1) {
+            if (i < this.albumListLength - 1) {
                 AlbumsController.MoveCurrentAlbumOrder(i, i + 1);
             }
         },
@@ -383,7 +536,8 @@ export default defineComponent({
                     if (isNaN(newPos) || !isFinite(newPos)) {
                         return;
                     }
-                    newPos = Math.min(newPos, this.albumList.length - 1);
+                    newPos = Math.floor(newPos);
+                    newPos = Math.min(newPos, this.albumListLength - 1);
                     newPos = Math.max(0, newPos);
                     if (newPos === i) {
                         return;
@@ -394,7 +548,8 @@ export default defineComponent({
         },
 
         removeMedia: function (i: number) {
-            const media = this.albumList[i];
+            const completeAlbumList = this._handles.listScroller.list;
+            const media = completeAlbumList[i];
             if (!media) {
                 return;
             }
@@ -418,30 +573,35 @@ export default defineComponent({
         },
 
         scrollToSelected: function () {
-            const itemHeight = 130;
-            const element = this.$el.querySelector(".album-body");
+            const cont = this.$el.querySelector(".album-body");
 
-            if (!element) {
+            if (!cont) {
                 return;
             }
 
-            const scrollHeight = element.scrollHeight;
-            const height = element.getBoundingClientRect().height;
+            const contBounds = cont.getBoundingClientRect();
 
-            const itemTop = this.currentPos * itemHeight;
+            const el = this.$el.querySelector(".album-body-item.current");
 
-            const expectedTop = height / 2 - itemHeight / 2;
+            if (!el) {
+                return;
+            }
 
-            const scroll = Math.max(0, Math.min(scrollHeight - height, itemTop - expectedTop));
+            const elBounds = el.getBoundingClientRect();
+            const elTopRel = elBounds.top - contBounds.top + cont.scrollTop;
 
-            element.scrollTop = scroll;
+            const expectedTop = contBounds.height / 2 - elBounds.height / 2;
+
+            const scroll = Math.max(0, Math.min(cont.scrollHeight - contBounds.height, elTopRel - expectedTop));
+
+            cont.scrollTop = scroll;
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 
@@ -461,41 +621,164 @@ export default defineComponent({
                 return false;
             }
 
-            if (event.key.toUpperCase() === "L") {
-                this.toggleLoop();
-                return true;
+            const completeAlbumList = this._handles.listScroller.list;
+
+            switch (event.key) {
+                case "l":
+                case "L":
+                    this.toggleLoop();
+                    return true;
+                case "r":
+                case "R":
+                    this.toggleRandom();
+                    return true;
+
+                case "q":
+                case "Q":
+                    this.closePage();
+                    return true;
+                case "f":
+                case "F":
+                    this.toggleFav();
+                    return true;
+                case "g":
+                case "G":
+                    this.displayAlbumGoPos = true;
+                    return true;
+                case "Home":
+                    if (completeAlbumList.length > 0) {
+                        this.clickMedia(completeAlbumList[0]);
+                    }
+                    return true;
+                case "End":
+                    if (completeAlbumList.length > 0) {
+                        this.clickMedia(completeAlbumList[completeAlbumList.length - 1]);
+                    }
+                    return true;
+                default:
+                    return false;
+            }
+        },
+
+        onDrag: function (item: AlbumListItem, e: DragEvent) {
+            e.preventDefault();
+
+            if (isTouchDevice()) {
+                return; // Disabled for touch devices
             }
 
-            if (event.key.toUpperCase() === "R") {
-                this.toggleRandom();
-                return true;
+            if (!this.canWrite) {
+                return; // Cannot alter the album
             }
 
-            if (event.key.toUpperCase() === "Q") {
-                this.closePage();
-                return true;
+            this.dragging = true;
+            this.draggingItem = item;
+            this.draggingPosition = item.pos;
+            this.draggingOverPosition = item.pos;
+            if (this._handles.dragCheckInterval) {
+                clearInterval(this._handles.dragCheckInterval);
+                this._handles.dragCheckInterval = null;
+            }
+            this._handles.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+        },
+
+        onDocumentMouseMove: function (e: MouseEvent) {
+            this.mouseX = e.pageX;
+            this.mouseY = e.pageY;
+        },
+
+        onDocumentMouseUp: function () {
+            if (!this.dragging) {
+                return;
             }
 
-            if (event.key.toUpperCase() === "F") {
-                this.toggleFav();
-                return true;
+            if (this._handles.dragCheckInterval) {
+                clearInterval(this._handles.dragCheckInterval);
+                this._handles.dragCheckInterval = null;
             }
 
-            if (event.key === "Home") {
-                if (this.albumList.length > 0) {
-                    this.clickMedia(this.albumList[0]);
+            // Check drop position
+
+            this.checkDropPosition();
+
+            // Move element if needed
+
+            if (this.draggingOverPosition >= 0 && this.draggingPosition >= 0) {
+                const initialPosition = this.draggingPosition;
+                const finalPosition =
+                    this.draggingOverPosition > this.draggingPosition ? this.draggingOverPosition - 1 : this.draggingOverPosition;
+
+                if (initialPosition !== finalPosition) {
+                    AlbumsController.MoveCurrentAlbumOrder(initialPosition, finalPosition);
                 }
-                return true;
             }
 
-            if (event.key === "End") {
-                if (this.albumList.length > 0) {
-                    this.clickMedia(this.albumList[this.albumList.length - 1]);
+            // Reset dragging
+            this.dragging = false;
+            this.draggingPosition = -1;
+            this.draggingOverPosition = -1;
+        },
+
+        onDragCheck: function () {
+            const con = this.$el.querySelector(".album-body");
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.mouseX >= conBounds.left - 420) {
+                // Auto scroll
+
+                const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
+                const scrollStep = Math.floor(conBounds.height / 10);
+
+                if (relTop <= 0.1) {
+                    con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+                } else if (relTop >= 0.9) {
+                    con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
                 }
-                return true;
             }
 
-            return false;
+            // Check drop position
+            this.checkDropPosition();
+        },
+
+        checkDropPosition: function () {
+            const con = this.$el.querySelector(".album-body");
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.albumList.length === 0) {
+                return;
+            }
+
+            const item = con.querySelector(".album-body-item:not(.dragging)");
+
+            if (!item) {
+                return;
+            }
+
+            if (this.mouseX < conBounds.left - 420) {
+                this.draggingOverPosition = -1;
+                return;
+            }
+
+            const itemHeight = item.getBoundingClientRect().height;
+
+            const firstPos = this.albumList[0].pos;
+            const lastPos = this.albumList[this.albumList.length - 1].pos;
+            const containerScrollTop = con.scrollTop;
+
+            this.draggingOverPosition = Math.min(
+                lastPos + 1,
+                Math.max(firstPos, firstPos + Math.round((this.mouseY - conBounds.top + containerScrollTop) / itemHeight)),
+            );
         },
     },
     mounted: function () {
@@ -509,9 +792,20 @@ export default defineComponent({
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
 
-        this.onAlbumPosUpdate();
+        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.albumList;
+            },
+            set: (l) => {
+                this.albumList = l;
+            },
+        });
 
-        this.updateAlbumsList();
+        this.updateAlbumList();
+
+        this.mustScroll = true;
+
+        this.onAlbumPosUpdate();
 
         this._handles.loadingH = this.onAlbumLoading.bind(this);
         AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
@@ -526,17 +820,13 @@ export default defineComponent({
         this._handles.favUpdateH = this.updateFav.bind(this);
         AppEvents.AddEventListener("albums-fav-updated", this._handles.favUpdateH);
 
-        // Sortable
-        if (!isTouchDevice()) {
-            const element = this.$el.querySelector(".album-body");
-            this._handles.sortable = Sortable.create(element, {
-                onUpdate: this.onUpdateSortable.bind(this),
-                disabled: !this.canWrite,
-                scroll: element,
-                forceAutoscrollFallback: true,
-                scrollSensitivity: 100,
-            });
-        }
+        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this._handles.onDocumentMouseMoveH = this.onDocumentMouseMove.bind(this);
+        document.addEventListener("mousemove", this._handles.onDocumentMouseMoveH);
+
+        this._handles.onDocumentMouseUpH = this.onDocumentMouseUp.bind(this);
+        document.addEventListener("mouseup", this._handles.onDocumentMouseUpH);
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
@@ -550,10 +840,14 @@ export default defineComponent({
 
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
-        // Sortable
-        if (this._handles.sortable) {
-            this._handles.sortable.destroy();
-            this._handles.sortable = null;
+        clearInterval(this._handles.checkContainerTimer);
+
+        document.removeEventListener("mousemove", this._handles.onDocumentMouseMoveH);
+        document.removeEventListener("mouseup", this._handles.onDocumentMouseUpH);
+
+        if (this._handles.dragCheckInterval) {
+            clearInterval(this._handles.dragCheckInterval);
+            this._handles.dragCheckInterval = null;
         }
     },
 });
