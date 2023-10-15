@@ -265,7 +265,7 @@ export default defineComponent({
             if (this.contextOpen) {
                 return;
             }
- 
+
             if (this.moving || this.resizing) {
                 return;
             }
@@ -276,7 +276,6 @@ export default defineComponent({
 
             e.stopPropagation();
 
-
             const parentElem: HTMLElement = this.$el.parentElement;
 
             if (!parentElem) {
@@ -284,7 +283,7 @@ export default defineComponent({
             }
 
             const bounds = parentElem.getBoundingClientRect();
-            
+
             let x: number;
             let y: number;
             if (e.touches && e.touches.length > 0) {

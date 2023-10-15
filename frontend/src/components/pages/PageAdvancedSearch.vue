@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, hidden: !display }">
+    <div :class="{ 'page-inner': !inModal, hidden: !display }" @scroll.passive="onPageScroll">
         <form class="adv-search-form" @submit="startSearch">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
@@ -187,16 +187,23 @@ import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
+import { useVModel } from "@/utils/v-model";
 
 const PAGE_SIZE = 50;
 
 export default defineComponent({
     name: "PageAdvancedSearch",
-    emits: ["select-media"],
+    emits: ["select-media", "update:pageScroll"],
     props: {
         display: Boolean,
         inModal: Boolean,
         noAlbum: Number,
+        pageScroll: Number,
+    },
+    setup(props) {
+        return {
+            pageScrollStatus: useVModel(props, "pageScroll"),
+        };
     },
     data: function () {
         return {
@@ -640,7 +647,7 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             this.matchingTags = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     if (!tagFilter) {
                         return {
                             id: a[0],
@@ -801,8 +808,25 @@ export default defineComponent({
                 }
             });
         },
+
+        onPageScroll: function (e: Event) {
+            if (this.inModal) {
+                return;
+            }
+
+            this.pageScrollStatus = (e.target as HTMLElement).scrollTop || 0;
+        },
+
+        goTop: function () {
+            if (!this.inModal) {
+                this.$el.scrollTop = 0;
+            }
+        },
+
+        goBottom: function () {},
     },
     mounted: function () {
+        this.pageScrollStatus = 0;
         this._handles = Object.create(null);
         this.advancedSearch = false;
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
@@ -828,6 +852,9 @@ export default defineComponent({
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+
+        this._handles.goTopH = this.goTop.bind(this);
+        AppEvents.AddEventListener("adv-search-go-top", this._handles.goTopH);
 
         this.updateAlbums();
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
@@ -855,6 +882,8 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
+
+        AppEvents.RemoveEventListener("adv-search-go-top", this._handles.goTopH);
 
         AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);

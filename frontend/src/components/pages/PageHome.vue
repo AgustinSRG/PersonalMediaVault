@@ -189,7 +189,7 @@ export default defineComponent({
                         this.load();
                         return;
                     }
-                    this.scrollToCurrentMedia()
+                    this.scrollToCurrentMedia();
                     this.onCurrentMediaChanged();
                 })
                 .onRequestError((err) => {

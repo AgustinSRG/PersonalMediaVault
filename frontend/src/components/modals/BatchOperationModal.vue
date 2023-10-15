@@ -311,7 +311,7 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             this.matchingTagsSearch = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     if (!tagFilter) {
                         return {
                             id: a[0],
@@ -373,7 +373,7 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             this.matchingTagsAction = Array.from(TagsController.Tags.entries())
-                .map(a => {
+                .map((a) => {
                     if (!tagFilter) {
                         return {
                             id: a[0],

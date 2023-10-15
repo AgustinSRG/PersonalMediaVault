@@ -24,7 +24,7 @@
                         />
                     </div>
                     <div class="form-control-suffix" v-if="albumLength > 0">
-                        {{ '/ ' + albumLength }}
+                        {{ "/ " + albumLength }}
                     </div>
                 </div>
             </div>
@@ -125,5 +125,4 @@ export default defineComponent({
     padding-left: 0.75rem;
     white-space: nowrap;
 }
-
 </style>

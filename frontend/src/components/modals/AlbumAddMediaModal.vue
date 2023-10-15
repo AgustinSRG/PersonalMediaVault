@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true">
+    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -41,6 +41,12 @@
                 ></PageAdvancedSearch>
                 <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
             </div>
+
+            <div v-if="pageScroll > 0" class="modal-button-br-container">
+                <button type="button" :title="$t('Go to the top')" class="modal-button-br" @click="goTop">
+                    <i class="fas fa-angles-up"></i>
+                </button>
+            </div>
         </div>
     </ModalDialogContainer>
 </template>
@@ -81,6 +87,8 @@ export default defineComponent({
 
             pageItemsFit: AppPreferences.PageItemsFit,
             pageItemsSize: AppPreferences.PageItemsSize,
+
+            pageScroll: 0,
         };
     },
     methods: {
@@ -138,6 +146,15 @@ export default defineComponent({
         updatePageItemsPreferences: function () {
             this.pageItemsFit = AppPreferences.PageItemsFit;
             this.pageItemsSize = AppPreferences.PageItemsSize;
+        },
+
+        onPageScroll: function (e: Event) {
+            this.pageScroll = (e.target as HTMLElement).scrollTop;
+        },
+
+        goTop: function () {
+            this.$el.scrollTop = 0;
+            this.$el.focus();
         },
     },
     mounted: function () {

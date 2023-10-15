@@ -53,7 +53,7 @@ export class BigListScroller<T = any> {
      * @param maxPages Max number of pages to keep
      * @param callbacks Callbacks to get and set the list window
      */
-    constructor(windowSize: number, callbacks: {get: () => T[], set:  (list: T[]) => void}) {
+    constructor(windowSize: number, callbacks: { get: () => T[]; set: (list: T[]) => void }) {
         this.windowSize = windowSize;
         this.minWindowSize = windowSize;
         this.getListWindow = callbacks.get;
@@ -148,7 +148,6 @@ export class BigListScroller<T = any> {
 
         const relScroll = elem.scrollTop / overflowLength;
 
-
         if (relScroll <= 0.1) {
             this.moveWindowUp();
         } else if (relScroll >= 0.9) {
@@ -193,7 +192,7 @@ export class BigListScroller<T = any> {
 
         const itemsFitWidth = Math.floor(containerWidth / itemWidth) || 1;
         const itemsFitHeight = Math.floor(containerHeight / itemHeight) || 1;
-        
+
         const minSize = BigListScroller.GetWindowSize(itemsFitWidth * itemsFitHeight);
 
         return this.changeWindowSize(Math.max(this.minWindowSize, minSize));

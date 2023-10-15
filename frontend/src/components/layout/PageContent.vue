@@ -14,18 +14,7 @@
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <div
-                class="page-title"
-                :title="renderTitle(page, search)"
-                :class="{
-                    'kind-home': page === 'home' || page === 'search',
-                    'kind-albums': page === 'albums',
-                    'kind-random': page === 'random',
-                    'kind-upload': page === 'upload',
-                }"
-            >
-                <i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}
-            </div>
+            <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button v-if="page === 'random'" type="button" :title="$t('Refresh')" class="page-header-btn" @click="triggerRefresh">
                 <i class="fas fa-sync-alt"></i>
             </button>
@@ -65,6 +54,15 @@
             >
                 <i class="fas fa-arrow-down-short-wide"></i>
             </button>
+            <button
+                v-if="page === 'adv-search' && pageScroll > 0"
+                type="button"
+                :title="$t('Go to the top')"
+                class="page-header-btn"
+                @click="goToTop"
+            >
+                <i class="fas fa-angles-up"></i>
+            </button>
             <button v-if="hasConfigOptions(page)" type="button" :title="$t('Configuration')" class="page-header-btn" @click="openConfig">
                 <i class="fas fa-cog"></i>
             </button>
@@ -82,6 +80,7 @@
             :display="isDisplayed && page === 'adv-search'"
             :inModal="false"
             :noAlbum="-1"
+            v-model:pageScroll="pageScroll"
         ></PageAdvancedSearch>
         <PageAlbums v-if="isDisplayed && page === 'albums'" :display="isDisplayed && page === 'albums'" :min="min"></PageAlbums>
 
@@ -171,6 +170,8 @@ export default defineComponent({
 
             pageItemsFit: AppPreferences.PageItemsFit,
             pageItemsSize: AppPreferences.PageItemsSize,
+
+            pageScroll: 0,
         };
     },
     methods: {
@@ -329,6 +330,10 @@ export default defineComponent({
         updatePageItemsPreferences: function () {
             this.pageItemsFit = AppPreferences.PageItemsFit;
             this.pageItemsSize = AppPreferences.PageItemsSize;
+        },
+
+        goToTop: function () {
+            AppEvents.Emit("adv-search-go-top");
         },
     },
     mounted: function () {

@@ -91,6 +91,10 @@
     content: "\f101";
 }
 
+.fa-angles-up::before {
+    content: "\f102";
+}
+
 .fa-arrow-down::before {
     content: "\f063";
 }

@@ -10,19 +10,21 @@ export const NOTES_TEXT_SEPARATOR = '"""';
  * @returns notes as text
  */
 export function imageNotesToText(notes: ImageNote[]): string {
-    return notes.map(note => {
-        const noteHeader = `[${note.x}, ${note.y}] (${note.w} x ${note.h})`;
+    return notes
+        .map((note) => {
+            const noteHeader = `[${note.x}, ${note.y}] (${note.w} x ${note.h})`;
 
-        const lines = note.text.split("\n").map(line => {
-            if ((/^""["]+$/).test(line.trim())) {
-                line = line.trim() + '"';
-            }
+            const lines = note.text.split("\n").map((line) => {
+                if (/^""["]+$/.test(line.trim())) {
+                    line = line.trim() + '"';
+                }
 
-            return line;
-        });
+                return line;
+            });
 
-        return noteHeader + '\n' + NOTES_TEXT_SEPARATOR + '\n' + lines.join("\n") + '\n' + NOTES_TEXT_SEPARATOR + '\n';
-    }).join("\n");
+            return noteHeader + "\n" + NOTES_TEXT_SEPARATOR + "\n" + lines.join("\n") + "\n" + NOTES_TEXT_SEPARATOR + "\n";
+        })
+        .join("\n");
 }
 
 /**
@@ -96,15 +98,15 @@ export function textToImageNotes(text: string): ImageNote[] {
                     if (trimLine === NOTES_TEXT_SEPARATOR) {
                         state = 0;
                         notes.push(currentNote);
-                    } else if ((/^""["]+$/).test(trimLine)) {
+                    } else if (/^""["]+$/.test(trimLine)) {
                         if (currentNote.text) {
-                            currentNote.text += '\n';
+                            currentNote.text += "\n";
                         }
 
                         currentNote.text += trimLine.substring(1);
                     } else {
                         if (currentNote.text) {
-                            currentNote.text += '\n';
+                            currentNote.text += "\n";
                         }
 
                         currentNote.text += line;
@@ -116,5 +118,3 @@ export function textToImageNotes(text: string): ImageNote[] {
 
     return notes;
 }
-
-
