@@ -80,6 +80,14 @@ export class BigListScroller<T = any> {
     }
 
     /**
+     * Checks if the window is at the end
+     * @returns True if the window position is at the end
+     */
+    public isAtTheEnd(): boolean {
+        return (this.windowPosition + this.windowSize) >= this.list.length;
+    }
+
+    /**
      * Resets the list
      * After you do this, make sure to get the new listWindow
      */

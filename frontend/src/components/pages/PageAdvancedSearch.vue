@@ -827,6 +827,10 @@ export default defineComponent({
                 return;
             }
 
+            if (!this._handles.listScroller.isAtTheEnd()) {
+                return;
+            }
+
             const con = this.getContainer();
 
             if (!con) {
