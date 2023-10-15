@@ -10,16 +10,10 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>{{ $t("Max items per page") }}:</label>
-                    <select class="form-control form-select form-control-full-width" v-model="pageSize" @change="onChangePageSize">
-                        <option v-for="po in pageSizeOptions" :key="po" :value="po">{{ po }} {{ $t("items per page") }}</option>
-                        <option :value="0">{{ $t("Use a custom value") }}</option>
-                    </select>
-                </div>
-                <div class="form-group" v-if="pageSize === 0">
                     <input
                         type="number"
-                        class="form-control form-control-full-width"
-                        v-model.number="pageSizeCustom"
+                        class="form-control form-control-full-width auto-focus"
+                        v-model.number="pageSize"
                         @change="onChangePageSize"
                         :max="maxPageSize"
                         :min="minPageSize"
@@ -78,12 +72,9 @@ export default defineComponent({
         return {
             page: AppStatus.CurrentPage,
             pageSize: AppPreferences.PageMaxItems,
-            pageSizeCustom: AppPreferences.PageMaxItems,
 
             maxPageSize: MAX_PAGE_SIZE,
             minPageSize: MIN_PAGE_SIZE,
-
-            pageSizeOptions: [],
 
             pageItemsFit: AppPreferences.PageItemsFit,
             pageItemsSize: AppPreferences.PageItemsSize,
@@ -91,7 +82,7 @@ export default defineComponent({
     },
     methods: {
         onChangePageSize() {
-            const pageSize = parseInt(this.pageSize === 0 ? this.pageSizeCustom : this.pageSize);
+            const pageSize = parseInt(this.pageSize);
             const truePageSize = Math.min(256, Math.max(1, pageSize || 25));
 
             if (AppPreferences.PageMaxItems !== truePageSize) {
@@ -120,13 +111,6 @@ export default defineComponent({
             this.page = AppStatus.CurrentPage;
             this.pageSize = AppPreferences.PageMaxItems;
 
-            if (this.pageSizeOptions.includes(this.pageSize)) {
-                this.pageSizeCustom = this.pageSize;
-            } else {
-                this.pageSizeCustom = this.pageSize;
-                this.pageSize = 0;
-            }
-
             this.pageItemsFit = AppPreferences.PageItemsFit;
             this.pageItemsSize = AppPreferences.PageItemsSize;
         },
@@ -146,12 +130,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.pageSizeOption = [];
-
-        for (let i = 1; i <= 20; i++) {
-            this.pageSizeOptions.push(5 * i);
-        }
-
         this.reset();
 
         if (this.display) {
