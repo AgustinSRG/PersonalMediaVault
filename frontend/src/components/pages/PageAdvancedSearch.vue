@@ -555,6 +555,7 @@ export default defineComponent({
             this.loading = false;
             this.finished = true;
             this.started = false;
+            this.startSearch();
         },
 
         updatePageSize: function () {
