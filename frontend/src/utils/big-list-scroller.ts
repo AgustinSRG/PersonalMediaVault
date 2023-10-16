@@ -166,7 +166,9 @@ export class BigListScroller<T = any> {
         const relScroll = elem.scrollTop / overflowLength;
 
         if (relScroll == 0) {
-            this.moveWindowToElement(0);
+            if (this.windowPosition > 0) {
+                this.moveWindowToElement(0);
+            }
         } else if (relScroll <= 0.1) {
             this.moveWindowUp();
         } else if (relScroll >= 0.9) {
