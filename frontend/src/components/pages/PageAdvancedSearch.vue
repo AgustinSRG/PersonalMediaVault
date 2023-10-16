@@ -161,7 +161,7 @@
                 </a>
             </div>
 
-            <div v-if="!finished && fullListLength >= PAGE_SIZE" class="search-continue-mark">
+            <div v-if="!finished && fullListLength >= pageSize" class="search-continue-mark">
                 <button type="button" class="btn btn-primary btn-mr" disabled>
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
                 </button>
@@ -188,8 +188,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
-
-const PAGE_SIZE = 50;
+import { AppPreferences } from "@/control/app-preferences";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -234,7 +233,9 @@ export default defineComponent({
             tagToAdd: "",
             matchingTags: [],
             tagMode: "all",
-            PAGE_SIZE: PAGE_SIZE,
+            
+
+            pageSize: AppPreferences.PageMaxItems,
 
             albums: [],
             albumSearch: -1,
@@ -297,14 +298,14 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("page-adv-search-load", SearchAPI.Search(this.getFirstTag(), this.order, this.page, PAGE_SIZE))
+            Request.Pending("page-adv-search-load", SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     const completePageList = this._handles.listScroller.list;
                     this.filterElements(result.page_items);
                     this.page = result.page_index + 1;
                     this.totalPages = result.page_count;
                     this.progress = (this.page / Math.max(1, this.totalPages)) * 100;
-                    if (completePageList.length >= PAGE_SIZE) {
+                    if (completePageList.length >= this.pageSize) {
                         // Done for now
                         this.loading = false;
 
@@ -554,6 +555,11 @@ export default defineComponent({
             this.loading = false;
             this.finished = true;
             this.started = false;
+        },
+
+        updatePageSize: function () {
+            this.pageSize = AppPreferences.PageMaxItems;
+            this.resetSearch();
         },
 
         goToMedia: function (mid: number, e: Event) {
@@ -962,6 +968,9 @@ export default defineComponent({
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
         AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
+        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
+        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+
         this.updateTagData();
 
         this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
@@ -1002,6 +1011,8 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
+
+        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);
