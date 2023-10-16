@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, hidden: !display }" @scroll.passive="onPageScroll">
+    <div :class="{ 'page-inner': !inModal, hidden: !display }" @scroll.passive="onPageScroll" tabindex="-1">
         <form class="adv-search-form" @submit="startSearch">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
@@ -112,7 +112,7 @@
             </div>
         </form>
 
-        <div class="search-results" tabindex="-1">
+        <div class="search-results">
             <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
