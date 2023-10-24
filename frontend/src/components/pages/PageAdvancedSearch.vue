@@ -233,7 +233,6 @@ export default defineComponent({
             tagToAdd: "",
             matchingTags: [],
             tagMode: "all",
-            
 
             pageSize: AppPreferences.PageMaxItems,
 

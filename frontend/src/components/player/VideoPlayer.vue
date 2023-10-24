@@ -289,6 +289,14 @@
             {{ $t("Pause") }}
         </div>
 
+        <div v-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
+            {{ $t("Previous") }}
+        </div>
+
+        <div v-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+            {{ $t("Next") }}
+        </div>
+
         <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
             <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
         </div>
