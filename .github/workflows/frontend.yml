@@ -29,6 +29,10 @@ jobs:
       working-directory: ./frontend
       run: npm install
 
+    - name: Test Vue project
+      working-directory: ./frontend
+      run: npm test
+
     - name: Build Vue project
       working-directory: ./frontend
       run: npm run build

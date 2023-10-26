@@ -6,8 +6,9 @@
         "serve": "vite",
         "dev": "vite",
         "build": "vite build",
-        "lint": "eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
+        "lint": "tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
         "prettier": "prettier --write .",
+        "test": "tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore src",
         "update-locales": "node translate-file-maker.js"
     },
     "dependencies": {
@@ -16,10 +17,10 @@
     },
     "devDependencies": {
         "@types/sanitize-html": "2.6.2",
-        "@typescript-eslint/eslint-plugin": "6.6.0",
-        "@typescript-eslint/parser": "6.6.0",
+        "@typescript-eslint/eslint-plugin": "6.9.0",
+        "@typescript-eslint/parser": "6.9.0",
         "@vitejs/plugin-vue": "4.3.4",
-        "@vue/eslint-config-typescript": "11.0.3",
+        "@vue/eslint-config-typescript": "12.0.0",
         "eslint": "8.49.0",
         "eslint-plugin-vue": "9.17.0",
         "prettier": "3.0.0",
