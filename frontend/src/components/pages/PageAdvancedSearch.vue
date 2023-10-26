@@ -959,7 +959,7 @@ export default defineComponent({
         this._handles.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.goTopH = this.goTop.bind(this);
         AppEvents.AddEventListener("adv-search-go-top", this._handles.goTopH);
@@ -1009,7 +1009,7 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("adv-search-go-top", this._handles.goTopH);
 
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
         AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);

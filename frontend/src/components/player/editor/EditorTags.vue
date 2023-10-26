@@ -383,7 +383,7 @@ export default defineComponent({
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
 
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -397,7 +397,7 @@ export default defineComponent({
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
 
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
 
         AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
 

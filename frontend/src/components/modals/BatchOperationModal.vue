@@ -946,7 +946,7 @@ export default defineComponent({
         this._handles = Object.create(null);
         this._handles.tagUpdateH = this.updateTagData.bind(this);
 
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this.updateTagData();
 
@@ -974,7 +974,7 @@ export default defineComponent({
             this._handles.findTagActionTimeout = null;
         }
 
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
     },
     watch: {

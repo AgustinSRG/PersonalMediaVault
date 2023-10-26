@@ -438,7 +438,7 @@ export default defineComponent({
         }
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
         AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
@@ -460,7 +460,7 @@ export default defineComponent({
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
         AlbumsController.OnPageUnload();

@@ -1,5 +1,7 @@
 // Tags data controller
 
+"use strict";
+
 import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
@@ -8,20 +10,53 @@ import { AuthController } from "./auth";
 import { MediaListItem } from "@/api/models";
 import { MediaEntry } from "./media";
 
+const EVENT_NAME = "tags-update";
+
+/**
+ * Tags data management object
+ */
 export class TagsController {
+    /**
+     * Tags data version
+     */
     public static TagsVersion = 0;
+
+    /**
+     * Tags mapping ID -> Name
+     */
     public static Tags: Map<number, string> = new Map();
+
+    /**
+     * Last tag ID
+     */
     public static LastTagId = -1;
 
+    /**
+     * True if loading
+     */
     public static Loading = true;
+
+    /**
+     * True if initially loaded
+     */
     public static InitiallyLoaded = false;
 
+    /**
+     * Initialization logic
+     * Runs at the app startup
+     */
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", TagsController.Load);
         TagsController.Load();
     }
 
-    public static GetTagName(id: number, v: number) {
+    /**
+     * Gets tag name by tag ID
+     * @param id Tag ID
+     * @param v The tags data version
+     * @returns The name
+     */
+    public static GetTagName(id: number, v: number): string {
         if (import.meta.env.DEV) {
             if (TagsController.TagsVersion !== v) {
                 console.warn("Tag version not properly updated. Current: " + TagsController.TagsVersion + " | Given: " + v);
@@ -30,6 +65,9 @@ export class TagsController {
         return TagsController.Tags.get(id) || "???";
     }
 
+    /**
+     * Loads tags
+     */
     public static Load() {
         TagsController.Loading = true;
 
@@ -37,8 +75,8 @@ export class TagsController {
             return; // Vault is locked
         }
 
-        AppEvents.Emit("tags-loading", true);
         Timeouts.Abort("tags-load");
+
         Request.Pending("tags-load", TagsAPI.GetTags())
             .onSuccess((tags) => {
                 TagsController.Tags = new Map();
@@ -51,9 +89,8 @@ export class TagsController {
                 }
 
                 TagsController.TagsVersion++;
-                AppEvents.Emit("tags-update", TagsController.TagsVersion);
+                AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
                 TagsController.Loading = false;
-                AppEvents.Emit("tags-loading", false);
                 TagsController.InitiallyLoaded = true;
             })
             .onRequestError((err) => {
@@ -74,6 +111,11 @@ export class TagsController {
             });
     }
 
+    /**
+     * Finds tag by name
+     * @param name The tag name
+     * @returns The tag ID
+     */
     public static FindTag(name: string): number {
         for (const [tagId, tagName] of TagsController.Tags) {
             if (tagName === name) {
@@ -84,6 +126,11 @@ export class TagsController {
         return -1;
     }
 
+    /**
+     * Adds tag to the local status
+     * @param id The tag ID
+     * @param name The tag name
+     */
     public static AddTag(id: number, name: string) {
         // Remove any other tag with that name
         for (const [tagId, tagName] of TagsController.Tags) {
@@ -96,7 +143,7 @@ export class TagsController {
         TagsController.Tags.set(id, name);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit("tags-update", TagsController.TagsVersion);
+        AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
 
         if (TagsController.LastTagId < id) {
             if (TagsController.LastTagId === id - 1) {
@@ -109,13 +156,21 @@ export class TagsController {
         }
     }
 
+    /**
+     * Removes tag from the local status
+     * @param id The tag ID
+     */
     public static RemoveTag(id: number) {
         TagsController.Tags.delete(id);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit("tags-update", TagsController.TagsVersion);
+        AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
     }
 
+    /**
+     * Checks a media list for new tags, to reload the list
+     * @param list The received list
+     */
     public static OnMediaListReceived(list: (MediaListItem | MediaEntry)[]) {
         if (TagsController.Loading) {
             return; // Already loading
@@ -132,5 +187,21 @@ export class TagsController {
                 }
             }
         }
+    }
+
+    /**
+     * Adds event listener to check for updates
+     * @param handler Event handler
+     */
+    public static AddEventListener(handler: (v: number) => void) {
+        AppEvents.AddEventListener(EVENT_NAME, handler);
+    }
+
+    /**
+     * Removes event listener
+     * @param handler Event handler
+     */
+    public static RemoveEventListener(handler: (v: number) => void) {
+        AppEvents.RemoveEventListener(EVENT_NAME, handler);
     }
 }

@@ -320,7 +320,7 @@ export default defineComponent({
 
         this.updateTagData();
         this._handles.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this.updateAlbums();
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
@@ -333,7 +333,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
         if (this._handles.findTagTimeout) {

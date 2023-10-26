@@ -417,7 +417,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.tagUpdateH = this.updateTagData.bind(this);
-        AppEvents.AddEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -437,7 +437,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         Request.Abort("tags-editor-busy");
-        AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);
+        TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },
