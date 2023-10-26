@@ -948,7 +948,7 @@ export default defineComponent({
         AppEvents.AddEventListener("media-delete", this._handles.resetH);
         AppEvents.AddEventListener("media-meta-change", this._handles.resetH);
 
-        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.nextMediaH = this.nextMedia.bind(this);
         AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
@@ -1002,7 +1002,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("media-delete", this._handles.resetH);
         AppEvents.RemoveEventListener("media-meta-change", this._handles.resetH);
 
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);

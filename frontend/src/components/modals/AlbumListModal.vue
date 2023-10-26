@@ -424,7 +424,7 @@ export default defineComponent({
         AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         this._handles.statusH = this.onUpdateStatus.bind(this);
-        AppEvents.AddEventListener("app-status-update", this._handles.statusH);
+        AppStatus.AddEventListener(this._handles.statusH);
 
         this.updateAlbums();
         this.load();
@@ -438,7 +438,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusH);
+        AppStatus.RemoveEventListener(this._handles.statusH);
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");
     },

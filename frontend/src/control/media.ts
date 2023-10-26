@@ -96,7 +96,7 @@ export class MediaController {
 
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", MediaController.Load);
-        AppEvents.AddEventListener("app-status-update", MediaController.OnMediaChanged);
+        AppStatus.AddEventListener(MediaController.OnMediaChanged);
 
         MediaController.MediaId = AppStatus.CurrentMedia;
 

@@ -128,6 +128,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { AppPreferences } from "@/control/app-preferences";
+import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -326,7 +327,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.page, this.order);
+            this.searchParams = packSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -337,7 +338,7 @@ export default defineComponent({
         },
 
         updateSearchParams: function () {
-            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
             this.order = params.order;
             this.updateLoadingFiller();
@@ -440,7 +441,7 @@ export default defineComponent({
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
         AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
-        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -462,7 +463,7 @@ export default defineComponent({
         Timeouts.Abort("page-albums-load");
         Request.Abort("page-albums-load");
         AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
         AppEvents.RemoveEventListener("albums-list-change", this._handles.loadH);
 

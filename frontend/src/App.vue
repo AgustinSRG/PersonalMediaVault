@@ -111,7 +111,7 @@ export default defineComponent({
         this.updateAppStatus();
         this._handles.updateH = this.updateAppStatus.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this._handles.updateH);
+        AppStatus.AddEventListener(this._handles.updateH);
         AppEvents.AddEventListener("current-album-update", this._handles.updateH);
         AppEvents.AddEventListener("current-media-update", this._handles.updateH);
 
@@ -122,7 +122,7 @@ export default defineComponent({
         AppEvents.AddEventListener("loaded-locale", this._handles.onLoadedLocaleH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.updateH);
+        AppStatus.RemoveEventListener(this._handles.updateH);
         AppEvents.RemoveEventListener("current-album-update", this._handles.updateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.updateH);
         AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);

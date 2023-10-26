@@ -98,6 +98,7 @@ import { KeyboardManager } from "@/control/keyboard";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { AppPreferences } from "@/control/app-preferences";
+import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -299,13 +300,13 @@ export default defineComponent({
         },
 
         updateSearchParams: function () {
-            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            const params = unPackSearchParams(this.searchParams);
             this.pageN = params.page;
             this.order = params.order;
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.pageN, this.order);
+            this.searchParams = packSearchParams(this.pageN, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -339,7 +340,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.pageUpdater = this.updatePage.bind(this);
-        AppEvents.AddEventListener("app-status-update", this._handles.pageUpdater);
+        AppStatus.AddEventListener(this._handles.pageUpdater);
 
         this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
         AppEvents.AddEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
@@ -350,7 +351,7 @@ export default defineComponent({
         this.updateSearchParams();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.pageUpdater);
+        AppStatus.RemoveEventListener(this._handles.pageUpdater);
         AppEvents.RemoveEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },

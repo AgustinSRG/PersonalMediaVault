@@ -2,39 +2,93 @@
 // Controls what page the app is in
 // Event: app-status-update
 
+"use strict";
+
 import { getParameterByName } from "@/utils/cookie";
 import { GenerateURIQuery } from "@/utils/request";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { PlayerPreferences } from "./player-preferences";
 
+const EVENT_NAME = "app-status-update";
+
+/**
+ * Layout mode
+ */
+export type AppStatusLayout = "initial" | "album" | "media" | "media-split";
+
+/**
+ * Focus target
+ */
+export type AppStatusFocus = "right" | "left";
+
+/**
+ * Page
+ */
+export type AppStatusPage = "home" | "random" | "search" | "random" | "albums" | "upload" | "adv-search";
+
+/**
+ * App status manager object
+ */
 export class AppStatus {
-    public static CurrentLayout = "initial";
-    public static CurrentFocus = "left";
+    /**
+     * Current layout mode
+     */
+    public static CurrentLayout: AppStatusLayout = "initial";
 
-    public static CurrentPage = "home";
+    /**
+     * Current focused side
+     */
+    public static CurrentFocus: AppStatusFocus = "left";
 
+    /**
+     * Current main page
+     */
+    public static CurrentPage: AppStatusPage = "home";
+
+    /**
+     * Current search query
+     */
     public static CurrentSearch = "";
 
+    /**
+     * Current search params
+     */
     public static SearchParams = "";
 
+    /**
+     * True for split mode, false for single mode
+     */
     public static ListSplitMode = true;
 
+    /**
+     * Current media ID
+     */
     public static CurrentMedia = -1;
 
+    /**
+     * Current album ID
+     */
     public static CurrentAlbum = -1;
 
+    /**
+     * Initialization logic
+     * Loads at the app startup
+     */
     public static Initialize() {
         window.onpopstate = function () {
-            AppStatus.GetURLParams();
+            AppStatus.LoadURLParams();
             AppStatus.OnStatusUpdate();
         };
 
-        AppStatus.GetURLParams();
+        AppStatus.LoadURLParams();
         AppStatus.OnStatusUpdate();
     }
 
-    public static GetURLParams() {
+    /**
+     * Loads parameters from URL
+     */
+    public static LoadURLParams() {
         const media = getParameterByName("media");
         if (media) {
             const mediaId = parseInt(media);
@@ -64,7 +118,7 @@ export class AppStatus {
         const page = getParameterByName("page");
 
         if (page && ["home", "search", "random", "albums", "upload", "adv-search"].includes(page)) {
-            AppStatus.CurrentPage = page;
+            AppStatus.CurrentPage = page as AppStatusPage;
         } else {
             AppStatus.CurrentPage = "home";
         }
@@ -90,6 +144,10 @@ export class AppStatus {
         AppStatus.ListSplitMode = split === "yes";
     }
 
+    /**
+     * Updates layout mode based on current status variables,
+     * like: page, media, album, split mode
+     */
     public static UpdateLayout() {
         if (AppStatus.CurrentPage === "search" && !AppStatus.CurrentSearch) {
             AppStatus.CurrentPage = "home";
@@ -114,6 +172,10 @@ export class AppStatus {
         }
     }
 
+    /**
+     * Checks if player is visible
+     * @returns True if player is visible
+     */
     public static IsPlayerVisible(): boolean {
         switch (AppStatus.CurrentLayout) {
             case "album":
@@ -125,6 +187,10 @@ export class AppStatus {
         }
     }
 
+    /**
+     * Checks if page is visible
+     * @returns True if page is visible
+     */
     public static IsPageVisible(): boolean {
         switch (AppStatus.CurrentLayout) {
             case "initial":
@@ -135,6 +201,10 @@ export class AppStatus {
         }
     }
 
+    /**
+     * Generates an URL from the current status
+     * @returns The current URL
+     */
     public static GetCurrentURL(): string {
         const params: any = Object.create(null);
 
@@ -165,6 +235,10 @@ export class AppStatus {
         return window.location.protocol + "//" + window.location.host + window.location.pathname + GenerateURIQuery(params);
     }
 
+    /**
+     * Updates current URL
+     * @param replaceState True if the new URL must replace the old URL
+     */
     public static UpdateURL(replaceState?: boolean) {
         if (AppStatus.CurrentAlbum >= 0 && AppStatus.CurrentMedia < 0) {
             if (AlbumsController.Loading) {
@@ -191,15 +265,40 @@ export class AppStatus {
         }
     }
 
-    public static OnStatusUpdate(replaceState?: boolean) {
+    /**
+     * Call when status updates
+     * Updates layout, emits event and updates URL
+     * @param replaceState True to replace the old URL with the new one
+     */
+    private static OnStatusUpdate(replaceState?: boolean) {
         AppStatus.UpdateLayout();
 
-        AppEvents.Emit("app-status-update", AppStatus);
+        AppEvents.Emit(EVENT_NAME);
 
         AppStatus.UpdateURL(replaceState);
     }
 
-    public static GoToPage(page: string) {
+    /**
+     * Adds event listener to check for updates
+     * @param handler Event handler
+     */
+    public static AddEventListener(handler: () => void) {
+        AppEvents.AddEventListener(EVENT_NAME, handler);
+    }
+
+    /**
+     * Removes event listener
+     * @param handler Event handler
+     */
+    public static RemoveEventListener(handler: () => void) {
+        AppEvents.RemoveEventListener(EVENT_NAME, handler);
+    }
+
+    /**
+     * Navigates to a page
+     * @param page The page to navigate to
+     */
+    public static GoToPage(page: AppStatusPage) {
         AppStatus.CurrentPage = page;
 
         AppStatus.CurrentAlbum = -1;
@@ -217,7 +316,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
-    public static GoToPageNoSplit(page: string) {
+    /**
+     * Navigates to a page, without split mode
+     * @param page The page to navigate to
+     */
+    public static GoToPageNoSplit(page: AppStatusPage) {
         AppStatus.CurrentPage = page;
 
         AppStatus.CurrentAlbum = -1;
@@ -232,6 +335,9 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Expands the page, closing the player
+     */
     public static ExpandPage() {
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
@@ -244,6 +350,9 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Call when the current media is deleted
+     */
     public static OnDeleteMedia() {
         AppStatus.CurrentMedia = -1;
 
@@ -256,6 +365,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Changes the search query
+     * @param search The search query
+     * @param forced True to force the page change to the search results
+     */
     public static GoToSearch(search: string, forced?: boolean) {
         AppStatus.CurrentSearch = search;
 
@@ -280,6 +394,9 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Clears current search query
+     */
     public static ClearSearch() {
         AppStatus.CurrentSearch = "";
 
@@ -290,6 +407,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Navigates to a media asset
+     * @param mediaId The media ID
+     * @param split True to use split mode
+     */
     public static ClickOnMedia(mediaId: number, split: boolean) {
         AppStatus.CurrentMedia = mediaId;
 
@@ -304,6 +426,10 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Navigates to an album
+     * @param albumId The album ID
+     */
     public static ClickOnAlbum(albumId: number) {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = -1;
@@ -318,6 +444,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * navigates to an album, while keeping the current media
+     * @param albumId The album ID
+     * @param mediaId The media ID
+     */
     public static ClickOnAlbumByMedia(albumId: number, mediaId: number) {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = mediaId;
@@ -332,6 +463,11 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * navigates to an album, knowing the media list
+     * @param albumId The album ID
+     * @param list The media IDs list
+     */
     public static ClickOnAlbumWithList(albumId: number, list: number[]) {
         AppStatus.CurrentAlbum = albumId;
 
@@ -354,18 +490,27 @@ export class AppStatus {
         AppStatus.OnStatusUpdate(true);
     }
 
+    /**
+     * Changes focus to the left section
+     */
     public static FocusLeft() {
         AppStatus.CurrentFocus = "left";
 
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Changes focus to the right section
+     */
     public static FocusRight() {
         AppStatus.CurrentFocus = "right";
 
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Closes the page, leaving only the player
+     */
     public static ClosePage() {
         AppStatus.CurrentFocus = "left";
         AppStatus.ListSplitMode = false;
@@ -373,6 +518,9 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Closes the album, leaving only the player
+     */
     public static CloseAlbum() {
         AppStatus.CurrentFocus = "left";
         AppStatus.CurrentAlbum = -1;
@@ -380,44 +528,13 @@ export class AppStatus {
         AppStatus.OnStatusUpdate();
     }
 
+    /**
+     * Changes search parameters
+     * @param params The new params to set
+     */
     public static ChangeSearchParams(params: string) {
         AppStatus.SearchParams = params;
 
         AppStatus.OnStatusUpdate();
-    }
-
-    public static PackSearchParams(page: number, order: string): string {
-        if (page === 0 && order === "desc") {
-            return "";
-        }
-
-        if (order === "desc") {
-            return page + "";
-        }
-
-        return page + "-" + order;
-    }
-
-    public static UnPackSearchParams(params: string): { page: number; order: string } {
-        const res = {
-            page: 0,
-            order: "desc",
-        };
-
-        if (params) {
-            const spl = params.split("-");
-            res.page = parseInt(spl[0], 10) || 0;
-            if (res.page < 0) {
-                res.page = 0;
-            }
-
-            res.order = spl[1] || "desc";
-
-            if (res.order !== "desc" && res.order !== "asc") {
-                res.order = "desc";
-            }
-        }
-
-        return res;
     }
 }

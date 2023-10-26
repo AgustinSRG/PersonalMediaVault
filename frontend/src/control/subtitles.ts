@@ -16,7 +16,7 @@ export class SubtitlesController {
 
     public static Initialize() {
         AppEvents.AddEventListener("auth-status-changed", SubtitlesController.Load);
-        AppEvents.AddEventListener("app-status-update", SubtitlesController.OnMediaChanged);
+        AppStatus.AddEventListener(SubtitlesController.OnMediaChanged);
         AppEvents.AddEventListener("current-media-update", SubtitlesController.Load);
 
         SubtitlesController.MediaId = AppStatus.CurrentMedia;

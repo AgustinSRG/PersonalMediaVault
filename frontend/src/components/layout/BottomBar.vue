@@ -100,7 +100,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.updateStatusH = this.onStatusUpdate.bind(this);
-        AppEvents.AddEventListener("app-status-update", this._handles.updateStatusH);
+        AppStatus.AddEventListener(this._handles.updateStatusH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
         AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
@@ -109,7 +109,7 @@ export default defineComponent({
         AppEvents.AddEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.updateStatusH);
+        AppStatus.RemoveEventListener(this._handles.updateStatusH);
 
         AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
         AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);

@@ -348,7 +348,7 @@ export default defineComponent({
         this._handles = Object.create(null);
         this._handles.statusChangeH = this.onSearchChanged.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
         AppEvents.AddEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
@@ -369,7 +369,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
         AppEvents.RemoveEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
 

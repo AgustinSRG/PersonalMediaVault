@@ -87,6 +87,7 @@ import { AlbumsController } from "@/control/albums";
 import { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
 import { AppPreferences } from "@/control/app-preferences";
+import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 
 export default defineComponent({
     name: "PageHome",
@@ -248,7 +249,7 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
-            this.searchParams = AppStatus.PackSearchParams(this.page, this.order);
+            this.searchParams = packSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
 
@@ -278,7 +279,7 @@ export default defineComponent({
         },
 
         updateSearchParams: function () {
-            const params = AppStatus.UnPackSearchParams(this.searchParams);
+            const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
             this.order = params.order;
             this.updateLoadingFiller();
@@ -424,7 +425,7 @@ export default defineComponent({
         AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
         AppEvents.AddEventListener("media-delete", this._handles.loadH);
         AppEvents.AddEventListener("media-meta-change", this._handles.loadH);
-        AppEvents.AddEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.nextMediaH = this.nextMedia.bind(this);
         AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
@@ -456,7 +457,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
         AppEvents.RemoveEventListener("media-meta-change", this._handles.loadH);
         AppEvents.RemoveEventListener("media-delete", this._handles.loadH);
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusChangeH);
+        AppStatus.RemoveEventListener(this._handles.statusChangeH);
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
         AppEvents.RemoveEventListener("tags-update", this._handles.tagUpdateH);

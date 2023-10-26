@@ -155,7 +155,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.mediaUpdateH = this.onMediaUpdate.bind(this);
-        AppEvents.AddEventListener("app-status-update", this._handles.mediaUpdateH);
+        AppStatus.AddEventListener(this._handles.mediaUpdateH);
 
         AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
 
@@ -168,7 +168,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.mediaUpdateH);
+        AppStatus.RemoveEventListener(this._handles.mediaUpdateH);
 
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },

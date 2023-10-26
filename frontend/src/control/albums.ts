@@ -41,7 +41,7 @@ export class AlbumsController {
         AppEvents.AddEventListener("auth-status-changed", AlbumsController.Load);
         AppEvents.AddEventListener("auth-status-changed", AlbumsController.LoadCurrentAlbum);
 
-        AppEvents.AddEventListener("app-status-update", AlbumsController.OnCurrentAlbumChanged);
+        AppStatus.AddEventListener(AlbumsController.OnCurrentAlbumChanged);
 
         AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
 

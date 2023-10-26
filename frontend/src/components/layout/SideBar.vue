@@ -349,7 +349,7 @@ export default defineComponent({
         this._handles = Object.create(null);
         this._handles.statusUpdater = this.updateStatus.bind(this);
 
-        AppEvents.AddEventListener("app-status-update", this._handles.statusUpdater);
+        AppStatus.AddEventListener(this._handles.statusUpdater);
 
         this._handles.albumsUpdater = this.updateAlbums.bind(this);
 
@@ -374,7 +374,7 @@ export default defineComponent({
         this.updateAlbums();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("app-status-update", this._handles.statusUpdater);
+        AppStatus.RemoveEventListener(this._handles.statusUpdater);
 
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdater);
         AppEvents.RemoveEventListener("albums-fav-updated", this._handles.albumsUpdater);
