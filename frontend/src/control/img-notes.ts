@@ -7,6 +7,7 @@ import { AppStatus } from "./app-status";
 import { BusyStateController } from "./busy-state";
 import { MediaController } from "./media";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { AuthController } from "./auth";
 
 export interface ImageNote {
     id: number;
@@ -66,7 +67,7 @@ export class ImageNotesController {
     public static NextId = 0;
 
     public static Initialize() {
-        AppEvents.AddEventListener("auth-status-changed", ImageNotesController.Load);
+        AuthController.AddChangeEventListener(ImageNotesController.Load);
         AppStatus.AddEventListener(ImageNotesController.OnMediaChanged);
         AppEvents.AddEventListener("current-media-update", ImageNotesController.Load);
 

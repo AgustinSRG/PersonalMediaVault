@@ -362,7 +362,7 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
 
@@ -381,7 +381,7 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("album-sidebar-top", this._handles.albumGoTop);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         this._handles.focusTrap.destroy();
     },

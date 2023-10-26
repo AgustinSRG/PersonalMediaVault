@@ -461,13 +461,13 @@ export default defineComponent({
         AppStatus.AddEventListener(this._handles.onAppStatusUpdateH);
 
         this._handles.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
-        AppEvents.AddEventListener("auth-status-changed", this._handles.onAuthStatusChangedH);
+        AuthController.AddChangeEventListener(this._handles.onAuthStatusChangedH);
 
         this._handles.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
-        AppEvents.AddEventListener("auth-status-loading", this._handles.onAuthStatusLoadingH);
+        AuthController.AddLoadingEventListener(this._handles.onAuthStatusLoadingH);
 
         this._handles.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
-        AppEvents.AddEventListener("auth-status-loading-error", this._handles.onAuthLoadingErrorH);
+        AuthController.AddErrorEventListener(this._handles.onAuthLoadingErrorH);
 
         this._handles.onNewAppVersionH = this.onNewAppVersion.bind(this);
         AppEvents.AddEventListener("app-new-version", this._handles.onNewAppVersionH);
@@ -475,9 +475,9 @@ export default defineComponent({
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("theme-changed", this._handles.onThemeChangedH);
         AppStatus.RemoveEventListener(this._handles.onAppStatusUpdateH);
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.onAuthStatusChangedH);
-        AppEvents.RemoveEventListener("auth-status-loading", this._handles.onAuthStatusLoadingH);
-        AppEvents.RemoveEventListener("auth-status-loading-error", this._handles.onAuthLoadingErrorH);
+        AuthController.RemoveChangeEventListener(this._handles.onAuthStatusChangedH);
+        AuthController.RemoveLoadingEventListener(this._handles.onAuthStatusLoadingH);
+        AuthController.RemoveErrorEventListener(this._handles.onAuthLoadingErrorH);
         AppEvents.RemoveEventListener("app-new-version", this._handles.onNewAppVersionH);
     },
 });

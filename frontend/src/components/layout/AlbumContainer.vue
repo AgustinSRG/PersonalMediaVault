@@ -815,7 +815,7 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.favUpdateH = this.updateFav.bind(this);
         AppEvents.AddEventListener("albums-fav-updated", this._handles.favUpdateH);
@@ -834,7 +834,7 @@ export default defineComponent({
 
         AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         AppEvents.RemoveEventListener("albums-fav-updated", this._handles.favUpdateH);
 

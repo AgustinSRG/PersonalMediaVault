@@ -353,7 +353,7 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.albumLoadingH = this.updateAlbumsLoading.bind(this);
         AppEvents.AddEventListener("current-album-loading", this._handles.albumLoadingH);
@@ -375,7 +375,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
         AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         AppEvents.RemoveEventListener("current-album-loading", this._handles.albumLoadingH);
 

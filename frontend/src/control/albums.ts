@@ -38,8 +38,8 @@ export class AlbumsController {
     public static InitiallyLoaded = false;
 
     public static Initialize() {
-        AppEvents.AddEventListener("auth-status-changed", AlbumsController.Load);
-        AppEvents.AddEventListener("auth-status-changed", AlbumsController.LoadCurrentAlbum);
+        AuthController.AddChangeEventListener(AlbumsController.Load);
+        AuthController.AddChangeEventListener(AlbumsController.LoadCurrentAlbum);
 
         AppStatus.AddEventListener(AlbumsController.OnCurrentAlbumChanged);
 

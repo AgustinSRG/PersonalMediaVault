@@ -944,7 +944,7 @@ export default defineComponent({
         this._handles.resetH = this.resetSearch.bind(this);
         this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.AddChangeEventListener(this._handles.loadH);
         AppEvents.AddEventListener("media-delete", this._handles.resetH);
         AppEvents.AddEventListener("media-meta-change", this._handles.resetH);
 
@@ -998,7 +998,7 @@ export default defineComponent({
 
         Timeouts.Abort("page-adv-search-dirty");
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener("media-delete", this._handles.resetH);
         AppEvents.RemoveEventListener("media-meta-change", this._handles.resetH);
 

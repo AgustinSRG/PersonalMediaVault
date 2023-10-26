@@ -7,6 +7,7 @@ import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
 import { PlayerPreferences } from "./player-preferences";
+import { AuthController } from "./auth";
 
 export class SubtitlesController {
     public static MediaId = -1;
@@ -15,7 +16,7 @@ export class SubtitlesController {
     public static Subtitles: SubtitlesEntry[] = [];
 
     public static Initialize() {
-        AppEvents.AddEventListener("auth-status-changed", SubtitlesController.Load);
+        AuthController.AddChangeEventListener(SubtitlesController.Load);
         AppStatus.AddEventListener(SubtitlesController.OnMediaChanged);
         AppEvents.AddEventListener("current-media-update", SubtitlesController.Load);
 

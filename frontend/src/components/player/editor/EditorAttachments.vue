@@ -430,13 +430,13 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
     },
 
     beforeUnmount: function () {
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         Request.Abort("media-editor-busy-attachments");
     },

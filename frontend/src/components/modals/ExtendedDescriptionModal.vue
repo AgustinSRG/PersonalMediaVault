@@ -336,7 +336,7 @@ export default defineComponent({
         this._handles = Object.create(null);
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
@@ -348,7 +348,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },
     watch: {

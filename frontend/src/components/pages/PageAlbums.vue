@@ -440,12 +440,12 @@ export default defineComponent({
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.AddChangeEventListener(this._handles.loadH);
         AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         AppEvents.AddEventListener("albums-list-change", this._handles.loadH);
 
@@ -462,12 +462,12 @@ export default defineComponent({
     beforeUnmount: function () {
         Timeouts.Abort("page-albums-load");
         Request.Abort("page-albums-load");
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
         AppEvents.RemoveEventListener("albums-list-change", this._handles.loadH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
 

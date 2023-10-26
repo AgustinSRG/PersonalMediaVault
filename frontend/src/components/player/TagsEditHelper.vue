@@ -421,7 +421,7 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
@@ -438,7 +438,7 @@ export default defineComponent({
     beforeUnmount: function () {
         Request.Abort("tags-editor-busy");
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
     },
     watch: {

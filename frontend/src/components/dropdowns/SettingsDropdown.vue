@@ -88,7 +88,6 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -151,7 +150,7 @@ export default defineComponent({
         this._handles = Object.create(null);
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
@@ -163,7 +162,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         this._handles.focusTrap.destroy();
     },
     watch: {

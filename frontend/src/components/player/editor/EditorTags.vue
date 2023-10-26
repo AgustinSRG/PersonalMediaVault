@@ -387,7 +387,7 @@ export default defineComponent({
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         TagsController.Load();
 
@@ -399,7 +399,7 @@ export default defineComponent({
 
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
 
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.authUpdateH);
+        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);

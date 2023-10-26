@@ -46,7 +46,7 @@ export class TagsController {
      * Runs at the app startup
      */
     public static Initialize() {
-        AppEvents.AddEventListener("auth-status-changed", TagsController.Load);
+        AuthController.AddChangeEventListener(TagsController.Load);
         TagsController.Load();
     }
 

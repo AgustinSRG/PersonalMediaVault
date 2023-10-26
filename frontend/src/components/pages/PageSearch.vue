@@ -446,7 +446,7 @@ export default defineComponent({
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        AppEvents.AddEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.AddChangeEventListener(this._handles.loadH);
         AppEvents.AddEventListener("media-meta-change", this._handles.loadH);
         AppEvents.AddEventListener("media-delete", this._handles.loadH);
         AppStatus.AddEventListener(this._handles.statusChangeH);
@@ -474,7 +474,7 @@ export default defineComponent({
     beforeUnmount: function () {
         Timeouts.Abort("page-search-load");
         Request.Abort("page-search-load");
-        AppEvents.RemoveEventListener("auth-status-changed", this._handles.loadH);
+        AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener("media-meta-change", this._handles.loadH);
         AppEvents.RemoveEventListener("media-delete", this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
