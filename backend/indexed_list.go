@@ -75,7 +75,7 @@ func (file *IndexedListFile) Count() (int64, error) {
 	return int64(binary.BigEndian.Uint64(b)), nil
 }
 
-// Initalizes the index. Call once when the index file does not exists
+// Initializes the index. Call once when the index file does not exists
 func (file *IndexedListFile) Initialize() error {
 	// Set the size of the file
 	err := file.f.Truncate(8)
@@ -145,11 +145,12 @@ func (file *IndexedListFile) WriteValue(index int64, value uint64) error {
 	return nil
 }
 
-// Searchs in the file for a value
+// Searches in the file for a value
 // val - Value to search in the list
 // Returns:
-//   1 - A boolean value = true if the exact value was found
-//   2 - The closest index to that value
+//
+//	1 - A boolean value = true if the exact value was found
+//	2 - The closest index to that value
 func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -190,14 +191,15 @@ func (file *IndexedListFile) BinarySearch(val uint64) (bool, int64, error) {
 	return mVal == val, low, nil
 }
 
-// Searchs in the file for a value
+// Searches in the file for a value
 // This method requires you to provide the list length.
-// A wrong value will result in undefined behaviour
+// A wrong value will result in undefined behavior
 // val - Value to search in the list
 // count - List size
 // Returns:
-//   1 - A boolean value = true if the exact value was found
-//   2 - The closest index to that value
+//
+//	1 - A boolean value = true if the exact value was found
+//	2 - The closest index to that value
 func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int64) (bool, int64, error) {
 	if count == 0 {
 		return false, 0, nil
@@ -236,8 +238,9 @@ func (file *IndexedListFile) BinarySearchWithCountPreCalc(val uint64, count int6
 // Adds a value
 // val - Value to add
 // Returns
-//   1 - true if it was added, false if it was already in the file
-//   2 - the index where the value was added
+//
+//	1 - true if it was added, false if it was already in the file
+//	2 - the index where the value was added
 func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -301,8 +304,9 @@ func (file *IndexedListFile) AddValue(val uint64) (bool, int64, error) {
 // Removes a value
 // val - Value to remove
 // Returns
-//   1 - true if it was removed, false if it was not present in the index
-//   2 - The new count value
+//
+//	1 - true if it was removed, false if it was not present in the index
+//	2 - The new count value
 func (file *IndexedListFile) RemoveValue(val uint64) (bool, int64, error) {
 	count, err := file.Count()
 
@@ -445,7 +449,7 @@ func (file *IndexedListFile) ListValuesReverse(skip int64, limit int64) ([]uint6
 }
 
 // Returns a random list of values from the list
-// seed - Seed for the PRNG
+// seed - Seed for the P-RNG
 // limit - Max number of items to return
 func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, error) {
 	count, err := file.Count()
@@ -462,7 +466,15 @@ func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, er
 
 	result := make([]uint64, limit)
 
+	index_set := make(map[int64]struct{})
+
+	resultCount := int64(0)
+
 	for i := int64(0); i < limit; i++ {
+		if resultCount >= count {
+			break
+		}
+
 		index := prng.Int63()
 
 		if index < 0 {
@@ -471,13 +483,44 @@ func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, er
 
 		index = index % count
 
+		_, repeated := index_set[index]
+
+		if repeated {
+			repeatedIndex := index
+			index++
+
+			if index >= count {
+				index = 0
+			}
+
+			for index != repeatedIndex && repeated {
+				_, repeated = index_set[index]
+
+				if repeated {
+					index++
+
+					if index >= count {
+						index = 0
+					}
+				}
+			}
+
+			if repeated {
+				break
+			}
+		}
+
+		index_set[index] = struct{}{}
+
 		val, err := file.ReadValue(index)
+
 		if err != nil {
 			return nil, err
 		}
 
 		result[i] = val
+		resultCount++
 	}
 
-	return result, nil
+	return result[0:resultCount], nil
 }
