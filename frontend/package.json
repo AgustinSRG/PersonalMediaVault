@@ -12,8 +12,8 @@
         "update-locales": "node translate-file-maker.js"
     },
     "dependencies": {
-        "sanitize-html": "2.7.0",
-        "vue": "3.3.4"
+        "sanitize-html": "2.11.0",
+        "vue": "3.3.8"
     },
     "devDependencies": {
         "@types/sanitize-html": "2.6.2",
