@@ -13,6 +13,11 @@ import { UploadMediaAPI } from "@/api/api-media-upload";
 
 const TICK_DELAY_MS = 500;
 
+/**
+ * Removes extension if present, in order to get the title
+ * @param fileName The file name
+ * @returns The title
+ */
 function getTitleFromFileName(fileName: string): string {
     const parts = (fileName + "").split(".");
     if (parts.length > 1) {
@@ -23,54 +28,112 @@ function getTitleFromFileName(fileName: string): string {
     }
 }
 
+/**
+ * Upload entry (basic)
+ */
 export interface UploadEntryMin {
+    /**
+     * Entry identifier
+     */
     id: number;
 
+    /**
+     * File name
+     */
     name: string;
+
+    /**
+     * File size (bytes)
+     */
     size: number;
 
+    /**
+     * Upload status
+     */
     status: "pending" | "uploading" | "encrypting" | "tag" | "ready" | "error";
 
+    /**
+     * Error (only relevant if status = 'error')
+     */
     error: "" | "invalid-media" | "access-denied" | "deleted" | "server-error" | "no-internet";
 
+    /**
+     * Progress.
+     * When status = 'uploading', progress = uploaded bytes percent in range [0, 100]
+     * When status = 'encrypting', progress = encrypted bytes percent in range [0, 100]
+     * When status = 'tag', progress = number of tags left
+     */
     progress: number;
 
+    /**
+     * Media ID, only relevant if status = 'encrypting' | 'tag' | 'ready'
+     */
     mid: number;
 }
 
-export interface UploadEntry {
-    id: number;
-
+/**
+ * Upload entry (full)
+ */
+interface UploadEntry extends UploadEntryMin {
+    /**
+     * File to upload
+     */
     file: File;
-    name: string;
-    size: number;
 
-    status: "pending" | "uploading" | "encrypting" | "tag" | "ready" | "error";
-
-    error: "" | "invalid-media" | "access-denied" | "deleted" | "server-error" | "no-internet";
-
-    progress: number;
-
-    mid: number;
-
+    /**
+     * True if busy (request in progress)
+     */
     busy: boolean;
 
+    /**
+     * Last request timestamp (Unix milliseconds)
+     */
     lastRequest: number;
 
+    /**
+     * ID of the album to add the media into. -1 means no album.
+     */
     album: number;
+
+    /**
+     * List of remaining tags to add to the media
+     */
     tags: string[];
 }
 
+/**
+ * Management object to control uploads.
+ */
 export class UploadController {
+    /**
+     * Upload entries
+     */
     public static Entries: UploadEntry[] = [];
 
+    /**
+     * Number of active uploads
+     */
     private static UploadingCount = 0;
+
+    /**
+     * Max number of parallel active uploads
+     */
     public static MaxParallelUploads = 1;
 
+    /**
+     * Counter to assign unique IDs to each entry
+     */
     private static NextId = 0;
 
+    /**
+     * Interval to check the entries
+     */
     private static timer: number = null;
 
+    /**
+     * Gets the list of entries
+     * @returns The list of entries
+     */
     public static GetEntries(): UploadEntryMin[] {
         return UploadController.Entries.map((e) => {
             return {
@@ -85,6 +148,9 @@ export class UploadController {
         });
     }
 
+    /**
+     * Checks entries and initiates uploads if necessary
+     */
     private static tick() {
         for (let index = 0; index < UploadController.Entries.length; index++) {
             const pending = UploadController.Entries[index];
@@ -104,6 +170,13 @@ export class UploadController {
         }
     }
 
+    /**
+     * Adds a file, creating a new entry
+     * @param file The file to upload
+     * @param album The album to add the media into. Set to -1 for no album.
+     * @param tags The list of tags to add to the media.
+     * @returns The created entry ID
+     */
     public static AddFile(file: File, album: number, tags: string[]): number {
         UploadController.NextId++;
         const id = UploadController.NextId;
@@ -136,6 +209,10 @@ export class UploadController {
         return id;
     }
 
+    /**
+     * Retries uploading a file, when it resulted in error
+     * @param id The entry ID
+     */
     public static TryAgain(id: number) {
         for (let i = 0; i < UploadController.Entries.length; i++) {
             if (UploadController.Entries[i].id === id) {
@@ -154,6 +231,10 @@ export class UploadController {
         }
     }
 
+    /**
+     * Checks if the list if empty.
+     * Meaning there are no pending uploads.
+     */
     public static CheckEmptyList() {
         let isEmpty = false;
         for (const entry of UploadController.Entries) {
@@ -174,6 +255,10 @@ export class UploadController {
         }
     }
 
+    /**
+     * Removes an entry, aborting any requests.
+     * @param id The entry ID
+     */
     public static RemoveFile(id: number) {
         // Abort requests
         Request.Abort("upload-media-" + id);
@@ -194,6 +279,9 @@ export class UploadController {
         }
     }
 
+    /**
+     * Clears any completed uploads from the list
+     */
     public static ClearList() {
         const entries = UploadController.Entries.slice();
 
@@ -207,6 +295,9 @@ export class UploadController {
         AppEvents.Emit("upload-list-clear");
     }
 
+    /**
+     * Cancels all pending uploads
+     */
     public static CancelAll() {
         const entries = UploadController.Entries.slice();
 
@@ -218,6 +309,11 @@ export class UploadController {
         AppEvents.Emit("upload-list-clear");
     }
 
+    /**
+     * Uploads the media file
+     * @param m The entry
+     * @param index The index of the entry in the array
+     */
     private static UploadMedia(m: UploadEntry, index: number) {
         UploadController.UploadingCount++;
 
@@ -277,6 +373,11 @@ export class UploadController {
             });
     }
 
+    /**
+     * Checks encryption status of the media
+     * @param m The entry
+     * @param index The index of the entry in the array
+     */
     private static CheckEncryptionStatus(m: UploadEntry, index: number) {
         if (m.busy) {
             return;
@@ -336,6 +437,11 @@ export class UploadController {
             });
     }
 
+    /**
+     * Adds next tag to the media
+     * @param m The entry
+     * @param index The index of the entry in the array
+     */
     private static AddNextTag(m: UploadEntry, index: number) {
         if (m.busy) {
             return;
