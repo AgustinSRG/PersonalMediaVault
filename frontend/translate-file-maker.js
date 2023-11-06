@@ -133,9 +133,10 @@ function main() {
     for (const file of translationFiles) {
         const keysFixed = mergeResourcesFirstSide(usedKeys, getResourcesFromTranslationsFile(file));
 
-        const content = generateTranslationConfigurationFile(Path.basename(file), keysFixed);
+        const content = generateTranslationConfigurationFile(Path.basename(file).split("-").pop(), keysFixed);
 
         FS.writeFileSync(file, content);
+        console.log(`Wrote file: ${file}`);
     }
 }
 

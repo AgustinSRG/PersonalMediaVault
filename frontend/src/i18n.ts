@@ -58,7 +58,7 @@ function setI18nLanguage(locale: string) {
 
 async function loadLocaleMessages(locale: string) {
     // load locale messages with dynamic import
-    const messages = await import(/* webpackChunkName: "locale-[request]" */ `./locales/${locale}.json`);
+    const messages = await import(/* webpackChunkName: "locale-[request]" */ `./locales/locale-${locale}.json`);
 
     // Set messages
     i18nData.messages = new Map(Object.entries(messages.default));
