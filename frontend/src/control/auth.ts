@@ -7,7 +7,7 @@ import { AuthAPI } from "@/api/api-auth";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
-import { LocalStorage } from "./local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
 
 const EVENT_NAME_LOADING = "auth-status-loading";
@@ -79,8 +79,8 @@ export class AuthController {
      * Loads authentication status from local storage
      */
     public static LoadAuthStatus() {
-        AuthController.Session = LocalStorage.Get("x-session-token", "");
-        AuthController.Fingerprint = LocalStorage.Get("x-vault-fingerprint", "");
+        AuthController.Session = fetchFromLocalStorage("x-session-token", "");
+        AuthController.Fingerprint = fetchFromLocalStorage("x-vault-fingerprint", "");
     }
 
     /**
@@ -96,7 +96,7 @@ export class AuthController {
      * @returns True if the status was not synced, false if the status was synced
      */
     public static RefreshAuthStatus(): boolean {
-        const storedSession = LocalStorage.Get("x-session-token", "");
+        const storedSession = fetchFromLocalStorage("x-session-token", "");
 
         if (storedSession !== AuthController.Session) {
             AuthController.LoadAuthStatus();
@@ -217,9 +217,9 @@ export class AuthController {
     public static SetSession(session: string, fingerprint: string) {
         AuthController.Locked = true;
         AuthController.Session = session;
-        LocalStorage.Set("x-session-token", session);
+        saveIntoLocalStorage("x-session-token", session);
         AuthController.Fingerprint = fingerprint;
-        LocalStorage.Set("x-vault-fingerprint", fingerprint);
+        saveIntoLocalStorage("x-vault-fingerprint", fingerprint);
         AuthController.SetAssetsCookie();
         AuthController.Username = "";
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
@@ -250,7 +250,7 @@ export class AuthController {
     public static ClearSession() {
         AuthController.Locked = true;
         AuthController.Session = "";
-        LocalStorage.Set("x-session-token", "");
+        saveIntoLocalStorage("x-session-token", "");
         AuthController.Username = "";
         AuthController.SetAssetsCookie();
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);

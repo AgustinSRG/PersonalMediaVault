@@ -1,6 +1,6 @@
 // Player preferences
 
-import { LocalStorage } from "./local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 
 const MAX_CACHE_PLAY_TIME_SIZE = 100;
 const MAX_CACHE_ALBUM_POS_SIZE = 100;
@@ -50,53 +50,53 @@ export class PlayerPreferences {
     public static ExtendedDescriptionSize = "xl";
 
     public static LoadPreferences() {
-        const userRes = LocalStorage.Get("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
+        const userRes = fetchFromLocalStorage("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
         if (userRes) {
             PlayerPreferences.UserSelectedResolution = userRes;
         }
 
-        const userResImage = LocalStorage.Get("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
+        const userResImage = fetchFromLocalStorage("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
         if (userResImage) {
             PlayerPreferences.UserSelectedResolutionImage = userResImage;
         }
 
-        const playTimeCache = LocalStorage.Get("player-play-time-cache", []);
+        const playTimeCache = fetchFromLocalStorage("player-play-time-cache", []);
 
         if (playTimeCache) {
             PlayerPreferences.PlayTimeCache = playTimeCache;
         }
 
-        const albumPosCache = LocalStorage.Get("player-album-pos-cache", []);
+        const albumPosCache = fetchFromLocalStorage("player-album-pos-cache", []);
 
         if (albumPosCache) {
             PlayerPreferences.AlbumCurrentCache = albumPosCache;
         }
 
-        PlayerPreferences.PlayerVolume = LocalStorage.Get("player-pref-volume", 1);
-        PlayerPreferences.PlayerMuted = LocalStorage.Get("player-pref-muted", false);
+        PlayerPreferences.PlayerVolume = fetchFromLocalStorage("player-pref-volume", 1);
+        PlayerPreferences.PlayerMuted = fetchFromLocalStorage("player-pref-muted", false);
 
-        PlayerPreferences.PlayerScale = LocalStorage.Get("player-pref-scale", 0);
-        PlayerPreferences.PlayerFit = LocalStorage.Get("player-pref-fit", true);
+        PlayerPreferences.PlayerScale = fetchFromLocalStorage("player-pref-scale", 0);
+        PlayerPreferences.PlayerFit = fetchFromLocalStorage("player-pref-fit", true);
 
-        PlayerPreferences.AudioAnimationStyle = LocalStorage.Get("player-pref-audio-anim", "gradient");
+        PlayerPreferences.AudioAnimationStyle = fetchFromLocalStorage("player-pref-audio-anim", "gradient");
 
-        PlayerPreferences.ImagePlayerBackground = LocalStorage.Get("player-pref-img-bg", "default");
+        PlayerPreferences.ImagePlayerBackground = fetchFromLocalStorage("player-pref-img-bg", "default");
 
-        PlayerPreferences.ImageAutoNext = LocalStorage.Get("player-pref-img-auto-next", 0);
-        PlayerPreferences.NextOnEnd = LocalStorage.Get("player-pref-next-end", true);
+        PlayerPreferences.ImageAutoNext = fetchFromLocalStorage("player-pref-img-auto-next", 0);
+        PlayerPreferences.NextOnEnd = fetchFromLocalStorage("player-pref-next-end", true);
 
-        PlayerPreferences.ImageNotesVisible = LocalStorage.Get("player-pref-img-notes-v", true);
+        PlayerPreferences.ImageNotesVisible = fetchFromLocalStorage("player-pref-img-notes-v", true);
 
-        PlayerPreferences.SelectedSubtitles = LocalStorage.Get("player-pref-subtitles", "");
-        PlayerPreferences.SubtitlesSize = LocalStorage.Get("player-pref-subtitles-size", "l");
-        PlayerPreferences.SubtitlesBackground = LocalStorage.Get("player-pref-subtitles-bg", "75");
-        PlayerPreferences.SubtitlesHTML = LocalStorage.Get("player-pref-subtitles-html", false);
+        PlayerPreferences.SelectedSubtitles = fetchFromLocalStorage("player-pref-subtitles", "");
+        PlayerPreferences.SubtitlesSize = fetchFromLocalStorage("player-pref-subtitles-size", "l");
+        PlayerPreferences.SubtitlesBackground = fetchFromLocalStorage("player-pref-subtitles-bg", "75");
+        PlayerPreferences.SubtitlesHTML = fetchFromLocalStorage("player-pref-subtitles-html", false);
 
-        PlayerPreferences.PlayerTogglePlayDelay = LocalStorage.Get("player-pref-toggle-delay", 250);
+        PlayerPreferences.PlayerTogglePlayDelay = fetchFromLocalStorage("player-pref-toggle-delay", 250);
 
-        PlayerPreferences.SelectedAudioTrack = LocalStorage.Get("player-pref-audio-track", "");
+        PlayerPreferences.SelectedAudioTrack = fetchFromLocalStorage("player-pref-audio-track", "");
 
-        PlayerPreferences.ExtendedDescriptionSize = LocalStorage.Get("player-pref-ext-desc-size", "xl");
+        PlayerPreferences.ExtendedDescriptionSize = fetchFromLocalStorage("player-pref-ext-desc-size", "xl");
     }
 
     public static GetResolutionIndex(metadata: any): number {
@@ -163,7 +163,7 @@ export class PlayerPreferences {
             };
         }
 
-        LocalStorage.Set("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
+        saveIntoLocalStorage("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
     }
 
     public static SetResolutionIndexImage(metadata: any, index: number) {
@@ -181,11 +181,11 @@ export class PlayerPreferences {
             };
         }
 
-        LocalStorage.Set("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
+        saveIntoLocalStorage("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
     }
 
     public static GetInitialTime(mid: number) {
-        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []); // Update
+        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []); // Update
         for (const entry of PlayerPreferences.PlayTimeCache) {
             if (entry.mid === mid) {
                 const time = entry.time;
@@ -202,7 +202,7 @@ export class PlayerPreferences {
 
     public static SetInitialTime(mid: number, time: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter((e) => {
+        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []).filter((e) => {
             return e.mid !== mid;
         });
 
@@ -215,20 +215,20 @@ export class PlayerPreferences {
             time: time,
         });
 
-        LocalStorage.Set("player-play-time-cache", PlayerPreferences.PlayTimeCache);
+        saveIntoLocalStorage("player-play-time-cache", PlayerPreferences.PlayTimeCache);
     }
 
     public static ClearInitialTime(mid: number) {
         // Remove if found
-        PlayerPreferences.PlayTimeCache = LocalStorage.Get("player-play-time-cache", []).filter((e) => {
+        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []).filter((e) => {
             return e.mid !== mid;
         });
 
-        LocalStorage.Set("player-play-time-cache", PlayerPreferences.PlayTimeCache);
+        saveIntoLocalStorage("player-play-time-cache", PlayerPreferences.PlayTimeCache);
     }
 
     public static GetAlbumPos(id: number): number {
-        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []);
+        PlayerPreferences.AlbumCurrentCache = fetchFromLocalStorage("player-album-pos-cache", []);
         for (const entry of PlayerPreferences.AlbumCurrentCache) {
             if (entry.id === id) {
                 const pos = entry.pos;
@@ -244,7 +244,7 @@ export class PlayerPreferences {
     }
 
     public static SetAlbumPos(id: number, pos: number) {
-        PlayerPreferences.AlbumCurrentCache = LocalStorage.Get("player-album-pos-cache", []).filter((e) => {
+        PlayerPreferences.AlbumCurrentCache = fetchFromLocalStorage("player-album-pos-cache", []).filter((e) => {
             return e.id !== id;
         });
 
@@ -257,86 +257,86 @@ export class PlayerPreferences {
             pos: pos,
         });
 
-        LocalStorage.Set("player-album-pos-cache", PlayerPreferences.AlbumCurrentCache);
+        saveIntoLocalStorage("player-album-pos-cache", PlayerPreferences.AlbumCurrentCache);
     }
 
     public static SetVolume(vol: number) {
         PlayerPreferences.PlayerVolume = vol;
-        LocalStorage.Set("player-pref-volume", vol);
+        saveIntoLocalStorage("player-pref-volume", vol);
     }
 
     public static SetMuted(m: boolean) {
         PlayerPreferences.PlayerMuted = m;
-        LocalStorage.Set("player-pref-muted", m);
+        saveIntoLocalStorage("player-pref-muted", m);
     }
 
     public static SetScale(s: number) {
         PlayerPreferences.PlayerScale = s;
-        LocalStorage.Set("player-pref-scale", s);
+        saveIntoLocalStorage("player-pref-scale", s);
     }
 
     public static SetFit(f: boolean) {
         PlayerPreferences.PlayerFit = f;
-        LocalStorage.Set("player-pref-fit", f);
+        saveIntoLocalStorage("player-pref-fit", f);
     }
 
     public static SetAudioAnimationStyle(s: string) {
         PlayerPreferences.AudioAnimationStyle = s;
-        LocalStorage.Set("player-pref-audio-anim", s);
+        saveIntoLocalStorage("player-pref-audio-anim", s);
     }
 
     public static SetImagePlayerBackground(s: string) {
         PlayerPreferences.ImagePlayerBackground = s;
-        LocalStorage.Set("player-pref-img-bg", s);
+        saveIntoLocalStorage("player-pref-img-bg", s);
     }
 
     public static SetImageAutoNext(s: number) {
         PlayerPreferences.ImageAutoNext = s;
-        LocalStorage.Set("player-pref-img-auto-next", s);
+        saveIntoLocalStorage("player-pref-img-auto-next", s);
     }
 
     public static SetNextOnEnd(s: boolean) {
         PlayerPreferences.NextOnEnd = s;
-        LocalStorage.Set("player-pref-next-end", s);
+        saveIntoLocalStorage("player-pref-next-end", s);
     }
 
     public static SetImageNotesVisible(v: boolean) {
         PlayerPreferences.ImageNotesVisible = v;
-        LocalStorage.Set("player-pref-img-notes-v", v);
+        saveIntoLocalStorage("player-pref-img-notes-v", v);
     }
 
     public static SetSubtitles(s: string) {
         PlayerPreferences.SelectedSubtitles = s;
-        LocalStorage.Set("player-pref-subtitles", s);
+        saveIntoLocalStorage("player-pref-subtitles", s);
     }
 
     public static SetAudioTrack(s: string) {
         PlayerPreferences.SelectedAudioTrack = s;
-        LocalStorage.Set("player-pref-audio-track", s);
+        saveIntoLocalStorage("player-pref-audio-track", s);
     }
 
     public static SetSubtitlesSize(s: string) {
         PlayerPreferences.SubtitlesSize = s;
-        LocalStorage.Set("player-pref-subtitles-size", s);
+        saveIntoLocalStorage("player-pref-subtitles-size", s);
     }
 
     public static SetSubtitlesBackground(s: string) {
         PlayerPreferences.SubtitlesBackground = s;
-        LocalStorage.Set("player-pref-subtitles-bg", s);
+        saveIntoLocalStorage("player-pref-subtitles-bg", s);
     }
 
     public static SetSubtitlesHTML(s: boolean) {
         PlayerPreferences.SubtitlesHTML = s;
-        LocalStorage.Set("player-pref-subtitles-html", s);
+        saveIntoLocalStorage("player-pref-subtitles-html", s);
     }
 
     public static SetPlayerToggleDelay(d: number) {
         PlayerPreferences.PlayerTogglePlayDelay = d;
-        LocalStorage.Set("player-pref-toggle-delay", d);
+        saveIntoLocalStorage("player-pref-toggle-delay", d);
     }
 
     public static SetExtendedDescriptionSize(s: string) {
         PlayerPreferences.ExtendedDescriptionSize = s;
-        LocalStorage.Set("player-pref-ext-desc-size", s);
+        saveIntoLocalStorage("player-pref-ext-desc-size", s);
     }
 }

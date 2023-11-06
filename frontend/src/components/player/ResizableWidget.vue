@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import { LocalStorage } from "@/control/local-storage";
+import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
 import { useVModel } from "@/utils/v-model";
 import { nextTick } from "vue";
 import { defineComponent } from "vue";
@@ -154,7 +154,7 @@ export default defineComponent({
         loadPosition: function () {
             // Load position
             if (this.positionKey) {
-                const savedPosition = LocalStorage.Get(this.positionKey, null);
+                const savedPosition = fetchFromLocalStorage(this.positionKey, null);
 
                 if (savedPosition && typeof savedPosition === "object") {
                     this.x = Number(savedPosition.x) || 0;
@@ -252,7 +252,7 @@ export default defineComponent({
 
         savePosition: function () {
             if (this.positionKey) {
-                LocalStorage.Set(this.positionKey, {
+                saveIntoLocalStorage(this.positionKey, {
                     x: this.x,
                     y: this.y,
                     width: this.width,
@@ -497,3 +497,4 @@ export default defineComponent({
 <style>
 @import "@/style/player/resizable-widget.css";
 </style>
+@/utils/local-storage

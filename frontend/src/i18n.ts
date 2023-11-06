@@ -1,6 +1,6 @@
 import { App, Ref, nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
-import { LocalStorage } from "./control/local-storage";
+import { fetchFromLocalStorage } from "./utils/local-storage";
 
 declare module "vue" {
     interface ComponentCustomProperties {
@@ -12,7 +12,7 @@ declare module "vue" {
 
 export const SUPPORT_LOCALES = ["en", "es"];
 
-let defaultLanguage = LocalStorage.Get("app-pref-lang", import.meta.env.VITE__I18N_LOCALE || "en");
+let defaultLanguage = fetchFromLocalStorage("app-pref-lang", import.meta.env.VITE__I18N_LOCALE || "en");
 const fallbackLocale = import.meta.env.VITE__I18N_FALLBACK_LOCALE || "en";
 
 if (!SUPPORT_LOCALES.includes(defaultLanguage)) {
