@@ -252,7 +252,18 @@
 </template>
 
 <script lang="ts">
-import { PlayerPreferences } from "@/control/player-preferences";
+import {
+    getAutoNextTime,
+    getImageBackgroundStyle,
+    getImageFit,
+    getImageNotesVisible,
+    getImageScale,
+    getUserSelectedResolutionImage,
+    setImageBackgroundStyle,
+    setImageFit,
+    setImageScale,
+    setUserSelectedResolutionImage,
+} from "@/control/player-preferences";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import ScaleControl from "./ScaleControl.vue";
@@ -389,7 +400,7 @@ export default defineComponent({
 
             notesEditMode: false,
             hasExtendedDescription: false,
-            notesVisible: PlayerPreferences.ImageNotesVisible,
+            notesVisible: getImageNotesVisible(),
 
             mediaError: false,
         };
@@ -621,7 +632,7 @@ export default defineComponent({
         },
 
         onUserScaleUpdated() {
-            PlayerPreferences.SetScale(this.scale);
+            setImageScale(this.scale);
             this.computeImageDimensions();
             nextTick(this.centerScroll.bind(this));
         },
@@ -632,7 +643,7 @@ export default defineComponent({
         },
 
         onUserFitUpdated() {
-            PlayerPreferences.SetFit(this.fit);
+            setImageFit(this.fit);
             this.computeImageDimensions();
         },
 
@@ -642,7 +653,7 @@ export default defineComponent({
         },
 
         onBackgroundChanged() {
-            PlayerPreferences.SetImagePlayerBackground(this.background);
+            setImageBackgroundStyle(this.background);
         },
 
         /* Player events */
@@ -933,12 +944,12 @@ export default defineComponent({
             }
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.loading = true;
-            this.currentResolution = PlayerPreferences.GetResolutionIndexImage(this.metadata);
+            this.currentResolution = getUserSelectedResolutionImage(this.metadata);
             this.setImageURL();
         },
 
         onResolutionUpdated: function () {
-            PlayerPreferences.SetResolutionIndexImage(this.metadata, this.currentResolution);
+            setUserSelectedResolutionImage(this.metadata, this.currentResolution);
             this.setImageURL();
         },
 
@@ -1004,7 +1015,7 @@ export default defineComponent({
                 clearTimeout(this._handles.autoNextTimer);
                 this._handles.autoNextTimer = null;
             }
-            const timerS = PlayerPreferences.ImageAutoNext;
+            const timerS = getAutoNextTime();
 
             if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
                 return;
@@ -1087,16 +1098,16 @@ export default defineComponent({
             }
         },
 
-        imageNotesVisibleUpdated: function () {
-            this.notesVisible = PlayerPreferences.ImageNotesVisible;
+        imageNotesVisibleUpdated: function (v: boolean) {
+            this.notesVisible = v;
         },
     },
     mounted: function () {
         this._handles = Object.create(null);
         // Load player preferences
-        this.fit = PlayerPreferences.PlayerFit;
-        this.scale = PlayerPreferences.PlayerScale;
-        this.background = PlayerPreferences.ImagePlayerBackground;
+        this.fit = getImageFit();
+        this.scale = getImageScale();
+        this.background = getImageBackgroundStyle();
 
         this._handles.keyHandler = this.onKeyPress.bind(this);
         KeyboardManager.AddHandler(this._handles.keyHandler, 100);

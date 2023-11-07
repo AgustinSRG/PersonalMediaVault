@@ -1,7 +1,16 @@
 // Keyboard events manager
 
-type KeyboardEventHandler = (event: KeyboardEvent) => boolean;
+"use strict";
 
+/**
+ * Handler for keyboard events
+ */
+export type KeyboardEventHandler = (event: KeyboardEvent) => boolean;
+
+/**
+ * Keyboard manager.
+ * Handles global key presses.
+ */
 export class KeyboardManager {
     public static handlers: { priority: number; fn: KeyboardEventHandler }[] = [];
 

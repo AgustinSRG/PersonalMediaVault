@@ -9,13 +9,13 @@
  * @returns The fetched value, or the default value
  */
 export function fetchFromLocalStorage<T>(key: string, defaultVal: T): T {
+    const v = localStorage.getItem(key);
+
+    if (v === undefined || v === null) {
+        return defaultVal;
+    }
+
     try {
-        const v = localStorage.getItem(key);
-
-        if (v === undefined || v === null) {
-            return defaultVal;
-        }
-
         return JSON.parse(v);
     } catch (ex) {
         console.error(ex);
@@ -29,9 +29,5 @@ export function fetchFromLocalStorage<T>(key: string, defaultVal: T): T {
  * @param val The value to store
  */
 export function saveIntoLocalStorage(key: string, val: any) {
-    try {
-        localStorage.setItem(key, JSON.stringify(val));
-    } catch (ex) {
-        console.error(ex);
-    }
+    localStorage.setItem(key, JSON.stringify(val));
 }

@@ -372,7 +372,17 @@
 </template>
 
 <script lang="ts">
-import { PlayerPreferences } from "@/control/player-preferences";
+import {
+    getAutoNextTime,
+    getSelectedSubtitles,
+    getTogglePlayDelay,
+    setAutoNextTime,
+    setSelectedAudioTrack,
+    setSelectedSubtitles,
+    setSubtitlesBackground,
+    setSubtitlesSize,
+    setTogglePlayDelay,
+} from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -437,10 +447,10 @@ export default defineComponent({
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
 
-            toggleDelay: PlayerPreferences.PlayerTogglePlayDelay,
+            toggleDelay: getTogglePlayDelay(),
             toggleDelayOptions: [0, 250, 500, 750, 1000],
 
-            autoNext: PlayerPreferences.ImageAutoNext,
+            autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
         };
     },
@@ -451,23 +461,23 @@ export default defineComponent({
 
         changeToggleDelay: function (d) {
             this.toggleDelay = d;
-            PlayerPreferences.SetPlayerToggleDelay(d);
+            setTogglePlayDelay(d);
         },
 
-        changeSubtitle: function (s) {
+        changeSubtitle: function (s: string) {
             this.subtitles = s;
-            PlayerPreferences.SetSubtitles(s);
-            SubtitlesController.OnSubtitlesChanged();
+            setSelectedSubtitles(s);
+            SubtitlesController.OnSubtitlesChanged(s);
         },
 
         changeAudioTrack: function (s) {
             this.audioTrackState = s;
-            PlayerPreferences.SetAudioTrack(s);
+            setSelectedAudioTrack(s);
         },
 
         changeAutoNext: function (b) {
             this.autoNext = b;
-            PlayerPreferences.SetImageAutoNext(b);
+            setAutoNextTime(b);
             this.$emit("update-auto-next");
         },
 
@@ -675,7 +685,7 @@ export default defineComponent({
 
         updateSubtitleSize: function (s: string) {
             this.subSizeState = s;
-            PlayerPreferences.SetSubtitlesSize(s);
+            setSubtitlesSize(s);
         },
 
         renderSubtitleBackground: function (s: string) {
@@ -695,7 +705,7 @@ export default defineComponent({
 
         updateSubtitleBackground: function (s: string) {
             this.subBackgroundState = s;
-            PlayerPreferences.SetSubtitlesBackground(s);
+            setSubtitlesBackground(s);
         },
 
         updateResolutions: function () {
@@ -731,7 +741,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this.updateResolutions();
-        this.subtitles = PlayerPreferences.SelectedSubtitles;
+        this.subtitles = getSelectedSubtitles();
         this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
     },
     beforeUnmount: function () {

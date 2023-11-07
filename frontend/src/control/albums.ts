@@ -1,5 +1,7 @@
 // Albums data controller
 
+"use strict";
+
 import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
@@ -9,7 +11,7 @@ import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
 import { MediaController, MediaData, MediaEntry } from "./media";
-import { PlayerPreferences } from "./player-preferences";
+import { setCachedAlbumPosition } from "./player-preferences";
 
 export interface AlbumEntry {
     id: number;
@@ -318,7 +320,7 @@ export class AlbumsController {
             AlbumsController.CurrentNext = null;
         }
 
-        PlayerPreferences.SetAlbumPos(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
+        setCachedAlbumPosition(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
 
         AppEvents.Emit("album-pos-update");
         AlbumsController.PreFetchAlbumNext();

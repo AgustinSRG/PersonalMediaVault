@@ -1,3 +1,7 @@
+// Internationalization module
+
+"use strict";
+
 import { App, Ref, nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
 import { fetchFromLocalStorage } from "./utils/local-storage";

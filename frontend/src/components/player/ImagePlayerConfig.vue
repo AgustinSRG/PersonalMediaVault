@@ -120,7 +120,7 @@
 </template>
 
 <script lang="ts">
-import { PlayerPreferences } from "@/control/player-preferences";
+import { getAutoNextTime, getImageNotesVisible, setAutoNextTime, setImageNotesVisible } from "@/control/player-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -149,9 +149,9 @@ export default defineComponent({
             page: "",
             resolutions: [],
             bgOptions: ["default", "black", "white"],
-            autoNext: PlayerPreferences.ImageAutoNext,
+            autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
-            hideNotes: !PlayerPreferences.ImageNotesVisible,
+            hideNotes: !getImageNotesVisible(),
         };
     },
     methods: {
@@ -165,13 +165,13 @@ export default defineComponent({
 
         changeAutoNext: function (b) {
             this.autoNext = b;
-            PlayerPreferences.SetImageAutoNext(b);
+            setAutoNextTime(b);
             this.$emit("update-auto-next");
         },
 
         changeNotesVisible: function () {
-            PlayerPreferences.SetImageNotesVisible(!this.hideNotes);
-            this.$emit("update-notes-visible");
+            setImageNotesVisible(!this.hideNotes);
+            this.$emit("update-notes-visible", !this.hideNotes);
         },
 
         enterConfig: function () {

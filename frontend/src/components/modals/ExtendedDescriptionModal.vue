@@ -77,8 +77,8 @@ import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { Timeouts } from "@/utils/timeout";
 import { GetAssetURL, Request } from "@/utils/request";
 import { escapeHTML } from "@/utils/html";
-import { PlayerPreferences } from "@/control/player-preferences";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 
 export default defineComponent({
     components: {
@@ -317,7 +317,7 @@ export default defineComponent({
         },
 
         updateModalSize: function () {
-            this.modalSize = PlayerPreferences.ExtendedDescriptionSize;
+            this.modalSize = getExtendedDescriptionSize();
             if (!["lg", "xl"].includes(this.modalSize)) {
                 this.modalSize = "xl";
             }
@@ -329,7 +329,7 @@ export default defineComponent({
             } else {
                 this.modalSize = "lg";
             }
-            PlayerPreferences.SetExtendedDescriptionSize(this.modalSize);
+            setExtendedDescriptionSize(this.modalSize);
         },
     },
     mounted: function () {

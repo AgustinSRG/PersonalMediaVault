@@ -1,342 +1,603 @@
 // Player preferences
 
+"use strict";
+
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
+import { MediaData } from "./media";
 
-const MAX_CACHE_PLAY_TIME_SIZE = 100;
-const MAX_CACHE_ALBUM_POS_SIZE = 100;
+/**
+ * User selected resolution (video)
+ */
+export interface UserSelectedResolutionVideo {
+    original: boolean;
+    width: number;
+    height: number;
+    fps: number;
+}
 
-export class PlayerPreferences {
-    public static UserSelectedResolution = {
+const LS_KEY_USER_SELECTED_RESOLUTION_VIDEO = "player-pref-resolution";
+
+/**
+ * Gets user selected resolution (video)
+ * @param metadata Media metadata
+ * @returns The resolution index
+ */
+export function getUserSelectedResolutionVideo(metadata: MediaData): number {
+    let r = fetchFromLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_VIDEO, {
         original: true,
         width: 0,
         height: 0,
         fps: 0,
-    };
+    } as UserSelectedResolutionVideo);
 
-    public static UserSelectedResolutionImage = {
+    if (!r || typeof r !== "object") {
+        r = {
+            original: true,
+            width: 0,
+            height: 0,
+            fps: 0,
+        };
+    }
+
+    if (r.original || !metadata.resolutions || metadata.resolutions.length === 0) {
+        return -1;
+    }
+
+    let currentVal = metadata.width * metadata.height * metadata.fps;
+
+    const prefVal = r.width * r.height * r.fps;
+
+    let currenRes = -1;
+
+    for (let i = 0; i < metadata.resolutions.length; i++) {
+        const res = metadata.resolutions[i];
+        if (!res.ready) {
+            continue;
+        }
+        const resVal = res.width * res.height * res.fps;
+        if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
+            currentVal = resVal;
+            currenRes = i;
+        }
+    }
+
+    return currenRes;
+}
+
+/**
+ * Sets user selected resolution (Video)
+ * @param metadata The media metadata
+ * @param index The selected resolution index
+ */
+export function setUserSelectedResolutionVideo(metadata: MediaData, index: number) {
+    let r: UserSelectedResolutionVideo;
+
+    if (index < 0) {
+        r = {
+            original: true,
+            width: 0,
+            height: 0,
+            fps: 0,
+        };
+    } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+        r = {
+            original: false,
+            width: metadata.resolutions[index].width,
+            height: metadata.resolutions[index].height,
+            fps: metadata.resolutions[index].fps,
+        };
+    }
+
+    saveIntoLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_VIDEO, r);
+}
+
+/**
+ * User selected resolution (image)
+ */
+export interface UserSelectedResolutionImage {
+    original: boolean;
+    width: number;
+    height: number;
+}
+
+const LS_KEY_USER_SELECTED_RESOLUTION_IMAGE = "player-pref-resolution-img";
+
+/**
+ * Gets user selected resolution (image)
+ * @param metadata Media metadata
+ * @returns The resolution index
+ */
+export function getUserSelectedResolutionImage(metadata: MediaData): number {
+    let r = fetchFromLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_IMAGE, {
         original: true,
         width: 0,
         height: 0,
-    };
+    } as UserSelectedResolutionImage);
 
-    public static PlayTimeCache: { mid: number; time: number }[] = [];
-
-    public static AlbumCurrentCache: { id: number; pos: number }[] = [];
-
-    public static PlayerVolume = 1;
-    public static PlayerMuted = false;
-
-    public static PlayerScale = 0;
-    public static PlayerFit = true;
-
-    public static AudioAnimationStyle = "gradient";
-
-    public static ImagePlayerBackground = "default";
-
-    public static NextOnEnd = true;
-    public static ImageAutoNext = 0;
-
-    public static ImageNotesVisible = true;
-
-    public static SelectedSubtitles = "";
-    public static SubtitlesSize = "l";
-    public static SubtitlesBackground = "75";
-    public static SubtitlesHTML = false;
-
-    public static SelectedAudioTrack = "";
-
-    public static PlayerTogglePlayDelay = 250;
-
-    public static ExtendedDescriptionSize = "xl";
-
-    public static LoadPreferences() {
-        const userRes = fetchFromLocalStorage("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
-        if (userRes) {
-            PlayerPreferences.UserSelectedResolution = userRes;
-        }
-
-        const userResImage = fetchFromLocalStorage("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
-        if (userResImage) {
-            PlayerPreferences.UserSelectedResolutionImage = userResImage;
-        }
-
-        const playTimeCache = fetchFromLocalStorage("player-play-time-cache", []);
-
-        if (playTimeCache) {
-            PlayerPreferences.PlayTimeCache = playTimeCache;
-        }
-
-        const albumPosCache = fetchFromLocalStorage("player-album-pos-cache", []);
-
-        if (albumPosCache) {
-            PlayerPreferences.AlbumCurrentCache = albumPosCache;
-        }
-
-        PlayerPreferences.PlayerVolume = fetchFromLocalStorage("player-pref-volume", 1);
-        PlayerPreferences.PlayerMuted = fetchFromLocalStorage("player-pref-muted", false);
-
-        PlayerPreferences.PlayerScale = fetchFromLocalStorage("player-pref-scale", 0);
-        PlayerPreferences.PlayerFit = fetchFromLocalStorage("player-pref-fit", true);
-
-        PlayerPreferences.AudioAnimationStyle = fetchFromLocalStorage("player-pref-audio-anim", "gradient");
-
-        PlayerPreferences.ImagePlayerBackground = fetchFromLocalStorage("player-pref-img-bg", "default");
-
-        PlayerPreferences.ImageAutoNext = fetchFromLocalStorage("player-pref-img-auto-next", 0);
-        PlayerPreferences.NextOnEnd = fetchFromLocalStorage("player-pref-next-end", true);
-
-        PlayerPreferences.ImageNotesVisible = fetchFromLocalStorage("player-pref-img-notes-v", true);
-
-        PlayerPreferences.SelectedSubtitles = fetchFromLocalStorage("player-pref-subtitles", "");
-        PlayerPreferences.SubtitlesSize = fetchFromLocalStorage("player-pref-subtitles-size", "l");
-        PlayerPreferences.SubtitlesBackground = fetchFromLocalStorage("player-pref-subtitles-bg", "75");
-        PlayerPreferences.SubtitlesHTML = fetchFromLocalStorage("player-pref-subtitles-html", false);
-
-        PlayerPreferences.PlayerTogglePlayDelay = fetchFromLocalStorage("player-pref-toggle-delay", 250);
-
-        PlayerPreferences.SelectedAudioTrack = fetchFromLocalStorage("player-pref-audio-track", "");
-
-        PlayerPreferences.ExtendedDescriptionSize = fetchFromLocalStorage("player-pref-ext-desc-size", "xl");
+    if (!r || typeof r !== "object") {
+        r = {
+            original: true,
+            width: 0,
+            height: 0,
+        };
     }
 
-    public static GetResolutionIndex(metadata: any): number {
-        if (PlayerPreferences.UserSelectedResolution.original || !metadata.resolutions || metadata.resolutions.length === 0) {
-            return -1;
+    if (r.original || !metadata.resolutions || metadata.resolutions.length === 0) {
+        return -1;
+    }
+    let currentVal = metadata.width * metadata.height;
+
+    const prefVal = r.width * r.height;
+
+    let currenRes = -1;
+
+    for (let i = 0; i < metadata.resolutions.length; i++) {
+        const res = metadata.resolutions[i];
+        if (!res.ready) {
+            continue;
         }
-        let currentVal = metadata.width * metadata.height * metadata.fps;
-        const prefVal =
-            PlayerPreferences.UserSelectedResolution.width *
-            PlayerPreferences.UserSelectedResolution.height *
-            PlayerPreferences.UserSelectedResolution.fps;
-        let currenRes = -1;
-        for (let i = 0; i < metadata.resolutions.length; i++) {
-            const res = metadata.resolutions[i];
-            if (!res.ready) {
-                continue;
-            }
-            const resVal = res.width * res.height * res.fps;
-            if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
-                currentVal = resVal;
-                currenRes = i;
+        const resVal = res.width * res.height;
+        if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
+            currentVal = resVal;
+            currenRes = i;
+        }
+    }
+
+    return currenRes;
+}
+
+/**
+ * Sets user selected resolution (image)
+ * @param metadata Media metadata
+ * @param index The selected resolution index
+ */
+export function setUserSelectedResolutionImage(metadata: MediaData, index: number) {
+    let r: UserSelectedResolutionImage;
+    if (index < 0) {
+        r = {
+            original: true,
+            width: 0,
+            height: 0,
+        };
+    } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
+        r = {
+            original: false,
+            width: metadata.resolutions[index].width,
+            height: metadata.resolutions[index].height,
+        };
+    }
+
+    saveIntoLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_IMAGE, r);
+}
+
+const MAX_CACHE_PLAY_TIME_SIZE = 100;
+const LS_KEY_PLAY_TIME_CACHE = "player-play-time-cache";
+
+interface PlayTimeCacheEntry {
+    mid: number;
+    time: number;
+}
+
+/**
+ * Gets cached initial time
+ * @param mid The media ID
+ * @returns The initial time in seconds
+ */
+export function getCachedInitialTime(mid: number): number {
+    let cache = fetchFromLocalStorage(LS_KEY_PLAY_TIME_CACHE, [] as PlayTimeCacheEntry[]);
+
+    if (!cache || !Array.isArray(cache)) {
+        cache = [];
+    }
+
+    for (const entry of cache) {
+        if (!entry || typeof entry !== "object") {
+            continue;
+        }
+
+        if (entry.mid === mid) {
+            const time = entry.time;
+            if (typeof time === "number" && !isNaN(time) && isFinite(time) && time >= 0) {
+                return time;
+            } else {
+                return 0;
             }
         }
-
-        return currenRes;
     }
 
-    public static GetResolutionIndexImage(metadata: any): number {
-        if (PlayerPreferences.UserSelectedResolutionImage.original || !metadata.resolutions || metadata.resolutions.length === 0) {
-            return -1;
-        }
-        let currentVal = metadata.width * metadata.height;
-        const prefVal = PlayerPreferences.UserSelectedResolutionImage.width * PlayerPreferences.UserSelectedResolutionImage.height;
-        let currenRes = -1;
-        for (let i = 0; i < metadata.resolutions.length; i++) {
-            const res = metadata.resolutions[i];
-            if (!res.ready) {
-                continue;
-            }
-            const resVal = res.width * res.height;
-            if (Math.abs(resVal - prefVal) < Math.abs(currentVal - prefVal)) {
-                currentVal = resVal;
-                currenRes = i;
-            }
-        }
+    return 0;
+}
 
-        return currenRes;
+/**
+ * Sets cached initial time
+ * @param mid The media ID
+ * @param time The cached current time
+ */
+export function setCachedInitialTime(mid: number, time: number) {
+    let cache = fetchFromLocalStorage(LS_KEY_PLAY_TIME_CACHE, [] as PlayTimeCacheEntry[]);
+
+    if (!cache || !Array.isArray(cache)) {
+        cache = [];
     }
 
-    public static SetResolutionIndex(metadata: any, index: number) {
-        if (index < 0) {
-            PlayerPreferences.UserSelectedResolution = {
-                original: true,
-                width: 0,
-                height: 0,
-                fps: 0,
-            };
-        } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
-            PlayerPreferences.UserSelectedResolution = {
-                original: false,
-                width: metadata.resolutions[index].width,
-                height: metadata.resolutions[index].height,
-                fps: metadata.resolutions[index].fps,
-            };
+    // Remove elements
+    cache = cache.filter((e) => {
+        if (!e || typeof e !== "object") {
+            return false;
         }
 
-        saveIntoLocalStorage("player-pref-resolution", PlayerPreferences.UserSelectedResolution);
+        return e.mid !== mid;
+    });
+
+    while (cache.length >= MAX_CACHE_PLAY_TIME_SIZE) {
+        cache.shift();
     }
 
-    public static SetResolutionIndexImage(metadata: any, index: number) {
-        if (index < 0) {
-            PlayerPreferences.UserSelectedResolutionImage = {
-                original: true,
-                width: 0,
-                height: 0,
-            };
-        } else if (metadata && metadata.resolutions && metadata.resolutions[index] && metadata.resolutions[index].ready) {
-            PlayerPreferences.UserSelectedResolutionImage = {
-                original: false,
-                width: metadata.resolutions[index].width,
-                height: metadata.resolutions[index].height,
-            };
+    // Add
+
+    cache.push({
+        mid: mid,
+        time: time,
+    });
+
+    saveIntoLocalStorage(LS_KEY_PLAY_TIME_CACHE, cache);
+}
+
+const MAX_CACHE_ALBUM_POS_SIZE = 100;
+const LS_KEY_ALBUM_POS_CACHE = "player-album-pos-cache";
+
+interface AlbumPositionCacheEntry {
+    id: number;
+    pos: number;
+}
+
+/**
+ * Gets cached current album position
+ * @param id Album ID
+ * @returns Current cached position
+ */
+export function getCachedAlbumPosition(id: number): number {
+    let cache = fetchFromLocalStorage(LS_KEY_ALBUM_POS_CACHE, [] as AlbumPositionCacheEntry[]);
+
+    if (!cache || !Array.isArray(cache)) {
+        cache = [];
+    }
+
+    for (const entry of cache) {
+        if (!entry || typeof entry !== "object") {
+            continue;
         }
 
-        saveIntoLocalStorage("player-pref-resolution-img", PlayerPreferences.UserSelectedResolutionImage);
-    }
-
-    public static GetInitialTime(mid: number) {
-        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []); // Update
-        for (const entry of PlayerPreferences.PlayTimeCache) {
-            if (entry.mid === mid) {
-                const time = entry.time;
-                if (typeof time === "number" && !isNaN(time) && isFinite(time) && time >= 0) {
-                    return time;
-                } else {
-                    return 0;
-                }
+        if (entry.id === id) {
+            const pos = entry.pos;
+            if (typeof pos === "number" && !isNaN(pos) && isFinite(pos) && pos >= 0) {
+                return pos;
+            } else {
+                return 0;
             }
         }
-
-        return 0;
     }
 
-    public static SetInitialTime(mid: number, time: number) {
-        // Remove if found
-        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []).filter((e) => {
-            return e.mid !== mid;
-        });
+    return 0;
+}
 
-        while (PlayerPreferences.PlayTimeCache.length >= MAX_CACHE_PLAY_TIME_SIZE) {
-            PlayerPreferences.PlayTimeCache.shift();
+/**
+ * Sets cached current album position
+ * @param id Album ID
+ * @param pos Current cached position
+ */
+export function setCachedAlbumPosition(id: number, pos: number) {
+    let cache = fetchFromLocalStorage(LS_KEY_ALBUM_POS_CACHE, [] as AlbumPositionCacheEntry[]);
+
+    if (!cache || !Array.isArray(cache)) {
+        cache = [];
+    }
+
+    // Remove elements
+    cache = cache.filter((e) => {
+        if (!e || typeof e !== "object") {
+            return false;
         }
 
-        PlayerPreferences.PlayTimeCache.push({
-            mid: mid,
-            time: time,
-        });
+        return e.id !== id;
+    });
 
-        saveIntoLocalStorage("player-play-time-cache", PlayerPreferences.PlayTimeCache);
+    while (cache.length >= MAX_CACHE_ALBUM_POS_SIZE) {
+        cache.shift();
     }
 
-    public static ClearInitialTime(mid: number) {
-        // Remove if found
-        PlayerPreferences.PlayTimeCache = fetchFromLocalStorage("player-play-time-cache", []).filter((e) => {
-            return e.mid !== mid;
-        });
+    cache.push({
+        id: id,
+        pos: pos,
+    });
 
-        saveIntoLocalStorage("player-play-time-cache", PlayerPreferences.PlayTimeCache);
-    }
+    saveIntoLocalStorage(LS_KEY_ALBUM_POS_CACHE, cache);
+}
 
-    public static GetAlbumPos(id: number): number {
-        PlayerPreferences.AlbumCurrentCache = fetchFromLocalStorage("player-album-pos-cache", []);
-        for (const entry of PlayerPreferences.AlbumCurrentCache) {
-            if (entry.id === id) {
-                const pos = entry.pos;
-                if (typeof pos === "number" && !isNaN(pos) && isFinite(pos) && pos >= 0) {
-                    return pos;
-                } else {
-                    return 0;
-                }
-            }
-        }
+const LS_KEY_VOLUME = "player-pref-volume";
 
-        return 0;
-    }
+/**
+ * Gets player volume
+ * @returns The volume (0 - 1)
+ */
+export function getPlayerVolume(): number {
+    return Number(fetchFromLocalStorage(LS_KEY_VOLUME, 1)) || 0;
+}
 
-    public static SetAlbumPos(id: number, pos: number) {
-        PlayerPreferences.AlbumCurrentCache = fetchFromLocalStorage("player-album-pos-cache", []).filter((e) => {
-            return e.id !== id;
-        });
+/**
+ * Sets player volume
+ * @param volume The volume (0 - 1)
+ */
+export function setPlayerVolume(volume: number) {
+    saveIntoLocalStorage(LS_KEY_VOLUME, volume);
+}
 
-        while (PlayerPreferences.AlbumCurrentCache.length >= MAX_CACHE_ALBUM_POS_SIZE) {
-            PlayerPreferences.AlbumCurrentCache.shift();
-        }
+const LS_KEY_MUTED = "player-pref-muted";
 
-        PlayerPreferences.AlbumCurrentCache.push({
-            id: id,
-            pos: pos,
-        });
+/**
+ * Get player muted flag
+ * @returns The muted flag
+ */
+export function getPlayerMuted(): boolean {
+    return !!fetchFromLocalStorage(LS_KEY_MUTED, false);
+}
 
-        saveIntoLocalStorage("player-album-pos-cache", PlayerPreferences.AlbumCurrentCache);
-    }
+/**
+ * Sets player muted flag
+ * @param muted The muted flag
+ */
+export function setPlayerMuted(muted: boolean) {
+    saveIntoLocalStorage(LS_KEY_MUTED, muted);
+}
 
-    public static SetVolume(vol: number) {
-        PlayerPreferences.PlayerVolume = vol;
-        saveIntoLocalStorage("player-pref-volume", vol);
-    }
+const LS_KEY_SCALE = "player-pref-scale";
 
-    public static SetMuted(m: boolean) {
-        PlayerPreferences.PlayerMuted = m;
-        saveIntoLocalStorage("player-pref-muted", m);
-    }
+/**
+ * Gets image scale
+ * @returns The image scale
+ */
+export function getImageScale(): number {
+    return Number(fetchFromLocalStorage(LS_KEY_SCALE, 0)) || 0;
+}
 
-    public static SetScale(s: number) {
-        PlayerPreferences.PlayerScale = s;
-        saveIntoLocalStorage("player-pref-scale", s);
-    }
+/**
+ * Sets image scale
+ * @param scale The image scale
+ */
+export function setImageScale(scale: number) {
+    saveIntoLocalStorage(LS_KEY_SCALE, scale);
+}
 
-    public static SetFit(f: boolean) {
-        PlayerPreferences.PlayerFit = f;
-        saveIntoLocalStorage("player-pref-fit", f);
-    }
+const LS_KEY_IMAGE_FIT = "player-pref-fit";
 
-    public static SetAudioAnimationStyle(s: string) {
-        PlayerPreferences.AudioAnimationStyle = s;
-        saveIntoLocalStorage("player-pref-audio-anim", s);
-    }
+/**
+ * Gets image fit flag
+ * @returns The image fit flag
+ */
+export function getImageFit(): boolean {
+    return !!fetchFromLocalStorage(LS_KEY_IMAGE_FIT, true);
+}
 
-    public static SetImagePlayerBackground(s: string) {
-        PlayerPreferences.ImagePlayerBackground = s;
-        saveIntoLocalStorage("player-pref-img-bg", s);
-    }
+/**
+ * Sets image fit flag
+ * @param fit The image fit flag
+ */
+export function setImageFit(fit: boolean) {
+    saveIntoLocalStorage(LS_KEY_IMAGE_FIT, fit);
+}
 
-    public static SetImageAutoNext(s: number) {
-        PlayerPreferences.ImageAutoNext = s;
-        saveIntoLocalStorage("player-pref-img-auto-next", s);
-    }
+const LS_KEY_AUDIO_ANIMATION_STYLE = "player-pref-audio-anim";
 
-    public static SetNextOnEnd(s: boolean) {
-        PlayerPreferences.NextOnEnd = s;
-        saveIntoLocalStorage("player-pref-next-end", s);
-    }
+/**
+ * Gets selected audio animation style
+ * @returns The animation style name
+ */
+export function getAudioAnimationStyle(): string {
+    return fetchFromLocalStorage(LS_KEY_AUDIO_ANIMATION_STYLE, "gradient") + "";
+}
 
-    public static SetImageNotesVisible(v: boolean) {
-        PlayerPreferences.ImageNotesVisible = v;
-        saveIntoLocalStorage("player-pref-img-notes-v", v);
-    }
+/**
+ * Sets selected audio animation style
+ * @param style The animation style name
+ */
+export function setAudioAnimationStyle(style: string) {
+    saveIntoLocalStorage(LS_KEY_AUDIO_ANIMATION_STYLE, style);
+}
 
-    public static SetSubtitles(s: string) {
-        PlayerPreferences.SelectedSubtitles = s;
-        saveIntoLocalStorage("player-pref-subtitles", s);
-    }
+const LS_KEY_IMAGE_BACKGROUND = "player-pref-img-bg";
 
-    public static SetAudioTrack(s: string) {
-        PlayerPreferences.SelectedAudioTrack = s;
-        saveIntoLocalStorage("player-pref-audio-track", s);
-    }
+/**
+ * Get selected image background style
+ * @returns The background style name
+ */
+export function getImageBackgroundStyle(): string {
+    return fetchFromLocalStorage(LS_KEY_IMAGE_BACKGROUND, "default") + "";
+}
 
-    public static SetSubtitlesSize(s: string) {
-        PlayerPreferences.SubtitlesSize = s;
-        saveIntoLocalStorage("player-pref-subtitles-size", s);
-    }
+/**
+ * Set selected image background style
+ * @param style The background style name
+ */
+export function setImageBackgroundStyle(style: string) {
+    saveIntoLocalStorage(LS_KEY_IMAGE_BACKGROUND, style);
+}
 
-    public static SetSubtitlesBackground(s: string) {
-        PlayerPreferences.SubtitlesBackground = s;
-        saveIntoLocalStorage("player-pref-subtitles-bg", s);
-    }
+const LS_KEY_AUTO_NEXT_ON_END = "player-pref-next-end";
 
-    public static SetSubtitlesHTML(s: boolean) {
-        PlayerPreferences.SubtitlesHTML = s;
-        saveIntoLocalStorage("player-pref-subtitles-html", s);
-    }
+/**
+ * Gets auto next option on media ending
+ * @returns Auto next flag
+ */
+export function getAutoNextOnEnd(): boolean {
+    return !!fetchFromLocalStorage(LS_KEY_AUTO_NEXT_ON_END, true);
+}
 
-    public static SetPlayerToggleDelay(d: number) {
-        PlayerPreferences.PlayerTogglePlayDelay = d;
-        saveIntoLocalStorage("player-pref-toggle-delay", d);
-    }
+/**
+ * Sets auto next option on media ending
+ * @param autoNext Auto next flag
+ */
+export function setAutoNextOnEnd(autoNext: boolean) {
+    saveIntoLocalStorage(LS_KEY_AUTO_NEXT_ON_END, autoNext);
+}
 
-    public static SetExtendedDescriptionSize(s: string) {
-        PlayerPreferences.ExtendedDescriptionSize = s;
-        saveIntoLocalStorage("player-pref-ext-desc-size", s);
-    }
+const LS_KEY_AUTO_NEXT_TIME = "player-pref-img-auto-next";
+
+/**
+ * Gets auto next option for images or short videos
+ * @returns Number of seconds to wait for auto next, 0 = disabled
+ */
+export function getAutoNextTime(): number {
+    return Number(fetchFromLocalStorage(LS_KEY_AUTO_NEXT_TIME, 0)) || 0;
+}
+
+/**
+ * Sets auto next option for images or short videos
+ * @param autoNextSeconds Number of seconds to wait for auto next, 0 = disabled
+ */
+export function setAutoNextTime(autoNextSeconds: number) {
+    saveIntoLocalStorage(LS_KEY_AUTO_NEXT_TIME, autoNextSeconds);
+}
+
+const LS_KEY_IMAGE_NOTES_VISIBLE = "player-pref-img-notes-v";
+
+/**
+ * Gets image notes visibility
+ * @returns Image notes visibility
+ */
+export function getImageNotesVisible(): boolean {
+    return !!fetchFromLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE, true);
+}
+
+/**
+ * Sets image notes visibility
+ * @param visible Image notes visibility
+ */
+export function setImageNotesVisible(visible: boolean) {
+    saveIntoLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE, visible);
+}
+
+const LS_KEY_SUBTITLES_SELECTED = "player-pref-subtitles";
+
+/**
+ * Gets selected subtitles
+ * @returns Selected subtitles ID
+ */
+export function getSelectedSubtitles(): string {
+    return fetchFromLocalStorage(LS_KEY_SUBTITLES_SELECTED, "") + "";
+}
+
+/**
+ * Sets selected subtitles
+ * @param sub Selected subtitles ID
+ */
+export function setSelectedSubtitles(sub: string) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_SELECTED, sub);
+}
+
+const LS_KEY_SUBTITLES_SIZE = "player-pref-subtitles-size";
+
+/**
+ * Gets selected subtitles size
+ * @returns The selected subtitles size
+ */
+export function getSubtitlesSize(): string {
+    return fetchFromLocalStorage(LS_KEY_SUBTITLES_SIZE, "l") + "";
+}
+
+/**
+ * Sets selected subtitles size
+ * @param size The selected subtitles size
+ */
+export function setSubtitlesSize(size: string) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_SIZE, size);
+}
+
+const LS_KEY_SUBTITLES_BG = "player-pref-subtitles-bg";
+
+/**
+ * Gets subtitles background
+ * @returns The subtitles background style
+ */
+export function getSubtitlesBackground(): string {
+    return fetchFromLocalStorage(LS_KEY_SUBTITLES_BG, "75") + "";
+}
+
+/**
+ * Sets subtitles background
+ * @param bg The subtitles background style
+ */
+export function setSubtitlesBackground(bg: string) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_BG, bg);
+}
+
+const LS_KEY_SUBTITLES_HTML = "player-pref-subtitles-html";
+
+/**
+ * Gets the HTML allowed in subtitles flag
+ * @returns Allow subtitles HTML flag
+ */
+export function getSubtitlesAllowHTML(): boolean {
+    return !!fetchFromLocalStorage(LS_KEY_SUBTITLES_HTML, false);
+}
+
+/**
+ * Sets the HTML allowed in subtitles flag
+ * @param allowHTML Allow subtitles HTML flag
+ */
+export function setSubtitlesAllowHTML(allowHTML: boolean) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_HTML, allowHTML);
+}
+
+const LS_KEY_AUDIO_TRACK = "player-pref-audio-track";
+
+/**
+ * Gets selected audio track
+ * @returns The selected audio track
+ */
+export function getSelectedAudioTrack(): string {
+    return fetchFromLocalStorage(LS_KEY_AUDIO_TRACK, "") + "";
+}
+
+/**
+ * Sets selected audio track
+ * @returns The selected audio track
+ */
+export function setSelectedAudioTrack(track: string) {
+    saveIntoLocalStorage(LS_KEY_AUDIO_TRACK, track);
+}
+
+const LS_KEY_TOGGLE_PLAY_DELAY = "player-pref-toggle-delay";
+
+/**
+ * Gets toggle play delay
+ * @returns Toggle play delay (ms)
+ */
+export function getTogglePlayDelay(): number {
+    return Number(fetchFromLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY, 250)) || 0;
+}
+
+/**
+ * Sets toggle play delay
+ * @param delay Toggle play delay (ms)
+ */
+export function setTogglePlayDelay(delay: number) {
+    saveIntoLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY, delay);
+}
+
+const LS_KEY_EXTENDED_DESCRIPTION_SIZE = "player-pref-ext-desc-size";
+
+/**
+ * Gets extended description size
+ * @returns The extended description size style
+ */
+export function getExtendedDescriptionSize(): string {
+    return fetchFromLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, "xl") + "";
+}
+
+/**
+ * Sets extended description size
+ * @param size The extended description size style
+ */
+export function setExtendedDescriptionSize(size: string) {
+    saveIntoLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, size);
 }

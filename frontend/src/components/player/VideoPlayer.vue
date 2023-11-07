@@ -421,7 +421,25 @@
 </template>
 
 <script lang="ts">
-import { PlayerPreferences } from "@/control/player-preferences";
+import {
+    getAutoNextOnEnd,
+    getAutoNextTime,
+    getCachedInitialTime,
+    getPlayerMuted,
+    getPlayerVolume,
+    getSelectedAudioTrack,
+    getSubtitlesAllowHTML,
+    getSubtitlesBackground,
+    getSubtitlesSize,
+    getTogglePlayDelay,
+    getUserSelectedResolutionVideo,
+    setAutoNextOnEnd,
+    setCachedInitialTime,
+    setPlayerMuted,
+    setPlayerVolume,
+    setSubtitlesAllowHTML,
+    setUserSelectedResolutionVideo,
+} from "@/control/player-preferences";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
@@ -586,7 +604,7 @@ export default defineComponent({
             subtitlesBg: "75",
             subtitlesHTML: false,
 
-            audioTrack: PlayerPreferences.SelectedAudioTrack,
+            audioTrack: getSelectedAudioTrack(),
             audioTrackURL: "",
 
             timeSlices: [],
@@ -707,7 +725,7 @@ export default defineComponent({
         },
 
         onResolutionUpdated: function () {
-            PlayerPreferences.SetResolutionIndex(this.metadata, this.currentResolution);
+            setUserSelectedResolutionVideo(this.metadata, this.currentResolution);
             this.setVideoURL();
         },
 
@@ -732,7 +750,7 @@ export default defineComponent({
         },
 
         onUserVolumeUpdated() {
-            PlayerPreferences.SetVolume(this.volume);
+            setPlayerVolume(this.volume);
         },
 
         changeVolume: function (v: number) {
@@ -741,7 +759,7 @@ export default defineComponent({
         },
 
         onUserMutedUpdated() {
-            PlayerPreferences.SetMuted(this.muted);
+            setPlayerMuted(this.muted);
         },
 
         toggleMuted: function () {
@@ -802,7 +820,7 @@ export default defineComponent({
             this.currentTime = videoElement.currentTime;
             this.duration = videoElement.duration;
             if (this.canSaveTime && Date.now() - this.lastTimeChangedEvent > 5000) {
-                PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+                setCachedInitialTime(this.mid, this.currentTime);
                 this.lastTimeChangedEvent = Date.now();
             }
             this.updateSubtitles();
@@ -912,7 +930,7 @@ export default defineComponent({
                 return;
             }
             if (this.canSaveTime) {
-                PlayerPreferences.SetInitialTime(this.mid, 0);
+                setCachedInitialTime(this.mid, 0);
             }
             if (!this.loop && !this.isShort) {
                 this.pause();
@@ -1036,17 +1054,18 @@ export default defineComponent({
         },
 
         togglePlay() {
+            const delay = getTogglePlayDelay();
             if (this.playing) {
                 if (this._handles.togglePlayDelayTimeout) {
                     clearTimeout(this._handles.togglePlayDelayTimeout);
                     this._handles.togglePlayDelayTimeout = null;
                     this.feedback = "";
-                } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
+                } else if (delay > 0) {
                     this.feedback = "pause";
                     this._handles.togglePlayDelayTimeout = setTimeout(() => {
                         this._handles.togglePlayDelayTimeout = null;
                         this.pause();
-                    }, PlayerPreferences.PlayerTogglePlayDelay);
+                    }, delay);
                 } else {
                     this.feedback = "pause";
                     this.pause();
@@ -1056,12 +1075,12 @@ export default defineComponent({
                     clearTimeout(this._handles.togglePlayDelayTimeout);
                     this._handles.togglePlayDelayTimeout = null;
                     this.feedback = "";
-                } else if (PlayerPreferences.PlayerTogglePlayDelay > 0) {
+                } else if (delay > 0) {
                     this.feedback = "play";
                     this._handles.togglePlayDelayTimeout = setTimeout(() => {
                         this._handles.togglePlayDelayTimeout = null;
                         this.play();
-                    }, PlayerPreferences.PlayerTogglePlayDelay);
+                    }, delay);
                 } else {
                     this.feedback = "play";
                     this.play();
@@ -1093,7 +1112,7 @@ export default defineComponent({
             }
 
             if (this.canSaveTime && video && !video.ended) {
-                PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+                setCachedInitialTime(this.mid, this.currentTime);
             }
 
             this.lastTimeChangedEvent = Date.now();
@@ -1221,7 +1240,7 @@ export default defineComponent({
             }
 
             if (save && this.canSaveTime) {
-                PlayerPreferences.SetInitialTime(this.mid, this.currentTime);
+                setCachedInitialTime(this.mid, this.currentTime);
                 this.lastTimeChangedEvent = Date.now();
             }
 
@@ -1484,12 +1503,12 @@ export default defineComponent({
             this.currentTimeSliceStart = 0;
             this.currentTimeSliceEnd = 0;
             this.sliceLoop = false;
-            this.currentTime = this.canSaveTime ? PlayerPreferences.GetInitialTime(this.mid) : 0;
+            this.currentTime = this.canSaveTime ? getCachedInitialTime(this.mid) : 0;
             this.duration = 0;
             this.speed = 1;
             this.scale = 1;
             this.setDefaultLoop();
-            this.currentResolution = PlayerPreferences.GetResolutionIndex(this.metadata);
+            this.currentResolution = getUserSelectedResolutionVideo(this.metadata);
             this.loading = true;
             this.playing = true;
             this.setVideoURL();
@@ -1649,12 +1668,12 @@ export default defineComponent({
         },
 
         onUpdateSubHTML: function () {
-            PlayerPreferences.SetSubtitlesHTML(this.subtitlesHTML);
+            setSubtitlesAllowHTML(this.subtitlesHTML);
             this.reloadSubtitles();
         },
 
         onUpdateNextEnd: function () {
-            PlayerPreferences.SetNextOnEnd(this.nextEnd);
+            setAutoNextOnEnd(this.nextEnd);
         },
 
         handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {
@@ -1716,7 +1735,7 @@ export default defineComponent({
                 return;
             }
 
-            const timerS = PlayerPreferences.ImageAutoNext;
+            const timerS = getAutoNextTime();
 
             if (isNaN(timerS) || !isFinite(timerS) || timerS <= 0) {
                 return;
@@ -2016,12 +2035,12 @@ export default defineComponent({
         this._handles = Object.create(null);
 
         // Load player preferences
-        this.muted = PlayerPreferences.PlayerMuted;
-        this.volume = PlayerPreferences.PlayerVolume;
-        this.subtitlesSize = PlayerPreferences.SubtitlesSize;
-        this.subtitlesBg = PlayerPreferences.SubtitlesBackground;
-        this.subtitlesHTML = PlayerPreferences.SubtitlesHTML;
-        this.nextEnd = PlayerPreferences.NextOnEnd;
+        this.muted = getPlayerMuted();
+        this.volume = getPlayerVolume();
+        this.subtitlesSize = getSubtitlesSize();
+        this.subtitlesBg = getSubtitlesBackground();
+        this.subtitlesHTML = getSubtitlesAllowHTML();
+        this.nextEnd = getAutoNextOnEnd();
 
         this._handles.keyHandler = this.onKeyPress.bind(this);
         KeyboardManager.AddHandler(this._handles.keyHandler, 100);

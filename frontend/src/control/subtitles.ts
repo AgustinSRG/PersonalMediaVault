@@ -1,12 +1,14 @@
 // Subtitles controller
 
+"use strict";
+
 import { GetAssetURL, Request } from "@/utils/request";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
-import { PlayerPreferences } from "./player-preferences";
+import { getSelectedSubtitles } from "./player-preferences";
 import { AuthController } from "./auth";
 
 export class SubtitlesController {
@@ -45,7 +47,7 @@ export class SubtitlesController {
         }
 
         const subtitles = MediaController.MediaData.subtitles || [];
-        const prefSubtitles = PlayerPreferences.SelectedSubtitles;
+        const prefSubtitles = getSelectedSubtitles();
 
         SubtitlesController.SelectedSubtitles = "";
         SubtitlesController.SubtitlesFileURL = "";
@@ -95,8 +97,12 @@ export class SubtitlesController {
             });
     }
 
-    public static OnSubtitlesChanged() {
-        if (SubtitlesController.SelectedSubtitles !== PlayerPreferences.SelectedSubtitles) {
+    /**
+     * Changes current subtitles
+     * @param sub The current subtitles ID
+     */
+    public static OnSubtitlesChanged(sub: string) {
+        if (SubtitlesController.SelectedSubtitles !== sub) {
             SubtitlesController.Load();
         }
     }

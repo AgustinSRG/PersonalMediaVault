@@ -8,7 +8,7 @@ import { getParameterByName } from "@/utils/cookie";
 import { GenerateURIQuery } from "@/utils/request";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
-import { PlayerPreferences } from "./player-preferences";
+import { getCachedAlbumPosition } from "./player-preferences";
 
 const EVENT_NAME = "app-status-update";
 
@@ -471,7 +471,7 @@ export class AppStatus {
     public static ClickOnAlbumWithList(albumId: number, list: number[]) {
         AppStatus.CurrentAlbum = albumId;
 
-        const pos = PlayerPreferences.GetAlbumPos(albumId);
+        const pos = getCachedAlbumPosition(albumId);
 
         if (pos < list.length) {
             AppStatus.CurrentMedia = list[pos];

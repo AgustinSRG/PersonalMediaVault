@@ -1,10 +1,11 @@
 // Entry point
 
+"use strict";
+
 // Initialize stuff
 
 import { AppPreferences } from "./control/app-preferences";
 import { AppStatus } from "./control/app-status";
-import { PlayerPreferences } from "./control/player-preferences";
 import { AuthController } from "./control/auth";
 import { TagsController } from "./control/tags";
 import { AlbumsController } from "./control/albums";
@@ -13,7 +14,6 @@ import { KeyboardManager } from "./control/keyboard";
 import { BusyStateController } from "./control/busy-state";
 
 AppPreferences.LoadPreferences();
-PlayerPreferences.LoadPreferences();
 
 KeyboardManager.Initialize();
 

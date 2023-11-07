@@ -248,7 +248,14 @@
 </template>
 
 <script lang="ts">
-import { PlayerPreferences } from "@/control/player-preferences";
+import {
+    getAutoNextTime,
+    getSelectedSubtitles,
+    setAutoNextTime,
+    setSelectedSubtitles,
+    setSubtitlesBackground,
+    setSubtitlesSize,
+} from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -307,7 +314,7 @@ export default defineComponent({
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
 
-            autoNext: PlayerPreferences.ImageAutoNext,
+            autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
         };
     },
@@ -371,7 +378,7 @@ export default defineComponent({
 
         changeAutoNext: function (b) {
             this.autoNext = b;
-            PlayerPreferences.SetImageAutoNext(b);
+            setAutoNextTime(b);
             this.$emit("update-auto-next");
         },
 
@@ -400,10 +407,10 @@ export default defineComponent({
             this.animColorsState = s;
         },
 
-        changeSubtitle: function (s) {
+        changeSubtitle: function (s: string) {
             this.subtitles = s;
-            PlayerPreferences.SetSubtitles(s);
-            SubtitlesController.OnSubtitlesChanged();
+            setSelectedSubtitles(s);
+            SubtitlesController.OnSubtitlesChanged(s);
         },
 
         renderSubtitleSize: function (s: string) {
@@ -423,7 +430,7 @@ export default defineComponent({
 
         updateSubtitleSize: function (s: string) {
             this.subSizeState = s;
-            PlayerPreferences.SetSubtitlesSize(s);
+            setSubtitlesSize(s);
         },
 
         renderSubtitleBackground: function (s: string) {
@@ -455,7 +462,7 @@ export default defineComponent({
 
         updateSubtitleBackground: function (s: string) {
             this.subBackgroundState = s;
-            PlayerPreferences.SetSubtitlesBackground(s);
+            setSubtitlesBackground(s);
         },
 
         renderSubtitle: function (subId: string, rTick: number) {
@@ -496,7 +503,7 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
-        this.subtitles = PlayerPreferences.SelectedSubtitles;
+        this.subtitles = getSelectedSubtitles();
         this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
     },
     beforeUnmount: function () {
