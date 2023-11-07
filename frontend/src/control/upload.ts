@@ -404,7 +404,7 @@ export class UploadController {
                     }
 
                     if (MediaController.MediaId === m.mid) {
-                        MediaController.OnMediaChanged();
+                        MediaController.Load();
                     }
 
                     UploadController.UploadingCount--;
@@ -452,7 +452,7 @@ export class UploadController {
             AppEvents.Emit("upload-list-update", index, m);
             UploadController.CheckEmptyList();
             if (MediaController.MediaId === m.mid) {
-                MediaController.OnMediaChanged();
+                MediaController.Load();
             } else if (AlbumsController.CurrentNext && AlbumsController.CurrentNext.id === m.mid) {
                 AlbumsController.PreFetchAlbumNext();
             }

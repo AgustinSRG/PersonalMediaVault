@@ -1,8 +1,9 @@
 // App preferences
 
-import { AlbumEntry, AlbumsController } from "./albums";
+import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
+import { AlbumListItemMin } from "@/api/models";
 
 function defaultBrowserTheme(): string {
     if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -53,7 +54,7 @@ export class AppPreferences {
         AppEvents.Emit("theme-changed", t);
     }
 
-    public static OnAlbumsUpdate(albums: { [id: string]: AlbumEntry }) {
+    public static OnAlbumsUpdate(albums: { [id: string]: AlbumListItemMin }) {
         for (const id of Object.keys(AppPreferences.AlbumPositionMap)) {
             if (!albums[id]) {
                 delete AppPreferences.AlbumPositionMap[id];

@@ -74,9 +74,9 @@
 <script lang="ts">
 import { MediaAPI } from "@/api/api-media";
 import { TasksAPI } from "@/api/api-tasks";
-import { TaskStatus } from "@/api/models";
+import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
-import { MediaController, MediaData } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";

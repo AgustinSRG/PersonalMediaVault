@@ -422,7 +422,7 @@ import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
-import { MediaController } from "@/control/media";
+import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { SubtitlesController } from "@/control/subtitles";
 import { sanitizeSubtitlesHTML, getUniqueSubtitlesLoadTag } from "@/utils/subtitles-html";
 import { htmlToText } from "@/utils/html";
@@ -431,7 +431,6 @@ import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
 import { AppPreferences } from "@/control/app-preferences";
-import { AUTO_LOOP_MIN_DURATION, NEXT_END_WAIT_DURATION } from "@/utils/constants";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),

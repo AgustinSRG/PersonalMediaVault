@@ -10,31 +10,12 @@ import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController } from "./auth";
-import { MediaController, MediaData, MediaEntry } from "./media";
+import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
-
-export interface AlbumEntry {
-    id: number;
-    name: string;
-    size: number;
-    thumbnail: string;
-    lm: number;
-}
-
-export interface AlbumEntryMin {
-    id: number;
-    name: string;
-}
-
-export interface AlbumData {
-    id: number;
-    name: string;
-    list: MediaEntry[];
-    lm: number;
-}
+import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
 
 export class AlbumsController {
-    public static Albums: { [id: string]: AlbumEntryMin } = Object.create(null);
+    public static Albums: { [id: string]: AlbumListItemMin } = Object.create(null);
 
     public static Loading = true;
     public static InitiallyLoaded = false;
@@ -93,7 +74,7 @@ export class AlbumsController {
 
     public static CurrentAlbum = -1;
     public static CurrentAlbumLoading = false;
-    public static CurrentAlbumData: AlbumData = null;
+    public static CurrentAlbumData: Album = null;
 
     public static OnCurrentAlbumChanged() {
         if (AppStatus.CurrentAlbum !== AlbumsController.CurrentAlbum) {
@@ -239,8 +220,8 @@ export class AlbumsController {
     }
 
     public static CurrentAlbumPos = -1;
-    public static CurrentPrev: MediaEntry = null;
-    public static CurrentNext: MediaEntry = null;
+    public static CurrentPrev: MediaListItem = null;
+    public static CurrentNext: MediaListItem = null;
 
     public static AlbumLoop = false;
     public static AlbumRandom = false;
@@ -394,11 +375,7 @@ export class AlbumsController {
         }
 
         if (AlbumsController.AvailableNextPrefetch) {
-            MediaController.MediaData = AlbumsController.NextMediaData;
-            AppEvents.Emit("current-media-update", MediaController.MediaData);
-
-            MediaController.Loading = false;
-            AppEvents.Emit("current-media-loading", false);
+            MediaController.SetMediaData(AlbumsController.NextMediaData);
             return true;
         } else {
             return false;

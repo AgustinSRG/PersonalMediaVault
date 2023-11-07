@@ -2,8 +2,8 @@
 
 "use strict";
 
+import { MediaData } from "@/api/models";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
-import { MediaData } from "./media";
 
 /**
  * User selected resolution (video)

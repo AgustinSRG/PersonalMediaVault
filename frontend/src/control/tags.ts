@@ -8,7 +8,6 @@ import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AuthController } from "./auth";
 import { MediaListItem } from "@/api/models";
-import { MediaEntry } from "./media";
 
 const EVENT_NAME = "tags-update";
 
@@ -171,7 +170,7 @@ export class TagsController {
      * Checks a media list for new tags, to reload the list
      * @param list The received list
      */
-    public static OnMediaListReceived(list: (MediaListItem | MediaEntry)[]) {
+    public static OnMediaListReceived(list: MediaListItem[]) {
         if (TagsController.Loading) {
             return; // Already loading
         }

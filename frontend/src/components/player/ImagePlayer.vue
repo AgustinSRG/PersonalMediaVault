@@ -282,7 +282,7 @@ import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { MEDIA_TYPE_IMAGE } from "@/utils/constants";
+import { MEDIA_TYPE_IMAGE } from "@/control/media";
 
 const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),

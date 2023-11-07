@@ -68,8 +68,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { MediaController } from "@/control/media";
-import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/utils/constants";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { defineComponent } from "vue";
 
