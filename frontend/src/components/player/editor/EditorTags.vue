@@ -379,7 +379,7 @@ export default defineComponent({
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
 
@@ -395,7 +395,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
 
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
 

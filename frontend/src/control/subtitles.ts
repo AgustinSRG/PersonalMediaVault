@@ -20,7 +20,7 @@ export class SubtitlesController {
     public static Initialize() {
         AuthController.AddChangeEventListener(SubtitlesController.Load);
         AppStatus.AddEventListener(SubtitlesController.OnMediaChanged);
-        AppEvents.AddEventListener("current-media-update", SubtitlesController.Load);
+        MediaController.AddUpdateEventListener(SubtitlesController.Load);
 
         SubtitlesController.MediaId = AppStatus.CurrentMedia;
 

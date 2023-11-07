@@ -342,8 +342,8 @@ export default defineComponent({
 
         this.updateStatus();
 
-        AppEvents.AddEventListener("current-media-loading", this._handles.loadingH);
-        AppEvents.AddEventListener("current-media-update", this._handles.updateH);
+        MediaController.AddLoadingEventListener(this._handles.loadingH);
+        MediaController.AddUpdateEventListener(this._handles.updateH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
         AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
@@ -369,8 +369,8 @@ export default defineComponent({
         });
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-media-loading", this._handles.loadingH);
-        AppEvents.RemoveEventListener("current-media-update", this._handles.updateH);
+        MediaController.RemoveLoadingEventListener(this._handles.loadingH);
+        MediaController.RemoveUpdateEventListener(this._handles.updateH);
 
         AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
         AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);

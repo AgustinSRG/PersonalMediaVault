@@ -340,7 +340,7 @@ export default defineComponent({
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
 
         if (this.display) {
             this.updateModalSize();
@@ -349,7 +349,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
     },
     watch: {
         display: function () {

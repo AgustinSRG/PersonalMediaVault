@@ -69,7 +69,7 @@ export class ImageNotesController {
     public static Initialize() {
         AuthController.AddChangeEventListener(ImageNotesController.Load);
         AppStatus.AddEventListener(ImageNotesController.OnMediaChanged);
-        AppEvents.AddEventListener("current-media-update", ImageNotesController.Load);
+        MediaController.AddUpdateEventListener(ImageNotesController.Load);
 
         ImageNotesController.MediaId = AppStatus.CurrentMedia;
 

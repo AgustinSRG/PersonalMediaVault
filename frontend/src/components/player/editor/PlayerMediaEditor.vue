@@ -88,7 +88,6 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { defineAsyncComponent, defineComponent } from "vue";
@@ -183,7 +182,7 @@ export default defineComponent({
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
 
-        AppEvents.AddEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -191,7 +190,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-media-update", this._handles.mediaUpdateH);
+        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
     },
