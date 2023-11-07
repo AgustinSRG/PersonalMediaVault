@@ -47,7 +47,7 @@
     padding-left: 8px;
     padding-top: 3px;
     overflow: hidden;
-    max-width: calc(240px - 72px - 32px - 8px);
+    flex: 1;
 }
 
 .top-bar-button {

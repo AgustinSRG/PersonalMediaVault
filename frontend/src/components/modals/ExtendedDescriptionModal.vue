@@ -7,7 +7,7 @@
             role="document"
         >
             <div class="modal-header">
-                <div class="modal-title with-2-buttons">{{ title || $t("Extended description") }}</div>
+                <div class="modal-title">{{ title || $t("Extended description") }}</div>
                 <button
                     type="button"
                     class="modal-close-btn"

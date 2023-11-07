@@ -2,7 +2,7 @@
     <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
-                <div class="modal-title no-close">
+                <div class="modal-title">
                     {{ $t("The media vault is locked") }}
                 </div>
             </div>
