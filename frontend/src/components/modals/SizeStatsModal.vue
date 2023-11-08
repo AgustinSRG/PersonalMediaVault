@@ -45,7 +45,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { Timeouts } from "@/utils/timeout";
 import { Request } from "@/utils/request";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";
 
@@ -103,7 +103,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.close();

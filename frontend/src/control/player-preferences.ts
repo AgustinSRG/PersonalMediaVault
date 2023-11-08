@@ -3,7 +3,7 @@
 "use strict";
 
 import { MediaData } from "@/api/models";
-import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
+import { fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 
 /**
  * User selected resolution (video)
@@ -321,7 +321,7 @@ const LS_KEY_VOLUME = "player-pref-volume";
  * @returns The volume (0 - 1)
  */
 export function getPlayerVolume(): number {
-    return Number(fetchFromLocalStorage(LS_KEY_VOLUME, 1)) || 0;
+    return Number(fetchFromLocalStorageCache(LS_KEY_VOLUME, 1)) || 0;
 }
 
 /**
@@ -339,7 +339,7 @@ const LS_KEY_MUTED = "player-pref-muted";
  * @returns The muted flag
  */
 export function getPlayerMuted(): boolean {
-    return !!fetchFromLocalStorage(LS_KEY_MUTED, false);
+    return !!fetchFromLocalStorageCache(LS_KEY_MUTED, false);
 }
 
 /**
@@ -357,7 +357,7 @@ const LS_KEY_SCALE = "player-pref-scale";
  * @returns The image scale
  */
 export function getImageScale(): number {
-    return Number(fetchFromLocalStorage(LS_KEY_SCALE, 0)) || 0;
+    return Number(fetchFromLocalStorageCache(LS_KEY_SCALE, 0)) || 0;
 }
 
 /**
@@ -375,7 +375,7 @@ const LS_KEY_IMAGE_FIT = "player-pref-fit";
  * @returns The image fit flag
  */
 export function getImageFit(): boolean {
-    return !!fetchFromLocalStorage(LS_KEY_IMAGE_FIT, true);
+    return !!fetchFromLocalStorageCache(LS_KEY_IMAGE_FIT, true);
 }
 
 /**
@@ -393,7 +393,7 @@ const LS_KEY_AUDIO_ANIMATION_STYLE = "player-pref-audio-anim";
  * @returns The animation style name
  */
 export function getAudioAnimationStyle(): string {
-    return fetchFromLocalStorage(LS_KEY_AUDIO_ANIMATION_STYLE, "gradient") + "";
+    return fetchFromLocalStorageCache(LS_KEY_AUDIO_ANIMATION_STYLE, "gradient") + "";
 }
 
 /**
@@ -411,7 +411,7 @@ const LS_KEY_IMAGE_BACKGROUND = "player-pref-img-bg";
  * @returns The background style name
  */
 export function getImageBackgroundStyle(): string {
-    return fetchFromLocalStorage(LS_KEY_IMAGE_BACKGROUND, "default") + "";
+    return fetchFromLocalStorageCache(LS_KEY_IMAGE_BACKGROUND, "default") + "";
 }
 
 /**
@@ -429,7 +429,7 @@ const LS_KEY_AUTO_NEXT_ON_END = "player-pref-next-end";
  * @returns Auto next flag
  */
 export function getAutoNextOnEnd(): boolean {
-    return !!fetchFromLocalStorage(LS_KEY_AUTO_NEXT_ON_END, true);
+    return !!fetchFromLocalStorageCache(LS_KEY_AUTO_NEXT_ON_END, true);
 }
 
 /**
@@ -447,7 +447,7 @@ const LS_KEY_AUTO_NEXT_TIME = "player-pref-img-auto-next";
  * @returns Number of seconds to wait for auto next, 0 = disabled
  */
 export function getAutoNextTime(): number {
-    return Number(fetchFromLocalStorage(LS_KEY_AUTO_NEXT_TIME, 0)) || 0;
+    return Number(fetchFromLocalStorageCache(LS_KEY_AUTO_NEXT_TIME, 0)) || 0;
 }
 
 /**
@@ -465,7 +465,7 @@ const LS_KEY_IMAGE_NOTES_VISIBLE = "player-pref-img-notes-v";
  * @returns Image notes visibility
  */
 export function getImageNotesVisible(): boolean {
-    return !!fetchFromLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE, true);
+    return !!fetchFromLocalStorageCache(LS_KEY_IMAGE_NOTES_VISIBLE, true);
 }
 
 /**
@@ -483,7 +483,7 @@ const LS_KEY_SUBTITLES_SELECTED = "player-pref-subtitles";
  * @returns Selected subtitles ID
  */
 export function getSelectedSubtitles(): string {
-    return fetchFromLocalStorage(LS_KEY_SUBTITLES_SELECTED, "") + "";
+    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_SELECTED, "") + "";
 }
 
 /**
@@ -501,7 +501,7 @@ const LS_KEY_SUBTITLES_SIZE = "player-pref-subtitles-size";
  * @returns The selected subtitles size
  */
 export function getSubtitlesSize(): string {
-    return fetchFromLocalStorage(LS_KEY_SUBTITLES_SIZE, "l") + "";
+    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_SIZE, "l") + "";
 }
 
 /**
@@ -519,7 +519,7 @@ const LS_KEY_SUBTITLES_BG = "player-pref-subtitles-bg";
  * @returns The subtitles background style
  */
 export function getSubtitlesBackground(): string {
-    return fetchFromLocalStorage(LS_KEY_SUBTITLES_BG, "75") + "";
+    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_BG, "75") + "";
 }
 
 /**
@@ -537,7 +537,7 @@ const LS_KEY_SUBTITLES_HTML = "player-pref-subtitles-html";
  * @returns Allow subtitles HTML flag
  */
 export function getSubtitlesAllowHTML(): boolean {
-    return !!fetchFromLocalStorage(LS_KEY_SUBTITLES_HTML, false);
+    return !!fetchFromLocalStorageCache(LS_KEY_SUBTITLES_HTML, false);
 }
 
 /**
@@ -555,7 +555,7 @@ const LS_KEY_AUDIO_TRACK = "player-pref-audio-track";
  * @returns The selected audio track
  */
 export function getSelectedAudioTrack(): string {
-    return fetchFromLocalStorage(LS_KEY_AUDIO_TRACK, "") + "";
+    return fetchFromLocalStorageCache(LS_KEY_AUDIO_TRACK, "") + "";
 }
 
 /**
@@ -573,7 +573,7 @@ const LS_KEY_TOGGLE_PLAY_DELAY = "player-pref-toggle-delay";
  * @returns Toggle play delay (ms)
  */
 export function getTogglePlayDelay(): number {
-    return Number(fetchFromLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY, 250)) || 0;
+    return Number(fetchFromLocalStorageCache(LS_KEY_TOGGLE_PLAY_DELAY, 250)) || 0;
 }
 
 /**
@@ -591,7 +591,7 @@ const LS_KEY_EXTENDED_DESCRIPTION_SIZE = "player-pref-ext-desc-size";
  * @returns The extended description size style
  */
 export function getExtendedDescriptionSize(): string {
-    return fetchFromLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, "xl") + "";
+    return fetchFromLocalStorageCache(LS_KEY_EXTENDED_DESCRIPTION_SIZE, "xl") + "";
 }
 
 /**

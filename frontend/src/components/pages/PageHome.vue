@@ -75,7 +75,7 @@
 import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
@@ -86,7 +86,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController } from "@/control/albums";
 import { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 
 export default defineComponent({
@@ -105,7 +105,7 @@ export default defineComponent({
             loading: false,
             firstLoaded: false,
 
-            pageSize: AppPreferences.PageMaxItems,
+            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -196,7 +196,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add("*", "*", () => {
                             // Retry
@@ -214,7 +214,7 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = AppPreferences.PageMaxItems;
+            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.page = 0;
             this.load();
@@ -441,7 +441,7 @@ export default defineComponent({
         TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         this.updateSearchParams();
         this.updateTagData();
@@ -461,7 +461,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
         AlbumsController.OnPageUnload();
     },

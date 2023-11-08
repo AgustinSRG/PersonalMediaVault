@@ -186,7 +186,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 
@@ -420,7 +420,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             // Retry
                             Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
                         })
@@ -478,7 +478,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(500, "*", () => {
                             this.error = this.$t("Internal server error");

@@ -76,6 +76,7 @@ import { MediaAPI } from "@/api/api-media";
 import { TasksAPI } from "@/api/api-tasks";
 import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
+import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
@@ -184,7 +185,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.status = "loading";
@@ -226,7 +227,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.refreshMedia();

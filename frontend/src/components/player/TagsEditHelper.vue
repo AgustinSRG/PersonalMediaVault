@@ -69,7 +69,7 @@ import { defineComponent } from "vue";
 
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
@@ -200,7 +200,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
@@ -271,7 +271,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
@@ -330,7 +330,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));

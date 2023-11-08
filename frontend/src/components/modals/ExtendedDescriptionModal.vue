@@ -68,7 +68,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
@@ -173,7 +173,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED, false);
                         })
                         .add(404, "*", () => {
                             this.content = "";
@@ -306,7 +306,7 @@ export default defineComponent({
                         .add(401, "*", () => {
                             this.contentStoredId = this.mid;
                             this.contentStored = this.contentToChange;
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .handle(err);
                 })

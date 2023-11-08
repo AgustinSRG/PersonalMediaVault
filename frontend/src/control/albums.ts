@@ -9,7 +9,7 @@ import { shuffleArray } from "@/utils/shuffle";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
-import { AuthController } from "./auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
@@ -57,7 +57,7 @@ export class AlbumsController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add("*", "*", () => {
                         // Retry
@@ -122,7 +122,7 @@ export class AlbumsController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         AlbumsController.CurrentAlbumData = null;
@@ -210,7 +210,7 @@ export class AlbumsController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized");
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .handle(err);
             })
@@ -344,7 +344,7 @@ export class AlbumsController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         AlbumsController.NextMediaData = null;

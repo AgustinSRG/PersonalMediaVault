@@ -9,7 +9,7 @@ import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
-import { AuthController } from "./auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 
 export class SubtitlesController {
     public static MediaId = -1;
@@ -78,7 +78,7 @@ export class SubtitlesController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         SubtitlesController.Subtitles = [];

@@ -6,7 +6,7 @@ import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { AppEvents } from "./app-events";
-import { AuthController } from "./auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaListItem } from "@/api/models";
 
 const EVENT_NAME = "tags-update";
@@ -95,7 +95,7 @@ export class TagsController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add("*", "*", () => {
                         // Retry

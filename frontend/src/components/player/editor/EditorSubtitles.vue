@@ -74,7 +74,7 @@
 import { MediaSubtitle } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { GetAssetURL, Request } from "@/utils/request";
 import { defineComponent } from "vue";
@@ -200,7 +200,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(413, "*", () => {
                             AppEvents.Emit("snack", this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"));
@@ -265,7 +265,7 @@ export default defineComponent({
                                 })
                                 .add(401, "*", () => {
                                     AppEvents.Emit("snack", this.$t("Access denied"));
-                                    AppEvents.Emit("unauthorized");
+                                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
                                     AppEvents.Emit("snack", this.$t("Access denied"));

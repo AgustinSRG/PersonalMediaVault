@@ -164,9 +164,9 @@
 import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
@@ -245,7 +245,7 @@ export default defineComponent({
 
             albumList: [] as AlbumListItem[],
 
-            isFav: AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + ""),
+            isFav: albumIsFavorite(AlbumsController.CurrentAlbum),
 
             loading: AlbumsController.CurrentAlbumLoading,
 
@@ -289,7 +289,7 @@ export default defineComponent({
             this.albumName = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.name : "";
             this.albumListLength = AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0;
 
-            this.isFav = AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + "");
+            this.isFav = albumIsFavorite(AlbumsController.CurrentAlbum);
 
             this.updateAlbumList(!this.mustScroll);
         },
@@ -409,10 +409,12 @@ export default defineComponent({
 
         toggleFav: function () {
             if (this.isFav) {
-                AppPreferences.albumRemoveFav(AlbumsController.CurrentAlbum + "");
+                this.isFav = false;
+                albumRemoveFav(AlbumsController.CurrentAlbum);
                 AppEvents.Emit("snack", this.$t("Album removed from favorites"));
             } else {
-                AppPreferences.albumAddFav(AlbumsController.CurrentAlbum + "");
+                this.isFav = true;
+                albumAddFav(AlbumsController.CurrentAlbum);
                 AppEvents.Emit("snack", this.$t("Album added to favorites"));
             }
         },
@@ -563,7 +565,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .handle(err);
                 })
@@ -613,7 +615,7 @@ export default defineComponent({
         },
 
         updateFav: function () {
-            this.isFav = AppPreferences.FavAlbums.includes(AlbumsController.CurrentAlbum + "");
+            this.isFav = albumIsFavorite(AlbumsController.CurrentAlbum);
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
@@ -818,7 +820,7 @@ export default defineComponent({
         AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.favUpdateH = this.updateFav.bind(this);
-        AppEvents.AddEventListener("albums-fav-updated", this._handles.favUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.favUpdateH);
 
         this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
@@ -836,7 +838,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("albums-fav-updated", this._handles.favUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.favUpdateH);
 
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 

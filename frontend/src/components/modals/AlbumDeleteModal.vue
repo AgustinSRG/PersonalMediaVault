@@ -46,6 +46,7 @@ import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 export default defineComponent({
     name: "AlbumDeleteModal",
@@ -126,7 +127,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");

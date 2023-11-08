@@ -97,7 +97,7 @@ import { AuthController } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 
 const PageHome = defineAsyncComponent({
@@ -169,8 +169,8 @@ export default defineComponent({
 
             displayConfigModal: false,
 
-            pageItemsFit: AppPreferences.PageItemsFit,
-            pageItemsSize: AppPreferences.PageItemsSize,
+            pageItemsFit: getPageItemsFit(),
+            pageItemsSize: getPageItemsSize(),
 
             pageScroll: 0,
         };
@@ -329,8 +329,8 @@ export default defineComponent({
         },
 
         updatePageItemsPreferences: function () {
-            this.pageItemsFit = AppPreferences.PageItemsFit;
-            this.pageItemsSize = AppPreferences.PageItemsSize;
+            this.pageItemsFit = getPageItemsFit();
+            this.pageItemsSize = getPageItemsSize();
         },
 
         goToTop: function () {
@@ -343,7 +343,7 @@ export default defineComponent({
         AppStatus.AddEventListener(this._handles.pageUpdater);
 
         this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
 
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
@@ -352,7 +352,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.pageUpdater);
-        AppEvents.RemoveEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },
 });

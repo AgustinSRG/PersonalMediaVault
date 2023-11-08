@@ -62,7 +62,8 @@ import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
+import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 export default defineComponent({
     components: {
@@ -86,8 +87,8 @@ export default defineComponent({
 
             isUpload: true,
 
-            pageItemsFit: AppPreferences.PageItemsFit,
-            pageItemsSize: AppPreferences.PageItemsSize,
+            pageItemsFit: getPageItemsFit(),
+            pageItemsSize: getPageItemsSize(),
 
             pageScroll: 0,
         };
@@ -123,7 +124,7 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(400, "MAX_SIZE_REACHED", () => {
                             AppEvents.Emit(
@@ -145,8 +146,8 @@ export default defineComponent({
         },
 
         updatePageItemsPreferences: function () {
-            this.pageItemsFit = AppPreferences.PageItemsFit;
-            this.pageItemsSize = AppPreferences.PageItemsSize;
+            this.pageItemsFit = getPageItemsFit();
+            this.pageItemsSize = getPageItemsSize();
         },
 
         onPageScroll: function (e: Event) {
@@ -174,7 +175,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
 
         if (this.display) {
             nextTick(() => {
@@ -183,7 +184,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("page-items-pref-updated", this._handles.updatePageItemsPreferencesH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
     },
     watch: {
         display: function () {

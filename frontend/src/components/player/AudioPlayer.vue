@@ -430,7 +430,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
-import { AppPreferences } from "@/control/app-preferences";
+import { ColorThemeName, getTheme } from "@/control/app-preferences";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -576,7 +576,7 @@ export default defineComponent({
 
             timeSlicesEdit: false,
 
-            theme: AppPreferences.Theme,
+            theme: getTheme(),
 
             mediaError: false,
 
@@ -1537,8 +1537,8 @@ export default defineComponent({
             setAutoNextOnEnd(this.nextEnd);
         },
 
-        themeUpdated: function () {
-            this.theme = AppPreferences.Theme;
+        themeUpdated: function (theme: ColorThemeName) {
+            this.theme = theme;
         },
 
         handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {

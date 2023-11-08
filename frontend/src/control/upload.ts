@@ -10,6 +10,7 @@ import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
 import { UploadMediaAPI } from "@/api/api-media-upload";
+import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 
 const TICK_DELAY_MS = 500;
 
@@ -345,7 +346,7 @@ export class UploadController {
                     .add(401, "*", () => {
                         m.error = "access-denied";
                         m.status = "error";
-                        AppEvents.Emit("unauthorized");
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(403, "*", () => {
                         m.error = "access-denied";
@@ -420,7 +421,7 @@ export class UploadController {
                 m.busy = false;
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized");
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         m.error = "deleted";
@@ -484,7 +485,7 @@ export class UploadController {
                         AppEvents.Emit("upload-list-update", index, m);
                     })
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized");
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(403, "*", () => {
                         m.error = "access-denied";

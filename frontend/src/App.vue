@@ -12,6 +12,7 @@ import { UploadEntryMin } from "./control/upload";
 import { GetAssetURL } from "./utils/request";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
+import { EVENT_NAME_LOADED_LOCALE } from "./i18n";
 
 export default defineComponent({
     name: "App",
@@ -119,14 +120,14 @@ export default defineComponent({
         AppEvents.AddEventListener("upload-list-update", this._handles.uploadDoneH);
 
         this._handles.onLoadedLocaleH = this.onLoadedLocale.bind(this);
-        AppEvents.AddEventListener("loaded-locale", this._handles.onLoadedLocaleH);
+        AppEvents.AddEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
     },
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.updateH);
         AppEvents.RemoveEventListener("current-album-update", this._handles.updateH);
         MediaController.RemoveUpdateEventListener(this._handles.updateH);
         AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
-        AppEvents.RemoveEventListener("loaded-locale", this._handles.onLoadedLocaleH);
+        AppEvents.RemoveEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
     },
 });
 </script>

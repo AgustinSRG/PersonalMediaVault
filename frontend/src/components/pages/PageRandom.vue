@@ -90,9 +90,9 @@ import { MediaListItem } from "@/api/models";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
@@ -114,7 +114,7 @@ export default defineComponent({
 
             search: AppStatus.CurrentSearch,
 
-            pageSize: AppPreferences.PageMaxItems,
+            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -207,7 +207,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add("*", "*", () => {
                             // Retry
@@ -225,7 +225,7 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = AppPreferences.PageMaxItems;
+            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.load();
         },
@@ -448,7 +448,7 @@ export default defineComponent({
         AppEvents.AddEventListener("random-page-refresh", this._handles.loadH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         this.updateSearchParams();
         this.updateTagData();
@@ -469,7 +469,7 @@ export default defineComponent({
         AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("random-page-refresh", this._handles.loadH);
-        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
         AlbumsController.OnPageUnload();
     },

@@ -124,7 +124,7 @@
 <script lang="ts">
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { AppEvents } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { Request } from "@/utils/request";
@@ -186,7 +186,7 @@ function saveTimeSlices(state: SaveRequestState) {
             state.saving = false;
             Request.ErrorHandler()
                 .add(401, "*", () => {
-                    AppEvents.Emit("unauthorized");
+                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                 })
                 .handle(err);
             if (state.pendingSave) {

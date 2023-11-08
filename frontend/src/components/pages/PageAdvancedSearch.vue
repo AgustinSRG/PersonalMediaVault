@@ -177,9 +177,8 @@ import { SearchAPI } from "@/api/api-search";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
-import { MediaEntry } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
@@ -188,7 +187,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -234,7 +233,7 @@ export default defineComponent({
             matchingTags: [],
             tagMode: "all",
 
-            pageSize: AppPreferences.PageMaxItems,
+            pageSize: getPageMaxItems(),
 
             albums: [],
             albumSearch: -1,
@@ -328,7 +327,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add("*", "*", () => {
                             // Retry
@@ -347,7 +346,7 @@ export default defineComponent({
             this.advancedSearch = !this.advancedSearch;
         },
 
-        filterElements: function (results: MediaEntry[]) {
+        filterElements: function (results: MediaListItem[]) {
             TagsController.OnMediaListReceived(results);
             const filterText = normalizeString(this.textSearch).trim().toLowerCase();
             const filterTextWords = filterToWords(filterText);
@@ -518,7 +517,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.cancel();
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.albumFilter = new Set();
@@ -558,7 +557,7 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = AppPreferences.PageMaxItems;
+            this.pageSize = getPageMaxItems();
             this.resetSearch();
         },
 
@@ -969,7 +968,7 @@ export default defineComponent({
         AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         this.updateTagData();
 
@@ -1012,7 +1011,7 @@ export default defineComponent({
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
 
-        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);

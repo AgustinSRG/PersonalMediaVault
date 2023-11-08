@@ -203,10 +203,12 @@ import { AlbumsController } from "@/control/albums";
 import { Request } from "@/utils/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { SearchAPI } from "@/api/api-search";
-import { MediaController, MediaEntry } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { TagsAPI } from "@/api/api-tags";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { MediaListItem } from "@/api/models";
 
 const PAGE_SIZE = 50;
 
@@ -550,7 +552,7 @@ export default defineComponent({
                         .add(401, "*", () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.status = "error";
@@ -606,7 +608,7 @@ export default defineComponent({
                         .add(401, "*", () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(500, "*", () => {
                             this.status = "error";
@@ -635,7 +637,7 @@ export default defineComponent({
             }
         },
 
-        filterElements: function (results: MediaEntry[]) {
+        filterElements: function (results: MediaListItem[]) {
             const filterText = normalizeString(this.textSearch).trim().toLowerCase();
             const filterTextWords = filterToWords(filterText);
             const filterType = this.typeSearch;
@@ -766,7 +768,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");
@@ -799,7 +801,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(400, "MAX_SIZE_REACHED", () => {
                             this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
@@ -835,7 +837,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");
@@ -873,7 +875,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");
@@ -919,7 +921,7 @@ export default defineComponent({
                     Request.ErrorHandler()
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Access denied");

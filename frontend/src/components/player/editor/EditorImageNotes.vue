@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
@@ -117,7 +117,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             AppEvents.Emit("snack", this.$t("Access denied"));

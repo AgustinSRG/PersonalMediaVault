@@ -51,8 +51,15 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { AppPreferences } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
+import {
+    getPageItemsFit,
+    getPageItemsSize,
+    getPageMaxItems,
+    setPageItemsFit,
+    setPageItemsSize,
+    setPageMaxItems,
+} from "@/control/app-preferences";
 
 const MIN_PAGE_SIZE = 1;
 const MAX_PAGE_SIZE = 256;
@@ -71,13 +78,13 @@ export default defineComponent({
     data: function () {
         return {
             page: AppStatus.CurrentPage,
-            pageSize: AppPreferences.PageMaxItems,
+            pageSize: getPageMaxItems(),
 
             maxPageSize: MAX_PAGE_SIZE,
             minPageSize: MIN_PAGE_SIZE,
 
-            pageItemsFit: AppPreferences.PageItemsFit,
-            pageItemsSize: AppPreferences.PageItemsSize,
+            pageItemsFit: getPageItemsFit(),
+            pageItemsSize: getPageItemsSize(),
         };
     },
     methods: {
@@ -85,8 +92,8 @@ export default defineComponent({
             const pageSize = parseInt(this.pageSize);
             const truePageSize = Math.min(256, Math.max(1, pageSize || 25));
 
-            if (AppPreferences.PageMaxItems !== truePageSize) {
-                AppPreferences.SetPageMaxItems(truePageSize);
+            if (getPageMaxItems() !== truePageSize) {
+                setPageMaxItems(truePageSize);
             }
         },
 
@@ -94,13 +101,13 @@ export default defineComponent({
             const itemsFit = parseInt(this.pageItemsFit);
             const trueItemsFit = Math.min(256, Math.max(0, itemsFit || 5));
 
-            if (AppPreferences.PageItemsFit !== trueItemsFit) {
-                AppPreferences.SetPageItemsFit(trueItemsFit);
+            if (getPageItemsFit() !== trueItemsFit) {
+                setPageItemsFit(trueItemsFit);
             }
         },
 
         onChangeItemsSize: function () {
-            AppPreferences.SetPageItemsSize(this.pageItemsSize);
+            setPageItemsSize(this.pageItemsSize);
         },
 
         close: function () {
@@ -109,10 +116,10 @@ export default defineComponent({
 
         reset: function () {
             this.page = AppStatus.CurrentPage;
-            this.pageSize = AppPreferences.PageMaxItems;
+            this.pageSize = getPageMaxItems();
 
-            this.pageItemsFit = AppPreferences.PageItemsFit;
-            this.pageItemsSize = AppPreferences.PageItemsSize;
+            this.pageItemsFit = getPageItemsFit();
+            this.pageItemsSize = getPageItemsSize();
         },
 
         autoFocus: function () {

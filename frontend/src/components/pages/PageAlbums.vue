@@ -120,15 +120,16 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumEntry, AlbumsController } from "@/control/albums";
+import { AlbumsController } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { AppPreferences } from "@/control/app-preferences";
+import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import { AlbumListItem } from "@/api/models";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -150,7 +151,7 @@ export default defineComponent({
 
             filter: AlbumsController.AlbumsPageSearch,
 
-            pageSize: AppPreferences.PageMaxItems,
+            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -235,7 +236,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add("*", "*", () => {
                             // Retry
@@ -261,7 +262,7 @@ export default defineComponent({
                 .trim()
                 .toLowerCase();
 
-            let albumsList = this.albumsList.map((a: AlbumEntry) => {
+            let albumsList = this.albumsList.map((a: AlbumListItem) => {
                 return {
                     id: a.id,
                     name: a.name,
@@ -394,7 +395,7 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = AppPreferences.PageMaxItems;
+            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.page = 0;
             this.load();
@@ -450,7 +451,7 @@ export default defineComponent({
         AppEvents.AddEventListener("albums-list-change", this._handles.loadH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         this.updateSearchParams();
         this.load();
@@ -469,7 +470,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("page-size-pref-updated", this._handles.updatePageSizeH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },

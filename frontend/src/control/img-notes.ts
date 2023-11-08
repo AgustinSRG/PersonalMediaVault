@@ -7,7 +7,7 @@ import { AppStatus } from "./app-status";
 import { BusyStateController } from "./busy-state";
 import { MediaController } from "./media";
 import { EditMediaAPI } from "@/api/api-media-edit";
-import { AuthController } from "./auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 
 export interface ImageNote {
     id: number;
@@ -128,7 +128,7 @@ export class ImageNotesController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         ImageNotesController.Notes = [];
@@ -194,7 +194,7 @@ export class ImageNotesController {
                 BusyStateController.RemoveBusy("image-notes-save");
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized");
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(403, "*", () => {
                         ImageNotesController.PendingSave = false;

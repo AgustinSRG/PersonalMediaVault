@@ -4,7 +4,6 @@
 
 // Initialize stuff
 
-import { AppPreferences } from "./control/app-preferences";
 import { AppStatus } from "./control/app-status";
 import { AuthController } from "./control/auth";
 import { TagsController } from "./control/tags";
@@ -12,8 +11,6 @@ import { AlbumsController } from "./control/albums";
 import { MediaController } from "./control/media";
 import { KeyboardManager } from "./control/keyboard";
 import { BusyStateController } from "./control/busy-state";
-
-AppPreferences.LoadPreferences();
 
 KeyboardManager.Initialize();
 

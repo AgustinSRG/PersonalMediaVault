@@ -138,7 +138,12 @@
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppPreferences } from "@/control/app-preferences";
+import {
+    EVENT_NAME_ALBUM_SIDEBAR_TOP,
+    EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
+    getAlbumFavoriteList,
+    getAlbumsOrderMap,
+} from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { GenerateURIQuery } from "@/utils/request";
@@ -257,9 +262,10 @@ export default defineComponent({
         },
 
         updateAlbums: function () {
+            const albumsOrderMap = getAlbumsOrderMap();
             this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
-                const lruA = AppPreferences.AlbumPositionMap[a.id + ""] || 0;
-                const lruB = AppPreferences.AlbumPositionMap[b.id + ""] || 0;
+                const lruA = albumsOrderMap[a.id + ""] || 0;
+                const lruB = albumsOrderMap[b.id + ""] || 0;
                 if (lruA > lruB) {
                     return -1;
                 } else if (lruA < lruB) {
@@ -272,7 +278,7 @@ export default defineComponent({
                     return 0;
                 }
             });
-            const favIdList = AppPreferences.FavAlbums;
+            const favIdList = getAlbumFavoriteList();
             const albumsFavorite = [];
             const albumsRest = [];
             this.albums.forEach((album) => {
@@ -354,11 +360,11 @@ export default defineComponent({
         this._handles.albumsUpdater = this.updateAlbums.bind(this);
 
         AppEvents.AddEventListener("albums-update", this._handles.albumsUpdater);
-        AppEvents.AddEventListener("albums-fav-updated", this._handles.albumsUpdater);
+        AppEvents.AddEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
 
         this._handles.albumGoTop = this.putAlbumFirst.bind(this);
 
-        AppEvents.AddEventListener("album-sidebar-top", this._handles.albumGoTop);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUM_SIDEBAR_TOP, this._handles.albumGoTop);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -377,9 +383,9 @@ export default defineComponent({
         AppStatus.RemoveEventListener(this._handles.statusUpdater);
 
         AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdater);
-        AppEvents.RemoveEventListener("albums-fav-updated", this._handles.albumsUpdater);
+        AppEvents.RemoveEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
 
-        AppEvents.RemoveEventListener("album-sidebar-top", this._handles.albumGoTop);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUM_SIDEBAR_TOP, this._handles.albumGoTop);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 

@@ -54,7 +54,7 @@
 <script lang="ts">
 import { AccountAPI } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -125,7 +125,7 @@ export default defineComponent({
                         })
                         .add(401, "*", () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit("unauthorized");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
                             this.error = this.$t("Invalid password");

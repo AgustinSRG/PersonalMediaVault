@@ -125,7 +125,7 @@ import { MediaAPI } from "@/api/api-media";
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { Request } from "@/utils/request";
 import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
@@ -212,7 +212,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("unauthorized", false);
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.$refs.modalContainer.close(true);
@@ -282,7 +282,7 @@ export default defineComponent({
                         this.busy = false;
                         Request.ErrorHandler()
                             .add(401, "*", () => {
-                                AppEvents.Emit("unauthorized");
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             })
                             .handle(err);
                     })
@@ -310,7 +310,7 @@ export default defineComponent({
                         this.busy = false;
                         Request.ErrorHandler()
                             .add(401, "*", () => {
-                                AppEvents.Emit("unauthorized");
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             })
                             .add(400, "MAX_SIZE_REACHED", () => {
                                 AppEvents.Emit(

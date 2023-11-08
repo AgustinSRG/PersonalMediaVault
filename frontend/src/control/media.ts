@@ -8,7 +8,7 @@ import { Timeouts } from "@/utils/timeout";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
-import { AuthController } from "./auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaData } from "@/api/models";
 
 /**
@@ -126,7 +126,7 @@ export class MediaController {
             .onRequestError((err) => {
                 Request.ErrorHandler()
                     .add(401, "*", () => {
-                        AppEvents.Emit("unauthorized", false);
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
                     .add(404, "*", () => {
                         MediaController.MediaData = null;

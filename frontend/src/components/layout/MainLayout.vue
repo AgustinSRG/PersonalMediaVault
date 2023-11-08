@@ -90,9 +90,9 @@ import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
-import { AuthController } from "../../control/auth";
+import { AuthController, EVENT_NAME_APP_NEW_VERSION } from "../../control/auth";
 import { AppEvents } from "../../control/app-events";
-import { AppPreferences } from "@/control/app-preferences";
+import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 
 const PlayerContainer = defineAsyncComponent({
@@ -232,7 +232,7 @@ export default defineComponent({
     name: "MainLayout",
     data: function () {
         return {
-            theme: AppPreferences.Theme,
+            theme: getTheme(),
 
             locked: AuthController.Locked,
             loadingAuth: AuthController.Loading,
@@ -383,8 +383,8 @@ export default defineComponent({
             }
         },
 
-        onThemeChanged: function () {
-            this.theme = AppPreferences.Theme;
+        onThemeChanged: function (theme: ColorThemeName) {
+            this.theme = theme;
         },
 
         onAppStatusUpdate: function () {
@@ -455,7 +455,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.onThemeChangedH = this.onThemeChanged.bind(this);
-        AppEvents.AddEventListener("theme-changed", this._handles.onThemeChangedH);
+        AppEvents.AddEventListener(EVENT_NAME_THEME_CHANGED, this._handles.onThemeChangedH);
 
         this._handles.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
         AppStatus.AddEventListener(this._handles.onAppStatusUpdateH);
@@ -470,15 +470,15 @@ export default defineComponent({
         AuthController.AddErrorEventListener(this._handles.onAuthLoadingErrorH);
 
         this._handles.onNewAppVersionH = this.onNewAppVersion.bind(this);
-        AppEvents.AddEventListener("app-new-version", this._handles.onNewAppVersionH);
+        AppEvents.AddEventListener(EVENT_NAME_APP_NEW_VERSION, this._handles.onNewAppVersionH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("theme-changed", this._handles.onThemeChangedH);
+        AppEvents.RemoveEventListener(EVENT_NAME_THEME_CHANGED, this._handles.onThemeChangedH);
         AppStatus.RemoveEventListener(this._handles.onAppStatusUpdateH);
         AuthController.RemoveChangeEventListener(this._handles.onAuthStatusChangedH);
         AuthController.RemoveLoadingEventListener(this._handles.onAuthStatusLoadingH);
         AuthController.RemoveErrorEventListener(this._handles.onAuthLoadingErrorH);
-        AppEvents.RemoveEventListener("app-new-version", this._handles.onNewAppVersionH);
+        AppEvents.RemoveEventListener(EVENT_NAME_APP_NEW_VERSION, this._handles.onNewAppVersionH);
     },
 });
 </script>
