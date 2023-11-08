@@ -52,11 +52,11 @@
     cursor: none;
 }
 
-.image-player.bg-black .image-scroller {
+.image-player.bg-black .image-scroller img {
     background: black;
 }
 
-.image-player.bg-white .image-scroller {
+.image-player.bg-white .image-scroller img {
     background: white;
 }
 
