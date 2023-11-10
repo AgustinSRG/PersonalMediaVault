@@ -40,7 +40,7 @@
                         <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                         <i v-else class="fas fa-ban"></i>
                     </div>
-                    <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="item.title || $t('Untitled')" loading="lazy" />
+                    <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
                     <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
                         {{ renderTime(item.duration) }}
                     </div>

@@ -1,7 +1,7 @@
 <template>
     <div class="player-media-change-preview">
         <div class="player-media-change-preview-thumbnail">
-            <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="title" loading="lazy" />
+            <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
             <div v-if="!thumbnail" class="player-media-change-preview-no-thumbnail">
                 <i v-if="type === 0" class="fas fa-ban"></i>
                 <i v-if="type === 1" class="fas fa-image"></i>

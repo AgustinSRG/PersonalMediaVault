@@ -68,7 +68,7 @@
                             <img
                                 v-if="item.thumbnail"
                                 :src="getThumbnail(item.thumbnail)"
-                                :alt="item.title || $t('Untitled')"
+                                :alt="$t('Thumbnail')"
                                 loading="lazy"
                             />
                             <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
