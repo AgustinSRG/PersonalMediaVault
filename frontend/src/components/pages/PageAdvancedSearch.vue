@@ -174,7 +174,7 @@
 import { AlbumsAPI } from "@/api/api-albums";
 import { MediaListItem } from "@/api/models";
 import { SearchAPI } from "@/api/api-search";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -188,6 +188,14 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
+import {
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    PagesController,
+} from "@/control/pages";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -765,7 +773,7 @@ export default defineComponent({
             if (!this.inModal) {
                 const completePageList = this._handles.listScroller.list;
                 const i = this.findCurrentMediaIndex();
-                AlbumsController.OnPageLoad(i, completePageList.length, 0, 1);
+                PagesController.OnPageLoad(i, completePageList.length, 0, 1);
             }
         },
 
@@ -861,7 +869,7 @@ export default defineComponent({
         },
 
         updateAlbums: function () {
-            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+            this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
                 if (a.nameLowerCase < b.nameLowerCase) {
                     return -1;
                 } else {
@@ -944,16 +952,16 @@ export default defineComponent({
         this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
         AuthController.AddChangeEventListener(this._handles.loadH);
-        AppEvents.AddEventListener("media-delete", this._handles.resetH);
-        AppEvents.AddEventListener("media-meta-change", this._handles.resetH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.resetH);
 
         AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
 
         this._handles.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
 
         this._handles.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
 
@@ -961,11 +969,11 @@ export default defineComponent({
         TagsController.AddEventListener(this._handles.tagUpdateH);
 
         this._handles.goTopH = this.goTop.bind(this);
-        AppEvents.AddEventListener("adv-search-go-top", this._handles.goTopH);
+        AppEvents.AddEventListener(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this._handles.goTopH);
 
         this.updateAlbums();
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
         AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
@@ -998,18 +1006,18 @@ export default defineComponent({
         Timeouts.Abort("page-adv-search-dirty");
 
         AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppEvents.RemoveEventListener("media-delete", this._handles.resetH);
-        AppEvents.RemoveEventListener("media-meta-change", this._handles.resetH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.resetH);
 
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
-        AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
 
-        AppEvents.RemoveEventListener("adv-search-go-top", this._handles.goTopH);
+        AppEvents.RemoveEventListener(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this._handles.goTopH);
 
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
         AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
 
@@ -1024,7 +1032,7 @@ export default defineComponent({
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
 
         if (!this.inModal) {
-            AlbumsController.OnPageUnload();
+            PagesController.OnPageUnload();
         }
     },
     watch: {

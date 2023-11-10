@@ -463,7 +463,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     this.busy = false;
                     this.dirty = false;
-                    AppEvents.Emit("snack", this.$t("Vault configuration updated!"));
+                    AppEvents.ShowSnackBar(this.$t("Vault configuration updated!"));
                     AuthController.CheckAuthStatus();
                     this.close();
                 })

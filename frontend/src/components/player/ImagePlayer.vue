@@ -280,7 +280,7 @@ import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_NEXT_PRE_FETCH } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { MEDIA_TYPE_IMAGE } from "@/control/media";
 
@@ -1127,7 +1127,7 @@ export default defineComponent({
         document.addEventListener("mousemove", this._handles.moveScrollHandler);
 
         this._handles.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
-        AppEvents.AddEventListener("album-next-prefetch", this._handles.onAlbumPrefetchH);
+        AppEvents.AddEventListener(EVENT_NAME_NEXT_PRE_FETCH, this._handles.onAlbumPrefetchH);
 
         this.initializeImage();
 
@@ -1148,7 +1148,7 @@ export default defineComponent({
         document.removeEventListener("mouseup", this._handles.dropScrollHandler);
         document.removeEventListener("mousemove", this._handles.moveScrollHandler);
 
-        AppEvents.RemoveEventListener("album-next-prefetch", this._handles.onAlbumPrefetchH);
+        AppEvents.RemoveEventListener(EVENT_NAME_NEXT_PRE_FETCH, this._handles.onAlbumPrefetchH);
 
         KeyboardManager.RemoveHandler(this._handles.keyHandler);
 

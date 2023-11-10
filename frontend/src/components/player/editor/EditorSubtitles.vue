@@ -142,7 +142,7 @@ export default defineComponent({
 
         addSubtitles: function () {
             if (!this.srtFile) {
-                AppEvents.Emit("snack", this.$t("Please, select a SubRip file first"));
+                AppEvents.ShowSnackBar(this.$t("Please, select a SubRip file first"));
                 return;
             }
 
@@ -158,7 +158,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                AppEvents.Emit("snack", this.$t("There is already another subtitles file with the same identifier"));
+                AppEvents.ShowSnackBar(this.$t("There is already another subtitles file with the same identifier"));
                 return;
             }
 
@@ -172,7 +172,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-subtitles", EditMediaAPI.SetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Added subtitles") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
                     this.subtitles.push(res);
                     if (MediaController.MediaData) {
@@ -187,40 +187,40 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "INVALID_SRT", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid SubRip file"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid SubRip file"));
                         })
                         .add(400, "INVALID_ID", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid subtitles identifier"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid subtitles identifier"));
                         })
                         .add(400, "INVALID_NAME", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid subtitles name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid subtitles name"));
                         })
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Bad request"));
+                            AppEvents.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(413, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"));
+                            AppEvents.ShowSnackBar(this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"));
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -241,7 +241,7 @@ export default defineComponent({
 
                     Request.Pending("media-editor-busy-subtitles", EditMediaAPI.RemoveSubtitles(mediaId, id))
                         .onSuccess(() => {
-                            AppEvents.Emit("snack", this.$t("Removed subtitles") + ": " + sub.name);
+                            AppEvents.ShowSnackBar(this.$t("Removed subtitles") + ": " + sub.name);
                             this.busy = false;
                             for (let i = 0; i < this.subtitles.length; i++) {
                                 if (this.subtitles[i].id === id) {
@@ -261,28 +261,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                    AppEvents.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.Emit("snack", err.message);
+                            AppEvents.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });

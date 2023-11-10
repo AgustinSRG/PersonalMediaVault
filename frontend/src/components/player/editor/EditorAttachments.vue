@@ -197,7 +197,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-attachments", EditMediaAPI.UploadAttachment(mediaId, file))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Added attachment") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentUploadProgress = 0;
                     this.attachments.push(res);
@@ -220,28 +220,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Bad request"));
+                            AppEvents.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -262,7 +262,7 @@ export default defineComponent({
 
                     Request.Pending("media-editor-busy-attachments", EditMediaAPI.RemoveAttachment(mediaId, id))
                         .onSuccess(() => {
-                            AppEvents.Emit("snack", this.$t("Removed attachment") + ": " + att.name);
+                            AppEvents.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
                             this.busy = false;
                             for (let i = 0; i < this.attachments.length; i++) {
                                 if (this.attachments[i].id === id) {
@@ -282,28 +282,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                    AppEvents.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.Emit("snack", err.message);
+                            AppEvents.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });
@@ -341,7 +341,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-attachments", EditMediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Renamed attachment") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentEdit = -1;
                     this.attachmentEditName = "";
@@ -364,31 +364,31 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "INVALID_NAME", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid attachment name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid attachment name"));
                         })
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Bad request"));
+                            AppEvents.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });

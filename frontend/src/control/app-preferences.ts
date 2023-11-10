@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { AlbumsController } from "./albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./albums";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 import { AlbumListItemMin } from "@/api/models";
@@ -166,7 +166,7 @@ export function albumRemoveFav(id: number) {
     }
 }
 
-AppEvents.AddEventListener("albums-update", (albums: { [id: string]: AlbumListItemMin }) => {
+AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: { [id: string]: AlbumListItemMin }) => {
     // Remove favorite albums removed from the vault
     let favorites = fetchFromLocalStorage(LS_KEY_FAVORITE_ALBUMS, []);
 
@@ -204,7 +204,7 @@ export function getAlbumsOrderMap(): { [id: string]: number } {
     return m;
 }
 
-AppEvents.AddEventListener("current-album-update", () => {
+AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
     if (!AlbumsController.CurrentAlbumData) {
         return;
     }

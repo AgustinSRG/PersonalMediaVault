@@ -141,7 +141,7 @@ export default defineComponent({
 
         addAudio: function () {
             if (!this.audioFile) {
-                AppEvents.Emit("snack", this.$t("Please, select an audio file first"));
+                AppEvents.ShowSnackBar(this.$t("Please, select an audio file first"));
                 return;
             }
 
@@ -157,7 +157,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                AppEvents.Emit("snack", this.$t("There is already another audio track with the same identifier"));
+                AppEvents.ShowSnackBar(this.$t("There is already another audio track with the same identifier"));
                 return;
             }
 
@@ -171,7 +171,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-audios", EditMediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Added audio track") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
                     this.audios.push(res);
                     if (MediaController.MediaData) {
@@ -186,37 +186,37 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "INVALID_AUDIO", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid audio file"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid audio file"));
                         })
                         .add(400, "INVALID_ID", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid audio track identifier"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid audio track identifier"));
                         })
                         .add(400, "INVALID_NAME", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid audio track name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid audio track name"));
                         })
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Bad request"));
+                            AppEvents.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -237,7 +237,7 @@ export default defineComponent({
 
                     Request.Pending("media-editor-busy-audios", EditMediaAPI.RemoveAudioTrack(mediaId, id))
                         .onSuccess(() => {
-                            AppEvents.Emit("snack", this.$t("Removed audio track") + ": " + aud.name);
+                            AppEvents.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
                             this.busy = false;
                             for (let i = 0; i < this.audios.length; i++) {
                                 if (this.audios[i].id === id) {
@@ -257,28 +257,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                    AppEvents.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.Emit("snack", err.message);
+                            AppEvents.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });

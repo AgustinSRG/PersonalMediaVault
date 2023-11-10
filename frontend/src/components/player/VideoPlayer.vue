@@ -454,7 +454,7 @@ import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
-import { SubtitlesController } from "@/control/subtitles";
+import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
 import { htmlToText } from "@/utils/html";
 import { AppEvents } from "@/control/app-events";
 import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtitles-html";
@@ -1407,9 +1407,9 @@ export default defineComponent({
                 case "x":
                     this.sliceLoop = !this.sliceLoop;
                     if (this.sliceLoop) {
-                        AppEvents.Emit("snack", this.$t("Slice loop enabled"));
+                        AppEvents.ShowSnackBar(this.$t("Slice loop enabled"));
                     } else {
-                        AppEvents.Emit("snack", this.$t("Slice loop disabled"));
+                        AppEvents.ShowSnackBar(this.$t("Slice loop disabled"));
                     }
                     break;
                 case "l":
@@ -1419,9 +1419,9 @@ export default defineComponent({
                     } else {
                         this.loop = !this.loop;
                         if (this.loop) {
-                            AppEvents.Emit("snack", this.$t("Loop enabled"));
+                            AppEvents.ShowSnackBar(this.$t("Loop enabled"));
                         } else {
-                            AppEvents.Emit("snack", this.$t("Loop disabled"));
+                            AppEvents.ShowSnackBar(this.$t("Loop disabled"));
                         }
                         this.$emit("force-loop", this.loop);
                     }
@@ -1444,12 +1444,12 @@ export default defineComponent({
                     break;
                 case "+":
                     this.scale = Math.min(8, this.scale + (shifting ? 0.01 : 0.1));
-                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    AppEvents.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
                 case "-":
                     this.scale = Math.max(1, this.scale - (shifting ? 0.01 : 0.1));
-                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    AppEvents.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
                 case "n":
@@ -1461,7 +1461,7 @@ export default defineComponent({
                 case "z":
                 case "Z":
                     this.scale = 1;
-                    AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                    AppEvents.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
                     this.onScaleUpdated();
                     break;
                 case "Delete":
@@ -1961,7 +1961,7 @@ export default defineComponent({
                     this.scale = Math.min(8, this.scale + 0.1);
                 }
 
-                AppEvents.Emit("snack", this.$t("Scale") + ": " + this.renderScale(this.scale));
+                AppEvents.ShowSnackBar(this.$t("Scale") + ": " + this.renderScale(this.scale));
                 this.onScaleUpdated();
             }
         },
@@ -2053,7 +2053,7 @@ export default defineComponent({
         document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
         this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener("subtitles-update", this._handles.subtitlesReloadH);
+        AppEvents.AddEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
 
         this._handles.dropScrollHandler = this.dropScroll.bind(this);
         document.addEventListener("mouseup", this._handles.dropScrollHandler);
@@ -2099,7 +2099,7 @@ export default defineComponent({
         document.removeEventListener("mouseup", this._handles.dropScrollHandler);
         document.removeEventListener("mousemove", this._handles.moveScrollHandler);
 
-        AppEvents.RemoveEventListener("subtitles-update", this._handles.subtitlesReloadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
         KeyboardManager.RemoveHandler(this._handles.keyHandler);
 
         if (window.navigator && window.navigator.mediaSession) {

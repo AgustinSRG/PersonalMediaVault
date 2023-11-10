@@ -108,7 +108,7 @@ export default defineComponent({
                     AuthController.UpdateUsername(this.username);
                     this.username = "";
                     this.password = "";
-                    AppEvents.Emit("snack", this.$t("Vault username changed!"));
+                    AppEvents.ShowSnackBar(this.$t("Vault username changed!"));
                     this.$refs.modalContainer.close(true);
                 })
                 .onCancel(() => {

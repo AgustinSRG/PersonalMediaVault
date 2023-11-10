@@ -115,7 +115,7 @@ export default defineComponent({
                     this.currentPassword = "";
                     this.password = "";
                     this.password2 = "";
-                    AppEvents.Emit("snack", this.$t("Vault password changed!"));
+                    AppEvents.ShowSnackBar(this.$t("Vault password changed!"));
                     this.$refs.modalContainer.close(true);
                 })
                 .onCancel(() => {

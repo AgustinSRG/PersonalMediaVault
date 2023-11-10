@@ -137,11 +137,19 @@ const ImagePlayer = defineAsyncComponent({
     delay: 1000,
 });
 
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_LOADING, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
+import {
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    PagesController,
+} from "@/control/pages";
 
 const AlbumListModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumListModal.vue"),
@@ -207,8 +215,8 @@ export default defineComponent({
             displayExtendedDescription: false,
             displayDelete: false,
 
-            hasPagePrev: AlbumsController.HasPagePrev,
-            hasPageNext: AlbumsController.HasPageNext,
+            hasPagePrev: PagesController.HasPagePrev,
+            hasPageNext: PagesController.HasPageNext,
 
             minPlayer: false,
 
@@ -271,7 +279,7 @@ export default defineComponent({
             if (this.next) {
                 AppStatus.ClickOnMedia(this.next.id, false);
             } else if (this.hasPageNext) {
-                AppEvents.Emit("page-media-nav-next");
+                AppEvents.Emit(EVENT_NAME_PAGE_NAV_NEXT);
             }
         },
 
@@ -279,7 +287,7 @@ export default defineComponent({
             if (this.prev) {
                 AppStatus.ClickOnMedia(this.prev.id, false);
             } else if (this.hasPagePrev) {
-                AppEvents.Emit("page-media-nav-prev");
+                AppEvents.Emit(EVENT_NAME_PAGE_NAV_PREV);
             }
         },
 
@@ -289,9 +297,9 @@ export default defineComponent({
             this.isInAlbum = AppStatus.CurrentAlbum >= 0;
         },
 
-        onPagePosUpdate: function () {
-            this.hasPagePrev = AlbumsController.HasPagePrev;
-            this.hasPageNext = AlbumsController.HasPageNext;
+        onPagePosUpdate: function (prev: boolean, next: boolean) {
+            this.hasPagePrev = prev;
+            this.hasPageNext = next;
         },
 
         updateAuthInfo: function () {
@@ -346,23 +354,23 @@ export default defineComponent({
         MediaController.AddUpdateEventListener(this._handles.updateH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
         AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
         this._handles.albumLoadingH = this.updateAlbumsLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this._handles.albumLoadingH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.albumLoadingH);
 
         this._handles.goPrevH = this.goPrev.bind(this);
-        AppEvents.AddEventListener("media-go-prev", this._handles.goPrevH);
+        AppEvents.AddEventListener(EVENT_NAME_GO_PREV, this._handles.goPrevH);
 
         this._handles.goNextH = this.goNext.bind(this);
-        AppEvents.AddEventListener("media-go-next", this._handles.goNextH);
+        AppEvents.AddEventListener(EVENT_NAME_GO_NEXT, this._handles.goNextH);
 
         nextTick(() => {
             this.$el.focus();
@@ -372,15 +380,15 @@ export default defineComponent({
         MediaController.RemoveLoadingEventListener(this._handles.loadingH);
         MediaController.RemoveUpdateEventListener(this._handles.updateH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
-        AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        AppEvents.RemoveEventListener("current-album-loading", this._handles.albumLoadingH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.albumLoadingH);
 
-        AppEvents.RemoveEventListener("media-go-prev", this._handles.goPrevH);
-        AppEvents.RemoveEventListener("media-go-next", this._handles.goNextH);
+        AppEvents.RemoveEventListener(EVENT_NAME_GO_PREV, this._handles.goPrevH);
+        AppEvents.RemoveEventListener(EVENT_NAME_GO_NEXT, this._handles.goNextH);
 
         this._handles.focusTrap.destroy();
 

@@ -116,7 +116,7 @@ export default defineComponent({
             Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.Emit("snack", this.$t("Successfully added to album"));
+                    AppEvents.ShowSnackBar(this.$t("Successfully added to album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     callback();
                 })
@@ -127,15 +127,14 @@ export default defineComponent({
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(400, "MAX_SIZE_REACHED", () => {
-                            AppEvents.Emit(
-                                "snack",
+                            AppEvents.ShowSnackBar(
                                 this.$t("Error") +
                                     ":" +
                                     this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                             );
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Error") + ":" + this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
                         })
                         .handle(err);
                 })

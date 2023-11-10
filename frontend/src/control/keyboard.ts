@@ -12,13 +12,23 @@ export type KeyboardEventHandler = (event: KeyboardEvent) => boolean;
  * Handles global key presses.
  */
 export class KeyboardManager {
-    public static handlers: { priority: number; fn: KeyboardEventHandler }[] = [];
+    /**
+     * Keyboard handlers
+     */
+    private static handlers: { priority: number; fn: KeyboardEventHandler }[] = [];
 
+    /**
+     * Initialization logic
+     */
     public static Initialize() {
         document.addEventListener("keydown", KeyboardManager.Handle);
     }
 
-    public static Handle(event: KeyboardEvent) {
+    /**
+     * Handles keydown event
+     * @param event The event
+     */
+    private static Handle(event: KeyboardEvent) {
         if (!event.ctrlKey && event.target && ["input", "select"].includes(((<Node>event.target).nodeName + "").toLowerCase())) {
             return;
         }
@@ -33,6 +43,9 @@ export class KeyboardManager {
         }
     }
 
+    /**
+     * Sorts event handlers by priority
+     */
     private static Sort() {
         KeyboardManager.handlers = KeyboardManager.handlers.sort((a, b) => {
             if (a.priority > b.priority) {
@@ -45,6 +58,11 @@ export class KeyboardManager {
         });
     }
 
+    /**
+     * Adds keyboard handler
+     * @param handler The handler function
+     * @param priority The priority
+     */
     public static AddHandler(handler: KeyboardEventHandler, priority?: number) {
         KeyboardManager.handlers.push({
             priority: priority || 0,
@@ -53,6 +71,10 @@ export class KeyboardManager {
         KeyboardManager.Sort();
     }
 
+    /**
+     * Removes keyboard handler
+     * @param handler The handler function
+     */
     public static RemoveHandler(handler: KeyboardEventHandler) {
         for (let i = 0; i < KeyboardManager.handlers.length; i++) {
             if (KeyboardManager.handlers[i].fn === handler) {

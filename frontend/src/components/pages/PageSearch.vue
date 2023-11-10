@@ -91,11 +91,17 @@ import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { KeyboardManager } from "@/control/keyboard";
-import { AlbumsController } from "@/control/albums";
 import { MediaListItem } from "@/api/models";
 import { TagsController } from "@/control/tags";
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import {
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    PagesController,
+} from "@/control/pages";
 
 export default defineComponent({
     name: "PageSearch",
@@ -261,7 +267,7 @@ export default defineComponent({
 
         onCurrentMediaChanged: function () {
             const i = this.findCurrentMediaIndex();
-            AlbumsController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
+            PagesController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
         },
 
         onSearchParamsChanged: function () {
@@ -447,15 +453,15 @@ export default defineComponent({
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
         AuthController.AddChangeEventListener(this._handles.loadH);
-        AppEvents.AddEventListener("media-meta-change", this._handles.loadH);
-        AppEvents.AddEventListener("media-delete", this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
         AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
 
         this._handles.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
 
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         TagsController.AddEventListener(this._handles.tagUpdateH);
@@ -475,15 +481,15 @@ export default defineComponent({
         Timeouts.Abort("page-search-load");
         Request.Abort("page-search-load");
         AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppEvents.RemoveEventListener("media-meta-change", this._handles.loadH);
-        AppEvents.RemoveEventListener("media-delete", this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
-        AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
-        AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
-        AlbumsController.OnPageUnload();
+        PagesController.OnPageUnload();
     },
     watch: {
         display: function () {

@@ -4,11 +4,11 @@
 
 <script lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
-import { AlbumsController } from "./control/albums";
+import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./control/albums";
 import { AppEvents } from "./control/app-events";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
-import { UploadEntryMin } from "./control/upload";
+import { UploadController, UploadEntryMin } from "./control/upload";
 import { GetAssetURL } from "./utils/request";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
@@ -95,11 +95,14 @@ export default defineComponent({
             this.updateMediaMetadata();
         },
 
-        onUploadFinished: function (i, m: UploadEntryMin) {
+        onUploadFinished: function (mode: "push" | "rm" | "update", m: UploadEntryMin) {
+            if (mode !== "update") {
+                return;
+            }
             if (m.status === "ready") {
-                AppEvents.Emit("snack", this.$t("Successfully uploaded") + ": " + m.name);
+                AppEvents.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
             } else if (m.status === "error") {
-                AppEvents.Emit("snack", this.$t("Error uploading file") + ": " + m.name);
+                AppEvents.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
             }
         },
 
@@ -113,20 +116,20 @@ export default defineComponent({
         this._handles.updateH = this.updateAppStatus.bind(this);
 
         AppStatus.AddEventListener(this._handles.updateH);
-        AppEvents.AddEventListener("current-album-update", this._handles.updateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.updateH);
         MediaController.AddUpdateEventListener(this._handles.updateH);
 
         this._handles.uploadDoneH = this.onUploadFinished.bind(this);
-        AppEvents.AddEventListener("upload-list-update", this._handles.uploadDoneH);
+        UploadController.AddEventListener(this._handles.uploadDoneH);
 
         this._handles.onLoadedLocaleH = this.onLoadedLocale.bind(this);
         AppEvents.AddEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
     },
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.updateH);
-        AppEvents.RemoveEventListener("current-album-update", this._handles.updateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.updateH);
         MediaController.RemoveUpdateEventListener(this._handles.updateH);
-        AppEvents.RemoveEventListener("upload-list-update", this._handles.uploadDoneH);
+        UploadController.RemoveEventListener(this._handles.uploadDoneH);
         AppEvents.RemoveEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
     },
 });

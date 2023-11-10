@@ -40,9 +40,10 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
+import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, PagesController } from "@/control/pages";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -54,8 +55,8 @@ export default defineComponent({
             prev: AlbumsController.CurrentPrev,
             next: AlbumsController.CurrentNext,
 
-            hasPagePrev: AlbumsController.HasPagePrev,
-            hasPageNext: AlbumsController.HasPageNext,
+            hasPagePrev: PagesController.HasPagePrev,
+            hasPageNext: PagesController.HasPageNext,
         };
     },
     methods: {
@@ -68,9 +69,9 @@ export default defineComponent({
             this.next = AlbumsController.CurrentNext;
         },
 
-        onPagePosUpdate: function () {
-            this.hasPagePrev = AlbumsController.HasPagePrev;
-            this.hasPageNext = AlbumsController.HasPageNext;
+        onPagePosUpdate: function (prev: boolean, next: boolean) {
+            this.hasPagePrev = prev;
+            this.hasPageNext = next;
         },
 
         clickLeft: function () {
@@ -82,11 +83,11 @@ export default defineComponent({
         },
 
         goNext: function () {
-            AppEvents.Emit("media-go-next");
+            AppEvents.Emit(EVENT_NAME_GO_NEXT);
         },
 
         goPrev: function () {
-            AppEvents.Emit("media-go-prev");
+            AppEvents.Emit(EVENT_NAME_GO_PREV);
         },
 
         clickOnEnter: function (event) {
@@ -103,16 +104,16 @@ export default defineComponent({
         AppStatus.AddEventListener(this._handles.updateStatusH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
     },
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.updateStatusH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
-        AppEvents.RemoveEventListener("page-media-nav-update", this._handles.onPagePosUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
     },
 });
 </script>

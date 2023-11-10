@@ -67,7 +67,12 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController } from "@/control/albums";
+import {
+    AlbumsController,
+    EVENT_NAME_CURRENT_ALBUM_LOADING,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+} from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -253,7 +258,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
 
         this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
             get: () => {
@@ -269,20 +274,20 @@ export default defineComponent({
         this.onAlbumPosUpdate();
 
         this._handles.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
         this.autoFocus();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
-        AppEvents.RemoveEventListener("current-album-loading", this._handles.loadingH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         clearInterval(this._handles.checkContainerTimer);
     },

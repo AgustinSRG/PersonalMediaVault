@@ -1,6 +1,87 @@
 // Image notes formatting
 
-import { ImageNote, ImageNotesController } from "@/control/img-notes";
+"use strict";
+
+import { getUniqueNumericId } from "./unique-id";
+
+/**
+ * Image note
+ */
+export interface ImageNote {
+    /**
+     * Unique identifier
+     */
+    id: number;
+
+    /**
+     * X coordinate (css: top)
+     */
+    x: number;
+
+    /**
+     * Y coordinate (css: left)
+     */
+    y: number;
+
+    /**
+     * Width
+     */
+    w: number;
+
+    /**
+     * Height
+     */
+    h: number;
+
+    /**
+     * Text to display
+     */
+    text: string;
+}
+
+/**
+ * Parses image notes from a JSON string
+ * @param json The JSON string
+ * @returns The image notes array
+ */
+export function parseImageNotes(json: string): ImageNote[] {
+    let o: any;
+    try {
+        if (typeof json === "string") {
+            o = JSON.parse(json);
+        } else {
+            o = json;
+        }
+    } catch (ex) {
+        console.error(ex);
+        return [];
+    }
+    if (o && Array.isArray(o)) {
+        return o.map((note) => {
+            if (note && typeof note === "object") {
+                return {
+                    id: getUniqueNumericId(),
+                    x: parseInt(note.x, 10) || 0,
+                    y: parseInt(note.y, 10) || 0,
+                    w: parseInt(note.w, 10) || 0,
+                    h: parseInt(note.h, 10) || 0,
+                    text: (note.text || "") + "",
+                };
+            } else {
+                return {
+                    id: getUniqueNumericId(),
+                    x: 0,
+                    y: 0,
+                    w: 0,
+                    h: 0,
+                    text: "",
+                };
+            }
+        });
+    } else {
+        return [];
+    }
+}
 
 export const NOTES_TEXT_SEPARATOR = '"""';
 
@@ -63,7 +144,7 @@ export function textToImageNotes(text: string): ImageNote[] {
                         const h = parseInt(partsSize[1] || "", 10) || 0;
 
                         currentNote = {
-                            id: ImageNotesController.GetNewId(),
+                            id: getUniqueNumericId(),
                             text: "",
                             x: x,
                             y: y,

@@ -35,7 +35,7 @@
 
 <script lang="ts">
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
@@ -102,11 +102,11 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.CreateAlbum(albumName))
                 .onSuccess((response) => {
-                    AppEvents.Emit("snack", this.$t("Album created") + ": " + albumName);
+                    AppEvents.ShowSnackBar(this.$t("Album created") + ": " + albumName);
                     this.busy = false;
                     this.name = "";
                     this.$refs.modalContainer.close(true);
-                    AppEvents.Emit("albums-list-change");
+                    AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
                     AlbumsController.Load();
                     this.$emit("new-album", response.album_id, albumName);
                 })

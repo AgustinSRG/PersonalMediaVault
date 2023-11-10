@@ -88,7 +88,6 @@
 <script lang="ts">
 import { MediaListItem } from "@/api/models";
 import { SearchAPI } from "@/api/api-search";
-import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
@@ -101,6 +100,14 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { MediaController } from "@/control/media";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import {
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    EVENT_NAME_RANDOM_PAGE_REFRESH,
+    PagesController,
+} from "@/control/pages";
 
 export default defineComponent({
     name: "PageRandom",
@@ -335,7 +342,7 @@ export default defineComponent({
 
         onCurrentMediaChanged: function () {
             const i = this.findCurrentMediaIndex();
-            AlbumsController.OnPageLoad(i, this.pageItems.length, 1, 3);
+            PagesController.OnPageLoad(i, this.pageItems.length, 1, 3);
         },
 
         prevMedia: function () {
@@ -428,15 +435,15 @@ export default defineComponent({
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
         AuthController.AddChangeEventListener(this._handles.loadH);
-        AppEvents.AddEventListener("media-meta-change", this._handles.loadH);
-        AppEvents.AddEventListener("media-delete", this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
         AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-next", this._handles.nextMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
 
         this._handles.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
 
         for (let i = 1; i <= 20; i++) {
             this.pageSizeOptions.push(5 * i);
@@ -445,7 +452,7 @@ export default defineComponent({
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         TagsController.AddEventListener(this._handles.tagUpdateH);
 
-        AppEvents.AddEventListener("random-page-refresh", this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_RANDOM_PAGE_REFRESH, this._handles.loadH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
         AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
@@ -462,16 +469,16 @@ export default defineComponent({
         Timeouts.Abort("page-random-load");
         Request.Abort("page-random-load");
         AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppEvents.RemoveEventListener("media-meta-change", this._handles.loadH);
-        AppEvents.RemoveEventListener("media-delete", this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
-        AppEvents.RemoveEventListener("page-media-nav-next", this._handles.nextMediaH);
-        AppEvents.RemoveEventListener("page-media-nav-prev", this._handles.prevMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
+        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener("random-page-refresh", this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_RANDOM_PAGE_REFRESH, this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
         KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
-        AlbumsController.OnPageUnload();
+        PagesController.OnPageUnload();
     },
     watch: {
         display: function () {

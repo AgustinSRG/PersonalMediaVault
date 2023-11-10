@@ -122,7 +122,7 @@
 <script lang="ts">
 import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -268,7 +268,7 @@ export default defineComponent({
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = false;
-                        AppEvents.Emit("snack", this.$t("Successfully removed from album"));
+                        AppEvents.ShowSnackBar(this.$t("Successfully removed from album"));
                         if (this.mediaAlbums.indexOf(album.id) >= 0) {
                             this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
                         }
@@ -296,7 +296,7 @@ export default defineComponent({
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = true;
-                        AppEvents.Emit("snack", this.$t("Successfully added to album"));
+                        AppEvents.ShowSnackBar(this.$t("Successfully added to album"));
                         if (this.mediaAlbums.indexOf(album.id) === -1) {
                             this.mediaAlbums.push(album.id);
                         }
@@ -313,15 +313,14 @@ export default defineComponent({
                                 AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             })
                             .add(400, "MAX_SIZE_REACHED", () => {
-                                AppEvents.Emit(
-                                    "snack",
+                                AppEvents.ShowSnackBar(
                                     this.$t("Error") +
                                         ":" +
                                         this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                                 );
                             })
                             .add(403, "*", () => {
-                                AppEvents.Emit("snack", this.$t("Error") + ":" + this.$t("Access denied"));
+                                AppEvents.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
                             })
                             .handle(err);
                     })
@@ -343,7 +342,7 @@ export default defineComponent({
         updateAlbums: function () {
             const mid = AppStatus.CurrentMedia;
             const filter = (this.filter + "").toLowerCase();
-            this.albums = AlbumsController.GetAlbumsListCopy()
+            this.albums = AlbumsController.GetAlbumsListMin()
                 .filter((a) => {
                     return !filter || a.nameLowerCase.indexOf(filter) >= 0;
                 })
@@ -421,7 +420,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
         this._handles.statusH = this.onUpdateStatus.bind(this);
         AppStatus.AddEventListener(this._handles.statusH);
@@ -437,7 +436,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
         AppStatus.RemoveEventListener(this._handles.statusH);
         Timeouts.Abort("media-albums-load");
         Request.Abort("media-albums-load");

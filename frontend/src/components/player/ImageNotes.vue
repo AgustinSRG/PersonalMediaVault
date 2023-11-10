@@ -134,9 +134,10 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { ImageNote, ImageNotesController } from "@/control/img-notes";
+import { EVENT_NAME_IMAGE_NOTES_SAVED, EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
 import { AppEvents } from "@/control/app-events";
 import { escapeHTML } from "@/utils/html";
+import { ImageNote } from "@/utils/notes-format";
 
 export default defineComponent({
     name: "ImageNotes",
@@ -598,7 +599,7 @@ export default defineComponent({
         },
 
         onNotesSaved: function () {
-            AppEvents.Emit("snack", this.$t("Image notes have been saved"));
+            AppEvents.ShowSnackBar(this.$t("Image notes have been saved"));
         },
     },
 
@@ -607,16 +608,23 @@ export default defineComponent({
         this.updateRealDimensions();
 
         this._handles.onNotesUpdateH = this.onNotesUpdate.bind(this);
-        AppEvents.AddEventListener("img-notes-update", this._handles.onNotesUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.onNotesUpdateH);
 
-        this._handles.onNotesPushH = this.onNotesPush.bind(this);
-        AppEvents.AddEventListener("img-notes-push", this._handles.onNotesPushH);
+        this._handles.notesChangeHandler = (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
+            switch (mode) {
+                case "push":
+                    this.onNotesPush(note);
+                    break;
+                case "rm":
+                    this.onNotesRemove(index);
+                    break;
+                case "update":
+                    this.onNotesChange(index, note);
+                    break;
+            }
+        };
 
-        this._handles.onNotesChangeH = this.onNotesChange.bind(this);
-        AppEvents.AddEventListener("img-notes-change", this._handles.onNotesChangeH);
-
-        this._handles.onNotesRemoveH = this.onNotesRemove.bind(this);
-        AppEvents.AddEventListener("img-notes-rm", this._handles.onNotesRemoveH);
+        ImageNotesController.AddEventListener(this._handles.notesChangeHandler);
 
         this._handles.mouseDropH = this.mouseDrop.bind(this);
         document.addEventListener("mouseup", this._handles.mouseDropH);
@@ -630,21 +638,19 @@ export default defineComponent({
         this.onNotesUpdate();
 
         this._handles.onNotesSavedH = this.onNotesSaved.bind(this);
-        AppEvents.AddEventListener("image-notes-saved", this._handles.onNotesSavedH);
+        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_SAVED, this._handles.onNotesSavedH);
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("img-notes-update", this._handles.onNotesUpdateH);
-        AppEvents.RemoveEventListener("img-notes-push", this._handles.onNotesPushH);
-        AppEvents.RemoveEventListener("img-notes-change", this._handles.onNotesChangeH);
-        AppEvents.RemoveEventListener("img-notes-rm", this._handles.onNotesRemoveH);
+        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.onNotesUpdateH);
+        ImageNotesController.RemoveEventListener(this._handles.notesChangeHandler);
 
         document.removeEventListener("mouseup", this._handles.mouseDropH);
         document.removeEventListener("touchend", this._handles.mouseDropH);
         document.removeEventListener("mousemove", this._handles.mouseMoveH);
         document.removeEventListener("touchmove", this._handles.mouseMoveH);
 
-        AppEvents.RemoveEventListener("image-notes-saved", this._handles.onNotesSavedH);
+        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_SAVED, this._handles.onNotesSavedH);
     },
 
     watch: {

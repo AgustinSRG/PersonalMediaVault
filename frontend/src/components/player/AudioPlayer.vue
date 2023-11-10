@@ -423,14 +423,14 @@ import PlayerContextMenu from "./PlayerContextMenu.vue";
 import { GetAssetURL } from "@/utils/request";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
-import { SubtitlesController } from "@/control/subtitles";
+import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
 import { sanitizeSubtitlesHTML, getUniqueSubtitlesLoadTag } from "@/utils/subtitles-html";
 import { htmlToText } from "@/utils/html";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
-import { ColorThemeName, getTheme } from "@/control/app-preferences";
+import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -1200,9 +1200,9 @@ export default defineComponent({
                 case "x":
                     this.sliceLoop = !this.sliceLoop;
                     if (this.sliceLoop) {
-                        AppEvents.Emit("snack", this.$t("Slice loop enabled"));
+                        AppEvents.ShowSnackBar(this.$t("Slice loop enabled"));
                     } else {
-                        AppEvents.Emit("snack", this.$t("Slice loop disabled"));
+                        AppEvents.ShowSnackBar(this.$t("Slice loop disabled"));
                     }
                     break;
                 case "l":
@@ -1212,9 +1212,9 @@ export default defineComponent({
                     } else {
                         this.loop = !this.loop;
                         if (this.loop) {
-                            AppEvents.Emit("snack", this.$t("Loop enabled"));
+                            AppEvents.ShowSnackBar(this.$t("Loop enabled"));
                         } else {
-                            AppEvents.Emit("snack", this.$t("Loop disabled"));
+                            AppEvents.ShowSnackBar(this.$t("Loop disabled"));
                         }
                         this.$emit("force-loop", this.loop);
                     }
@@ -1707,10 +1707,10 @@ export default defineComponent({
         document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
         this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener("subtitles-update", this._handles.subtitlesReloadH);
+        AppEvents.AddEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
 
         this._handles.themeHandler = this.themeUpdated.bind(this);
-        AppEvents.AddEventListener("theme-changed", this._handles.themeHandler);
+        AppEvents.AddEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
 
         this.initializeAudio();
 
@@ -1744,9 +1744,9 @@ export default defineComponent({
         document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
         document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
 
-        AppEvents.RemoveEventListener("subtitles-update", this._handles.subtitlesReloadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
 
-        AppEvents.RemoveEventListener("theme-changed", this._handles.themeHandler);
+        AppEvents.RemoveEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
 
         KeyboardManager.RemoveHandler(this._handles.keyHandler);
 

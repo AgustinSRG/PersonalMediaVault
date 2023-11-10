@@ -115,7 +115,7 @@ export default defineComponent({
 
             Request.Do(EditMediaAPI.DeleteMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.Emit("snack", this.$t("Media deleted") + ": " + this.oldName);
+                    AppEvents.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.$refs.modalContainer.close(true);

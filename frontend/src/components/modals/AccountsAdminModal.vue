@@ -163,7 +163,7 @@ export default defineComponent({
             Request.Do(AdminAPI.DeleteAccount(username))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.Emit("snack", this.$t("Account deleted") + ": " + username);
+                    AppEvents.ShowSnackBar(this.$t("Account deleted") + ": " + username);
                     this.load();
                 })
                 .onCancel(() => {

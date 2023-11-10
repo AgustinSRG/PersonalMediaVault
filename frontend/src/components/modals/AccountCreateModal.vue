@@ -128,7 +128,7 @@ export default defineComponent({
             Request.Do(AdminAPI.CreateAccount(username, password, write))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.Emit("snack", this.$t("Account created") + ": " + username);
+                    AppEvents.ShowSnackBar(this.$t("Account created") + ": " + username);
                     this.accountUsername = "";
                     this.accountPassword = "";
                     this.accountPassword2 = "";

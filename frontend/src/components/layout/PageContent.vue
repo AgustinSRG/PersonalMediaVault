@@ -99,6 +99,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_RANDOM_PAGE_REFRESH } from "@/control/pages";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -311,7 +312,7 @@ export default defineComponent({
         },
 
         triggerRefresh: function () {
-            AppEvents.Emit("random-page-refresh");
+            AppEvents.Emit(EVENT_NAME_RANDOM_PAGE_REFRESH);
             this.focusPage();
         },
 
@@ -334,7 +335,7 @@ export default defineComponent({
         },
 
         goToTop: function () {
-            AppEvents.Emit("adv-search-go-top");
+            AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
         },
     },
     mounted: function () {

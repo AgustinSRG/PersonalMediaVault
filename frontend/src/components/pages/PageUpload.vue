@@ -139,7 +139,6 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { UploadController, UploadEntryMin } from "@/control/upload";
 import { GenerateURIQuery } from "@/utils/request";
@@ -514,25 +513,31 @@ export default defineComponent({
         this.updateCountCancellable(this.pendingToUpload);
         this.updateFilteredEntries();
 
-        this._handles.onPendingPushH = this.onPendingPush.bind(this);
-        this._handles.onPendingRemoveH = this.onPendingRemove.bind(this);
-        this._handles.onPendingClearH = this.onPendingClear.bind(this);
-        this._handles.onPendingUpdateH = this.onPendingUpdate.bind(this);
+        this._handles.uploadListHandler = (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
+            switch (mode) {
+                case "clear":
+                    this.onPendingClear();
+                    break;
+                case "push":
+                    this.onPendingPush(entry);
+                    break;
+                case "rm":
+                    this.onPendingRemove(index);
+                    break;
+                case "update":
+                    this.onPendingUpdate(index, entry);
+                    break;
+            }
+        };
 
-        AppEvents.AddEventListener("upload-list-push", this._handles.onPendingPushH);
-        AppEvents.AddEventListener("upload-list-rm", this._handles.onPendingRemoveH);
-        AppEvents.AddEventListener("upload-list-clear", this._handles.onPendingClearH);
-        AppEvents.AddEventListener("upload-list-update", this._handles.onPendingUpdateH);
+        UploadController.AddEventListener(this._handles.uploadListHandler);
 
         if (this.display) {
             this.autoFocus();
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("upload-list-push", this._handles.onPendingPushH);
-        AppEvents.RemoveEventListener("upload-list-rm", this._handles.onPendingRemoveH);
-        AppEvents.RemoveEventListener("upload-list-clear", this._handles.onPendingClearH);
-        AppEvents.RemoveEventListener("upload-list-update", this._handles.onPendingUpdateH);
+        UploadController.RemoveEventListener(this._handles.uploadListHandler);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);

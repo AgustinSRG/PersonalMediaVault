@@ -136,7 +136,7 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
@@ -263,7 +263,7 @@ export default defineComponent({
 
         updateAlbums: function () {
             const albumsOrderMap = getAlbumsOrderMap();
-            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+            this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
                 const lruA = albumsOrderMap[a.id + ""] || 0;
                 const lruB = albumsOrderMap[b.id + ""] || 0;
                 if (lruA > lruB) {
@@ -359,7 +359,7 @@ export default defineComponent({
 
         this._handles.albumsUpdater = this.updateAlbums.bind(this);
 
-        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdater);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdater);
         AppEvents.AddEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
 
         this._handles.albumGoTop = this.putAlbumFirst.bind(this);
@@ -382,7 +382,7 @@ export default defineComponent({
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.statusUpdater);
 
-        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdater);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdater);
         AppEvents.RemoveEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
 
         AppEvents.RemoveEventListener(EVENT_NAME_ALBUM_SIDEBAR_TOP, this._handles.albumGoTop);

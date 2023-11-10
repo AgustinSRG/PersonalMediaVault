@@ -122,7 +122,7 @@ import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumsController } from "@/control/albums";
+import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
@@ -130,6 +130,7 @@ import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/norma
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -149,7 +150,7 @@ export default defineComponent({
 
             albumsList: [],
 
-            filter: AlbumsController.AlbumsPageSearch,
+            filter: PagesController.AlbumsPageSearch,
 
             pageSize: getPageMaxItems(),
             order: "desc",
@@ -202,7 +203,7 @@ export default defineComponent({
         },
 
         changeFilter: function () {
-            AlbumsController.AlbumsPageSearch = this.filter;
+            PagesController.AlbumsPageSearch = this.filter;
             this.page = 0;
             this.updateList();
         },
@@ -448,7 +449,7 @@ export default defineComponent({
 
         AuthController.AddChangeEventListener(this._handles.authUpdateH);
 
-        AppEvents.AddEventListener("albums-list-change", this._handles.loadH);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_CHANGED, this._handles.loadH);
 
         this._handles.updatePageSizeH = this.updatePageSize.bind(this);
         AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
@@ -466,7 +467,7 @@ export default defineComponent({
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("albums-list-change", this._handles.loadH);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_CHANGED, this._handles.loadH);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 

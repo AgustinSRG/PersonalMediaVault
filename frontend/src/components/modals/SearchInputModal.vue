@@ -35,6 +35,7 @@ import { AppEvents } from "@/control/app-events";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
+import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 
 export default defineComponent({
     name: "SearchInputModal",
@@ -75,7 +76,7 @@ export default defineComponent({
         submit: function (e) {
             e.preventDefault();
 
-            AppEvents.Emit("search-modal-submit", this.search);
+            AppEvents.Emit(EVENT_NAME_SEARCH_MODAL_SUBMIT, this.search);
             this.close();
         },
     },

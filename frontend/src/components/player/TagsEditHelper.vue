@@ -169,7 +169,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
-                    AppEvents.Emit("snack", this.$t("Removed tag") + ": " + tagName);
+                    AppEvents.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
                     for (let i = 0; i < this.tags.length; i++) {
                         if (this.tags[i] === tag) {
@@ -196,28 +196,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -238,7 +238,7 @@ export default defineComponent({
 
             Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     this.tagToAdd = "";
                     if (this.tags.indexOf(res.id) === -1) {
@@ -267,28 +267,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -305,7 +305,7 @@ export default defineComponent({
 
             Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
-                    AppEvents.Emit("snack", this.$t("Added tag") + ": " + res.name);
+                    AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     if (this.tags.indexOf(res.id) === -1) {
                         this.tags.push(res.id);
@@ -326,28 +326,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Invalid tag name"));
+                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });

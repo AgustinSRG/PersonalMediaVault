@@ -1,8 +1,8 @@
 // Edit media API
 
-import { ImageNote } from "@/control/img-notes";
 import { GetApiURL, RequestParams } from "@/utils/request";
 import { MediaResolution, MediaSubtitle, MediaAudioTrack } from "./models";
+import { ImageNote } from "@/utils/notes-format";
 
 export class EditMediaAPI {
     public static ChangeMediaTitle(id: number, title: string): RequestParams<void> {

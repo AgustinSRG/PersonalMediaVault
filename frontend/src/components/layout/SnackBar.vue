@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
+import { AppEvents, EVENT_NAME_SNACK_BAR } from "@/control/app-events";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -40,10 +40,10 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.showH = this.show.bind(this);
-        AppEvents.AddEventListener("snack", this._handles.showH);
+        AppEvents.AddEventListener(EVENT_NAME_SNACK_BAR, this._handles.showH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("snack", this._handles.showH);
+        AppEvents.RemoveEventListener(EVENT_NAME_SNACK_BAR, this._handles.showH);
         if (this._handles.timeout) {
             clearTimeout(this._handles.timeout);
             this._handles.timeout = null;

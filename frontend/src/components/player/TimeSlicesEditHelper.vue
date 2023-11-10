@@ -296,7 +296,7 @@ export default defineComponent({
         },
 
         onSaved: function () {
-            AppEvents.Emit("snack", this.$t("Successfully changed time slices"));
+            AppEvents.ShowSnackBar(this.$t("Successfully changed time slices"));
             this.$emit("update-time-slices");
         },
 

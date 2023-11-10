@@ -88,7 +88,7 @@ import { useVModel } from "../../utils/v-model";
 import { parseTagName } from "@/utils/tags";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -289,7 +289,7 @@ export default defineComponent({
         },
 
         updateAlbums: function () {
-            this.albums = AlbumsController.GetAlbumsListCopy().sort((a, b) => {
+            this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
                 if (a.nameLowerCase < b.nameLowerCase) {
                     return -1;
                 } else {
@@ -324,7 +324,7 @@ export default defineComponent({
 
         this.updateAlbums();
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
         this.reset();
 
@@ -334,7 +334,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener("albums-update", this._handles.albumsUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);

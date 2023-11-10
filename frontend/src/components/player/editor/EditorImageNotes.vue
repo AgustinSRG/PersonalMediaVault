@@ -46,7 +46,7 @@ import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
-import { ImageNotesController } from "@/control/img-notes";
+import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
 
 export default defineComponent({
     components: {},
@@ -97,12 +97,12 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-image-notes", EditMediaAPI.SetNotes(mediaId, notes))
                 .onSuccess(() => {
-                    AppEvents.Emit("snack", this.$t("Successfully changed image notes"));
+                    AppEvents.ShowSnackBar(this.$t("Successfully changed image notes"));
                     this.busy = false;
                     this.dirty = false;
 
                     ImageNotesController.Notes = notes;
-                    AppEvents.Emit("img-notes-update");
+                    AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
 
                     this.$emit("changed");
                 })
@@ -113,28 +113,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Bad request"));
+                            AppEvents.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -151,7 +151,7 @@ export default defineComponent({
 
         this._handles.updateImageNotesH = this.updateImageNotes.bind(this);
 
-        AppEvents.AddEventListener("img-notes-update", this._handles.updateImageNotesH);
+        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.updateImageNotesH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -161,7 +161,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("img-notes-update", this._handles.updateImageNotesH);
+        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.updateImageNotesH);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 

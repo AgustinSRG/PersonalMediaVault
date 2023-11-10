@@ -91,6 +91,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
+import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 
 export default defineComponent({
     name: "TopBar",
@@ -248,7 +249,7 @@ export default defineComponent({
                     };
                 })
                 .concat(
-                    Object.values(AlbumsController.Albums).map((a) => {
+                    AlbumsController.GetAlbumsList().map((a) => {
                         const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
                         return {
                             key: "album:" + a.id,
@@ -351,7 +352,7 @@ export default defineComponent({
         AppStatus.AddEventListener(this._handles.statusChangeH);
 
         this._handles.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
-        AppEvents.AddEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
+        AppEvents.AddEventListener(EVENT_NAME_SEARCH_MODAL_SUBMIT, this._handles.onSearchModalSubmitH);
 
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
@@ -371,7 +372,7 @@ export default defineComponent({
     beforeUnmount: function () {
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
 
-        AppEvents.RemoveEventListener("search-modal-submit", this._handles.onSearchModalSubmitH);
+        AppEvents.RemoveEventListener(EVENT_NAME_SEARCH_MODAL_SUBMIT, this._handles.onSearchModalSubmitH);
 
         if (this._handles.findTagTimeout) {
             clearTimeout(this._handles.findTagTimeout);
@@ -389,7 +390,4 @@ export default defineComponent({
         }
     },
 });
-
-// Searchbox background: hsl(0, 0%, 7%)
-// Searchbox text color : hsla(0, 100%, 100%, 0.88)
 </script>

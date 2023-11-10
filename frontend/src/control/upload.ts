@@ -14,6 +14,11 @@ import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 
 const TICK_DELAY_MS = 500;
 
+const REQUEST_PREFIX_UPLOAD = "upload-media-";
+const REQUEST_PREFIX_CHECK_ENCRYPTION = "check-media-encryption-";
+
+const EVENT_NAME_LIST_UPDATE = "upload-list-update";
+
 /**
  * Removes extension if present, in order to get the title
  * @param fileName The file name
@@ -198,7 +203,7 @@ export class UploadController {
         if (UploadController.timer === null) {
             UploadController.timer = setInterval(UploadController.tick, TICK_DELAY_MS);
         }
-        AppEvents.Emit("upload-list-push", {
+        UploadController.Emit("push", {
             id: id,
             name: file.name,
             size: file.size,
@@ -226,7 +231,7 @@ export class UploadController {
                 UploadController.Entries[i].progress = 0;
 
                 UploadController.CheckEmptyList();
-                AppEvents.Emit("upload-list-update", i, UploadController.Entries[i]);
+                UploadController.Emit("update", UploadController.Entries[i], i);
                 return;
             }
         }
@@ -262,8 +267,8 @@ export class UploadController {
      */
     public static RemoveFile(id: number) {
         // Abort requests
-        Request.Abort("upload-media-" + id);
-        Request.Abort("check-media-encryption-" + id);
+        Request.Abort(REQUEST_PREFIX_UPLOAD + id);
+        Request.Abort(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
 
         // Remove from the array
         for (let i = 0; i < UploadController.Entries.length; i++) {
@@ -274,7 +279,7 @@ export class UploadController {
 
                 UploadController.Entries.splice(i, 1);
                 UploadController.CheckEmptyList();
-                AppEvents.Emit("upload-list-rm", i);
+                UploadController.Emit("rm", null, i);
                 return;
             }
         }
@@ -293,7 +298,7 @@ export class UploadController {
         }
 
         UploadController.CheckEmptyList();
-        AppEvents.Emit("upload-list-clear");
+        UploadController.Emit("clear");
     }
 
     /**
@@ -307,7 +312,7 @@ export class UploadController {
         }
 
         UploadController.CheckEmptyList();
-        AppEvents.Emit("upload-list-clear");
+        UploadController.Emit("clear");
     }
 
     /**
@@ -320,18 +325,18 @@ export class UploadController {
 
         m.status = "uploading";
         m.progress = 0;
-        AppEvents.Emit("upload-list-update", index, m);
+        UploadController.Emit("update", m, index);
 
-        Request.Pending("upload-media-" + m.id, UploadMediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        Request.Pending(REQUEST_PREFIX_UPLOAD + m.id, UploadMediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
-                AppEvents.Emit("upload-list-update", index, m);
+                UploadController.Emit("update", m, index);
             })
             .onSuccess((data) => {
                 m.mid = data.media_id;
                 m.status = "encrypting";
                 m.progress = 0;
-                AppEvents.Emit("upload-list-update", index, m);
+                UploadController.Emit("update", m, index);
             })
             .onCancel(() => {
                 UploadController.UploadingCount--;
@@ -362,7 +367,7 @@ export class UploadController {
                     })
                     .handle(err);
                 UploadController.CheckEmptyList();
-                AppEvents.Emit("upload-list-update", index, m);
+                UploadController.Emit("update", m, index);
             })
             .onUnexpectedError((err) => {
                 UploadController.UploadingCount--;
@@ -370,7 +375,7 @@ export class UploadController {
                 console.error(err);
                 m.status = "error";
                 UploadController.CheckEmptyList();
-                AppEvents.Emit("upload-list-update", index, m);
+                UploadController.Emit("update", m, index);
             });
     }
 
@@ -387,7 +392,7 @@ export class UploadController {
         m.busy = true;
         m.lastRequest = Date.now();
 
-        Request.Pending("check-media-encryption-" + m.id, MediaAPI.GetMedia(m.mid))
+        Request.Pending(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, MediaAPI.GetMedia(m.mid))
             .onSuccess((media) => {
                 m.busy = false;
                 if (media.ready) {
@@ -398,7 +403,7 @@ export class UploadController {
                         m.status = "ready";
                     }
 
-                    AppEvents.Emit("upload-list-update", index, m);
+                    UploadController.Emit("update", m, index);
 
                     if (m.album !== -1) {
                         AlbumsController.OnChangedAlbum(m.album, true);
@@ -411,7 +416,7 @@ export class UploadController {
                     UploadController.UploadingCount--;
                 } else {
                     m.progress = Math.max(m.progress, media.ready_p);
-                    AppEvents.Emit("upload-list-update", index, m);
+                    UploadController.Emit("update", m, index);
                 }
             })
             .onCancel(() => {
@@ -428,7 +433,7 @@ export class UploadController {
                         m.status = "error";
                         UploadController.UploadingCount--;
                         UploadController.CheckEmptyList();
-                        AppEvents.Emit("upload-list-update", index, m);
+                        UploadController.Emit("update", m, index);
                     })
                     .handle(err);
             })
@@ -450,7 +455,7 @@ export class UploadController {
 
         if (m.tags.length === 0) {
             m.status = "ready";
-            AppEvents.Emit("upload-list-update", index, m);
+            UploadController.Emit("update", m, index);
             UploadController.CheckEmptyList();
             if (MediaController.MediaId === m.mid) {
                 MediaController.Load();
@@ -470,7 +475,7 @@ export class UploadController {
                 m.tags.shift(); // Remove tag from list
                 m.progress = m.tags.length;
                 m.busy = false;
-                AppEvents.Emit("upload-list-update", index, m);
+                UploadController.Emit("update", m, index);
                 TagsController.AddTag(res.id, res.name);
             })
             .onCancel(() => {
@@ -482,7 +487,7 @@ export class UploadController {
                     .add(400, "*", () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
-                        AppEvents.Emit("upload-list-update", index, m);
+                        UploadController.Emit("update", m, index);
                     })
                     .add(401, "*", () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
@@ -490,13 +495,13 @@ export class UploadController {
                     .add(403, "*", () => {
                         m.error = "access-denied";
                         m.status = "error";
-                        AppEvents.Emit("upload-list-update", index, m);
+                        UploadController.Emit("update", m, index);
                         UploadController.CheckEmptyList();
                     })
                     .add(404, "*", () => {
                         m.error = "deleted";
                         m.status = "error";
-                        AppEvents.Emit("upload-list-update", index, m);
+                        UploadController.Emit("update", m, index);
                         UploadController.CheckEmptyList();
                     })
                     .handle(err);
@@ -505,5 +510,31 @@ export class UploadController {
                 m.busy = false;
                 console.error(err);
             });
+    }
+
+    /**
+     * Emits list update event
+     * @param mode Mode
+     * @param entry Entry
+     * @param index Index
+     */
+    private static Emit(mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) {
+        AppEvents.Emit(EVENT_NAME_LIST_UPDATE, mode, entry, index);
+    }
+
+    /**
+     * Adds event listener to check for updates
+     * @param handler Event handler
+     */
+    public static AddEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
+        AppEvents.AddEventListener(EVENT_NAME_LIST_UPDATE, handler);
+    }
+
+    /**
+     * Removes event listener
+     * @param handler Event handler
+     */
+    public static RemoveEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
+        AppEvents.RemoveEventListener(EVENT_NAME_LIST_UPDATE, handler);
     }
 }

@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumsController } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { defineComponent, nextTick } from "vue";
@@ -113,7 +113,7 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.DeleteAlbum(albumId))
                 .onSuccess(() => {
-                    AppEvents.Emit("snack", this.$t("Album deleted") + ": " + this.oldName);
+                    AppEvents.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.$refs.modalContainer.close(true);
@@ -153,7 +153,7 @@ export default defineComponent({
     mounted: function () {
         this._handles = Object.create(null);
         this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
 
         this.onAlbumUpdate();
         if (this.display) {
@@ -163,7 +163,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
     },
     watch: {
         display: function () {

@@ -14,12 +14,64 @@ import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
 
-export class AlbumsController {
-    public static Albums: { [id: string]: AlbumListItemMin } = Object.create(null);
+/**
+ * Event triggered when the albums list is updated
+ */
+export const EVENT_NAME_ALBUMS_LIST_UPDATE = "albums-update";
 
+/**
+ * Event triggered when the user updates an album, so the list must be re-fetched
+ */
+export const EVENT_NAME_ALBUMS_CHANGED = "albums-list-change";
+
+/**
+ * Event triggered when the loading status for the current album changes
+ */
+export const EVENT_NAME_CURRENT_ALBUM_LOADING = "current-album-loading";
+
+/**
+ * Event triggered when the current album data is updated
+ */
+export const EVENT_NAME_CURRENT_ALBUM_UPDATED = "current-album-update";
+
+/**
+ * Event triggered when the current media position in the current album is updated
+ */
+export const EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED = "album-pos-update";
+
+/**
+ * Event triggered when the next element is pre-fetched
+ */
+export const EVENT_NAME_NEXT_PRE_FETCH = "album-next-prefetch";
+
+const REQUEST_ID_ALBUMS_LOAD = "albums-load";
+
+const REQUEST_ID_CURRENT_ALBUM_LOAD = "album-current-load";
+
+const REQUEST_ID_NEXT_PRE_FETCH = "album-next-prefetch-load";
+
+/**
+ * Management object for albums
+ */
+export class AlbumsController {
+    /**
+     * Albums mapping
+     */
+    private static AlbumsMap: Map<number, AlbumListItemMin> = new Map();
+
+    /**
+     * Loading flag for albums list
+     */
     public static Loading = true;
+
+    /**
+     * True if the albums list was loaded at least once
+     */
     public static InitiallyLoaded = false;
 
+    /**
+     * Initialization logic
+     */
     public static Initialize() {
         AuthController.AddChangeEventListener(AlbumsController.Load);
         AuthController.AddChangeEventListener(AlbumsController.LoadCurrentAlbum);
@@ -32,26 +84,70 @@ export class AlbumsController {
         AlbumsController.LoadCurrentAlbum();
     }
 
+    /**
+     * Gets the albums list
+     * @returns The albums list
+     */
+    public static GetAlbumsList(): AlbumListItemMin[] {
+        return Array.from(AlbumsController.AlbumsMap.values());
+    }
+
+    /**
+     * Gets a minified version of the albums list
+     * @returns A minified version of the albums list
+     */
+    public static GetAlbumsListMin(): { id: number; name: string; nameLowerCase: string }[] {
+        const result = [];
+
+        for (const album of AlbumsController.AlbumsMap.values()) {
+            result.push({
+                id: album.id,
+                name: album.name,
+                nameLowerCase: album.name.toLowerCase(),
+            });
+        }
+
+        return result;
+    }
+
+    /**
+     * Finds duplicated name in the map
+     * @param name The name to find
+     * @returns True if the name os found
+     */
+    public static FindDuplicatedName(name: string): boolean {
+        const nameLower = name.toLowerCase();
+
+        for (const album of AlbumsController.AlbumsMap.values()) {
+            if (nameLower === album.name.toLowerCase()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Loads albums list
+     */
     public static Load() {
         AlbumsController.Loading = true;
-        AppEvents.Emit("albums-loading", true);
 
         if (AuthController.Locked) {
             return; // Vault is locked
         }
 
-        Timeouts.Abort("albums-load");
-        Request.Pending("albums-load", AlbumsAPI.GetAlbumsMin())
+        Timeouts.Abort(REQUEST_ID_ALBUMS_LOAD);
+        Request.Pending(REQUEST_ID_ALBUMS_LOAD, AlbumsAPI.GetAlbumsMin())
             .onSuccess((albums) => {
-                AlbumsController.Albums = Object.create(null);
+                AlbumsController.AlbumsMap.clear();
 
                 for (const album of albums) {
-                    AlbumsController.Albums[album.id + ""] = album;
+                    AlbumsController.AlbumsMap.set(album.id, album);
                 }
 
-                AppEvents.Emit("albums-update", AlbumsController.Albums);
+                AppEvents.Emit(EVENT_NAME_ALBUMS_LIST_UPDATE);
                 AlbumsController.Loading = false;
-                AppEvents.Emit("albums-loading", false);
                 AlbumsController.InitiallyLoaded = true;
             })
             .onRequestError((err) => {
@@ -61,22 +157,37 @@ export class AlbumsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set("albums-load", 1500, AlbumsController.Load);
+                        Timeouts.Set(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set("albums-load", 1500, AlbumsController.Load);
+                Timeouts.Set(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
             });
     }
 
+    /**
+     * Id of the current album.
+     * -1 if no album selected.
+     */
     public static CurrentAlbum = -1;
+
+    /**
+     * Loading flag for the current album
+     */
     public static CurrentAlbumLoading = false;
+
+    /**
+     * Loaded album data
+     */
     public static CurrentAlbumData: Album = null;
 
-    public static OnCurrentAlbumChanged() {
+    /**
+     * Called when the app status changes, in order to reload if necessary
+     */
+    private static OnCurrentAlbumChanged() {
         if (AppStatus.CurrentAlbum !== AlbumsController.CurrentAlbum) {
             AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
             AlbumsController.CurrentAlbumData = null;
@@ -85,15 +196,18 @@ export class AlbumsController {
         AlbumsController.UpdateAlbumCurrentPos();
     }
 
+    /**
+     * Loads the current album
+     */
     public static LoadCurrentAlbum() {
         if (AlbumsController.CurrentAlbum < 0) {
-            Timeouts.Abort("album-current-load");
-            Request.Abort("album-current-load");
+            Timeouts.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
+            Request.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
 
             AlbumsController.CurrentAlbumData = null;
-            AppEvents.Emit("current-album-update", null);
+            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, null);
             AlbumsController.CurrentAlbumLoading = false;
-            AppEvents.Emit("current-album-loading", false);
+            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
             AlbumsController.UpdateAlbumCurrentPos();
 
@@ -101,20 +215,20 @@ export class AlbumsController {
         }
 
         AlbumsController.CurrentAlbumLoading = true;
-        AppEvents.Emit("current-album-loading", true);
+        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, true);
 
         if (AuthController.Locked) {
             return; // Vault is locked
         }
 
-        Timeouts.Abort("album-current-load");
-        Request.Pending("album-current-load", AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum))
+        Timeouts.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
+        Request.Pending(REQUEST_ID_CURRENT_ALBUM_LOAD, AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum))
             .onSuccess((album) => {
                 AlbumsController.CurrentAlbumData = album;
-                AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+                AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
                 AlbumsController.CurrentAlbumLoading = false;
-                AppEvents.Emit("current-album-loading", false);
+                AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
                 AlbumsController.UpdateAlbumCurrentPos();
                 AppStatus.UpdateURL();
@@ -126,62 +240,47 @@ export class AlbumsController {
                     })
                     .add(404, "*", () => {
                         AlbumsController.CurrentAlbumData = null;
-                        AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+                        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
                         AlbumsController.CurrentAlbumLoading = false;
-                        AppEvents.Emit("current-album-loading", false);
+                        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
                         AppStatus.CloseAlbum();
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
+                        Timeouts.Set(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set("album-current-load", 1500, AlbumsController.LoadCurrentAlbum);
+                Timeouts.Set(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
             });
     }
 
-    public static GetAlbumsListCopy(): { id: number; name: string; nameLowerCase: string }[] {
-        const result = [];
-
-        for (const album of Object.values(AlbumsController.Albums)) {
-            result.push({
-                id: album.id,
-                name: album.name,
-                nameLowerCase: album.name.toLowerCase(),
-            });
-        }
-
-        return result;
-    }
-
-    public static FindDuplicatedName(name: string): boolean {
-        const nameLower = name.toLowerCase();
-
-        for (const album of Object.values(AlbumsController.Albums)) {
-            if (nameLower === album.name.toLowerCase()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    /**
+     * Call when the user makes changes to an album
+     * @param albumId The album ID
+     * @param noUpdateList Set to true if a list reload is not necessary
+     */
     public static OnChangedAlbum(albumId: number, noUpdateList?: boolean) {
         if (AlbumsController.CurrentAlbum === albumId) {
             AlbumsController.LoadCurrentAlbum();
         }
-        AppEvents.Emit("albums-list-change");
+        AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
         if (!noUpdateList) {
             AlbumsController.Load();
         }
     }
 
+    /**
+     * Moves an element of the album to another position.
+     * Updates the local list and calls the server to update the remote list.
+     * @param oldIndex The original position
+     * @param newIndex The new position
+     */
     public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number) {
         if (!AlbumsController.CurrentAlbumData) {
             return;
@@ -196,7 +295,7 @@ export class AlbumsController {
 
         AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
 
-        AppEvents.Emit("current-album-update", AlbumsController.CurrentAlbumData);
+        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
         AlbumsController.UpdateAlbumCurrentPos();
 
@@ -204,8 +303,7 @@ export class AlbumsController {
 
         Request.Do(AlbumsAPI.MoveMediaInAlbum(albumId, mediaId, newIndex))
             .onSuccess(() => {
-                AppEvents.Emit("album-order-saved");
-                AppEvents.Emit("albums-list-change");
+                AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
             })
             .onRequestError((err) => {
                 Request.ErrorHandler()
@@ -219,23 +317,50 @@ export class AlbumsController {
             });
     }
 
+    /**
+     * Position of the current media in the current album
+     */
     public static CurrentAlbumPos = -1;
+
+    /**
+     * Previous element
+     */
     public static CurrentPrev: MediaListItem = null;
+
+    /**
+     * Next element
+     */
     public static CurrentNext: MediaListItem = null;
 
+    /**
+     * Album loop option
+     */
     public static AlbumLoop = false;
+
+    /**
+     * Album randomize order option
+     */
     public static AlbumRandom = false;
 
+    /**
+     * Toggles album loop option
+     */
     public static ToggleLoop() {
         AlbumsController.AlbumLoop = !AlbumsController.AlbumLoop;
         this.UpdateAlbumCurrentPos();
     }
 
+    /**
+     * Toggles album order randomize option
+     */
     public static ToggleRandom() {
         AlbumsController.AlbumRandom = !AlbumsController.AlbumRandom;
         this.UpdateAlbumCurrentPos();
     }
 
+    /**
+     * Computes and updates the position of the current media in the current album
+     */
     public static UpdateAlbumCurrentPos() {
         const mediaId = AppStatus.CurrentMedia;
 
@@ -243,7 +368,7 @@ export class AlbumsController {
             AlbumsController.CurrentAlbumPos = -1;
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
-            AppEvents.Emit("album-pos-update");
+            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
             AlbumsController.PreFetchAlbumNext();
             return;
         }
@@ -303,23 +428,37 @@ export class AlbumsController {
 
         setCachedAlbumPosition(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
 
-        AppEvents.Emit("album-pos-update");
+        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
         AlbumsController.PreFetchAlbumNext();
     }
 
+    /**
+     * True if the next pre-fetch data is available
+     */
     public static AvailableNextPrefetch = false;
+
+    /**
+     * Loading flag for the next element
+     */
     public static LoadingNext = false;
+
+    /**
+     * Loaded data for the next element
+     */
     public static NextMediaData: MediaData = null;
 
+    /**
+     * Loads the data for the next element for fast transition
+     */
     public static PreFetchAlbumNext() {
         if (AlbumsController.CurrentNext === null || AlbumsController.CurrentNext.id === MediaController.MediaId) {
-            Timeouts.Abort("album-next-prefetch-load");
-            Request.Abort("album-next-prefetch-load");
+            Timeouts.Abort(REQUEST_ID_NEXT_PRE_FETCH);
+            Request.Abort(REQUEST_ID_NEXT_PRE_FETCH);
 
             AlbumsController.NextMediaData = null;
             AlbumsController.LoadingNext = false;
             AlbumsController.AvailableNextPrefetch = false;
-            AppEvents.Emit("album-next-prefetch");
+            AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
             return;
         }
 
@@ -333,13 +472,13 @@ export class AlbumsController {
 
         const mediaId = AlbumsController.CurrentNext.id;
 
-        Timeouts.Abort("album-next-prefetch-load");
-        Request.Pending("album-next-prefetch-load", MediaAPI.GetMedia(mediaId))
+        Timeouts.Abort(REQUEST_ID_NEXT_PRE_FETCH);
+        Request.Pending(REQUEST_ID_NEXT_PRE_FETCH, MediaAPI.GetMedia(mediaId))
             .onSuccess((media) => {
                 AlbumsController.NextMediaData = media;
                 AlbumsController.LoadingNext = false;
                 AlbumsController.AvailableNextPrefetch = true;
-                AppEvents.Emit("album-next-prefetch", mediaId);
+                AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
             })
             .onRequestError((err) => {
                 Request.ErrorHandler()
@@ -350,21 +489,25 @@ export class AlbumsController {
                         AlbumsController.NextMediaData = null;
                         AlbumsController.LoadingNext = false;
                         AlbumsController.AvailableNextPrefetch = true;
-                        AppEvents.Emit("album-next-prefetch", mediaId);
+                        AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+                        Timeouts.Set(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set("album-next-prefetch-load", 1500, AlbumsController.PreFetchAlbumNext);
+                Timeouts.Set(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
             });
     }
 
+    /**
+     * Checks if pre-fetch is available
+     * @returns True if the pre-fetched data was set, so no load is needed
+     */
     public static CheckAlbumNextPrefetch(): boolean {
         if (AlbumsController.CurrentNext === null) {
             return false;
@@ -381,26 +524,4 @@ export class AlbumsController {
             return false;
         }
     }
-
-    public static HasPagePrev = false;
-    public static HasPageNext = false;
-
-    public static OnPageLoad(currentMediaIndex: number, pageSize: number, page: number, totalPages: number) {
-        if (currentMediaIndex >= 0) {
-            AlbumsController.HasPagePrev = currentMediaIndex > 0 || page > 0;
-            AlbumsController.HasPageNext = currentMediaIndex < pageSize - 1 || page < totalPages - 1;
-        } else {
-            AlbumsController.HasPagePrev = false;
-            AlbumsController.HasPageNext = false;
-        }
-        AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
-    }
-
-    public static OnPageUnload() {
-        AlbumsController.HasPagePrev = false;
-        AlbumsController.HasPageNext = false;
-        AppEvents.Emit("page-media-nav-update", AlbumsController.HasPagePrev, AlbumsController.HasPageNext);
-    }
-
-    public static AlbumsPageSearch = "";
 }

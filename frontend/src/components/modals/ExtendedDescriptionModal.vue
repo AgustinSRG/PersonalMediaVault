@@ -294,7 +294,7 @@ export default defineComponent({
             Request.Do(EditMediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.Emit("snack", this.$t("Successfully saved extended description"));
+                    AppEvents.ShowSnackBar(this.$t("Successfully saved extended description"));
                     this.content = this.contentToChange;
                     this.editing = false;
                     this.changed = true;

@@ -239,7 +239,7 @@ export default defineComponent({
 
                     Request.Pending("media-editor-busy-resolutions", EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
-                            AppEvents.Emit("snack", this.$t("Added resolution") + ": " + r.name);
+                            AppEvents.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = true;
                             r.fps = result.fps;
@@ -268,28 +268,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                    AppEvents.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.Emit("snack", err.message);
+                            AppEvents.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });
@@ -316,7 +316,7 @@ export default defineComponent({
 
                     Request.Pending("media-editor-busy-resolutions", EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
-                            AppEvents.Emit("snack", this.$t("Removed resolution") + ": " + r.name);
+                            AppEvents.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = false;
                             if (MediaController.MediaData) {
@@ -344,28 +344,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Bad request"));
+                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Access denied"));
+                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Not found"));
+                                    AppEvents.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Internal server error"));
+                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.Emit("snack", err.message);
+                            AppEvents.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });

@@ -81,6 +81,7 @@ import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { Timeouts } from "@/utils/timeout";
+import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -259,7 +260,7 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this.pendingId = MediaController.GetPendingId();
+        this.pendingId = getUniqueStringId();
         this.start();
     },
 

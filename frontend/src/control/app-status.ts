@@ -9,6 +9,7 @@ import { GenerateURIQuery } from "@/utils/request";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
+import { EVENT_NAME_MEDIA_DELETE } from "./pages";
 
 const EVENT_NAME = "app-status-update";
 
@@ -360,7 +361,7 @@ export class AppStatus {
 
         AppStatus.CurrentFocus = "right";
 
-        AppEvents.Emit("media-delete");
+        AppEvents.Emit(EVENT_NAME_MEDIA_DELETE);
 
         AppStatus.OnStatusUpdate();
     }

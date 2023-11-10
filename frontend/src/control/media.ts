@@ -161,19 +161,6 @@ export class MediaController {
     }
 
     /**
-     * Counter to make unique pending Ids
-     */
-    private static NextPendingId = 0;
-
-    /**
-     * Gets an unique ID for a request to check the media
-     */
-    public static GetPendingId() {
-        MediaController.NextPendingId++;
-        return "pending-check-" + Date.now() + "-" + MediaController.NextPendingId;
-    }
-
-    /**
      * Adds event listener to check for metadata updates
      * @param handler Event handler
      */

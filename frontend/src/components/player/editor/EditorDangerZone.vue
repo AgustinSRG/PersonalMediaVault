@@ -83,7 +83,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-danger", EditMediaAPI.EncodeMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.Emit("snack", this.$t("Successfully requested pending encoding tasks"));
+                    AppEvents.ShowSnackBar(this.$t("Successfully requested pending encoding tasks"));
                     this.busy = false;
                     MediaController.Load();
                 })
@@ -94,25 +94,25 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Access denied"));
+                            AppEvents.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Not found"));
+                            AppEvents.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.Emit("snack", this.$t("Internal server error"));
+                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.Emit("snack", this.$t("Could not connect to the server"));
+                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.Emit("snack", err.message);
+                    AppEvents.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });

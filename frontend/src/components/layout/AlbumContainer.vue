@@ -162,7 +162,13 @@
 
 <script lang="ts">
 import { AlbumsAPI } from "@/api/api-albums";
-import { AlbumsController } from "@/control/albums";
+import {
+    AlbumsController,
+    EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_CURRENT_ALBUM_LOADING,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+} from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
@@ -392,18 +398,18 @@ export default defineComponent({
         toggleLoop: function () {
             AlbumsController.ToggleLoop();
             if (AlbumsController.AlbumLoop) {
-                AppEvents.Emit("snack", this.$t("Album loop enabled"));
+                AppEvents.ShowSnackBar(this.$t("Album loop enabled"));
             } else {
-                AppEvents.Emit("snack", this.$t("Album loop disabled"));
+                AppEvents.ShowSnackBar(this.$t("Album loop disabled"));
             }
         },
 
         toggleRandom: function () {
             AlbumsController.ToggleRandom();
             if (AlbumsController.AlbumRandom) {
-                AppEvents.Emit("snack", this.$t("Album shuffle enabled"));
+                AppEvents.ShowSnackBar(this.$t("Album shuffle enabled"));
             } else {
-                AppEvents.Emit("snack", this.$t("Album shuffle disabled"));
+                AppEvents.ShowSnackBar(this.$t("Album shuffle disabled"));
             }
         },
 
@@ -411,11 +417,11 @@ export default defineComponent({
             if (this.isFav) {
                 this.isFav = false;
                 albumRemoveFav(AlbumsController.CurrentAlbum);
-                AppEvents.Emit("snack", this.$t("Album removed from favorites"));
+                AppEvents.ShowSnackBar(this.$t("Album removed from favorites"));
             } else {
                 this.isFav = true;
                 albumAddFav(AlbumsController.CurrentAlbum);
-                AppEvents.Emit("snack", this.$t("Album added to favorites"));
+                AppEvents.ShowSnackBar(this.$t("Album added to favorites"));
             }
         },
 
@@ -558,9 +564,9 @@ export default defineComponent({
             const albumId = this.albumId;
             Request.Do(AlbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
                 .onSuccess(() => {
-                    AppEvents.Emit("snack", this.$t("Successfully removed from album"));
+                    AppEvents.ShowSnackBar(this.$t("Successfully removed from album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
-                    AppEvents.Emit("albums-list-change");
+                    AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -789,7 +795,7 @@ export default defineComponent({
         }
         this._handles = Object.create(null);
         this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener("current-album-update", this._handles.albumUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
 
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
@@ -810,10 +816,10 @@ export default defineComponent({
         this.onAlbumPosUpdate();
 
         this._handles.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener("current-album-loading", this._handles.loadingH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
 
         this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
@@ -831,10 +837,10 @@ export default defineComponent({
         document.addEventListener("mouseup", this._handles.onDocumentMouseUpH);
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener("current-album-update", this._handles.albumUpdateH);
-        AppEvents.RemoveEventListener("current-album-loading", this._handles.loadingH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
 
-        AppEvents.RemoveEventListener("album-pos-update", this._handles.posUpdateH);
+        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
