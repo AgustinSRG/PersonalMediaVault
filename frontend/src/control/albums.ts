@@ -57,7 +57,7 @@ export class AlbumsController {
     /**
      * Albums mapping
      */
-    private static AlbumsMap: Map<number, AlbumListItemMin> = new Map();
+    public static AlbumsMap: Map<number, AlbumListItemMin> = new Map();
 
     /**
      * Loading flag for albums list
@@ -146,7 +146,7 @@ export class AlbumsController {
                     AlbumsController.AlbumsMap.set(album.id, album);
                 }
 
-                AppEvents.Emit(EVENT_NAME_ALBUMS_LIST_UPDATE);
+                AppEvents.Emit(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
                 AlbumsController.Loading = false;
                 AlbumsController.InitiallyLoaded = true;
             })

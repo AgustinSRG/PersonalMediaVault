@@ -166,7 +166,7 @@ export function albumRemoveFav(id: number) {
     }
 }
 
-AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: { [id: string]: AlbumListItemMin }) => {
+AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, AlbumListItemMin>) => {
     // Remove favorite albums removed from the vault
     let favorites = fetchFromLocalStorage(LS_KEY_FAVORITE_ALBUMS, []);
 
@@ -174,7 +174,7 @@ AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: { [id: string
         favorites = [];
     } else {
         favorites = favorites.filter((id) => {
-            return !!albums[id];
+            return albums.has(parseInt(id, 10));
         });
         saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
     }
