@@ -301,3 +301,44 @@ export function setPageItemsFit(fit: number) {
     saveIntoLocalStorage(LS_KEY_PAGE_ITEMS_FIT, fit);
     AppEvents.Emit(EVENT_NAME_PAGE_ITEMS_UPDATED);
 }
+
+const LS_KEY_LAST_USED_TAGS = "app-last-used-tags";
+
+const LAST_USED_TAGS_LIMIT = 10;
+
+/**
+ * Gets the list of last used tags
+ */
+export function getLastUsedTags(): number[] {
+    let r = fetchFromLocalStorageCache(LS_KEY_LAST_USED_TAGS, []);
+
+    if (!Array.isArray(r)) {
+        r = [];
+    }
+
+    return r;
+}
+
+/**
+ * Updates the last used tags
+ * @param tag The used tag
+ */
+export function setLastUsedTag(tag: number) {
+    let r = fetchFromLocalStorage(LS_KEY_LAST_USED_TAGS, []);
+
+    if (!Array.isArray(r)) {
+        r = [];
+    }
+
+    if (r.includes(tag)) {
+        r = r.filter(t => t !== tag);
+    }
+
+    r.unshift(tag);
+
+    while (r.length > LAST_USED_TAGS_LIMIT) {
+        r.pop();
+    }
+
+    saveIntoLocalStorage(LS_KEY_LAST_USED_TAGS, r);
+}

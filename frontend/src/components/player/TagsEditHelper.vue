@@ -76,6 +76,7 @@ import { AppEvents } from "@/control/app-events";
 import { Request } from "@/utils/request";
 import { TagsAPI } from "@/api/api-tags";
 import { MediaController } from "@/control/media";
+import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 
 export default defineComponent({
     components: {
@@ -151,6 +152,7 @@ export default defineComponent({
 
         updateTagData: function () {
             this.tagVersion = TagsController.TagsVersion;
+            this.findTags();
         },
 
         getTagName: function (tag: number, v: number) {
@@ -238,6 +240,7 @@ export default defineComponent({
 
             Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
+                    setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     this.tagToAdd = "";
@@ -305,6 +308,7 @@ export default defineComponent({
 
             Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
+                    setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     if (this.tags.indexOf(res.id) === -1) {
@@ -369,6 +373,23 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
+            if (!tagFilter) {
+                const lastUsedTagsIds = getLastUsedTags();
+                const lastUsedTags = [];
+
+                for (const tid of lastUsedTagsIds) {
+                    if (TagsController.Tags.has(tid) && !this.tags.includes(tid)) {
+                        lastUsedTags.push({
+                            id: tid,
+                            name: TagsController.Tags.get(tid),
+                        });
+                    }
+                }
+
+                this.matchingTags = lastUsedTags;
+
+                return;
+            }
             this.matchingTags = Array.from(TagsController.Tags.entries())
                 .map((a) => {
                     const i = a[1].indexOf(tagFilter);
@@ -427,7 +448,6 @@ export default defineComponent({
 
         MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
 
-        this.updateTagData();
         this.load();
 
         if (this.display) {

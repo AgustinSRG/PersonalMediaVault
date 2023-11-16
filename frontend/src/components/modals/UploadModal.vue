@@ -89,6 +89,7 @@ import { parseTagName } from "@/utils/tags";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { getLastUsedTags } from "@/control/app-preferences";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -194,7 +195,20 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             if (!tagFilter) {
-                this.matchingTags = [];
+                const lastUsedTagsIds = getLastUsedTags();
+                const lastUsedTags = [];
+
+                for (const tid of lastUsedTagsIds) {
+                    if (TagsController.Tags.has(tid) && !this.tags.includes(tid)) {
+                        lastUsedTags.push({
+                            id: tid,
+                            name: TagsController.Tags.get(tid),
+                        });
+                    }
+                }
+
+                this.matchingTags = lastUsedTags;
+
                 return;
             }
             this.matchingTags = Array.from(TagsController.Tags.entries())
@@ -233,12 +247,21 @@ export default defineComponent({
         },
 
         onTagInputKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab" && this.tagToAdd && !event.shiftKey) {
-                this.onTagAddChanged(true);
-                if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
-                    this.tagToAdd = this.matchingTags[0].name;
+            if (event.key === "Tab" && !event.shiftKey) {
+                if (this.tagToAdd) {
                     this.onTagAddChanged(true);
-                    event.preventDefault();
+                    if (this.matchingTags.length > 0 && this.matchingTags[0].name !== this.tagToAdd) {
+                        this.tagToAdd = this.matchingTags[0].name;
+                        this.onTagAddChanged(true);
+                        event.preventDefault();
+                    }
+                } else {
+                    const btn = this.$el.querySelector(".modal-footer-btn");
+
+                    if (btn) {
+                        event.preventDefault();
+                        btn.focus();
+                    }
                 }
             } else if (event.key === "Enter") {
                 if (this.tagToAdd) {

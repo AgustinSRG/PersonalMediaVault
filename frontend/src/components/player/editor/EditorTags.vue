@@ -59,6 +59,7 @@
 <script lang="ts">
 import { TagsAPI } from "@/api/api-tags";
 import { AppEvents } from "@/control/app-events";
+import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
@@ -108,6 +109,7 @@ export default defineComponent({
 
         updateTagData: function () {
             this.tagVersion = TagsController.TagsVersion;
+            this.findTags();
         },
 
         getTagName: function (tag: number, v: number) {
@@ -191,6 +193,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-tags", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
+                    setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     this.tagToAdd = "";
@@ -256,6 +259,7 @@ export default defineComponent({
 
             Request.Pending("media-editor-busy-tags", TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
+                    setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     if (this.tags.indexOf(res.id) === -1) {
@@ -319,7 +323,20 @@ export default defineComponent({
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
             if (!tagFilter) {
-                this.matchingTags = [];
+                const lastUsedTagsIds = getLastUsedTags();
+                const lastUsedTags = [];
+
+                for (const tid of lastUsedTagsIds) {
+                    if (TagsController.Tags.has(tid) && !this.tags.includes(tid)) {
+                        lastUsedTags.push({
+                            id: tid,
+                            name: TagsController.Tags.get(tid),
+                        });
+                    }
+                }
+
+                this.matchingTags = lastUsedTags;
+
                 return;
             }
             this.matchingTags = Array.from(TagsController.Tags.entries())

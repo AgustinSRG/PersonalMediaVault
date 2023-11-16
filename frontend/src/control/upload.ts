@@ -11,6 +11,7 @@ import { MediaController } from "./media";
 import { TagsController } from "./tags";
 import { UploadMediaAPI } from "@/api/api-media-upload";
 import { EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { setLastUsedTag } from "./app-preferences";
 
 const TICK_DELAY_MS = 500;
 
@@ -472,6 +473,7 @@ export class UploadController {
 
         Request.Do(TagsAPI.TagMedia(mediaId, tag))
             .onSuccess((res) => {
+                setLastUsedTag(res.id);
                 m.tags.shift(); // Remove tag from list
                 m.progress = m.tags.length;
                 m.busy = false;
