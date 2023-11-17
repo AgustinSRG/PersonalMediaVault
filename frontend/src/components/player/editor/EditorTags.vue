@@ -66,6 +66,7 @@ import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
 import { Request } from "@/utils/request";
+import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
@@ -126,7 +127,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tagName = this.getTagName(tag, this.tagVersion);
 
-            Request.Pending("media-editor-busy-tags", TagsAPI.UntagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.UntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
                     AppEvents.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
@@ -191,7 +192,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tag = this.tagToAdd;
 
-            Request.Pending("media-editor-busy-tags", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -257,7 +258,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-tags", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -391,6 +392,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
         this.updateTagData();
 
@@ -422,7 +425,7 @@ export default defineComponent({
             clearTimeout(this._handles.findTagTimeout);
         }
 
-        Request.Abort("media-editor-busy-tags");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

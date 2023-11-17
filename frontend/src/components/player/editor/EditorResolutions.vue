@@ -74,6 +74,7 @@ import { defineComponent } from "vue";
 
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -237,7 +238,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending("media-editor-busy-resolutions", EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this._handles.requestId, EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
                             AppEvents.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
@@ -314,7 +315,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending("media-editor-busy-resolutions", EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this._handles.requestId, EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
                             AppEvents.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
@@ -409,6 +410,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -425,7 +428,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-resolutions");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

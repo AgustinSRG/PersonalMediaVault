@@ -144,12 +144,7 @@
                                 <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                                 <i v-else class="fas fa-ban"></i>
                             </div>
-                            <img
-                                v-if="item.thumbnail"
-                                :src="getThumbnail(item.thumbnail)"
-                                :alt="$t('Thumbnail')"
-                                loading="lazy"
-                            />
+                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
                             <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                                 {{ renderTime(item.duration) }}
                             </div>
@@ -196,6 +191,7 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     PagesController,
 } from "@/control/pages";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -250,7 +246,7 @@ export default defineComponent({
     },
     methods: {
         markDirty: function () {
-            Timeouts.Set("page-adv-search-dirty", 330, () => {
+            Timeouts.Set(this._handles.dirtyTimeoutId, 330, () => {
                 this.startSearch();
             });
         },
@@ -291,8 +287,8 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("page-adv-search-load");
-            Request.Abort("page-adv-search-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display || this.finished) {
                 return;
@@ -304,7 +300,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("page-adv-search-load", SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize))
+            Request.Pending(this._handles.loadRequestId, SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     const completePageList = this._handles.listScroller.list;
                     this.filterElements(result.page_items);
@@ -339,14 +335,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("page-adv-search-load", 1500, this._handles.loadH);
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("page-adv-search-load", 1500, this._handles.loadH);
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -467,7 +463,7 @@ export default defineComponent({
             if (event) {
                 event.preventDefault();
             }
-            Timeouts.Abort("page-adv-search-dirty");
+            Timeouts.Abort(this._handles.dirtyTimeoutId);
             this.loading = true;
             this._handles.listScroller.reset();
             this.fullListLength = 0;
@@ -486,9 +482,9 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort("page-adv-search-load");
+            Request.Abort(this._handles.loadRequestId);
 
-            Request.Pending("page-adv-search-load", AlbumsAPI.GetAlbum(this.albumSearch))
+            Request.Pending(this._handles.loadRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     if (this.order === "asc") {
                         this.filterElements(
@@ -532,7 +528,7 @@ export default defineComponent({
                             this.load();
                         })
                         .add("*", "*", () => {
-                            Timeouts.Set("page-adv-search-load", 1500, this.loadAlbumSearch.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
                         })
                         .handle(err);
                 })
@@ -543,15 +539,15 @@ export default defineComponent({
         },
 
         cancel: function () {
-            Timeouts.Abort("page-adv-search-load");
-            Request.Abort("page-adv-search-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
             this.loading = false;
             this.finished = true;
         },
 
         resetSearch: function () {
-            Timeouts.Abort("page-adv-search-load");
-            Request.Abort("page-adv-search-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
             this._handles.listScroller.reset();
             this.fullListLength = 0;
             this._handles.mediaIndexMap.clear();
@@ -943,6 +939,10 @@ export default defineComponent({
     mounted: function () {
         this.pageScrollStatus = 0;
         this._handles = Object.create(null);
+
+        this._handles.loadRequestId = getUniqueStringId();
+        this._handles.dirtyTimeoutId = getUniqueStringId();
+
         this.advancedSearch = false;
         this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
         KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
@@ -1000,10 +1000,10 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort("page-adv-search-load");
-        Request.Abort("page-adv-search-load");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
 
-        Timeouts.Abort("page-adv-search-dirty");
+        Timeouts.Abort(this._handles.dirtyTimeoutId);
 
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);

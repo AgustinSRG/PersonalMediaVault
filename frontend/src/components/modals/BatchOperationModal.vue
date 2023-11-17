@@ -209,6 +209,7 @@ import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/norma
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaListItem } from "@/api/models";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 const PAGE_SIZE = 50;
 
@@ -540,9 +541,9 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort("modal-batch-request");
+            Request.Abort(this._handles.batchRequestId);
 
-            Request.Pending("modal-batch-request", AlbumsAPI.GetAlbum(this.albumSearch))
+            Request.Pending(this._handles.batchRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     this.filterElements(result.list);
                     this.finishSearch();
@@ -588,9 +589,9 @@ export default defineComponent({
         },
 
         searchNext: function (page: number) {
-            Request.Abort("modal-batch-request");
+            Request.Abort(this._handles.batchRequestId);
 
-            Request.Pending("modal-batch-request", SearchAPI.Search(this.getFirstTag(), "asc", page, PAGE_SIZE))
+            Request.Pending(this._handles.batchRequestId, SearchAPI.Search(this.getFirstTag(), "asc", page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
 
@@ -713,7 +714,7 @@ export default defineComponent({
         },
 
         cancel: function () {
-            Request.Abort("modal-batch-request");
+            Request.Abort(this._handles.batchRequestId);
         },
 
         confirm: function () {
@@ -723,7 +724,7 @@ export default defineComponent({
         },
 
         actionNext: function (i: number) {
-            Request.Abort("modal-batch-request");
+            Request.Abort(this._handles.batchRequestId);
 
             if (i >= this.actionItems.length) {
                 // Finish
@@ -759,7 +760,7 @@ export default defineComponent({
         },
 
         actionDelete: function (mid: number, next: number) {
-            Request.Pending("modal-batch-request", EditMediaAPI.DeleteMedia(mid))
+            Request.Pending(this._handles.batchRequestId, EditMediaAPI.DeleteMedia(mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -792,7 +793,7 @@ export default defineComponent({
         },
 
         actionAddAlbum: function (mid: number, next: number) {
-            Request.Pending("modal-batch-request", AlbumsAPI.AddMediaToAlbum(this.albumToAdd, mid))
+            Request.Pending(this._handles.batchRequestId, AlbumsAPI.AddMediaToAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -828,7 +829,7 @@ export default defineComponent({
         },
 
         actionRemoveAlbum: function (mid: number, next: number) {
-            Request.Pending("modal-batch-request", AlbumsAPI.RemoveMediaFromAlbum(this.albumToAdd, mid))
+            Request.Pending(this._handles.batchRequestId, AlbumsAPI.RemoveMediaFromAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -866,7 +867,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending("modal-batch-request", TagsAPI.TagMedia(mid, tags[0]))
+            Request.Pending(this._handles.batchRequestId, TagsAPI.TagMedia(mid, tags[0]))
                 .onSuccess(() => {
                     this.actionAddTag(mid, tags.slice(1), next);
                 })
@@ -912,7 +913,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending("modal-batch-request", TagsAPI.UntagMedia(mid, tagId))
+            Request.Pending(this._handles.batchRequestId, TagsAPI.UntagMedia(mid, tagId))
                 .onSuccess(() => {
                     this.actionRemoveTag(mid, tags.slice(1), next);
                 })
@@ -946,6 +947,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.batchRequestId = getUniqueStringId();
+
         this._handles.tagUpdateH = this.updateTagData.bind(this);
 
         TagsController.AddEventListener(this._handles.tagUpdateH);
@@ -964,7 +967,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort("modal-batch-request");
+        Request.Abort(this._handles.batchRequestId);
 
         if (this._handles.findTagSearchTimeout) {
             clearTimeout(this._handles.findTagSearchTimeout);

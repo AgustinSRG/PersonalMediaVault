@@ -77,6 +77,7 @@ import { Timeouts } from "@/utils/timeout";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     name: "TaskListModal",
@@ -116,10 +117,10 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("admin-tasks");
-            Request.Abort("admin-tasks");
-            Timeouts.Abort("admin-tasks-update");
-            Timeouts.Abort("admin-tasks-update");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
+            Timeouts.Abort(this._handles.updateRequestId);
+            Request.Abort(this._handles.updateRequestId);
 
             if (!this.display) {
                 return;
@@ -127,11 +128,11 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending("admin-tasks", TasksAPI.GetTasks())
+            Request.Pending(this._handles.loadRequestId, TasksAPI.GetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
-                    Timeouts.Set("admin-tasks-update", 500, this.updateTasks.bind(this));
+                    Timeouts.Set(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -143,29 +144,29 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("admin-tasks", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("admin-tasks", 1500, this.load.bind(this));
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         updateTasks: function () {
-            Timeouts.Abort("admin-tasks-update");
-            Timeouts.Abort("admin-tasks-update");
+            Timeouts.Abort(this._handles.updateRequestId);
+            Request.Abort(this._handles.updateRequestId);
 
             if (!this.display) {
                 return;
             }
 
-            Request.Pending("admin-tasks-update", TasksAPI.GetTasks())
+            Request.Pending(this._handles.updateRequestId, TasksAPI.GetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
-                    Timeouts.Set("admin-tasks-update", 500, this.updateTasks.bind(this));
+                    Timeouts.Set(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -177,14 +178,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("admin-tasks-update", 1500, this.updateTasks.bind(this));
+                            Timeouts.Set(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("admin-tasks-update", 1500, this.updateTasks.bind(this));
+                    Timeouts.Set(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
                 });
         },
 
@@ -322,6 +323,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+        this._handles.updateRequestId = getUniqueStringId();
+
         this.load();
 
         if (this.display) {
@@ -331,9 +336,10 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort("admin-tasks");
-        Request.Abort("admin-tasks");
-        Timeouts.Abort("admin-tasks-update");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
+        Timeouts.Abort(this._handles.updateRequestId);
+        Request.Abort(this._handles.updateRequestId);
     },
     watch: {
         display: function () {

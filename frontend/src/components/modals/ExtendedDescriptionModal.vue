@@ -79,6 +79,7 @@ import { GetAssetURL, Request } from "@/utils/request";
 import { escapeHTML } from "@/utils/html";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -118,8 +119,8 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            Timeouts.Abort("media-ext-desc-load");
-            Request.Abort("media-ext-desc-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -150,7 +151,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending("media-ext-desc-load", {
+            Request.Pending(this._handles.loadRequestId, {
                 method: "GET",
                 url: GetAssetURL(descFilePath),
             })
@@ -191,14 +192,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("media-ext-desc-load", 1500, this.load.bind(this));
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -334,6 +335,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+
         this._handles.authUpdateH = this.updateAuthInfo.bind(this);
 
         AuthController.AddChangeEventListener(this._handles.authUpdateH);
@@ -348,6 +351,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
     },

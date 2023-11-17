@@ -41,6 +41,7 @@ import { defineComponent } from "vue";
 import MediaDeleteModal from "@/components/modals/MediaDeleteModal.vue";
 import ReEncodeConfirmationModal from "@/components/modals/ReEncodeConfirmationModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -81,7 +82,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-danger", EditMediaAPI.EncodeMedia(mediaId))
+            Request.Pending(this._handles.requestId, EditMediaAPI.EncodeMedia(mediaId))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully requested pending encoding tasks"));
                     this.busy = false;
@@ -133,6 +134,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -149,7 +152,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-danger");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

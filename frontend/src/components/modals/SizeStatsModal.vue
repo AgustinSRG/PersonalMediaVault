@@ -48,6 +48,7 @@ import { Request } from "@/utils/request";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     name: "SizeStatsModal",
@@ -71,8 +72,8 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            Timeouts.Abort("media-size-stats-load");
-            Request.Abort("media-size-stats-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -84,7 +85,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("media-size-stats-load", MediaAPI.GetMediaSizeStats(this.mid))
+            Request.Pending(this._handles.loadRequestId, MediaAPI.GetMediaSizeStats(this.mid))
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;
@@ -110,14 +111,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("media-size-stats-load", 1500, this.load.bind(this));
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -144,12 +145,19 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
             });
             this.load();
         }
+    },
+    beforeUnmount: function () {
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
     },
     watch: {
         display: function () {

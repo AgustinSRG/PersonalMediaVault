@@ -189,6 +189,7 @@ import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -396,8 +397,8 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("advanced-settings");
-            Request.Abort("advanced-settings");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -405,7 +406,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending("advanced-settings", ConfigAPI.GetConfig())
+            Request.Pending(this._handles.loadRequestId, ConfigAPI.GetConfig())
                 .onSuccess((response: VaultUserConfig) => {
                     this.title = response.title;
                     this.css = response.css;
@@ -422,18 +423,18 @@ export default defineComponent({
                         .add(401, "*", () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             // Retry
-                            Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("advanced-settings", 1500, this.load.bind(this));
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -504,6 +505,8 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
         this.load();
         if (this.display) {
             this.error = "";
@@ -513,8 +516,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort("advanced-settings");
-        Request.Abort("advanced-settings");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
     },
     watch: {
         display: function () {

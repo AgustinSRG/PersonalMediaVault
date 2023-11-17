@@ -77,6 +77,7 @@ import { Request } from "@/utils/request";
 import { TagsAPI } from "@/api/api-tags";
 import { MediaController } from "@/control/media";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -169,7 +170,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tagName = this.getTagName(tag, this.tagVersion);
 
-            Request.Pending("media-editor-busy", TagsAPI.UntagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.UntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
                     AppEvents.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
@@ -238,7 +239,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tag = this.tagToAdd;
 
-            Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -306,7 +307,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("tags-editor-busy", TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -437,6 +438,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this._handles.tagUpdateH = this.updateTagData.bind(this);
         TagsController.AddEventListener(this._handles.tagUpdateH);
 
@@ -456,7 +459,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort("tags-editor-busy");
+        Request.Abort(this._handles.requestId);
         TagsController.RemoveEventListener(this._handles.tagUpdateH);
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);

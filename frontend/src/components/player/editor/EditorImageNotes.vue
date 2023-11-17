@@ -47,6 +47,7 @@ import { defineComponent, nextTick } from "vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
 import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {},
@@ -95,7 +96,7 @@ export default defineComponent({
 
             const notes = textToImageNotes(this.imageNotes);
 
-            Request.Pending("media-editor-busy-image-notes", EditMediaAPI.SetNotes(mediaId, notes))
+            Request.Pending(this._handles.requestId, EditMediaAPI.SetNotes(mediaId, notes))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed image notes"));
                     this.busy = false;
@@ -147,6 +148,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateImageNotes();
 
         this._handles.updateImageNotesH = this.updateImageNotes.bind(this);
@@ -165,7 +168,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-image-notes");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

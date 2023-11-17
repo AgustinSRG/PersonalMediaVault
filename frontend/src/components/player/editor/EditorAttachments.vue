@@ -123,6 +123,7 @@ import { defineComponent } from "vue";
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { clone } from "@/utils/objects";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -195,7 +196,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-attachments", EditMediaAPI.UploadAttachment(mediaId, file))
+            Request.Pending(this._handles.requestId, EditMediaAPI.UploadAttachment(mediaId, file))
                 .onSuccess((res) => {
                     AppEvents.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
@@ -260,7 +261,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = att.id;
 
-                    Request.Pending("media-editor-busy-attachments", EditMediaAPI.RemoveAttachment(mediaId, id))
+                    Request.Pending(this._handles.requestId, EditMediaAPI.RemoveAttachment(mediaId, id))
                         .onSuccess(() => {
                             AppEvents.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
                             this.busy = false;
@@ -339,7 +340,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = this.attachmentEdit;
 
-            Request.Pending("media-editor-busy-attachments", EditMediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
+            Request.Pending(this._handles.requestId, EditMediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
                     AppEvents.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;
@@ -422,6 +423,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -438,7 +441,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-attachments");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

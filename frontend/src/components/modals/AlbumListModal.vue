@@ -132,6 +132,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -183,8 +184,8 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("media-albums-load");
-            Request.Abort("media-albums-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -196,7 +197,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("media-albums-load", MediaAPI.GetMediaAlbums(this.mid))
+            Request.Pending(this._handles.loadRequestId, MediaAPI.GetMediaAlbums(this.mid))
                 .onSuccess((result) => {
                     this.mediaAlbums = result;
                     this.loading = false;
@@ -219,14 +220,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set("media-albums-load", 1500, this.load.bind(this));
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -419,6 +420,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+
         this._handles.albumsUpdateH = this.updateAlbums.bind(this);
         AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
@@ -438,8 +441,8 @@ export default defineComponent({
     beforeUnmount: function () {
         AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
         AppStatus.RemoveEventListener(this._handles.statusH);
-        Timeouts.Abort("media-albums-load");
-        Request.Abort("media-albums-load");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
     },
     watch: {
         display: function () {
@@ -451,8 +454,8 @@ export default defineComponent({
                 AlbumsController.Load();
                 this.load();
             } else {
-                Timeouts.Abort("media-albums-load");
-                Request.Abort("media-albums-load");
+                Timeouts.Abort(this._handles.loadRequestId);
+                Request.Abort(this._handles.loadRequestId);
             }
         },
     },

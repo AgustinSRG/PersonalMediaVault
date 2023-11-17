@@ -82,6 +82,7 @@ import { defineComponent } from "vue";
 import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { clone } from "@/utils/objects";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -169,7 +170,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-audios", EditMediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
+            Request.Pending(this._handles.requestId, EditMediaAPI.SetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
                     AppEvents.ShowSnackBar(this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
@@ -235,7 +236,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = aud.id;
 
-                    Request.Pending("media-editor-busy-audios", EditMediaAPI.RemoveAudioTrack(mediaId, id))
+                    Request.Pending(this._handles.requestId, EditMediaAPI.RemoveAudioTrack(mediaId, id))
                         .onSuccess(() => {
                             AppEvents.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
                             this.busy = false;
@@ -301,6 +302,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -317,7 +320,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-audios");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>

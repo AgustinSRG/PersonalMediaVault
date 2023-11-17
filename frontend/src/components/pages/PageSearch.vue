@@ -55,12 +55,7 @@
                                 <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                                 <i v-else class="fas fa-ban"></i>
                             </div>
-                            <img
-                                v-if="item.thumbnail"
-                                :src="getThumbnail(item.thumbnail)"
-                                :alt="$t('Thumbnail')"
-                                loading="lazy"
-                            />
+                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
                             <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                                 {{ renderTime(item.duration) }}
                             </div>
@@ -102,6 +97,7 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     PagesController,
 } from "@/control/pages";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     name: "PageSearch",
@@ -155,8 +151,8 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("page-search-load");
-            Request.Abort("page-search-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -164,7 +160,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            Timeouts.Set("page-search-load", 330, () => {
+            Timeouts.Set(this._handles.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -172,14 +168,14 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("page-search-load", SearchAPI.Search(this.search, this.order, this.page, this.pageSize))
+            Request.Pending(this._handles.loadRequestId, SearchAPI.Search(this.search, this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     this.pageItems = result.page_items;
                     TagsController.OnMediaListReceived(this.pageItems);
                     this.page = result.page_index;
                     this.totalPages = result.page_count;
                     this.total = result.total_count;
-                    Timeouts.Abort("page-search-load");
+                    Timeouts.Abort(this._handles.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     if (this.switchMediaOnLoad === "next") {
@@ -213,7 +209,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set("page-search-load", 1500, this._handles.loadH);
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -221,7 +217,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set("page-search-load", 1500, this._handles.loadH);
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -446,6 +442,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+
         this._handles.loadH = this.load.bind(this);
         this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
@@ -478,8 +476,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort("page-search-load");
-        Request.Abort("page-search-load");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);

@@ -110,6 +110,7 @@ import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_MEDIA_METADATA_CHANGE } from "@/control/pages";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {
@@ -208,7 +209,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-thumbnail", EditMediaAPI.ChangeMediaThumbnail(mediaId, file))
+            Request.Pending(this._handles.requestIdThumbnail, EditMediaAPI.ChangeMediaThumbnail(mediaId, file))
                 .onSuccess((res) => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed thumbnail"));
                     this.busyThumbnail = false;
@@ -267,7 +268,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-title", EditMediaAPI.ChangeMediaTitle(mediaId, this.title))
+            Request.Pending(this._handles.requestIdTitle, EditMediaAPI.ChangeMediaTitle(mediaId, this.title))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed title"));
                     this.busyTitle = false;
@@ -322,7 +323,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-description", EditMediaAPI.ChangeMediaDescription(mediaId, this.desc))
+            Request.Pending(this._handles.requestIdDescription, EditMediaAPI.ChangeMediaDescription(mediaId, this.desc))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed description"));
                     this.busyDescription = false;
@@ -375,7 +376,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending("media-editor-busy-extra", EditMediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
+            Request.Pending(this._handles.requestIdExtra, EditMediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed media extra params"));
                     this.busyExtra = false;
@@ -426,6 +427,11 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestIdTitle = getUniqueStringId();
+        this._handles.requestIdDescription = getUniqueStringId();
+        this._handles.requestIdThumbnail = getUniqueStringId();
+        this._handles.requestIdExtra = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -444,10 +450,10 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-title");
-        Request.Abort("media-editor-busy-description");
-        Request.Abort("media-editor-busy-thumbnail");
-        Request.Abort("media-editor-busy-extra");
+        Request.Abort(this._handles.requestIdTitle);
+        Request.Abort(this._handles.requestIdDescription);
+        Request.Abort(this._handles.requestIdThumbnail);
+        Request.Abort(this._handles.requestIdExtra);
     },
 });
 </script>

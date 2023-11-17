@@ -331,7 +331,7 @@ export function setLastUsedTag(tag: number) {
     }
 
     if (r.includes(tag)) {
-        r = r.filter(t => t !== tag);
+        r = r.filter((t) => t !== tag);
     }
 
     r.unshift(tag);

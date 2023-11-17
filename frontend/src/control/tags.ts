@@ -11,6 +11,8 @@ import { MediaListItem } from "@/api/models";
 
 const EVENT_NAME = "tags-update";
 
+const REQUEST_ID = "tags-load";
+
 /**
  * Tags data management object
  */
@@ -74,9 +76,9 @@ export class TagsController {
             return; // Vault is locked
         }
 
-        Timeouts.Abort("tags-load");
+        Timeouts.Abort(REQUEST_ID);
 
-        Request.Pending("tags-load", TagsAPI.GetTags())
+        Request.Pending(REQUEST_ID, TagsAPI.GetTags())
             .onSuccess((tags) => {
                 TagsController.Tags = new Map();
 
@@ -99,14 +101,14 @@ export class TagsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set("tags-load", 1500, TagsController.Load);
+                        Timeouts.Set(REQUEST_ID, 1500, TagsController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set("tags-load", 1500, TagsController.Load);
+                Timeouts.Set(REQUEST_ID, 1500, TagsController.Load);
             });
     }
 

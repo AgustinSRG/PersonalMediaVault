@@ -117,12 +117,7 @@
                         <i v-else-if="draggingItem.type === 3" class="fas fa-headphones"></i>
                         <i v-else class="fas fa-ban"></i>
                     </div>
-                    <img
-                        v-if="draggingItem.thumbnail"
-                        :src="getThumbnail(draggingItem.thumbnail)"
-                        :alt="$t('Thumbnail')"
-                        loading="lazy"
-                    />
+                    <img v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
                     <div class="album-body-item-thumb-tag" v-if="draggingItem.type === 2 || draggingItem.type === 3">
                         {{ renderTime(draggingItem.duration) }}
                     </div>

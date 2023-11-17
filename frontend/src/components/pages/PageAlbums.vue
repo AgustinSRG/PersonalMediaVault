@@ -82,12 +82,7 @@
                             <div v-if="!item.thumbnail" class="no-thumb">
                                 <i class="fas fa-list-ol"></i>
                             </div>
-                            <img
-                                v-if="item.thumbnail"
-                                :src="getThumbnail(item.thumbnail)"
-                                :alt="$t('Thumbnail')"
-                                loading="lazy"
-                            />
+                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
                             <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
                             <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
                                 1 {{ $t("item") }}
@@ -131,6 +126,7 @@ import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-pre
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -209,8 +205,8 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort("page-albums-load");
-            Request.Abort("page-albums-load");
+            Timeouts.Abort(this._handles.loadRequestId);
+            Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -218,7 +214,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            Timeouts.Set("page-albums-load", 330, () => {
+            Timeouts.Set(this._handles.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -226,10 +222,10 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending("page-albums-load", AlbumsAPI.GetAlbums())
+            Request.Pending(this._handles.loadRequestId, AlbumsAPI.GetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
-                    Timeouts.Abort("page-albums-load");
+                    Timeouts.Abort(this._handles.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     this.updateList();
@@ -242,7 +238,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set("page-albums-load", 1500, this._handles.loadH);
+                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -250,7 +246,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set("page-albums-load", 1500, this._handles.loadH);
+                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -436,6 +432,8 @@ export default defineComponent({
     },
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.loadRequestId = getUniqueStringId();
+
         this._handles.loadH = this.load.bind(this);
         this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
 
@@ -462,8 +460,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort("page-albums-load");
-        Request.Abort("page-albums-load");
+        Timeouts.Abort(this._handles.loadRequestId);
+        Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);
 

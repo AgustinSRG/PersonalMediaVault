@@ -36,6 +36,7 @@ import { defineComponent, nextTick } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { clone } from "@/utils/objects";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 export default defineComponent({
     components: {},
@@ -93,7 +94,7 @@ export default defineComponent({
 
             const slices = parseTimeSlices(this.timeSlices);
 
-            Request.Pending("media-editor-busy-time-slices", EditMediaAPI.ChangeTimeSlices(mediaId, slices))
+            Request.Pending(this._handles.requestId, EditMediaAPI.ChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
                     AppEvents.ShowSnackBar(this.$t("Successfully changed time slices"));
                     this.busy = false;
@@ -148,6 +149,8 @@ export default defineComponent({
 
     mounted: function () {
         this._handles = Object.create(null);
+        this._handles.requestId = getUniqueStringId();
+
         this.updateMediaData();
 
         this._handles.mediaUpdateH = this.updateMediaData.bind(this);
@@ -166,7 +169,7 @@ export default defineComponent({
 
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
 
-        Request.Abort("media-editor-busy-time-slices");
+        Request.Abort(this._handles.requestId);
     },
 });
 </script>
