@@ -80,7 +80,7 @@ import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent } from "vue";
 
@@ -112,7 +112,7 @@ export default defineComponent({
         },
 
         stop: function () {
-            Timeouts.Abort(this.pendingId);
+            clearNamedTimeout(this.pendingId);
             Request.Abort(this.pendingId);
             this.status = "loading";
             this.progress = 0;
@@ -123,7 +123,7 @@ export default defineComponent({
         },
 
         checkTask: function () {
-            Timeouts.Abort(this.pendingId);
+            clearNamedTimeout(this.pendingId);
             Request.Abort(this.pendingId);
 
             if (this.error) {
@@ -132,7 +132,7 @@ export default defineComponent({
 
             if (this.tid <= 0) {
                 this.status = "not-ready";
-                Timeouts.Set(this.pendingId, 1000, this.refreshMedia.bind(this));
+                setNamedTimeout(this.pendingId, 1000, this.refreshMedia.bind(this));
                 return;
             }
 
@@ -175,12 +175,12 @@ export default defineComponent({
 
                         this.stageProgress = (this.stageNumber * 100) / 6;
 
-                        Timeouts.Set(this.pendingId, 500, this.checkTask.bind(this));
+                        setNamedTimeout(this.pendingId, 500, this.checkTask.bind(this));
                     } else {
                         this.stageNumber = -1;
                         this.stage = "QUEUE";
                         this.progress = 0;
-                        Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                        setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                     }
                 })
                 .onRequestError((err) => {
@@ -194,19 +194,19 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                            setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this.pendingId, 1500, this.checkTask.bind(this));
+                    setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                 });
         },
 
         checkMediaStatus: function () {
-            Timeouts.Abort(this.pendingId);
+            clearNamedTimeout(this.pendingId);
             Request.Abort(this.pendingId);
 
             Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
@@ -235,14 +235,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this.pendingId, 1500, this.checkMediaStatus.bind(this));
+                            setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this.pendingId, 1500, this.checkMediaStatus.bind(this));
+                    setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
                 });
         },
 

@@ -5,7 +5,7 @@
 import { AccountAPI } from "@/api/api-account";
 import { AuthAPI } from "@/api/api-auth";
 import { Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
@@ -130,7 +130,7 @@ export class AuthController {
     public static CheckAuthStatus() {
         AuthController.Loading = true;
         AppEvents.Emit(EVENT_NAME_LOADING, true);
-        Timeouts.Abort(REQUEST_KEY);
+        clearNamedTimeout(REQUEST_KEY);
         Request.Pending(REQUEST_KEY, AccountAPI.GetContext())
             .onSuccess((response) => {
                 AuthController.Locked = false;
@@ -159,7 +159,7 @@ export class AuthController {
                     .add("*", "*", () => {
                         // Retry
                         AppEvents.Emit(EVENT_NAME_ERROR);
-                        Timeouts.Set(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
+                        setNamedTimeout(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
                     })
                     .handle(err);
             })
@@ -184,7 +184,7 @@ export class AuthController {
             return;
         }
 
-        Timeouts.Abort(REQUEST_KEY_SILENT);
+        clearNamedTimeout(REQUEST_KEY_SILENT);
 
         if (AuthController.Loading) {
             Request.Abort(REQUEST_KEY_SILENT);
@@ -205,7 +205,7 @@ export class AuthController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_KEY_SILENT, 1500, AuthController.CheckAuthStatusSilent);
+                        setNamedTimeout(REQUEST_KEY_SILENT, 1500, AuthController.CheckAuthStatusSilent);
                     })
                     .handle(err);
             })

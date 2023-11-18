@@ -6,7 +6,7 @@ import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
 import { shuffleArray } from "@/utils/shuffle";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
@@ -137,7 +137,7 @@ export class AlbumsController {
             return; // Vault is locked
         }
 
-        Timeouts.Abort(REQUEST_ID_ALBUMS_LOAD);
+        clearNamedTimeout(REQUEST_ID_ALBUMS_LOAD);
         Request.Pending(REQUEST_ID_ALBUMS_LOAD, AlbumsAPI.GetAlbumsMin())
             .onSuccess((albums) => {
                 AlbumsController.AlbumsMap.clear();
@@ -157,14 +157,14 @@ export class AlbumsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
+                        setNamedTimeout(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
+                setNamedTimeout(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
             });
     }
 
@@ -201,7 +201,7 @@ export class AlbumsController {
      */
     public static LoadCurrentAlbum() {
         if (AlbumsController.CurrentAlbum < 0) {
-            Timeouts.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
+            clearNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD);
             Request.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
 
             AlbumsController.CurrentAlbumData = null;
@@ -221,7 +221,7 @@ export class AlbumsController {
             return; // Vault is locked
         }
 
-        Timeouts.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
+        clearNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD);
         Request.Pending(REQUEST_ID_CURRENT_ALBUM_LOAD, AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum))
             .onSuccess((album) => {
                 AlbumsController.CurrentAlbumData = album;
@@ -249,14 +249,14 @@ export class AlbumsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
+                        setNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
+                setNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
             });
     }
 
@@ -452,7 +452,7 @@ export class AlbumsController {
      */
     public static PreFetchAlbumNext() {
         if (AlbumsController.CurrentNext === null || AlbumsController.CurrentNext.id === MediaController.MediaId) {
-            Timeouts.Abort(REQUEST_ID_NEXT_PRE_FETCH);
+            clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
             Request.Abort(REQUEST_ID_NEXT_PRE_FETCH);
 
             AlbumsController.NextMediaData = null;
@@ -472,7 +472,7 @@ export class AlbumsController {
 
         const mediaId = AlbumsController.CurrentNext.id;
 
-        Timeouts.Abort(REQUEST_ID_NEXT_PRE_FETCH);
+        clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
         Request.Pending(REQUEST_ID_NEXT_PRE_FETCH, MediaAPI.GetMedia(mediaId))
             .onSuccess((media) => {
                 AlbumsController.NextMediaData = media;
@@ -493,14 +493,14 @@ export class AlbumsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
+                        setNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
+                setNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
             });
     }
 

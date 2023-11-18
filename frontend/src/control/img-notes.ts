@@ -3,7 +3,7 @@
 "use strict";
 
 import { GetAssetURL, Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { BusyStateController } from "./busy-state";
@@ -112,7 +112,7 @@ export class ImageNotesController {
         Request.Abort(REQUEST_KEY_SAVE);
 
         if (!MediaController.MediaData) {
-            Timeouts.Abort(REQUEST_KEY_LOAD);
+            clearNamedTimeout(REQUEST_KEY_LOAD);
             Request.Abort(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.ImageWidth = 0;
@@ -126,7 +126,7 @@ export class ImageNotesController {
         ImageNotesController.ImageHeight = MediaController.MediaData.height;
 
         if (!MediaController.MediaData.img_notes || !MediaController.MediaData.img_notes_url) {
-            Timeouts.Abort(REQUEST_KEY_LOAD);
+            clearNamedTimeout(REQUEST_KEY_LOAD);
             Request.Abort(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.Notes = [];
@@ -137,7 +137,7 @@ export class ImageNotesController {
         ImageNotesController.NotesFileURL = GetAssetURL(MediaController.MediaData.img_notes_url);
         ImageNotesController.Notes = [];
 
-        Timeouts.Abort(REQUEST_KEY_LOAD);
+        clearNamedTimeout(REQUEST_KEY_LOAD);
         Request.Pending(REQUEST_KEY_LOAD, {
             method: "GET",
             url: ImageNotesController.NotesFileURL,
@@ -157,14 +157,14 @@ export class ImageNotesController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
+                        setNamedTimeout(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
+                setNamedTimeout(REQUEST_KEY_LOAD, 1500, ImageNotesController.Load);
             });
     }
 

@@ -4,7 +4,7 @@
 
 import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaListItem } from "@/api/models";
@@ -76,7 +76,7 @@ export class TagsController {
             return; // Vault is locked
         }
 
-        Timeouts.Abort(REQUEST_ID);
+        clearNamedTimeout(REQUEST_ID);
 
         Request.Pending(REQUEST_ID, TagsAPI.GetTags())
             .onSuccess((tags) => {
@@ -101,14 +101,14 @@ export class TagsController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID, 1500, TagsController.Load);
+                        setNamedTimeout(REQUEST_ID, 1500, TagsController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID, 1500, TagsController.Load);
+                setNamedTimeout(REQUEST_ID, 1500, TagsController.Load);
             });
     }
 

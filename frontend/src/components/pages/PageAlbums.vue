@@ -111,7 +111,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
@@ -205,7 +205,7 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
@@ -214,7 +214,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            Timeouts.Set(this._handles.loadRequestId, 330, () => {
+            setNamedTimeout(this._handles.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -225,7 +225,7 @@ export default defineComponent({
             Request.Pending(this._handles.loadRequestId, AlbumsAPI.GetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
-                    Timeouts.Abort(this._handles.loadRequestId);
+                    clearNamedTimeout(this._handles.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     this.updateList();
@@ -238,7 +238,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -246,7 +246,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -460,7 +460,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppStatus.RemoveEventListener(this._handles.statusChangeH);

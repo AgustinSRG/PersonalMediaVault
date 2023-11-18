@@ -178,7 +178,7 @@ import { TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -246,7 +246,7 @@ export default defineComponent({
     },
     methods: {
         markDirty: function () {
-            Timeouts.Set(this._handles.dirtyTimeoutId, 330, () => {
+            setNamedTimeout(this._handles.dirtyTimeoutId, 330, () => {
                 this.startSearch();
             });
         },
@@ -287,7 +287,7 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
 
             if (!this.display || this.finished) {
@@ -335,14 +335,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -463,7 +463,7 @@ export default defineComponent({
             if (event) {
                 event.preventDefault();
             }
-            Timeouts.Abort(this._handles.dirtyTimeoutId);
+            clearNamedTimeout(this._handles.dirtyTimeoutId);
             this.loading = true;
             this._handles.listScroller.reset();
             this.fullListLength = 0;
@@ -528,7 +528,7 @@ export default defineComponent({
                             this.load();
                         })
                         .add("*", "*", () => {
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
                         })
                         .handle(err);
                 })
@@ -539,14 +539,14 @@ export default defineComponent({
         },
 
         cancel: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
             this.loading = false;
             this.finished = true;
         },
 
         resetSearch: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
             this._handles.listScroller.reset();
             this.fullListLength = 0;
@@ -1000,10 +1000,10 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
 
-        Timeouts.Abort(this._handles.dirtyTimeoutId);
+        clearNamedTimeout(this._handles.dirtyTimeoutId);
 
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);

@@ -91,7 +91,7 @@ import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { MediaController } from "@/control/media";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -153,7 +153,7 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
@@ -162,7 +162,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            Timeouts.Set(this._handles.loadRequestId, 330, () => {
+            setNamedTimeout(this._handles.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -182,7 +182,7 @@ export default defineComponent({
                     });
                     TagsController.OnMediaListReceived(this.pageItems);
                     this.total = this.pageItems.length;
-                    Timeouts.Abort(this._handles.loadRequestId);
+                    clearNamedTimeout(this._handles.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     if (this.switchMediaOnLoad === "next") {
@@ -215,7 +215,7 @@ export default defineComponent({
                         .add("*", "*", () => {
                             // Retry
                             this.loading = true;
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                         })
                         .handle(err);
                 })
@@ -223,7 +223,7 @@ export default defineComponent({
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
                 });
         },
 
@@ -464,7 +464,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.loadH);
         AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);

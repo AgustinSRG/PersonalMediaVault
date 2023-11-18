@@ -4,7 +4,7 @@
 
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
@@ -87,7 +87,7 @@ export class MediaController {
      */
     public static Load() {
         if (MediaController.MediaId < 0) {
-            Timeouts.Abort(REQUEST_ID);
+            clearNamedTimeout(REQUEST_ID);
             Request.Abort(REQUEST_ID);
 
             MediaController.MediaData = null;
@@ -108,7 +108,7 @@ export class MediaController {
             return; // Vault is locked
         }
 
-        Timeouts.Abort(REQUEST_ID);
+        clearNamedTimeout(REQUEST_ID);
         Request.Abort(REQUEST_ID);
 
         if (AlbumsController.CheckAlbumNextPrefetch()) {
@@ -137,14 +137,14 @@ export class MediaController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID, 1500, MediaController.Load);
+                        setNamedTimeout(REQUEST_ID, 1500, MediaController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID, 1500, MediaController.Load);
+                setNamedTimeout(REQUEST_ID, 1500, MediaController.Load);
             });
     }
 

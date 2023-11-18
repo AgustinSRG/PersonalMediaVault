@@ -4,7 +4,7 @@
 
 import { GetAssetURL, Request } from "@/utils/request";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
@@ -74,7 +74,7 @@ export class SubtitlesController {
     public static Load() {
         if (!MediaController.MediaData) {
             Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
-            Timeouts.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             SubtitlesController.SelectedSubtitles = "";
             SubtitlesController.SubtitlesFileURL = "";
             SubtitlesController.Subtitles = [];
@@ -99,12 +99,12 @@ export class SubtitlesController {
 
         if (!SubtitlesController.SubtitlesFileURL) {
             Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
-            Timeouts.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             AppEvents.Emit(EVENT_NAME_SUBTITLES_UPDATE);
             return;
         }
 
-        Timeouts.Abort(REQUEST_ID_SUBTITLES_LOAD);
+        clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
         Request.Pending(REQUEST_ID_SUBTITLES_LOAD, {
             method: "GET",
             url: SubtitlesController.SubtitlesFileURL,
@@ -124,14 +124,14 @@ export class SubtitlesController {
                     })
                     .add("*", "*", () => {
                         // Retry
-                        Timeouts.Set(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
+                        setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
                     })
                     .handle(err);
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // Retry
-                Timeouts.Set(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
+                setNamedTimeout(REQUEST_ID_SUBTITLES_LOAD, 1500, SubtitlesController.Load);
             });
     }
 

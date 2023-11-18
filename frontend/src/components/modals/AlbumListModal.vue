@@ -127,7 +127,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { Request } from "@/utils/request";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
@@ -184,7 +184,7 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
@@ -220,14 +220,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -441,7 +441,7 @@ export default defineComponent({
     beforeUnmount: function () {
         AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
         AppStatus.RemoveEventListener(this._handles.statusH);
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
     },
     watch: {
@@ -454,7 +454,7 @@ export default defineComponent({
                 AlbumsController.Load();
                 this.load();
             } else {
-                Timeouts.Abort(this._handles.loadRequestId);
+                clearNamedTimeout(this._handles.loadRequestId);
                 Request.Abort(this._handles.loadRequestId);
             }
         },

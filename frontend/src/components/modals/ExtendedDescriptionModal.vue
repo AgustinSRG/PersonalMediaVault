@@ -74,7 +74,7 @@ import { useVModel } from "../../utils/v-model";
 import { MediaController } from "@/control/media";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { GetAssetURL, Request } from "@/utils/request";
 import { escapeHTML } from "@/utils/html";
 import { EditMediaAPI } from "@/api/api-media-edit";
@@ -119,7 +119,7 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
 
             if (!this.display) {
@@ -192,14 +192,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -351,7 +351,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
         AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
         MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);

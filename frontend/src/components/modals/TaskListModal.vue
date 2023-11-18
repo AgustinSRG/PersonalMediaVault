@@ -73,7 +73,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { GenerateURIQuery, Request } from "@/utils/request";
 import { renderTimeSeconds } from "@/utils/time";
-import { Timeouts } from "@/utils/timeout";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -117,9 +117,9 @@ export default defineComponent({
         },
 
         load: function () {
-            Timeouts.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this._handles.loadRequestId);
             Request.Abort(this._handles.loadRequestId);
-            Timeouts.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this._handles.updateRequestId);
             Request.Abort(this._handles.updateRequestId);
 
             if (!this.display) {
@@ -132,7 +132,7 @@ export default defineComponent({
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
-                    Timeouts.Set(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -144,19 +144,19 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         updateTasks: function () {
-            Timeouts.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this._handles.updateRequestId);
             Request.Abort(this._handles.updateRequestId);
 
             if (!this.display) {
@@ -166,7 +166,7 @@ export default defineComponent({
             Request.Pending(this._handles.updateRequestId, TasksAPI.GetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
-                    Timeouts.Set(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -178,14 +178,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            Timeouts.Set(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
+                            setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    Timeouts.Set(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
+                    setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
                 });
         },
 
@@ -336,9 +336,9 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Timeouts.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this._handles.loadRequestId);
         Request.Abort(this._handles.loadRequestId);
-        Timeouts.Abort(this._handles.updateRequestId);
+        clearNamedTimeout(this._handles.updateRequestId);
         Request.Abort(this._handles.updateRequestId);
     },
     watch: {
