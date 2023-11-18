@@ -3,12 +3,13 @@
 "use strict";
 
 import { AccountAPI } from "@/api/api-account";
-import { AuthAPI } from "@/api/api-auth";
+import { apiAuthLogout } from "@/api/api-auth";
 import { Request } from "@/utils/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
+import { makeApiRequest, setRequestAuthentication } from "@/api/request";
 
 const REQUEST_KEY = "auth-control-check";
 const REQUEST_KEY_SILENT = "auth-control-check-silent";
@@ -97,6 +98,7 @@ export class AuthController {
     public static LoadAuthStatus() {
         AuthController.Session = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
         AuthController.Fingerprint = fetchFromLocalStorage(LS_KEY_VAULT_FINGERPRINT, "");
+        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
     }
 
     /**
@@ -236,6 +238,7 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, session);
         AuthController.Fingerprint = fingerprint;
         saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
+        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
         AuthController.SetAssetsCookie();
         AuthController.Username = "";
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
@@ -247,17 +250,19 @@ export class AuthController {
      */
     public static Logout() {
         const currentSession = AuthController.Session;
-        Request.Do(AuthAPI.Logout())
-            .onSuccess(() => {
-                if (AuthController.Session === currentSession) {
-                    AuthController.ClearSession();
-                }
-            })
-            .onRequestError(() => {
-                if (AuthController.Session === currentSession) {
-                    AuthController.ClearSession();
-                }
-            });
+        makeApiRequest(
+            apiAuthLogout()
+                .onSuccess(() => {
+                    if (AuthController.Session === currentSession) {
+                        AuthController.ClearSession();
+                    }
+                })
+                .onRequestError(() => {
+                    if (AuthController.Session === currentSession) {
+                        AuthController.ClearSession();
+                    }
+                }),
+        );
     }
 
     /**
@@ -267,6 +272,7 @@ export class AuthController {
         AuthController.Locked = true;
         AuthController.Session = "";
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
+        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
         AuthController.Username = "";
         AuthController.SetAssetsCookie();
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
