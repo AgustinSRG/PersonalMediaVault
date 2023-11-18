@@ -12,21 +12,6 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaData } from "@/api/models";
 
 /**
- * Type value for images
- */
-export const MEDIA_TYPE_IMAGE = 1;
-
-/**
- * Type value for videos
- */
-export const MEDIA_TYPE_VIDEO = 2;
-
-/**
- * Type value for audios
- */
-export const MEDIA_TYPE_AUDIO = 3;
-
-/**
  * Min duration in seconds to use auto-next, instead of next-end
  */
 export const AUTO_LOOP_MIN_DURATION = 3;

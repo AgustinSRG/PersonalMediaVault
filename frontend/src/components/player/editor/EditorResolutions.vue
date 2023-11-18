@@ -68,13 +68,14 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MediaController } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { Request } from "@/utils/request";
 import { defineComponent } from "vue";
 
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
 
 export default defineComponent({
     components: {
