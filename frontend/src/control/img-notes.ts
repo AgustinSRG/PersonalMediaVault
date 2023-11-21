@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { GetAssetURL, Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
@@ -12,6 +12,7 @@ import { EditMediaAPI } from "@/api/api-media-edit";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { ImageNote, parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
+import { getAssetURL } from "@/api/utils";
 
 /**
  * Event triggered when the image notes are updated
@@ -134,7 +135,7 @@ export class ImageNotesController {
             return;
         }
 
-        ImageNotesController.NotesFileURL = GetAssetURL(MediaController.MediaData.img_notes_url);
+        ImageNotesController.NotesFileURL = getAssetURL(MediaController.MediaData.img_notes_url);
         ImageNotesController.Notes = [];
 
         clearNamedTimeout(REQUEST_KEY_LOAD);

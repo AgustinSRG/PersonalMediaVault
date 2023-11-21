@@ -1,20 +1,23 @@
 // Config API
 
-import { GetApiURL, RequestParams } from "@/utils/request";
+"use strict";
+
+import { RequestParams } from "./request";
 import { VaultUserConfig } from "./models";
+import { getApiURL } from "./utils";
 
 export class ConfigAPI {
     public static GetConfig(): RequestParams<VaultUserConfig> {
         return {
             method: "GET",
-            url: GetApiURL("/api/config"),
+            url: getApiURL("/api/config"),
         };
     }
 
     public static SetConfig(config: VaultUserConfig): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/config"),
+            url: getApiURL("/api/config"),
             json: config,
         };
     }

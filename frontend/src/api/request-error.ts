@@ -20,17 +20,35 @@ export interface RequestError {
 /**
  * Error handler for common errors
  */
-export interface CommonErrorHandler {
-    /**
-     * Handler for server errors
-     */
-    serverError: () => void;
+export type CommonErrorHandler =
+    | {
+          /**
+           * Handler for server errors
+           */
+          serverError: () => void;
 
+          /**
+           * Handler for network errors
+           */
+          networkError: () => void;
+      }
+    | {
+          /**
+           * Wraps both: Networks and server errors
+           * If you set this, do not set either serverError or networkError
+           */
+          temporalError: () => void;
+      };
+
+/**
+ * Error handler for common errors on authenticated requests
+ */
+export type CommonAuthenticatedErrorHandler = CommonErrorHandler & {
     /**
-     * Handler for network errors
+     * Handler for unauthorized errors
      */
-    networkError: () => void;
-}
+    unauthorized: () => void;
+};
 
 /**
  * Callback to handle errors
@@ -67,7 +85,7 @@ export class RequestErrorHandler {
 
     /**
      * Adds callback
-     * @param status The HTTP status code 
+     * @param status The HTTP status code
      * @param code The API error code
      * @param callback The callback
      * @returns Self
@@ -103,7 +121,7 @@ export class RequestErrorHandler {
         for (const callback of this.callbacks) {
             if (callback.status === "*" || callback.status === error.status) {
                 if (callback.code === "*" || errorCode === callback.code) {
-                    callback.callback();
+                    callback.callback && callback.callback();
                     return;
                 }
             }

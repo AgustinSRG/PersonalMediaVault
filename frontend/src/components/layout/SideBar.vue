@@ -146,7 +146,7 @@ import {
 } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { GenerateURIQuery } from "@/utils/request";
+import { generateURIQuery } from "@/api/utils";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -239,7 +239,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     page: page,
                 })
             );
@@ -251,7 +251,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     album: albumId + "",
                 })
             );

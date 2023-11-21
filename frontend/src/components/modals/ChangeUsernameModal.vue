@@ -52,10 +52,10 @@
 </template>
 
 <script lang="ts">
-import { AccountAPI } from "@/api/api-account";
+import { apiAccountChangeUsername } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@/api/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
@@ -102,7 +102,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AccountAPI.ChangeUsername(this.username, this.password))
+            makeApiRequest(apiAccountChangeUsername(this.username, this.password))
                 .onSuccess(() => {
                     this.busy = false;
                     AuthController.UpdateUsername(this.username);
@@ -114,29 +114,30 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "USERNAME_IN_USE", () => {
-                            this.error = this.$t("The username is already in use");
-                        })
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid username provided");
-                        })
-                        .add(401, "*", () => {
+
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidUsername: () => {
+                            this.error = this.$t("Invalid username provided");
+                        },
+                        usernameInUse: () => {
+                            this.error = this.$t("The username is already in use");
+                        },
+                        invalidPassword: () => {
                             this.error = this.$t("Invalid password");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

@@ -1,14 +1,17 @@
 // Edit media API
 
-import { GetApiURL, RequestParams } from "@/utils/request";
+"use strict";
+
+import { RequestParams } from "./request";
 import { MediaResolution, MediaSubtitle, MediaAudioTrack } from "./models";
 import { ImageNote } from "@/utils/notes-format";
+import { getApiURL } from "./utils";
 
 export class EditMediaAPI {
     public static ChangeMediaTitle(id: number, title: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/title"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/title"),
             json: {
                 title: title,
             },
@@ -18,7 +21,7 @@ export class EditMediaAPI {
     public static ChangeMediaDescription(id: number, description: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/description"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/description"),
             json: {
                 description: description,
             },
@@ -28,7 +31,7 @@ export class EditMediaAPI {
     public static ChangeExtraParams(id: number, forceStartBeginning: boolean): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/extra"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/extra"),
             json: {
                 force_start_beginning: forceStartBeginning,
             },
@@ -38,7 +41,7 @@ export class EditMediaAPI {
     public static ChangeTimeSlices(id: number, time_slices: { time: number; name: string }[]): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/time_slices"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/time_slices"),
             json: time_slices,
         };
     }
@@ -46,7 +49,7 @@ export class EditMediaAPI {
     public static SetNotes(id: number, notes: ImageNote[]): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/notes"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/notes"),
             json: notes,
         };
     }
@@ -54,7 +57,7 @@ export class EditMediaAPI {
     public static SetExtendedDescription(id: number, extendedDesc: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/ext_desc"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/ext_desc"),
             json: {
                 ext_desc: extendedDesc,
             },
@@ -66,7 +69,7 @@ export class EditMediaAPI {
         form.append("file", thumbnail);
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/thumbnail"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/edit/thumbnail"),
             form: form,
         };
     }
@@ -74,21 +77,21 @@ export class EditMediaAPI {
     public static EncodeMedia(id: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/encode"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/encode"),
         };
     }
 
     public static DeleteMedia(id: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/delete"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/delete"),
         };
     }
 
     public static AddResolution(id: number, width: number, height: number, fps: number): RequestParams<MediaResolution> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/add"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/add"),
             json: {
                 width: width,
                 height: height,
@@ -100,7 +103,7 @@ export class EditMediaAPI {
     public static RemoveResolution(id: number, width: number, height: number, fps: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/remove"),
+            url: getApiURL("/api/media/" + encodeURIComponent(id + "") + "/resolution/remove"),
             json: {
                 width: width,
                 height: height,
@@ -114,7 +117,7 @@ export class EditMediaAPI {
         form.append("file", srt);
         return {
             method: "POST",
-            url: GetApiURL(
+            url: getApiURL(
                 "/api/media/" +
                     encodeURIComponent(mediaId + "") +
                     "/subtitles/set?id=" +
@@ -129,7 +132,7 @@ export class EditMediaAPI {
     public static RemoveSubtitles(mediaId: number, id: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/remove?id=" + encodeURIComponent(id)),
+            url: getApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/subtitles/remove?id=" + encodeURIComponent(id)),
         };
     }
 
@@ -138,7 +141,7 @@ export class EditMediaAPI {
         form.append("file", audio);
         return {
             method: "POST",
-            url: GetApiURL(
+            url: getApiURL(
                 "/api/media/" +
                     encodeURIComponent(mediaId + "") +
                     "/audios/set?id=" +
@@ -153,7 +156,7 @@ export class EditMediaAPI {
     public static RemoveAudioTrack(mediaId: number, id: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/remove?id=" + encodeURIComponent(id)),
+            url: getApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/audios/remove?id=" + encodeURIComponent(id)),
         };
     }
 
@@ -162,7 +165,7 @@ export class EditMediaAPI {
         form.append("file", attachment);
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/add"),
+            url: getApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/add"),
             form: form,
         };
     }
@@ -170,7 +173,7 @@ export class EditMediaAPI {
     public static RenameAttachment(mediaId: number, id: number, name: string): RequestParams<MediaAudioTrack> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/rename"),
+            url: getApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/rename"),
             json: {
                 id: id,
                 name: name,
@@ -181,7 +184,7 @@ export class EditMediaAPI {
     public static RemoveAttachment(mediaId: number, id: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/remove?id=" + encodeURIComponent(id + "")),
+            url: getApiURL("/api/media/" + encodeURIComponent(mediaId + "") + "/attachments/remove?id=" + encodeURIComponent(id + "")),
         };
     }
 }

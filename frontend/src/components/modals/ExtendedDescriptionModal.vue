@@ -75,7 +75,8 @@ import { MediaController } from "@/control/media";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { GetAssetURL, Request } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
+import { Request } from "@/api/request";
 import { escapeHTML } from "@/utils/html";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
@@ -153,7 +154,7 @@ export default defineComponent({
 
             Request.Pending(this._handles.loadRequestId, {
                 method: "GET",
-                url: GetAssetURL(descFilePath),
+                url: getAssetURL(descFilePath),
             })
                 .onSuccess((extendedDescText) => {
                     this.content = extendedDescText;

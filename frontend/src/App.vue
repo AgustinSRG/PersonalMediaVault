@@ -9,7 +9,7 @@ import { AppEvents } from "./control/app-events";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
 import { UploadController, UploadEntryMin } from "./control/upload";
-import { GetAssetURL } from "./utils/request";
+import { getAssetURL } from "@/api/utils";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
 import { EVENT_NAME_LOADED_LOCALE } from "./i18n";
@@ -82,7 +82,7 @@ export default defineComponent({
                             ? AlbumsController.CurrentAlbumData.name
                             : undefined,
                     artwork: MediaController.MediaData.thumbnail
-                        ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
+                        ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
                         : undefined,
                 });
             } else {

@@ -451,7 +451,7 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
@@ -720,7 +720,7 @@ export default defineComponent({
                 part = thumbCount;
             }
 
-            return GetAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
+            return getAssetURL(this.metadata.video_previews.replace("{INDEX}", "" + part));
         },
 
         onResolutionUpdated: function () {
@@ -1540,7 +1540,7 @@ export default defineComponent({
 
             if (this.currentResolution < 0) {
                 if (this.metadata.encoded) {
-                    this.videoURL = GetAssetURL(this.metadata.url);
+                    this.videoURL = getAssetURL(this.metadata.url);
                     this.videoPending = false;
                     this.videoPendingTask = 0;
                     this.setupAutoNextTimer();
@@ -1556,7 +1556,7 @@ export default defineComponent({
                 if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
                     const res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
-                        this.videoURL = GetAssetURL(res.url);
+                        this.videoURL = getAssetURL(res.url);
                         this.videoPending = false;
                         this.videoPendingTask = 0;
                         this.setupAutoNextTimer();
@@ -1658,7 +1658,7 @@ export default defineComponent({
 
             for (const audio of this.metadata.audios) {
                 if (audio.id === this.audioTrack) {
-                    this.audioTrackURL = GetAssetURL(audio.url);
+                    this.audioTrackURL = getAssetURL(audio.url);
                     return;
                 }
             }

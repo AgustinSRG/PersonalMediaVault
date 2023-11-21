@@ -2,14 +2,14 @@
 
 "use strict";
 
-import { AccountAPI } from "@/api/api-account";
+import { apiAccountGetContext } from "@/api/api-account";
 import { apiAuthLogout } from "@/api/api-auth";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
-import { makeApiRequest, setRequestAuthentication } from "@/api/request";
+import { makeApiRequest, makeNamedApiRequest, setRequestAuthentication } from "@/api/request";
 
 const REQUEST_KEY = "auth-control-check";
 const REQUEST_KEY_SILENT = "auth-control-check-silent";
@@ -133,7 +133,7 @@ export class AuthController {
         AuthController.Loading = true;
         AppEvents.Emit(EVENT_NAME_LOADING, true);
         clearNamedTimeout(REQUEST_KEY);
-        Request.Pending(REQUEST_KEY, AccountAPI.GetContext())
+        makeNamedApiRequest(REQUEST_KEY, apiAccountGetContext())
             .onSuccess((response) => {
                 AuthController.Locked = false;
                 AuthController.IsRoot = response.root;
@@ -149,21 +149,21 @@ export class AuthController {
                 AppEvents.Emit(EVENT_NAME_LOADING, false);
                 AuthController.UpdateCustomStyle();
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AuthController.Locked = true;
                         AuthController.Username = "";
                         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
                         AuthController.Loading = false;
                         AppEvents.Emit(EVENT_NAME_LOADING, false);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         AppEvents.Emit(EVENT_NAME_ERROR);
                         setNamedTimeout(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -195,21 +195,21 @@ export class AuthController {
 
         AuthController.CheckingAuthSilent = true;
 
-        Request.Pending(REQUEST_KEY_SILENT, AccountAPI.GetContext())
+        makeNamedApiRequest(REQUEST_KEY_SILENT, apiAccountGetContext())
             .onSuccess(() => {
                 AuthController.CheckingAuthSilent = false;
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AuthController.CheckingAuthSilent = false;
                         AuthController.CheckAuthStatus();
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_KEY_SILENT, 1500, AuthController.CheckAuthStatusSilent);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -250,19 +250,17 @@ export class AuthController {
      */
     public static Logout() {
         const currentSession = AuthController.Session;
-        makeApiRequest(
-            apiAuthLogout()
-                .onSuccess(() => {
-                    if (AuthController.Session === currentSession) {
-                        AuthController.ClearSession();
-                    }
-                })
-                .onRequestError(() => {
-                    if (AuthController.Session === currentSession) {
-                        AuthController.ClearSession();
-                    }
-                }),
-        );
+        makeApiRequest(apiAuthLogout())
+            .onSuccess(() => {
+                if (AuthController.Session === currentSession) {
+                    AuthController.ClearSession();
+                }
+            })
+            .onRequestError(() => {
+                if (AuthController.Session === currentSession) {
+                    AuthController.ClearSession();
+                }
+            });
     }
 
     /**

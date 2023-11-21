@@ -73,7 +73,7 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { TagsAPI } from "@/api/api-tags";
 import { MediaController } from "@/control/media";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";

@@ -141,7 +141,7 @@
 <script lang="ts">
 import { AppStatus } from "@/control/app-status";
 import { UploadController, UploadEntryMin } from "@/control/upload";
-import { GenerateURIQuery } from "@/utils/request";
+import { generateURIQuery } from "@/api/utils";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -501,7 +501,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );

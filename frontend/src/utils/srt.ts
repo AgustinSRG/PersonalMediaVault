@@ -46,6 +46,9 @@ function replaceSRT_HTMLFormat(text: string): string {
 }
 
 export function parseSRT(srt: string): SubtitlesEntry[] {
+    if (typeof srt !== "string") {
+        return [];
+    }
     const result: SubtitlesEntry[] = [];
     const lines = srt.split("\n");
     let lineBuffer = [];

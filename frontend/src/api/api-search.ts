@@ -1,15 +1,18 @@
 // Search API
 
-import { GenerateURIQuery, GetApiURL, RequestParams } from "@/utils/request";
+"use strict";
+
+import { RequestParams } from "./request";
 import { SearchResults, RandomResults } from "./models";
+import { generateURIQuery, getApiURL } from "./utils";
 
 export class SearchAPI {
     public static Search(tag: string, order: string, page: number, pageSize: number): RequestParams<SearchResults> {
         return {
             method: "GET",
-            url: GetApiURL(
+            url: getApiURL(
                 "/api/search" +
-                    GenerateURIQuery({
+                    generateURIQuery({
                         tag: tag,
                         order: order,
                         page_index: page + "",
@@ -22,9 +25,9 @@ export class SearchAPI {
     public static Random(tag: string, seed: number, pageSize: number): RequestParams<RandomResults> {
         return {
             method: "GET",
-            url: GetApiURL(
+            url: getApiURL(
                 "/api/random" +
-                    GenerateURIQuery({
+                    generateURIQuery({
                         tag: tag,
                         seed: seed + "",
                         page_size: pageSize + "",

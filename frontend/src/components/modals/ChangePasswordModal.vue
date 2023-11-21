@@ -54,9 +54,9 @@
 </template>
 
 <script lang="ts">
-import { AccountAPI } from "@/api/api-account";
+import { apiAccountChangePassword } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@/api/request";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -109,7 +109,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AccountAPI.ChangePassword(this.currentPassword, this.password))
+            makeApiRequest(apiAccountChangePassword(this.currentPassword, this.password))
                 .onSuccess(() => {
                     this.busy = false;
                     this.currentPassword = "";
@@ -121,26 +121,26 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid password provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidNewPassword: () => {
+                            this.error = this.$t("Invalid password provided");
+                        },
+                        invalidPassword: () => {
                             this.error = this.$t("Invalid password");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

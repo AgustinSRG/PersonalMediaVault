@@ -420,7 +420,7 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
@@ -1312,7 +1312,7 @@ export default defineComponent({
             }
 
             if (this.metadata.encoded) {
-                this.audioURL = GetAssetURL(this.metadata.url);
+                this.audioURL = getAssetURL(this.metadata.url);
                 this.audioPending = false;
                 this.audioPendingTask = 0;
                 this.getAudioElement().load();

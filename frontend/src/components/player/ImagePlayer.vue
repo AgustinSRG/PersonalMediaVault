@@ -275,7 +275,7 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
@@ -969,7 +969,7 @@ export default defineComponent({
 
             if (this.currentResolution < 0) {
                 if (this.metadata.encoded) {
-                    this.imageURL = GetAssetURL(this.metadata.url);
+                    this.imageURL = getAssetURL(this.metadata.url);
                     this.imagePending = false;
                     this.imagePendingTask = 0;
                     this.width = this.metadata.width;
@@ -985,7 +985,7 @@ export default defineComponent({
                 if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
                     const res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
-                        this.imageURL = GetAssetURL(res.url);
+                        this.imageURL = getAssetURL(res.url);
                         this.imagePending = false;
                         this.imagePendingTask = 0;
                         this.width = this.metadata.width;
@@ -1061,7 +1061,7 @@ export default defineComponent({
             if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
                 if (this.currentResolution < 0) {
                     if (AlbumsController.NextMediaData.encoded) {
-                        this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.url);
+                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.url);
                     } else {
                         this.prefetchURL = "";
                     }
@@ -1070,7 +1070,7 @@ export default defineComponent({
                         AlbumsController.NextMediaData.resolutions[this.currentResolution] &&
                         AlbumsController.NextMediaData.resolutions[this.currentResolution].ready
                     ) {
-                        this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
+                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
                     } else {
                         this.prefetchURL = "";
                     }

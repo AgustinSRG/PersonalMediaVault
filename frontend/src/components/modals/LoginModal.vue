@@ -96,7 +96,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAuthLogin(this.username, this.password)
+            makeApiRequest(apiAuthLogin(this.username, this.password))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -131,7 +131,7 @@ export default defineComponent({
                     this.error = err.message;
                     console.error(err);
                     this.busy = false;
-                }));
+                });
         },
 
         updateNow: function () {

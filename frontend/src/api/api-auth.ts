@@ -2,8 +2,8 @@
 
 "use strict";
 
-import { Request } from "./request";
-import { CommonErrorHandler, RequestErrorHandler } from "./request-error";
+import { RequestParams } from "./request";
+import { CommonAuthenticatedErrorHandler, CommonErrorHandler, RequestErrorHandler } from "./request-error";
 import { API_PREFIX, getApiURL } from "./utils";
 
 const API_GROUP_PREFIX = "/auth";
@@ -26,11 +26,11 @@ export interface LoginResult {
 /**
  * Error handler for login
  */
-export interface LoginErrorHandler extends CommonErrorHandler {
+export type LoginErrorHandler = CommonErrorHandler & {
     invalidCredentials: () => void;
     wrongCredentials: () => void;
     cooldown: () => void;
-}
+};
 
 /**
  * API call: Login
@@ -38,8 +38,8 @@ export interface LoginErrorHandler extends CommonErrorHandler {
  * @param password Password
  * @returns The request object
  */
-export function apiAuthLogin(username: string, password: string): Request<LoginResult, LoginErrorHandler> {
-    return new Request({
+export function apiAuthLogin(username: string, password: string): RequestParams<LoginResult, LoginErrorHandler> {
+    return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/login`),
         json: {
@@ -51,22 +51,23 @@ export function apiAuthLogin(username: string, password: string): Request<LoginR
                 .add(400, "*", handler.invalidCredentials)
                 .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.wrongCredentials)
-                .add(500, "*", handler.serverError)
-                .add("*", "*", handler.networkError)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
                 .handle(err);
         },
-    });
+    };
 }
 
-export function apiAuthLogout(): Request<void, CommonErrorHandler> {
-    return new Request({
+export function apiAuthLogout(): RequestParams<void, CommonAuthenticatedErrorHandler> {
+    return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/logout`),
         handleError: (err, handler) => {
             new RequestErrorHandler()
-                .add(500, "*", handler.serverError)
-                .add("*", "*", handler.networkError)
+                .add(401, "*", handler.unauthorized)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
                 .handle(err);
         },
-    });
+    };
 }

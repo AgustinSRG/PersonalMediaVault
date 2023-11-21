@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { GetAssetURL, Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
@@ -10,6 +10,7 @@ import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { getAssetURL } from "@/api/utils";
 
 /**
  * Event triggered when a subtitles file is loaded
@@ -92,7 +93,7 @@ export class SubtitlesController {
         for (const sub of subtitles) {
             if (sub.id === prefSubtitles) {
                 SubtitlesController.SelectedSubtitles = sub.id;
-                SubtitlesController.SubtitlesFileURL = GetAssetURL(sub.url);
+                SubtitlesController.SubtitlesFileURL = getAssetURL(sub.url);
                 break;
             }
         }

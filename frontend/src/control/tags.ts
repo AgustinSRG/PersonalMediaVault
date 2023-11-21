@@ -3,7 +3,7 @@
 "use strict";
 
 import { TagsAPI } from "@/api/api-tags";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";

@@ -76,7 +76,8 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { GetAssetURL, Request } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
+import { Request } from "@/api/request";
 import { defineComponent } from "vue";
 import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
@@ -295,7 +296,7 @@ export default defineComponent({
             const link = document.createElement("a");
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.href = GetAssetURL(sub.url);
+            link.href = getAssetURL(sub.url);
             link.click();
         },
 

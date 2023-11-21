@@ -169,7 +169,8 @@ import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, album
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
-import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
+import { generateURIQuery, getAssetURL } from "@/api/utils";
+import { Request } from "@/api/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
@@ -445,7 +446,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         clickMedia: function (item: AlbumListItem, e: MouseEvent) {
@@ -461,7 +462,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: item.id + "",
                     album: this.albumId + "",
                 })

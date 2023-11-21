@@ -5,11 +5,11 @@
 "use strict";
 
 import { getParameterByName } from "@/utils/cookie";
-import { GenerateURIQuery } from "@/utils/request";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
 import { EVENT_NAME_MEDIA_DELETE } from "./pages";
+import { generateURIQuery } from "@/api/utils";
 
 const EVENT_NAME = "app-status-update";
 
@@ -233,7 +233,7 @@ export class AppStatus {
             params["split"] = "yes";
         }
 
-        return window.location.protocol + "//" + window.location.host + window.location.pathname + GenerateURIQuery(params);
+        return window.location.protocol + "//" + window.location.host + window.location.pathname + generateURIQuery(params);
     }
 
     /**

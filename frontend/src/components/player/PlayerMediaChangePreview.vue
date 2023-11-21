@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
 import { defineComponent } from "vue";
 import { renderTimeSeconds } from "../../utils/time";
 
@@ -46,7 +46,7 @@ export default defineComponent({
     },
     methods: {
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
         updateData: function () {
             if (this.media) {

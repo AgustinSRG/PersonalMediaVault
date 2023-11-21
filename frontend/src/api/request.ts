@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { RequestError } from "./request-error";
+import { RequestError, RequestErrorHandler } from "./request-error";
 
 /**
  * Name of the header to send the session token into
@@ -37,12 +37,12 @@ export function setRequestAuthentication(session: string, refreshCallback: () =>
 /**
  * API request method
  */
-export type RequestMethod = "GET" | "POST" | "DELETE";
+export type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 /**
  * Request parameters
  */
-export interface RequestParams<Error_Handler> {
+export interface RequestParams<_Return_Type = any, Error_Handler = never> {
     /**
      * Request method
      */
@@ -59,20 +59,60 @@ export interface RequestParams<Error_Handler> {
     json?: any;
 
     /**
-     * Request body as mutipart/form-data
+     * Request body as multipart/form-data
      */
     form?: FormData;
 
     /**
+     * Request extra headers
+     */
+    headers?: { [headerName: string]: string };
+
+    /**
      * Function to handle request errors
      */
-    handleError: (err: RequestError, handler: Error_Handler) => void;
+    handleError?: (err: RequestError, handler: Error_Handler) => void;
 }
 
 /**
  * API request
  */
-export class Request<Return_Type, Error_Handler> {
+export class Request<Return_Type = any, Error_Handler = never> {
+    /**
+     * Sends API request
+     * @param req The request parameters
+     * @returns The request
+     */
+    public static Do<R = any, E = never>(req: RequestParams<R, E>): Request<R, E> {
+        return makeApiRequest(req);
+    }
+
+    /**
+     * Sends API request with a name.
+     * If another request was pending with the same name, it is aborted.
+     * @param name The request name
+     * @param req The request parameters
+     * @returns The request
+     */
+    public static Pending<R = any, E = never>(name: string, req: RequestParams<R, E>): Request<R, E> {
+        return makeNamedApiRequest(name, req);
+    }
+
+    /**
+     * Aborts a named pending request
+     * @param name The request name
+     */
+    public static Abort(name: string) {
+        abortNamedApiRequest(name);
+    }
+
+    /**
+     * Creates a new error handler instance
+     */
+    public static ErrorHandler(): RequestErrorHandler {
+        return new RequestErrorHandler();
+    }
+
     /**
      * Request method
      */
@@ -92,6 +132,11 @@ export class Request<Return_Type, Error_Handler> {
      * Request body as multipart/form-data
      */
     public readonly form?: FormData;
+
+    /**
+     * Request extra headers
+     */
+    public readonly headers?: { [headerName: string]: string };
 
     /**
      * Function to handle request errors
@@ -134,6 +179,11 @@ export class Request<Return_Type, Error_Handler> {
     private _onUploadProgress: (loaded: number, total: number) => void;
 
     /**
+     * True if sent
+     */
+    public sent?: boolean;
+
+    /**
      * True if aborted
      */
     private aborted?: boolean;
@@ -142,12 +192,13 @@ export class Request<Return_Type, Error_Handler> {
      * Constructor
      * @param params Request parameters
      */
-    constructor(params: RequestParams<Error_Handler>) {
+    constructor(params: RequestParams<Return_Type, Error_Handler>) {
         this.url = params.url;
         this.method = params.method;
         this.json = params.json;
         this.form = params.form;
-        this.handleError = params.handleError;
+        this.headers = params.headers;
+        this.handleError = params.handleError || function () {};
     }
 
     /**
@@ -207,7 +258,10 @@ export class Request<Return_Type, Error_Handler> {
      * @param callback A function to call when the request is finished
      */
     public send(callback?: () => void) {
-        if (this.method === "POST") {
+        if (this.sent) {
+            return;
+        }
+        if (["POST", "PUT"].includes(this.method)) {
             if (this.form) {
                 this.sendAsMultipartFormData(callback);
             } else {
@@ -216,6 +270,7 @@ export class Request<Return_Type, Error_Handler> {
         } else {
             this.sendAsFetch(callback);
         }
+        this.sent = true;
     }
 
     /**
@@ -244,6 +299,12 @@ export class Request<Return_Type, Error_Handler> {
         RequestAuthentication.refreshCallback();
 
         const headers: { [key: string]: string } = {};
+
+        if (this.headers) {
+            for (const h of Object.keys(this.headers)) {
+                headers[h] = this.headers[h];
+            }
+        }
 
         headers[SESSION_TOKEN_HEADER_NAME] = RequestAuthentication.session;
 
@@ -425,6 +486,12 @@ export class Request<Return_Type, Error_Handler> {
         request.open(this.method, this.url);
 
         // Set headers
+        if (this.headers) {
+            for (const h of Object.keys(this.headers)) {
+                request.setRequestHeader(h, this.headers[h]);
+            }
+        }
+
         request.setRequestHeader(SESSION_TOKEN_HEADER_NAME, RequestAuthentication.session);
 
         // Send form data
@@ -434,8 +501,48 @@ export class Request<Return_Type, Error_Handler> {
 
 /**
  * Sends API request
- * @param r The request
+ * @param params The request parameters
+ * @returns The request
  */
-export function makeApiRequest(r: Request<any, any>) {
+export function makeApiRequest<R = any, E = never>(params: RequestParams<R, E>): Request<R, E> {
+    const r = new Request(params);
     r.send();
+    return r;
+}
+
+/**
+ * Global map of named requests
+ */
+const NamedRequests = new Map<string, Request<any, any>>();
+
+/**
+ * Sends API request with a name.
+ * If another request was pending with the same name, it is aborted.
+ * @param name Request name
+ * @param params The request parameters
+ * @returns The request
+ */
+export function makeNamedApiRequest<R = any, E = never>(name: string, params: RequestParams<R, E>): Request<R, E> {
+    abortNamedApiRequest(name);
+
+    const r = new Request(params);
+
+    NamedRequests.set(name, r);
+
+    r.send(() => {
+        NamedRequests.delete(name);
+    });
+
+    return r;
+}
+
+/**
+ * Aborts a named pending request
+ * @param name Request name
+ */
+export function abortNamedApiRequest(name: string) {
+    if (NamedRequests.has(name)) {
+        NamedRequests.get(name).abort();
+        NamedRequests.delete(name);
+    }
 }

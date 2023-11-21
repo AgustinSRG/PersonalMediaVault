@@ -76,7 +76,7 @@ import {
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/api/utils";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
@@ -162,7 +162,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         clickMedia: function (item) {

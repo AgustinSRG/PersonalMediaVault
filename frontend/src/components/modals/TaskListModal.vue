@@ -71,7 +71,8 @@
 import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { GenerateURIQuery, Request } from "@/utils/request";
+import { generateURIQuery } from "@/api/utils";
+import { Request } from "@/api/request";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -316,7 +317,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );

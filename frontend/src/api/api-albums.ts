@@ -1,34 +1,37 @@
 // Albums API
 
-import { GetApiURL, RequestParams } from "@/utils/request";
+"use strict";
+
+import { RequestParams } from "./request";
 import { AlbumListItem, AlbumListItemMin, Album } from "./models";
+import { getApiURL } from "./utils";
 
 export class AlbumsAPI {
     public static GetAlbums(): RequestParams<AlbumListItem[]> {
         return {
             method: "GET",
-            url: GetApiURL("/api/albums"),
+            url: getApiURL("/api/albums"),
         };
     }
 
     public static GetAlbumsMin(): RequestParams<AlbumListItemMin[]> {
         return {
             method: "GET",
-            url: GetApiURL("/api/albums?mode=min"),
+            url: getApiURL("/api/albums?mode=min"),
         };
     }
 
     public static GetAlbum(id: number): RequestParams<Album> {
         return {
             method: "GET",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "")),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "")),
         };
     }
 
     public static CreateAlbum(name: string): RequestParams<{ album_id: number }> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums"),
+            url: getApiURL("/api/albums"),
             json: {
                 name: name,
             },
@@ -38,14 +41,14 @@ export class AlbumsAPI {
     public static DeleteAlbum(id: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/delete"),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "") + "/delete"),
         };
     }
 
     public static RenameAlbum(id: number, name: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/rename"),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "") + "/rename"),
             json: {
                 name: name,
             },
@@ -55,7 +58,7 @@ export class AlbumsAPI {
     public static AddMediaToAlbum(id: number, media: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/add"),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "") + "/add"),
             json: {
                 media_id: media,
             },
@@ -65,7 +68,7 @@ export class AlbumsAPI {
     public static RemoveMediaFromAlbum(id: number, media: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/remove"),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "") + "/remove"),
             json: {
                 media_id: media,
             },
@@ -75,7 +78,7 @@ export class AlbumsAPI {
     public static MoveMediaInAlbum(id: number, media: number, position: number): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/albums/" + encodeURIComponent(id + "") + "/move"),
+            url: getApiURL("/api/albums/" + encodeURIComponent(id + "") + "/move"),
             json: {
                 media_id: media,
                 position: position,

@@ -126,7 +126,7 @@ import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/album
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";

@@ -200,7 +200,7 @@ import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { AlbumsAPI } from "@/api/api-albums";
 import { SearchAPI } from "@/api/api-search";
 import { MediaController } from "@/control/media";

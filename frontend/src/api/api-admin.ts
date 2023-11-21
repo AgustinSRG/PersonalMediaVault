@@ -1,19 +1,22 @@
 // Admin API
 
-import { GetApiURL, RequestParams } from "@/utils/request";
+"use strict";
+
+import { RequestParams } from "./request";
+import { getApiURL } from "./utils";
 
 export class AdminAPI {
     public static ListAccounts(): RequestParams<{ username: string; write: boolean }[]> {
         return {
             method: "GET",
-            url: GetApiURL("/api/admin/accounts"),
+            url: getApiURL("/api/admin/accounts"),
         };
     }
 
-    public static CreateAccount(username: string, password: string, write: boolean): RequestParams {
+    public static CreateAccount(username: string, password: string, write: boolean): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/admin/accounts"),
+            url: getApiURL("/api/admin/accounts"),
             json: {
                 username: username,
                 password: password,
@@ -22,10 +25,10 @@ export class AdminAPI {
         };
     }
 
-    public static DeleteAccount(username: string): RequestParams {
+    public static DeleteAccount(username: string): RequestParams<void> {
         return {
             method: "POST",
-            url: GetApiURL("/api/admin/accounts/delete"),
+            url: getApiURL("/api/admin/accounts/delete"),
             json: {
                 username: username,
             },

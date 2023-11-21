@@ -181,7 +181,7 @@
 import { ConfigAPI } from "@/api/api-config";
 import { VaultUserConfig } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
