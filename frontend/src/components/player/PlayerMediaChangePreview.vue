@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 import { defineComponent } from "vue";
 import { renderTimeSeconds } from "../../utils/time";
 

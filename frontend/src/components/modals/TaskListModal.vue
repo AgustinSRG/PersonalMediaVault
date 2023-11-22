@@ -71,8 +71,8 @@
 import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { generateURIQuery } from "@/api/utils";
-import { Request } from "@/api/request";
+import { generateURIQuery } from "@/utils/api";
+import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";

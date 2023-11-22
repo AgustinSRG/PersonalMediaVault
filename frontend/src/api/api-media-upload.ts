@@ -2,8 +2,8 @@
 
 "use strict";
 
-import { RequestParams } from "./request";
-import { getApiURL } from "./utils";
+import { RequestParams } from "@asanrom/request-browser";
+import { getApiURL } from "@/utils/api";
 
 export class UploadMediaAPI {
     public static UploadMedia(title: string, file: File, album: number): RequestParams<{ media_id: number }> {

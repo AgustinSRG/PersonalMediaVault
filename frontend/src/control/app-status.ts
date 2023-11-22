@@ -9,7 +9,7 @@ import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
 import { EVENT_NAME_MEDIA_DELETE } from "./pages";
-import { generateURIQuery } from "@/api/utils";
+import { generateURIQuery } from "@/utils/api";
 
 const EVENT_NAME = "app-status-update";
 

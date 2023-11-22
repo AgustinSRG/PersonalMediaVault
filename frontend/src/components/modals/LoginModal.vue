@@ -54,7 +54,7 @@
 <script lang="ts">
 import { apiAuthLogin } from "@/api/api-auth";
 import { AuthController } from "@/control/auth";
-import { makeApiRequest } from "@/api/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({

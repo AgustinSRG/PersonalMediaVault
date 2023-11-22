@@ -127,7 +127,7 @@ import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
 import { useVModel } from "@/utils/v-model";

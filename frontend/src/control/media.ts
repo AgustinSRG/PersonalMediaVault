@@ -3,7 +3,7 @@
 "use strict";
 
 import { MediaAPI } from "@/api/api-media";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";

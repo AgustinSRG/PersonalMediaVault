@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
@@ -10,7 +10,7 @@ import { AppStatus } from "./app-status";
 import { MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 
 /**
  * Event triggered when a subtitles file is loaded

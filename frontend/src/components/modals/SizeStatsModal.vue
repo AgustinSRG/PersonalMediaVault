@@ -44,7 +44,7 @@
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";

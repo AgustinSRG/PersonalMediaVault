@@ -31,7 +31,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { EditMediaAPI } from "@/api/api-media-edit";

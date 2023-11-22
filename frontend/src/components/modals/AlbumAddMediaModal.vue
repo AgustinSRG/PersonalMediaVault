@@ -58,7 +58,7 @@ import { useVModel } from "../../utils/v-model";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";

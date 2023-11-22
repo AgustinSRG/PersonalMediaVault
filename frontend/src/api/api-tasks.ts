@@ -2,9 +2,9 @@
 
 "use strict";
 
-import { RequestParams } from "./request";
+import { RequestParams } from "@asanrom/request-browser";
 import { TaskStatus } from "./models";
-import { getApiURL } from "./utils";
+import { getApiURL } from "@/utils/api";
 
 export class TasksAPI {
     public static GetTasks(): RequestParams<TaskStatus[]> {

@@ -4,7 +4,7 @@
 
 import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";

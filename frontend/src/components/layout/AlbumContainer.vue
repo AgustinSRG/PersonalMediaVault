@@ -169,8 +169,8 @@ import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, album
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { KeyboardManager } from "@/control/keyboard";
-import { generateURIQuery, getAssetURL } from "@/api/utils";
-import { Request } from "@/api/request";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 

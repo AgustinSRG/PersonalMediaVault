@@ -78,7 +78,7 @@ import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";

@@ -55,7 +55,7 @@
 import { apiAccountChangeUsername } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { makeApiRequest } from "@/api/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 

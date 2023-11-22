@@ -451,7 +451,7 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";

@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus } from "./app-status";
@@ -12,7 +12,7 @@ import { EditMediaAPI } from "@/api/api-media-edit";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { ImageNote, parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 
 /**
  * Event triggered when the image notes are updated

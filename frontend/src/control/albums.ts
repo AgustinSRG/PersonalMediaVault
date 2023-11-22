@@ -4,7 +4,7 @@
 
 import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { shuffleArray } from "@/utils/shuffle";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";

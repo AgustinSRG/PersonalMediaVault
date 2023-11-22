@@ -43,7 +43,7 @@
 import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";

@@ -275,7 +275,7 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";

@@ -2,9 +2,9 @@
 
 "use strict";
 
-import { RequestParams } from "./request";
+import { RequestParams } from "@asanrom/request-browser";
 import { SearchResults, RandomResults } from "./models";
-import { generateURIQuery, getApiURL } from "./utils";
+import { generateURIQuery, getApiURL } from "@/utils/api";
 
 export class SearchAPI {
     public static Search(tag: string, order: string, page: number, pageSize: number): RequestParams<SearchResults> {

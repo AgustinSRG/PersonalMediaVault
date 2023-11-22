@@ -42,7 +42,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";

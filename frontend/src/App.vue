@@ -9,7 +9,7 @@ import { AppEvents } from "./control/app-events";
 import { AppStatus } from "./control/app-status";
 import { MediaController } from "./control/media";
 import { UploadController, UploadEntryMin } from "./control/upload";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
 import { EVENT_NAME_LOADED_LOCALE } from "./i18n";

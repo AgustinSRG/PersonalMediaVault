@@ -141,7 +141,7 @@
 <script lang="ts">
 import { AppStatus } from "@/control/app-status";
 import { UploadController, UploadEntryMin } from "@/control/upload";
-import { generateURIQuery } from "@/api/utils";
+import { generateURIQuery } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";

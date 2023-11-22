@@ -76,7 +76,7 @@ import {
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { getAssetURL } from "@/api/utils";
+import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 

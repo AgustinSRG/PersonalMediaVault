@@ -4,12 +4,11 @@
 
 import { apiAccountGetContext } from "@/api/api-account";
 import { apiAuthLogout } from "@/api/api-auth";
-import { Request } from "@/api/request";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
-import { makeApiRequest, makeNamedApiRequest, setRequestAuthentication } from "@/api/request";
+import { abortNamedApiRequest, addRequestAuthenticationHandler, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 
 const REQUEST_KEY = "auth-control-check";
 const REQUEST_KEY_SILENT = "auth-control-check-silent";
@@ -20,6 +19,8 @@ const EVENT_NAME_ERROR = "auth-status-loading-error";
 
 const LS_KEY_AUTH_TOKEN = "x-session-token";
 const LS_KEY_VAULT_FINGERPRINT = "x-vault-fingerprint";
+
+const SESSION_TOKEN_HEADER_NAME = "x-session-token";
 
 /**
  * Event triggered when a new version is detected
@@ -90,6 +91,15 @@ export class AuthController {
         AuthController.LoadAuthStatus();
         AuthController.SetAssetsCookie();
         AuthController.CheckAuthStatus();
+
+        addRequestAuthenticationHandler(() => {
+            AuthController.RefreshAuthStatus();
+
+            const authHeaders = Object.create(null);
+            authHeaders[SESSION_TOKEN_HEADER_NAME] = AuthController.Session;
+
+            return authHeaders;
+        });
     }
 
     /**
@@ -98,7 +108,6 @@ export class AuthController {
     public static LoadAuthStatus() {
         AuthController.Session = fetchFromLocalStorage(LS_KEY_AUTH_TOKEN, "");
         AuthController.Fingerprint = fetchFromLocalStorage(LS_KEY_VAULT_FINGERPRINT, "");
-        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
     }
 
     /**
@@ -189,7 +198,7 @@ export class AuthController {
         clearNamedTimeout(REQUEST_KEY_SILENT);
 
         if (AuthController.Loading) {
-            Request.Abort(REQUEST_KEY_SILENT);
+            abortNamedApiRequest(REQUEST_KEY_SILENT);
             AuthController.CheckingAuthSilent = false;
         }
 
@@ -238,7 +247,6 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, session);
         AuthController.Fingerprint = fingerprint;
         saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
-        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
         AuthController.SetAssetsCookie();
         AuthController.Username = "";
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
@@ -270,7 +278,6 @@ export class AuthController {
         AuthController.Locked = true;
         AuthController.Session = "";
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
-        setRequestAuthentication(AuthController.Session, AuthController.RefreshAuthStatus);
         AuthController.Username = "";
         AuthController.SetAssetsCookie();
         AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);

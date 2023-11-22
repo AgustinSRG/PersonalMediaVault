@@ -66,7 +66,7 @@
 <script lang="ts">
 import { AdminAPI } from "@/api/api-admin";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";

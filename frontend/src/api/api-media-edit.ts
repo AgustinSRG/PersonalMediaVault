@@ -2,10 +2,10 @@
 
 "use strict";
 
-import { RequestParams } from "./request";
+import { RequestParams } from "@asanrom/request-browser";
 import { MediaResolution, MediaSubtitle, MediaAudioTrack } from "./models";
 import { ImageNote } from "@/utils/notes-format";
-import { getApiURL } from "./utils";
+import { getApiURL } from "@/utils/api";
 
 export class EditMediaAPI {
     public static ChangeMediaTitle(id: number, title: string): RequestParams<void> {

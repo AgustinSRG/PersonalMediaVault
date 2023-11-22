@@ -146,7 +146,7 @@ import {
 } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { generateURIQuery } from "@/api/utils";
+import { generateURIQuery } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";

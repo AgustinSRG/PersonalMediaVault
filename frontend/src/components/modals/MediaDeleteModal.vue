@@ -44,7 +44,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EditMediaAPI } from "@/api/api-media-edit";

@@ -110,8 +110,8 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { generateURIQuery, getAssetURL } from "@/api/utils";
-import { Request } from "@/api/request";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 

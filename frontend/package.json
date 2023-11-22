@@ -12,6 +12,7 @@
         "update-locales": "node translate-file-maker.js"
     },
     "dependencies": {
+        "@asanrom/request-browser": "1.0.0",
         "sanitize-html": "2.11.0",
         "vue": "3.3.8"
     },

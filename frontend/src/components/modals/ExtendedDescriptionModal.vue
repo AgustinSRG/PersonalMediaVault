@@ -75,8 +75,8 @@ import { MediaController } from "@/control/media";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { getAssetURL } from "@/api/utils";
-import { Request } from "@/api/request";
+import { getAssetURL } from "@/utils/api";
+import { Request } from "@asanrom/request-browser";
 import { escapeHTML } from "@/utils/html";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";

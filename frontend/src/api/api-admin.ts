@@ -2,8 +2,8 @@
 
 "use strict";
 
-import { RequestParams } from "./request";
-import { getApiURL } from "./utils";
+import { RequestParams } from "@asanrom/request-browser";
+import { getApiURL } from "@/utils/api";
 
 export class AdminAPI {
     public static ListAccounts(): RequestParams<{ username: string; write: boolean }[]> {

@@ -65,7 +65,7 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
 import { TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
-import { Request } from "@/api/request";
+import { Request } from "@asanrom/request-browser";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent, nextTick } from "vue";
 
