@@ -41,18 +41,24 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
 import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {},
     name: "EditorImageNotes",
     emits: ["changed"],
+    setup() {
+        return {
+            requestId: getUniqueStringId(),
+        };
+    },
     data: function () {
         return {
             imageNotesSeparator: NOTES_TEXT_SEPARATOR,
@@ -66,7 +72,6 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
         };
     },
-
     methods: {
         autoFocus: function () {
             nextTick(() => {
@@ -96,9 +101,9 @@ export default defineComponent({
 
             const notes = textToImageNotes(this.imageNotes);
 
-            Request.Pending(this._handles.requestId, EditMediaAPI.SetNotes(mediaId, notes))
+            Request.Pending(this.requestId, EditMediaAPI.SetNotes(mediaId, notes))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully changed image notes"));
+                    PagesController.ShowSnackBar(this.$t("Successfully changed image notes"));
                     this.busy = false;
                     this.dirty = false;
 
@@ -114,28 +119,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
+                            PagesController.ShowSnackBar(this.$t("Bad request"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
+                            PagesController.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                            PagesController.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -147,28 +152,17 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.requestId = getUniqueStringId();
-
         this.updateImageNotes();
 
-        this._handles.updateImageNotesH = this.updateImageNotes.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.updateImageNotes.bind(this));
 
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.updateImageNotesH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.autoFocus();
     },
 
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.updateImageNotesH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        Request.Abort(this._handles.requestId);
+        Request.Abort(this.requestId);
     },
 });
 </script>

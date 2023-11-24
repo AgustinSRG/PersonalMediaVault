@@ -47,6 +47,7 @@ import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "AlbumDeleteModal",
@@ -113,7 +114,7 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.DeleteAlbum(albumId))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
+                    PagesController.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.$refs.modalContainer.close(true);
@@ -151,9 +152,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
         this.onAlbumUpdate();
         if (this.display) {
@@ -161,9 +160,6 @@ export default defineComponent({
             this.confirmation = "";
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
     },
     watch: {
         display: function () {

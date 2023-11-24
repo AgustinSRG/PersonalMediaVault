@@ -58,6 +58,11 @@ export const EVENT_NAME_MEDIA_DELETE = "media-delete";
 export const EVENT_NAME_SEARCH_MODAL_SUBMIT = "search-modal-submit";
 
 /**
+ * Event triggered to show a message in the snackbar
+ */
+export const EVENT_NAME_SNACK_BAR = "snack";
+
+/**
  * Management object for pages
  */
 export class PagesController {
@@ -102,4 +107,12 @@ export class PagesController {
      * Search query for the albums page
      */
     public static AlbumsPageSearch = "";
+
+    /**
+     * Emits event to show a snackbar
+     * @param message The message to show
+     */
+    public static ShowSnackBar(message: string) {
+        AppEvents.Emit(EVENT_NAME_SNACK_BAR, message);
+    }
 }

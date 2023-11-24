@@ -167,8 +167,7 @@ import {
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { KeyboardManager } from "@/control/keyboard";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -217,6 +216,7 @@ interface AlbumListItem {
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -235,6 +235,9 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            listScroller: null as BigListScroller,
+            dragCheckInterval: null,
+            checkContainerTimer: null,
             displayAlbumAddMedia: useVModel(props, "displayUpload"),
         };
     },
@@ -299,7 +302,7 @@ export default defineComponent({
         updateAlbumList: function (preserveWindowScroll?: boolean) {
             this.currentMenuOpen = -1;
 
-            const centerPosition = this._handles.listScroller.getCenterPosition();
+            const centerPosition = this.listScroller.getCenterPosition();
 
             let currentScroll = 0;
 
@@ -309,11 +312,11 @@ export default defineComponent({
                 currentScroll = conEl.scrollTop;
             }
 
-            this._handles.listScroller.reset();
+            this.listScroller.reset();
 
             if (this.loadedAlbum) {
                 let i = 0;
-                this._handles.listScroller.addElements(
+                this.listScroller.addElements(
                     AlbumsController.CurrentAlbumData.list.map((m) => {
                         return {
                             pos: i++,
@@ -327,7 +330,7 @@ export default defineComponent({
                 );
 
                 if (preserveWindowScroll) {
-                    this._handles.listScroller.moveWindowToElement(centerPosition);
+                    this.listScroller.moveWindowToElement(centerPosition);
                     nextTick(() => {
                         const conEl = this.$el.querySelector(".album-body");
 
@@ -345,7 +348,7 @@ export default defineComponent({
 
         onScroll: function (e) {
             this.closeOptionsMenu();
-            this._handles.listScroller.checkElementScroll(e.target);
+            this.listScroller.checkElementScroll(e.target);
         },
 
         checkContainerHeight: function () {
@@ -355,7 +358,7 @@ export default defineComponent({
                 return;
             }
 
-            this._handles.listScroller.checkElementScroll(cont);
+            this.listScroller.checkElementScroll(cont);
 
             const el = this.$el.querySelector(".album-body-item");
 
@@ -363,7 +366,7 @@ export default defineComponent({
                 return;
             }
 
-            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+            const changed = this.listScroller.checkScrollContainerHeight(cont, el);
 
             if (changed) {
                 this.mustScroll = true;
@@ -394,18 +397,18 @@ export default defineComponent({
         toggleLoop: function () {
             AlbumsController.ToggleLoop();
             if (AlbumsController.AlbumLoop) {
-                AppEvents.ShowSnackBar(this.$t("Album loop enabled"));
+                PagesController.ShowSnackBar(this.$t("Album loop enabled"));
             } else {
-                AppEvents.ShowSnackBar(this.$t("Album loop disabled"));
+                PagesController.ShowSnackBar(this.$t("Album loop disabled"));
             }
         },
 
         toggleRandom: function () {
             AlbumsController.ToggleRandom();
             if (AlbumsController.AlbumRandom) {
-                AppEvents.ShowSnackBar(this.$t("Album shuffle enabled"));
+                PagesController.ShowSnackBar(this.$t("Album shuffle enabled"));
             } else {
-                AppEvents.ShowSnackBar(this.$t("Album shuffle disabled"));
+                PagesController.ShowSnackBar(this.$t("Album shuffle disabled"));
             }
         },
 
@@ -413,11 +416,11 @@ export default defineComponent({
             if (this.isFav) {
                 this.isFav = false;
                 albumRemoveFav(AlbumsController.CurrentAlbum);
-                AppEvents.ShowSnackBar(this.$t("Album removed from favorites"));
+                PagesController.ShowSnackBar(this.$t("Album removed from favorites"));
             } else {
                 this.isFav = true;
                 albumAddFav(AlbumsController.CurrentAlbum);
-                AppEvents.ShowSnackBar(this.$t("Album added to favorites"));
+                PagesController.ShowSnackBar(this.$t("Album added to favorites"));
             }
         },
 
@@ -449,7 +452,7 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        clickMedia: function (item: AlbumListItem, e: MouseEvent) {
+        clickMedia: function (item: AlbumListItem, e?: MouseEvent) {
             if (e) {
                 e.preventDefault();
             }
@@ -474,7 +477,7 @@ export default defineComponent({
             event.stopPropagation();
 
             if (this.contextShown && this.currentMenuOpen === item.pos) {
-                this.currentMenuOpen = "";
+                this.currentMenuOpen = -1;
                 this.contextShown = false;
             } else {
                 this.currentMenuOpen = item.pos;
@@ -510,7 +513,7 @@ export default defineComponent({
             this.currentPosMedia = newPosMedia;
 
             if (mustScroll) {
-                this._handles.listScroller.moveWindowToElement(this.currentPos);
+                this.listScroller.moveWindowToElement(this.currentPos);
                 nextTick(() => {
                     this.scrollToSelected();
                 });
@@ -552,7 +555,7 @@ export default defineComponent({
         },
 
         removeMedia: function (i: number) {
-            const completeAlbumList = this._handles.listScroller.list;
+            const completeAlbumList = this.listScroller.list;
             const media = completeAlbumList[i];
             if (!media) {
                 return;
@@ -560,7 +563,7 @@ export default defineComponent({
             const albumId = this.albumId;
             Request.Do(AlbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully removed from album"));
+                    PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
                 })
@@ -611,9 +614,6 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
-            if (this._handles.sortable) {
-                this._handles.sortable.option("disabled", !this.canWrite);
-            }
         },
 
         updateFav: function () {
@@ -625,7 +625,7 @@ export default defineComponent({
                 return false;
             }
 
-            const completeAlbumList = this._handles.listScroller.list;
+            const completeAlbumList = this.listScroller.list;
 
             switch (event.key) {
                 case "l":
@@ -679,11 +679,11 @@ export default defineComponent({
             this.draggingItem = item;
             this.draggingPosition = item.pos;
             this.draggingOverPosition = item.pos;
-            if (this._handles.dragCheckInterval) {
-                clearInterval(this._handles.dragCheckInterval);
-                this._handles.dragCheckInterval = null;
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
             }
-            this._handles.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+            this.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
         },
 
         onDocumentMouseMove: function (e: MouseEvent) {
@@ -696,9 +696,9 @@ export default defineComponent({
                 return;
             }
 
-            if (this._handles.dragCheckInterval) {
-                clearInterval(this._handles.dragCheckInterval);
-                this._handles.dragCheckInterval = null;
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
             }
 
             // Check drop position
@@ -789,14 +789,12 @@ export default defineComponent({
         if (this.displayAlbumAddMedia) {
             this.displayAlbumAddMedia = false;
         }
-        this._handles = Object.create(null);
-        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
 
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
-        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
+
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
             get: () => {
                 return this.albumList;
             },
@@ -811,47 +809,26 @@ export default defineComponent({
 
         this.onAlbumPosUpdate();
 
-        this._handles.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
 
-        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
 
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateFav.bind(this));
 
-        this._handles.favUpdateH = this.updateFav.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.favUpdateH);
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
-        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
 
-        this._handles.onDocumentMouseMoveH = this.onDocumentMouseMove.bind(this);
-        document.addEventListener("mousemove", this._handles.onDocumentMouseMoveH);
-
-        this._handles.onDocumentMouseUpH = this.onDocumentMouseUp.bind(this);
-        document.addEventListener("mouseup", this._handles.onDocumentMouseUpH);
+        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
+        clearInterval(this.checkContainerTimer);
 
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.favUpdateH);
-
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
-
-        clearInterval(this._handles.checkContainerTimer);
-
-        document.removeEventListener("mousemove", this._handles.onDocumentMouseMoveH);
-        document.removeEventListener("mouseup", this._handles.onDocumentMouseUpH);
-
-        if (this._handles.dragCheckInterval) {
-            clearInterval(this._handles.dragCheckInterval);
-            this._handles.dragCheckInterval = null;
+        if (this.dragCheckInterval) {
+            clearInterval(this.dragCheckInterval);
+            this.dragCheckInterval = null;
         }
     },
 });

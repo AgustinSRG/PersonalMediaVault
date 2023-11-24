@@ -8,8 +8,8 @@ import { Request } from "@asanrom/request-browser";
 import { shuffleArray } from "@/utils/shuffle";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
@@ -73,10 +73,9 @@ export class AlbumsController {
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(AlbumsController.Load);
-        AuthController.AddChangeEventListener(AlbumsController.LoadCurrentAlbum);
-
-        AppStatus.AddEventListener(AlbumsController.OnCurrentAlbumChanged);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.LoadCurrentAlbum);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, AlbumsController.OnCurrentAlbumChanged);
 
         AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
 

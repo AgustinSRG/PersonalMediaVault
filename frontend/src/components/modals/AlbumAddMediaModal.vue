@@ -64,6 +64,7 @@ import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -116,7 +117,7 @@ export default defineComponent({
             Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Successfully added to album"));
+                    PagesController.ShowSnackBar(this.$t("Successfully added to album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     callback();
                 })
@@ -127,14 +128,14 @@ export default defineComponent({
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(400, "MAX_SIZE_REACHED", () => {
-                            AppEvents.ShowSnackBar(
+                            PagesController.ShowSnackBar(
                                 this.$t("Error") +
                                     ":" +
                                     this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                             );
                         })
                         .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
                         })
                         .handle(err);
                 })
@@ -172,18 +173,13 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_ITEMS_UPDATED, this.updatePageItemsPreferences.bind(this));
 
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
             });
         }
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
     },
     watch: {
         display: function () {

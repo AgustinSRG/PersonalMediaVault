@@ -69,15 +69,16 @@ import { defineComponent } from "vue";
 
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@asanrom/request-browser";
 import { TagsAPI } from "@/api/api-tags";
-import { MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -92,6 +93,8 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            requestId: getUniqueStringId(),
+            findTagTimeout: null,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -170,9 +173,9 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tagName = this.getTagName(tag, this.tagVersion);
 
-            Request.Pending(this._handles.requestId, TagsAPI.UntagMedia(mediaId, tag))
+            Request.Pending(this.requestId, TagsAPI.UntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
-                    AppEvents.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
+                    PagesController.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
                     for (let i = 0; i < this.tags.length; i++) {
                         if (this.tags[i] === tag) {
@@ -199,34 +202,34 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
+                            PagesController.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
+                            PagesController.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                            PagesController.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
         },
 
-        addTag: function (e) {
+        addTag: function (e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -239,10 +242,10 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tag = this.tagToAdd;
 
-            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
-                    AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
+                    PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     this.tagToAdd = "";
                     if (this.tags.indexOf(res.id) === -1) {
@@ -271,28 +274,28 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
+                            PagesController.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
+                            PagesController.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                            PagesController.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -307,10 +310,10 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestId, TagsAPI.TagMedia(mediaId, tag))
+            Request.Pending(this.requestId, TagsAPI.TagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
-                    AppEvents.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
+                    PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     if (this.tags.indexOf(res.id) === -1) {
                         this.tags.push(res.id);
@@ -331,39 +334,39 @@ export default defineComponent({
                     this.busy = false;
                     Request.ErrorHandler()
                         .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Invalid tag name"));
+                            PagesController.ShowSnackBar(this.$t("Invalid tag name"));
                         })
                         .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                            PagesController.ShowSnackBar(this.$t("Access denied"));
                         })
                         .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
+                            PagesController.ShowSnackBar(this.$t("Not found"));
                         })
                         .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                            PagesController.ShowSnackBar(this.$t("Internal server error"));
                         })
                         .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
         },
 
         onTagAddChanged: function () {
-            if (this._handles.findTagTimeout) {
+            if (this.findTagTimeout) {
                 return;
             }
-            this._handles.findTagTimeout = setTimeout(() => {
-                this._handles.findTagTimeout = null;
+            this.findTagTimeout = setTimeout(() => {
+                this.findTagTimeout = null;
                 this.findTags();
             }, 200);
         },
@@ -437,19 +440,11 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.requestId = getUniqueStringId();
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this._handles.tagUpdateH = this.updateTagData.bind(this);
-        TagsController.AddEventListener(this._handles.tagUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
-
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
         this.load();
 
@@ -459,10 +454,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort(this._handles.requestId);
-        TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
+        Request.Abort(this.requestId);
     },
     watch: {
         display: function () {

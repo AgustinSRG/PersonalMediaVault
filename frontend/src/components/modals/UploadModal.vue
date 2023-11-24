@@ -86,8 +86,7 @@
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { parseTagName } from "@/utils/tags";
-import { TagsController } from "@/control/tags";
-import { AppEvents } from "@/control/app-events";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { getLastUsedTags } from "@/control/app-preferences";
 
@@ -109,6 +108,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            findTagTimeout: null,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -272,17 +272,17 @@ export default defineComponent({
 
         onTagAddChanged: function (forced: boolean) {
             if (forced) {
-                if (this._handles.findTagTimeout) {
-                    clearTimeout(this._handles.findTagTimeout);
-                    this._handles.findTagTimeout = null;
+                if (this.findTagTimeout) {
+                    clearTimeout(this.findTagTimeout);
+                    this.findTagTimeout = null;
                 }
                 this.findTags();
             } else {
-                if (this._handles.findTagTimeout) {
+                if (this.findTagTimeout) {
                     return;
                 }
-                this._handles.findTagTimeout = setTimeout(() => {
-                    this._handles.findTagTimeout = null;
+                this.findTagTimeout = setTimeout(() => {
+                    this.findTagTimeout = null;
                     this.findTags();
                 }, 200);
             }
@@ -339,15 +339,13 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-
         this.updateTagData();
-        this._handles.tagUpdateH = this.updateTagData.bind(this);
-        TagsController.AddEventListener(this._handles.tagUpdateH);
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
         this.updateAlbums();
-        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
 
         this.reset();
 
@@ -356,12 +354,9 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
-
-        if (this._handles.findTagTimeout) {
-            clearTimeout(this._handles.findTagTimeout);
-            this._handles.findTagTimeout = null;
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
+            this.findTagTimeout = null;
         }
     },
     watch: {

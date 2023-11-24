@@ -68,10 +68,10 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -81,6 +81,7 @@ import { escapeHTML } from "@/utils/html";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -93,6 +94,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -106,7 +108,7 @@ export default defineComponent({
             content: "",
             contentToChange: "",
 
-            contentStoredId: "",
+            contentStoredId: -1,
             contentStored: "",
 
             loading: true,
@@ -120,8 +122,8 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            Request.Abort(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -142,7 +144,7 @@ export default defineComponent({
                 if (this.contentStoredId === MediaController.MediaData.id) {
                     this.contentToChange = this.contentStored;
                 } else {
-                    this.contentStoredId = "";
+                    this.contentStoredId = -1;
                     this.contentStored = "";
                 }
 
@@ -152,7 +154,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, {
+            Request.Pending(this.loadRequestId, {
                 method: "GET",
                 url: getAssetURL(descFilePath),
             })
@@ -166,7 +168,7 @@ export default defineComponent({
                         this.contentToChange = this.contentStored;
                         this.editing = !!this.canWrite;
                     } else {
-                        this.contentStoredId = "";
+                        this.contentStoredId = -1;
                         this.contentStored = "";
                     }
 
@@ -186,21 +188,21 @@ export default defineComponent({
                             if (this.contentStoredId === MediaController.MediaData.id) {
                                 this.contentToChange = this.contentStored;
                             } else {
-                                this.contentStoredId = "";
+                                this.contentStoredId = -1;
                                 this.contentStored = "";
                             }
                             this.autoFocus();
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -296,7 +298,7 @@ export default defineComponent({
             Request.Do(EditMediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Successfully saved extended description"));
+                    PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
                     this.content = this.contentToChange;
                     this.editing = false;
                     this.changed = true;
@@ -335,16 +337,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
-
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
         if (this.display) {
             this.updateModalSize();
@@ -352,15 +347,13 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
+        clearNamedTimeout(this.loadRequestId);
+        Request.Abort(this.loadRequestId);
     },
     watch: {
         display: function () {
             if (this.display) {
-                this.contentStoredId = "";
+                this.contentStoredId = -1;
                 this.contentStored = "";
                 this.updateModalSize();
                 this.load();

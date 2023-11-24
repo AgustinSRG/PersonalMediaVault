@@ -41,6 +41,7 @@ import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "AlbumRenameModal",
@@ -111,7 +112,7 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
+                    PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;
                     this.name = "";
                     this.$refs.modalContainer.close(true);
@@ -149,9 +150,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
         this.onAlbumUpdate();
 
@@ -160,9 +159,6 @@ export default defineComponent({
             this.name = this.oldName;
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
     },
     watch: {
         display: function () {

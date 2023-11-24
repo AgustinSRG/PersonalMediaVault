@@ -129,7 +129,6 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { useVModel } from "../../utils/v-model";
-import { KeyboardManager } from "@/control/keyboard";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 
@@ -279,24 +278,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         // Load player preferences
-
-        this._handles.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
-
-        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
-    },
-    beforeUnmount: function () {
-        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
-        KeyboardManager.RemoveHandler(this._handles.keyHandler);
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
+        this.$listenOnAppEvent("fullscreenchange", this.onExitFullScreen.bind(this));
     },
     watch: {
         rTick: function () {

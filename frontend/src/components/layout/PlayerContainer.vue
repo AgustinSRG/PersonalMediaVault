@@ -108,7 +108,7 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_LOADING, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
@@ -139,7 +139,7 @@ const ImagePlayer = defineAsyncComponent({
 
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_LOADING, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { FocusTrap } from "../../utils/focus-trap";
 import { closeFullscreen } from "@/utils/full-screen";
 import {
@@ -190,6 +190,12 @@ export default defineComponent({
     },
     props: {
         displayUpload: Boolean,
+    },
+    setup() {
+        return {
+            focusTrap: null as FocusTrap,
+            timer: null,
+        };
     },
     data: function () {
         return {
@@ -308,12 +314,12 @@ export default defineComponent({
 
         onUpdateFullScreen: function () {
             if (this.fullScreen) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
 
@@ -339,60 +345,36 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadingH = this.updateLoading.bind(this);
-        this._handles.updateH = this.updateMedia.bind(this);
+        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
 
-        this._handles.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
-
-        this._handles.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
+        this.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
         this.checkPlayerSize();
 
         this.updateStatus();
 
-        MediaController.AddLoadingEventListener(this._handles.loadingH);
-        MediaController.AddUpdateEventListener(this._handles.updateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_LOADING, this.updateLoading.bind(this));
 
-        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMedia.bind(this));
 
-        this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
 
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
 
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        this._handles.albumLoadingH = this.updateAlbumsLoading.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.albumLoadingH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.updateAlbumsLoading.bind(this));
 
-        this._handles.goPrevH = this.goPrev.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_GO_PREV, this._handles.goPrevH);
+        this.$listenOnAppEvent(EVENT_NAME_GO_PREV, this.goPrev.bind(this));
 
-        this._handles.goNextH = this.goNext.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_GO_NEXT, this._handles.goNextH);
+        this.$listenOnAppEvent(EVENT_NAME_GO_NEXT, this.goNext.bind(this));
 
         nextTick(() => {
             this.$el.focus();
         });
     },
     beforeUnmount: function () {
-        MediaController.RemoveLoadingEventListener(this._handles.loadingH);
-        MediaController.RemoveUpdateEventListener(this._handles.updateH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.albumLoadingH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_GO_PREV, this._handles.goPrevH);
-        AppEvents.RemoveEventListener(EVENT_NAME_GO_NEXT, this._handles.goNextH);
-
-        this._handles.focusTrap.destroy();
-
-        clearInterval(this._handles.timer);
+        this.focusTrap.destroy();
+        clearInterval(this.timer);
     },
 });
 </script>

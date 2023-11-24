@@ -27,6 +27,7 @@ BusyStateController.Initialize();
 import { createApp } from "vue";
 
 import { i18n } from "./i18n";
+import { appEventsPlugin } from "./app-events-plugin";
 
 import App from "./App.vue";
 import ModalDialogContainer from "@/components/utils/ModalDialogContainer.vue";
@@ -43,7 +44,7 @@ document.addEventListener("dragover", function (e) {
 
 // Create app
 
-createApp(App).use(i18n).component("ModalDialogContainer", ModalDialogContainer).mount("#app");
+createApp(App).use(i18n).use(appEventsPlugin).component("ModalDialogContainer", ModalDialogContainer).mount("#app");
 
 // Register service worker
 

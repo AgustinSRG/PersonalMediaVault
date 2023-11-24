@@ -88,6 +88,8 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
+            updateRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -118,10 +120,10 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
-            clearNamedTimeout(this._handles.updateRequestId);
-            Request.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            Request.Abort(this.loadRequestId);
+            clearNamedTimeout(this.updateRequestId);
+            Request.Abort(this.updateRequestId);
 
             if (!this.display) {
                 return;
@@ -129,11 +131,11 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, TasksAPI.GetTasks())
+            Request.Pending(this.loadRequestId, TasksAPI.GetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
-                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -145,29 +147,29 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         updateTasks: function () {
-            clearNamedTimeout(this._handles.updateRequestId);
-            Request.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this.updateRequestId);
+            Request.Abort(this.updateRequestId);
 
             if (!this.display) {
                 return;
             }
 
-            Request.Pending(this._handles.updateRequestId, TasksAPI.GetTasks())
+            Request.Pending(this.updateRequestId, TasksAPI.GetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
-                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
                 .onRequestError((err) => {
                     Request.ErrorHandler()
@@ -179,14 +181,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
+                            setNamedTimeout(this.updateRequestId, 1500, this.updateTasks.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 1500, this.updateTasks.bind(this));
                 });
         },
 
@@ -324,10 +326,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
-        this._handles.updateRequestId = getUniqueStringId();
-
         this.load();
 
         if (this.display) {
@@ -337,10 +335,10 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
-        clearNamedTimeout(this._handles.updateRequestId);
-        Request.Abort(this._handles.updateRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        Request.Abort(this.loadRequestId);
+        clearNamedTimeout(this.updateRequestId);
+        Request.Abort(this.updateRequestId);
     },
     watch: {
         display: function () {

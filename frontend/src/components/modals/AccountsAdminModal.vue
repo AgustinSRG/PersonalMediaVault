@@ -74,6 +74,7 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -87,6 +88,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -109,8 +111,8 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            Request.Abort(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -118,7 +120,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, AdminAPI.ListAccounts())
+            Request.Pending(this.loadRequestId, AdminAPI.ListAccounts())
                 .onSuccess((accounts) => {
                     this.accounts = accounts;
                     this.loading = false;
@@ -133,14 +135,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -164,7 +166,7 @@ export default defineComponent({
             Request.Do(AdminAPI.DeleteAccount(username))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Account deleted") + ": " + username);
+                    PagesController.ShowSnackBar(this.$t("Account deleted") + ": " + username);
                     this.load();
                 })
                 .onCancel(() => {
@@ -219,8 +221,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
         this.load();
 
         if (this.display) {
@@ -233,8 +233,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        Request.Abort(this.loadRequestId);
     },
     watch: {
         display: function () {

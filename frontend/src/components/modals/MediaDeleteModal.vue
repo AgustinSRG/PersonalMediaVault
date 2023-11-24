@@ -42,13 +42,14 @@
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "MediaDeleteModal",
@@ -115,7 +116,7 @@ export default defineComponent({
 
             Request.Do(EditMediaAPI.DeleteMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
+                    PagesController.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
                     this.$refs.modalContainer.close(true);
@@ -154,11 +155,8 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.mediaUpdateH = this.onMediaUpdate.bind(this);
-        AppStatus.AddEventListener(this._handles.mediaUpdateH);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onMediaUpdate.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
 
         this.onMediaUpdate();
 
@@ -167,11 +165,6 @@ export default defineComponent({
             this.confirmation = "";
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.mediaUpdateH);
-
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
     },
     watch: {
         display: function () {

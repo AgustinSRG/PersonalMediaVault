@@ -54,10 +54,11 @@
 <script lang="ts">
 import { apiAccountChangeUsername } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ChangeUsernameModal",
@@ -108,7 +109,7 @@ export default defineComponent({
                     AuthController.UpdateUsername(this.username);
                     this.username = "";
                     this.password = "";
-                    AppEvents.ShowSnackBar(this.$t("Vault username changed!"));
+                    PagesController.ShowSnackBar(this.$t("Vault username changed!"));
                     this.$refs.modalContainer.close(true);
                 })
                 .onCancel(() => {
@@ -155,17 +156,14 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.currentUsername = AuthController.Username;
-        this._handles.usernameUpdatedH = this.usernameUpdated.bind(this);
-        AuthController.AddChangeEventListener(this._handles.usernameUpdatedH);
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.usernameUpdated.bind(this));
+
         if (this.display) {
             this.error = "";
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AuthController.RemoveChangeEventListener(this._handles.usernameUpdatedH);
     },
     watch: {
         display: function () {

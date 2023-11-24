@@ -90,10 +90,15 @@ import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
-import { AuthController, EVENT_NAME_APP_NEW_VERSION } from "../../control/auth";
-import { AppEvents } from "../../control/app-events";
+import {
+    AuthController,
+    EVENT_NAME_APP_NEW_VERSION,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_AUTH_ERROR,
+    EVENT_NAME_AUTH_LOADING,
+} from "../../control/auth";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -407,8 +412,6 @@ export default defineComponent({
                 this.displayAdvancedSettings = false;
                 this.displayBatchOperation = false;
 
-                this.displayAlbumCreate = false;
-
                 this.displayAccountAdmin = false;
 
                 this.displaySearchModal = false;
@@ -453,32 +456,17 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.onThemeChangedH = this.onThemeChanged.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_THEME_CHANGED, this._handles.onThemeChangedH);
+        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.onThemeChanged.bind(this));
 
-        this._handles.onAppStatusUpdateH = this.onAppStatusUpdate.bind(this);
-        AppStatus.AddEventListener(this._handles.onAppStatusUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusUpdate.bind(this));
 
-        this._handles.onAuthStatusChangedH = this.onAuthStatusChanged.bind(this);
-        AuthController.AddChangeEventListener(this._handles.onAuthStatusChangedH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthStatusChanged.bind(this));
 
-        this._handles.onAuthStatusLoadingH = this.onAuthStatusLoading.bind(this);
-        AuthController.AddLoadingEventListener(this._handles.onAuthStatusLoadingH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_LOADING, this.onAuthStatusLoading.bind(this));
 
-        this._handles.onAuthLoadingErrorH = this.onAuthLoadingError.bind(this);
-        AuthController.AddErrorEventListener(this._handles.onAuthLoadingErrorH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_ERROR, this.onAuthLoadingError.bind(this));
 
-        this._handles.onNewAppVersionH = this.onNewAppVersion.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_APP_NEW_VERSION, this._handles.onNewAppVersionH);
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_THEME_CHANGED, this._handles.onThemeChangedH);
-        AppStatus.RemoveEventListener(this._handles.onAppStatusUpdateH);
-        AuthController.RemoveChangeEventListener(this._handles.onAuthStatusChangedH);
-        AuthController.RemoveLoadingEventListener(this._handles.onAuthStatusLoadingH);
-        AuthController.RemoveErrorEventListener(this._handles.onAuthLoadingErrorH);
-        AppEvents.RemoveEventListener(EVENT_NAME_APP_NEW_VERSION, this._handles.onNewAppVersionH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_NEW_VERSION, this.onNewAppVersion.bind(this));
     },
 });
 </script>

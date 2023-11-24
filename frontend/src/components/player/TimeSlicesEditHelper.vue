@@ -124,8 +124,8 @@
 <script lang="ts">
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaController } from "@/control/media";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { Request } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -135,6 +135,7 @@ import { defineComponent } from "vue";
 
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
+import { PagesController } from "@/control/pages";
 
 interface SaveRequestState {
     saving: boolean;
@@ -217,6 +218,13 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            saveState: {
+                saving: false,
+                pendingSave: false,
+                mid: -1,
+                timeSlices: [],
+                callback: null,
+            },
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -272,7 +280,7 @@ export default defineComponent({
                 };
             });
 
-            this._handles.saveState = {
+            this.saveState = {
                 saving: false,
                 pendingSave: false,
                 mid: MediaController.MediaData.id,
@@ -282,7 +290,7 @@ export default defineComponent({
         },
 
         save: function () {
-            this._handles.saveState.timeSlices = this.timeSlicesArray
+            this.saveState.timeSlices = this.timeSlicesArray
                 .filter((s) => {
                     return !s.deleted;
                 })
@@ -292,11 +300,11 @@ export default defineComponent({
                         name: s.name,
                     };
                 });
-            saveTimeSlices(this._handles.saveState);
+            saveTimeSlices(this.saveState);
         },
 
         onSaved: function () {
-            AppEvents.ShowSnackBar(this.$t("Successfully changed time slices"));
+            PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
             this.$emit("update-time-slices");
         },
 
@@ -428,23 +436,11 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
+        this.saveState.callback = this.onSaved.bind(this);
 
-        this._handles.saveState = {
-            saving: false,
-            pendingSave: false,
-            mid: -1,
-            timeSlices: [],
-            callback: this.onSaved.bind(this),
-        };
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
 
@@ -463,9 +459,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        this._handles.saveState.callback = null;
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
+        this.saveState.callback = null;
     },
 
     watch: {

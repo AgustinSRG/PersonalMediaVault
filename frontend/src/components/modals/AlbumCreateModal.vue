@@ -41,6 +41,7 @@ import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "AlbumCreateModal",
@@ -102,7 +103,7 @@ export default defineComponent({
 
             Request.Do(AlbumsAPI.CreateAlbum(albumName))
                 .onSuccess((response) => {
-                    AppEvents.ShowSnackBar(this.$t("Album created") + ": " + albumName);
+                    PagesController.ShowSnackBar(this.$t("Album created") + ": " + albumName);
                     this.busy = false;
                     this.name = "";
                     this.$refs.modalContainer.close(true);

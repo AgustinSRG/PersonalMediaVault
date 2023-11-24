@@ -32,17 +32,17 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
         };
     },
     data: function () {
         return {
             closing: false,
-            focusTrap: null,
         };
     },
     methods: {
-        close: function (forced: boolean) {
+        close: function (forced?: boolean) {
             if (this.lockClose && forced !== true) {
                 return;
             }

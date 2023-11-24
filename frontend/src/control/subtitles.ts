@@ -6,10 +6,10 @@ import { Request } from "@asanrom/request-browser";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
-import { MediaController } from "./media";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { getAssetURL } from "@/utils/api";
 
 /**
@@ -47,9 +47,9 @@ export class SubtitlesController {
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(SubtitlesController.Load);
-        AppStatus.AddEventListener(SubtitlesController.OnMediaChanged);
-        MediaController.AddUpdateEventListener(SubtitlesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, SubtitlesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, SubtitlesController.OnMediaChanged);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_UPDATE, SubtitlesController.Load);
 
         SubtitlesController.MediaId = AppStatus.CurrentMedia;
 

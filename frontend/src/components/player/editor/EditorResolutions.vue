@@ -67,8 +67,8 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaController } from "@/control/media";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { Request } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
@@ -76,6 +76,7 @@ import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmat
 import { EditMediaAPI } from "@/api/api-media-edit";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -83,6 +84,11 @@ export default defineComponent({
     },
     name: "EditorResolutions",
     emits: ["changed"],
+    setup() {
+        return {
+            requestId: getUniqueStringId(),
+        };
+    },
     data: function () {
         return {
             type: 0,
@@ -239,9 +245,9 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this._handles.requestId, EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this.requestId, EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
-                            AppEvents.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
+                            PagesController.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = true;
                             r.fps = result.fps;
@@ -270,28 +276,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
+                                    PagesController.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
+                                    PagesController.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
+                                    PagesController.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Not found"));
+                                    PagesController.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                                    PagesController.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                                    PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.ShowSnackBar(err.message);
+                            PagesController.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });
@@ -316,9 +322,9 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this._handles.requestId, EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this.requestId, EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
-                            AppEvents.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
+                            PagesController.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
                             r.enabled = false;
                             if (MediaController.MediaData) {
@@ -346,28 +352,28 @@ export default defineComponent({
                             this.busy = false;
                             Request.ErrorHandler()
                                 .add(400, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
+                                    PagesController.ShowSnackBar(this.$t("Bad request"));
                                 })
                                 .add(401, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
+                                    PagesController.ShowSnackBar(this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                                 })
                                 .add(403, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
+                                    PagesController.ShowSnackBar(this.$t("Access denied"));
                                 })
                                 .add(404, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Not found"));
+                                    PagesController.ShowSnackBar(this.$t("Not found"));
                                 })
                                 .add(500, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
+                                    PagesController.ShowSnackBar(this.$t("Internal server error"));
                                 })
                                 .add("*", "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
+                                    PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
                                 })
                                 .handle(err);
                         })
                         .onUnexpectedError((err) => {
-                            AppEvents.ShowSnackBar(err.message);
+                            PagesController.ShowSnackBar(err.message);
                             console.error(err);
                             this.busy = false;
                         });
@@ -410,26 +416,14 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.requestId = getUniqueStringId();
-
         this.updateMediaData();
 
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
     },
 
     beforeUnmount: function () {
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        Request.Abort(this._handles.requestId);
+        Request.Abort(this.requestId);
     },
 });
 </script>

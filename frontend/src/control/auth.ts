@@ -13,9 +13,20 @@ import { abortNamedApiRequest, addRequestAuthenticationHandler, makeApiRequest, 
 const REQUEST_KEY = "auth-control-check";
 const REQUEST_KEY_SILENT = "auth-control-check-silent";
 
-const EVENT_NAME_LOADING = "auth-status-loading";
-const EVENT_NAME_CHANGED = "auth-status-changed";
-const EVENT_NAME_ERROR = "auth-status-loading-error";
+/**
+ * Event triggered when the auth status starts or stops loading
+ */
+export const EVENT_NAME_AUTH_LOADING = "auth-status-loading";
+
+/**
+ * Event triggered when the authentication status changes
+ */
+export const EVENT_NAME_AUTH_CHANGED = "auth-status-changed";
+
+/**
+ * Event triggered when the authentication status cannot be loaded due to an error
+ */
+export const EVENT_NAME_AUTH_ERROR = "auth-status-loading-error";
 
 const LS_KEY_AUTH_TOKEN = "x-session-token";
 const LS_KEY_VAULT_FINGERPRINT = "x-vault-fingerprint";
@@ -140,7 +151,7 @@ export class AuthController {
      */
     public static CheckAuthStatus() {
         AuthController.Loading = true;
-        AppEvents.Emit(EVENT_NAME_LOADING, true);
+        AppEvents.Emit(EVENT_NAME_AUTH_LOADING, true);
         clearNamedTimeout(REQUEST_KEY);
         makeNamedApiRequest(REQUEST_KEY, apiAccountGetContext())
             .onSuccess((response) => {
@@ -153,9 +164,9 @@ export class AuthController {
                 if (import.meta.env.VITE__VERSION !== response.version) {
                     AppEvents.Emit(EVENT_NAME_APP_NEW_VERSION);
                 }
-                AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                 AuthController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_LOADING, false);
+                AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
                 AuthController.UpdateCustomStyle();
             })
             .onRequestError((err, handleErr) => {
@@ -163,13 +174,13 @@ export class AuthController {
                     unauthorized: () => {
                         AuthController.Locked = true;
                         AuthController.Username = "";
-                        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                         AuthController.Loading = false;
-                        AppEvents.Emit(EVENT_NAME_LOADING, false);
+                        AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
                     },
                     temporalError: () => {
                         // Retry
-                        AppEvents.Emit(EVENT_NAME_ERROR);
+                        AppEvents.Emit(EVENT_NAME_AUTH_ERROR);
                         setNamedTimeout(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
                     },
                 });
@@ -179,9 +190,9 @@ export class AuthController {
                 // We assume the credentials are invalid
                 AuthController.Locked = true;
                 AuthController.Username = "";
-                AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                 AuthController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_LOADING, false);
+                AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
             });
     }
 
@@ -233,7 +244,7 @@ export class AuthController {
      */
     public static UpdateUsername(username: string) {
         AuthController.Username = username;
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
     }
 
     /**
@@ -249,7 +260,7 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
         AuthController.SetAssetsCookie();
         AuthController.Username = "";
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();
     }
 
@@ -280,7 +291,7 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
         AuthController.Username = "";
         AuthController.SetAssetsCookie();
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
     }
 
     /**
@@ -306,53 +317,5 @@ export class AuthController {
         styleElement.appendChild(document.createTextNode(AuthController.CSS));
 
         head.appendChild(styleElement);
-    }
-
-    /**
-     * Adds event listener to check for loading status updates
-     * @param handler Event handler
-     */
-    public static AddLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_LOADING, handler);
-    }
-
-    /**
-     * Removes event listener (Loading event)
-     * @param handler Event handler
-     */
-    public static RemoveLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_LOADING, handler);
-    }
-
-    /**
-     * Adds event listener to check for auth status changes
-     * @param handler Event handler
-     */
-    public static AddChangeEventListener(handler: (locked: boolean, username: string) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_CHANGED, handler);
-    }
-
-    /**
-     * Removes event listener (Changed event)
-     * @param handler Event handler
-     */
-    public static RemoveChangeEventListener(handler: (locked: boolean, username: string) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_CHANGED, handler);
-    }
-
-    /**
-     * Adds event listener to check for loading errors
-     * @param handler Event handler
-     */
-    public static AddErrorEventListener(handler: () => void) {
-        AppEvents.AddEventListener(EVENT_NAME_ERROR, handler);
-    }
-
-    /**
-     * Removes event listener (Error event)
-     * @param handler Event handler
-     */
-    public static RemoveErrorEventListener(handler: () => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_ERROR, handler);
     }
 }

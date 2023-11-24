@@ -59,6 +59,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -72,8 +73,8 @@ export default defineComponent({
     },
     methods: {
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            Request.Abort(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -85,7 +86,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, MediaAPI.GetMediaSizeStats(this.mid))
+            Request.Pending(this.loadRequestId, MediaAPI.GetMediaSizeStats(this.mid))
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;
@@ -111,14 +112,14 @@ export default defineComponent({
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -145,9 +146,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
-
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
@@ -156,8 +154,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        Request.Abort(this.loadRequestId);
     },
     watch: {
         display: function () {

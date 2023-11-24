@@ -71,6 +71,7 @@ import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {},
@@ -128,7 +129,7 @@ export default defineComponent({
             Request.Do(AdminAPI.CreateAccount(username, password, write))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Account created") + ": " + username);
+                    PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);
                     this.accountUsername = "";
                     this.accountPassword = "";
                     this.accountPassword2 = "";

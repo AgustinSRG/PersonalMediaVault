@@ -89,7 +89,7 @@ export default defineComponent({
     },
     methods: {
         onChangePageSize() {
-            const pageSize = parseInt(this.pageSize);
+            const pageSize = parseInt(this.pageSize as any);
             const truePageSize = Math.min(256, Math.max(1, pageSize || 25));
 
             if (getPageMaxItems() !== truePageSize) {
@@ -98,7 +98,7 @@ export default defineComponent({
         },
 
         onChangePageItemsFit: function () {
-            const itemsFit = parseInt(this.pageItemsFit);
+            const itemsFit = parseInt(this.pageItemsFit as any);
             const trueItemsFit = Math.min(256, Math.max(0, itemsFit || 5));
 
             if (getPageItemsFit() !== trueItemsFit) {

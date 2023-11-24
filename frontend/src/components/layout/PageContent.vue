@@ -90,11 +90,10 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import { AuthController } from "@/control/auth";
-import { KeyboardManager } from "@/control/keyboard";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
@@ -339,22 +338,13 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.pageUpdater = this.updatePage.bind(this);
-        AppStatus.AddEventListener(this._handles.pageUpdater);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updatePage.bind(this));
 
-        this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_ITEMS_UPDATED, this.updatePageItemsPreferences.bind(this));
 
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 10);
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
 
         this.updateSearchParams();
-    },
-    beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.pageUpdater);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
     },
 });
 </script>

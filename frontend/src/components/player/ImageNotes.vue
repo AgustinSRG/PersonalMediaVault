@@ -134,10 +134,16 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { EVENT_NAME_IMAGE_NOTES_SAVED, EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
+import {
+    EVENT_NAME_IMAGE_NOTES_CHANGE,
+    EVENT_NAME_IMAGE_NOTES_SAVED,
+    EVENT_NAME_IMAGE_NOTES_UPDATE,
+    ImageNotesController,
+} from "@/control/img-notes";
 import { AppEvents } from "@/control/app-events";
 import { escapeHTML } from "@/utils/html";
 import { ImageNote } from "@/utils/notes-format";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ImageNotes",
@@ -599,18 +605,17 @@ export default defineComponent({
         },
 
         onNotesSaved: function () {
-            AppEvents.ShowSnackBar(this.$t("Image notes have been saved"));
+            PagesController.ShowSnackBar(this.$t("Image notes have been saved"));
         },
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
         this.updateRealDimensions();
 
-        this._handles.onNotesUpdateH = this.onNotesUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.onNotesUpdateH);
+        this.onNotesUpdateH = this.onNotesUpdate.bind(this);
+        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdateH);
 
-        this._handles.notesChangeHandler = (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
             switch (mode) {
                 case "push":
                     this.onNotesPush(note);
@@ -622,35 +627,17 @@ export default defineComponent({
                     this.onNotesChange(index, note);
                     break;
             }
-        };
+        });
 
-        ImageNotesController.AddEventListener(this._handles.notesChangeHandler);
+        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
 
-        this._handles.mouseDropH = this.mouseDrop.bind(this);
-        document.addEventListener("mouseup", this._handles.mouseDropH);
-        document.addEventListener("touchend", this._handles.mouseDropH);
-
-        this._handles.mouseMoveH = this.mouseMove.bind(this);
-
-        document.addEventListener("mousemove", this._handles.mouseMoveH);
-        document.addEventListener("touchmove", this._handles.mouseMoveH);
+        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
 
         this.onNotesUpdate();
 
-        this._handles.onNotesSavedH = this.onNotesSaved.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_SAVED, this._handles.onNotesSavedH);
-    },
-
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this._handles.onNotesUpdateH);
-        ImageNotesController.RemoveEventListener(this._handles.notesChangeHandler);
-
-        document.removeEventListener("mouseup", this._handles.mouseDropH);
-        document.removeEventListener("touchend", this._handles.mouseDropH);
-        document.removeEventListener("mousemove", this._handles.mouseMoveH);
-        document.removeEventListener("touchmove", this._handles.mouseMoveH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_SAVED, this._handles.onNotesSavedH);
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED, this.onNotesSaved.bind(this));
     },
 
     watch: {

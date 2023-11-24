@@ -60,6 +60,7 @@ import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ChangePasswordModal",
@@ -115,7 +116,7 @@ export default defineComponent({
                     this.currentPassword = "";
                     this.password = "";
                     this.password2 = "";
-                    AppEvents.ShowSnackBar(this.$t("Vault password changed!"));
+                    PagesController.ShowSnackBar(this.$t("Vault password changed!"));
                     this.$refs.modalContainer.close(true);
                 })
                 .onCancel(() => {

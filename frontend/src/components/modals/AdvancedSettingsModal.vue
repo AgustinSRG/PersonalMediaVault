@@ -190,6 +190,7 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     components: {
@@ -203,6 +204,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -397,8 +399,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            Request.Abort(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -406,7 +408,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, ConfigAPI.GetConfig())
+            Request.Pending(this.loadRequestId, ConfigAPI.GetConfig())
                 .onSuccess((response: VaultUserConfig) => {
                     this.title = response.title;
                     this.css = response.css;
@@ -423,18 +425,18 @@ export default defineComponent({
                         .add(401, "*", () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .add("*", "*", () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         })
                         .handle(err);
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -464,7 +466,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     this.busy = false;
                     this.dirty = false;
-                    AppEvents.ShowSnackBar(this.$t("Vault configuration updated!"));
+                    PagesController.ShowSnackBar(this.$t("Vault configuration updated!"));
                     AuthController.CheckAuthStatus();
                     this.close();
                 })
@@ -505,8 +507,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
         this.load();
         if (this.display) {
             this.error = "";
@@ -516,8 +516,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        Request.Abort(this.loadRequestId);
     },
     watch: {
         display: function () {

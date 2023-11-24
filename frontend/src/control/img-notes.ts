@@ -5,11 +5,11 @@
 import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { BusyStateController } from "./busy-state";
-import { MediaController } from "./media";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./media";
 import { EditMediaAPI } from "@/api/api-media-edit";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { ImageNote, parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
 import { getAssetURL } from "@/utils/api";
@@ -21,6 +21,7 @@ export const EVENT_NAME_IMAGE_NOTES_UPDATE = "img-notes-update";
 
 /**
  * Event triggered when the image notes are changed
+ * Handler like: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void
  */
 export const EVENT_NAME_IMAGE_NOTES_CHANGE = "img-notes-change";
 
@@ -67,9 +68,9 @@ export class ImageNotesController {
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(ImageNotesController.Load);
-        AppStatus.AddEventListener(ImageNotesController.OnMediaChanged);
-        MediaController.AddUpdateEventListener(ImageNotesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, ImageNotesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, ImageNotesController.OnMediaChanged);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_UPDATE, ImageNotesController.Load);
 
         ImageNotesController.MediaId = AppStatus.CurrentMedia;
 
@@ -340,22 +341,6 @@ export class ImageNotesController {
      */
     private static Emit(mode: "push" | "rm" | "update", note?: ImageNote, index?: number) {
         AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_CHANGE, mode, note, index);
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_CHANGE, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_CHANGE, handler);
     }
 }
 

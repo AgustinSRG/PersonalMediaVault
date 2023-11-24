@@ -18,7 +18,11 @@ const TICK_DELAY_MS = 500;
 const REQUEST_PREFIX_UPLOAD = "upload-media-";
 const REQUEST_PREFIX_CHECK_ENCRYPTION = "check-media-encryption-";
 
-const EVENT_NAME_LIST_UPDATE = "upload-list-update";
+/**
+ * Event triggered when the upload list updates
+ * Handler like: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void
+ */
+export const EVENT_NAME_UPLOAD_LIST_UPDATE = "upload-list-update";
 
 /**
  * Removes extension if present, in order to get the title
@@ -521,22 +525,6 @@ export class UploadController {
      * @param index Index
      */
     private static Emit(mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) {
-        AppEvents.Emit(EVENT_NAME_LIST_UPDATE, mode, entry, index);
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_LIST_UPDATE, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_LIST_UPDATE, handler);
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_UPDATE, mode, entry, index);
     }
 }
