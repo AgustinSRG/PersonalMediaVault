@@ -64,7 +64,6 @@
 </template>
 
 <script lang="ts">
-import { AdminAPI } from "@/api/api-admin";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -75,6 +74,7 @@ import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { apiAdminDeleteAccount, apiAdminListAccounts } from "@/api/api-admin";
 
 export default defineComponent({
     components: {
@@ -120,24 +120,24 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, AdminAPI.ListAccounts())
+            Request.Pending(this.loadRequestId, apiAdminListAccounts())
                 .onSuccess((accounts) => {
                     this.accounts = accounts;
                     this.loading = false;
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -163,7 +163,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AdminAPI.DeleteAccount(username))
+            Request.Do(apiAdminDeleteAccount(username))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Account deleted") + ": " + username);
@@ -172,28 +172,28 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        accountNotFound: () => {
                             // Already deleted?
                             this.busy = false;
                             this.load();
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

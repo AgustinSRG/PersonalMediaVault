@@ -35,7 +35,7 @@ export type LoginErrorHandler = CommonErrorHandler & {
  * API call: Login
  * @param username Username
  * @param password Password
- * @returns The request object
+ * @returns The request parameters
  */
 export function apiAuthLogin(username: string, password: string): RequestParams<LoginResult, LoginErrorHandler> {
     return {
@@ -57,6 +57,10 @@ export function apiAuthLogin(username: string, password: string): RequestParams<
     };
 }
 
+/**
+ * Closes the current session
+ * @returns The request parameters
+ */
 export function apiAuthLogout(): RequestParams<void, CommonAuthenticatedErrorHandler> {
     return {
         method: "POST",

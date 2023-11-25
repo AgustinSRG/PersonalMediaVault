@@ -44,7 +44,7 @@ export interface AccountContext {
 
 /**
  * Gets account context
- * @returns The request object
+ * @returns The request parameters
  */
 export function apiAccountGetContext(): RequestParams<AccountContext, CommonAuthenticatedErrorHandler> {
     return {
@@ -84,7 +84,7 @@ export type ChangeUsernameErrorHandler = CommonAuthenticatedErrorHandler & {
  * Changes account username
  * @param username New username
  * @param password Account password
- * @returns The request object
+ * @returns The request parameters
  */
 export function apiAccountChangeUsername(username: string, password: string): RequestParams<void, ChangeUsernameErrorHandler> {
     return {
@@ -126,7 +126,7 @@ export type ChangePasswordErrorHandler = CommonAuthenticatedErrorHandler & {
  * Changes account password
  * @param password The old password
  * @param newPassword The new password
- * @returns The request object
+ * @returns The request parameters
  */
 export function apiAccountChangePassword(password: string, newPassword: string): RequestParams<void, ChangePasswordErrorHandler> {
     return {
