@@ -143,12 +143,14 @@ export const appEventsPlugin = {
                 },
             },
             beforeUnmount() {
-                this.$appEventHandlers && this.$appEventHandlers.forEach((handler, eventName) => {
-                    AppEvents.RemoveEventListener(eventName, handler);
-                });
-                this.$documentEventHandlers && this.$documentEventHandlers.forEach((listener, eventName) => {
-                    document.removeEventListener(eventName, listener);
-                });
+                this.$appEventHandlers &&
+                    this.$appEventHandlers.forEach((handler, eventName) => {
+                        AppEvents.RemoveEventListener(eventName, handler);
+                    });
+                this.$documentEventHandlers &&
+                    this.$documentEventHandlers.forEach((listener, eventName) => {
+                        document.removeEventListener(eventName, listener);
+                    });
                 this.$keyboardHandlers && this.$keyboardHandlers.forEach(KeyboardManager.RemoveHandler);
             },
         });

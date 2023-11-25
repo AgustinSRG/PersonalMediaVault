@@ -9,10 +9,5 @@
         "strict": false,
         "types": ["vite/client"],
         "verbatimModuleSyntax": false
-    },
-    "references": [
-        {
-            "path": "./tsconfig.config.json"
-        }
-    ]
+    }
 }
