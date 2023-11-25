@@ -185,6 +185,8 @@ export default defineComponent({
                     }
                     if (removed) {
                         TagsController.RemoveTag(tag);
+                    } else {
+                        this.findTags();
                     }
                     if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
                         if (!MediaController.MediaData.tags.includes(tag)) {
