@@ -97,12 +97,6 @@ export class AuthController {
      * Runs at app startup
      */
     public static Initialize() {
-        AppEvents.AddEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.ClearSession);
-
-        AuthController.LoadAuthStatus();
-        AuthController.SetAssetsCookie();
-        AuthController.CheckAuthStatus();
-
         addRequestAuthenticationHandler(() => {
             AuthController.RefreshAuthStatus();
 
@@ -111,6 +105,12 @@ export class AuthController {
 
             return authHeaders;
         });
+
+        AppEvents.AddEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.ClearSession);
+
+        AuthController.LoadAuthStatus();
+        AuthController.SetAssetsCookie();
+        AuthController.CheckAuthStatus();
     }
 
     /**
