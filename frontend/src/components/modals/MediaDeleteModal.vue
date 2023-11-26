@@ -47,9 +47,9 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
+import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 
 export default defineComponent({
     name: "MediaDeleteModal",
@@ -114,7 +114,7 @@ export default defineComponent({
 
             const mediaId = this.currentMedia;
 
-            Request.Do(EditMediaAPI.DeleteMedia(mediaId))
+            Request.Do(apiMediaDeleteMedia(mediaId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
@@ -126,26 +126,26 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

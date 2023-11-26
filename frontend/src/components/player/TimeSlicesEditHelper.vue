@@ -122,7 +122,6 @@
 </template>
 
 <script lang="ts">
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
@@ -136,6 +135,7 @@ import { defineComponent } from "vue";
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
+import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 
 interface SaveRequestState {
     saving: boolean;
@@ -148,7 +148,7 @@ interface SaveRequestState {
     callback: () => void;
 }
 
-function saveTimeSlices(state: SaveRequestState) {
+function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
     if (state.mid < 0) {
         return;
     }
@@ -160,7 +160,7 @@ function saveTimeSlices(state: SaveRequestState) {
 
     state.saving = true;
 
-    Request.Do(EditMediaAPI.ChangeTimeSlices(state.mid, state.timeSlices))
+    Request.Do(apiMediaChangeTimeSlices(state.mid, state.timeSlices))
         .onSuccess(() => {
             state.saving = false;
 
@@ -170,7 +170,7 @@ function saveTimeSlices(state: SaveRequestState) {
 
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             } else if (state.callback) {
                 state.callback();
             }
@@ -180,19 +180,35 @@ function saveTimeSlices(state: SaveRequestState) {
 
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         })
-        .onRequestError((err) => {
+        .onRequestError((err, handleErr) => {
             state.saving = false;
-            Request.ErrorHandler()
-                .add(401, "*", () => {
+            handleErr(err, {
+                unauthorized: () => {
                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                })
-                .handle(err);
+                },
+                badRequest: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    MediaController.Load();
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         })
         .onUnexpectedError((err) => {
@@ -200,7 +216,7 @@ function saveTimeSlices(state: SaveRequestState) {
             state.saving = false;
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         });
 }
@@ -300,7 +316,7 @@ export default defineComponent({
                         name: s.name,
                     };
                 });
-            saveTimeSlices(this.saveState);
+            saveTimeSlices(this.saveState, this.$t);
         },
 
         onSaved: function () {

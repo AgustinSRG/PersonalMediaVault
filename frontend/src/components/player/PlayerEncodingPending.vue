@@ -72,7 +72,6 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
 import { TasksAPI } from "@/api/api-tasks";
 import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
@@ -83,6 +82,7 @@ import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent } from "vue";
+import { apiMediaGetMedia } from "@/api/api-media";
 
 export default defineComponent({
     name: "PlayerEncodingPending",
@@ -209,7 +209,7 @@ export default defineComponent({
             clearNamedTimeout(this.pendingId);
             Request.Abort(this.pendingId);
 
-            Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
+            Request.Pending(this.pendingId, apiMediaGetMedia(this.mid))
                 .onSuccess((media: MediaData) => {
                     if (this.res >= 0) {
                         if (media.resolutions[this.res] && media.resolutions[this.res].ready) {
@@ -225,19 +225,19 @@ export default defineComponent({
                         }
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.refreshMedia();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

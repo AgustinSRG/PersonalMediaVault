@@ -73,10 +73,10 @@ import { Request } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO } from "@/api/models";
 import { PagesController } from "@/control/pages";
+import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -245,7 +245,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this.requestId, EditMediaAPI.AddResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this.requestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
                             PagesController.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
@@ -272,29 +272,52 @@ export default defineComponent({
                         .onCancel(() => {
                             this.busy = false;
                         })
-                        .onRequestError((err) => {
+                        .onRequestError((err, handleErr) => {
                             this.busy = false;
-                            Request.ErrorHandler()
-                                .add(400, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Bad request"));
-                                })
-                                .add(401, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Access denied"));
+                            handleErr(err, {
+                                unauthorized: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                                })
-                                .add(403, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Access denied"));
-                                })
-                                .add(404, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Not found"));
-                                })
-                                .add(500, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Internal server error"));
-                                })
-                                .add("*", "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
-                                })
-                                .handle(err);
+                                },
+                                duplicatedResolution: () => {
+                                    // Already added
+                                    PagesController.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
+                                    this.busy = false;
+                                    r.enabled = true;
+                                    if (MediaController.MediaData) {
+                                        MediaController.MediaData.resolutions = this.resolutions
+                                            .filter((re) => {
+                                                return re.enabled;
+                                            })
+                                            .map((re) => {
+                                                return {
+                                                    width: re.width,
+                                                    height: re.height,
+                                                    fps: re.fps,
+                                                    ready: false,
+                                                    task: 0,
+                                                    url: "",
+                                                };
+                                            });
+                                    }
+                                    this.$emit("changed");
+                                },
+                                badRequest: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                                },
+                                accessDenied: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                },
+                                notFound: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                },
+                                serverError: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                                },
+                                networkError: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                                },
+                            });
                         })
                         .onUnexpectedError((err) => {
                             PagesController.ShowSnackBar(err.message);
@@ -322,7 +345,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this.requestId, EditMediaAPI.RemoveResolution(mediaId, r.width, r.height, r.fps))
+                    Request.Pending(this.requestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
                             PagesController.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
@@ -348,29 +371,29 @@ export default defineComponent({
                         .onCancel(() => {
                             this.busy = false;
                         })
-                        .onRequestError((err) => {
+                        .onRequestError((err, handleErr) => {
                             this.busy = false;
-                            Request.ErrorHandler()
-                                .add(400, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Bad request"));
-                                })
-                                .add(401, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Access denied"));
+                            handleErr(err, {
+                                unauthorized: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                                })
-                                .add(403, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Access denied"));
-                                })
-                                .add(404, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Not found"));
-                                })
-                                .add(500, "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Internal server error"));
-                                })
-                                .add("*", "*", () => {
-                                    PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
-                                })
-                                .handle(err);
+                                },
+                                badRequest: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                                },
+                                accessDenied: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                },
+                                notFound: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                },
+                                serverError: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                                },
+                                networkError: () => {
+                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                                },
+                            });
                         })
                         .onUnexpectedError((err) => {
                             PagesController.ShowSnackBar(err.message);

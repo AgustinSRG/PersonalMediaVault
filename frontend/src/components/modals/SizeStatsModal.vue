@@ -46,9 +46,9 @@ import { useVModel } from "../../utils/v-model";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { Request } from "@asanrom/request-browser";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiMediaGetMediaSizeStats } from "@/api/api-media";
 
 export default defineComponent({
     name: "SizeStatsModal",
@@ -86,7 +86,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, MediaAPI.GetMediaSizeStats(this.mid))
+            Request.Pending(this.loadRequestId, apiMediaGetMediaSizeStats(this.mid))
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;
@@ -102,19 +102,19 @@ export default defineComponent({
 
                     this.total = total;
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.close();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

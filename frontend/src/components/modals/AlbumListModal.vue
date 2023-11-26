@@ -120,7 +120,6 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
@@ -134,6 +133,7 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import { apiMediaGetMediaAlbums } from "@/api/api-media";
 
 export default defineComponent({
     components: {
@@ -199,7 +199,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, MediaAPI.GetMediaAlbums(this.mid))
+            Request.Pending(this.loadRequestId, apiMediaGetMediaAlbums(this.mid))
                 .onSuccess((result) => {
                     this.mediaAlbums = result;
                     this.loading = false;
@@ -212,19 +212,19 @@ export default defineComponent({
                     this.updateAlbums();
                     this.autoFocus();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.$refs.modalContainer.close(true);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

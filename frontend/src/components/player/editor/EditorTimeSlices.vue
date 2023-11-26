@@ -34,10 +34,10 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { Request } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {},
@@ -100,7 +100,7 @@ export default defineComponent({
 
             const slices = parseTimeSlices(this.timeSlices);
 
-            Request.Pending(this.requestId, EditMediaAPI.ChangeTimeSlices(mediaId, slices))
+            Request.Pending(this.requestId, apiMediaChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
                     this.busy = false;
@@ -117,29 +117,29 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBar(err.message);

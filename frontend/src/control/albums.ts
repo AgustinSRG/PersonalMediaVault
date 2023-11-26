@@ -2,7 +2,6 @@
 
 "use strict";
 
-import { MediaAPI } from "@/api/api-media";
 import { Request } from "@asanrom/request-browser";
 import { shuffleArray } from "@/utils/shuffle";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -14,6 +13,7 @@ import { setCachedAlbumPosition } from "./player-preferences";
 import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin, apiAlbumsMoveMediaInAlbum } from "@/api/api-albums";
 import { PagesController } from "./pages";
+import { apiMediaGetMedia } from "@/api/api-media";
 
 /**
  * Event triggered when the albums list is updated
@@ -501,29 +501,29 @@ export class AlbumsController {
         const mediaId = AlbumsController.CurrentNext.id;
 
         clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
-        Request.Pending(REQUEST_ID_NEXT_PRE_FETCH, MediaAPI.GetMedia(mediaId))
+        Request.Pending(REQUEST_ID_NEXT_PRE_FETCH, apiMediaGetMedia(mediaId))
             .onSuccess((media) => {
                 AlbumsController.NextMediaData = media;
                 AlbumsController.LoadingNext = false;
                 AlbumsController.AvailableNextPrefetch = true;
                 AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         AlbumsController.NextMediaData = null;
                         AlbumsController.LoadingNext = false;
                         AlbumsController.AvailableNextPrefetch = true;
                         AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH, 1500, AlbumsController.PreFetchAlbumNext);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);

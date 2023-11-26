@@ -276,6 +276,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Success
           schema:

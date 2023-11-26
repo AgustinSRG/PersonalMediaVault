@@ -2,17 +2,17 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { Request, RequestErrorHandler } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { BusyStateController } from "./busy-state";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./media";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { ImageNote, parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
 import { getAssetURL } from "@/utils/api";
+import { apiMediaSetNotes } from "@/api/api-media-edit";
 
 /**
  * Event triggered when the image notes are updated
@@ -149,7 +149,7 @@ export class ImageNotesController {
                 AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
             })
             .onRequestError((err) => {
-                Request.ErrorHandler()
+                new RequestErrorHandler()
                     .add(401, "*", () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
@@ -194,7 +194,7 @@ export class ImageNotesController {
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
-        Request.Pending(REQUEST_KEY_SAVE, EditMediaAPI.SetNotes(mediaId, ImageNotesController.Notes))
+        Request.Pending(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess(() => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
@@ -209,26 +209,26 @@ export class ImageNotesController {
                 ImageNotesController.PendingSave = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    badRequest: () => {
                         ImageNotesController.PendingSave = false;
-                    })
-                    .add(404, "*", () => {
+                    },
+                    accessDenied: () => {
                         ImageNotesController.PendingSave = false;
-                    })
-                    .add(500, "*", () => {
+                    },
+                    notFound: () => {
+                        ImageNotesController.PendingSave = false;
+                    },
+                    temporalError: () => {
                         ImageNotesController.SaveNotes();
-                    })
-                    .add("*", "*", () => {
-                        ImageNotesController.SaveNotes();
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);

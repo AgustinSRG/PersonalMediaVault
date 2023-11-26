@@ -205,11 +205,11 @@ import { SearchAPI } from "@/api/api-search";
 import { MediaController } from "@/control/media";
 import { TagsAPI } from "@/api/api-tags";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 
 const PAGE_SIZE = 50;
 
@@ -759,30 +759,30 @@ export default defineComponent({
         },
 
         actionDelete: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, EditMediaAPI.DeleteMedia(mid))
+            Request.Pending(this.batchRequestId, apiMediaDeleteMedia(mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

@@ -2,16 +2,16 @@
 
 "use strict";
 
-import { MediaAPI } from "@/api/api-media";
 import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
-import { UploadMediaAPI } from "@/api/api-media-upload";
 import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { setLastUsedTag } from "./app-preferences";
+import { apiUploadMedia } from "@/api/api-media-upload";
+import { apiMediaGetMedia } from "@/api/api-media";
 
 const TICK_DELAY_MS = 500;
 
@@ -332,7 +332,7 @@ export class UploadController {
         m.progress = 0;
         UploadController.Emit("update", m, index);
 
-        Request.Pending(REQUEST_PREFIX_UPLOAD + m.id, UploadMediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        Request.Pending(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
                 UploadController.Emit("update", m, index);
@@ -346,31 +346,35 @@ export class UploadController {
             .onCancel(() => {
                 UploadController.UploadingCount--;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 UploadController.UploadingCount--;
-                Request.ErrorHandler()
-                    .add(400, "*", () => {
-                        m.error = "invalid-media";
-                        m.status = "error";
-                    })
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         m.error = "access-denied";
                         m.status = "error";
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    accessDenied: () => {
                         m.error = "access-denied";
                         m.status = "error";
-                    })
-                    .add(500, "*", () => {
+                    },
+                    invalidMediaFile: () => {
+                        m.error = "invalid-media";
+                        m.status = "error";
+                    },
+                    badRequest: () => {
+                        m.error = "invalid-media";
+                        m.status = "error";
+                    },
+                    serverError: () => {
                         m.error = "server-error";
                         m.status = "error";
-                    })
-                    .add("*", "*", () => {
+                    },
+                    networkError: () => {
                         m.error = "no-internet";
                         m.status = "error";
-                    })
-                    .handle(err);
+                    },
+                });
                 UploadController.CheckEmptyList();
                 UploadController.Emit("update", m, index);
             })
@@ -397,7 +401,7 @@ export class UploadController {
         m.busy = true;
         m.lastRequest = Date.now();
 
-        Request.Pending(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, MediaAPI.GetMedia(m.mid))
+        Request.Pending(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, apiMediaGetMedia(m.mid))
             .onSuccess((media) => {
                 m.busy = false;
                 if (media.ready) {
@@ -427,20 +431,21 @@ export class UploadController {
             .onCancel(() => {
                 m.busy = false;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 m.busy = false;
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         m.error = "deleted";
                         m.status = "error";
                         UploadController.UploadingCount--;
                         UploadController.CheckEmptyList();
                         UploadController.Emit("update", m, index);
-                    })
-                    .handle(err);
+                    },
+                    temporalError: () => {},
+                });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;

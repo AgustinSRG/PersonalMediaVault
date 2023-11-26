@@ -76,12 +76,12 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { Request, RequestErrorHandler } from "@asanrom/request-browser";
 import { escapeHTML } from "@/utils/html";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { apiMediaSetExtendedDescription } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -175,7 +175,7 @@ export default defineComponent({
                     this.autoFocus();
                 })
                 .onRequestError((err) => {
-                    Request.ErrorHandler()
+                    new RequestErrorHandler()
                         .add(401, "*", () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED, false);
                         })
@@ -295,7 +295,7 @@ export default defineComponent({
 
             this.busy = true;
 
-            Request.Do(EditMediaAPI.SetExtendedDescription(this.mid, this.contentToChange))
+            Request.Do(apiMediaSetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
@@ -304,15 +304,30 @@ export default defineComponent({
                     this.changed = true;
                     this.autoFocus();
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.contentStoredId = this.mid;
                             this.contentStored = this.contentToChange;
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.busy = false;

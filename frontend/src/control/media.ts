@@ -2,7 +2,6 @@
 
 "use strict";
 
-import { MediaAPI } from "@/api/api-media";
 import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
@@ -10,6 +9,7 @@ import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaData } from "@/api/models";
+import { apiMediaGetMedia } from "@/api/api-media";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -112,7 +112,7 @@ export class MediaController {
             return; // Pre-fetch
         }
 
-        Request.Pending(REQUEST_ID, MediaAPI.GetMedia(MediaController.MediaId))
+        Request.Pending(REQUEST_ID, apiMediaGetMedia(MediaController.MediaId))
             .onSuccess((media) => {
                 MediaController.MediaData = media;
                 AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
@@ -120,23 +120,23 @@ export class MediaController {
                 MediaController.Loading = false;
                 AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         MediaController.MediaData = null;
                         AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
                         MediaController.Loading = false;
                         AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID, 1500, MediaController.Load);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
