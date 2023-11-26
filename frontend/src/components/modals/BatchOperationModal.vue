@@ -203,13 +203,13 @@ import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/album
 import { Request } from "@asanrom/request-browser";
 import { SearchAPI } from "@/api/api-search";
 import { MediaController } from "@/control/media";
-import { TagsAPI } from "@/api/api-tags";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
+import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 
 const PAGE_SIZE = 50;
 
@@ -869,30 +869,33 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.batchRequestId, TagsAPI.TagMedia(mid, tags[0]))
+            Request.Pending(this.batchRequestId, apiTagsTagMedia(mid, tags[0]))
                 .onSuccess(() => {
                     this.actionAddTag(mid, tags.slice(1), next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidTagName: () => {
+                            this.error = this.$t("Invalid tag name");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
-                            this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -915,30 +918,27 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.batchRequestId, TagsAPI.UntagMedia(mid, tagId))
+            Request.Pending(this.batchRequestId, apiTagsUntagMedia(mid, tagId))
                 .onSuccess(() => {
                     this.actionRemoveTag(mid, tags.slice(1), next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
-                            this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

@@ -2,12 +2,12 @@
 
 "use strict";
 
-import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaListItem } from "@/api/models";
+import { apiTagsGetTags } from "@/api/api-tags";
 
 /**
  * Event triggered whenever the tags list is loaded or changed
@@ -81,7 +81,7 @@ export class TagsController {
 
         clearNamedTimeout(REQUEST_ID);
 
-        Request.Pending(REQUEST_ID, TagsAPI.GetTags())
+        Request.Pending(REQUEST_ID, apiTagsGetTags())
             .onSuccess((tags) => {
                 TagsController.Tags = new Map();
 
@@ -97,16 +97,16 @@ export class TagsController {
                 TagsController.Loading = false;
                 TagsController.InitiallyLoaded = true;
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID, 1500, TagsController.Load);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);

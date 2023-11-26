@@ -2,7 +2,6 @@
 
 "use strict";
 
-import { TagsAPI } from "@/api/api-tags";
 import { Request } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
@@ -12,6 +11,7 @@ import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { setLastUsedTag } from "./app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
+import { apiTagsTagMedia } from "@/api/api-tags";
 
 const TICK_DELAY_MS = 500;
 
@@ -480,7 +480,7 @@ export class UploadController {
         const tag = m.tags[0];
         const mediaId = m.mid;
 
-        Request.Do(TagsAPI.TagMedia(mediaId, tag))
+        Request.Do(apiTagsTagMedia(mediaId, tag))
             .onSuccess((res) => {
                 setLastUsedTag(res.id);
                 m.tags.shift(); // Remove tag from list
@@ -492,30 +492,30 @@ export class UploadController {
             .onCancel(() => {
                 m.busy = false;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 m.busy = false;
-                Request.ErrorHandler()
-                    .add(400, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                    },
+                    invalidTagName: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
                         UploadController.Emit("update", m, index);
-                    })
-                    .add(401, "*", () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    badRequest: () => {
+                        m.tags.shift(); // Invalid tag name
+                        m.progress = m.tags.length;
+                        UploadController.Emit("update", m, index);
+                    },
+                    accessDenied: () => {
                         m.error = "access-denied";
                         m.status = "error";
                         UploadController.Emit("update", m, index);
                         UploadController.CheckEmptyList();
-                    })
-                    .add(404, "*", () => {
-                        m.error = "deleted";
-                        m.status = "error";
-                        UploadController.Emit("update", m, index);
-                        UploadController.CheckEmptyList();
-                    })
-                    .handle(err);
+                    },
+                    temporalError: () => {},
+                });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;
