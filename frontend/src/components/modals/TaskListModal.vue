@@ -68,7 +68,6 @@
 </template>
 
 <script lang="ts">
-import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { generateURIQuery } from "@/utils/api";
@@ -79,6 +78,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiTasksGetTasks } from "@/api/api-tasks";
 
 export default defineComponent({
     name: "TaskListModal",
@@ -131,25 +131,22 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, TasksAPI.GetTasks())
+            Request.Pending(this.loadRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
                     setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -166,24 +163,21 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.updateRequestId, TasksAPI.GetTasks())
+            Request.Pending(this.updateRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.updateRequestId, 1500, this.updateTasks.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

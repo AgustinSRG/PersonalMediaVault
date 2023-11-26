@@ -72,7 +72,6 @@
 </template>
 
 <script lang="ts">
-import { TasksAPI } from "@/api/api-tasks";
 import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -83,6 +82,7 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent } from "vue";
 import { apiMediaGetMedia } from "@/api/api-media";
+import { apiTasksGetTask } from "@/api/api-tasks";
 
 export default defineComponent({
     name: "PlayerEncodingPending",
@@ -136,7 +136,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.pendingId, TasksAPI.GetTask(this.tid))
+            Request.Pending(this.pendingId, apiTasksGetTask(this.tid))
                 .onSuccess((task: TaskStatus) => {
                     this.status = "task";
                     if (task.running) {
@@ -183,20 +183,20 @@ export default defineComponent({
                         setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.status = "loading";
                             this.checkMediaStatus();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
