@@ -126,7 +126,7 @@ import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
 import { useVModel } from "@/utils/v-model";
@@ -160,7 +160,7 @@ function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
 
     state.saving = true;
 
-    Request.Do(apiMediaChangeTimeSlices(state.mid, state.timeSlices))
+    makeApiRequest(apiMediaChangeTimeSlices(state.mid, state.timeSlices))
         .onSuccess(() => {
             state.saving = false;
 

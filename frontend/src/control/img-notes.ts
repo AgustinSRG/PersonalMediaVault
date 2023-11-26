@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request, RequestErrorHandler } from "@asanrom/request-browser";
+import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
@@ -111,11 +111,11 @@ export class ImageNotesController {
      */
     public static Load() {
         ImageNotesController.PendingSave = false;
-        Request.Abort(REQUEST_KEY_SAVE);
+        abortNamedApiRequest(REQUEST_KEY_SAVE);
 
         if (!MediaController.MediaData) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
-            Request.Abort(REQUEST_KEY_LOAD);
+            abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.ImageWidth = 0;
             ImageNotesController.ImageHeight = 0;
@@ -129,7 +129,7 @@ export class ImageNotesController {
 
         if (!MediaController.MediaData.img_notes || !MediaController.MediaData.img_notes_url) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
-            Request.Abort(REQUEST_KEY_LOAD);
+            abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.Notes = [];
             AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
@@ -140,7 +140,7 @@ export class ImageNotesController {
         ImageNotesController.Notes = [];
 
         clearNamedTimeout(REQUEST_KEY_LOAD);
-        Request.Pending(REQUEST_KEY_LOAD, {
+        makeNamedApiRequest(REQUEST_KEY_LOAD, {
             method: "GET",
             url: ImageNotesController.NotesFileURL,
         })
@@ -194,7 +194,7 @@ export class ImageNotesController {
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
-        Request.Pending(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
+        makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess(() => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);

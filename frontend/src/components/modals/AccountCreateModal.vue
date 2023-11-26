@@ -66,7 +66,7 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -126,7 +126,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(apiAdminCreateAccount(username, password, write))
+            makeApiRequest(apiAdminCreateAccount(username, password, write))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);

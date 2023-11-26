@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
@@ -85,7 +85,7 @@ export class MediaController {
     public static Load() {
         if (MediaController.MediaId < 0) {
             clearNamedTimeout(REQUEST_ID);
-            Request.Abort(REQUEST_ID);
+            abortNamedApiRequest(REQUEST_ID);
 
             MediaController.MediaData = null;
             AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, null);
@@ -106,13 +106,13 @@ export class MediaController {
         }
 
         clearNamedTimeout(REQUEST_ID);
-        Request.Abort(REQUEST_ID);
+        abortNamedApiRequest(REQUEST_ID);
 
         if (AlbumsController.CheckAlbumNextPrefetch()) {
             return; // Pre-fetch
         }
 
-        Request.Pending(REQUEST_ID, apiMediaGetMedia(MediaController.MediaId))
+        makeNamedApiRequest(REQUEST_ID, apiMediaGetMedia(MediaController.MediaId))
             .onSuccess((media) => {
                 MediaController.MediaData = media;
                 AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);

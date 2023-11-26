@@ -77,7 +77,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
@@ -177,7 +177,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestId, apiMediaSetAudioTrack(mediaId, id, name, this.audioFile))
+            makeNamedApiRequest(this.requestId, apiMediaSetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBar(this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
@@ -243,7 +243,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = aud.id;
 
-                    Request.Pending(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
+                    makeNamedApiRequest(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
                         .onSuccess(() => {
                             PagesController.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
                             this.busy = false;
@@ -315,7 +315,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

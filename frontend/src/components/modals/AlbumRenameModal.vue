@@ -36,7 +36,7 @@
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -110,7 +110,7 @@ export default defineComponent({
 
             const albumId = this.currentAlbum;
 
-            Request.Do(apiAlbumsRenameAlbum(albumId, this.name))
+            makeApiRequest(apiAlbumsRenameAlbum(albumId, this.name))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;

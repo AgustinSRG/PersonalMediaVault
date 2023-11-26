@@ -65,7 +65,7 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -112,7 +112,7 @@ export default defineComponent({
     methods: {
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -120,7 +120,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, apiAdminListAccounts())
+            makeNamedApiRequest(this.loadRequestId, apiAdminListAccounts())
                 .onSuccess((accounts) => {
                     this.accounts = accounts;
                     this.loading = false;
@@ -163,7 +163,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(apiAdminDeleteAccount(username))
+            makeApiRequest(apiAdminDeleteAccount(username))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Account deleted") + ": " + username);
@@ -234,7 +234,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

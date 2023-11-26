@@ -31,7 +31,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { parseTimeSlices, renderTimeSlices } from "@/utils/time-slices";
 import { clone } from "@/utils/objects";
@@ -100,7 +100,7 @@ export default defineComponent({
 
             const slices = parseTimeSlices(this.timeSlices);
 
-            Request.Pending(this.requestId, apiMediaChangeTimeSlices(mediaId, slices))
+            makeNamedApiRequest(this.requestId, apiMediaChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
                     this.busy = false;
@@ -163,7 +163,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

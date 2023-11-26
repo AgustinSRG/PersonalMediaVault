@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { shuffleArray } from "@/utils/shuffle";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
@@ -138,7 +138,7 @@ export class AlbumsController {
         }
 
         clearNamedTimeout(REQUEST_ID_ALBUMS_LOAD);
-        Request.Pending(REQUEST_ID_ALBUMS_LOAD, apiAlbumsGetAlbumsMin())
+        makeNamedApiRequest(REQUEST_ID_ALBUMS_LOAD, apiAlbumsGetAlbumsMin())
             .onSuccess((albums) => {
                 AlbumsController.AlbumsMap.clear();
 
@@ -202,7 +202,7 @@ export class AlbumsController {
     public static LoadCurrentAlbum() {
         if (AlbumsController.CurrentAlbum < 0) {
             clearNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD);
-            Request.Abort(REQUEST_ID_CURRENT_ALBUM_LOAD);
+            abortNamedApiRequest(REQUEST_ID_CURRENT_ALBUM_LOAD);
 
             AlbumsController.CurrentAlbumData = null;
             AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, null);
@@ -222,7 +222,7 @@ export class AlbumsController {
         }
 
         clearNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD);
-        Request.Pending(REQUEST_ID_CURRENT_ALBUM_LOAD, apiAlbumsGetAlbum(AlbumsController.CurrentAlbum))
+        makeNamedApiRequest(REQUEST_ID_CURRENT_ALBUM_LOAD, apiAlbumsGetAlbum(AlbumsController.CurrentAlbum))
             .onSuccess((album) => {
                 AlbumsController.CurrentAlbumData = album;
                 AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
@@ -302,7 +302,7 @@ export class AlbumsController {
 
         // Update in server
 
-        Request.Do(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
+        makeApiRequest(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
             .onSuccess(() => {
                 AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
             })
@@ -481,7 +481,7 @@ export class AlbumsController {
     public static PreFetchAlbumNext() {
         if (AlbumsController.CurrentNext === null || AlbumsController.CurrentNext.id === MediaController.MediaId) {
             clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
-            Request.Abort(REQUEST_ID_NEXT_PRE_FETCH);
+            abortNamedApiRequest(REQUEST_ID_NEXT_PRE_FETCH);
 
             AlbumsController.NextMediaData = null;
             AlbumsController.LoadingNext = false;
@@ -501,7 +501,7 @@ export class AlbumsController {
         const mediaId = AlbumsController.CurrentNext.id;
 
         clearNamedTimeout(REQUEST_ID_NEXT_PRE_FETCH);
-        Request.Pending(REQUEST_ID_NEXT_PRE_FETCH, apiMediaGetMedia(mediaId))
+        makeNamedApiRequest(REQUEST_ID_NEXT_PRE_FETCH, apiMediaGetMedia(mediaId))
             .onSuccess((media) => {
                 AlbumsController.NextMediaData = media;
                 AlbumsController.LoadingNext = false;

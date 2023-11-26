@@ -44,7 +44,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -114,7 +114,7 @@ export default defineComponent({
 
             const mediaId = this.currentMedia;
 
-            Request.Do(apiMediaDeleteMedia(mediaId))
+            makeApiRequest(apiMediaDeleteMedia(mediaId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;

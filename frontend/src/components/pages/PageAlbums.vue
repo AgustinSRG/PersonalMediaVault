@@ -111,7 +111,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 
@@ -211,7 +211,7 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -227,7 +227,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, apiAlbumsGetAlbums())
+            makeNamedApiRequest(this.loadRequestId, apiAlbumsGetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
                     clearNamedTimeout(this.loadRequestId);
@@ -455,7 +455,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

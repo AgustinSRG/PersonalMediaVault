@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
@@ -81,7 +81,7 @@ export class TagsController {
 
         clearNamedTimeout(REQUEST_ID);
 
-        Request.Pending(REQUEST_ID, apiTagsGetTags())
+        makeNamedApiRequest(REQUEST_ID, apiTagsGetTags())
             .onSuccess((tags) => {
                 TagsController.Tags = new Map();
 

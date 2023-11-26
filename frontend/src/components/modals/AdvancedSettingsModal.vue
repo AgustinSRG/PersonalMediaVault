@@ -180,7 +180,7 @@
 <script lang="ts">
 import { VaultUserConfig } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -400,7 +400,7 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -408,7 +408,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, apiConfigGetConfig())
+            makeNamedApiRequest(this.loadRequestId, apiConfigGetConfig())
                 .onSuccess((response: VaultUserConfig) => {
                     this.title = response.title;
                     this.css = response.css;
@@ -452,7 +452,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(
+            makeApiRequest(
                 apiConfigSetConfig({
                     title: this.title,
                     css: this.css,
@@ -520,7 +520,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

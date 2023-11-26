@@ -168,7 +168,7 @@ import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, album
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
@@ -561,7 +561,7 @@ export default defineComponent({
                 return;
             }
             const albumId = this.albumId;
-            Request.Do(apiAlbumsRemoveMediaFromAlbum(albumId, media.id))
+            makeApiRequest(apiAlbumsRemoveMediaFromAlbum(albumId, media.id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
                     AlbumsController.OnChangedAlbum(albumId, true);

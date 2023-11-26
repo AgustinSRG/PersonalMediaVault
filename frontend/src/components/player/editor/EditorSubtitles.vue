@@ -77,7 +77,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { clone } from "@/utils/objects";
@@ -178,7 +178,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestId, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
+            makeNamedApiRequest(this.requestId, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBar(this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
@@ -249,7 +249,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = sub.id;
 
-                    Request.Pending(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
+                    makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
                         .onSuccess(() => {
                             PagesController.ShowSnackBar(this.$t("Removed subtitles") + ": " + sub.name);
                             this.busy = false;
@@ -321,7 +321,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

@@ -88,7 +88,7 @@ import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -158,7 +158,7 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -174,7 +174,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, apiSearchRandom(this.search, Date.now(), this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearchRandom(this.search, Date.now(), this.pageSize))
                 .onSuccess((result) => {
                     const s = new Set();
                     this.pageItems = result.page_items.filter((i) => {
@@ -455,7 +455,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
     },
     watch: {

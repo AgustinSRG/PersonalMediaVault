@@ -200,7 +200,7 @@ import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -544,9 +544,9 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort(this.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
-            Request.Pending(this.batchRequestId, apiAlbumsGetAlbum(this.albumSearch))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     this.filterElements(result.list);
                     this.finishSearch();
@@ -588,9 +588,9 @@ export default defineComponent({
         },
 
         searchNext: function (page: number) {
-            Request.Abort(this.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
-            Request.Pending(this.batchRequestId, apiSearch(this.getFirstTag(), "asc", page, PAGE_SIZE))
+            makeNamedApiRequest(this.batchRequestId, apiSearch(this.getFirstTag(), "asc", page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
 
@@ -713,7 +713,7 @@ export default defineComponent({
         },
 
         cancel: function () {
-            Request.Abort(this.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
         },
 
         confirm: function () {
@@ -723,7 +723,7 @@ export default defineComponent({
         },
 
         actionNext: function (i: number) {
-            Request.Abort(this.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
             if (i >= this.actionItems.length) {
                 // Finish
@@ -759,7 +759,7 @@ export default defineComponent({
         },
 
         actionDelete: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, apiMediaDeleteMedia(mid))
+            makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -792,7 +792,7 @@ export default defineComponent({
         },
 
         actionAddAlbum: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, apiAlbumsAddMediaToAlbum(this.albumToAdd, mid))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsAddMediaToAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -831,7 +831,7 @@ export default defineComponent({
         },
 
         actionRemoveAlbum: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, apiAlbumsRemoveMediaFromAlbum(this.albumToAdd, mid))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsRemoveMediaFromAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
@@ -869,7 +869,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.batchRequestId, apiTagsTagMedia(mid, tags[0]))
+            makeNamedApiRequest(this.batchRequestId, apiTagsTagMedia(mid, tags[0]))
                 .onSuccess(() => {
                     this.actionAddTag(mid, tags.slice(1), next);
                 })
@@ -918,7 +918,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.batchRequestId, apiTagsUntagMedia(mid, tagId))
+            makeNamedApiRequest(this.batchRequestId, apiTagsUntagMedia(mid, tagId))
                 .onSuccess(() => {
                     this.actionRemoveTag(mid, tags.slice(1), next);
                 })
@@ -964,7 +964,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort(this.batchRequestId);
+        abortNamedApiRequest(this.batchRequestId);
 
         if (this.findTagSearchTimeout) {
             clearTimeout(this.findTagSearchTimeout);

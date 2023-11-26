@@ -106,7 +106,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
@@ -223,7 +223,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestIdThumbnail, apiMediaChangeMediaThumbnail(mediaId, file))
+            makeNamedApiRequest(this.requestIdThumbnail, apiMediaChangeMediaThumbnail(mediaId, file))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed thumbnail"));
                     this.busyThumbnail = false;
@@ -285,7 +285,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestIdTitle, apiMediaChangeMediaTitle(mediaId, this.title))
+            makeNamedApiRequest(this.requestIdTitle, apiMediaChangeMediaTitle(mediaId, this.title))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed title"));
                     this.busyTitle = false;
@@ -343,7 +343,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestIdDescription, apiMediaChangeMediaDescription(mediaId, this.desc))
+            makeNamedApiRequest(this.requestIdDescription, apiMediaChangeMediaDescription(mediaId, this.desc))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed description"));
                     this.busyDescription = false;
@@ -399,7 +399,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestIdExtra, apiMediaChangeExtraParams(mediaId, this.startBeginning))
+            makeNamedApiRequest(this.requestIdExtra, apiMediaChangeExtraParams(mediaId, this.startBeginning))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed media extra params"));
                     this.busyExtra = false;
@@ -458,10 +458,10 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestIdTitle);
-        Request.Abort(this.requestIdDescription);
-        Request.Abort(this.requestIdThumbnail);
-        Request.Abort(this.requestIdExtra);
+        abortNamedApiRequest(this.requestIdTitle);
+        abortNamedApiRequest(this.requestIdDescription);
+        abortNamedApiRequest(this.requestIdThumbnail);
+        abortNamedApiRequest(this.requestIdExtra);
     },
 });
 </script>

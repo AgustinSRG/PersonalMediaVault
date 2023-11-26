@@ -174,7 +174,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -292,7 +292,7 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display || this.finished) {
                 return;
@@ -304,7 +304,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, apiSearch(this.getFirstTag(), this.order, this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch(this.getFirstTag(), this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     const completePageList = this.listScroller.list;
                     this.filterElements(result.page_items);
@@ -486,9 +486,9 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
-            Request.Pending(this.loadRequestId, apiAlbumsGetAlbum(this.albumSearch))
+            makeNamedApiRequest(this.loadRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     if (this.order === "asc") {
                         this.filterElements(
@@ -544,14 +544,14 @@ export default defineComponent({
 
         cancel: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
             this.loading = false;
             this.finished = true;
         },
 
         resetSearch: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
             this.listScroller.reset();
             this.fullListLength = 0;
             this.mediaIndexMap.clear();
@@ -991,7 +991,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
 
         clearNamedTimeout(this.dirtyTimeoutId);
 

@@ -76,7 +76,7 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getAssetURL } from "@/utils/api";
-import { Request, RequestErrorHandler } from "@asanrom/request-browser";
+import { RequestErrorHandler, abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { escapeHTML } from "@/utils/html";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -123,7 +123,7 @@ export default defineComponent({
     methods: {
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -154,7 +154,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, {
+            makeNamedApiRequest(this.loadRequestId, {
                 method: "GET",
                 url: getAssetURL(descFilePath),
             })
@@ -295,7 +295,7 @@ export default defineComponent({
 
             this.busy = true;
 
-            Request.Do(apiMediaSetExtendedDescription(this.mid, this.contentToChange))
+            makeApiRequest(apiMediaSetExtendedDescription(this.mid, this.contentToChange))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
@@ -363,7 +363,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

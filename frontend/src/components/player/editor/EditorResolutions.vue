@@ -69,7 +69,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
@@ -245,7 +245,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this.requestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
+                    makeNamedApiRequest(this.requestId, apiMediaAddResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess((result) => {
                             PagesController.ShowSnackBar(this.$t("Added resolution") + ": " + r.name);
                             this.busy = false;
@@ -345,7 +345,7 @@ export default defineComponent({
 
                     const mediaId = AppStatus.CurrentMedia;
 
-                    Request.Pending(this.requestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
+                    makeNamedApiRequest(this.requestId, apiMediaRemoveResolution(mediaId, r.width, r.height, r.fps))
                         .onSuccess(() => {
                             PagesController.ShowSnackBar(this.$t("Removed resolution") + ": " + r.name);
                             this.busy = false;
@@ -446,7 +446,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

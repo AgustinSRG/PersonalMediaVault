@@ -118,7 +118,7 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
@@ -203,7 +203,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestId, apiMediaUploadAttachment(mediaId, file))
+            makeNamedApiRequest(this.requestId, apiMediaUploadAttachment(mediaId, file))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
@@ -268,7 +268,7 @@ export default defineComponent({
                     const mediaId = AppStatus.CurrentMedia;
                     const id = att.id;
 
-                    Request.Pending(this.requestId, apiMediaRemoveAttachment(mediaId, id))
+                    makeNamedApiRequest(this.requestId, apiMediaRemoveAttachment(mediaId, id))
                         .onSuccess(() => {
                             PagesController.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
                             this.busy = false;
@@ -347,7 +347,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = this.attachmentEdit;
 
-            Request.Pending(this.requestId, apiMediaRenameAttachment(mediaId, id, this.attachmentEditName))
+            makeNamedApiRequest(this.requestId, apiMediaRenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;
@@ -436,7 +436,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

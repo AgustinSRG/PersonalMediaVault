@@ -42,7 +42,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
 import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
@@ -101,7 +101,7 @@ export default defineComponent({
 
             const notes = textToImageNotes(this.imageNotes);
 
-            Request.Pending(this.requestId, apiMediaSetNotes(mediaId, notes))
+            makeNamedApiRequest(this.requestId, apiMediaSetNotes(mediaId, notes))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully changed image notes"));
                     this.busy = false;
@@ -162,7 +162,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

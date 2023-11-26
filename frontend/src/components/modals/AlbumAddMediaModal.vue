@@ -58,7 +58,7 @@ import { useVModel } from "../../utils/v-model";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
@@ -114,7 +114,7 @@ export default defineComponent({
             const albumId = this.aid;
             this.busy = true;
             // Add
-            Request.Do(apiAlbumsAddMediaToAlbum(albumId, mid))
+            makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, mid))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully added to album"));

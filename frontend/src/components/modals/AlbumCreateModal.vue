@@ -36,7 +36,7 @@
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -101,7 +101,7 @@ export default defineComponent({
 
             const albumName = this.name;
 
-            Request.Do(apiAlbumsCreateAlbum(albumName))
+            makeApiRequest(apiAlbumsCreateAlbum(albumName))
                 .onSuccess((response) => {
                     PagesController.ShowSnackBar(this.$t("Album created") + ": " + albumName);
                     this.busy = false;

@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
@@ -272,8 +272,8 @@ export class UploadController {
      */
     public static RemoveFile(id: number) {
         // Abort requests
-        Request.Abort(REQUEST_PREFIX_UPLOAD + id);
-        Request.Abort(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
+        abortNamedApiRequest(REQUEST_PREFIX_UPLOAD + id);
+        abortNamedApiRequest(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
 
         // Remove from the array
         for (let i = 0; i < UploadController.Entries.length; i++) {
@@ -332,7 +332,7 @@ export class UploadController {
         m.progress = 0;
         UploadController.Emit("update", m, index);
 
-        Request.Pending(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
                 UploadController.Emit("update", m, index);
@@ -401,7 +401,7 @@ export class UploadController {
         m.busy = true;
         m.lastRequest = Date.now();
 
-        Request.Pending(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, apiMediaGetMedia(m.mid))
+        makeNamedApiRequest(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, apiMediaGetMedia(m.mid))
             .onSuccess((media) => {
                 m.busy = false;
                 if (media.ready) {
@@ -480,7 +480,7 @@ export class UploadController {
         const tag = m.tags[0];
         const mediaId = m.mid;
 
-        Request.Do(apiTagsTagMedia(mediaId, tag))
+        makeApiRequest(apiTagsTagMedia(mediaId, tag))
             .onSuccess((res) => {
                 setLastUsedTag(res.id);
                 m.tags.shift(); // Remove tag from list

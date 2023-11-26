@@ -124,7 +124,7 @@ import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/album
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -187,7 +187,7 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -199,7 +199,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, apiMediaGetMediaAlbums(this.mid))
+            makeNamedApiRequest(this.loadRequestId, apiMediaGetMediaAlbums(this.mid))
                 .onSuccess((result) => {
                     this.mediaAlbums = result;
                     this.loading = false;
@@ -267,7 +267,7 @@ export default defineComponent({
 
             if (album.added) {
                 // Remove
-                Request.Do(apiAlbumsRemoveMediaFromAlbum(album.id, this.mid))
+                makeApiRequest(apiAlbumsRemoveMediaFromAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = false;
@@ -309,7 +309,7 @@ export default defineComponent({
                     });
             } else {
                 // Add
-                Request.Do(apiAlbumsAddMediaToAlbum(album.id, this.mid))
+                makeApiRequest(apiAlbumsAddMediaToAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = true;
@@ -465,7 +465,7 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {
@@ -478,7 +478,7 @@ export default defineComponent({
                 this.load();
             } else {
                 clearNamedTimeout(this.loadRequestId);
-                Request.Abort(this.loadRequestId);
+                abortNamedApiRequest(this.loadRequestId);
             }
         },
     },

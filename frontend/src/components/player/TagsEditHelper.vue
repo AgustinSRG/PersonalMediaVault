@@ -73,7 +73,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { AppStatus } from "@/control/app-status";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -173,7 +173,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tagName = this.getTagName(tag, this.tagVersion);
 
-            Request.Pending(this.requestId, apiTagsUntagMedia(mediaId, tag))
+            makeNamedApiRequest(this.requestId, apiTagsUntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
                     PagesController.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
@@ -238,7 +238,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const tag = this.tagToAdd;
 
-            Request.Pending(this.requestId, apiTagsTagMedia(mediaId, tag))
+            makeNamedApiRequest(this.requestId, apiTagsTagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -306,7 +306,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestId, apiTagsTagMedia(mediaId, tag))
+            makeNamedApiRequest(this.requestId, apiTagsTagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
                     PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
@@ -450,7 +450,7 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
     watch: {
         display: function () {

@@ -35,7 +35,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import MediaDeleteModal from "@/components/modals/MediaDeleteModal.vue";
@@ -88,7 +88,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this.requestId, apiMediaEncodeMedia(mediaId))
+            makeNamedApiRequest(this.requestId, apiMediaEncodeMedia(mediaId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully requested pending encoding tasks"));
                     this.busy = false;
@@ -146,7 +146,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        Request.Abort(this.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

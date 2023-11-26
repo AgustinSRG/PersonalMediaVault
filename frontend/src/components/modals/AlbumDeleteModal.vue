@@ -42,7 +42,7 @@
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@asanrom/request-browser";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -112,7 +112,7 @@ export default defineComponent({
 
             const albumId = this.currentAlbum;
 
-            Request.Do(apiAlbumsDeleteAlbum(albumId))
+            makeApiRequest(apiAlbumsDeleteAlbum(albumId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;

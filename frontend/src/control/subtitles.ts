@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { Request } from "@asanrom/request-browser";
+import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
@@ -74,7 +74,7 @@ export class SubtitlesController {
      */
     public static Load() {
         if (!MediaController.MediaData) {
-            Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
             clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             SubtitlesController.SelectedSubtitles = "";
             SubtitlesController.SubtitlesFileURL = "";
@@ -99,14 +99,14 @@ export class SubtitlesController {
         }
 
         if (!SubtitlesController.SubtitlesFileURL) {
-            Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
             clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             AppEvents.Emit(EVENT_NAME_SUBTITLES_UPDATE);
             return;
         }
 
         clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
-        Request.Pending(REQUEST_ID_SUBTITLES_LOAD, {
+        makeNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD, {
             method: "GET",
             url: SubtitlesController.SubtitlesFileURL,
         })
@@ -115,7 +115,7 @@ export class SubtitlesController {
                 AppEvents.Emit(EVENT_NAME_SUBTITLES_UPDATE);
             })
             .onRequestError((err) => {
-                Request.ErrorHandler()
+                new RequestErrorHandler()
                     .add(401, "*", () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })

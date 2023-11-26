@@ -71,7 +71,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { generateURIQuery } from "@/utils/api";
-import { Request } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -121,9 +121,9 @@ export default defineComponent({
 
         load: function () {
             clearNamedTimeout(this.loadRequestId);
-            Request.Abort(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
             clearNamedTimeout(this.updateRequestId);
-            Request.Abort(this.updateRequestId);
+            abortNamedApiRequest(this.updateRequestId);
 
             if (!this.display) {
                 return;
@@ -131,7 +131,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, apiTasksGetTasks())
+            makeNamedApiRequest(this.loadRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
@@ -157,13 +157,13 @@ export default defineComponent({
 
         updateTasks: function () {
             clearNamedTimeout(this.updateRequestId);
-            Request.Abort(this.updateRequestId);
+            abortNamedApiRequest(this.updateRequestId);
 
             if (!this.display) {
                 return;
             }
 
-            Request.Pending(this.updateRequestId, apiTasksGetTasks())
+            makeNamedApiRequest(this.updateRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
@@ -330,9 +330,9 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
-        Request.Abort(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
         clearNamedTimeout(this.updateRequestId);
-        Request.Abort(this.updateRequestId);
+        abortNamedApiRequest(this.updateRequestId);
     },
     watch: {
         display: function () {
