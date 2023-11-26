@@ -178,7 +178,6 @@
 </template>
 
 <script lang="ts">
-import { ConfigAPI } from "@/api/api-config";
 import { VaultUserConfig } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@asanrom/request-browser";
@@ -191,6 +190,7 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 
 export default defineComponent({
     components: {
@@ -408,7 +408,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this.loadRequestId, ConfigAPI.GetConfig())
+            Request.Pending(this.loadRequestId, apiConfigGetConfig())
                 .onSuccess((response: VaultUserConfig) => {
                     this.title = response.title;
                     this.css = response.css;
@@ -420,18 +420,18 @@ export default defineComponent({
 
                     this.autoFocus();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -453,7 +453,7 @@ export default defineComponent({
             this.error = "";
 
             Request.Do(
-                ConfigAPI.SetConfig({
+                apiConfigSetConfig({
                     title: this.title,
                     css: this.css,
                     max_tasks: this.maxTasks,
@@ -473,23 +473,26 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid configuration provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(500, "*", () => {
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Invalid configuration provided");
+                        },
+                        accessDenied: () => {
+                            this.error = this.$t("Access denied");
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

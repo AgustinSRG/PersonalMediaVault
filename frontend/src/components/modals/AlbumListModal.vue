@@ -301,7 +301,7 @@ export default defineComponent({
                             networkError: () => {
                                 PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                             },
-                        })
+                        });
                     })
                     .onUnexpectedError((err) => {
                         this.busy = false;
