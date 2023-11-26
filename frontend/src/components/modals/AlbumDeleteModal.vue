@@ -40,7 +40,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@asanrom/request-browser";
@@ -48,6 +47,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
+import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     name: "AlbumDeleteModal",
@@ -112,7 +112,7 @@ export default defineComponent({
 
             const albumId = this.currentAlbum;
 
-            Request.Do(AlbumsAPI.DeleteAlbum(albumId))
+            Request.Do(apiAlbumsDeleteAlbum(albumId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Album deleted") + ": " + this.oldName);
                     this.busy = false;
@@ -123,26 +123,27 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                            AlbumsController.OnChangedAlbum(albumId);
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

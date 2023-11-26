@@ -156,7 +156,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import {
     AlbumsController,
     EVENT_NAME_ALBUMS_CHANGED,
@@ -217,6 +216,7 @@ import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
 import { PagesController } from "@/control/pages";
+import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -526,13 +526,13 @@ export default defineComponent({
 
         moveMediaUp: function (i: number) {
             if (i > 0) {
-                AlbumsController.MoveCurrentAlbumOrder(i, i - 1);
+                AlbumsController.MoveCurrentAlbumOrder(i, i - 1, this.$t);
             }
         },
 
         moveMediaDown: function (i: number) {
             if (i < this.albumListLength - 1) {
-                AlbumsController.MoveCurrentAlbumOrder(i, i + 1);
+                AlbumsController.MoveCurrentAlbumOrder(i, i + 1, this.$t);
             }
         },
 
@@ -549,7 +549,7 @@ export default defineComponent({
                     if (newPos === i) {
                         return;
                     }
-                    AlbumsController.MoveCurrentAlbumOrder(i, newPos);
+                    AlbumsController.MoveCurrentAlbumOrder(i, newPos, this.$t);
                 },
             });
         },
@@ -561,18 +561,32 @@ export default defineComponent({
                 return;
             }
             const albumId = this.albumId;
-            Request.Do(AlbumsAPI.RemoveMediaFromAlbum(albumId, media.id))
+            Request.Do(apiAlbumsRemoveMediaFromAlbum(albumId, media.id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .handle(err);
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AuthController.CheckAuthStatusSilent();
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            AlbumsController.OnChangedAlbum(albumId);
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -713,7 +727,7 @@ export default defineComponent({
                     this.draggingOverPosition > this.draggingPosition ? this.draggingOverPosition - 1 : this.draggingOverPosition;
 
                 if (initialPosition !== finalPosition) {
-                    AlbumsController.MoveCurrentAlbumOrder(initialPosition, finalPosition);
+                    AlbumsController.MoveCurrentAlbumOrder(initialPosition, finalPosition, this.$t);
                 }
             }
 

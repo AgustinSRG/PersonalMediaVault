@@ -59,12 +59,12 @@ import { useVModel } from "../../utils/v-model";
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { Request } from "@asanrom/request-browser";
-import { AlbumsAPI } from "@/api/api-albums";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
+import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     components: {
@@ -114,30 +114,44 @@ export default defineComponent({
             const albumId = this.aid;
             this.busy = true;
             // Add
-            Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
+            Request.Do(apiAlbumsAddMediaToAlbum(albumId, mid))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully added to album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     callback();
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(400, "MAX_SIZE_REACHED", () => {
+                        },
+                        maxSizeReached: () => {
                             PagesController.ShowSnackBar(
                                 this.$t("Error") +
-                                    ":" +
+                                    ": " +
                                     this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                             );
-                        })
-                        .add(403, "*", () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AuthController.CheckAuthStatusSilent();
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            AlbumsController.Load();
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.busy = false;

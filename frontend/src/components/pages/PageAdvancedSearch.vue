@@ -166,7 +166,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { MediaListItem } from "@/api/models";
 import { SearchAPI } from "@/api/api-search";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
@@ -192,6 +191,7 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsGetAlbum } from "@/api/api-albums";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -488,7 +488,7 @@ export default defineComponent({
         loadAlbumSearch: function () {
             Request.Abort(this.loadRequestId);
 
-            Request.Pending(this.loadRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
+            Request.Pending(this.loadRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     if (this.order === "asc") {
                         this.filterElements(
@@ -521,20 +521,20 @@ export default defineComponent({
                         this.onCurrentMediaChanged();
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.cancel();
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.albumFilter = new Set();
                             this.load();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             setNamedTimeout(this.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

@@ -34,7 +34,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { Request } from "@asanrom/request-browser";
@@ -42,6 +41,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
+import { apiAlbumsRenameAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     name: "AlbumRenameModal",
@@ -110,7 +110,7 @@ export default defineComponent({
 
             const albumId = this.currentAlbum;
 
-            Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
+            Request.Do(apiAlbumsRenameAlbum(albumId, this.name))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;
@@ -121,26 +121,33 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid album name provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidName: () => {
+                            this.error = this.$t("Invalid album name provided");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        notFound: () => {
+                            this.$refs.modalContainer.close(true);
+                            AlbumsController.OnChangedAlbum(albumId);
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

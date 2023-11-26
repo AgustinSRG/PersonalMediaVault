@@ -120,7 +120,6 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
@@ -134,6 +133,7 @@ import { useVModel } from "../../utils/v-model";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     components: {
@@ -267,7 +267,7 @@ export default defineComponent({
 
             if (album.added) {
                 // Remove
-                Request.Do(AlbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
+                Request.Do(apiAlbumsRemoveMediaFromAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = false;
@@ -281,13 +281,27 @@ export default defineComponent({
                             this.autoFocus();
                         }
                     })
-                    .onRequestError((err) => {
+                    .onRequestError((err, handleErr) => {
                         this.busy = false;
-                        Request.ErrorHandler()
-                            .add(401, "*", () => {
+                        handleErr(err, {
+                            unauthorized: () => {
                                 AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                            })
-                            .handle(err);
+                            },
+                            accessDenied: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                AuthController.CheckAuthStatusSilent();
+                            },
+                            notFound: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                AlbumsController.Load();
+                            },
+                            serverError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            },
+                            networkError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            },
+                        })
                     })
                     .onUnexpectedError((err) => {
                         this.busy = false;
@@ -295,7 +309,7 @@ export default defineComponent({
                     });
             } else {
                 // Add
-                Request.Do(AlbumsAPI.AddMediaToAlbum(album.id, this.mid))
+                Request.Do(apiAlbumsAddMediaToAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = true;
@@ -309,23 +323,37 @@ export default defineComponent({
                             this.changeEditMode();
                         }
                     })
-                    .onRequestError((err) => {
+                    .onRequestError((err, handleErr) => {
                         this.busy = false;
-                        Request.ErrorHandler()
-                            .add(401, "*", () => {
+                        handleErr(err, {
+                            unauthorized: () => {
                                 AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                            })
-                            .add(400, "MAX_SIZE_REACHED", () => {
+                            },
+                            maxSizeReached: () => {
                                 PagesController.ShowSnackBar(
                                     this.$t("Error") +
-                                        ":" +
+                                        ": " +
                                         this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                                 );
-                            })
-                            .add(403, "*", () => {
-                                PagesController.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
-                            })
-                            .handle(err);
+                            },
+                            badRequest: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            },
+                            accessDenied: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                AuthController.CheckAuthStatusSilent();
+                            },
+                            notFound: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                AlbumsController.Load();
+                            },
+                            serverError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            },
+                            networkError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            },
+                        });
                     })
                     .onUnexpectedError((err) => {
                         this.busy = false;

@@ -117,7 +117,6 @@ import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { AlbumsAPI } from "@/api/api-albums";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
@@ -127,6 +126,7 @@ import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsGetAlbums } from "@/api/api-albums";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -227,7 +227,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, AlbumsAPI.GetAlbums())
+            Request.Pending(this.loadRequestId, apiAlbumsGetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
                     clearNamedTimeout(this.loadRequestId);
@@ -235,17 +235,17 @@ export default defineComponent({
                     this.firstLoaded = true;
                     this.updateList();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             this.loading = true;
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

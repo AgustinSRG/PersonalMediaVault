@@ -2,7 +2,6 @@
 
 "use strict";
 
-import { AlbumsAPI } from "@/api/api-albums";
 import { MediaAPI } from "@/api/api-media";
 import { Request } from "@asanrom/request-browser";
 import { shuffleArray } from "@/utils/shuffle";
@@ -13,6 +12,8 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
+import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin, apiAlbumsMoveMediaInAlbum } from "@/api/api-albums";
+import { PagesController } from "./pages";
 
 /**
  * Event triggered when the albums list is updated
@@ -137,7 +138,7 @@ export class AlbumsController {
         }
 
         clearNamedTimeout(REQUEST_ID_ALBUMS_LOAD);
-        Request.Pending(REQUEST_ID_ALBUMS_LOAD, AlbumsAPI.GetAlbumsMin())
+        Request.Pending(REQUEST_ID_ALBUMS_LOAD, apiAlbumsGetAlbumsMin())
             .onSuccess((albums) => {
                 AlbumsController.AlbumsMap.clear();
 
@@ -149,16 +150,16 @@ export class AlbumsController {
                 AlbumsController.Loading = false;
                 AlbumsController.InitiallyLoaded = true;
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID_ALBUMS_LOAD, 1500, AlbumsController.Load);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -221,7 +222,7 @@ export class AlbumsController {
         }
 
         clearNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD);
-        Request.Pending(REQUEST_ID_CURRENT_ALBUM_LOAD, AlbumsAPI.GetAlbum(AlbumsController.CurrentAlbum))
+        Request.Pending(REQUEST_ID_CURRENT_ALBUM_LOAD, apiAlbumsGetAlbum(AlbumsController.CurrentAlbum))
             .onSuccess((album) => {
                 AlbumsController.CurrentAlbumData = album;
                 AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
@@ -232,12 +233,12 @@ export class AlbumsController {
                 AlbumsController.UpdateAlbumCurrentPos();
                 AppStatus.UpdateURL();
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         AlbumsController.CurrentAlbumData = null;
                         AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
@@ -245,12 +246,12 @@ export class AlbumsController {
                         AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
                         AppStatus.CloseAlbum();
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID_CURRENT_ALBUM_LOAD, 1500, AlbumsController.LoadCurrentAlbum);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -279,8 +280,9 @@ export class AlbumsController {
      * Updates the local list and calls the server to update the remote list.
      * @param oldIndex The original position
      * @param newIndex The new position
+     * @param $t Translation function to display errors
      */
-    public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number) {
+    public static MoveCurrentAlbumOrder(oldIndex: number, newIndex: number, $t: (msg: string) => string) {
         if (!AlbumsController.CurrentAlbumData) {
             return;
         }
@@ -300,16 +302,43 @@ export class AlbumsController {
 
         // Update in server
 
-        Request.Do(AlbumsAPI.MoveMediaInAlbum(albumId, mediaId, newIndex))
+        Request.Do(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
             .onSuccess(() => {
                 AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                // Revert changes
+                AlbumsController.OnChangedAlbum(albumId, true);
+                // Show error
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .handle(err);
+                    },
+                    maxSizeReached: () => {
+                        PagesController.ShowSnackBar(
+                            $t("Error") +
+                                ": " +
+                                $t("The album reached the limit of 1024 elements. Please, consider creating another album."),
+                        );
+                    },
+                    badRequest: () => {
+                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                    },
+                    accessDenied: () => {
+                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                        AuthController.CheckAuthStatusSilent();
+                    },
+                    notFound: () => {
+                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                        AlbumsController.OnChangedAlbum(albumId);
+                    },
+                    serverError: () => {
+                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                    },
+                    networkError: () => {
+                        PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);

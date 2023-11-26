@@ -201,7 +201,6 @@ import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { Request } from "@asanrom/request-browser";
-import { AlbumsAPI } from "@/api/api-albums";
 import { SearchAPI } from "@/api/api-search";
 import { MediaController } from "@/control/media";
 import { TagsAPI } from "@/api/api-tags";
@@ -210,6 +209,7 @@ import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 
 const PAGE_SIZE = 50;
 
@@ -546,35 +546,31 @@ export default defineComponent({
         loadAlbumSearch: function () {
             Request.Abort(this.batchRequestId);
 
-            Request.Pending(this.batchRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
+            Request.Pending(this.batchRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     this.filterElements(result.list);
                     this.finishSearch();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.status = "error";
-                            this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.status = "error";
                             this.error = this.$t("The selected album was not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.status = "error";
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.status = "error";
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -796,33 +792,36 @@ export default defineComponent({
         },
 
         actionAddAlbum: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, AlbumsAPI.AddMediaToAlbum(this.albumToAdd, mid))
+            Request.Pending(this.batchRequestId, apiAlbumsAddMediaToAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(400, "MAX_SIZE_REACHED", () => {
+                        },
+                        maxSizeReached: () => {
                             this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
-                        })
-                        .add(403, "*", () => {
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -832,30 +831,30 @@ export default defineComponent({
         },
 
         actionRemoveAlbum: function (mid: number, next: number) {
-            Request.Pending(this.batchRequestId, AlbumsAPI.RemoveMediaFromAlbum(this.albumToAdd, mid))
+            Request.Pending(this.batchRequestId, apiAlbumsRemoveMediaFromAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
