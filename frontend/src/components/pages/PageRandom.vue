@@ -82,7 +82,6 @@
 
 <script lang="ts">
 import { MediaListItem } from "@/api/models";
-import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
@@ -104,6 +103,7 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiSearchRandom } from "@/api/api-search";
 
 export default defineComponent({
     name: "PageRandom",
@@ -174,7 +174,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, SearchAPI.Random(this.search, Date.now(), this.pageSize))
+            Request.Pending(this.loadRequestId, apiSearchRandom(this.search, Date.now(), this.pageSize))
                 .onSuccess((result) => {
                     const s = new Set();
                     this.pageItems = result.page_items.filter((i) => {
@@ -211,17 +211,17 @@ export default defineComponent({
                     this.scrollToCurrentMedia();
                     this.onCurrentMediaChanged();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             this.loading = true;
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

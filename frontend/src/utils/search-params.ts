@@ -21,12 +21,27 @@ export function packSearchParams(page: number, order: string): string {
 }
 
 /**
+ * Search parameters
+ */
+export interface SearchParams {
+    /**
+     * Page number
+     */
+    page: number;
+
+    /**
+     * Order direction
+     */
+    order: "asc" | "desc";
+}
+
+/**
  * Unpacks the search parameters from a string
  * @param params The packed search params
  * @returns The search parameters (page index and order)
  */
-export function unPackSearchParams(params: string): { page: number; order: string } {
-    const res = {
+export function unPackSearchParams(params: string): SearchParams {
+    const res: SearchParams = {
         page: 0,
         order: "desc",
     };
@@ -38,11 +53,7 @@ export function unPackSearchParams(params: string): { page: number; order: strin
             res.page = 0;
         }
 
-        res.order = spl[1] || "desc";
-
-        if (res.order !== "desc" && res.order !== "asc") {
-            res.order = "desc";
-        }
+        res.order = spl[1] !== "asc" ? "desc" : "asc";
     }
 
     return res;

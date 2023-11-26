@@ -2,37 +2,73 @@
 
 "use strict";
 
-import { RequestParams } from "@asanrom/request-browser";
+import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
 import { SearchResults, RandomResults } from "./models";
 import { generateURIQuery, getApiURL } from "@/utils/api";
 
-export class SearchAPI {
-    public static Search(tag: string, order: string, page: number, pageSize: number): RequestParams<SearchResults> {
-        return {
-            method: "GET",
-            url: getApiURL(
-                "/api/search" +
-                    generateURIQuery({
-                        tag: tag,
-                        order: order,
-                        page_index: page + "",
-                        page_size: pageSize + "",
-                    }),
-            ),
-        };
-    }
+/**
+ * Search for media in the vault
+ * @param tag Tag to filter by
+ * @param order Order direction
+ * @param page Page number, starting at 0
+ * @param pageSize Page size
+ * @returns The request parameters
+ */
+export function apiSearch(
+    tag: string,
+    order: "asc" | "desc",
+    page: number,
+    pageSize: number,
+): RequestParams<SearchResults, CommonAuthenticatedErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(
+            "/api/search" +
+                generateURIQuery({
+                    tag: tag,
+                    order: order,
+                    page_index: page + "",
+                    page_size: pageSize + "",
+                }),
+        ),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
 
-    public static Random(tag: string, seed: number, pageSize: number): RequestParams<RandomResults> {
-        return {
-            method: "GET",
-            url: getApiURL(
-                "/api/random" +
-                    generateURIQuery({
-                        tag: tag,
-                        seed: seed + "",
-                        page_size: pageSize + "",
-                    }),
-            ),
-        };
-    }
+/**
+ * Gets random results
+ * @param tag Tag to filter by
+ * @param seed RNG seed
+ * @param pageSize Page size
+ * @returns The request parameters
+ */
+export function apiSearchRandom(
+    tag: string,
+    seed: number,
+    pageSize: number,
+): RequestParams<RandomResults, CommonAuthenticatedErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(
+            "/api/random" +
+                generateURIQuery({
+                    tag: tag,
+                    seed: seed + "",
+                    page_size: pageSize + "",
+                }),
+        ),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
 }

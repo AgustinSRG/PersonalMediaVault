@@ -67,7 +67,6 @@
 </template>
 
 <script lang="ts">
-import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -90,6 +89,7 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiSearch } from "@/api/api-search";
 
 export default defineComponent({
     name: "PageHome",
@@ -113,7 +113,7 @@ export default defineComponent({
             firstLoaded: false,
 
             pageSize: getPageMaxItems(),
-            order: "desc",
+            order: "desc" as "asc" | "desc",
             searchParams: AppStatus.SearchParams,
 
             currentMedia: AppStatus.CurrentMedia,
@@ -165,7 +165,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, SearchAPI.Search("", this.order, this.page, this.pageSize))
+            Request.Pending(this.loadRequestId, apiSearch("", this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     TagsController.OnMediaListReceived(result.page_items);
                     this.pageItems = result.page_items;
@@ -198,17 +198,17 @@ export default defineComponent({
                     this.scrollToCurrentMedia();
                     this.onCurrentMediaChanged();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             this.loading = true;
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

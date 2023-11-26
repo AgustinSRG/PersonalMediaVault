@@ -167,7 +167,6 @@
 
 <script lang="ts">
 import { MediaListItem } from "@/api/models";
-import { SearchAPI } from "@/api/api-search";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
@@ -192,6 +191,7 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
+import { apiSearch } from "@/api/api-search";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -220,7 +220,7 @@ export default defineComponent({
         return {
             loading: false,
 
-            order: "desc",
+            order: "desc" as "desc" | "asc",
             textSearch: "",
             type: 0,
 
@@ -304,7 +304,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this.loadRequestId, SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize))
+            Request.Pending(this.loadRequestId, apiSearch(this.getFirstTag(), this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     const completePageList = this.listScroller.list;
                     this.filterElements(result.page_items);
@@ -332,16 +332,16 @@ export default defineComponent({
                         }
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

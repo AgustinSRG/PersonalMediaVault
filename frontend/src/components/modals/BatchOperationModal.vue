@@ -201,7 +201,6 @@ import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { Request } from "@asanrom/request-browser";
-import { SearchAPI } from "@/api/api-search";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -210,6 +209,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
+import { apiSearch } from "@/api/api-search";
 
 const PAGE_SIZE = 50;
 
@@ -590,7 +590,7 @@ export default defineComponent({
         searchNext: function (page: number) {
             Request.Abort(this.batchRequestId);
 
-            Request.Pending(this.batchRequestId, SearchAPI.Search(this.getFirstTag(), "asc", page, PAGE_SIZE))
+            Request.Pending(this.batchRequestId, apiSearch(this.getFirstTag(), "asc", page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
 
@@ -603,22 +603,22 @@ export default defineComponent({
                         this.searchNext(page + 1);
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.status = "error";
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.status = "error";
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
