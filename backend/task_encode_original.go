@@ -352,7 +352,8 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		return
 	}
 
-	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, task.session.key)
+	encodedSize := f_info.Size()
+	err = ws.Initialize(encodedSize, ENCRYPTED_BLOCK_MAX_SIZE, task.session.key)
 
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
@@ -407,7 +408,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		}
 
 		bytesCopied += int64(c)
-		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(ENCRYPTED_BLOCK_MAX_SIZE)))
+		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(encodedSize)))
 
 		if task.killed {
 			f.Close()
