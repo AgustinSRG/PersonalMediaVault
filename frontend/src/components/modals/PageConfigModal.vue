@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Page configuration") }}</div>
@@ -85,6 +85,8 @@ export default defineComponent({
 
             pageItemsFit: getPageItemsFit(),
             pageItemsSize: getPageItemsSize(),
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -111,7 +113,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         reset: function () {

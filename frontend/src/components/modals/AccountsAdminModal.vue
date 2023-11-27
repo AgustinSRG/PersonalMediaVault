@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Administrate accounts") }}</div>
@@ -107,6 +107,8 @@ export default defineComponent({
             loading: true,
             busy: false,
             error: "",
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -209,7 +211,7 @@ export default defineComponent({
         close: function () {
             this.displayAccountDelete = false;
             this.displayAccountCreate = false;
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         afterSubModalClosed: function (display: boolean) {

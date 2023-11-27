@@ -28,6 +28,8 @@ export default defineComponent({
         display: Boolean,
         lockClose: Boolean,
         static: Boolean,
+        closeSignal: Number,
+        forceCloseSignal: Number,
         closeCallback: Function,
     },
     setup(props) {
@@ -121,6 +123,16 @@ export default defineComponent({
                 if (this.focusTrap) {
                     this.focusTrap.deactivate();
                 }
+            }
+        },
+        closeSignal: function () {
+            if (this.closeSignal > 0) {
+                this.close();
+            }
+        },
+        forceCloseSignal: function () {
+            if (this.forceCloseSignal > 0) {
+                this.close(true);
             }
         },
     },

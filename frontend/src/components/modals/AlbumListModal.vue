@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <div v-if="display" class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Albums") }}</div>
@@ -166,6 +171,9 @@ export default defineComponent({
             editMode: AuthController.CanWrite,
             canWrite: AuthController.CanWrite,
             editModeChanged: false,
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -218,7 +226,7 @@ export default defineComponent({
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
-                            this.$refs.modalContainer.close(true);
+                            this.forceCloseSignal++;
                         },
                         temporalError: () => {
                             // Retry
@@ -234,7 +242,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         createAlbum: function () {
@@ -247,7 +255,7 @@ export default defineComponent({
         },
 
         goToAlbum: function (album) {
-            this.$refs.modalContainer.close(true);
+            this.forceCloseSignal++;
             AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
         },
 

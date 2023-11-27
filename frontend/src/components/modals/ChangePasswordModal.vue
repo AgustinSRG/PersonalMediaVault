@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Change password") }}</div>
@@ -80,6 +85,9 @@ export default defineComponent({
             password2: "",
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -117,7 +125,7 @@ export default defineComponent({
                     this.password = "";
                     this.password2 = "";
                     PagesController.ShowSnackBar(this.$t("Vault password changed!"));
-                    this.$refs.modalContainer.close(true);
+                    this.forceCloseSignal++;
                 })
                 .onCancel(() => {
                     this.busy = false;
@@ -151,7 +159,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {

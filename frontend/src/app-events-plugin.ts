@@ -14,14 +14,6 @@ declare module "vue" {
          * Override refs
          */
         $refs: {
-            modalContainer?: {
-                /**
-                 * Closes the modal
-                 * @param forced True to force (no wait, no condition)
-                 */
-                close: (forced?: boolean) => void;
-            };
-
             // Position change modal. TODO: Use event instead
             movePosModal?: {
                 show: (options: { pos: number; callback: (newPos: number) => void }) => void;

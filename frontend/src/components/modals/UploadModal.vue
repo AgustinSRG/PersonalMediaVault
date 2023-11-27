@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Upload files") }}</div>
@@ -123,11 +123,13 @@ export default defineComponent({
             albums: [],
 
             displayAlbumCreate: false,
+
+            closeSignal: 0,
         };
     },
     methods: {
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         renderFiles: function (files) {

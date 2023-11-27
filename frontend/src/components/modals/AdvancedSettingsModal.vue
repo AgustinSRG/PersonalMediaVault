@@ -1,5 +1,11 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :close-callback="askClose">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :static="true"
+        :close-callback="askClose"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Advanced settings") }}</div>
@@ -301,6 +307,9 @@ export default defineComponent({
             loading: true,
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -502,11 +511,11 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         closeForced: function () {
-            this.$refs.modalContainer.close(true);
+            this.forceCloseSignal++;
         },
     },
     mounted: function () {

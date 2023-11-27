@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title" v-if="deleting">
@@ -58,6 +58,8 @@ export default defineComponent({
             fps: 0,
 
             callback: null,
+
+            closeSignal: 0,
         };
     },
     setup(props) {
@@ -98,7 +100,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {

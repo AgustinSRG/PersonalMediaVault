@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -92,11 +92,13 @@ export default defineComponent({
             pageItemsSize: getPageItemsSize(),
 
             pageScroll: 0,
+
+            closeSignal: 0,
         };
     },
     methods: {
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         changeToUpload: function () {

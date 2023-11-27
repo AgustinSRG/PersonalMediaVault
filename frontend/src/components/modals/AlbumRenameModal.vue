@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -57,6 +62,9 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     setup(props) {
@@ -85,7 +93,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
@@ -101,7 +109,7 @@ export default defineComponent({
             }
 
             if (this.name === this.oldName) {
-                this.$refs.modalContainer.close(true);
+                this.forceCloseSignal++;
                 return;
             }
 
@@ -115,7 +123,7 @@ export default defineComponent({
                     PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;
                     this.name = "";
-                    this.$refs.modalContainer.close(true);
+                    this.forceCloseSignal++;
                     AlbumsController.OnChangedAlbum(albumId);
                 })
                 .onCancel(() => {
@@ -138,7 +146,7 @@ export default defineComponent({
                             this.error = this.$t("Access denied");
                         },
                         notFound: () => {
-                            this.$refs.modalContainer.close(true);
+                            this.forceCloseSignal++;
                             AlbumsController.OnChangedAlbum(albumId);
                         },
                         serverError: () => {

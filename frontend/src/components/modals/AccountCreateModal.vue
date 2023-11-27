@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Create account") }}</div>
@@ -94,6 +94,8 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -178,7 +180,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {

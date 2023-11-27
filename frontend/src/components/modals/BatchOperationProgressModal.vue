@@ -1,6 +1,7 @@
 <template>
     <ModalDialogContainer
-        ref="modalContainer"
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
         :static="true"
         :lock-close="status === 'search' || status === 'action'"
@@ -124,6 +125,9 @@ export default defineComponent({
     data: function () {
         return {
             confirmationDelete: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     setup(props) {
@@ -133,12 +137,12 @@ export default defineComponent({
     },
     methods: {
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         cancel: function () {
             this.$emit("cancel");
-            this.$refs.modalContainer.close(true);
+            this.forceCloseSignal++;
         },
 
         confirm: function () {

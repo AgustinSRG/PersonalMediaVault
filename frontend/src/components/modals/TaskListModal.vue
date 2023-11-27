@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Tasks") }}</div>
@@ -98,6 +98,8 @@ export default defineComponent({
             tasks: [],
 
             loading: true,
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -230,7 +232,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         renderType: function (t: number) {

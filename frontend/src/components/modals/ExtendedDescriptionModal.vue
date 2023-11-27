@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" @close="onClose" :lock-close="busy" @key="onKeyPress">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" @close="onClose" :lock-close="busy" @key="onKeyPress">
         <div
             v-if="display"
             class="modal-dialog modal-height-100-wf"
@@ -118,6 +118,7 @@ export default defineComponent({
             modalSize: "xl",
 
             changed: false,
+            closeSignal: 0,
         };
     },
     methods: {
@@ -228,7 +229,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         onClose: function () {
