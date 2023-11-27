@@ -1572,6 +1572,9 @@ export default defineComponent({
         },
 
         onMediaError: function () {
+            if (!this.audioURL) {
+                return;
+            }
             if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
                 this.loading = false;

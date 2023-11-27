@@ -1708,6 +1708,9 @@ export default defineComponent({
         },
 
         onMediaError: function () {
+            if (!this.videoURL) {
+                return;
+            }
             if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
                 this.loading = false;
