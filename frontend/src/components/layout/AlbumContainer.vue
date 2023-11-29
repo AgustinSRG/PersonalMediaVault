@@ -150,7 +150,11 @@
         <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
         <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
         <AlbumGoToPosModal v-if="displayAlbumGoPos" v-model:display="displayAlbumGoPos"></AlbumGoToPosModal>
-        <AlbumMovePosModal ref="movePosModal" v-model:display="displayAlbumMovePos"></AlbumMovePosModal>
+        <AlbumMovePosModal
+            v-model:display="displayAlbumMovePos"
+            :position-to-move="positionToMove"
+            :album-list-length="albumListLength"
+        ></AlbumMovePosModal>
         <LoadingOverlay v-if="loading"></LoadingOverlay>
     </div>
 </template>
@@ -280,6 +284,7 @@ export default defineComponent({
             mouseX: 0,
             mouseY: 0,
             draggingOverPosition: -1,
+            positionToMove: 0,
         };
     },
     methods: {
@@ -537,21 +542,8 @@ export default defineComponent({
         },
 
         changeMediaPos: function (i: number) {
-            this.$refs.movePosModal.show({
-                pos: i,
-                callback: (newPos: number) => {
-                    if (isNaN(newPos) || !isFinite(newPos)) {
-                        return;
-                    }
-                    newPos = Math.floor(newPos);
-                    newPos = Math.min(newPos, this.albumListLength - 1);
-                    newPos = Math.max(0, newPos);
-                    if (newPos === i) {
-                        return;
-                    }
-                    AlbumsController.MoveCurrentAlbumOrder(i, newPos, this.$t);
-                },
-            });
+            this.positionToMove = i;
+            this.displayAlbumMovePos = true;
         },
 
         removeMedia: function (i: number) {

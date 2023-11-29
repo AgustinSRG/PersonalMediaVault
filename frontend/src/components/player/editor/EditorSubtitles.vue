@@ -66,7 +66,11 @@
             </button>
         </div>
 
-        <SubtitlesDeleteModal ref="subtitlesDeleteModal" v-model:display="displaySubtitlesDelete"></SubtitlesDeleteModal>
+        <SubtitlesDeleteModal
+            v-model:display="displaySubtitlesDelete"
+            :subtitle-to-delete="subtitleToDelete"
+            @confirm="removeSubtitlesConfirm"
+        ></SubtitlesDeleteModal>
     </div>
 </template>
 
@@ -113,6 +117,7 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             displaySubtitlesDelete: false,
+            subtitleToDelete: null as MediaSubtitle,
         };
     },
 
@@ -236,68 +241,70 @@ export default defineComponent({
                 });
         },
 
-        removeSubtitles: function (sub) {
-            this.$refs.subtitlesDeleteModal.show({
-                name: sub.name,
-                callback: () => {
-                    if (this.busy) {
-                        return;
+        removeSubtitles: function (sub: MediaSubtitle) {
+            this.subtitleToDelete = sub;
+            this.displaySubtitlesDelete = true;
+        },
+
+        removeSubtitlesConfirm: function () {
+            const sub = this.subtitleToDelete;
+
+            if (this.busy || !sub) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const id = sub.id;
+
+            makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
+                .onSuccess(() => {
+                    PagesController.ShowSnackBar(this.$t("Removed subtitles") + ": " + sub.name);
+                    this.busy = false;
+                    for (let i = 0; i < this.subtitles.length; i++) {
+                        if (this.subtitles[i].id === id) {
+                            this.subtitles.splice(i, 1);
+                            break;
+                        }
                     }
-
-                    this.busy = true;
-
-                    const mediaId = AppStatus.CurrentMedia;
-                    const id = sub.id;
-
-                    makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
-                        .onSuccess(() => {
-                            PagesController.ShowSnackBar(this.$t("Removed subtitles") + ": " + sub.name);
-                            this.busy = false;
-                            for (let i = 0; i < this.subtitles.length; i++) {
-                                if (this.subtitles[i].id === id) {
-                                    this.subtitles.splice(i, 1);
-                                    break;
-                                }
-                            }
-                            if (MediaController.MediaData) {
-                                MediaController.MediaData.subtitles = clone(this.subtitles);
-                            }
-                            this.$emit("changed");
-                        })
-                        .onCancel(() => {
-                            this.busy = false;
-                        })
-                        .onRequestError((err, handleErr) => {
-                            this.busy = false;
-                            handleErr(err, {
-                                unauthorized: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                                },
-                                badRequest: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
-                                },
-                                accessDenied: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                },
-                                notFound: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                                },
-                                serverError: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                                },
-                                networkError: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                                },
-                            });
-                        })
-                        .onUnexpectedError((err) => {
-                            PagesController.ShowSnackBar(err.message);
-                            console.error(err);
-                            this.busy = false;
-                        });
-                },
-            });
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.subtitles = clone(this.subtitles);
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    PagesController.ShowSnackBar(err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
         },
 
         downloadSubtitles: function (sub: MediaSubtitle) {

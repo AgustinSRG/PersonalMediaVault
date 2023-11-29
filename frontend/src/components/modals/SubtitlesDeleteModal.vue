@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ name }}</label>
+                    <label>{{ subtitleToDelete ? subtitleToDelete.name : "" }}</label>
                 </div>
             </div>
             <div class="modal-footer no-padding">
@@ -28,19 +28,18 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { PropType } from "vue";
+import { MediaSubtitle } from "@/api/models";
 
 export default defineComponent({
     name: "SubtitlesDeleteModal",
-    emits: ["update:display"],
+    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
+        subtitleToDelete: Object as PropType<MediaSubtitle>,
     },
     data: function () {
         return {
-            name: "",
-
-            callback: null,
-
             closeSignal: 0,
         };
     },
@@ -50,12 +49,6 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: { name: string; callback: () => void }) {
-            this.name = options.name;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -75,9 +68,7 @@ export default defineComponent({
         submit: function (e) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback();
-            }
+            this.$emit("confirm");
 
             this.close();
         },

@@ -34,7 +34,6 @@
                 </div>
                 <PageAdvancedSearch
                     v-if="!isUpload"
-                    ref="advSearch"
                     :display="true"
                     :inModal="true"
                     :noAlbum="aid"
@@ -63,7 +62,7 @@ import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { PagesController } from "@/control/pages";
+import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 
 export default defineComponent({
@@ -169,14 +168,14 @@ export default defineComponent({
         onPageScroll: function (e: Event) {
             this.pageScroll = (e.target as HTMLElement).scrollTop;
 
-            if (!this.isUpload && this.$refs.advSearch) {
-                this.$refs.advSearch.onScroll(e);
+            if (!this.isUpload) {
+                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
             }
         },
 
         goTop: function () {
-            if (!this.isUpload && this.$refs.advSearch) {
-                this.$refs.advSearch.goTop();
+            if (!this.isUpload) {
+                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
 
                 nextTick(() => {
                     this.$el.scrollTop = 0;

@@ -36,12 +36,15 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { AlbumsController } from "@/control/albums";
 
 export default defineComponent({
     name: "AlbumMovePosModal",
     emits: ["update:display"],
     props: {
         display: Boolean,
+        positionToMove: Number,
+        albumListLength: Number,
     },
     data: function () {
         return {
@@ -67,22 +70,29 @@ export default defineComponent({
             });
         },
 
-        show: function (options: { pos: number; callback: () => void }) {
-            this.currentPos = options.pos + 1;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         close: function () {
             this.closeSignal++;
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback(this.currentPos - 1);
+            let newPos = this.currentPos - 1;
+
+            if (isNaN(newPos) || !isFinite(newPos)) {
+                this.close();
+                return;
             }
+            newPos = Math.floor(newPos);
+            newPos = Math.min(newPos, this.albumListLength - 1);
+            newPos = Math.max(0, newPos);
+
+            if (newPos === this.positionToMove) {
+                this.close();
+                return;
+            }
+
+            AlbumsController.MoveCurrentAlbumOrder(this.positionToMove, newPos, this.$t);
 
             this.close();
         },
@@ -95,6 +105,7 @@ export default defineComponent({
     watch: {
         display: function () {
             if (this.display) {
+                this.currentPos = this.positionToMove + 1;
                 this.autoFocus();
             }
         },

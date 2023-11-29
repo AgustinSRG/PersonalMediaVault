@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ name }}</label>
+                    <label>{{ attachmentToDelete ? attachmentToDelete.name : "" }}</label>
                 </div>
             </div>
             <div class="modal-footer no-padding">
@@ -26,20 +26,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from "vue";
+import { PropType, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { MediaAttachment } from "@/api/models";
 
 export default defineComponent({
     name: "AttachmentDeleteModal",
-    emits: ["update:display"],
+    emits: ["update:display", "confirm"],
     props: {
+        attachmentToDelete: Object as PropType<MediaAttachment>,
         display: Boolean,
     },
     data: function () {
         return {
             name: "",
-
-            callback: null,
 
             closeSignal: 0,
         };
@@ -50,12 +50,6 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: { name: string; callback: () => void }) {
-            this.name = options.name;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -75,9 +69,7 @@ export default defineComponent({
         submit: function (e) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback();
-            }
+            this.$emit("confirm");
 
             this.close();
         },

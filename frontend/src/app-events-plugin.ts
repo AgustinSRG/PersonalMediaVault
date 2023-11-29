@@ -13,50 +13,7 @@ declare module "vue" {
         /**
          * Override refs
          */
-        $refs: {
-            // Position change modal. TODO: Use event instead
-            movePosModal?: {
-                show: (options: { pos: number; callback: (newPos: number) => void }) => void;
-            };
-
-            // Delete account modal. TODO: Use event instead
-            deleteModal?: {
-                show: (options: { name: string; callback: () => void }) => void;
-            };
-
-            // Delete attachment modal. TODO: Use event instead
-            attachmentDeleteModal?: {
-                show: (options: { name: string; callback: () => void }) => void;
-            };
-
-            // Delete audio track modal. TODO: Use event instead
-            audioTrackDeleteModal?: {
-                show: (options: { name: string; callback: () => void }) => void;
-            };
-
-            // Delete subtitles modal. TODO: Use event instead
-            subtitlesDeleteModal?: {
-                show: (options: { name: string; callback: () => void }) => void;
-            };
-
-            // Resolution confirmation modal. TODO: Use event instead
-            resolutionConfirmationModal?: {
-                show: (options: {
-                    type: number;
-                    deleting: boolean;
-                    name: string;
-                    width: number;
-                    height: number;
-                    fps: number;
-                    callback: () => void;
-                }) => void;
-            };
-
-            advSearch?: {
-                onScroll: (e: Event) => void;
-                goTop: () => void;
-            };
-        };
+        $refs: never;
 
         /**
          * Mapping of app event handlers

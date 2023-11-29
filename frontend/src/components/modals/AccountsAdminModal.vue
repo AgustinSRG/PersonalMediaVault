@@ -51,9 +51,10 @@
         </div>
 
         <AccountDeleteModal
-            ref="deleteModal"
             v-model:display="displayAccountDelete"
             @update:display="afterSubModalClosed"
+            :username="accountToDelete"
+            @done="load"
         ></AccountDeleteModal>
         <AccountCreateModal
             v-model:display="displayAccountCreate"
@@ -65,7 +66,7 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -73,8 +74,7 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { PagesController } from "@/control/pages";
-import { apiAdminDeleteAccount, apiAdminListAccounts } from "@/api/api-admin";
+import { apiAdminListAccounts } from "@/api/api-admin";
 
 export default defineComponent({
     components: {
@@ -102,6 +102,8 @@ export default defineComponent({
             accountWrite: false,
 
             displayAccountDelete: false,
+            accountToDelete: "",
+
             displayAccountCreate: false,
 
             loading: true,
@@ -149,59 +151,8 @@ export default defineComponent({
         },
 
         askDeleteAccount: function (username: string) {
-            this.$refs.deleteModal.show({
-                name: username,
-                callback: () => {
-                    this.deleteAccount(username);
-                },
-            });
-        },
-
-        deleteAccount: function (username: string) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            makeApiRequest(apiAdminDeleteAccount(username))
-                .onSuccess(() => {
-                    this.busy = false;
-                    PagesController.ShowSnackBar(this.$t("Account deleted") + ": " + username);
-                    this.load();
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        accountNotFound: () => {
-                            // Already deleted?
-                            this.busy = false;
-                            this.load();
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
+            this.accountToDelete = username;
+            this.displayAccountDelete = true;
         },
 
         createAccount: function () {

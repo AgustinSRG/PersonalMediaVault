@@ -66,7 +66,11 @@
             </button>
         </div>
 
-        <AudioTrackDeleteModal ref="audioTrackDeleteModal" v-model:display="displayAudioTrackDelete"></AudioTrackDeleteModal>
+        <AudioTrackDeleteModal
+            v-model:display="displayAudioTrackDelete"
+            :trackToDelete="trackToDelete"
+            @confirm="removeAudioConfirm"
+        ></AudioTrackDeleteModal>
     </div>
 </template>
 
@@ -112,6 +116,7 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             displayAudioTrackDelete: false,
+            trackToDelete: null as MediaAudioTrack,
         };
     },
 
@@ -231,67 +236,69 @@ export default defineComponent({
         },
 
         removeAudio: function (aud: MediaAudioTrack) {
-            this.$refs.audioTrackDeleteModal.show({
-                name: aud.name,
-                callback: () => {
-                    if (this.busy) {
-                        return;
+            this.trackToDelete = aud;
+            this.displayAudioTrackDelete = true;
+        },
+
+        removeAudioConfirm: function () {
+            const aud = this.trackToDelete;
+
+            if (this.busy || !aud) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const id = aud.id;
+
+            makeNamedApiRequest(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
+                .onSuccess(() => {
+                    PagesController.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
+                    this.busy = false;
+                    for (let i = 0; i < this.audios.length; i++) {
+                        if (this.audios[i].id === id) {
+                            this.audios.splice(i, 1);
+                            break;
+                        }
                     }
-
-                    this.busy = true;
-
-                    const mediaId = AppStatus.CurrentMedia;
-                    const id = aud.id;
-
-                    makeNamedApiRequest(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
-                        .onSuccess(() => {
-                            PagesController.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
-                            this.busy = false;
-                            for (let i = 0; i < this.audios.length; i++) {
-                                if (this.audios[i].id === id) {
-                                    this.audios.splice(i, 1);
-                                    break;
-                                }
-                            }
-                            if (MediaController.MediaData) {
-                                MediaController.MediaData.audios = clone(this.audios);
-                            }
-                            this.$emit("changed");
-                        })
-                        .onCancel(() => {
-                            this.busy = false;
-                        })
-                        .onRequestError((err, handleErr) => {
-                            this.busy = false;
-                            handleErr(err, {
-                                unauthorized: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                                },
-                                badRequest: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
-                                },
-                                accessDenied: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                                },
-                                notFound: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
-                                },
-                                serverError: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
-                                },
-                                networkError: () => {
-                                    PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
-                                },
-                            });
-                        })
-                        .onUnexpectedError((err) => {
-                            PagesController.ShowSnackBar(err.message);
-                            console.error(err);
-                            this.busy = false;
-                        });
-                },
-            });
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.audios = clone(this.audios);
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    PagesController.ShowSnackBar(err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
         },
 
         downloadAudio: function (aud: MediaAudioTrack) {

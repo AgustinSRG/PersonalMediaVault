@@ -40,6 +40,11 @@ export const EVENT_NAME_GO_PREV = "media-go-prev";
 export const EVENT_NAME_ADVANCED_SEARCH_GO_TOP = "adv-search-go-top";
 
 /**
+ * Event triggered when the advanced search container is scrolled
+ */
+export const EVENT_NAME_ADVANCED_SEARCH_SCROLL = "adv-search-scroll";
+
+/**
  * Event triggered when the user makes changes to the basic metadata of the current media
  * This means albums and pages should reload
  */
