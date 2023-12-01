@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title about-modal-title">
@@ -69,11 +69,13 @@ export default defineComponent({
             homePage: import.meta.env.VITE__HOME_URL || "#",
             gitRepo: import.meta.env.VITE__GIT_URL || "#",
             license: import.meta.env.VITE__LICENSE_URL || "#",
+
+            closeSignal: 0,
         };
     },
     methods: {
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {

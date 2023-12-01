@@ -341,7 +341,7 @@
             v-model:shown="displayConfig"
             v-model:speed="speed"
             v-model:loop="loop"
-            @update:loop="() => this.$emit('force-loop', this.loop)"
+            @update:loop="() => $emit('force-loop', loop)"
             v-model:nextEnd="nextEnd"
             v-model:animColors="animationColors"
             v-model:subSize="subtitlesSize"
@@ -377,7 +377,7 @@
             :x="contextMenuX"
             :y="contextMenuY"
             v-model:loop="loop"
-            @update:loop="() => this.$emit('force-loop', this.loop)"
+            @update:loop="() => $emit('force-loop', loop)"
             :url="audioURL"
             :canWrite="canWrite"
             :hasExtendedDescription="hasExtendedDescription"
@@ -410,7 +410,7 @@ import {
     setPlayerVolume,
     setSubtitlesAllowHTML,
 } from "@/control/player-preferences";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
 import VolumeControl from "./VolumeControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
@@ -420,17 +420,18 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
 import { sanitizeSubtitlesHTML, getUniqueSubtitlesLoadTag } from "@/utils/subtitles-html";
 import { htmlToText } from "@/utils/html";
-import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { KeyboardManager } from "@/control/keyboard";
 import { AuthController } from "@/control/auth";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
+import { MediaData } from "@/api/models";
+import { PagesController } from "@/control/pages";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -470,7 +471,7 @@ export default defineComponent({
     ],
     props: {
         mid: Number,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
         rTick: Number,
 
         fullscreen: Boolean,
@@ -495,6 +496,15 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            timer: null,
+            autoNextTimer: null,
+            audioContext: null as AudioContext,
+            audioSource: null,
+            audioAnalyser: null as AnalyserNode,
+            rendererTimer: null,
+            subTag: "",
+            nextEndTimer: null,
+            mediaSessionId: getUniqueStringId(),
             fullScreenState: useVModel(props, "fullscreen"),
             displayTagListStatus: useVModel(props, "displayTagList"),
         };
@@ -626,9 +636,9 @@ export default defineComponent({
             }
         },
 
-        showConfig: function (e) {
+        showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
-            e.stopPropagation();
+            e && e.stopPropagation();
         },
 
         clickControls: function (e) {
@@ -721,12 +731,10 @@ export default defineComponent({
                     }
                     const promise = player.play();
                     if (promise) {
-                        promise.catch(
-                            function () {
-                                this.playing = false;
-                                this.requiresRefresh = true;
-                            }.bind(this),
-                        );
+                        promise.catch(() => {
+                            this.playing = false;
+                            this.requiresRefresh = true;
+                        });
                     }
                 }
                 return;
@@ -742,12 +750,10 @@ export default defineComponent({
             }
             const promise = player.play();
             if (promise) {
-                promise.catch(
-                    function () {
-                        this.playing = false;
-                        this.requiresRefresh = true;
-                    }.bind(this),
-                );
+                promise.catch(() => {
+                    this.playing = false;
+                    this.requiresRefresh = true;
+                });
             }
             this.autoPlayApplied = true;
         },
@@ -780,9 +786,9 @@ export default defineComponent({
         playerMouseUp: function (e) {
             if (this.timelineGrabbed) {
                 if (e.touches && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+                    this.onTimelineSkip(e.touches[0].pageX);
                 } else {
-                    this.onTimelineSkip(e.pageX, e.pageY);
+                    this.onTimelineSkip(e.pageX);
                 }
                 this.timelineGrabbed = false;
             }
@@ -792,9 +798,9 @@ export default defineComponent({
 
             if (this.timelineGrabbed) {
                 if (e.touches && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+                    this.onTimelineSkip(e.touches[0].pageX);
                 } else {
-                    this.onTimelineSkip(e.pageX, e.pageY);
+                    this.onTimelineSkip(e.pageX);
                 }
             }
         },
@@ -973,10 +979,10 @@ export default defineComponent({
             e.stopPropagation();
             if (e.touches && e.touches.length > 0) {
                 this.timelineGrabbed = true;
-                this.onTimelineSkip(e.touches[0].pageX, e.touches[0].pageY);
+                this.onTimelineSkip(e.touches[0].pageX);
             } else if (e.button === 0) {
                 this.timelineGrabbed = true;
-                this.onTimelineSkip(e.pageX, e.pageY);
+                this.onTimelineSkip(e.pageX);
             }
         },
         getTimelineBarWidth: function (time, duration) {
@@ -1033,7 +1039,7 @@ export default defineComponent({
             return renderTimeSeconds(s);
         },
 
-        setTime: function (time: number, save: boolean) {
+        setTime: function (time: number, save?: boolean) {
             this.currentTimeSlice = null;
             time = Math.max(0, time);
             time = Math.min(time, this.duration);
@@ -1200,9 +1206,9 @@ export default defineComponent({
                 case "x":
                     this.sliceLoop = !this.sliceLoop;
                     if (this.sliceLoop) {
-                        AppEvents.ShowSnackBar(this.$t("Slice loop enabled"));
+                        PagesController.ShowSnackBar(this.$t("Slice loop enabled"));
                     } else {
-                        AppEvents.ShowSnackBar(this.$t("Slice loop disabled"));
+                        PagesController.ShowSnackBar(this.$t("Slice loop disabled"));
                     }
                     break;
                 case "l":
@@ -1212,9 +1218,9 @@ export default defineComponent({
                     } else {
                         this.loop = !this.loop;
                         if (this.loop) {
-                            AppEvents.ShowSnackBar(this.$t("Loop enabled"));
+                            PagesController.ShowSnackBar(this.$t("Loop enabled"));
                         } else {
-                            AppEvents.ShowSnackBar(this.$t("Loop disabled"));
+                            PagesController.ShowSnackBar(this.$t("Loop disabled"));
                         }
                         this.$emit("force-loop", this.loop);
                     }
@@ -1295,9 +1301,9 @@ export default defineComponent({
         setAudioURL() {
             this.hideNextEnd();
 
-            if (this._handles.autoNextTimer) {
-                clearTimeout(this._handles.autoNextTimer);
-                this._handles.autoNextTimer = null;
+            if (this.autoNextTimer) {
+                clearTimeout(this.autoNextTimer);
+                this.autoNextTimer = null;
             }
 
             this.mediaError = false;
@@ -1312,7 +1318,7 @@ export default defineComponent({
             }
 
             if (this.metadata.encoded) {
-                this.audioURL = GetAssetURL(this.metadata.url);
+                this.audioURL = getAssetURL(this.metadata.url);
                 this.audioPending = false;
                 this.audioPendingTask = 0;
                 this.getAudioElement().load();
@@ -1330,64 +1336,64 @@ export default defineComponent({
         },
 
         clearAudioRenderer: function () {
-            if (this._handles.rendererTimer) {
-                clearInterval(this._handles.rendererTimer);
-                this._handles.rendererTimer = null;
+            if (this.rendererTimer) {
+                clearInterval(this.rendererTimer);
+                this.rendererTimer = null;
             }
 
-            if (this._handles.audioSource) {
-                this._handles.audioSource.disconnect();
+            if (this.audioSource) {
+                this.audioSource.disconnect();
             }
 
-            if (this._handles.audioAnalyser) {
-                this._handles.audioAnalyser.disconnect();
+            if (this.audioAnalyser) {
+                this.audioAnalyser.disconnect();
             }
 
-            this._handles.audioAnalyser = null;
+            this.audioAnalyser = null;
         },
 
         setupAudioRenderer: function () {
-            if (!this._handles.audioContext) {
+            if (!this.audioContext) {
                 this.setupAudioContext();
             }
 
             this.clearAudioRenderer();
 
             if (this.audioURL) {
-                const context = this._handles.audioContext;
-                const source = this._handles.audioSource;
+                const context = this.audioContext;
+                const source = this.audioSource;
 
                 const analyser = context.createAnalyser();
 
-                this._handles.audioSource = source;
-                this._handles.audioAnalyser = analyser;
+                this.audioSource = source;
+                this.audioAnalyser = analyser;
                 source.connect(analyser);
                 analyser.connect(context.destination);
 
                 analyser.fftSize = 256;
 
-                this._handles.rendererTimer = setInterval(this.audioAnimationFrame.bind(this), Math.floor(1000 / 30));
+                this.rendererTimer = setInterval(this.audioAnimationFrame.bind(this), Math.floor(1000 / 30));
             } else {
-                this._handles.audioContext = null;
-                this._handles.audioSource = null;
-                this._handles.audioAnalyser = null;
+                this.audioContext = null;
+                this.audioSource = null;
+                this.audioAnalyser = null;
             }
         },
 
         setupAudioContext: function () {
             const context = new AudioContext();
-            this._handles.audioContext = context;
+            this.audioContext = context;
             const source = context.createMediaElementSource(this.getAudioElement());
-            this._handles.audioSource = source;
+            this.audioSource = source;
         },
 
         closeAudioContext: function () {
-            if (this._handles.audioContext) {
-                this._handles.audioContext.close();
+            if (this.audioContext) {
+                this.audioContext.close();
             }
 
-            this._handles.audioContext = null;
-            this._handles.audioSource = null;
+            this.audioContext = null;
+            this.audioSource = null;
         },
 
         audioAnimationFrame: function () {
@@ -1395,7 +1401,7 @@ export default defineComponent({
                 return;
             }
 
-            const analyser = this._handles.audioAnalyser;
+            const analyser = this.audioAnalyser;
             const canvas = this.$el.querySelector("canvas");
 
             if (!analyser || !canvas) {
@@ -1480,20 +1486,20 @@ export default defineComponent({
             if (sub) {
                 if (this.subtitlesHTML) {
                     const subTag = getUniqueSubtitlesLoadTag();
-                    this._handles.subTag = subTag;
+                    this.subTag = subTag;
                     sanitizeSubtitlesHTML(sub.text).then((text) => {
-                        if (this._handles.subTag === subTag) {
+                        if (this.subTag === subTag) {
                             this.subtitles = text;
                         }
                     });
                 } else {
-                    this._handles.subTag = "";
+                    this.subTag = "";
                     this.subtitles = htmlToText(sub.text);
                 }
                 this.subtitlesStart = sub.start;
                 this.subtitlesEnd = sub.end;
             } else {
-                this._handles.subTag = "";
+                this.subTag = "";
                 this.subtitles = "";
                 this.subtitlesStart = 0;
                 this.subtitlesEnd = 0;
@@ -1566,6 +1572,9 @@ export default defineComponent({
         },
 
         onMediaError: function () {
+            if (!this.audioURL) {
+                return;
+            }
             if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
                 this.loading = false;
@@ -1591,9 +1600,9 @@ export default defineComponent({
         },
 
         setupAutoNextTimer: function () {
-            if (this._handles.autoNextTimer) {
-                clearTimeout(this._handles.autoNextTimer);
-                this._handles.autoNextTimer = null;
+            if (this.autoNextTimer) {
+                clearTimeout(this.autoNextTimer);
+                this.autoNextTimer = null;
             }
             const timerS = getAutoNextTime();
 
@@ -1607,8 +1616,8 @@ export default defineComponent({
 
             const ms = timerS * 1000;
 
-            this._handles.autoNextTimer = setTimeout(() => {
-                this._handles.autoNextTimer = null;
+            this.autoNextTimer = setTimeout(() => {
+                this.autoNextTimer = null;
                 if (this.displayConfig || this.expandedTitle) {
                     this.setupAutoNextTimer();
                 } else {
@@ -1621,16 +1630,16 @@ export default defineComponent({
             this.pendingNextEnd = true;
             this.pendingNextEndSeconds = NEXT_END_WAIT_DURATION;
 
-            if (this._handles.nextEndTimer) {
-                clearTimeout(this._handles.nextEndTimer);
-                this._handles.nextEndTimer = null;
+            if (this.nextEndTimer) {
+                clearTimeout(this.nextEndTimer);
+                this.nextEndTimer = null;
             }
 
-            this._handles.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
+            this.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
         },
 
         tickNextEnd: function () {
-            this._handles.nextEndTimer = null;
+            this.nextEndTimer = null;
 
             this.pendingNextEndSeconds = Math.max(0, this.pendingNextEndSeconds - 1);
 
@@ -1640,15 +1649,15 @@ export default defineComponent({
                 return;
             }
 
-            this._handles.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
+            this.nextEndTimer = setTimeout(this.tickNextEnd.bind(this), 1000);
         },
 
         hideNextEnd: function () {
             this.pendingNextEnd = false;
 
-            if (this._handles.nextEndTimer) {
-                clearTimeout(this._handles.nextEndTimer);
-                this._handles.nextEndTimer = null;
+            if (this.nextEndTimer) {
+                clearTimeout(this.nextEndTimer);
+                this.nextEndTimer = null;
             }
         },
 
@@ -1685,7 +1694,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         // Load player preferences
         this.muted = getPlayerMuted();
         this.volume = getPlayerVolume();
@@ -1695,22 +1703,15 @@ export default defineComponent({
         this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();
 
-        this._handles.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
 
-        this._handles.timer = setInterval(this.tick.bind(this), 100);
+        this.timer = setInterval(this.tick.bind(this), 100);
 
-        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
+        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
 
-        this._handles.subtitlesReloadH = this.reloadSubtitles.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
+        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_UPDATE, this.reloadSubtitles.bind(this));
 
-        this._handles.themeHandler = this.themeUpdated.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
+        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.themeUpdated.bind(this));
 
         this.initializeAudio();
 
@@ -1719,42 +1720,33 @@ export default defineComponent({
             navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
             navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
             navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+            MediaController.MediaSessionId = this.mediaSessionId;
         }
     },
     beforeUnmount: function () {
         this.audioURL = "";
         this.onClearURL();
-        clearInterval(this._handles.timer);
+        clearInterval(this.timer);
 
-        if (this._handles.autoNextTimer) {
-            clearTimeout(this._handles.autoNextTimer);
-            this._handles.autoNextTimer = null;
+        if (this.autoNextTimer) {
+            clearTimeout(this.autoNextTimer);
+            this.autoNextTimer = null;
         }
 
-        if (this._handles.nextEndTimer) {
-            clearTimeout(this._handles.nextEndTimer);
-            this._handles.nextEndTimer = null;
+        if (this.nextEndTimer) {
+            clearTimeout(this.nextEndTimer);
+            this.nextEndTimer = null;
         }
 
         this.clearAudioRenderer();
         this.closeAudioContext();
 
-        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_SUBTITLES_UPDATE, this._handles.subtitlesReloadH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
-
-        KeyboardManager.RemoveHandler(this._handles.keyHandler);
-
-        if (window.navigator && window.navigator.mediaSession) {
+        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
             navigator.mediaSession.setActionHandler("play", null);
             navigator.mediaSession.setActionHandler("pause", null);
             navigator.mediaSession.setActionHandler("nexttrack", null);
             navigator.mediaSession.setActionHandler("previoustrack", null);
+            MediaController.MediaSessionId = "";
         }
     },
     watch: {

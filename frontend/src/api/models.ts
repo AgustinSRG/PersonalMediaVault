@@ -114,6 +114,36 @@ export interface ImageResolution {
 }
 
 /**
+ * Named resolution
+ */
+export interface NamedResolution {
+    /**
+     * Resolution name
+     */
+    name: string;
+
+    /**
+     * Width
+     */
+    width: number;
+
+    /**
+     * Height
+     */
+    height: number;
+
+    /**
+     * Frames per second
+     */
+    fps: number;
+
+    /**
+     * True if enabled
+     */
+    enabled?: boolean;
+}
+
+/**
  * Vault user configuration
  */
 export interface VaultUserConfig {

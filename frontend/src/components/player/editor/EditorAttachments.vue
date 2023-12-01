@@ -107,7 +107,11 @@
             </button>
         </div>
 
-        <AttachmentDeleteModal ref="attachmentDeleteModal" v-model:display="displayAttachmentDelete"></AttachmentDeleteModal>
+        <AttachmentDeleteModal
+            v-model:display="displayAttachmentDelete"
+            :attachment-to-delete="attachmentToDelete"
+            @confirm="removeAttachmentConfirm"
+        ></AttachmentDeleteModal>
     </div>
 </template>
 
@@ -115,15 +119,17 @@
 import { MediaAttachment } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaController } from "@/control/media";
-import { GetAssetURL, Request } from "@/utils/request";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { getAssetURL } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
+import { apiMediaRemoveAttachment, apiMediaRenameAttachment, apiMediaUploadAttachment } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -131,6 +137,11 @@ export default defineComponent({
     },
     name: "EditorAttachments",
     emits: ["changed"],
+    setup() {
+        return {
+            requestId: getUniqueStringId(),
+        };
+    },
     data: function () {
         return {
             type: 0,
@@ -145,6 +156,7 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             displayAttachmentDelete: false,
+            attachmentToDelete: null as MediaAttachment,
         };
     },
 
@@ -196,9 +208,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestId, EditMediaAPI.UploadAttachment(mediaId, file))
+            makeNamedApiRequest(this.requestId, apiMediaUploadAttachment(mediaId, file))
                 .onSuccess((res) => {
-                    AppEvents.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
+                    PagesController.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentUploadProgress = 0;
                     this.attachments.push(res);
@@ -217,106 +229,108 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
         },
 
         removeAttachment: function (att: MediaAttachment) {
-            this.$refs.attachmentDeleteModal.show({
-                name: att.name,
-                callback: () => {
-                    if (this.busy) {
-                        return;
+            this.attachmentToDelete = att;
+            this.displayAttachmentDelete = true;
+        },
+
+        removeAttachmentConfirm: function () {
+            const att = this.attachmentToDelete;
+
+            if (this.busy || !att) {
+                return;
+            }
+
+            this.busy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+            const id = att.id;
+
+            makeNamedApiRequest(this.requestId, apiMediaRemoveAttachment(mediaId, id))
+                .onSuccess(() => {
+                    PagesController.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
+                    this.busy = false;
+                    for (let i = 0; i < this.attachments.length; i++) {
+                        if (this.attachments[i].id === id) {
+                            this.attachments.splice(i, 1);
+                            break;
+                        }
                     }
-
-                    this.busy = true;
-
-                    const mediaId = AppStatus.CurrentMedia;
-                    const id = att.id;
-
-                    Request.Pending(this._handles.requestId, EditMediaAPI.RemoveAttachment(mediaId, id))
-                        .onSuccess(() => {
-                            AppEvents.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
-                            this.busy = false;
-                            for (let i = 0; i < this.attachments.length; i++) {
-                                if (this.attachments[i].id === id) {
-                                    this.attachments.splice(i, 1);
-                                    break;
-                                }
-                            }
-                            if (MediaController.MediaData) {
-                                MediaController.MediaData.attachments = clone(this.attachments);
-                            }
-                            this.$emit("changed");
-                        })
-                        .onCancel(() => {
-                            this.busy = false;
-                        })
-                        .onRequestError((err) => {
-                            this.busy = false;
-                            Request.ErrorHandler()
-                                .add(400, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Bad request"));
-                                })
-                                .add(401, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
-                                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                                })
-                                .add(403, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Access denied"));
-                                })
-                                .add(404, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Not found"));
-                                })
-                                .add(500, "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                                })
-                                .add("*", "*", () => {
-                                    AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                                })
-                                .handle(err);
-                        })
-                        .onUnexpectedError((err) => {
-                            AppEvents.ShowSnackBar(err.message);
-                            console.error(err);
-                            this.busy = false;
-                        });
-                },
-            });
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.attachments = clone(this.attachments);
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    PagesController.ShowSnackBar(err.message);
+                    console.error(err);
+                    this.busy = false;
+                });
         },
 
         downloadAttachment: function (att: MediaAttachment) {
             const link = document.createElement("a");
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.href = GetAssetURL(att.url);
+            link.href = getAssetURL(att.url);
             link.click();
         },
 
@@ -340,9 +354,9 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = this.attachmentEdit;
 
-            Request.Pending(this._handles.requestId, EditMediaAPI.RenameAttachment(mediaId, id, this.attachmentEditName))
+            makeNamedApiRequest(this.requestId, apiMediaRenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
-                    AppEvents.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
+                    PagesController.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentEdit = -1;
                     this.attachmentEditName = "";
@@ -361,35 +375,35 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "INVALID_NAME", () => {
-                            AppEvents.ShowSnackBar(this.$t("Invalid attachment name"));
-                        })
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        invalidName: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid attachment name"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -398,7 +412,7 @@ export default defineComponent({
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
             if (!this.canWrite) {
-                this.editAttachment = -1;
+                this.attachmentEdit = -1;
             }
         },
 
@@ -422,26 +436,14 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.requestId = getUniqueStringId();
-
         this.updateMediaData();
 
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
     },
 
     beforeUnmount: function () {
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        Request.Abort(this._handles.requestId);
+        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

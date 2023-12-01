@@ -122,12 +122,11 @@
 </template>
 
 <script lang="ts">
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaController } from "@/control/media";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { parseTimeSeconds } from "@/utils/time-slices";
 import { useVModel } from "@/utils/v-model";
@@ -135,6 +134,8 @@ import { defineComponent } from "vue";
 
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
+import { PagesController } from "@/control/pages";
+import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
 
 interface SaveRequestState {
     saving: boolean;
@@ -147,7 +148,7 @@ interface SaveRequestState {
     callback: () => void;
 }
 
-function saveTimeSlices(state: SaveRequestState) {
+function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
     if (state.mid < 0) {
         return;
     }
@@ -159,7 +160,7 @@ function saveTimeSlices(state: SaveRequestState) {
 
     state.saving = true;
 
-    Request.Do(EditMediaAPI.ChangeTimeSlices(state.mid, state.timeSlices))
+    makeApiRequest(apiMediaChangeTimeSlices(state.mid, state.timeSlices))
         .onSuccess(() => {
             state.saving = false;
 
@@ -169,7 +170,7 @@ function saveTimeSlices(state: SaveRequestState) {
 
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             } else if (state.callback) {
                 state.callback();
             }
@@ -179,19 +180,35 @@ function saveTimeSlices(state: SaveRequestState) {
 
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         })
-        .onRequestError((err) => {
+        .onRequestError((err, handleErr) => {
             state.saving = false;
-            Request.ErrorHandler()
-                .add(401, "*", () => {
+            handleErr(err, {
+                unauthorized: () => {
                     AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                })
-                .handle(err);
+                },
+                badRequest: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));
+                },
+                accessDenied: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Access denied"));
+                },
+                notFound: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Not found"));
+                    MediaController.Load();
+                },
+                serverError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Internal server error"));
+                },
+                networkError: () => {
+                    PagesController.ShowSnackBar($t("Error") + ": " + $t("Could not connect to the server"));
+                },
+            });
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         })
         .onUnexpectedError((err) => {
@@ -199,7 +216,7 @@ function saveTimeSlices(state: SaveRequestState) {
             state.saving = false;
             if (state.pendingSave) {
                 state.pendingSave = false;
-                saveTimeSlices(state);
+                saveTimeSlices(state, $t);
             }
         });
 }
@@ -217,6 +234,13 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            saveState: {
+                saving: false,
+                pendingSave: false,
+                mid: -1,
+                timeSlices: [],
+                callback: null,
+            },
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -272,7 +296,7 @@ export default defineComponent({
                 };
             });
 
-            this._handles.saveState = {
+            this.saveState = {
                 saving: false,
                 pendingSave: false,
                 mid: MediaController.MediaData.id,
@@ -282,7 +306,7 @@ export default defineComponent({
         },
 
         save: function () {
-            this._handles.saveState.timeSlices = this.timeSlicesArray
+            this.saveState.timeSlices = this.timeSlicesArray
                 .filter((s) => {
                     return !s.deleted;
                 })
@@ -292,11 +316,11 @@ export default defineComponent({
                         name: s.name,
                     };
                 });
-            saveTimeSlices(this._handles.saveState);
+            saveTimeSlices(this.saveState, this.$t);
         },
 
         onSaved: function () {
-            AppEvents.ShowSnackBar(this.$t("Successfully changed time slices"));
+            PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
             this.$emit("update-time-slices");
         },
 
@@ -428,23 +452,11 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
+        this.saveState.callback = this.onSaved.bind(this);
 
-        this._handles.saveState = {
-            saving: false,
-            pendingSave: false,
-            mid: -1,
-            timeSlices: [],
-            callback: this.onSaved.bind(this),
-        };
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
 
@@ -463,9 +475,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        this._handles.saveState.callback = null;
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
+        this.saveState.callback = null;
     },
 
     watch: {

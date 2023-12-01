@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -34,13 +39,14 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { apiAlbumsRenameAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     name: "AlbumRenameModal",
@@ -56,6 +62,9 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     setup(props) {
@@ -84,7 +93,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
@@ -100,7 +109,7 @@ export default defineComponent({
             }
 
             if (this.name === this.oldName) {
-                this.$refs.modalContainer.close(true);
+                this.forceCloseSignal++;
                 return;
             }
 
@@ -109,37 +118,44 @@ export default defineComponent({
 
             const albumId = this.currentAlbum;
 
-            Request.Do(AlbumsAPI.RenameAlbum(albumId, this.name))
+            makeApiRequest(apiAlbumsRenameAlbum(albumId, this.name))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
+                    PagesController.ShowSnackBar(this.$t("Album renamed") + ": " + this.name);
                     this.busy = false;
                     this.name = "";
-                    this.$refs.modalContainer.close(true);
+                    this.forceCloseSignal++;
                     AlbumsController.OnChangedAlbum(albumId);
                 })
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid album name provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidName: () => {
+                            this.error = this.$t("Invalid album name provided");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        notFound: () => {
+                            this.forceCloseSignal++;
+                            AlbumsController.OnChangedAlbum(albumId);
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -149,9 +165,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
         this.onAlbumUpdate();
 
@@ -160,9 +174,6 @@ export default defineComponent({
             this.name = this.oldName;
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
     },
     watch: {
         display: function () {

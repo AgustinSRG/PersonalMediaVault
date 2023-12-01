@@ -41,7 +41,6 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme, setTheme } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -55,6 +54,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -96,31 +96,28 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.themeHandler = this.themeUpdated.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
-        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.themeUpdated.bind(this));
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
         if (this.display) {
-            this._handles.focusTrap.activate();
+            this.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_THEME_CHANGED, this._handles.themeHandler);
-        this._handles.focusTrap.destroy();
+        this.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
     },

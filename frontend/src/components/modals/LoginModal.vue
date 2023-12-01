@@ -52,15 +52,20 @@
 </template>
 
 <script lang="ts">
-import { AuthAPI } from "@/api/api-auth";
+import { apiAuthLogin } from "@/api/api-auth";
 import { AuthController } from "@/control/auth";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 
 export default defineComponent({
     name: "LoginModal",
     props: {
         display: Boolean,
+    },
+    setup() {
+        return {
+            timer: null,
+        };
     },
     data: function () {
         return {
@@ -96,7 +101,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AuthAPI.Login(this.username, this.password))
+            makeApiRequest(apiAuthLogin(this.username, this.password))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -106,26 +111,26 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
+                    handleErr(err, {
+                        invalidCredentials: () => {
                             this.error = this.$t("Invalid username or password");
-                        })
-                        .add(403, "COOLDOWN", () => {
-                            this.error = this.$t("You must wait 5 seconds to try again");
-                        })
-                        .add(403, "*", () => {
+                        },
+                        wrongCredentials: () => {
                             this.error = this.$t("Invalid username or password");
                             this.cooldown = Date.now() + 5000;
-                        })
-                        .add(500, "*", () => {
+                        },
+                        cooldown: () => {
+                            this.error = this.$t("You must wait 5 seconds to try again");
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -144,10 +149,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.autoFocus();
 
-        this._handles.timer = setInterval(this.updateNow.bind(this), 200);
+        this.timer = setInterval(this.updateNow.bind(this), 200);
     },
     watch: {
         display: function () {
@@ -156,7 +160,7 @@ export default defineComponent({
         },
     },
     beforeUnmount: function () {
-        clearInterval(this._handles.timer);
+        clearInterval(this.timer);
     },
 });
 </script>

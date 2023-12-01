@@ -166,17 +166,15 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { MediaListItem } from "@/api/models";
-import { SearchAPI } from "@/api/api-search";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { KeyboardManager } from "@/control/keyboard";
-import { TagsController } from "@/control/tags";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -192,6 +190,8 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsGetAlbum } from "@/api/api-albums";
+import { apiSearch } from "@/api/api-search";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -206,6 +206,13 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
+            dirtyTimeoutId: getUniqueStringId(),
+            mediaIndexMap: new Map<number, number>(),
+            listScroller: null as BigListScroller,
+            findTagTimeout: null,
+            continueCheckInterval: null,
+            checkContainerTimer: null,
             pageScrollStatus: useVModel(props, "pageScroll"),
         };
     },
@@ -213,7 +220,7 @@ export default defineComponent({
         return {
             loading: false,
 
-            order: "desc",
+            order: "desc" as "desc" | "asc",
             textSearch: "",
             type: 0,
 
@@ -246,7 +253,7 @@ export default defineComponent({
     },
     methods: {
         markDirty: function () {
-            setNamedTimeout(this._handles.dirtyTimeoutId, 330, () => {
+            setNamedTimeout(this.dirtyTimeoutId, 330, () => {
                 this.startSearch();
             });
         },
@@ -264,16 +271,13 @@ export default defineComponent({
         },
 
         scrollToCurrentMedia: function (): boolean {
-            if (!this._handles.mediaIndexMap.has(this.currentMedia)) {
+            if (!this.mediaIndexMap.has(this.currentMedia)) {
                 return false;
             }
-            const index = this._handles.mediaIndexMap.get(this.currentMedia);
+            const index = this.mediaIndexMap.get(this.currentMedia);
 
-            if (
-                index < this._handles.listScroller.windowPosition ||
-                index >= this._handles.listScroller.windowPosition + this._handles.listScroller.windowSize
-            ) {
-                this._handles.listScroller.moveWindowToElement(this._handles.mediaIndexMap.get(this.currentMedia));
+            if (index < this.listScroller.windowPosition || index >= this.listScroller.windowPosition + this.listScroller.windowSize) {
+                this.listScroller.moveWindowToElement(this.mediaIndexMap.get(this.currentMedia));
             }
 
             nextTick(() => {
@@ -287,8 +291,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display || this.finished) {
                 return;
@@ -300,9 +304,9 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, SearchAPI.Search(this.getFirstTag(), this.order, this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch(this.getFirstTag(), this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
-                    const completePageList = this._handles.listScroller.list;
+                    const completePageList = this.listScroller.list;
                     this.filterElements(result.page_items);
                     this.page = result.page_index + 1;
                     this.totalPages = result.page_count;
@@ -328,21 +332,21 @@ export default defineComponent({
                         }
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -375,7 +379,7 @@ export default defineComponent({
                     continue;
                 }
 
-                if (this._handles.mediaIndexMap.has(e.id)) {
+                if (this.mediaIndexMap.has(e.id)) {
                     continue;
                 }
 
@@ -446,13 +450,13 @@ export default defineComponent({
                     }
                 }
 
-                this._handles.mediaIndexMap.set(e.id, this._handles.listScroller.list.length + resultsToAdd.length);
+                this.mediaIndexMap.set(e.id, this.listScroller.list.length + resultsToAdd.length);
 
                 resultsToAdd.push(e);
             }
 
-            this._handles.listScroller.addElements(resultsToAdd);
-            this.fullListLength = this._handles.listScroller.list.length;
+            this.listScroller.addElements(resultsToAdd);
+            this.fullListLength = this.listScroller.list.length;
 
             nextTick(() => {
                 this.checkContainerHeight();
@@ -463,11 +467,11 @@ export default defineComponent({
             if (event) {
                 event.preventDefault();
             }
-            clearNamedTimeout(this._handles.dirtyTimeoutId);
+            clearNamedTimeout(this.dirtyTimeoutId);
             this.loading = true;
-            this._handles.listScroller.reset();
+            this.listScroller.reset();
             this.fullListLength = 0;
-            this._handles.mediaIndexMap.clear();
+            this.mediaIndexMap.clear();
             this.page = 0;
             this.totalPages = 0;
             this.progress = 0;
@@ -482,9 +486,9 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort(this._handles.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
-            Request.Pending(this._handles.loadRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
+            makeNamedApiRequest(this.loadRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     if (this.order === "asc") {
                         this.filterElements(
@@ -517,20 +521,20 @@ export default defineComponent({
                         this.onCurrentMediaChanged();
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.cancel();
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.albumFilter = new Set();
                             this.load();
-                        })
-                        .add("*", "*", () => {
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
-                        })
-                        .handle(err);
+                        },
+                        temporalError: () => {
+                            setNamedTimeout(this.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -539,18 +543,18 @@ export default defineComponent({
         },
 
         cancel: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
             this.loading = false;
             this.finished = true;
         },
 
         resetSearch: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
-            this._handles.listScroller.reset();
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
+            this.listScroller.reset();
             this.fullListLength = 0;
-            this._handles.mediaIndexMap.clear();
+            this.mediaIndexMap.clear();
             this.page = 0;
             this.totalPages = 0;
             this.progress = 0;
@@ -565,25 +569,25 @@ export default defineComponent({
             this.resetSearch();
         },
 
-        goToMedia: function (mid: number, e: Event) {
+        goToMedia: function (mid: number, e?: Event) {
             if (e) {
                 e.preventDefault();
             }
             if (this.inModal) {
                 this.$emit("select-media", mid, () => {
-                    const fullList = this._handles.listScroller.list;
-                    const centerPosition = this._handles.listScroller.getCenterPosition();
+                    const fullList = this.listScroller.list;
+                    const centerPosition = this.listScroller.getCenterPosition();
 
-                    const mediaIndex = this._handles.mediaIndexMap.get(mid);
+                    const mediaIndex = this.mediaIndexMap.get(mid);
 
                     if (mediaIndex !== undefined) {
                         fullList.splice(mediaIndex, 1);
-                        this._handles.mediaIndexMap.delete(mid);
+                        this.mediaIndexMap.delete(mid);
 
-                        this._handles.listScroller.moveWindowToElement(centerPosition);
+                        this.listScroller.moveWindowToElement(centerPosition);
 
                         for (let i = mediaIndex; i < fullList.length; i++) {
-                            this._handles.mediaIndexMap.set(fullList[i].id, i);
+                            this.mediaIndexMap.set(fullList[i].id, i);
                         }
                     }
                 });
@@ -598,14 +602,14 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         renderTime: function (s: number): string {
@@ -682,17 +686,17 @@ export default defineComponent({
 
         onTagAddChanged: function (forced?: boolean) {
             if (forced) {
-                if (this._handles.findTagTimeout) {
-                    clearTimeout(this._handles.findTagTimeout);
-                    this._handles.findTagTimeout = null;
+                if (this.findTagTimeout) {
+                    clearTimeout(this.findTagTimeout);
+                    this.findTagTimeout = null;
                 }
                 this.findTags();
             } else {
-                if (this._handles.findTagTimeout) {
+                if (this.findTagTimeout) {
                     return;
                 }
-                this._handles.findTagTimeout = setTimeout(() => {
-                    this._handles.findTagTimeout = null;
+                this.findTagTimeout = setTimeout(() => {
+                    this.findTagTimeout = null;
                     this.findTags();
                 }, 200);
             }
@@ -758,8 +762,8 @@ export default defineComponent({
         },
 
         findCurrentMediaIndex: function (): number {
-            if (this._handles.mediaIndexMap.has(this.currentMedia)) {
-                return this._handles.mediaIndexMap.get(this.currentMedia);
+            if (this.mediaIndexMap.has(this.currentMedia)) {
+                return this.mediaIndexMap.get(this.currentMedia);
             } else {
                 return -1;
             }
@@ -767,14 +771,14 @@ export default defineComponent({
 
         onCurrentMediaChanged: function () {
             if (!this.inModal) {
-                const completePageList = this._handles.listScroller.list;
+                const completePageList = this.listScroller.list;
                 const i = this.findCurrentMediaIndex();
                 PagesController.OnPageLoad(i, completePageList.length, 0, 1);
             }
         },
 
         nextMedia: function () {
-            const completePageList = this._handles.listScroller.list;
+            const completePageList = this.listScroller.list;
             const i = this.findCurrentMediaIndex();
             if (i !== -1 && i < completePageList.length - 1) {
                 this.goToMedia(completePageList[i + 1].id);
@@ -784,7 +788,7 @@ export default defineComponent({
         },
 
         prevMedia: function () {
-            const completePageList = this._handles.listScroller.list;
+            const completePageList = this.listScroller.list;
             const i = this.findCurrentMediaIndex();
             if (i !== -1 && i > 0) {
                 this.goToMedia(completePageList[i - 1].id);
@@ -836,7 +840,7 @@ export default defineComponent({
                 return;
             }
 
-            if (!this._handles.listScroller.isAtTheEnd()) {
+            if (!this.listScroller.isAtTheEnd()) {
                 return;
             }
 
@@ -885,17 +889,17 @@ export default defineComponent({
 
         goTop: function () {
             if (!this.inModal) {
-                this._handles.listScroller.moveWindowToElement(0);
+                this.listScroller.moveWindowToElement(0);
                 nextTick(() => {
                     this.$el.scrollTop = 0;
                 });
             } else {
-                this._handles.listScroller.moveWindowToElement(0);
+                this.listScroller.moveWindowToElement(0);
             }
         },
 
         onScroll: function (e: Event) {
-            this._handles.listScroller.checkElementScroll(e.target);
+            this.listScroller.checkElementScroll(e.target as HTMLElement);
         },
 
         getContainer: function () {
@@ -915,9 +919,9 @@ export default defineComponent({
                 return false;
             }
 
-            this._handles.listScroller.checkElementScroll(cont);
+            this.listScroller.checkElementScroll(cont);
 
-            const centerPosition = this._handles.listScroller.getCenterPosition();
+            const centerPosition = this.listScroller.getCenterPosition();
 
             const el = this.$el.querySelector(".search-result-item");
 
@@ -925,11 +929,11 @@ export default defineComponent({
                 return false;
             }
 
-            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+            const changed = this.listScroller.checkScrollContainerHeight(cont, el);
 
             if (changed) {
                 if (!this.scrollToCurrentMedia()) {
-                    this._handles.listScroller.moveWindowToElement(centerPosition);
+                    this.listScroller.moveWindowToElement(centerPosition);
                 }
             }
 
@@ -938,49 +942,37 @@ export default defineComponent({
     },
     mounted: function () {
         this.pageScrollStatus = 0;
-        this._handles = Object.create(null);
-
-        this._handles.loadRequestId = getUniqueStringId();
-        this._handles.dirtyTimeoutId = getUniqueStringId();
 
         this.advancedSearch = false;
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
 
-        this._handles.loadH = this.load.bind(this);
-        this._handles.resetH = this.resetSearch.bind(this);
-        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
-        AuthController.AddChangeEventListener(this._handles.loadH);
-        AppEvents.AddEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);
-        AppEvents.AddEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.resetH);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
 
-        AppStatus.AddEventListener(this._handles.statusChangeH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.resetSearch.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.resetSearch.bind(this));
 
-        this._handles.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
 
-        this._handles.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
 
-        this._handles.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
-        this._handles.tagUpdateH = this.updateTagData.bind(this);
-        TagsController.AddEventListener(this._handles.tagUpdateH);
+        this.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
 
-        this._handles.goTopH = this.goTop.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this._handles.goTopH);
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this.goTop.bind(this));
 
         this.updateAlbums();
-        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
 
-        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
 
         this.updateTagData();
 
-        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
             get: () => {
                 return this.pageItems;
             },
@@ -989,9 +981,7 @@ export default defineComponent({
             },
         });
 
-        this._handles.mediaIndexMap = new Map();
-
-        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
         this.startSearch();
 
@@ -1000,36 +990,18 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
 
-        clearNamedTimeout(this._handles.dirtyTimeoutId);
+        clearNamedTimeout(this.dirtyTimeoutId);
 
-        AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.resetH);
-        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.resetH);
-
-        AppStatus.RemoveEventListener(this._handles.statusChangeH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this._handles.goTopH);
-
-        TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
-
-        if (this._handles.findTagTimeout) {
-            clearTimeout(this._handles.findTagTimeout);
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
         }
 
-        clearInterval(this._handles.continueCheckInterval);
+        clearInterval(this.continueCheckInterval);
 
-        clearInterval(this._handles.checkContainerTimer);
-
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
+        clearInterval(this.checkContainerTimer);
 
         if (!this.inModal) {
             PagesController.OnPageUnload();

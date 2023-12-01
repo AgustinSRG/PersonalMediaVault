@@ -5,14 +5,14 @@
 <script lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./control/albums";
-import { AppEvents } from "./control/app-events";
-import { AppStatus } from "./control/app-status";
-import { MediaController } from "./control/media";
-import { UploadController, UploadEntryMin } from "./control/upload";
-import { GetAssetURL } from "./utils/request";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./control/app-status";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./control/media";
+import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadEntryMin } from "./control/upload";
+import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
 import { EVENT_NAME_LOADED_LOCALE } from "./i18n";
+import { PagesController } from "./control/pages";
 
 export default defineComponent({
     name: "App",
@@ -82,7 +82,7 @@ export default defineComponent({
                             ? AlbumsController.CurrentAlbumData.name
                             : undefined,
                     artwork: MediaController.MediaData.thumbnail
-                        ? [{ src: GetAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
+                        ? [{ src: getAssetURL(MediaController.MediaData.thumbnail), sizes: "250x250", type: "image/jpeg" }]
                         : undefined,
                 });
             } else {
@@ -100,9 +100,9 @@ export default defineComponent({
                 return;
             }
             if (m.status === "ready") {
-                AppEvents.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
+                PagesController.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
             } else if (m.status === "error") {
-                AppEvents.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
+                PagesController.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
             }
         },
 
@@ -111,26 +111,15 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.updateAppStatus();
-        this._handles.updateH = this.updateAppStatus.bind(this);
 
-        AppStatus.AddEventListener(this._handles.updateH);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.updateH);
-        MediaController.AddUpdateEventListener(this._handles.updateH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateAppStatus.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.updateAppStatus.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateAppStatus.bind(this));
 
-        this._handles.uploadDoneH = this.onUploadFinished.bind(this);
-        UploadController.AddEventListener(this._handles.uploadDoneH);
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadFinished.bind(this));
 
-        this._handles.onLoadedLocaleH = this.onLoadedLocale.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
-    },
-    beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.updateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.updateH);
-        MediaController.RemoveUpdateEventListener(this._handles.updateH);
-        UploadController.RemoveEventListener(this._handles.uploadDoneH);
-        AppEvents.RemoveEventListener(EVENT_NAME_LOADED_LOCALE, this._handles.onLoadedLocaleH);
+        this.$listenOnAppEvent(EVENT_NAME_LOADED_LOCALE, this.onLoadedLocale.bind(this));
     },
 });
 </script>

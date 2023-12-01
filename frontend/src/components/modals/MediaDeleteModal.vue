@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -42,13 +47,14 @@
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { MediaController } from "@/control/media";
-import { Request } from "@/utils/request";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 
 export default defineComponent({
     name: "MediaDeleteModal",
@@ -65,6 +71,9 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     setup(props) {
@@ -93,7 +102,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
@@ -113,38 +122,38 @@ export default defineComponent({
 
             const mediaId = this.currentMedia;
 
-            Request.Do(EditMediaAPI.DeleteMedia(mediaId))
+            makeApiRequest(apiMediaDeleteMedia(mediaId))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
+                    PagesController.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
                     this.confirmation = "";
-                    this.$refs.modalContainer.close(true);
+                    this.forceCloseSignal++;
                     AlbumsController.LoadCurrentAlbum();
                     AppStatus.OnDeleteMedia();
                 })
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -154,11 +163,8 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.mediaUpdateH = this.onMediaUpdate.bind(this);
-        AppStatus.AddEventListener(this._handles.mediaUpdateH);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onMediaUpdate.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
 
         this.onMediaUpdate();
 
@@ -167,11 +173,6 @@ export default defineComponent({
             this.confirmation = "";
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.mediaUpdateH);
-
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
     },
     watch: {
         display: function () {

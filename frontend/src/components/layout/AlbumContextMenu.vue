@@ -60,6 +60,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             shownState: useVModel(props, "shown"),
         };
     },
@@ -154,20 +155,15 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.computeDimensions();
 
-        this._handles.hideHandler = this.hide.bind(this);
+        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
+        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
 
-        document.addEventListener("mousedown", this._handles.hideHandler);
-        document.addEventListener("touchstart", this._handles.hideHandler);
-
-        this._handles.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
+        this.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
     },
     beforeUnmount: function () {
-        document.removeEventListener("mousedown", this._handles.hideHandler);
-        document.removeEventListener("touchstart", this._handles.hideHandler);
-        this._handles.focusTrap.destroy();
+        this.focusTrap.destroy();
     },
     watch: {
         x: function () {
@@ -178,12 +174,12 @@ export default defineComponent({
         },
         shown: function () {
             if (this.shown) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
     },

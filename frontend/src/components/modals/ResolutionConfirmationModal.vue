@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title" v-if="deleting">
@@ -21,9 +21,11 @@
                     <label>{{ $t("Do you want to delete this extra resolution?") }}</label>
                 </div>
 
-                <div class="form-group">
-                    <label v-if="type === 1">{{ name }}: {{ width }}x{{ height }}</label>
-                    <label v-if="type === 2"> {{ name }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
+                <div class="form-group" v-if="resolution">
+                    <label v-if="type === 1">{{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}</label>
+                    <label v-if="type === 2">
+                        {{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}, {{ resolution.fps }} fps
+                    </label>
                 </div>
             </div>
             <div class="modal-footer no-padding">
@@ -41,23 +43,21 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { PropType } from "vue";
+import { NamedResolution } from "@/api/models";
 
 export default defineComponent({
     name: "ResolutionConfirmationModal",
-    emits: ["update:display"],
+    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
+        resolution: Object as PropType<NamedResolution>,
+        type: Number,
+        deleting: Boolean,
     },
     data: function () {
         return {
-            deleting: false,
-            name: "",
-            type: 2,
-            width: 0,
-            height: 0,
-            fps: 0,
-
-            callback: null,
+            closeSignal: 0,
         };
     },
     setup(props) {
@@ -66,25 +66,6 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: {
-            type: number;
-            deleting: boolean;
-            name: string;
-            width: number;
-            height: number;
-            fps?: number;
-            callback: () => void;
-        }) {
-            this.type = options.type;
-            this.deleting = options.deleting;
-            this.name = options.name;
-            this.width = options.width;
-            this.height = options.height;
-            this.fps = options.fps;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -98,15 +79,13 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback();
-            }
+            this.$emit("confirm");
 
             this.close();
         },

@@ -5,13 +5,16 @@
 "use strict";
 
 import { getParameterByName } from "@/utils/cookie";
-import { GenerateURIQuery } from "@/utils/request";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
 import { EVENT_NAME_MEDIA_DELETE } from "./pages";
+import { generateURIQuery } from "@/utils/api";
 
-const EVENT_NAME = "app-status-update";
+/**
+ * Event triggered when the app status changes
+ */
+export const EVENT_NAME_APP_STATUS_CHANGED = "app-status-update";
 
 /**
  * Layout mode
@@ -233,7 +236,7 @@ export class AppStatus {
             params["split"] = "yes";
         }
 
-        return window.location.protocol + "//" + window.location.host + window.location.pathname + GenerateURIQuery(params);
+        return window.location.protocol + "//" + window.location.host + window.location.pathname + generateURIQuery(params);
     }
 
     /**
@@ -274,25 +277,9 @@ export class AppStatus {
     private static OnStatusUpdate(replaceState?: boolean) {
         AppStatus.UpdateLayout();
 
-        AppEvents.Emit(EVENT_NAME);
+        AppEvents.Emit(EVENT_NAME_APP_STATUS_CHANGED);
 
         AppStatus.UpdateURL(replaceState);
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: () => void) {
-        AppEvents.AddEventListener(EVENT_NAME, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: () => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME, handler);
     }
 
     /**

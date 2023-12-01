@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <div v-if="display" class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Albums") }}</div>
@@ -120,19 +125,20 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
-import { MediaAPI } from "@/api/api-media";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
+import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import { apiMediaGetMediaAlbums } from "@/api/api-media";
 
 export default defineComponent({
     components: {
@@ -145,6 +151,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -164,6 +171,9 @@ export default defineComponent({
             editMode: AuthController.CanWrite,
             canWrite: AuthController.CanWrite,
             editModeChanged: false,
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -184,8 +194,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -197,7 +207,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, MediaAPI.GetMediaAlbums(this.mid))
+            makeNamedApiRequest(this.loadRequestId, apiMediaGetMediaAlbums(this.mid))
                 .onSuccess((result) => {
                     this.mediaAlbums = result;
                     this.loading = false;
@@ -210,29 +220,29 @@ export default defineComponent({
                     this.updateAlbums();
                     this.autoFocus();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
-                            this.$refs.modalContainer.close(true);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        notFound: () => {
+                            this.forceCloseSignal++;
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         createAlbum: function () {
@@ -245,7 +255,7 @@ export default defineComponent({
         },
 
         goToAlbum: function (album) {
-            this.$refs.modalContainer.close(true);
+            this.forceCloseSignal++;
             AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
         },
 
@@ -265,11 +275,11 @@ export default defineComponent({
 
             if (album.added) {
                 // Remove
-                Request.Do(AlbumsAPI.RemoveMediaFromAlbum(album.id, this.mid))
+                makeApiRequest(apiAlbumsRemoveMediaFromAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = false;
-                        AppEvents.ShowSnackBar(this.$t("Successfully removed from album"));
+                        PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
                         if (this.mediaAlbums.indexOf(album.id) >= 0) {
                             this.mediaAlbums.splice(this.mediaAlbums.indexOf(album.id), 1);
                         }
@@ -279,13 +289,27 @@ export default defineComponent({
                             this.autoFocus();
                         }
                     })
-                    .onRequestError((err) => {
+                    .onRequestError((err, handleErr) => {
                         this.busy = false;
-                        Request.ErrorHandler()
-                            .add(401, "*", () => {
+                        handleErr(err, {
+                            unauthorized: () => {
                                 AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                            })
-                            .handle(err);
+                            },
+                            accessDenied: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                AuthController.CheckAuthStatusSilent();
+                            },
+                            notFound: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                AlbumsController.Load();
+                            },
+                            serverError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            },
+                            networkError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            },
+                        });
                     })
                     .onUnexpectedError((err) => {
                         this.busy = false;
@@ -293,11 +317,11 @@ export default defineComponent({
                     });
             } else {
                 // Add
-                Request.Do(AlbumsAPI.AddMediaToAlbum(album.id, this.mid))
+                makeApiRequest(apiAlbumsAddMediaToAlbum(album.id, this.mid))
                     .onSuccess(() => {
                         this.busy = false;
                         album.added = true;
-                        AppEvents.ShowSnackBar(this.$t("Successfully added to album"));
+                        PagesController.ShowSnackBar(this.$t("Successfully added to album"));
                         if (this.mediaAlbums.indexOf(album.id) === -1) {
                             this.mediaAlbums.push(album.id);
                         }
@@ -307,23 +331,37 @@ export default defineComponent({
                             this.changeEditMode();
                         }
                     })
-                    .onRequestError((err) => {
+                    .onRequestError((err, handleErr) => {
                         this.busy = false;
-                        Request.ErrorHandler()
-                            .add(401, "*", () => {
+                        handleErr(err, {
+                            unauthorized: () => {
                                 AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                            })
-                            .add(400, "MAX_SIZE_REACHED", () => {
-                                AppEvents.ShowSnackBar(
+                            },
+                            maxSizeReached: () => {
+                                PagesController.ShowSnackBar(
                                     this.$t("Error") +
-                                        ":" +
+                                        ": " +
                                         this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                                 );
-                            })
-                            .add(403, "*", () => {
-                                AppEvents.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
-                            })
-                            .handle(err);
+                            },
+                            badRequest: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            },
+                            accessDenied: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                                AuthController.CheckAuthStatusSilent();
+                            },
+                            notFound: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                                AlbumsController.Load();
+                            },
+                            serverError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            },
+                            networkError: () => {
+                                PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            },
+                        });
                     })
                     .onUnexpectedError((err) => {
                         this.busy = false;
@@ -419,14 +457,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
 
-        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
-
-        this._handles.statusH = this.onUpdateStatus.bind(this);
-        AppStatus.AddEventListener(this._handles.statusH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onUpdateStatus.bind(this));
 
         this.updateAlbums();
         this.load();
@@ -439,10 +472,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
-        AppStatus.RemoveEventListener(this._handles.statusH);
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {
@@ -454,8 +485,8 @@ export default defineComponent({
                 AlbumsController.Load();
                 this.load();
             } else {
-                clearNamedTimeout(this._handles.loadRequestId);
-                Request.Abort(this._handles.loadRequestId);
+                clearNamedTimeout(this.loadRequestId);
+                abortNamedApiRequest(this.loadRequestId);
             }
         },
     },

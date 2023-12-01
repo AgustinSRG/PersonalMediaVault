@@ -42,7 +42,7 @@
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, PagesController } from "@/control/pages";
 import { defineComponent } from "vue";
 
@@ -99,21 +99,11 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.updateStatusH = this.onStatusUpdate.bind(this);
-        AppStatus.AddEventListener(this._handles.updateStatusH);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onStatusUpdate.bind(this));
 
-        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
 
-        this._handles.onPagePosUpdateH = this.onPagePosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
-    },
-    beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.updateStatusH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this._handles.onPagePosUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
     },
 });
 </script>

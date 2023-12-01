@@ -2,23 +2,36 @@
 
 "use strict";
 
-import { AccountAPI } from "@/api/api-account";
-import { AuthAPI } from "@/api/api-auth";
-import { Request } from "@/utils/request";
+import { apiAccountGetContext } from "@/api/api-account";
+import { apiAuthLogout } from "@/api/api-auth";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "../utils/local-storage";
 import { setAssetsSessionCookie } from "@/utils/cookie";
+import { abortNamedApiRequest, addRequestAuthenticationHandler, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 
 const REQUEST_KEY = "auth-control-check";
 const REQUEST_KEY_SILENT = "auth-control-check-silent";
 
-const EVENT_NAME_LOADING = "auth-status-loading";
-const EVENT_NAME_CHANGED = "auth-status-changed";
-const EVENT_NAME_ERROR = "auth-status-loading-error";
+/**
+ * Event triggered when the auth status starts or stops loading
+ */
+export const EVENT_NAME_AUTH_LOADING = "auth-status-loading";
+
+/**
+ * Event triggered when the authentication status changes
+ */
+export const EVENT_NAME_AUTH_CHANGED = "auth-status-changed";
+
+/**
+ * Event triggered when the authentication status cannot be loaded due to an error
+ */
+export const EVENT_NAME_AUTH_ERROR = "auth-status-loading-error";
 
 const LS_KEY_AUTH_TOKEN = "x-session-token";
 const LS_KEY_VAULT_FINGERPRINT = "x-vault-fingerprint";
+
+const SESSION_TOKEN_HEADER_NAME = "x-session-token";
 
 /**
  * Event triggered when a new version is detected
@@ -84,6 +97,15 @@ export class AuthController {
      * Runs at app startup
      */
     public static Initialize() {
+        addRequestAuthenticationHandler(() => {
+            AuthController.RefreshAuthStatus();
+
+            const authHeaders = Object.create(null);
+            authHeaders[SESSION_TOKEN_HEADER_NAME] = AuthController.Session;
+
+            return authHeaders;
+        });
+
         AppEvents.AddEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.ClearSession);
 
         AuthController.LoadAuthStatus();
@@ -129,9 +151,9 @@ export class AuthController {
      */
     public static CheckAuthStatus() {
         AuthController.Loading = true;
-        AppEvents.Emit(EVENT_NAME_LOADING, true);
+        AppEvents.Emit(EVENT_NAME_AUTH_LOADING, true);
         clearNamedTimeout(REQUEST_KEY);
-        Request.Pending(REQUEST_KEY, AccountAPI.GetContext())
+        makeNamedApiRequest(REQUEST_KEY, apiAccountGetContext())
             .onSuccess((response) => {
                 AuthController.Locked = false;
                 AuthController.IsRoot = response.root;
@@ -142,35 +164,35 @@ export class AuthController {
                 if (import.meta.env.VITE__VERSION !== response.version) {
                     AppEvents.Emit(EVENT_NAME_APP_NEW_VERSION);
                 }
-                AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                 AuthController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_LOADING, false);
+                AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
                 AuthController.UpdateCustomStyle();
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AuthController.Locked = true;
                         AuthController.Username = "";
-                        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                         AuthController.Loading = false;
-                        AppEvents.Emit(EVENT_NAME_LOADING, false);
-                    })
-                    .add("*", "*", () => {
+                        AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
+                    },
+                    temporalError: () => {
                         // Retry
-                        AppEvents.Emit(EVENT_NAME_ERROR);
+                        AppEvents.Emit(EVENT_NAME_AUTH_ERROR);
                         setNamedTimeout(REQUEST_KEY, 1500, AuthController.CheckAuthStatus);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
                 // We assume the credentials are invalid
                 AuthController.Locked = true;
                 AuthController.Username = "";
-                AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+                AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
                 AuthController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_LOADING, false);
+                AppEvents.Emit(EVENT_NAME_AUTH_LOADING, false);
             });
     }
 
@@ -187,27 +209,27 @@ export class AuthController {
         clearNamedTimeout(REQUEST_KEY_SILENT);
 
         if (AuthController.Loading) {
-            Request.Abort(REQUEST_KEY_SILENT);
+            abortNamedApiRequest(REQUEST_KEY_SILENT);
             AuthController.CheckingAuthSilent = false;
         }
 
         AuthController.CheckingAuthSilent = true;
 
-        Request.Pending(REQUEST_KEY_SILENT, AccountAPI.GetContext())
+        makeNamedApiRequest(REQUEST_KEY_SILENT, apiAccountGetContext())
             .onSuccess(() => {
                 AuthController.CheckingAuthSilent = false;
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AuthController.CheckingAuthSilent = false;
                         AuthController.CheckAuthStatus();
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_KEY_SILENT, 1500, AuthController.CheckAuthStatusSilent);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -222,7 +244,7 @@ export class AuthController {
      */
     public static UpdateUsername(username: string) {
         AuthController.Username = username;
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
     }
 
     /**
@@ -238,7 +260,7 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_VAULT_FINGERPRINT, fingerprint);
         AuthController.SetAssetsCookie();
         AuthController.Username = "";
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
         AuthController.CheckAuthStatus();
     }
 
@@ -247,7 +269,7 @@ export class AuthController {
      */
     public static Logout() {
         const currentSession = AuthController.Session;
-        Request.Do(AuthAPI.Logout())
+        makeApiRequest(apiAuthLogout())
             .onSuccess(() => {
                 if (AuthController.Session === currentSession) {
                     AuthController.ClearSession();
@@ -269,7 +291,7 @@ export class AuthController {
         saveIntoLocalStorage(LS_KEY_AUTH_TOKEN, "");
         AuthController.Username = "";
         AuthController.SetAssetsCookie();
-        AppEvents.Emit(EVENT_NAME_CHANGED, AuthController.Locked, AuthController.Username);
+        AppEvents.Emit(EVENT_NAME_AUTH_CHANGED, AuthController.Locked, AuthController.Username);
     }
 
     /**
@@ -295,53 +317,5 @@ export class AuthController {
         styleElement.appendChild(document.createTextNode(AuthController.CSS));
 
         head.appendChild(styleElement);
-    }
-
-    /**
-     * Adds event listener to check for loading status updates
-     * @param handler Event handler
-     */
-    public static AddLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_LOADING, handler);
-    }
-
-    /**
-     * Removes event listener (Loading event)
-     * @param handler Event handler
-     */
-    public static RemoveLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_LOADING, handler);
-    }
-
-    /**
-     * Adds event listener to check for auth status changes
-     * @param handler Event handler
-     */
-    public static AddChangeEventListener(handler: (locked: boolean, username: string) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_CHANGED, handler);
-    }
-
-    /**
-     * Removes event listener (Changed event)
-     * @param handler Event handler
-     */
-    public static RemoveChangeEventListener(handler: (locked: boolean, username: string) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_CHANGED, handler);
-    }
-
-    /**
-     * Adds event listener to check for loading errors
-     * @param handler Event handler
-     */
-    public static AddErrorEventListener(handler: () => void) {
-        AppEvents.AddEventListener(EVENT_NAME_ERROR, handler);
-    }
-
-    /**
-     * Removes event listener (Error event)
-     * @param handler Event handler
-     */
-    public static RemoveErrorEventListener(handler: () => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_ERROR, handler);
     }
 }

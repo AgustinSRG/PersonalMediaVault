@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Page configuration") }}</div>
@@ -85,11 +85,13 @@ export default defineComponent({
 
             pageItemsFit: getPageItemsFit(),
             pageItemsSize: getPageItemsSize(),
+
+            closeSignal: 0,
         };
     },
     methods: {
         onChangePageSize() {
-            const pageSize = parseInt(this.pageSize);
+            const pageSize = parseInt(this.pageSize as any);
             const truePageSize = Math.min(256, Math.max(1, pageSize || 25));
 
             if (getPageMaxItems() !== truePageSize) {
@@ -98,7 +100,7 @@ export default defineComponent({
         },
 
         onChangePageItemsFit: function () {
-            const itemsFit = parseInt(this.pageItemsFit);
+            const itemsFit = parseInt(this.pageItemsFit as any);
             const trueItemsFit = Math.min(256, Math.max(0, itemsFit || 5));
 
             if (getPageItemsFit() !== trueItemsFit) {
@@ -111,7 +113,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         reset: function () {

@@ -2,16 +2,17 @@
 
 "use strict";
 
-import { GetAssetURL, Request } from "@/utils/request";
+import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { BusyStateController } from "./busy-state";
-import { MediaController } from "./media";
-import { EditMediaAPI } from "@/api/api-media-edit";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./media";
+import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { ImageNote, parseImageNotes } from "@/utils/notes-format";
 import { getUniqueNumericId } from "@/utils/unique-id";
+import { getAssetURL } from "@/utils/api";
+import { apiMediaSetNotes } from "@/api/api-media-edit";
 
 /**
  * Event triggered when the image notes are updated
@@ -20,6 +21,7 @@ export const EVENT_NAME_IMAGE_NOTES_UPDATE = "img-notes-update";
 
 /**
  * Event triggered when the image notes are changed
+ * Handler like: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void
  */
 export const EVENT_NAME_IMAGE_NOTES_CHANGE = "img-notes-change";
 
@@ -66,9 +68,9 @@ export class ImageNotesController {
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(ImageNotesController.Load);
-        AppStatus.AddEventListener(ImageNotesController.OnMediaChanged);
-        MediaController.AddUpdateEventListener(ImageNotesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, ImageNotesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, ImageNotesController.OnMediaChanged);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_UPDATE, ImageNotesController.Load);
 
         ImageNotesController.MediaId = AppStatus.CurrentMedia;
 
@@ -109,11 +111,11 @@ export class ImageNotesController {
      */
     public static Load() {
         ImageNotesController.PendingSave = false;
-        Request.Abort(REQUEST_KEY_SAVE);
+        abortNamedApiRequest(REQUEST_KEY_SAVE);
 
         if (!MediaController.MediaData) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
-            Request.Abort(REQUEST_KEY_LOAD);
+            abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.ImageWidth = 0;
             ImageNotesController.ImageHeight = 0;
@@ -127,18 +129,18 @@ export class ImageNotesController {
 
         if (!MediaController.MediaData.img_notes || !MediaController.MediaData.img_notes_url) {
             clearNamedTimeout(REQUEST_KEY_LOAD);
-            Request.Abort(REQUEST_KEY_LOAD);
+            abortNamedApiRequest(REQUEST_KEY_LOAD);
             ImageNotesController.NotesFileURL = "";
             ImageNotesController.Notes = [];
             AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
             return;
         }
 
-        ImageNotesController.NotesFileURL = GetAssetURL(MediaController.MediaData.img_notes_url);
+        ImageNotesController.NotesFileURL = getAssetURL(MediaController.MediaData.img_notes_url);
         ImageNotesController.Notes = [];
 
         clearNamedTimeout(REQUEST_KEY_LOAD);
-        Request.Pending(REQUEST_KEY_LOAD, {
+        makeNamedApiRequest(REQUEST_KEY_LOAD, {
             method: "GET",
             url: ImageNotesController.NotesFileURL,
         })
@@ -147,7 +149,7 @@ export class ImageNotesController {
                 AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
             })
             .onRequestError((err) => {
-                Request.ErrorHandler()
+                new RequestErrorHandler()
                     .add(401, "*", () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })
@@ -192,7 +194,7 @@ export class ImageNotesController {
         ImageNotesController.PendingSave = false;
         const mediaId = ImageNotesController.MediaId;
 
-        Request.Pending(REQUEST_KEY_SAVE, EditMediaAPI.SetNotes(mediaId, ImageNotesController.Notes))
+        makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
             .onSuccess(() => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
@@ -207,26 +209,26 @@ export class ImageNotesController {
                 ImageNotesController.PendingSave = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    badRequest: () => {
                         ImageNotesController.PendingSave = false;
-                    })
-                    .add(404, "*", () => {
+                    },
+                    accessDenied: () => {
                         ImageNotesController.PendingSave = false;
-                    })
-                    .add(500, "*", () => {
+                    },
+                    notFound: () => {
+                        ImageNotesController.PendingSave = false;
+                    },
+                    temporalError: () => {
                         ImageNotesController.SaveNotes();
-                    })
-                    .add("*", "*", () => {
-                        ImageNotesController.SaveNotes();
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -339,22 +341,6 @@ export class ImageNotesController {
      */
     private static Emit(mode: "push" | "rm" | "update", note?: ImageNote, index?: number) {
         AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_CHANGE, mode, note, index);
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_CHANGE, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_IMAGE_NOTES_CHANGE, handler);
     }
 }
 

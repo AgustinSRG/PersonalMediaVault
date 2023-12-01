@@ -75,19 +75,18 @@
 </template>
 
 <script lang="ts">
-import { SearchAPI } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
-import { KeyboardManager } from "@/control/keyboard";
 import { MediaListItem } from "@/api/models";
-import { TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {
@@ -98,6 +97,7 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiSearch } from "@/api/api-search";
 
 export default defineComponent({
     name: "PageSearch",
@@ -108,6 +108,11 @@ export default defineComponent({
         display: Boolean,
         min: Boolean,
     },
+    setup() {
+        return {
+            loadRequestId: getUniqueStringId(),
+        };
+    },
     data: function () {
         return {
             search: AppStatus.CurrentSearch,
@@ -116,7 +121,7 @@ export default defineComponent({
             firstLoaded: false,
 
             pageSize: getPageMaxItems(),
-            order: "desc",
+            order: "desc" as "asc" | "desc",
             searchParams: AppStatus.SearchParams,
 
             currentMedia: AppStatus.CurrentMedia,
@@ -151,8 +156,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -160,7 +165,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            setNamedTimeout(this._handles.loadRequestId, 330, () => {
+            setNamedTimeout(this.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -168,14 +173,14 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, SearchAPI.Search(this.search, this.order, this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch(this.search, this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     this.pageItems = result.page_items;
                     TagsController.OnMediaListReceived(this.pageItems);
                     this.page = result.page_index;
                     this.totalPages = result.page_count;
                     this.total = result.total_count;
-                    clearNamedTimeout(this._handles.loadRequestId);
+                    clearNamedTimeout(this.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     if (this.switchMediaOnLoad === "next") {
@@ -201,23 +206,23 @@ export default defineComponent({
                     this.scrollToCurrentMedia();
                     this.onCurrentMediaChanged();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             this.loading = true;
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -277,7 +282,7 @@ export default defineComponent({
             this.load();
         },
 
-        goToMedia: function (mid, e) {
+        goToMedia: function (mid: number, e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -290,7 +295,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );
@@ -314,7 +319,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         clearSearch: function () {
@@ -441,31 +446,21 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
-        this._handles.loadH = this.load.bind(this);
-        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
 
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
 
-        AuthController.AddChangeEventListener(this._handles.loadH);
-        AppEvents.AddEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
-        AppEvents.AddEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
-        AppStatus.AddEventListener(this._handles.statusChangeH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
 
-        this._handles.nextMediaH = this.nextMedia.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
-        this._handles.prevMediaH = this.prevMedia.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this._handles.tagUpdateH = this.updateTagData.bind(this);
-        TagsController.AddEventListener(this._handles.tagUpdateH);
-
-        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
 
         this.updateSearchParams();
         this.updateTagData();
@@ -476,17 +471,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
-        AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_METADATA_CHANGE, this._handles.loadH);
-        AppEvents.RemoveEventListener(EVENT_NAME_MEDIA_DELETE, this._handles.loadH);
-        AppStatus.RemoveEventListener(this._handles.statusChangeH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_NEXT, this._handles.nextMediaH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_NAV_PREV, this._handles.prevMediaH);
-        TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
     },
     watch: {

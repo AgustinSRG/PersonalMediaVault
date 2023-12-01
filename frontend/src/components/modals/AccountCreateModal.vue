@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Create account") }}</div>
@@ -65,12 +65,13 @@
 </template>
 
 <script lang="ts">
-import { AdminAPI } from "@/api/api-admin";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { apiAdminCreateAccount } from "@/api/api-admin";
 
 export default defineComponent({
     components: {},
@@ -93,6 +94,8 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -125,10 +128,10 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AdminAPI.CreateAccount(username, password, write))
+            makeApiRequest(apiAdminCreateAccount(username, password, write))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Account created") + ": " + username);
+                    PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);
                     this.accountUsername = "";
                     this.accountPassword = "";
                     this.accountPassword2 = "";
@@ -139,35 +142,35 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "USERNAME_INVALID", () => {
-                            this.error = this.$t("Invalid username provided");
-                        })
-                        .add(400, "USERNAME_IN_USE", () => {
-                            this.error = this.$t("The username is already in use");
-                        })
-                        .add(400, "PASSWORD_INVALID", () => {
-                            this.error = this.$t("Invalid password provided");
-                        })
-                        .add(400, "*", () => {
-                            this.error = this.$t("Bad request");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidUsername: () => {
+                            this.error = this.$t("Invalid username provided");
+                        },
+                        usernameInUse: () => {
+                            this.error = this.$t("The username is already in use");
+                        },
+                        invalidPassword: () => {
+                            this.error = this.$t("Invalid password provided");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -177,7 +180,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {

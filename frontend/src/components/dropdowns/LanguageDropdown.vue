@@ -54,6 +54,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -92,27 +93,26 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
         if (this.display) {
-            this._handles.focusTrap.activate();
+            this.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        this._handles.focusTrap.destroy();
+        this.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
     },

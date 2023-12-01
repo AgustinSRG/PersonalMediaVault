@@ -37,21 +37,21 @@
                 href="javascript:;"
                 @click="updateSelectedState('pending')"
                 class="horizontal-filter-menu-item"
-                :class="{ selected: this.selectedState === 'pending' }"
+                :class="{ selected: selectedState === 'pending' }"
                 >{{ $t("Pending") }} ({{ countPending }})</a
             >
             <a
                 href="javascript:;"
                 @click="updateSelectedState('ready')"
                 class="horizontal-filter-menu-item"
-                :class="{ selected: this.selectedState === 'ready' }"
+                :class="{ selected: selectedState === 'ready' }"
                 >{{ $t("Ready") }} ({{ countReady }})</a
             >
             <a
                 href="javascript:;"
                 @click="updateSelectedState('error')"
                 class="horizontal-filter-menu-item"
-                :class="{ selected: this.selectedState === 'error' }"
+                :class="{ selected: selectedState === 'error' }"
                 >{{ $t("Error") }} ({{ countError }})</a
             >
         </div>
@@ -140,8 +140,8 @@
 
 <script lang="ts">
 import { AppStatus } from "@/control/app-status";
-import { UploadController, UploadEntryMin } from "@/control/upload";
-import { GenerateURIQuery } from "@/utils/request";
+import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadController, UploadEntryMin } from "@/control/upload";
+import { generateURIQuery } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -501,46 +501,39 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.pendingToUpload = UploadController.GetEntries();
         this.updateCountCancellable(this.pendingToUpload);
         this.updateFilteredEntries();
 
-        this._handles.uploadListHandler = (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
-            switch (mode) {
-                case "clear":
-                    this.onPendingClear();
-                    break;
-                case "push":
-                    this.onPendingPush(entry);
-                    break;
-                case "rm":
-                    this.onPendingRemove(index);
-                    break;
-                case "update":
-                    this.onPendingUpdate(index, entry);
-                    break;
-            }
-        };
-
-        UploadController.AddEventListener(this._handles.uploadListHandler);
+        this.$listenOnAppEvent(
+            EVENT_NAME_UPLOAD_LIST_UPDATE,
+            (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
+                switch (mode) {
+                    case "clear":
+                        this.onPendingClear();
+                        break;
+                    case "push":
+                        this.onPendingPush(entry);
+                        break;
+                    case "rm":
+                        this.onPendingRemove(index);
+                        break;
+                    case "update":
+                        this.onPendingUpdate(index, entry);
+                        break;
+                }
+            },
+        );
 
         if (this.display) {
             this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {
-        UploadController.RemoveEventListener(this._handles.uploadListHandler);
-
-        if (this._handles.findTagTimeout) {
-            clearTimeout(this._handles.findTagTimeout);
         }
     },
     watch: {

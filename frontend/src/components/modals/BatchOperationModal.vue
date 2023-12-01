@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-xl" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Batch operation") }}</div>
@@ -197,19 +197,19 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { Request } from "@/utils/request";
-import { AlbumsAPI } from "@/api/api-albums";
-import { SearchAPI } from "@/api/api-search";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
-import { TagsAPI } from "@/api/api-tags";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
-import { EditMediaAPI } from "@/api/api-media-edit";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import { apiMediaDeleteMedia } from "@/api/api-media-edit";
+import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
+import { apiSearch } from "@/api/api-search";
 
 const PAGE_SIZE = 50;
 
@@ -224,6 +224,9 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            findTagSearchTimeout: null,
+            findTagActionTimeout: null,
+            batchRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -260,6 +263,7 @@ export default defineComponent({
             actionCount: 0,
             actionItems: [],
             error: "",
+            closeSignal: 0,
         };
     },
     methods: {
@@ -282,7 +286,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         getTagName: function (tag: number, v: number) {
@@ -291,17 +295,17 @@ export default defineComponent({
 
         onTagSearchChanged: function (forced?: boolean) {
             if (forced) {
-                if (this._handles.findTagSearchTimeout) {
-                    clearTimeout(this._handles.findTagSearchTimeout);
-                    this._handles.findTagSearchTimeout = null;
+                if (this.findTagSearchTimeout) {
+                    clearTimeout(this.findTagSearchTimeout);
+                    this.findTagSearchTimeout = null;
                 }
                 this.findTagsSearch();
             } else {
-                if (this._handles.findTagSearchTimeout) {
+                if (this.findTagSearchTimeout) {
                     return;
                 }
-                this._handles.findTagSearchTimeout = setTimeout(() => {
-                    this._handles.findTagSearchTimeout = null;
+                this.findTagSearchTimeout = setTimeout(() => {
+                    this.findTagSearchTimeout = null;
                     this.findTagsSearch();
                 }, 200);
             }
@@ -353,17 +357,17 @@ export default defineComponent({
 
         onTagActionChanged: function (forced?: boolean) {
             if (forced) {
-                if (this._handles.findTagActionTimeout) {
-                    clearTimeout(this._handles.findTagActionTimeout);
-                    this._handles.findTagActionTimeout = null;
+                if (this.findTagActionTimeout) {
+                    clearTimeout(this.findTagActionTimeout);
+                    this.findTagActionTimeout = null;
                 }
                 this.findTagsAction();
             } else {
-                if (this._handles.findTagActionTimeout) {
+                if (this.findTagActionTimeout) {
                     return;
                 }
-                this._handles.findTagActionTimeout = setTimeout(() => {
-                    this._handles.findTagActionTimeout = null;
+                this.findTagActionTimeout = setTimeout(() => {
+                    this.findTagActionTimeout = null;
                     this.findTagsAction();
                 }, 200);
             }
@@ -541,37 +545,33 @@ export default defineComponent({
         },
 
         loadAlbumSearch: function () {
-            Request.Abort(this._handles.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
-            Request.Pending(this._handles.batchRequestId, AlbumsAPI.GetAlbum(this.albumSearch))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsGetAlbum(this.albumSearch))
                 .onSuccess((result) => {
                     this.filterElements(result.list);
                     this.finishSearch();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.status = "error";
-                            this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.status = "error";
                             this.error = this.$t("The selected album was not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.status = "error";
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.status = "error";
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -589,9 +589,9 @@ export default defineComponent({
         },
 
         searchNext: function (page: number) {
-            Request.Abort(this._handles.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
-            Request.Pending(this._handles.batchRequestId, SearchAPI.Search(this.getFirstTag(), "asc", page, PAGE_SIZE))
+            makeNamedApiRequest(this.batchRequestId, apiSearch(this.getFirstTag(), "asc", page, PAGE_SIZE))
                 .onSuccess((result) => {
                     this.filterElements(result.page_items);
 
@@ -604,22 +604,22 @@ export default defineComponent({
                         this.searchNext(page + 1);
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.status = "error";
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.status = "error";
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -714,7 +714,7 @@ export default defineComponent({
         },
 
         cancel: function () {
-            Request.Abort(this._handles.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
         },
 
         confirm: function () {
@@ -724,7 +724,7 @@ export default defineComponent({
         },
 
         actionNext: function (i: number) {
-            Request.Abort(this._handles.batchRequestId);
+            abortNamedApiRequest(this.batchRequestId);
 
             if (i >= this.actionItems.length) {
                 // Finish
@@ -760,30 +760,30 @@ export default defineComponent({
         },
 
         actionDelete: function (mid: number, next: number) {
-            Request.Pending(this._handles.batchRequestId, EditMediaAPI.DeleteMedia(mid))
+            makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -793,33 +793,36 @@ export default defineComponent({
         },
 
         actionAddAlbum: function (mid: number, next: number) {
-            Request.Pending(this._handles.batchRequestId, AlbumsAPI.AddMediaToAlbum(this.albumToAdd, mid))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsAddMediaToAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(400, "MAX_SIZE_REACHED", () => {
+                        },
+                        maxSizeReached: () => {
                             this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
-                        })
-                        .add(403, "*", () => {
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -829,30 +832,30 @@ export default defineComponent({
         },
 
         actionRemoveAlbum: function (mid: number, next: number) {
-            Request.Pending(this._handles.batchRequestId, AlbumsAPI.RemoveMediaFromAlbum(this.albumToAdd, mid))
+            makeNamedApiRequest(this.batchRequestId, apiAlbumsRemoveMediaFromAlbum(this.albumToAdd, mid))
                 .onSuccess(() => {
                     this.actionNext(next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -867,30 +870,33 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this._handles.batchRequestId, TagsAPI.TagMedia(mid, tags[0]))
+            makeNamedApiRequest(this.batchRequestId, apiTagsTagMedia(mid, tags[0]))
                 .onSuccess(() => {
                     this.actionAddTag(mid, tags.slice(1), next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidTagName: () => {
+                            this.error = this.$t("Invalid tag name");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
-                            this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -913,30 +919,27 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this._handles.batchRequestId, TagsAPI.UntagMedia(mid, tagId))
+            makeNamedApiRequest(this.batchRequestId, apiTagsUntagMedia(mid, tagId))
                 .onSuccess(() => {
                     this.actionRemoveTag(mid, tags.slice(1), next);
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.status = "error";
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
-                            this.error = this.$t("Not found");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -946,18 +949,13 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.batchRequestId = getUniqueStringId();
-
-        this._handles.tagUpdateH = this.updateTagData.bind(this);
-
-        TagsController.AddEventListener(this._handles.tagUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
         this.updateTagData();
 
         this.updateAlbums();
-        this._handles.albumsUpdateH = this.updateAlbums.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
 
         if (this.display) {
             this.error = "";
@@ -967,20 +965,17 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        Request.Abort(this._handles.batchRequestId);
+        abortNamedApiRequest(this.batchRequestId);
 
-        if (this._handles.findTagSearchTimeout) {
-            clearTimeout(this._handles.findTagSearchTimeout);
-            this._handles.findTagSearchTimeout = null;
+        if (this.findTagSearchTimeout) {
+            clearTimeout(this.findTagSearchTimeout);
+            this.findTagSearchTimeout = null;
         }
 
-        if (this._handles.findTagActionTimeout) {
-            clearTimeout(this._handles.findTagActionTimeout);
-            this._handles.findTagActionTimeout = null;
+        if (this.findTagActionTimeout) {
+            clearTimeout(this.findTagActionTimeout);
+            this.findTagActionTimeout = null;
         }
-
-        TagsController.RemoveEventListener(this._handles.tagUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdateH);
     },
     watch: {
         display: function () {

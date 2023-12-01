@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -34,13 +39,14 @@
 </template>
 
 <script lang="ts">
-import { AlbumsAPI } from "@/api/api-albums";
 import { AlbumsController, EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { apiAlbumsCreateAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     name: "AlbumCreateModal",
@@ -54,6 +60,9 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     setup(props) {
@@ -75,7 +84,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
@@ -100,12 +109,12 @@ export default defineComponent({
 
             const albumName = this.name;
 
-            Request.Do(AlbumsAPI.CreateAlbum(albumName))
+            makeApiRequest(apiAlbumsCreateAlbum(albumName))
                 .onSuccess((response) => {
-                    AppEvents.ShowSnackBar(this.$t("Album created") + ": " + albumName);
+                    PagesController.ShowSnackBar(this.$t("Album created") + ": " + albumName);
                     this.busy = false;
                     this.name = "";
-                    this.$refs.modalContainer.close(true);
+                    this.forceCloseSignal++;
                     AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
                     AlbumsController.Load();
                     this.$emit("new-album", response.album_id, albumName);
@@ -113,26 +122,29 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid album name provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidName: () => {
+                            this.error = this.$t("Invalid album name provided");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        accessDenied: () => {
                             this.error = this.$t("Access denied");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;

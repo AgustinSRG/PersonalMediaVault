@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Administrate accounts") }}</div>
@@ -51,9 +51,10 @@
         </div>
 
         <AccountDeleteModal
-            ref="deleteModal"
             v-model:display="displayAccountDelete"
             @update:display="afterSubModalClosed"
+            :username="accountToDelete"
+            @done="load"
         ></AccountDeleteModal>
         <AccountCreateModal
             v-model:display="displayAccountCreate"
@@ -64,9 +65,8 @@
 </template>
 
 <script lang="ts">
-import { AdminAPI } from "@/api/api-admin";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -74,6 +74,7 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAdminListAccounts } from "@/api/api-admin";
 
 export default defineComponent({
     components: {
@@ -87,6 +88,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -100,17 +102,21 @@ export default defineComponent({
             accountWrite: false,
 
             displayAccountDelete: false,
+            accountToDelete: "",
+
             displayAccountCreate: false,
 
             loading: true,
             busy: false,
             error: "",
+
+            closeSignal: 0,
         };
     },
     methods: {
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -118,86 +124,35 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, AdminAPI.ListAccounts())
+            makeNamedApiRequest(this.loadRequestId, apiAdminListAccounts())
                 .onSuccess((accounts) => {
                     this.accounts = accounts;
                     this.loading = false;
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        accessDenied: () => {
                             this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         askDeleteAccount: function (username: string) {
-            this.$refs.deleteModal.show({
-                name: username,
-                callback: () => {
-                    this.deleteAccount(username);
-                },
-            });
-        },
-
-        deleteAccount: function (username: string) {
-            if (this.busy) {
-                return;
-            }
-
-            this.busy = true;
-            this.error = "";
-
-            Request.Do(AdminAPI.DeleteAccount(username))
-                .onSuccess(() => {
-                    this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Account deleted") + ": " + username);
-                    this.load();
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err) => {
-                    this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
-                            this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.error = this.$t("Access denied");
-                        })
-                        .add(404, "*", () => {
-                            // Already deleted?
-                            this.busy = false;
-                            this.load();
-                        })
-                        .add(500, "*", () => {
-                            this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
-                            this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
+            this.accountToDelete = username;
+            this.displayAccountDelete = true;
         },
 
         createAccount: function () {
@@ -207,7 +162,7 @@ export default defineComponent({
         close: function () {
             this.displayAccountDelete = false;
             this.displayAccountCreate = false;
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         afterSubModalClosed: function (display: boolean) {
@@ -219,8 +174,6 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
         this.load();
 
         if (this.display) {
@@ -233,8 +186,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

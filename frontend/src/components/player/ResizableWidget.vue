@@ -93,6 +93,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            fixPositionTimer: null,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -459,18 +460,13 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
+        this.fixPositionTimer = setInterval(this.fixPosition.bind(this), 1000);
 
-        this._handles.fixPositionTimer = setInterval(this.fixPosition.bind(this), 1000);
+        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
 
-        this._handles.mouseMoveH = this.mouseMove.bind(this);
-
-        document.addEventListener("mousemove", this._handles.mouseMoveH);
-        document.addEventListener("touchmove", this._handles.mouseMoveH);
-
-        this._handles.mouseDropH = this.mouseDrop.bind(this);
-        document.addEventListener("mouseup", this._handles.mouseDropH);
-        document.addEventListener("touchend", this._handles.mouseDropH);
+        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
 
         nextTick(() => {
             this.loadPosition();
@@ -478,12 +474,7 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        clearInterval(this._handles.fixPositionTimer);
-
-        document.removeEventListener("mouseup", this._handles.mouseDropH);
-        document.removeEventListener("touchend", this._handles.mouseDropH);
-        document.removeEventListener("mousemove", this._handles.mouseMoveH);
-        document.removeEventListener("touchmove", this._handles.mouseMoveH);
+        clearInterval(this.fixPositionTimer);
     },
 
     watch: {

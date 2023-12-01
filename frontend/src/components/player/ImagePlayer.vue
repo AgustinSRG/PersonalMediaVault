@@ -264,7 +264,7 @@ import {
     setImageScale,
     setUserSelectedResolutionImage,
 } from "@/control/player-preferences";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import ScaleControl from "./ScaleControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
@@ -275,14 +275,14 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { KeyboardManager } from "@/control/keyboard";
 import { AlbumsController, EVENT_NAME_NEXT_PRE_FETCH } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { MEDIA_TYPE_IMAGE } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MediaData } from "@/api/models";
+import { MediaController } from "@/control/media";
+import { getUniqueStringId } from "@/utils/unique-id";
 
 const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),
@@ -322,7 +322,7 @@ export default defineComponent({
     ],
     props: {
         mid: Number,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
         rTick: Number,
 
         showControls: Boolean,
@@ -344,6 +344,9 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            timer: null,
+            autoNextTimer: null,
+            mediaSessionId: getUniqueStringId(),
             fullScreenState: useVModel(props, "fullscreen"),
             showControlsState: useVModel(props, "showControls"),
             displayTagListStatus: useVModel(props, "displayTagList"),
@@ -606,9 +609,9 @@ export default defineComponent({
             }
         },
 
-        showConfig: function (e) {
+        showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
-            e.stopPropagation();
+            e && e.stopPropagation();
         },
 
         clickControls: function (e) {
@@ -954,9 +957,9 @@ export default defineComponent({
         },
 
         setImageURL() {
-            if (this._handles.autoNextTimer) {
-                clearTimeout(this._handles.autoNextTimer);
-                this._handles.autoNextTimer = null;
+            if (this.autoNextTimer) {
+                clearTimeout(this.autoNextTimer);
+                this.autoNextTimer = null;
             }
 
             this.mediaError = false;
@@ -969,7 +972,7 @@ export default defineComponent({
 
             if (this.currentResolution < 0) {
                 if (this.metadata.encoded) {
-                    this.imageURL = GetAssetURL(this.metadata.url);
+                    this.imageURL = getAssetURL(this.metadata.url);
                     this.imagePending = false;
                     this.imagePendingTask = 0;
                     this.width = this.metadata.width;
@@ -985,7 +988,7 @@ export default defineComponent({
                 if (this.metadata.resolutions && this.metadata.resolutions.length > this.currentResolution) {
                     const res = this.metadata.resolutions[this.currentResolution];
                     if (res.ready) {
-                        this.imageURL = GetAssetURL(res.url);
+                        this.imageURL = getAssetURL(res.url);
                         this.imagePending = false;
                         this.imagePendingTask = 0;
                         this.width = this.metadata.width;
@@ -1011,9 +1014,9 @@ export default defineComponent({
         },
 
         setupAutoNextTimer: function () {
-            if (this._handles.autoNextTimer) {
-                clearTimeout(this._handles.autoNextTimer);
-                this._handles.autoNextTimer = null;
+            if (this.autoNextTimer) {
+                clearTimeout(this.autoNextTimer);
+                this.autoNextTimer = null;
             }
             const timerS = getAutoNextTime();
 
@@ -1027,8 +1030,8 @@ export default defineComponent({
 
             const ms = timerS * 1000;
 
-            this._handles.autoNextTimer = setTimeout(() => {
-                this._handles.autoNextTimer = null;
+            this.autoNextTimer = setTimeout(() => {
+                this.autoNextTimer = null;
                 if (this.displayConfig || this.expandedTitle) {
                     this.setupAutoNextTimer();
                 } else {
@@ -1061,7 +1064,7 @@ export default defineComponent({
             if (AlbumsController.NextMediaData && AlbumsController.NextMediaData.type === MEDIA_TYPE_IMAGE) {
                 if (this.currentResolution < 0) {
                     if (AlbumsController.NextMediaData.encoded) {
-                        this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.url);
+                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.url);
                     } else {
                         this.prefetchURL = "";
                     }
@@ -1070,7 +1073,7 @@ export default defineComponent({
                         AlbumsController.NextMediaData.resolutions[this.currentResolution] &&
                         AlbumsController.NextMediaData.resolutions[this.currentResolution].ready
                     ) {
-                        this.prefetchURL = GetAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
+                        this.prefetchURL = getAssetURL(AlbumsController.NextMediaData.resolutions[this.currentResolution].url);
                     } else {
                         this.prefetchURL = "";
                     }
@@ -1103,63 +1106,48 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         // Load player preferences
         this.fit = getImageFit();
         this.scale = getImageScale();
         this.background = getImageBackgroundStyle();
 
-        this._handles.keyHandler = this.onKeyPress.bind(this);
-        KeyboardManager.AddHandler(this._handles.keyHandler, 100);
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
 
-        this._handles.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
+        this.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
 
-        this._handles.exitFullScreenListener = this.onExitFullScreen.bind(this);
-        document.addEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.addEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
+        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
 
-        this._handles.dropScrollHandler = this.dropScroll.bind(this);
-        document.addEventListener("mouseup", this._handles.dropScrollHandler);
+        this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
 
-        this._handles.moveScrollHandler = this.moveScroll.bind(this);
-        document.addEventListener("mousemove", this._handles.moveScrollHandler);
+        this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
 
-        this._handles.onAlbumPrefetchH = this.onAlbumPrefetch.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_NEXT_PRE_FETCH, this._handles.onAlbumPrefetchH);
+        this.$listenOnAppEvent(EVENT_NAME_NEXT_PRE_FETCH, this.onAlbumPrefetch.bind(this));
 
         this.initializeImage();
 
         if (window.navigator && window.navigator.mediaSession) {
+            navigator.mediaSession.setActionHandler("play", null);
+            navigator.mediaSession.setActionHandler("pause", null);
             navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
             navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
+            MediaController.MediaSessionId = this.mediaSessionId;
         }
     },
     beforeUnmount: function () {
         this.imageURL = "";
-        clearInterval(this._handles.timer);
+        clearInterval(this.timer);
 
-        document.removeEventListener("fullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("webkitfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("mozfullscreenchange", this._handles.exitFullScreenListener);
-        document.removeEventListener("MSFullscreenChange", this._handles.exitFullScreenListener);
-
-        document.removeEventListener("mouseup", this._handles.dropScrollHandler);
-        document.removeEventListener("mousemove", this._handles.moveScrollHandler);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_NEXT_PRE_FETCH, this._handles.onAlbumPrefetchH);
-
-        KeyboardManager.RemoveHandler(this._handles.keyHandler);
-
-        if (this._handles.autoNextTimer) {
-            clearTimeout(this._handles.autoNextTimer);
-            this._handles.autoNextTimer = null;
+        if (this.autoNextTimer) {
+            clearTimeout(this.autoNextTimer);
+            this.autoNextTimer = null;
         }
 
-        if (window.navigator && window.navigator.mediaSession) {
+        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
+            navigator.mediaSession.setActionHandler("play", null);
+            navigator.mediaSession.setActionHandler("pause", null);
             navigator.mediaSession.setActionHandler("nexttrack", null);
             navigator.mediaSession.setActionHandler("previoustrack", null);
+            MediaController.MediaSessionId = "";
         }
     },
     watch: {

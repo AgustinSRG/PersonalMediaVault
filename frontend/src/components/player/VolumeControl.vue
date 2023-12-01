@@ -162,27 +162,15 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-
         if (isTouchDevice()) {
             this.expandedState = true;
         }
 
-        this._handles.dropVolumeHandler = this.dropVolume.bind(this);
-        document.addEventListener("mouseup", this._handles.dropVolumeHandler);
-        document.addEventListener("touchend", this._handles.dropVolumeHandler);
+        this.$listenOnDocumentEvent("mouseup", this.dropVolume.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.dropVolume.bind(this));
 
-        this._handles.moveVolumeHandler = this.moveVolume.bind(this);
-
-        document.addEventListener("mousemove", this._handles.moveVolumeHandler);
-        document.addEventListener("touchmove", this._handles.moveVolumeHandler);
-    },
-    beforeUnmount: function () {
-        document.removeEventListener("mouseup", this._handles.dropVolumeHandler);
-        document.removeEventListener("touchend", this._handles.dropVolumeHandler);
-
-        document.removeEventListener("mousemove", this._handles.moveVolumeHandler);
-        document.removeEventListener("touchmove", this._handles.moveVolumeHandler);
+        this.$listenOnDocumentEvent("mousemove", this.moveVolume.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.moveVolume.bind(this));
     },
 });
 </script>

@@ -40,6 +40,11 @@ export const EVENT_NAME_GO_PREV = "media-go-prev";
 export const EVENT_NAME_ADVANCED_SEARCH_GO_TOP = "adv-search-go-top";
 
 /**
+ * Event triggered when the advanced search container is scrolled
+ */
+export const EVENT_NAME_ADVANCED_SEARCH_SCROLL = "adv-search-scroll";
+
+/**
  * Event triggered when the user makes changes to the basic metadata of the current media
  * This means albums and pages should reload
  */
@@ -56,6 +61,11 @@ export const EVENT_NAME_MEDIA_DELETE = "media-delete";
  * This event is received by the top bar component
  */
 export const EVENT_NAME_SEARCH_MODAL_SUBMIT = "search-modal-submit";
+
+/**
+ * Event triggered to show a message in the snackbar
+ */
+export const EVENT_NAME_SNACK_BAR = "snack";
 
 /**
  * Management object for pages
@@ -102,4 +112,12 @@ export class PagesController {
      * Search query for the albums page
      */
     public static AlbumsPageSearch = "";
+
+    /**
+     * Emits event to show a snackbar
+     * @param message The message to show
+     */
+    public static ShowSnackBar(message: string) {
+        AppEvents.Emit(EVENT_NAME_SNACK_BAR, message);
+    }
 }

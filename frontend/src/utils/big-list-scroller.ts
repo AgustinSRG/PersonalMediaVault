@@ -39,7 +39,7 @@ export class BigListScroller<T = any> {
     /**
      * Minimal window size
      */
-    private minWindowSize: number;
+    public minWindowSize: number;
 
     /**
      * Max number of elements in the list window
@@ -49,12 +49,12 @@ export class BigListScroller<T = any> {
     /**
      * Full list of elements
      */
-    private list: T[];
+    public list: T[];
 
     /**
      * Position of the window
      */
-    private windowPosition: number;
+    public windowPosition: number;
 
     /**
      * Constructor

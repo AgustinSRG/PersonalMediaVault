@@ -109,16 +109,15 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { GenerateURIQuery, GetAssetURL, Request } from "@/utils/request";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { AlbumsAPI } from "@/api/api-albums";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
-import { KeyboardManager } from "@/control/keyboard";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -127,6 +126,7 @@ import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiAlbumsGetAlbums } from "@/api/api-albums";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -138,6 +138,11 @@ export default defineComponent({
     props: {
         display: Boolean,
         min: Boolean,
+    },
+    setup() {
+        return {
+            loadRequestId: getUniqueStringId(),
+        };
     },
     data: function () {
         return {
@@ -205,8 +210,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -214,7 +219,7 @@ export default defineComponent({
 
             this.scrollToTop();
 
-            setNamedTimeout(this._handles.loadRequestId, 330, () => {
+            setNamedTimeout(this.loadRequestId, 330, () => {
                 this.loading = true;
             });
 
@@ -222,31 +227,31 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, AlbumsAPI.GetAlbums())
+            makeNamedApiRequest(this.loadRequestId, apiAlbumsGetAlbums())
                 .onSuccess((result) => {
                     this.albumsList = result;
-                    clearNamedTimeout(this._handles.loadRequestId);
+                    clearNamedTimeout(this.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
                     this.updateList();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             this.loading = true;
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
                     this.loading = true;
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this._handles.loadH);
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -353,7 +358,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         goToAlbum: function (album, e) {
@@ -369,7 +374,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     album: albumId + "",
                 })
             );
@@ -389,6 +394,7 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+            this.load();
         },
 
         updatePageSize: function () {
@@ -431,26 +437,14 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
-        this._handles.loadH = this.load.bind(this);
-        this._handles.statusChangeH = this.onAppStatusChanged.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
 
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH, 20);
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
 
-        AuthController.AddChangeEventListener(this._handles.loadH);
-        AppStatus.AddEventListener(this._handles.statusChangeH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
-
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_CHANGED, this._handles.loadH);
-
-        this._handles.updatePageSizeH = this.updatePageSize.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
 
         this.updateSearchParams();
         this.load();
@@ -460,18 +454,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
-        AuthController.RemoveChangeEventListener(this._handles.loadH);
-        AppStatus.RemoveEventListener(this._handles.statusChangeH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_CHANGED, this._handles.loadH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_SIZE_UPDATED, this._handles.updatePageSizeH);
-
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

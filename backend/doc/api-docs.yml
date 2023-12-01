@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 1.13.2
+  version: 1.13.3
 
 schemes:
   - http
@@ -276,6 +276,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Success
           schema:
@@ -638,6 +640,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -689,6 +693,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -725,6 +731,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -768,6 +776,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -822,6 +832,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -858,6 +870,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -904,6 +918,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -937,6 +953,8 @@ paths:
       responses:
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -964,6 +982,8 @@ paths:
       responses:
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1024,6 +1044,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1095,6 +1117,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1157,6 +1181,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         413:
@@ -1205,6 +1231,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1267,6 +1295,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1313,6 +1343,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1346,6 +1378,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1416,6 +1450,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1467,6 +1503,8 @@ paths:
           description: Bad request.
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1544,6 +1582,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Success. Tag ID is returned.
           schema:
@@ -1585,6 +1625,8 @@ paths:
       responses:
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Success.
           schema:
@@ -1791,6 +1833,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Album created
           schema:
@@ -1870,6 +1914,8 @@ paths:
           description: Unauthorized (No valid session)
         404:
           description: Not found
+        403:
+          description: Access denied
         200:
           description: Success
   
@@ -1917,6 +1963,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -1972,6 +2020,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -2022,6 +2072,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -2057,6 +2109,8 @@ paths:
       responses:
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -2111,6 +2165,8 @@ paths:
                 example: "Error message"
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         404:
           description: Not found
         200:
@@ -2157,6 +2213,8 @@ paths:
           description: Invalid config
         401:
           description: Unauthorized (No valid session)
+        403:
+          description: Access denied
         200:
           description: Success
   

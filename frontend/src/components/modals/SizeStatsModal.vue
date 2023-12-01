@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -44,11 +44,11 @@
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaAPI } from "@/api/api-media";
 import { AppEvents } from "@/control/app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiMediaGetMediaSizeStats } from "@/api/api-media";
 
 export default defineComponent({
     name: "SizeStatsModal",
@@ -59,6 +59,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -68,12 +69,14 @@ export default defineComponent({
             metaSize: 0,
             assets: [],
             total: 0,
+
+            closeSignal: 0,
         };
     },
     methods: {
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -85,7 +88,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            Request.Pending(this._handles.loadRequestId, MediaAPI.GetMediaSizeStats(this.mid))
+            makeNamedApiRequest(this.loadRequestId, apiMediaGetMediaSizeStats(this.mid))
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;
@@ -101,24 +104,24 @@ export default defineComponent({
 
                     this.total = total;
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.close();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -141,13 +144,10 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
-
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
@@ -156,8 +156,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

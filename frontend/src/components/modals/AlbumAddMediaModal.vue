@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -34,7 +34,6 @@
                 </div>
                 <PageAdvancedSearch
                     v-if="!isUpload"
-                    ref="advSearch"
                     :display="true"
                     :inModal="true"
                     :noAlbum="aid"
@@ -58,12 +57,13 @@ import { useVModel } from "../../utils/v-model";
 
 import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
-import { Request } from "@/utils/request";
-import { AlbumsAPI } from "@/api/api-albums";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
 import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
+import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 
 export default defineComponent({
     components: {
@@ -91,11 +91,13 @@ export default defineComponent({
             pageItemsSize: getPageItemsSize(),
 
             pageScroll: 0,
+
+            closeSignal: 0,
         };
     },
     methods: {
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         changeToUpload: function () {
@@ -113,30 +115,44 @@ export default defineComponent({
             const albumId = this.aid;
             this.busy = true;
             // Add
-            Request.Do(AlbumsAPI.AddMediaToAlbum(albumId, mid))
+            makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, mid))
                 .onSuccess(() => {
                     this.busy = false;
-                    AppEvents.ShowSnackBar(this.$t("Successfully added to album"));
+                    PagesController.ShowSnackBar(this.$t("Successfully added to album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
                     callback();
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(400, "MAX_SIZE_REACHED", () => {
-                            AppEvents.ShowSnackBar(
+                        },
+                        maxSizeReached: () => {
+                            PagesController.ShowSnackBar(
                                 this.$t("Error") +
-                                    ":" +
+                                    ": " +
                                     this.$t("The album reached the limit of 1024 elements. Please, consider creating another album."),
                             );
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Error") + ":" + this.$t("Access denied"));
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AuthController.CheckAuthStatusSilent();
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            AlbumsController.Load();
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.busy = false;
@@ -152,14 +168,14 @@ export default defineComponent({
         onPageScroll: function (e: Event) {
             this.pageScroll = (e.target as HTMLElement).scrollTop;
 
-            if (!this.isUpload && this.$refs.advSearch) {
-                this.$refs.advSearch.onScroll(e);
+            if (!this.isUpload) {
+                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
             }
         },
 
         goTop: function () {
-            if (!this.isUpload && this.$refs.advSearch) {
-                this.$refs.advSearch.goTop();
+            if (!this.isUpload) {
+                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
 
                 nextTick(() => {
                     this.$el.scrollTop = 0;
@@ -172,18 +188,13 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.updatePageItemsPreferencesH = this.updatePageItemsPreferences.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_ITEMS_UPDATED, this.updatePageItemsPreferences.bind(this));
 
         if (this.display) {
             nextTick(() => {
                 this.$el.focus();
             });
         }
-    },
-    beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_PAGE_ITEMS_UPDATED, this._handles.updatePageItemsPreferencesH);
     },
     watch: {
         display: function () {

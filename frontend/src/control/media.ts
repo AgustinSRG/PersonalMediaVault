@@ -2,14 +2,14 @@
 
 "use strict";
 
-import { MediaAPI } from "@/api/api-media";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaData } from "@/api/models";
+import { apiMediaGetMedia } from "@/api/api-media";
 
 /**
  * Min duration in seconds to use auto-next, instead of next-end
@@ -23,8 +23,15 @@ export const NEXT_END_WAIT_DURATION = 8;
 
 const REQUEST_ID = "media-current-load";
 
-const EVENT_NAME_LOADING = "current-media-loading";
-const EVENT_NAME_UPDATE = "current-media-update";
+/**
+ * Event triggered when the media loading status changes
+ */
+export const EVENT_NAME_MEDIA_LOADING = "current-media-loading";
+
+/**
+ * Event triggered when the current media data is updated
+ */
+export const EVENT_NAME_MEDIA_UPDATE = "current-media-update";
 
 /**
  * Management object to fetch media metadata
@@ -46,11 +53,16 @@ export class MediaController {
     public static MediaData: MediaData = null;
 
     /**
+     * Media session ID
+     */
+    public static MediaSessionId = "";
+
+    /**
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(MediaController.Load);
-        AppStatus.AddEventListener(MediaController.OnMediaChanged);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, MediaController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, MediaController.OnMediaChanged);
 
         MediaController.MediaId = AppStatus.CurrentMedia;
 
@@ -73,58 +85,58 @@ export class MediaController {
     public static Load() {
         if (MediaController.MediaId < 0) {
             clearNamedTimeout(REQUEST_ID);
-            Request.Abort(REQUEST_ID);
+            abortNamedApiRequest(REQUEST_ID);
 
             MediaController.MediaData = null;
-            AppEvents.Emit(EVENT_NAME_UPDATE, null);
+            AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, null);
             MediaController.Loading = false;
-            AppEvents.Emit(EVENT_NAME_LOADING, false);
+            AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
 
             return;
         }
 
         MediaController.MediaData = null;
-        AppEvents.Emit(EVENT_NAME_UPDATE, null);
+        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, null);
 
         MediaController.Loading = true;
-        AppEvents.Emit(EVENT_NAME_LOADING, true);
+        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, true);
 
         if (AuthController.Locked) {
             return; // Vault is locked
         }
 
         clearNamedTimeout(REQUEST_ID);
-        Request.Abort(REQUEST_ID);
+        abortNamedApiRequest(REQUEST_ID);
 
         if (AlbumsController.CheckAlbumNextPrefetch()) {
             return; // Pre-fetch
         }
 
-        Request.Pending(REQUEST_ID, MediaAPI.GetMedia(MediaController.MediaId))
+        makeNamedApiRequest(REQUEST_ID, apiMediaGetMedia(MediaController.MediaId))
             .onSuccess((media) => {
                 MediaController.MediaData = media;
-                AppEvents.Emit(EVENT_NAME_UPDATE, MediaController.MediaData);
+                AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
                 MediaController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_LOADING, false);
+                AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         MediaController.MediaData = null;
-                        AppEvents.Emit(EVENT_NAME_UPDATE, MediaController.MediaData);
+                        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
                         MediaController.Loading = false;
-                        AppEvents.Emit(EVENT_NAME_LOADING, false);
-                    })
-                    .add("*", "*", () => {
+                        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID, 1500, MediaController.Load);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -139,41 +151,9 @@ export class MediaController {
      */
     public static SetMediaData(media: MediaData) {
         MediaController.MediaData = media;
-        AppEvents.Emit(EVENT_NAME_UPDATE, MediaController.MediaData);
+        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
         MediaController.Loading = false;
-        AppEvents.Emit(EVENT_NAME_LOADING, false);
-    }
-
-    /**
-     * Adds event listener to check for metadata updates
-     * @param handler Event handler
-     */
-    public static AddUpdateEventListener(handler: (m: MediaData) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_UPDATE, handler);
-    }
-
-    /**
-     * Removes event listener (Updated event)
-     * @param handler Event handler
-     */
-    public static RemoveUpdateEventListener(handler: (m: MediaData) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_UPDATE, handler);
-    }
-
-    /**
-     * Adds event listener to check for request loading status updates
-     * @param handler Event handler
-     */
-    public static AddLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_LOADING, handler);
-    }
-
-    /**
-     * Removes event listener (Loading event)
-     * @param handler Event handler
-     */
-    public static RemoveLoadingEventListener(handler: (loading: boolean) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_LOADING, handler);
+        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
     }
 }

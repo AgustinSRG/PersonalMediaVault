@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Tasks") }}</div>
@@ -68,16 +68,17 @@
 </template>
 
 <script lang="ts">
-import { TasksAPI } from "@/api/api-tasks";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { GenerateURIQuery, Request } from "@/utils/request";
+import { generateURIQuery } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { apiTasksGetTasks } from "@/api/api-tasks";
 
 export default defineComponent({
     name: "TaskListModal",
@@ -87,6 +88,8 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
+            updateRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -95,6 +98,8 @@ export default defineComponent({
             tasks: [],
 
             loading: true,
+
+            closeSignal: 0,
         };
     },
     methods: {
@@ -117,10 +122,10 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
-            clearNamedTimeout(this._handles.updateRequestId);
-            Request.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
+            clearNamedTimeout(this.updateRequestId);
+            abortNamedApiRequest(this.updateRequestId);
 
             if (!this.display) {
                 return;
@@ -128,64 +133,58 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, TasksAPI.GetTasks())
+            makeNamedApiRequest(this.loadRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
                     this.loading = false;
-                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
         updateTasks: function () {
-            clearNamedTimeout(this._handles.updateRequestId);
-            Request.Abort(this._handles.updateRequestId);
+            clearNamedTimeout(this.updateRequestId);
+            abortNamedApiRequest(this.updateRequestId);
 
             if (!this.display) {
                 return;
             }
 
-            Request.Pending(this._handles.updateRequestId, TasksAPI.GetTasks())
+            makeNamedApiRequest(this.updateRequestId, apiTasksGetTasks())
                 .onSuccess((tasks) => {
                     this.setTasks(tasks);
-                    setNamedTimeout(this._handles.updateRequestId, 500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 500, this.updateTasks.bind(this));
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            this.displayStatus = false;
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.updateRequestId, 1500, this.updateTasks.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.updateRequestId, 1500, this.updateTasks.bind(this));
+                    setNamedTimeout(this.updateRequestId, 1500, this.updateTasks.bind(this));
                 });
         },
 
@@ -233,7 +232,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         renderType: function (t: number) {
@@ -316,17 +315,13 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     media: mid + "",
                 })
             );
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
-        this._handles.updateRequestId = getUniqueStringId();
-
         this.load();
 
         if (this.display) {
@@ -336,10 +331,10 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
-        clearNamedTimeout(this._handles.updateRequestId);
-        Request.Abort(this._handles.updateRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
+        clearNamedTimeout(this.updateRequestId);
+        abortNamedApiRequest(this.updateRequestId);
     },
     watch: {
         display: function () {

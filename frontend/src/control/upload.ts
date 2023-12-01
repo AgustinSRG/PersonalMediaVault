@@ -2,23 +2,27 @@
 
 "use strict";
 
-import { MediaAPI } from "@/api/api-media";
-import { TagsAPI } from "@/api/api-tags";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
-import { UploadMediaAPI } from "@/api/api-media-upload";
 import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { setLastUsedTag } from "./app-preferences";
+import { apiUploadMedia } from "@/api/api-media-upload";
+import { apiMediaGetMedia } from "@/api/api-media";
+import { apiTagsTagMedia } from "@/api/api-tags";
 
 const TICK_DELAY_MS = 500;
 
 const REQUEST_PREFIX_UPLOAD = "upload-media-";
 const REQUEST_PREFIX_CHECK_ENCRYPTION = "check-media-encryption-";
 
-const EVENT_NAME_LIST_UPDATE = "upload-list-update";
+/**
+ * Event triggered when the upload list updates
+ * Handler like: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void
+ */
+export const EVENT_NAME_UPLOAD_LIST_UPDATE = "upload-list-update";
 
 /**
  * Removes extension if present, in order to get the title
@@ -268,8 +272,8 @@ export class UploadController {
      */
     public static RemoveFile(id: number) {
         // Abort requests
-        Request.Abort(REQUEST_PREFIX_UPLOAD + id);
-        Request.Abort(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
+        abortNamedApiRequest(REQUEST_PREFIX_UPLOAD + id);
+        abortNamedApiRequest(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
 
         // Remove from the array
         for (let i = 0; i < UploadController.Entries.length; i++) {
@@ -328,7 +332,7 @@ export class UploadController {
         m.progress = 0;
         UploadController.Emit("update", m, index);
 
-        Request.Pending(REQUEST_PREFIX_UPLOAD + m.id, UploadMediaAPI.UploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, m.album))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
                 UploadController.Emit("update", m, index);
@@ -342,31 +346,35 @@ export class UploadController {
             .onCancel(() => {
                 UploadController.UploadingCount--;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 UploadController.UploadingCount--;
-                Request.ErrorHandler()
-                    .add(400, "*", () => {
-                        m.error = "invalid-media";
-                        m.status = "error";
-                    })
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         m.error = "access-denied";
                         m.status = "error";
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    accessDenied: () => {
                         m.error = "access-denied";
                         m.status = "error";
-                    })
-                    .add(500, "*", () => {
+                    },
+                    invalidMediaFile: () => {
+                        m.error = "invalid-media";
+                        m.status = "error";
+                    },
+                    badRequest: () => {
+                        m.error = "invalid-media";
+                        m.status = "error";
+                    },
+                    serverError: () => {
                         m.error = "server-error";
                         m.status = "error";
-                    })
-                    .add("*", "*", () => {
+                    },
+                    networkError: () => {
                         m.error = "no-internet";
                         m.status = "error";
-                    })
-                    .handle(err);
+                    },
+                });
                 UploadController.CheckEmptyList();
                 UploadController.Emit("update", m, index);
             })
@@ -393,7 +401,7 @@ export class UploadController {
         m.busy = true;
         m.lastRequest = Date.now();
 
-        Request.Pending(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, MediaAPI.GetMedia(m.mid))
+        makeNamedApiRequest(REQUEST_PREFIX_CHECK_ENCRYPTION + m.id, apiMediaGetMedia(m.mid))
             .onSuccess((media) => {
                 m.busy = false;
                 if (media.ready) {
@@ -423,20 +431,21 @@ export class UploadController {
             .onCancel(() => {
                 m.busy = false;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 m.busy = false;
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(404, "*", () => {
+                    },
+                    notFound: () => {
                         m.error = "deleted";
                         m.status = "error";
                         UploadController.UploadingCount--;
                         UploadController.CheckEmptyList();
                         UploadController.Emit("update", m, index);
-                    })
-                    .handle(err);
+                    },
+                    temporalError: () => {},
+                });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;
@@ -471,7 +480,7 @@ export class UploadController {
         const tag = m.tags[0];
         const mediaId = m.mid;
 
-        Request.Do(TagsAPI.TagMedia(mediaId, tag))
+        makeApiRequest(apiTagsTagMedia(mediaId, tag))
             .onSuccess((res) => {
                 setLastUsedTag(res.id);
                 m.tags.shift(); // Remove tag from list
@@ -483,30 +492,30 @@ export class UploadController {
             .onCancel(() => {
                 m.busy = false;
             })
-            .onRequestError((err) => {
+            .onRequestError((err, handleErr) => {
                 m.busy = false;
-                Request.ErrorHandler()
-                    .add(400, "*", () => {
+                handleErr(err, {
+                    unauthorized: () => {
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                    },
+                    invalidTagName: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
                         UploadController.Emit("update", m, index);
-                    })
-                    .add(401, "*", () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add(403, "*", () => {
+                    },
+                    badRequest: () => {
+                        m.tags.shift(); // Invalid tag name
+                        m.progress = m.tags.length;
+                        UploadController.Emit("update", m, index);
+                    },
+                    accessDenied: () => {
                         m.error = "access-denied";
                         m.status = "error";
                         UploadController.Emit("update", m, index);
                         UploadController.CheckEmptyList();
-                    })
-                    .add(404, "*", () => {
-                        m.error = "deleted";
-                        m.status = "error";
-                        UploadController.Emit("update", m, index);
-                        UploadController.CheckEmptyList();
-                    })
-                    .handle(err);
+                    },
+                    temporalError: () => {},
+                });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;
@@ -521,22 +530,6 @@ export class UploadController {
      * @param index Index
      */
     private static Emit(mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) {
-        AppEvents.Emit(EVENT_NAME_LIST_UPDATE, mode, entry, index);
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
-        AppEvents.AddEventListener(EVENT_NAME_LIST_UPDATE, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME_LIST_UPDATE, handler);
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_UPDATE, mode, entry, index);
     }
 }

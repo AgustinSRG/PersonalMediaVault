@@ -81,10 +81,8 @@
 
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { KeyboardManager } from "@/control/keyboard";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -96,6 +94,14 @@ import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 export default defineComponent({
     name: "TopBar",
     emits: ["logout", "settings", "menu", "menu-focus", "search-open", "help"],
+    setup() {
+        return {
+            blurTimeout: null,
+            focusTrap: null as FocusTrap,
+            bigListScroller: null as BigListScroller,
+            findTagTimeout: null,
+        };
+    },
     data: function () {
         return {
             search: AppStatus.CurrentSearch,
@@ -140,42 +146,42 @@ export default defineComponent({
         },
 
         focusSearch: function () {
-            if (this._handles.blurTimeout) {
-                clearTimeout(this._handles.blurTimeout);
-                this._handles.blurTimeout = null;
+            if (this.blurTimeout) {
+                clearTimeout(this.blurTimeout);
+                this.blurTimeout = null;
             }
             this.searchFocus = true;
             this.$el.querySelector(".top-bar-search-input").select();
             this.updateSuggestions();
-            if (this._handles.focusTrap) {
-                this._handles.focusTrap.activate();
+            if (this.focusTrap) {
+                this.focusTrap.activate();
             }
             AlbumsController.Load();
             TagsController.Load();
         },
 
         blurSearchInstantly: function () {
-            if (this._handles.blurTimeout) {
-                clearTimeout(this._handles.blurTimeout);
-                this._handles.blurTimeout = null;
+            if (this.blurTimeout) {
+                clearTimeout(this.blurTimeout);
+                this.blurTimeout = null;
             }
-            this._handles.blurTimeout = null;
+            this.blurTimeout = null;
             this.searchFocus = false;
-            if (this._handles.focusTrap) {
-                this._handles.focusTrap.deactivate();
+            if (this.focusTrap) {
+                this.focusTrap.deactivate();
             }
         },
 
         blurSearch: function () {
-            if (this._handles.blurTimeout) {
-                clearTimeout(this._handles.blurTimeout);
-                this._handles.blurTimeout = null;
+            if (this.blurTimeout) {
+                clearTimeout(this.blurTimeout);
+                this.blurTimeout = null;
             }
-            this._handles.blurTimeout = setTimeout(() => {
-                this._handles.blurTimeout = null;
+            this.blurTimeout = setTimeout(() => {
+                this.blurTimeout = null;
                 this.searchFocus = false;
-                if (this._handles.focusTrap) {
-                    this._handles.focusTrap.deactivate();
+                if (this.focusTrap) {
+                    this.focusTrap.deactivate();
                 }
             }, 100);
         },
@@ -201,7 +207,7 @@ export default defineComponent({
             this.submitSearch();
         },
 
-        submitSearch: function (event) {
+        submitSearch: function (event?: Event) {
             if (event) {
                 event.preventDefault();
             }
@@ -277,8 +283,8 @@ export default defineComponent({
                     }
                 });
 
-            this._handles.bigListScroller.reset();
-            this._handles.bigListScroller.addElements(suggestions);
+            this.bigListScroller.reset();
+            this.bigListScroller.addElements(suggestions);
 
             nextTick(() => {
                 const elem = this.$el.querySelector(".top-bar-search-suggestions");
@@ -289,15 +295,15 @@ export default defineComponent({
         },
 
         onSuggestionsScroll: function (e) {
-            this._handles.bigListScroller.checkElementScroll(e.target);
+            this.bigListScroller.checkElementScroll(e.target);
         },
 
         onSearchInput: function () {
-            if (this._handles.findTagTimeout) {
+            if (this.findTagTimeout) {
                 return;
             }
-            this._handles.findTagTimeout = setTimeout(() => {
-                this._handles.findTagTimeout = null;
+            this.findTagTimeout = setTimeout(() => {
+                this.findTagTimeout = null;
                 this.updateSuggestions();
             }, 200);
         },
@@ -346,20 +352,15 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.statusChangeH = this.onSearchChanged.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onSearchChanged.bind(this));
 
-        AppStatus.AddEventListener(this._handles.statusChangeH);
+        this.$listenOnAppEvent(EVENT_NAME_SEARCH_MODAL_SUBMIT, this.onSearchModalSubmit.bind(this));
 
-        this._handles.onSearchModalSubmitH = this.onSearchModalSubmit.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_SEARCH_MODAL_SUBMIT, this._handles.onSearchModalSubmitH);
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
 
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
+        this.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
 
-        this._handles.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
-
-        this._handles.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
             get: (): any[] => {
                 return this.suggestions;
             },
@@ -370,23 +371,17 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.statusChangeH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_SEARCH_MODAL_SUBMIT, this._handles.onSearchModalSubmitH);
-
-        if (this._handles.findTagTimeout) {
-            clearTimeout(this._handles.findTagTimeout);
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
         }
 
-        if (this._handles.blurTimeout) {
-            clearTimeout(this._handles.blurTimeout);
-            this._handles.blurTimeout = null;
+        if (this.blurTimeout) {
+            clearTimeout(this.blurTimeout);
+            this.blurTimeout = null;
         }
 
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
-
-        if (this._handles.focusTrap) {
-            this._handles.focusTrap.destroy();
+        if (this.focusTrap) {
+            this.focusTrap.destroy();
         }
     },
 });

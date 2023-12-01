@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Change password") }}</div>
@@ -54,12 +59,13 @@
 </template>
 
 <script lang="ts">
-import { AccountAPI } from "@/api/api-account";
+import { apiAccountChangePassword } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ChangePasswordModal",
@@ -79,6 +85,9 @@ export default defineComponent({
             password2: "",
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -109,38 +118,38 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AccountAPI.ChangePassword(this.currentPassword, this.password))
+            makeApiRequest(apiAccountChangePassword(this.currentPassword, this.password))
                 .onSuccess(() => {
                     this.busy = false;
                     this.currentPassword = "";
                     this.password = "";
                     this.password2 = "";
-                    AppEvents.ShowSnackBar(this.$t("Vault password changed!"));
-                    this.$refs.modalContainer.close(true);
+                    PagesController.ShowSnackBar(this.$t("Vault password changed!"));
+                    this.forceCloseSignal++;
                 })
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid password provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidNewPassword: () => {
+                            this.error = this.$t("Invalid password provided");
+                        },
+                        invalidPassword: () => {
                             this.error = this.$t("Invalid password");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -150,7 +159,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
     },
     mounted: function () {

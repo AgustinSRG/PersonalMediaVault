@@ -88,7 +88,7 @@
 }
 
 .player-title {
-    flex: 1;
+    width: calc(100% - 48px);
     height: 100%;
     display: flex;
     align-items: center;

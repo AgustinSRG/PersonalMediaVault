@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -101,6 +101,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -147,33 +148,29 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
-
-        this._handles.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
 
         if (this.display) {
-            this._handles.focusTrap.activate();
+            this.focusTrap.activate();
             nextTick(() => {
                 this.$el.focus();
             });
         }
     },
     beforeUnmount: function () {
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-        this._handles.focusTrap.destroy();
+        this.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 nextTick(() => {
                     this.$el.focus();
                 });
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
     },

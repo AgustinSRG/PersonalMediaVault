@@ -1,5 +1,10 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :lock-close="busy">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Change username") }}</div>
@@ -52,12 +57,13 @@
 </template>
 
 <script lang="ts">
-import { AccountAPI } from "@/api/api-account";
+import { apiAccountChangeUsername } from "@/api/api-account";
 import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { Request } from "@/utils/request";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ChangeUsernameModal",
@@ -77,6 +83,9 @@ export default defineComponent({
             password: "",
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -102,41 +111,42 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(AccountAPI.ChangeUsername(this.username, this.password))
+            makeApiRequest(apiAccountChangeUsername(this.username, this.password))
                 .onSuccess(() => {
                     this.busy = false;
                     AuthController.UpdateUsername(this.username);
                     this.username = "";
                     this.password = "";
-                    AppEvents.ShowSnackBar(this.$t("Vault username changed!"));
-                    this.$refs.modalContainer.close(true);
+                    PagesController.ShowSnackBar(this.$t("Vault username changed!"));
+                    this.forceCloseSignal++;
                 })
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "USERNAME_IN_USE", () => {
-                            this.error = this.$t("The username is already in use");
-                        })
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid username provided");
-                        })
-                        .add(401, "*", () => {
+
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
+                        },
+                        invalidUsername: () => {
+                            this.error = this.$t("Invalid username provided");
+                        },
+                        usernameInUse: () => {
+                            this.error = this.$t("The username is already in use");
+                        },
+                        invalidPassword: () => {
                             this.error = this.$t("Invalid password");
-                        })
-                        .add(500, "*", () => {
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -146,7 +156,7 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         usernameUpdated: function () {
@@ -154,17 +164,14 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.currentUsername = AuthController.Username;
-        this._handles.usernameUpdatedH = this.usernameUpdated.bind(this);
-        AuthController.AddChangeEventListener(this._handles.usernameUpdatedH);
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.usernameUpdated.bind(this));
+
         if (this.display) {
             this.error = "";
             this.autoFocus();
         }
-    },
-    beforeUnmount: function () {
-        AuthController.RemoveChangeEventListener(this._handles.usernameUpdatedH);
     },
     watch: {
         display: function () {

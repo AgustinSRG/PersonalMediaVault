@@ -50,7 +50,6 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import { AuthController } from "@/control/auth";
-import { KeyboardManager } from "@/control/keyboard";
 
 const PlayerMediaEditor = defineAsyncComponent({
     loader: () => import("@/components/player/editor/PlayerMediaEditor.vue"),
@@ -201,12 +200,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.handleGlobalKeyH = this.handleGlobalKey.bind(this);
-        KeyboardManager.AddHandler(this._handles.handleGlobalKeyH);
-    },
-    beforeUnmount: function () {
-        KeyboardManager.RemoveHandler(this._handles.handleGlobalKeyH);
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
     },
 });
 </script>

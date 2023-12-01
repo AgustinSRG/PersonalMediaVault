@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ name }}</label>
+                    <label>{{ subtitleToDelete ? subtitleToDelete.name : "" }}</label>
                 </div>
             </div>
             <div class="modal-footer no-padding">
@@ -28,18 +28,19 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { PropType } from "vue";
+import { MediaSubtitle } from "@/api/models";
 
 export default defineComponent({
     name: "SubtitlesDeleteModal",
-    emits: ["update:display"],
+    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
+        subtitleToDelete: Object as PropType<MediaSubtitle>,
     },
     data: function () {
         return {
-            name: "",
-
-            callback: null,
+            closeSignal: 0,
         };
     },
     setup(props) {
@@ -48,12 +49,6 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: { name: string; callback: () => void }) {
-            this.name = options.name;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -67,15 +62,13 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         submit: function (e) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback();
-            }
+            this.$emit("confirm");
 
             this.close();
         },

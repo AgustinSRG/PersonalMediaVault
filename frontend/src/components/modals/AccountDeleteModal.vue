@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -15,11 +15,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ name }}</label>
+                    <label>{{ username }}</label>
                 </div>
+
+                <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button type="submit" class="modal-footer-btn auto-focus"><i class="fas fa-trash-alt"></i> {{ $t("Delete") }}</button>
+                <button type="submit" :disabled="busy" class="modal-footer-btn auto-focus">
+                    <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                </button>
             </div>
         </form>
     </ModalDialogContainer>
@@ -28,18 +32,24 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { apiAdminDeleteAccount } from "@/api/api-admin";
+import { AppEvents } from "@/control/app-events";
+import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { makeApiRequest } from "@asanrom/request-browser";
 
 export default defineComponent({
     name: "AccountDeleteModal",
-    emits: ["update:display"],
+    emits: ["update:display", "done"],
     props: {
         display: Boolean,
+        username: String,
     },
     data: function () {
         return {
-            name: "",
-
-            callback: null,
+            closeSignal: 0,
+            busy: false,
+            error: "",
         };
     },
     setup(props) {
@@ -48,12 +58,6 @@ export default defineComponent({
         };
     },
     methods: {
-        show: function (options: { name: string; callback: () => void }) {
-            this.name = options.name;
-            this.callback = options.callback;
-            this.displayStatus = true;
-        },
-
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -67,17 +71,58 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
-            if (this.callback) {
-                this.callback();
+            if (this.busy) {
+                return;
             }
 
-            this.close();
+            this.busy = true;
+            this.error = "";
+
+            makeApiRequest(apiAdminDeleteAccount(this.username))
+                .onSuccess(() => {
+                    this.busy = false;
+                    PagesController.ShowSnackBar(this.$t("Account deleted") + ": " + this.username);
+                    this.$emit("done");
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        accessDenied: () => {
+                            this.error = this.$t("Access denied");
+                        },
+                        accountNotFound: () => {
+                            // Already deleted?
+                            this.busy = false;
+                            this.$emit("done");
+                            this.close();
+                        },
+                        serverError: () => {
+                            this.error = this.$t("Internal server error");
+                        },
+                        networkError: () => {
+                            this.error = this.$t("Could not connect to the server");
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
         },
     },
     mounted: function () {

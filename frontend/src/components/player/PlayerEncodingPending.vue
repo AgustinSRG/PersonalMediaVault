@@ -72,17 +72,17 @@
 </template>
 
 <script lang="ts">
-import { MediaAPI } from "@/api/api-media";
-import { TasksAPI } from "@/api/api-tasks";
 import { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { defineComponent } from "vue";
+import { apiMediaGetMedia } from "@/api/api-media";
+import { apiTasksGetTask } from "@/api/api-tasks";
 
 export default defineComponent({
     name: "PlayerEncodingPending",
@@ -113,7 +113,7 @@ export default defineComponent({
 
         stop: function () {
             clearNamedTimeout(this.pendingId);
-            Request.Abort(this.pendingId);
+            abortNamedApiRequest(this.pendingId);
             this.status = "loading";
             this.progress = 0;
             this.stage = "";
@@ -124,7 +124,7 @@ export default defineComponent({
 
         checkTask: function () {
             clearNamedTimeout(this.pendingId);
-            Request.Abort(this.pendingId);
+            abortNamedApiRequest(this.pendingId);
 
             if (this.error) {
                 return;
@@ -136,7 +136,7 @@ export default defineComponent({
                 return;
             }
 
-            Request.Pending(this.pendingId, TasksAPI.GetTask(this.tid))
+            makeNamedApiRequest(this.pendingId, apiTasksGetTask(this.tid))
                 .onSuccess((task: TaskStatus) => {
                     this.status = "task";
                     if (task.running) {
@@ -183,20 +183,20 @@ export default defineComponent({
                         setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.status = "loading";
                             this.checkMediaStatus();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
@@ -207,9 +207,9 @@ export default defineComponent({
 
         checkMediaStatus: function () {
             clearNamedTimeout(this.pendingId);
-            Request.Abort(this.pendingId);
+            abortNamedApiRequest(this.pendingId);
 
-            Request.Pending(this.pendingId, MediaAPI.GetMedia(this.mid))
+            makeNamedApiRequest(this.pendingId, apiMediaGetMedia(this.mid))
                 .onSuccess((media: MediaData) => {
                     if (this.res >= 0) {
                         if (media.resolutions[this.res] && media.resolutions[this.res].ready) {
@@ -225,19 +225,19 @@ export default defineComponent({
                         }
                     }
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(404, "*", () => {
+                        },
+                        notFound: () => {
                             this.refreshMedia();
-                        })
-                        .add("*", "*", () => {
+                        },
+                        temporalError: () => {
                             // Retry
                             setNamedTimeout(this.pendingId, 1500, this.checkMediaStatus.bind(this));
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);

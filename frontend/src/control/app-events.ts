@@ -5,11 +5,6 @@
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
 /**
- * Event triggered to show a message in the snackbar
- */
-export const EVENT_NAME_SNACK_BAR = "snack";
-
-/**
  * Global events manager
  */
 export class AppEvents {
@@ -64,13 +59,5 @@ export class AppEvents {
                 AppEvents.events.delete(eventName);
             }
         }
-    }
-
-    /**
-     * Emits event to show a snackbar
-     * @param message The message to show
-     */
-    public static ShowSnackBar(message: string) {
-        AppEvents.Emit(EVENT_NAME_SNACK_BAR, message);
     }
 }

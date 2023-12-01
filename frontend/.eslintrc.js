@@ -14,6 +14,7 @@ module.exports = {
         "no-useless-escape": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
         indent: ["warn", 4, { SwitchCase: 1 }],
         "vue/max-len": [
             "warn",

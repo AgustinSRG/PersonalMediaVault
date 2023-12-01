@@ -103,14 +103,20 @@
 import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaController } from "@/control/media";
-import { GetAssetURL, Request } from "@/utils/request";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { getAssetURL } from "@/utils/api";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
-import { EditMediaAPI } from "@/api/api-media-edit";
-import { EVENT_NAME_MEDIA_METADATA_CHANGE } from "@/control/pages";
+import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import {
+    apiMediaChangeExtraParams,
+    apiMediaChangeMediaDescription,
+    apiMediaChangeMediaThumbnail,
+    apiMediaChangeMediaTitle,
+} from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -118,6 +124,14 @@ export default defineComponent({
     },
     name: "EditorGeneral",
     emits: ["changed"],
+    setup() {
+        return {
+            requestIdTitle: getUniqueStringId(),
+            requestIdDescription: getUniqueStringId(),
+            requestIdThumbnail: getUniqueStringId(),
+            requestIdExtra: getUniqueStringId(),
+        };
+    },
     data: function () {
         return {
             type: 0,
@@ -172,7 +186,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         uploadThumbnail: function () {
@@ -209,9 +223,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestIdThumbnail, EditMediaAPI.ChangeMediaThumbnail(mediaId, file))
+            makeNamedApiRequest(this.requestIdThumbnail, apiMediaChangeMediaThumbnail(mediaId, file))
                 .onSuccess((res) => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully changed thumbnail"));
+                    PagesController.ShowSnackBar(this.$t("Successfully changed thumbnail"));
                     this.busyThumbnail = false;
                     this.thumbnail = res.url;
                     if (MediaController.MediaData) {
@@ -224,32 +238,35 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busyThumbnail = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busyThumbnail = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Invalid thumbnail provided"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        invalidThumbnail: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid thumbnail provided"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busyThumbnail = false;
                 });
@@ -268,9 +285,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestIdTitle, EditMediaAPI.ChangeMediaTitle(mediaId, this.title))
+            makeNamedApiRequest(this.requestIdTitle, apiMediaChangeMediaTitle(mediaId, this.title))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully changed title"));
+                    PagesController.ShowSnackBar(this.$t("Successfully changed title"));
                     this.busyTitle = false;
                     this.originalTitle = this.title;
                     if (MediaController.MediaData) {
@@ -283,32 +300,35 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busyTitle = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busyTitle = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        invalidTitle: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid title provided"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busyTitle = false;
                 });
@@ -323,9 +343,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestIdDescription, EditMediaAPI.ChangeMediaDescription(mediaId, this.desc))
+            makeNamedApiRequest(this.requestIdDescription, apiMediaChangeMediaDescription(mediaId, this.desc))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully changed description"));
+                    PagesController.ShowSnackBar(this.$t("Successfully changed description"));
                     this.busyDescription = false;
                     this.originalDesc = this.desc;
                     if (MediaController.MediaData) {
@@ -336,32 +356,35 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busyDescription = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busyDescription = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        invalidDescription: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid description provided"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busyDescription = false;
                 });
@@ -376,9 +399,9 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            Request.Pending(this._handles.requestIdExtra, EditMediaAPI.ChangeExtraParams(mediaId, this.startBeginning))
+            makeNamedApiRequest(this.requestIdExtra, apiMediaChangeExtraParams(mediaId, this.startBeginning))
                 .onSuccess(() => {
-                    AppEvents.ShowSnackBar(this.$t("Successfully changed media extra params"));
+                    PagesController.ShowSnackBar(this.$t("Successfully changed media extra params"));
                     this.busyExtra = false;
                     this.originalStartBeginning = this.startBeginning;
                     if (MediaController.MediaData) {
@@ -389,32 +412,32 @@ export default defineComponent({
                 .onCancel(() => {
                     this.busyExtra = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busyExtra = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Bad request"));
-                        })
-                        .add(401, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(403, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Access denied"));
-                        })
-                        .add(404, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Not found"));
-                        })
-                        .add(500, "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Internal server error"));
-                        })
-                        .add("*", "*", () => {
-                            AppEvents.ShowSnackBar(this.$t("Could not connect to the server"));
-                        })
-                        .handle(err);
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
-                    AppEvents.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBar(err.message);
                     console.error(err);
                     this.busyExtra = false;
                 });
@@ -426,34 +449,19 @@ export default defineComponent({
     },
 
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.requestIdTitle = getUniqueStringId();
-        this._handles.requestIdDescription = getUniqueStringId();
-        this._handles.requestIdThumbnail = getUniqueStringId();
-        this._handles.requestIdExtra = getUniqueStringId();
-
         this.updateMediaData();
 
-        this._handles.mediaUpdateH = this.updateMediaData.bind(this);
-
-        MediaController.AddUpdateEventListener(this._handles.mediaUpdateH);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.autoFocus();
     },
 
     beforeUnmount: function () {
-        MediaController.RemoveUpdateEventListener(this._handles.mediaUpdateH);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        Request.Abort(this._handles.requestIdTitle);
-        Request.Abort(this._handles.requestIdDescription);
-        Request.Abort(this._handles.requestIdThumbnail);
-        Request.Abort(this._handles.requestIdExtra);
+        abortNamedApiRequest(this.requestIdTitle);
+        abortNamedApiRequest(this.requestIdDescription);
+        abortNamedApiRequest(this.requestIdThumbnail);
+        abortNamedApiRequest(this.requestIdExtra);
     },
 });
 </script>

@@ -3,11 +3,16 @@
 </template>
 
 <script lang="ts">
-import { AppEvents, EVENT_NAME_SNACK_BAR } from "@/control/app-events";
+import { EVENT_NAME_SNACK_BAR } from "@/control/pages";
 import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "SnackBar",
+    setup() {
+        return {
+            timeout: null,
+        };
+    },
     data: function () {
         return {
             shown: false,
@@ -16,37 +21,34 @@ export default defineComponent({
     },
     methods: {
         show: function (msg: string) {
-            if (this._handles.timeout) {
-                clearTimeout(this._handles.timeout);
-                this._handles.timeout = null;
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+                this.timeout = null;
             }
 
             this.shown = true;
             this.message = msg;
 
-            this._handles.timeout = setTimeout(() => {
+            this.timeout = setTimeout(() => {
                 this.shown = false;
             }, 3000);
         },
 
         hide: function () {
-            if (this._handles.timeout) {
-                clearTimeout(this._handles.timeout);
-                this._handles.timeout = null;
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+                this.timeout = null;
             }
             this.shown = false;
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.showH = this.show.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_SNACK_BAR, this._handles.showH);
+        this.$listenOnAppEvent(EVENT_NAME_SNACK_BAR, this.show.bind(this));
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_SNACK_BAR, this._handles.showH);
-        if (this._handles.timeout) {
-            clearTimeout(this._handles.timeout);
-            this._handles.timeout = null;
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
         }
     },
 });

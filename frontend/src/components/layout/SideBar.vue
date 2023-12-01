@@ -137,16 +137,15 @@
 
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
     getAlbumFavoriteList,
     getAlbumsOrderMap,
 } from "@/control/app-preferences";
-import { AppStatus } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
-import { GenerateURIQuery } from "@/utils/request";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { generateURIQuery } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -162,6 +161,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -239,7 +239,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     page: page,
                 })
             );
@@ -251,7 +251,7 @@ export default defineComponent({
                 "//" +
                 window.location.host +
                 window.location.pathname +
-                GenerateURIQuery({
+                generateURIQuery({
                     album: albumId + "",
                 })
             );
@@ -352,56 +352,38 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.statusUpdater = this.updateStatus.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateStatus.bind(this));
 
-        AppStatus.AddEventListener(this._handles.statusUpdater);
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateAlbums.bind(this));
 
-        this._handles.albumsUpdater = this.updateAlbums.bind(this);
+        this.$listenOnAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, this.putAlbumFirst.bind(this));
 
-        AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdater);
-        AppEvents.AddEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
-        this._handles.albumGoTop = this.putAlbumFirst.bind(this);
-
-        AppEvents.AddEventListener(EVENT_NAME_ALBUM_SIDEBAR_TOP, this._handles.albumGoTop);
-
-        this._handles.authUpdateH = this.updateAuthInfo.bind(this);
-
-        AuthController.AddChangeEventListener(this._handles.authUpdateH);
-
-        this._handles.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
+        this.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
 
         if (this.display) {
-            this._handles.focusTrap.activate();
+            this.focusTrap.activate();
         }
 
         this.updateStatus();
         this.updateAlbums();
     },
     beforeUnmount: function () {
-        AppStatus.RemoveEventListener(this._handles.statusUpdater);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, this._handles.albumsUpdater);
-        AppEvents.RemoveEventListener(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this._handles.albumsUpdater);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_ALBUM_SIDEBAR_TOP, this._handles.albumGoTop);
-
-        AuthController.RemoveChangeEventListener(this._handles.authUpdateH);
-
-        this._handles.focusTrap.destroy();
+        this.focusTrap.destroy();
     },
     watch: {
         display: function () {
             if (this.display) {
-                this._handles.focusTrap.activate();
+                this.focusTrap.activate();
                 if (!this.initialLayout) {
                     nextTick(() => {
                         this.$el.focus();
                     });
                 }
             } else {
-                this._handles.focusTrap.deactivate();
+                this.focusTrap.deactivate();
             }
         },
     },

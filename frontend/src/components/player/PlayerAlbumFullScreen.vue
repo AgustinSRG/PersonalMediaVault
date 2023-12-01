@@ -73,10 +73,9 @@ import {
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
 } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { GetAssetURL } from "@/utils/request";
+import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 
@@ -85,6 +84,12 @@ const INITIAL_WINDOW_SIZE = 100;
 export default defineComponent({
     name: "PlayerAlbumFullScreen",
     emits: ["close"],
+    setup() {
+        return {
+            checkContainerTimer: null,
+            listScroller: null as BigListScroller,
+        };
+    },
     data: function () {
         return {
             albumId: AlbumsController.CurrentAlbum,
@@ -112,11 +117,11 @@ export default defineComponent({
         },
 
         updateAlbumList: function () {
-            this._handles.listScroller.reset();
+            this.listScroller.reset();
 
             if (this.loadedAlbum) {
                 let i = 0;
-                this._handles.listScroller.addElements(
+                this.listScroller.addElements(
                     AlbumsController.CurrentAlbumData.list.map((m) => {
                         return {
                             pos: i++,
@@ -162,7 +167,7 @@ export default defineComponent({
         },
 
         getThumbnail(thumb: string) {
-            return GetAssetURL(thumb);
+            return getAssetURL(thumb);
         },
 
         clickMedia: function (item) {
@@ -178,7 +183,7 @@ export default defineComponent({
             this.loop = AlbumsController.AlbumLoop;
             this.random = AlbumsController.AlbumRandom;
             this.currentPos = AlbumsController.CurrentAlbumPos;
-            this._handles.listScroller.moveWindowToElement(this.currentPos);
+            this.listScroller.moveWindowToElement(this.currentPos);
             nextTick(() => {
                 this.scrollToSelected();
             });
@@ -222,7 +227,7 @@ export default defineComponent({
         },
 
         onScroll: function (e) {
-            this._handles.listScroller.checkElementScroll(e.target);
+            this.listScroller.checkElementScroll(e.target);
         },
 
         checkContainerHeight: function () {
@@ -238,7 +243,7 @@ export default defineComponent({
                 return;
             }
 
-            const changed = this._handles.listScroller.checkScrollContainerHeight(cont, el);
+            const changed = this.listScroller.checkScrollContainerHeight(cont, el);
 
             if (changed) {
                 this.onAlbumPosUpdate();
@@ -256,11 +261,9 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.albumUpdateH = this.onAlbumUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
-        this._handles.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
             get: () => {
                 return this.albumList;
             },
@@ -273,23 +276,16 @@ export default defineComponent({
 
         this.onAlbumPosUpdate();
 
-        this._handles.loadingH = this.onAlbumLoading.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
 
-        this._handles.posUpdateH = this.onAlbumPosUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
 
-        this._handles.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
 
         this.autoFocus();
     },
     beforeUnmount: function () {
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, this._handles.albumUpdateH);
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_LOADING, this._handles.loadingH);
-
-        AppEvents.RemoveEventListener(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this._handles.posUpdateH);
-
-        clearInterval(this._handles.checkContainerTimer);
+        clearInterval(this.checkContainerTimer);
     },
 });
 </script>

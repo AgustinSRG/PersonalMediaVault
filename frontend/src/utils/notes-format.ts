@@ -44,7 +44,7 @@ export interface ImageNote {
  * @param json The JSON string
  * @returns The image notes array
  */
-export function parseImageNotes(json: string): ImageNote[] {
+export function parseImageNotes(json: unknown): ImageNote[] {
     let o: any;
     try {
         if (typeof json === "string") {

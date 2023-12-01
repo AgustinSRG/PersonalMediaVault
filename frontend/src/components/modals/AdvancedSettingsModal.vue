@@ -1,5 +1,11 @@
 <template>
-    <ModalDialogContainer ref="modalContainer" v-model:display="displayStatus" :static="true" :close-callback="askClose">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :static="true"
+        :close-callback="askClose"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Advanced settings") }}</div>
@@ -178,10 +184,9 @@
 </template>
 
 <script lang="ts">
-import { ConfigAPI } from "@/api/api-config";
 import { VaultUserConfig } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -190,6 +195,8 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { PagesController } from "@/control/pages";
+import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 
 export default defineComponent({
     components: {
@@ -203,6 +210,7 @@ export default defineComponent({
     },
     setup(props) {
         return {
+            loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -299,6 +307,9 @@ export default defineComponent({
             loading: true,
             busy: false,
             error: "",
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
         };
     },
     methods: {
@@ -397,8 +408,8 @@ export default defineComponent({
         },
 
         load: function () {
-            clearNamedTimeout(this._handles.loadRequestId);
-            Request.Abort(this._handles.loadRequestId);
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
 
             if (!this.display) {
                 return;
@@ -406,7 +417,7 @@ export default defineComponent({
 
             this.loading = true;
 
-            Request.Pending(this._handles.loadRequestId, ConfigAPI.GetConfig())
+            makeNamedApiRequest(this.loadRequestId, apiConfigGetConfig())
                 .onSuccess((response: VaultUserConfig) => {
                     this.title = response.title;
                     this.css = response.css;
@@ -418,23 +429,23 @@ export default defineComponent({
 
                     this.autoFocus();
                 })
-                .onRequestError((err) => {
-                    Request.ErrorHandler()
-                        .add(401, "*", () => {
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .add("*", "*", () => {
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                        temporalError: () => {
                             // Retry
-                            setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
-                        })
-                        .handle(err);
+                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     console.error(err);
                     // Retry
-                    setNamedTimeout(this._handles.loadRequestId, 1500, this.load.bind(this));
+                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
         },
 
@@ -450,8 +461,8 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            Request.Do(
-                ConfigAPI.SetConfig({
+            makeApiRequest(
+                apiConfigSetConfig({
                     title: this.title,
                     css: this.css,
                     max_tasks: this.maxTasks,
@@ -464,30 +475,33 @@ export default defineComponent({
                 .onSuccess(() => {
                     this.busy = false;
                     this.dirty = false;
-                    AppEvents.ShowSnackBar(this.$t("Vault configuration updated!"));
+                    PagesController.ShowSnackBar(this.$t("Vault configuration updated!"));
                     AuthController.CheckAuthStatus();
                     this.close();
                 })
                 .onCancel(() => {
                     this.busy = false;
                 })
-                .onRequestError((err) => {
+                .onRequestError((err, handleErr) => {
                     this.busy = false;
-                    Request.ErrorHandler()
-                        .add(400, "*", () => {
-                            this.error = this.$t("Invalid configuration provided");
-                        })
-                        .add(401, "*", () => {
+                    handleErr(err, {
+                        unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        })
-                        .add(500, "*", () => {
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Invalid configuration provided");
+                        },
+                        accessDenied: () => {
+                            this.error = this.$t("Access denied");
+                        },
+                        serverError: () => {
                             this.error = this.$t("Internal server error");
-                        })
-                        .add("*", "*", () => {
+                        },
+                        networkError: () => {
                             this.error = this.$t("Could not connect to the server");
-                        })
-                        .handle(err);
+                        },
+                    });
                 })
                 .onUnexpectedError((err) => {
                     this.error = err.message;
@@ -497,16 +511,14 @@ export default defineComponent({
         },
 
         close: function () {
-            this.$refs.modalContainer.close();
+            this.closeSignal++;
         },
 
         closeForced: function () {
-            this.$refs.modalContainer.close(true);
+            this.forceCloseSignal++;
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
-        this._handles.loadRequestId = getUniqueStringId();
         this.load();
         if (this.display) {
             this.error = "";
@@ -516,8 +528,8 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
-        clearNamedTimeout(this._handles.loadRequestId);
-        Request.Abort(this._handles.loadRequestId);
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     watch: {
         display: function () {

@@ -2,14 +2,15 @@
 
 "use strict";
 
-import { GetAssetURL, Request } from "@/utils/request";
+import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AppStatus } from "./app-status";
-import { MediaController } from "./media";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./media";
 import { getSelectedSubtitles } from "./player-preferences";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { getAssetURL } from "@/utils/api";
 
 /**
  * Event triggered when a subtitles file is loaded
@@ -46,9 +47,9 @@ export class SubtitlesController {
      * Initialization logic
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(SubtitlesController.Load);
-        AppStatus.AddEventListener(SubtitlesController.OnMediaChanged);
-        MediaController.AddUpdateEventListener(SubtitlesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, SubtitlesController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, SubtitlesController.OnMediaChanged);
+        AppEvents.AddEventListener(EVENT_NAME_MEDIA_UPDATE, SubtitlesController.Load);
 
         SubtitlesController.MediaId = AppStatus.CurrentMedia;
 
@@ -73,7 +74,7 @@ export class SubtitlesController {
      */
     public static Load() {
         if (!MediaController.MediaData) {
-            Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
             clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             SubtitlesController.SelectedSubtitles = "";
             SubtitlesController.SubtitlesFileURL = "";
@@ -92,20 +93,20 @@ export class SubtitlesController {
         for (const sub of subtitles) {
             if (sub.id === prefSubtitles) {
                 SubtitlesController.SelectedSubtitles = sub.id;
-                SubtitlesController.SubtitlesFileURL = GetAssetURL(sub.url);
+                SubtitlesController.SubtitlesFileURL = getAssetURL(sub.url);
                 break;
             }
         }
 
         if (!SubtitlesController.SubtitlesFileURL) {
-            Request.Abort(REQUEST_ID_SUBTITLES_LOAD);
+            abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
             clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
             AppEvents.Emit(EVENT_NAME_SUBTITLES_UPDATE);
             return;
         }
 
         clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);
-        Request.Pending(REQUEST_ID_SUBTITLES_LOAD, {
+        makeNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD, {
             method: "GET",
             url: SubtitlesController.SubtitlesFileURL,
         })
@@ -114,7 +115,7 @@ export class SubtitlesController {
                 AppEvents.Emit(EVENT_NAME_SUBTITLES_UPDATE);
             })
             .onRequestError((err) => {
-                Request.ErrorHandler()
+                new RequestErrorHandler()
                     .add(401, "*", () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                     })

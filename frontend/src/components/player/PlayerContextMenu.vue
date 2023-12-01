@@ -327,17 +327,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this._handles = Object.create(null);
         this.computeDimensions();
 
-        this._handles.hideHandler = this.hide.bind(this);
-
-        document.addEventListener("mousedown", this._handles.hideHandler);
-        document.addEventListener("touchstart", this._handles.hideHandler);
-    },
-    beforeUnmount: function () {
-        document.removeEventListener("mousedown", this._handles.hideHandler);
-        document.removeEventListener("touchstart", this._handles.hideHandler);
+        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
+        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
     },
     watch: {
         x: function () {

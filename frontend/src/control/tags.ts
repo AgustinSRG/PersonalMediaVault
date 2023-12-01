@@ -2,14 +2,17 @@
 
 "use strict";
 
-import { TagsAPI } from "@/api/api-tags";
-import { Request } from "@/utils/request";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaListItem } from "@/api/models";
+import { apiTagsGetTags } from "@/api/api-tags";
 
-const EVENT_NAME = "tags-update";
+/**
+ * Event triggered whenever the tags list is loaded or changed
+ */
+export const EVENT_NAME_TAGS_UPDATE = "tags-update";
 
 const REQUEST_ID = "tags-load";
 
@@ -47,7 +50,7 @@ export class TagsController {
      * Runs at the app startup
      */
     public static Initialize() {
-        AuthController.AddChangeEventListener(TagsController.Load);
+        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, TagsController.Load);
         TagsController.Load();
     }
 
@@ -78,7 +81,7 @@ export class TagsController {
 
         clearNamedTimeout(REQUEST_ID);
 
-        Request.Pending(REQUEST_ID, TagsAPI.GetTags())
+        makeNamedApiRequest(REQUEST_ID, apiTagsGetTags())
             .onSuccess((tags) => {
                 TagsController.Tags = new Map();
 
@@ -90,20 +93,20 @@ export class TagsController {
                 }
 
                 TagsController.TagsVersion++;
-                AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
+                AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
                 TagsController.Loading = false;
                 TagsController.InitiallyLoaded = true;
             })
-            .onRequestError((err) => {
-                Request.ErrorHandler()
-                    .add(401, "*", () => {
+            .onRequestError((err, handleErr) => {
+                handleErr(err, {
+                    unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                    })
-                    .add("*", "*", () => {
+                    },
+                    temporalError: () => {
                         // Retry
                         setNamedTimeout(REQUEST_ID, 1500, TagsController.Load);
-                    })
-                    .handle(err);
+                    },
+                });
             })
             .onUnexpectedError((err) => {
                 console.error(err);
@@ -144,7 +147,7 @@ export class TagsController {
         TagsController.Tags.set(id, name);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
+        AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
 
         if (TagsController.LastTagId < id) {
             if (TagsController.LastTagId === id - 1) {
@@ -165,7 +168,7 @@ export class TagsController {
         TagsController.Tags.delete(id);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit(EVENT_NAME, TagsController.TagsVersion);
+        AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
     }
 
     /**
@@ -188,21 +191,5 @@ export class TagsController {
                 }
             }
         }
-    }
-
-    /**
-     * Adds event listener to check for updates
-     * @param handler Event handler
-     */
-    public static AddEventListener(handler: (v: number) => void) {
-        AppEvents.AddEventListener(EVENT_NAME, handler);
-    }
-
-    /**
-     * Removes event listener
-     * @param handler Event handler
-     */
-    public static RemoveEventListener(handler: (v: number) => void) {
-        AppEvents.RemoveEventListener(EVENT_NAME, handler);
     }
 }
