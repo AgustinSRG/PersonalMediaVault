@@ -1,15 +1,17 @@
 {
     "name": "pmv-frontend",
+    "type": "module",
     "version": "1.13.5",
     "private": true,
     "scripts": {
         "serve": "vite",
         "dev": "vite",
         "build": "vite build",
-        "lint": "vue-tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
+        "lint": "eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
         "prettier": "prettier --write .",
         "test": "vue-tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore src",
-        "update-locales": "node translate-file-maker.js"
+        "update-locales": "node translate-file-maker.cjs",
+        "update-translations": "node translate-file-maker.cjs"
     },
     "dependencies": {
         "@asanrom/request-browser": "1.0.0",
