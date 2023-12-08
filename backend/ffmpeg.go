@@ -8,12 +8,14 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"os/exec"
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/vansante/go-ffprobe"
@@ -231,7 +233,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -316,7 +318,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -371,7 +373,7 @@ func MakeFFMpegEncodeToMP3Command(originalFilePath string, originalFileFormat st
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -405,7 +407,7 @@ func MakeFFMpegEncodeToPNGCommand(originalFilePath string, originalFileFormat st
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -467,7 +469,7 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -504,7 +506,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		args[0] = FFMPEG_BINARY_PATH
 
-		args = append(args, "-y") // Overwrite
+		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 		args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
 
@@ -560,7 +562,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		args[0] = FFMPEG_BINARY_PATH
 
-		args = append(args, "-y") // Overwrite
+		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 		args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
 
@@ -626,7 +628,7 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	if config.EncodingThreads > 0 {
 		args = append(args, "-threads", fmt.Sprint(config.EncodingThreads)) // Max threads
@@ -658,40 +660,11 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	return cmd, intervalSeconds
 }
 
-// Runs FFMPEG command asynchronously (the child process can be managed)
-// cmd - Command to run
-// input_duration - Duration in seconds (used to calculate progress)
-// progress_reporter - Function called each time ffmpeg reports progress vie standard error
-// Note: If you return true in progress_reporter, the process will be killed (use this to interrupt tasks)
-func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) error {
-	// Configure command
-	err := child_process_manager.ConfigureCommand(cmd)
-	if err != nil {
-		return err
-	}
-
-	// Create a pipe to read StdErr
-	pipe, err := cmd.StderrPipe()
-
-	if err != nil {
-		return err
-	}
-
-	// Start the command
-
-	LogDebug("Running command: " + cmd.String())
-
-	err = cmd.Start()
-
-	if err != nil {
-		return err
-	}
-
-	// Add process as a child process
-	child_process_manager.AddChildProcess(cmd.Process) //nolint:errcheck
-
-	// Read stderr line by line
-
+// Reads FFmpeg standard error for debugging purposes
+// Parameters:
+//   - pipe: Pipe to read the standard error
+//   - wg: Wait group to call when done
+func ffmpegReadStdErr(pipe io.ReadCloser, wg *sync.WaitGroup) {
 	reader := bufio.NewReader(pipe)
 
 	var finished bool = false
@@ -706,24 +679,45 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 		line = strings.ReplaceAll(line, "\r", "")
 
 		LogDebug("[FFMPEG] " + line)
+	}
 
-		if !strings.HasPrefix(line, "frame=") {
+	wg.Done()
+}
+
+// Reads FFmpeg progress output and calls
+// the progress reporter
+// Parameters:
+//   - pipe: Pipe to read the standard output
+//   - wg: Wait group to call when done
+//   - cmd: The command, in order to kill it if interrupted
+//   - input_duration: Duration of the media
+//   - progress_reporter: Function to report the progress
+func ffmpegReadStdOut(pipe io.ReadCloser, wg *sync.WaitGroup, cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) {
+	reader := bufio.NewReader(pipe)
+
+	var finished bool = false
+
+	for !finished {
+		line, err := reader.ReadString('\n')
+
+		if err != nil {
+			finished = true
+		}
+
+		line = strings.ReplaceAll(line, "\r", "")
+		line = strings.ReplaceAll(line, "\n", "")
+
+		if !strings.HasPrefix(line, "out_time=") {
 			continue // Not a progress line
 		}
 
-		parts := strings.Split(line, "time=")
+		parts := strings.Split(line, "=")
 
 		if len(parts) < 2 {
 			continue
 		}
 
-		parts = strings.Split(strings.Trim(parts[1], " "), " ")
-
-		if len(parts) < 1 {
-			continue
-		}
-
-		parts = strings.Split(parts[0], ":")
+		parts = strings.Split(strings.Trim(parts[1], " "), ":")
 
 		if len(parts) != 3 {
 			continue
@@ -743,6 +737,69 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 			}
 		}
 	}
+
+	wg.Done()
+}
+
+// Runs FFMPEG command asynchronously (the child process can be managed)
+// cmd - Command to run
+// input_duration - Duration in seconds (used to calculate progress)
+// progress_reporter - Function called each time ffmpeg reports progress vie standard error
+// Note: If you return true in progress_reporter, the process will be killed (use this to interrupt tasks)
+func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) error {
+	// Configure command
+	err := child_process_manager.ConfigureCommand(cmd)
+	if err != nil {
+		return err
+	}
+
+	// Create a pipe to read StdOut
+	pipeOut, err := cmd.StdoutPipe()
+
+	if err != nil {
+		return err
+	}
+
+	// Create a pipe to read StdErr
+	var pipeErr io.ReadCloser = nil
+
+	if log_debug_enabled {
+		pipeErr, err = cmd.StderrPipe()
+
+		if err != nil {
+			return err
+		}
+	} else {
+		cmd.Stderr = nil
+	}
+
+	// Start the command
+
+	LogDebug("Running command: " + cmd.String())
+
+	err = cmd.Start()
+
+	if err != nil {
+		return err
+	}
+
+	// Add process as a child process
+	child_process_manager.AddChildProcess(cmd.Process) //nolint:errcheck
+
+	// Create wait group
+	wg := sync.WaitGroup{}
+
+	// Read pipes
+	wg.Add(1)
+	go ffmpegReadStdOut(pipeOut, &wg, cmd, input_duration, progress_reporter)
+
+	if pipeErr != nil {
+		wg.Add(1)
+		go ffmpegReadStdErr(pipeErr, &wg)
+	}
+
+	// Wait
+	wg.Wait()
 
 	// Wait for ending
 
@@ -848,7 +905,7 @@ func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaR
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
 
@@ -968,7 +1025,7 @@ func ExtractAudioFromMedia(originalFilePath string, probedata *FFprobeMediaResul
 
 	args[0] = FFMPEG_BINARY_PATH
 
-	args = append(args, "-y") // Overwrite
+	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
 	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
 
