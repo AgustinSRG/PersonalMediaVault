@@ -14,7 +14,7 @@
         "update-translations": "node translate-file-maker.cjs"
     },
     "dependencies": {
-        "@asanrom/request-browser": "1.0.0",
+        "@asanrom/request-browser": "1.0.3",
         "sanitize-html": "2.11.0",
         "vue": "3.3.8"
     },
