@@ -1,7 +1,7 @@
 {
     "name": "pmv-frontend",
     "type": "module",
-    "version": "1.13.5",
+    "version": "1.13.6",
     "private": true,
     "scripts": {
         "serve": "vite",
@@ -14,7 +14,7 @@
         "update-translations": "node translate-file-maker.cjs"
     },
     "dependencies": {
-        "@asanrom/request-browser": "1.0.3",
+        "@asanrom/request-browser": "1.0.4",
         "sanitize-html": "2.11.0",
         "vue": "3.3.8"
     },
