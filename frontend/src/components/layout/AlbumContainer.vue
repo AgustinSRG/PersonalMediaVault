@@ -518,9 +518,11 @@ export default defineComponent({
             this.currentPosMedia = newPosMedia;
 
             if (mustScroll) {
-                this.listScroller.moveWindowToElement(this.currentPos);
                 nextTick(() => {
-                    this.scrollToSelected();
+                    this.listScroller.moveWindowToElement(this.currentPos);
+                    nextTick(() => {
+                        this.scrollToSelected();
+                    });
                 });
             }
         },
