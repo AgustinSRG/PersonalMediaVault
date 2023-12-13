@@ -1,5 +1,7 @@
 <template>
-    <div class="snackbar" :class="{ hidden: !shown }" @mouseenter="hide" @click="hide">{{ message }}</div>
+    <div class="snackbar" :class="{ hidden: !shown, center: position === 'center', right: position === 'right' }">
+        <div class="snackbar-box" @mouseenter="hide" @click="hide">{{ message }}</div>
+    </div>
 </template>
 
 <script lang="ts">
@@ -17,10 +19,11 @@ export default defineComponent({
         return {
             shown: false,
             message: "",
+            position: "left",
         };
     },
     methods: {
-        show: function (msg: string) {
+        show: function (msg: string, position?: string) {
             if (this.timeout) {
                 clearTimeout(this.timeout);
                 this.timeout = null;
@@ -28,6 +31,7 @@ export default defineComponent({
 
             this.shown = true;
             this.message = msg;
+            this.position = position;
 
             this.timeout = setTimeout(() => {
                 this.shown = false;

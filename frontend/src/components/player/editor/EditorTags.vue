@@ -136,7 +136,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiTagsUntagMedia(mediaId, tag))
                 .onSuccess(({ removed }) => {
-                    PagesController.ShowSnackBar(this.$t("Removed tag") + ": " + tagName);
+                    PagesController.ShowSnackBarRight(this.$t("Removed tag") + ": " + tagName);
                     this.busy = false;
                     for (let i = 0; i < this.tags.length; i++) {
                         if (this.tags[i] === tag) {
@@ -159,22 +159,22 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -196,7 +196,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiTagsTagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
-                    PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     this.tagToAdd = "";
                     if (this.tags.indexOf(res.id) === -1) {
@@ -223,28 +223,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTagName: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid tag name"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid tag name"));
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -262,7 +262,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiTagsTagMedia(mediaId, tag))
                 .onSuccess((res) => {
                     setLastUsedTag(res.id);
-                    PagesController.ShowSnackBar(this.$t("Added tag") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Added tag") + ": " + res.name);
                     this.busy = false;
                     if (this.tags.indexOf(res.id) === -1) {
                         this.tags.push(res.id);
@@ -281,28 +281,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTagName: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid tag name"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid tag name"));
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });

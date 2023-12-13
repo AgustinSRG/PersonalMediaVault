@@ -155,7 +155,7 @@ export default defineComponent({
 
         addSubtitles: function () {
             if (!this.srtFile) {
-                PagesController.ShowSnackBar(this.$t("Please, select a SubRip file first"));
+                PagesController.ShowSnackBarRight(this.$t("Please, select a SubRip file first"));
                 return;
             }
 
@@ -171,7 +171,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                PagesController.ShowSnackBar(this.$t("There is already another subtitles file with the same identifier"));
+                PagesController.ShowSnackBarRight(this.$t("There is already another subtitles file with the same identifier"));
                 return;
             }
 
@@ -185,7 +185,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
-                    PagesController.ShowSnackBar(this.$t("Added subtitles") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
                     this.subtitles.push(res);
                     if (MediaController.MediaData) {
@@ -200,42 +200,42 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidSRT: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid SubRip file"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid SubRip file"));
                         },
                         invalidId: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
                         },
                         invalidName: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         fileTooLarge: () => {
-                            PagesController.ShowSnackBar(
+                            PagesController.ShowSnackBarRight(
                                 this.$t("Error") + ": " + this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"),
                             );
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -260,7 +260,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
                 .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Removed subtitles") + ": " + sub.name);
+                    PagesController.ShowSnackBarRight(this.$t("Removed subtitles") + ": " + sub.name);
                     this.busy = false;
                     for (let i = 0; i < this.subtitles.length; i++) {
                         if (this.subtitles[i].id === id) {
@@ -280,28 +280,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });

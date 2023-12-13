@@ -116,8 +116,25 @@ export class PagesController {
     /**
      * Emits event to show a snackbar
      * @param message The message to show
+     * @param position The position of the snackbar
      */
-    public static ShowSnackBar(message: string) {
-        AppEvents.Emit(EVENT_NAME_SNACK_BAR, message);
+    public static ShowSnackBar(message: string, position?: "left" | "right" | "center") {
+        AppEvents.Emit(EVENT_NAME_SNACK_BAR, message, position);
+    }
+
+    /**
+     * Emits event to show a snackbar (Right position)
+     * @param message The message to show
+     */
+    public static ShowSnackBarRight(message: string) {
+        PagesController.ShowSnackBar(message, "right");
+    }
+
+    /**
+     * Emits event to show a snackbar (Center position)
+     * @param message The message to show
+     */
+    public static ShowSnackBarCenter(message: string) {
+        PagesController.ShowSnackBar(message, "center");
     }
 }

@@ -102,7 +102,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaChangeTimeSlices(mediaId, slices))
                 .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Successfully changed time slices"));
+                    PagesController.ShowSnackBarRight(this.$t("Successfully changed time slices"));
                     this.busy = false;
                     this.dirty = false;
                     this.originalTimeSlices = renderTimeSlices(slices);
@@ -121,28 +121,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });

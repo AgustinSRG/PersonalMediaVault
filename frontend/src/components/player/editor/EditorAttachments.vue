@@ -210,7 +210,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaUploadAttachment(mediaId, file))
                 .onSuccess((res) => {
-                    PagesController.ShowSnackBar(this.$t("Added attachment") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Added attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentUploadProgress = 0;
                     this.attachments.push(res);
@@ -233,28 +233,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -279,7 +279,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaRemoveAttachment(mediaId, id))
                 .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Removed attachment") + ": " + att.name);
+                    PagesController.ShowSnackBarRight(this.$t("Removed attachment") + ": " + att.name);
                     this.busy = false;
                     for (let i = 0; i < this.attachments.length; i++) {
                         if (this.attachments[i].id === id) {
@@ -299,28 +299,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -356,7 +356,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaRenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
-                    PagesController.ShowSnackBar(this.$t("Renamed attachment") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Renamed attachment") + ": " + res.name);
                     this.busy = false;
                     this.attachmentEdit = -1;
                     this.attachmentEditName = "";
@@ -379,31 +379,31 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidName: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid attachment name"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid attachment name"));
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });

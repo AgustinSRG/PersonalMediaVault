@@ -154,7 +154,7 @@ export default defineComponent({
 
         addAudio: function () {
             if (!this.audioFile) {
-                PagesController.ShowSnackBar(this.$t("Please, select an audio file first"));
+                PagesController.ShowSnackBarRight(this.$t("Please, select an audio file first"));
                 return;
             }
 
@@ -170,7 +170,7 @@ export default defineComponent({
             }
 
             if (duped) {
-                PagesController.ShowSnackBar(this.$t("There is already another audio track with the same identifier"));
+                PagesController.ShowSnackBarRight(this.$t("There is already another audio track with the same identifier"));
                 return;
             }
 
@@ -184,7 +184,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaSetAudioTrack(mediaId, id, name, this.audioFile))
                 .onSuccess((res) => {
-                    PagesController.ShowSnackBar(this.$t("Added audio track") + ": " + res.name);
+                    PagesController.ShowSnackBarRight(this.$t("Added audio track") + ": " + res.name);
                     this.busy = false;
                     this.audios.push(res);
                     if (MediaController.MediaData) {
@@ -199,37 +199,37 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidAudio: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid audio file"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio file"));
                         },
                         invalidId: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
                         },
                         invalidName: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
@@ -254,7 +254,7 @@ export default defineComponent({
 
             makeNamedApiRequest(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
                 .onSuccess(() => {
-                    PagesController.ShowSnackBar(this.$t("Removed audio track") + ": " + aud.name);
+                    PagesController.ShowSnackBarRight(this.$t("Removed audio track") + ": " + aud.name);
                     this.busy = false;
                     for (let i = 0; i < this.audios.length; i++) {
                         if (this.audios[i].id === id) {
@@ -274,28 +274,28 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Not found"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBar(err.message);
+                    PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
                     this.busy = false;
                 });
