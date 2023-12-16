@@ -189,7 +189,7 @@ export default defineComponent({
                         this.findTags();
                     }
                     if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
-                        if (!MediaController.MediaData.tags.includes(tag)) {
+                        if (MediaController.MediaData.tags.includes(tag)) {
                             MediaController.MediaData.tags = MediaController.MediaData.tags.filter((t) => {
                                 return t !== tag;
                             });
