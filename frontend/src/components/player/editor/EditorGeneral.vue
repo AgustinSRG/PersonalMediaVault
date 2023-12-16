@@ -17,8 +17,16 @@
                     />
                 </div>
                 <div class="form-group" v-if="canWrite">
-                    <button type="submit" class="btn btn-primary" :disabled="busyTitle || !title || originalTitle === title">
+                    <button
+                        v-if="originalTitle !== title || busyTitle || !savedTitle"
+                        type="submit"
+                        class="btn btn-primary"
+                        :disabled="busyTitle || originalTitle === title || !title"
+                    >
                         <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
+                    </button>
+                    <button v-else type="button" disabled class="btn btn-primary">
+                        <i class="fas fa-check"></i> {{ $t("Saved title") }}
                     </button>
                 </div>
             </form>
@@ -38,12 +46,16 @@
             </div>
             <div class="form-group" v-if="canWrite">
                 <button
+                    v-if="originalDesc !== desc || busyDescription || !savedDescription"
                     type="button"
                     class="btn btn-primary"
                     :disabled="busyDescription || originalDesc === desc"
                     @click="changeDescription"
                 >
                     <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
+                </button>
+                <button v-else type="button" disabled class="btn btn-primary">
+                    <i class="fas fa-check"></i> {{ $t("Saved description") }}
                 </button>
             </div>
 
@@ -52,27 +64,21 @@
             <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
                 <label>{{ $t("Extra media configuration") }}:</label>
             </div>
-            <div class="table-responsive" v-if="canWrite && (type === 2 || type === 3)">
+            <div class="table-responsive" v-if="type === 2 || type === 3">
                 <table class="table no-border">
                     <tr v-if="type === 2 || type === 3">
                         <td class="text-right td-shrink">
-                            <toggle-switch v-model:val="startBeginning" :disabled="busyExtra"></toggle-switch>
+                            <toggle-switch
+                                v-model:val="startBeginning"
+                                :disabled="busyExtra || !canWrite"
+                                @update:val="changeExtraParams"
+                            ></toggle-switch>
                         </td>
                         <td class="">
                             {{ $t("Reset time to the beginning every time the media reloads?") }}
                         </td>
                     </tr>
                 </table>
-            </div>
-            <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    :disabled="busyExtra || originalStartBeginning === startBeginning"
-                    @click="changeExtraParams"
-                >
-                    <i class="fas fa-pencil-alt"></i> {{ $t("Change extra configuration") }}
-                </button>
             </div>
         </div>
 
@@ -148,6 +154,10 @@ export default defineComponent({
             busyDescription: false,
             busyThumbnail: false,
             busyExtra: false,
+
+            savedTitle: false,
+            savedDescription: false,
+            savedExtra: false,
 
             canWrite: AuthController.CanWrite,
 
@@ -289,6 +299,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully changed title"));
                     this.busyTitle = false;
+                    this.savedTitle = true;
                     this.originalTitle = this.title;
                     if (MediaController.MediaData) {
                         MediaController.MediaData.title = this.title;
@@ -347,6 +358,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully changed description"));
                     this.busyDescription = false;
+                    this.savedDescription = true;
                     this.originalDesc = this.desc;
                     if (MediaController.MediaData) {
                         MediaController.MediaData.description = this.desc;

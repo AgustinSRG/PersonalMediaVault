@@ -19,8 +19,17 @@
         </div>
 
         <div class="form-group" v-if="canWrite">
-            <button type="button" class="btn btn-primary" :disabled="busy || !dirty" @click="changeTimeSlices">
+            <button
+                v-if="dirty || !saved || busy"
+                type="button"
+                class="btn btn-primary"
+                :disabled="busy || !dirty"
+                @click="changeTimeSlices"
+            >
                 <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
+            </button>
+            <button v-else type="button" disabled class="btn btn-primary">
+                <i class="fas fa-check"></i> {{ $t("Saved time slices") }}
             </button>
         </div>
     </div>
@@ -56,6 +65,7 @@ export default defineComponent({
             originalTimeSlices: "",
 
             busy: false,
+            saved: false,
 
             dirty: false,
 
@@ -104,6 +114,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully changed time slices"));
                     this.busy = false;
+                    this.saved = true;
                     this.dirty = false;
                     this.originalTimeSlices = renderTimeSlices(slices);
                     this.timeSlices = this.originalTimeSlices;

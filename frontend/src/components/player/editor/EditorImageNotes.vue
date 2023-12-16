@@ -32,8 +32,17 @@
         </div>
 
         <div class="form-group" v-if="canWrite">
-            <button type="button" class="btn btn-primary" :disabled="busy || !dirty" @click="changeImageNotes">
+            <button
+                v-if="dirty || busy || !saved"
+                type="button"
+                class="btn btn-primary"
+                :disabled="busy || !dirty"
+                @click="changeImageNotes"
+            >
                 <i class="fas fa-pencil-alt"></i> {{ $t("Change image notes") }}
+            </button>
+            <button v-else type="button" disabled class="btn btn-primary">
+                <i class="fas fa-check"></i> {{ $t("Saved image notes") }}
             </button>
         </div>
     </div>
@@ -66,6 +75,7 @@ export default defineComponent({
             imageNotes: "",
 
             busy: false,
+            saved: false,
 
             dirty: false,
 
@@ -105,6 +115,7 @@ export default defineComponent({
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully changed image notes"));
                     this.busy = false;
+                    this.saved = true;
                     this.dirty = false;
 
                     ImageNotesController.Notes = notes;
