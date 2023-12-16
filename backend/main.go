@@ -13,7 +13,7 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const BACKEND_VERSION = "1.13.6"
+const BACKEND_VERSION = "1.13.7"
 
 type BackendOptions struct {
 	debug       bool // Debug mode
