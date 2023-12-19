@@ -6,6 +6,9 @@
                     $t("Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.")
                 }}</span>
             </div>
+            <div class="player-task-info-row" v-if="errorMessage">
+                <span>{{ errorMessage }}</span>
+            </div>
             <div class="player-task-info-row">
                 <button type="button" class="btn btn-primary" @click="refreshMedia">
                     <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
@@ -91,6 +94,7 @@ export default defineComponent({
         tid: Number,
         res: Number,
         error: Boolean,
+        errorMessage: String,
     },
     data: function () {
         return {

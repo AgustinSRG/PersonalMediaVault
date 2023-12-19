@@ -98,6 +98,7 @@
             :tid="audioPendingTask"
             :res="-1"
             :error="mediaError"
+            :errorMessage="mediaErrorMessage"
         ></PlayerEncodingPending>
 
         <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls }">
@@ -590,6 +591,7 @@ export default defineComponent({
             theme: getTheme(),
 
             mediaError: false,
+            mediaErrorMessage: "",
 
             hasExtendedDescription: false,
 
@@ -1308,6 +1310,7 @@ export default defineComponent({
             }
 
             this.mediaError = false;
+            this.mediaErrorMessage = "";
             if (!this.metadata) {
                 this.audioURL = "";
                 this.onClearURL();
@@ -1578,9 +1581,29 @@ export default defineComponent({
             }
             if (!AuthController.RefreshAuthStatus()) {
                 this.mediaError = true;
+                this.updateMediaErrorMessage();
                 this.loading = false;
                 AuthController.CheckAuthStatusSilent();
             }
+        },
+
+        updateMediaErrorMessage: function () {
+            this.mediaErrorMessage = "";
+
+            const mediaElem = this.getAudioElement();
+
+            if (!mediaElem) {
+                return;
+            }
+
+            const err = mediaElem.error;
+
+            if (!err) {
+                return;
+            }
+
+            this.mediaErrorMessage = err.message || "";
+            this.mediaErrorMessage && console.error(this.mediaErrorMessage);
         },
 
         setDefaultLoop: function () {
