@@ -394,6 +394,7 @@
 
 <script lang="ts">
 import {
+    CURRENT_TIME_UPDATE_DELAY,
     getAudioAnimationStyle,
     getAutoNextOnEnd,
     getAutoNextTime,
@@ -713,7 +714,7 @@ export default defineComponent({
             this.currentTime = audioElement.currentTime;
             this.duration = audioElement.duration;
 
-            if (this.canSaveTime && Date.now() - this.lastTimeChangedEvent > 5000) {
+            if (!this.loading && this.canSaveTime && Date.now() - this.lastTimeChangedEvent > CURRENT_TIME_UPDATE_DELAY) {
                 setCachedInitialTime(this.mid, this.currentTime);
                 this.lastTimeChangedEvent = Date.now();
             }
@@ -931,7 +932,7 @@ export default defineComponent({
                 audio.pause();
             }
 
-            if (this.canSaveTime && audio && !audio.ended) {
+            if (!this.loading && this.canSaveTime && audio && !audio.ended) {
                 setCachedInitialTime(this.mid, this.currentTime);
             }
 

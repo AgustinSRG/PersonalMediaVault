@@ -422,6 +422,7 @@
 
 <script lang="ts">
 import {
+    CURRENT_TIME_UPDATE_DELAY,
     getAutoNextOnEnd,
     getAutoNextTime,
     getCachedInitialTime,
@@ -826,7 +827,7 @@ export default defineComponent({
             }
             this.currentTime = videoElement.currentTime;
             this.duration = videoElement.duration;
-            if (this.canSaveTime && Date.now() - this.lastTimeChangedEvent > 5000) {
+            if (!this.loading && this.canSaveTime && Date.now() - this.lastTimeChangedEvent > CURRENT_TIME_UPDATE_DELAY) {
                 setCachedInitialTime(this.mid, this.currentTime);
                 this.lastTimeChangedEvent = Date.now();
             }
@@ -1118,7 +1119,7 @@ export default defineComponent({
                 video.pause();
             }
 
-            if (this.canSaveTime && video && !video.ended) {
+            if (!this.loading && this.canSaveTime && video && !video.ended) {
                 setCachedInitialTime(this.mid, this.currentTime);
             }
 

@@ -209,6 +209,11 @@ export function getCachedInitialTime(mid: number): number {
 }
 
 /**
+ * Delay to save the current time inside the cache (milliseconds)
+ */
+export const CURRENT_TIME_UPDATE_DELAY = 2000;
+
+/**
  * Sets cached initial time
  * @param mid The media ID
  * @param time The cached current time
