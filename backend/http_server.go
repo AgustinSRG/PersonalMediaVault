@@ -148,6 +148,8 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	router.HandleFunc("/api/media/{mid:[0-9]+}/encode", api_mediaRequestEncode).Methods("POST")
 
+	router.HandleFunc("/api/media/{mid:[0-9]+}/replace", api_replaceMedia).Methods("POST")
+
 	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/add", api_mediaAddResolution).Methods("POST")
 	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/remove", api_mediaRemoveResolution).Methods("POST")
 

@@ -325,6 +325,57 @@ export function apiMediaEncodeMedia(id: number): RequestParams<void, MediaEditAp
 }
 
 /**
+ * Error handler for set extended description API
+ */
+export type ReplaceMediaErrorHandler = MediaEditApiErrorHandler & {
+    /**
+     * Error: Invalid media file
+     */
+    invalidMedia: () => void;
+
+    /**
+     * Error: invalid media type
+     */
+    invalidMediaType: () => void;
+
+    /**
+     * Error: Bad request
+     */
+    badRequest: () => void;
+};
+
+/**
+ * Replaces media
+ * @param id Media ID
+ * @param file Media file to upload
+ * @returns The request parameters
+ */
+export function apiMediaReplaceMedia(
+    id: number,
+    file: File,
+): RequestParams<void, ReplaceMediaErrorHandler> {
+    const form = new FormData();
+    form.append("file", file);
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/replace`),
+        form: form,
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "INVALID_MEDIA", handler.invalidMedia)
+                .add(400, "INVALID_MEDIA_TYPE", handler.invalidMediaType)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
  * Deletes media
  * @param id Media ID
  * @returns The request parameters
