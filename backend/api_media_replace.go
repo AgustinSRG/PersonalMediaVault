@@ -146,7 +146,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	meta, err := media.StartWrite(session.key)
+	meta, err := media.StartWriteWithFullLock(session.key)
 
 	if err != nil {
 		LogError(err)
@@ -227,13 +227,11 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	if probe_data.Encoded {
 		meta.OriginalEncoded = true
 		meta.OriginalExtension = probe_data.EncodedExt
-		meta.OriginalAsset = new_original_asset
 		meta.OriginalTask = 0
 	} else {
 		// Must start a task to encode
 		meta.OriginalEncoded = false
 		meta.OriginalExtension = ext
-		meta.OriginalAsset = new_original_asset
 		meta.OriginalTask = GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_ORIGINAL, nil, true)
 	}
 
