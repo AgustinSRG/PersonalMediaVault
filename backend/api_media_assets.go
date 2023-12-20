@@ -158,7 +158,7 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		response.Header().Add("Content-Range", "bytes */"+fmt.Sprint(s.FileSize()))
+		response.Header().Set("Content-Range", "bytes */"+fmt.Sprint(s.FileSize()))
 
 		response.WriteHeader(416)
 		return
@@ -182,15 +182,16 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 
 	// Send response
 
-	response.Header().Add("Content-Type", mimeType)
-	response.Header().Add("X-Content-Type-Options", "nosniff")
-	response.Header().Add("Content-Length", fmt.Sprint(contentLength))
-	response.Header().Add("Cache-Control", "max-age=31536000")
+	response.Header().Set("Content-Type", mimeType)
+	response.Header().Set("X-Content-Type-Options", "nosniff")
+	response.Header().Set("Content-Length", fmt.Sprint(contentLength))
+	response.Header().Set("Cache-Control", "max-age=31536000")
 
 	if hasRange {
-		response.Header().Add("Content-Range", "bytes "+fmt.Sprint(fileSeek)+"-"+fmt.Sprint(fileEnding)+"/"+fmt.Sprint(s.FileSize()))
+		response.Header().Set("Content-Range", "bytes "+fmt.Sprint(fileSeek)+"-"+fmt.Sprint(fileEnding)+"/"+fmt.Sprint(s.FileSize()))
 		response.WriteHeader(206)
 	} else {
+		response.Header().Set("Transfer-Encoding", "identity")
 		response.WriteHeader(200)
 	}
 
@@ -373,9 +374,9 @@ func api_handleAssetVideoPreviews(response http.ResponseWriter, request *http.Re
 
 	// Return the image
 
-	response.Header().Add("Content-Type", "image/jpg")
-	response.Header().Add("Content-Length", fmt.Sprint(len(d)))
-	response.Header().Add("Cache-Control", "max-age=31536000")
+	response.Header().Set("Content-Type", "image/jpg")
+	response.Header().Set("Content-Length", fmt.Sprint(len(d)))
+	response.Header().Set("Cache-Control", "max-age=31536000")
 
 	response.WriteHeader(200)
 

@@ -117,12 +117,12 @@ func ReturnAPI_JSON(response http.ResponseWriter, request *http.Request, result 
 	etag := hex.EncodeToString(hash)
 
 	response.Header().Set("ETag", etag)
-	response.Header().Add("Cache-Control", "no-cache")
+	response.Header().Set("Cache-Control", "no-cache")
 
 	if request.Header.Get("If-None-Match") == etag {
 		response.WriteHeader(304)
 	} else {
-		response.Header().Add("Content-Type", "application/json")
+		response.Header().Set("Content-Type", "application/json")
 		response.WriteHeader(200)
 
 		response.Write(result) //nolint:errcheck
@@ -151,13 +151,13 @@ func ReturnAPIError(response http.ResponseWriter, status int, code string, messa
 
 	if err != nil {
 		LogError(err)
-		response.Header().Add("Cache-Control", "no-cache")
+		response.Header().Set("Cache-Control", "no-cache")
 		response.WriteHeader(500)
 		return
 	}
 
-	response.Header().Add("Content-Type", "application/json")
-	response.Header().Add("Cache-Control", "no-cache")
+	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Cache-Control", "no-cache")
 	response.WriteHeader(status)
 	response.Write(jsonRes) //nolint:errcheck
 }

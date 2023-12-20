@@ -220,10 +220,9 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	mime.AddExtensionType(".js", "text/javascript") //nolint:errcheck
 
-	router.Use(cacheTTLAdd)
-	router.HandleFunc("/favicon.ico", handleFavicon).Methods("GET")
-	router.HandleFunc("/img/icons/{file}", handleImageFile).Methods("GET")
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir(frontend_path)))
+	router.Path("/favicon.ico").Methods("GET").Handler(handlers.CompressHandler(cacheTTLAdd(http.HandlerFunc(handleFavicon))))
+	router.Path("/img/icons/{file}").Methods("GET").Handler(handlers.CompressHandler(cacheTTLAdd(http.HandlerFunc(handleImageFile))))
+	router.PathPrefix("/").Handler(handlers.CompressHandler(cacheTTLAdd(http.FileServer(http.Dir(frontend_path)))))
 
 	// Run server
 
@@ -271,7 +270,7 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 
 	// Listen
 	LogInfo("[SSL] Listening on " + bind_addr + ":" + strconv.Itoa(ssl_port))
-	errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, handlers.CompressHandler(router))
+	errSSL := http.ListenAndServeTLS(bind_addr+":"+strconv.Itoa(ssl_port), certFile, keyFile, router)
 
 	if errSSL != nil {
 		LogError(errSSL)
@@ -299,7 +298,7 @@ func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 
 	// Listen
 	LogInfo("[HTTP] Listening on " + bind_addr + ":" + strconv.Itoa(tcp_port))
-	errHTTP := http.ListenAndServe(bind_addr+":"+strconv.Itoa(tcp_port), handlers.CompressHandler(router))
+	errHTTP := http.ListenAndServe(bind_addr+":"+strconv.Itoa(tcp_port), router)
 
 	if errHTTP != nil {
 		LogError(errHTTP)
