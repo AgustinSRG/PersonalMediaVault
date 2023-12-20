@@ -12,6 +12,7 @@
             <button type="button" class="btn btn-primary" :disabled="busy" @click="encodeMedia">
                 <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
             </button>
+            <div v-if="errorReEncode" class="form-error form-error-pt">{{ errorReEncode }}</div>
         </div>
 
         <!--- Replace -->
@@ -33,6 +34,7 @@
             <button v-else type="button" class="btn btn-primary" disabled>
                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Encrypting") }}...
             </button>
+            <div v-if="errorReplace" class="form-error form-error-pt">{{ errorReplace }}</div>
         </div>
 
         <!--- Delete -->
@@ -110,6 +112,9 @@ export default defineComponent({
 
             replacing: false,
             replaceProgress: 0,
+
+            errorReplace: "",
+            errorReEncode: "",
         };
     },
 
@@ -128,6 +133,7 @@ export default defineComponent({
             }
 
             this.busy = true;
+            this.errorReEncode = "";
 
             const mediaId = AppStatus.CurrentMedia;
 
@@ -144,25 +150,25 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
+                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Not found");
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Internal server error");
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            this.errorReEncode = this.$t("Error") + ": " + this.$t("Could not connect to the server");
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
+                    this.errorReEncode = this.$t("Error") + ": " + err.message;
                     console.error(err);
                     this.busy = false;
                 });
@@ -213,6 +219,7 @@ export default defineComponent({
             this.busy = true;
             this.replacing = true;
             this.replaceProgress = 0;
+            this.errorReplace = "";
 
             const mediaId = AppStatus.CurrentMedia;
 
@@ -244,36 +251,35 @@ export default defineComponent({
                     this.fileRef = null;
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidMedia: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid media file provided"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Invalid media file provided");
                         },
                         invalidMediaType: () => {
-                            PagesController.ShowSnackBarRight(
-                                this.$t("Error") + ": " + this.$t("You must upload a file of the same type in order to replace the media"),
-                            );
+                            this.errorReplace =
+                                this.$t("Error") + ": " + this.$t("You must upload a file of the same type in order to replace the media");
                         },
                         badRequest: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Bad request");
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
                         },
                         notFound: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Not found");
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Internal server error");
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            this.errorReplace = this.$t("Error") + ": " + this.$t("Could not connect to the server");
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
-                    PagesController.ShowSnackBarRight(err.message);
+                    this.errorReplace = this.$t("Error") + ": " + err.message;
                     console.error(err);
                     this.busy = false;
                     this.replacing = false;

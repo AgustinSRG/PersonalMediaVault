@@ -120,6 +120,10 @@ textarea.form-control::-webkit-resizer {
     color: red;
 }
 
+.form-error-pt {
+    padding-top: 0.5rem;
+}
+
 .file-hidden {
     display: none;
 }
