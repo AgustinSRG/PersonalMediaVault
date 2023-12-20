@@ -961,6 +961,56 @@ paths:
           description: Not found
         200:
           description: Success
+  
+  "/api/media/{id}/replace":
+    post:
+      summary: Replaces the media with a new file.
+      description: Replaces the media with a new file. Usually to increase the quality.
+      tags:
+        - media
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_MEDIA - Invalid media file provided
+                    * INVALID_MEDIA_TYPE - Invalid media type. The uploaded file must be the same type.
+                enum:
+                  - INVALID_MEDIA
+                  - INVALID_MEDIA_TYPE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Not found
+        200:
+          description: Success
           
   "/api/media/{id}/delete":
     post:
