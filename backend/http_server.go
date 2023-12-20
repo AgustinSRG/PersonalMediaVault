@@ -107,101 +107,104 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 		router.Use(corsMiddleware)
 	}
 
-	// API routes
+	// Assets (get encrypted media files)
 
-	// Auth API
-	router.HandleFunc("/api/auth/login", api_handleAuthLogin).Methods("POST")
-	router.HandleFunc("/api/auth/logout", api_handleAuthLogout).Methods("POST")
-
-	// Account API (changing credentials)
-	router.HandleFunc("/api/account", api_getAccountContext).Methods("GET")
-	router.HandleFunc("/api/account/username", api_getAccountContext).Methods("GET")
-	router.HandleFunc("/api/account/username", api_changeUsername).Methods("POST")
-	router.HandleFunc("/api/account/password", api_changePassword).Methods("POST")
-
-	// Admin API (Manage accounts)
-	router.HandleFunc("/api/admin/accounts", api_getAccounts).Methods("GET")
-	router.HandleFunc("/api/admin/accounts", api_createAccount).Methods("POST")
-	router.HandleFunc("/api/admin/accounts/delete", api_deleteAccount).Methods("POST")
-	router.HandleFunc("/api/admin/launcher/{tag}", api_checkLauncherTag).Methods("GET")
-
-	// Assets API (get encrypted media files)
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
 	router.HandleFunc("/assets/p/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
 
+	// API routes
+
+	apiRouter := router.PathPrefix("/api/").Subrouter()
+	apiRouter.Use(handlers.CompressHandler)
+
+	// Auth API
+	apiRouter.HandleFunc("/auth/login", api_handleAuthLogin).Methods("POST")
+	apiRouter.HandleFunc("/auth/logout", api_handleAuthLogout).Methods("POST")
+
+	// Account API (changing credentials)
+	apiRouter.HandleFunc("/account", api_getAccountContext).Methods("GET")
+	apiRouter.HandleFunc("/account/username", api_getAccountContext).Methods("GET")
+	apiRouter.HandleFunc("/account/username", api_changeUsername).Methods("POST")
+	apiRouter.HandleFunc("/account/password", api_changePassword).Methods("POST")
+
+	// Admin API (Manage accounts)
+	apiRouter.HandleFunc("/admin/accounts", api_getAccounts).Methods("GET")
+	apiRouter.HandleFunc("/admin/accounts", api_createAccount).Methods("POST")
+	apiRouter.HandleFunc("/admin/accounts/delete", api_deleteAccount).Methods("POST")
+	apiRouter.HandleFunc("/admin/launcher/{tag}", api_checkLauncherTag).Methods("GET")
+
 	// Media API
-	router.HandleFunc("/api/media/{mid:[0-9]+}", api_getMedia).Methods("GET")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/albums", api_getMediaAlbums).Methods("GET")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/size_stats", api_getMediaSizeStats).Methods("GET")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}", api_getMedia).Methods("GET")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/albums", api_getMediaAlbums).Methods("GET")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/size_stats", api_getMediaSizeStats).Methods("GET")
 
-	router.HandleFunc("/api/upload", api_uploadMedia).Methods("POST")
+	apiRouter.HandleFunc("/upload", api_uploadMedia).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/title", api_editMediaTitle).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/description", api_editMediaDescription).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/extra", api_editMediaExtraParams).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/thumbnail", api_editMediaThumbnail).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/notes", api_setImageNotes).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/ext_desc", api_setExtendedDescription).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/edit/time_slices", api_editMediaTimelineSplices).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/title", api_editMediaTitle).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/description", api_editMediaDescription).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/extra", api_editMediaExtraParams).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/thumbnail", api_editMediaThumbnail).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/notes", api_setImageNotes).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/ext_desc", api_setExtendedDescription).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/time_slices", api_editMediaTimelineSplices).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/encode", api_mediaRequestEncode).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/encode", api_mediaRequestEncode).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/replace", api_replaceMedia).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/replace", api_replaceMedia).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/add", api_mediaAddResolution).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/resolution/remove", api_mediaRemoveResolution).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/resolution/add", api_mediaAddResolution).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/resolution/remove", api_mediaRemoveResolution).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/subtitles/set", api_addMediaSubtitles).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/subtitles/remove", api_removeMediaSubtitles).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/subtitles/set", api_addMediaSubtitles).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/subtitles/remove", api_removeMediaSubtitles).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/audios/set", api_addMediaAudioTrack).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/audios/remove", api_removeMediaAudioTrack).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/audios/set", api_addMediaAudioTrack).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/audios/remove", api_removeMediaAudioTrack).Methods("POST")
 
-	router.HandleFunc("/api/media/{mid:[0-9]+}/attachments/add", api_addMediaAttachment).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/attachments/rename", api_updateMediaAttachment).Methods("POST")
-	router.HandleFunc("/api/media/{mid:[0-9]+}/attachments/remove", api_removeMediaAttachment).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/attachments/add", api_addMediaAttachment).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/attachments/rename", api_updateMediaAttachment).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/attachments/remove", api_removeMediaAttachment).Methods("POST")
 
 	// Search API
-	router.HandleFunc("/api/search", api_searchMedia).Methods("GET")
-	router.HandleFunc("/api/random", api_randomMedia).Methods("GET")
+	apiRouter.HandleFunc("/search", api_searchMedia).Methods("GET")
+	apiRouter.HandleFunc("/random", api_randomMedia).Methods("GET")
 
 	// Tags API
-	router.HandleFunc("/api/tags", api_getTags).Methods("GET")
+	apiRouter.HandleFunc("/tags", api_getTags).Methods("GET")
 
-	router.HandleFunc("/api/tags/add", api_tagMedia).Methods("POST")
-	router.HandleFunc("/api/tags/remove", api_untagMedia).Methods("POST")
+	apiRouter.HandleFunc("/tags/add", api_tagMedia).Methods("POST")
+	apiRouter.HandleFunc("/tags/remove", api_untagMedia).Methods("POST")
 
 	// Albums API
-	router.HandleFunc("/api/albums", api_getAlbums).Methods("GET")
-	router.HandleFunc("/api/albums/{id:[0-9]+}", api_getAlbum).Methods("GET")
+	apiRouter.HandleFunc("/albums", api_getAlbums).Methods("GET")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}", api_getAlbum).Methods("GET")
 
-	router.HandleFunc("/api/albums", api_createAlbum).Methods("POST")
+	apiRouter.HandleFunc("/albums", api_createAlbum).Methods("POST")
 
-	router.HandleFunc("/api/albums/{id:[0-9]+}/delete", api_deleteAlbum).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/delete", api_deleteAlbum).Methods("POST")
 
-	router.HandleFunc("/api/albums/{id:[0-9]+}/rename", api_renameAlbum).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/rename", api_renameAlbum).Methods("POST")
 
-	router.HandleFunc("/api/albums/{id:[0-9]+}/set", api_setAlbumList).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/set", api_setAlbumList).Methods("POST")
 
-	router.HandleFunc("/api/albums/{id:[0-9]+}/add", api_albumAddMedia).Methods("POST")
-	router.HandleFunc("/api/albums/{id:[0-9]+}/remove", api_albumRemoveMedia).Methods("POST")
-	router.HandleFunc("/api/albums/{id:[0-9]+}/move", api_albumMoveMedia).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/add", api_albumAddMedia).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/remove", api_albumRemoveMedia).Methods("POST")
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/move", api_albumMoveMedia).Methods("POST")
 
 	// Config API
-	router.HandleFunc("/api/config", api_getConfig).Methods("GET")
-	router.HandleFunc("/api/config", api_setConfig).Methods("POST")
+	apiRouter.HandleFunc("/config", api_getConfig).Methods("GET")
+	apiRouter.HandleFunc("/config", api_setConfig).Methods("POST")
 
 	// Tasks API
-	router.HandleFunc("/api/tasks", api_getTasks).Methods("GET")
-	router.HandleFunc("/api/tasks/{id:[0-9]+}", api_getTask).Methods("GET")
+	apiRouter.HandleFunc("/tasks", api_getTasks).Methods("GET")
+	apiRouter.HandleFunc("/tasks/{id:[0-9]+}", api_getTask).Methods("GET")
 
 	// About API
-	router.HandleFunc("/api/about", api_about).Methods("GET")
+	apiRouter.HandleFunc("/about", api_about).Methods("GET")
 
 	// Is Test?
-
 	if isTest {
 		return router
 	}
