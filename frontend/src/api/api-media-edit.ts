@@ -350,10 +350,7 @@ export type ReplaceMediaErrorHandler = MediaEditApiErrorHandler & {
  * @param file Media file to upload
  * @returns The request parameters
  */
-export function apiMediaReplaceMedia(
-    id: number,
-    file: File,
-): RequestParams<void, ReplaceMediaErrorHandler> {
+export function apiMediaReplaceMedia(id: number, file: File): RequestParams<void, ReplaceMediaErrorHandler> {
     const form = new FormData();
     form.append("file", file);
     return {
