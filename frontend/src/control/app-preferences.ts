@@ -9,20 +9,6 @@ import { AlbumListItemMin } from "@/api/models";
 
 export type ColorThemeName = "light" | "dark";
 
-/**
- * Gets default theme, by checking the browser settings
- * @returns The theme name
- */
-function defaultBrowserTheme(): ColorThemeName {
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "dark";
-    } else if (window.matchMedia) {
-        return "light";
-    } else {
-        return "dark";
-    }
-}
-
 const LS_KEY_THEME = "app-pref-theme";
 
 const Theme = {
@@ -41,7 +27,7 @@ export const EVENT_NAME_THEME_CHANGED = "theme-changed";
  */
 export function getTheme(): ColorThemeName {
     if (!Theme.loaded) {
-        Theme.value = fetchFromLocalStorage(LS_KEY_THEME, defaultBrowserTheme());
+        Theme.value = fetchFromLocalStorage(LS_KEY_THEME, "dark");
         Theme.loaded = true;
     }
 
