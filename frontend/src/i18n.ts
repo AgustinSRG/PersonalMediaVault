@@ -28,9 +28,40 @@ declare module "vue" {
 }
 
 /**
+ * Available languages
+ * Add here when adding new languages
+ */
+export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
+    {
+        id: "en",
+        name: "English",
+    },
+    {
+        id: "es",
+        name: "Español (Spanish)",
+    },
+    {
+        id: "fr",
+        name: "Français (French)",
+    },
+    {
+        id: "it",
+        name: "Italiano (Italian)",
+    },
+    {
+        id: "ja",
+        name: "日本語 (Japanese)",
+    },
+    {
+        id: "pt",
+        name: "Português (Portuguese)",
+    },
+];
+
+/**
  * List of supported locales
  */
-export const SUPPORTED_LOCALES = ["en", "es"];
+export const SUPPORTED_LOCALES = AVAILABLE_LANGUAGES.map((l) => l.id);
 
 // Load default language
 

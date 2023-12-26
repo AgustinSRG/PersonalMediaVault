@@ -22,17 +22,18 @@
             </div>
             <div class="modal-body with-menu limited-height">
                 <table class="modal-menu">
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('en')">
+                    <tr
+                        v-for="l in languages"
+                        :key="l.id"
+                        class="modal-menu-item"
+                        tabindex="0"
+                        @keydown="clickOnEnter"
+                        @click="changeLocale(l.id)"
+                    >
                         <td class="modal-menu-item-icon">
-                            <i class="fas fa-check" :class="{ unchecked: lang !== 'en' }"></i>
+                            <i class="fas fa-check" :class="{ unchecked: lang !== l.id }"></i>
                         </td>
-                        <td class="modal-menu-item-title">English ({{ $t("Default") }})</td>
-                    </tr>
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="changeLocale('es')">
-                        <td class="modal-menu-item-icon">
-                            <i class="fas fa-check" :class="{ unchecked: lang !== 'es' }"></i>
-                        </td>
-                        <td class="modal-menu-item-title">Español (Internacional)</td>
+                        <td class="modal-menu-item-title">{{ l.name }}</td>
                     </tr>
                 </table>
             </div>
@@ -45,6 +46,7 @@ import { getLanguage, setLanguage } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
+import { AVAILABLE_LANGUAGES } from "@/i18n";
 
 export default defineComponent({
     name: "LanguageDropdown",
@@ -60,6 +62,12 @@ export default defineComponent({
     },
     data: function () {
         return {
+            languages: AVAILABLE_LANGUAGES.map((l) => {
+                return {
+                    id: l.id,
+                    name: l.name,
+                };
+            }),
             lang: getLanguage(),
         };
     },
