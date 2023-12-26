@@ -62,7 +62,7 @@ export const EVENT_NAME_LOCALE_CHANGED = "set-locale";
  */
 export function getLanguage(): string {
     if (!Language.loaded) {
-        Language.value = fetchFromLocalStorage(LS_KEY_LANGUAGE, navigator.language || "en");
+        Language.value = fetchFromLocalStorage(LS_KEY_LANGUAGE, (navigator.language || "en").split("-")[0] + "");
         Language.loaded = true;
     }
 
