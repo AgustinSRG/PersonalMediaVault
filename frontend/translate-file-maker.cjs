@@ -11,7 +11,7 @@ function generateTranslationConfigurationFile(lang, resources) {
     const result = Object.create(null);
 
     for (const key of keys) {
-        result[key] = resources[key] || key;
+        result[key] = resources[key] || "";
     }
 
     return JSON.stringify(result, null, 4) + "\n";
@@ -25,8 +25,8 @@ function getResourcesFromTranslationsFile(file) {
 function searchTranslationUsages(file) {
     const str = FS.readFileSync(file).toString();
 
-    const matches = (str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\"([^\\"]*)\"([\s\n\t]+)*\)/gi) || []).concat(
-        str.match(/\$t([\s\n\t]+)*\(([\s\n\t]+)*\'[^\\']*\'([\s\n\t]+)*\)/gi) || [],
+    const matches = (str.match(/\$t([\s\n\t]+)?\(([\s\n\t]+)?\"([^\\"]+)\"([\s\n\t]+)?\)/gi) || []).concat(
+        str.match(/\$t([\s\n\t]+)?\(([\s\n\t]+)?\'[^\\']+\'([\s\n\t]+)?\)/gi) || [],
     );
     const usages = {};
 
@@ -119,6 +119,7 @@ function main() {
     let usedKeys = Object.create(null);
 
     for (const file of scanned) {
+        // console.log("File: " + file);
         const fileKeys = searchTranslationUsages(file);
         if (Object.keys(fileKeys).length > 0) {
             // console.log("[REPORT] Found " + Object.keys(fileKeys).length + " translation keys in file " + file);

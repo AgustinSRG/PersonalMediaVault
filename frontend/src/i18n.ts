@@ -74,7 +74,7 @@ export const i18n = {
                 return key;
             }
             if (i18nData.messages.has(key)) {
-                return i18nData.messages.get(key);
+                return (i18nData.messages.get(key) || key).trim();
             } else {
                 return key;
             }
