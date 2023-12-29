@@ -315,6 +315,10 @@
     content: "\f074";
 }
 
+.fa-sliders::before {
+    content: "\f1de";
+}
+
 .fa-spinner::before {
     content: "\f110";
 }

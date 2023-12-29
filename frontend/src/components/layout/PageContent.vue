@@ -64,7 +64,7 @@
                 <i class="fas fa-angles-up"></i>
             </button>
             <button v-if="hasConfigOptions(page)" type="button" :title="$t('Configuration')" class="page-header-btn" @click="openConfig">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-sliders"></i>
             </button>
             <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage">
                 <i class="fas fa-times"></i>
