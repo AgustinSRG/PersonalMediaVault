@@ -43,7 +43,7 @@ func InitializeTestVault() error {
 	ffmpegPath := os.Getenv("FFMPEG_PATH")
 	if ffmpegPath == "" {
 		if runtime.GOOS == "windows" {
-			ffmpegPath = "/ffmpeg/bin/ffmpeg.exe"
+			ffmpegPath = "C:\\\\ffmpeg\\bin\\ffmpeg.exe"
 		} else {
 			ffmpegPath = "/usr/bin/ffmpeg"
 		}
@@ -53,7 +53,7 @@ func InitializeTestVault() error {
 
 	if ffprobePath == "" {
 		if runtime.GOOS == "windows" {
-			ffprobePath = "/ffmpeg/bin/ffprobe.exe"
+			ffprobePath = "C:\\\\ffmpeg\\bin\\ffprobe.exe"
 		} else {
 			ffprobePath = "/usr/bin/ffprobe"
 		}

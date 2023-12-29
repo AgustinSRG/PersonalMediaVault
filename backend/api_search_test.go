@@ -12,21 +12,21 @@ import (
 
 func Search_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Upload test media
-	media1, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 1", "")
+	media1, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 1", "")
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	media2, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 2", "")
+	media2, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 2", "")
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	media3, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 3", "")
+	media3, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 3", "")
 
 	if err != nil {
 		t.Error(err)

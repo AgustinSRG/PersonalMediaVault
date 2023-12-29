@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"testing"
@@ -24,36 +25,36 @@ func Media_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Upload media and wait for it to be ready
 
 	t.Run("Video", func(t *testing.T) {
-		mid, err := UploadTestMedia(server, session, MediaTypeVideo, "Test video", "")
+		mid, filePath, err := UploadTestMedia(server, session, MediaTypeVideo, "Test video", "")
 
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		_TestUploadedMedia(server, session, t, mid)
+		_TestUploadedMedia(server, session, t, mid, filePath)
 	})
 
 	t.Run("Audio", func(t *testing.T) {
-		mid, err := UploadTestMedia(server, session, MediaTypeAudio, "Test audio", "")
+		mid, filePath, err := UploadTestMedia(server, session, MediaTypeAudio, "Test audio", "")
 
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		_TestUploadedMedia(server, session, t, mid)
+		_TestUploadedMedia(server, session, t, mid, filePath)
 	})
 
 	t.Run("Image", func(t *testing.T) {
-		mid, err := UploadTestMedia(server, session, MediaTypeImage, "Test image", "")
+		mid, filePath, err := UploadTestMedia(server, session, MediaTypeImage, "Test image", "")
 
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		_TestUploadedMedia(server, session, t, mid)
+		_TestUploadedMedia(server, session, t, mid, filePath)
 	})
 }
 
@@ -71,7 +72,7 @@ func _TestFetchMetadata(server *httptest.Server, session string, t *testing.T, m
 	return json.Unmarshal(bodyResponseBytes, &res)
 }
 
-func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, mediaId uint64) {
+func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, mediaId uint64, filePath string) {
 	// Get metadata
 
 	meta := MediaAPIMetaResponse{}
@@ -427,105 +428,107 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	client := server.Client()
 
-	newThumbnail, err := os.ReadFile(path.Join("test-assets", "test-image.png"))
+	{
+		newThumbnail, err := os.ReadFile(path.Join("test-assets", "test-image.png"))
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	var b bytes.Buffer
+		var b bytes.Buffer
 
-	writer := multipart.NewWriter(&b)
+		writer := multipart.NewWriter(&b)
 
-	part, err := writer.CreateFormFile("file", "new-thumbnail.png")
+		part, err := writer.CreateFormFile("file", "new-thumbnail.png")
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	_, err = part.Write(newThumbnail)
+		_, err = part.Write(newThumbnail)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	writer.Close()
+		writer.Close()
 
-	apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/thumbnail")
+		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/thumbnail")
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	req, err := http.NewRequest("POST", apiURL, &b)
+		req, err := http.NewRequest("POST", apiURL, &b)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	req.Header.Set("x-session-token", session)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("x-session-token", session)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	resp, err := client.Do(req)
+		resp, err := client.Do(req)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	defer resp.Body.Close()
+		defer resp.Body.Close()
 
-	if statusCode != 200 {
-		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
-	}
+		if resp.StatusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
 
-	bodyData, err := io.ReadAll(resp.Body)
+		bodyData, err := io.ReadAll(resp.Body)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	res2 := ThumbnailAPIResponse{}
+		res2 := ThumbnailAPIResponse{}
 
-	err = json.Unmarshal(bodyData, &res2)
+		err = json.Unmarshal(bodyData, &res2)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", res2.Url, nil, session)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	if statusCode != 200 {
-		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
-	}
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
 
-	thumbContentType := http.DetectContentType(bodyResponseBytes)
+		thumbContentType := http.DetectContentType(bodyResponseBytes)
 
-	if thumbContentType != "image/jpeg" {
-		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(thumbContentType), "image/jpeg"))
-	}
+		if thumbContentType != "image/jpeg" {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(thumbContentType), "image/jpeg"))
+		}
 
-	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-	if meta.Thumbnail == "" {
-		t.Errorf("Metadata has no thumbnail")
+		if meta.Thumbnail == "" {
+			t.Errorf("Metadata has no thumbnail")
+		}
 	}
 
 	// Subtitles
@@ -584,7 +587,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		defer resp.Body.Close()
 
-		if statusCode != 200 {
+		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 		}
 
@@ -715,7 +718,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		defer resp.Body.Close()
 
-		if statusCode != 200 {
+		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 		}
 
@@ -846,8 +849,8 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		defer resp.Body.Close()
 
-		if statusCode != 200 {
-			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		if resp.StatusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(resp.StatusCode), "200"))
 		}
 
 		bodyData, err := io.ReadAll(resp.Body)
@@ -1087,6 +1090,107 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		}
 	}
 
+	// Replace
+
+	{
+		newMediaContent, err := os.ReadFile(filePath)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		var b bytes.Buffer
+
+		writer := multipart.NewWriter(&b)
+
+		part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err = part.Write(newMediaContent)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		writer.Close()
+
+		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/replace")
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req, err := http.NewRequest("POST", apiURL, &b)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req.Header.Set("x-session-token", session)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := client.Do(req)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		for !meta.Encoded {
+			if meta.Task > 0 {
+				statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/tasks/"+fmt.Sprint(meta.Task), nil, session)
+
+				if err != nil {
+					t.Error(err)
+					return
+				}
+
+				if statusCode == 200 {
+					taskInfo := TaskListInfoEntry{}
+
+					err = json.Unmarshal(bodyResponseBytes, &taskInfo)
+
+					if err != nil {
+						t.Error(err)
+						return
+					}
+				} else if statusCode != 404 {
+					t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200/404"))
+				}
+			}
+
+			time.Sleep(100 * time.Millisecond)
+
+			err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}
+
 	// Re-Encode
 
 	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/encode", nil, session)
@@ -1297,7 +1401,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 	}
 }
 
-func UploadTestMedia(server *httptest.Server, session string, mt MediaType, title string, album string) (mid uint64, e error) {
+func UploadTestMedia(server *httptest.Server, session string, mt MediaType, title string, album string) (mid uint64, filePath string, e error) {
 	client := server.Client()
 
 	fileName := ""
@@ -1310,13 +1414,13 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 	case MediaTypeImage:
 		fileName = "test-image.png"
 	default:
-		return 0, errors.New("Invalid media type")
+		return 0, "", errors.New("Invalid media type")
 	}
 
 	apiURL, err := url.JoinPath(server.URL, "/api/upload")
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	var b bytes.Buffer
@@ -1326,19 +1430,21 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 	part, err := writer.CreateFormFile("file", fileName)
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
-	fileData, err := os.ReadFile(path.Join("test-assets", fileName))
+	filePath = path.Join("test-assets", fileName)
+
+	fileData, err := os.ReadFile(filePath)
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	_, err = part.Write(fileData)
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	writer.Close()
@@ -1346,7 +1452,7 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 	req, err := http.NewRequest("POST", apiURL+"?title="+url.QueryEscape(title)+"&album="+url.QueryEscape(album), &b)
 
 	if err != nil {
-		return 0, err
+		return 0, filePath, err
 	}
 
 	req.Header.Set("x-session-token", session)
@@ -1355,19 +1461,19 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return 0, err
+		return 0, filePath, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return 0, errors.New("Upload error. Status code: " + fmt.Sprint(resp.StatusCode))
+		return 0, filePath, errors.New("Upload error. Status code: " + fmt.Sprint(resp.StatusCode))
 	}
 
 	bodyData, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return 0, err
+		return 0, filePath, err
 	}
 
 	uploadRes := UploadAPIResponse{}
@@ -1375,7 +1481,7 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 	err = json.Unmarshal(bodyData, &uploadRes)
 
 	if err != nil {
-		return 0, err
+		return 0, filePath, err
 	}
 
 	mediaId := uploadRes.Id
@@ -1388,11 +1494,11 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 		statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId)), nil, session)
 
 		if err != nil {
-			return 0, err
+			return 0, filePath, err
 		}
 
 		if statusCode != 200 {
-			return 0, ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200")
+			return 0, filePath, ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200")
 		}
 
 		meta := MediaAPIMetaResponse{}
@@ -1400,11 +1506,11 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 		err = json.Unmarshal(bodyResponseBytes, &meta)
 
 		if err != nil {
-			return 0, err
+			return 0, filePath, err
 		}
 
 		if meta.Type != mt {
-			return 0, ErrorMismatch("MediaType", fmt.Sprint(meta.Type), fmt.Sprint(mt))
+			return 0, filePath, ErrorMismatch("MediaType", fmt.Sprint(meta.Type), fmt.Sprint(mt))
 		}
 
 		mediaReady = meta.Ready
@@ -1414,5 +1520,5 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 		}
 	}
 
-	return mediaId, nil
+	return mediaId, filePath, nil
 }

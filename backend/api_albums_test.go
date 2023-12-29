@@ -186,21 +186,21 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Upload test media
 
-	media1, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 1", fmt.Sprint(album1))
+	media1, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 1", fmt.Sprint(album1))
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	media2, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 2", fmt.Sprint(album1))
+	media2, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 2", fmt.Sprint(album1))
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	media3, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 3", fmt.Sprint(album2))
+	media3, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Media 3", fmt.Sprint(album2))
 
 	if err != nil {
 		t.Error(err)
