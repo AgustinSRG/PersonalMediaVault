@@ -10,10 +10,15 @@ import (
 	"time"
 )
 
-const SESSION_EXPIRATION_TIME = 24 * 60 * 60 * 1000
+const SESSION_EXPIRATION_TIME_DAY = 24 * 60 * 60 * 1000
+const SESSION_EXPIRATION_TIME_WEEK = 7 * SESSION_EXPIRATION_TIME_DAY
+const SESSION_EXPIRATION_TIME_MONTH = 30 * SESSION_EXPIRATION_TIME_DAY
+const SESSION_EXPIRATION_TIME_YEAR = 365 * SESSION_EXPIRATION_TIME_DAY
 
 // User session
 type ActiveSession struct {
+	index uint64 // Session index
+
 	id string // Session token
 
 	user string // User
@@ -32,6 +37,8 @@ type SessionManager struct {
 
 	lock *sync.Mutex // Mutex to access the data
 
+	next_index uint64
+
 	sessions map[string]*ActiveSession // Sessions
 }
 
@@ -39,6 +46,7 @@ type SessionManager struct {
 func (sm *SessionManager) Initialize(vault *Vault) {
 	sm.vault = vault
 	sm.lock = &sync.Mutex{}
+	sm.next_index = 0
 	sm.sessions = make(map[string]*ActiveSession)
 
 	go sm.RunSessionChecker()
@@ -49,8 +57,9 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 // key - Vault decryption key
 // root - Root access
 // write - Write access
+// expirationTime - Expiration time (Milliseconds)
 // Returns an error if failed, and the session ID if successful
-func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool) (error, string) {
+func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool, expirationTime int64) (error, string) {
 	sessionBytes := make([]byte, 32)
 	_, err_rand := rand.Read(sessionBytes)
 
@@ -65,13 +74,16 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 	isFirstSession := len(sm.sessions) == 0
 
 	newSession := ActiveSession{
+		index:     sm.next_index,
 		id:        sessionId,
 		user:      user,
 		key:       key,
 		write:     write,
 		root:      root,
-		not_after: time.Now().UnixMilli() + SESSION_EXPIRATION_TIME,
+		not_after: time.Now().UnixMilli() + expirationTime,
 	}
+
+	sm.next_index++
 
 	sm.sessions[sessionId] = &newSession
 

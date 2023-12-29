@@ -12,6 +12,7 @@ import (
 type LoginAPIBody struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Duration string `json:"duration"`
 }
 
 type LoginAPIResponse struct {
@@ -51,6 +52,17 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Expiration time
+	expirationTime := int64(SESSION_EXPIRATION_TIME_DAY)
+	switch p.Duration {
+	case "week":
+		expirationTime = SESSION_EXPIRATION_TIME_WEEK
+	case "month":
+		expirationTime = SESSION_EXPIRATION_TIME_MONTH
+	case "year":
+		expirationTime = SESSION_EXPIRATION_TIME_YEAR
+	}
+
 	// Check last failure
 	LAST_INVALID_PASSWORD_MU.Lock()
 	now := time.Now().UnixMilli()
@@ -82,7 +94,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err, s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write)
+	err, s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime)
 
 	if err != nil {
 		LogError(err)

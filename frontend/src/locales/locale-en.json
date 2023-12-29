@@ -112,7 +112,6 @@
     "Dark Theme": "",
     "Decrease volume by": "",
     "Decrement image scale by": "",
-    "Default": "",
     "Default (Theme)": "",
     "Delete": "",
     "Delete account": "",
@@ -374,6 +373,7 @@
     "Select and action to apply": "",
     "Select audio file": "",
     "Server version": "",
+    "Session duration": "",
     "Settings": "",
     "Shift": "",
     "Shortcut": "",
@@ -509,9 +509,14 @@
     "You must wait 1 second to try again": "",
     "You must wait 5 seconds to try again": "",
     "and": "",
+    "day": "",
+    "days": "",
     "item": "",
     "items": "",
+    "month": "",
     "or": "",
     "second": "",
-    "seconds": ""
+    "seconds": "",
+    "week": "",
+    "year": ""
 }

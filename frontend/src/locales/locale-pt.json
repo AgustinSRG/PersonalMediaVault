@@ -112,7 +112,6 @@
     "Dark Theme": "Tema escuro",
     "Decrease volume by": "Diminuir o volume em",
     "Decrement image scale by": "Diminuir a escala da imagem em",
-    "Default": "Padrão",
     "Default (Theme)": "Tema Padrão)",
     "Delete": "Excluir",
     "Delete account": "Deletar conta",
@@ -374,6 +373,7 @@
     "Select and action to apply": "Selecione e ação a ser aplicada",
     "Select audio file": "Selecione o arquivo de áudio",
     "Server version": "Versão do servidor",
+    "Session duration": "Duração da sessão",
     "Settings": "Configurações",
     "Shift": "Mudança",
     "Shortcut": "Atalho",
@@ -509,9 +509,14 @@
     "You must wait 1 second to try again": "Você deve esperar 1 segundo para tentar novamente",
     "You must wait 5 seconds to try again": "Você deve esperar 5 segundos para tentar novamente",
     "and": "e",
+    "day": "dia",
+    "days": "dias",
     "item": "item",
     "items": "Unid",
+    "month": "mês",
     "or": "ou",
     "second": "segundo",
-    "seconds": "segundos"
+    "seconds": "segundos",
+    "week": "semana",
+    "year": "ano"
 }

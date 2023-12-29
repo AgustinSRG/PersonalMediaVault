@@ -32,18 +32,29 @@ export type LoginErrorHandler = CommonErrorHandler & {
 };
 
 /**
+ * Session duration
+ */
+export type SessionDuration = "day" | "week" | "month" | "year";
+
+/**
  * API call: Login
  * @param username Username
  * @param password Password
+ * @param duration Session duration
  * @returns The request parameters
  */
-export function apiAuthLogin(username: string, password: string): RequestParams<LoginResult, LoginErrorHandler> {
+export function apiAuthLogin(
+    username: string,
+    password: string,
+    duration?: SessionDuration,
+): RequestParams<LoginResult, LoginErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/login`),
         json: {
             username: username,
             password: password,
+            duration: duration,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()

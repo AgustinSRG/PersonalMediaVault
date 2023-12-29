@@ -29,6 +29,15 @@
                         class="form-control form-control-full-width"
                     />
                 </div>
+                <div class="form-group">
+                    <label>{{ $t("Session duration") }}:</label>
+                    <select v-model="duration" class="form-control form-control-full-width form-select">
+                        <option :value="'day'">1 {{ $t("day") }}</option>
+                        <option :value="'week'">1 {{ $t("week") }} | 7 {{ $t("days") }}</option>
+                        <option :value="'month'">1 {{ $t("month") }} | 30 {{ $t("days") }}</option>
+                        <option :value="'year'">1 {{ $t("year") }} | 365 {{ $t("days") }}</option>
+                    </select>
+                </div>
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
@@ -52,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { apiAuthLogin } from "@/api/api-auth";
+import { SessionDuration, apiAuthLogin } from "@/api/api-auth";
 import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
@@ -71,6 +80,8 @@ export default defineComponent({
         return {
             username: "",
             password: "",
+            duration: "day" as SessionDuration,
+
             cooldown: 0,
             mustWait: 0,
             now: Date.now(),
@@ -101,7 +112,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAuthLogin(this.username, this.password))
+            makeApiRequest(apiAuthLogin(this.username, this.password, this.duration))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";

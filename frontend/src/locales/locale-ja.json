@@ -112,7 +112,6 @@
     "Dark Theme": "暗いテーマ",
     "Decrease volume by": "音量を下げる",
     "Decrement image scale by": "画像スケールを減らす",
-    "Default": "デフォルト",
     "Default (Theme)": "デフォルト（テーマ）",
     "Delete": "消去",
     "Delete account": "アカウントを削除する",
@@ -374,6 +373,7 @@
     "Select and action to apply": "選択して適用するアクション",
     "Select audio file": "音声ファイルを選択",
     "Server version": "サーバーのバージョン",
+    "Session duration": "セッション期間",
     "Settings": "設定",
     "Shift": "シフト",
     "Shortcut": "ショートカット",
@@ -509,9 +509,14 @@
     "You must wait 1 second to try again": "再試行するには 1 秒待つ必要があります",
     "You must wait 5 seconds to try again": "再試行するには 5 秒待つ必要があります",
     "and": "そして",
+    "day": "日",
+    "days": "日々",
     "item": "アイテム",
     "items": "アイテム",
+    "month": "月",
     "or": "または",
     "second": "秒",
-    "seconds": "秒"
+    "seconds": "秒",
+    "week": "週",
+    "year": "年"
 }

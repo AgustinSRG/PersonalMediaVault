@@ -61,6 +61,15 @@ paths:
                 type: string
                 description: Media vault password (can't be blank, max 255 chars)
                 example: password
+              duration:
+                type: string
+                description: "Duration of the session. Note the session can be closed before this or the vault server can restart, clearing all sessions."
+                enum:
+                  - day
+                  - week
+                  - month
+                  - year
+
       responses:
         400:
           description: Bad request (if the password given is blank, for example)
