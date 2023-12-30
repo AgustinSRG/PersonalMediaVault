@@ -66,7 +66,7 @@ export const SUPPORTED_LOCALES = AVAILABLE_LANGUAGES.map((l) => l.id);
 /**
  * Fallback locale
  */
-const FALLBACK_LOCALE = import.meta.env.VITE__I18N_FALLBACK_LOCALE || "en";
+const FALLBACK_LOCALE = import.meta.env.VITE__I18N_LOCALE || "en";
 
 /**
  * Finds locale by comparing the prefix
