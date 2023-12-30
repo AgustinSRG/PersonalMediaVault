@@ -4,7 +4,7 @@
 
 import { App, Ref, nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
-import { EVENT_NAME_LOCALE_CHANGED, getLanguage } from "./control/app-preferences";
+import { fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
 declare module "vue" {
     interface ComponentCustomProperties {
         /**
@@ -63,13 +63,107 @@ export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
  */
 export const SUPPORTED_LOCALES = AVAILABLE_LANGUAGES.map((l) => l.id);
 
+/**
+ * Fallback locale
+ */
+const FALLBACK_LOCALE = import.meta.env.VITE__I18N_FALLBACK_LOCALE || "en";
+
+/**
+ * Finds locale by comparing the prefix
+ * @param languages List of languages
+ * @param locale The locale
+ * @returns The index found, or -1
+ */
+function findLocaleByPrefix(languages: readonly string[], locale: string): number {
+    const localePrefix = locale.split("-")[0];
+    for (let i = 0; i < languages.length; i++) {
+        const langPrefix = languages[i].split("-")[0];
+
+        if (langPrefix === localePrefix) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/**
+ * Detects navigator language and chooses the best available locale
+ * @returns The best available locale
+ */
+export function detectNavigatorLanguage(): string {
+    const navigatorLanguages = navigator.languages || [FALLBACK_LOCALE];
+
+    const localesSorted = SUPPORTED_LOCALES.sort((a, b) => {
+        const iA = navigatorLanguages.indexOf(a);
+        const iB = navigatorLanguages.indexOf(b);
+
+        if (iA === -1 && iB === -1) {
+            const jA = findLocaleByPrefix(navigatorLanguages, a);
+            const jB = findLocaleByPrefix(navigatorLanguages, b);
+
+            if (jA === -1 && jB === -1) {
+                if (a === FALLBACK_LOCALE) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            } else if (jA === -1) {
+                return 1;
+            } else if (jB === -1) {
+                return -1;
+            } else if (jA < jB) {
+                return -1;
+            } else {
+                return 1;
+            }
+        } else if (iA === -1) {
+            return 1;
+        } else if (iB === -1) {
+            return -1;
+        } else if (iA < iB) {
+            return -1;
+        } else {
+            return 1;
+        }
+    });
+
+    return localesSorted[0] || FALLBACK_LOCALE;
+}
+
+/**
+ * Key to store language preference on locale storage
+ */
+const LS_KEY_LANGUAGE = "app-pref-lang";
+
+/**
+ * Event triggered when the locale changes
+ */
+export const EVENT_NAME_LOCALE_CHANGED = "set-locale";
+
+/**
+ * Gets the language
+ * @returns Language
+ */
+export function getLanguage(): string {
+    return fetchFromLocalStorageCache(LS_KEY_LANGUAGE, detectNavigatorLanguage());
+}
+
+/**
+ * Sets the language
+ * @param lang Language
+ */
+export function setLanguage(lang: string) {
+    saveIntoLocalStorage(LS_KEY_LANGUAGE, lang);
+    AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, lang);
+}
+
 // Load default language
 
 let defaultLanguage = getLanguage();
-const fallbackLocale = import.meta.env.VITE__I18N_FALLBACK_LOCALE || "en";
 
 if (!SUPPORTED_LOCALES.includes(defaultLanguage)) {
-    defaultLanguage = fallbackLocale;
+    defaultLanguage = FALLBACK_LOCALE;
 }
 
 /**

@@ -11,11 +11,6 @@ export type ColorThemeName = "light" | "dark";
 
 const LS_KEY_THEME = "app-pref-theme";
 
-const Theme = {
-    loaded: false,
-    value: "light" as ColorThemeName,
-};
-
 /**
  * Event triggered when the theme changes
  */
@@ -26,12 +21,7 @@ export const EVENT_NAME_THEME_CHANGED = "theme-changed";
  * @returns The theme name
  */
 export function getTheme(): ColorThemeName {
-    if (!Theme.loaded) {
-        Theme.value = fetchFromLocalStorage(LS_KEY_THEME, "dark");
-        Theme.loaded = true;
-    }
-
-    return Theme.value;
+    return fetchFromLocalStorageCache(LS_KEY_THEME, "dark")
 }
 
 /**
@@ -39,44 +29,8 @@ export function getTheme(): ColorThemeName {
  * @param theme The theme name
  */
 export function setTheme(theme: ColorThemeName) {
-    Theme.value = theme;
     saveIntoLocalStorage(LS_KEY_THEME, theme);
     AppEvents.Emit(EVENT_NAME_THEME_CHANGED, theme);
-}
-
-const LS_KEY_LANGUAGE = "app-pref-lang";
-
-const Language = {
-    loaded: false,
-    value: "en",
-};
-
-/**
- * Event triggered when the locale changes
- */
-export const EVENT_NAME_LOCALE_CHANGED = "set-locale";
-
-/**
- * Gets the language
- * @returns Language
- */
-export function getLanguage(): string {
-    if (!Language.loaded) {
-        Language.value = fetchFromLocalStorage(LS_KEY_LANGUAGE, (navigator.language || "en").split("-")[0] + "");
-        Language.loaded = true;
-    }
-
-    return Language.value;
-}
-
-/**
- * Sets the language
- * @param lang Language
- */
-export function setLanguage(lang: string) {
-    Language.value = lang;
-    saveIntoLocalStorage(LS_KEY_LANGUAGE, lang);
-    AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, lang);
 }
 
 const LS_KEY_FAVORITE_ALBUMS = "app-pref-albums-fav";

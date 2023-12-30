@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts">
-import { getLanguage, setLanguage } from "@/control/app-preferences";
+import { getLanguage, setLanguage } from "@/i18n";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
