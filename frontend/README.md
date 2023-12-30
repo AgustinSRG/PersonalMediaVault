@@ -2,7 +2,7 @@
 
 This project contains the web interface for Personal Media Vault. The interface is inspired by YouTube, but adapted for the personal media use case.
 
-Built using the [Vue.js](https://vuejs.org/) framework.
+Built using the [Vue.js](https://vuejs.org/) framework and [Vite](https://vitejs.dev/) asd the build tool.
 
 ## Compilation
 
@@ -41,6 +41,20 @@ This project uses prettier to automatically stylize the code. For that, use the 
 ```sh
 npm run prettier
 ```
+
+## Internationalization
+
+Text translations can be found in the [src/locales](./src/locales/) folder as `json` files with a name structure like `locale-{LOCALE}.json`.
+
+When using the `i18n` plugin, run the following script to detect its usages and update the translation files:
+
+```sh
+npm run update-translations
+```
+
+If there are missing translations, several `.txt` files will be created. You can use them or directly update the `.json` files.
+
+After any update, remember to run the `update-translations` script.
 
 ## Font awesome
 

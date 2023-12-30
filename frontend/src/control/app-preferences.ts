@@ -21,7 +21,7 @@ export const EVENT_NAME_THEME_CHANGED = "theme-changed";
  * @returns The theme name
  */
 export function getTheme(): ColorThemeName {
-    return fetchFromLocalStorageCache(LS_KEY_THEME, "dark")
+    return fetchFromLocalStorageCache(LS_KEY_THEME, "dark");
 }
 
 /**
