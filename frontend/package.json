@@ -12,7 +12,8 @@
         "prettier": "prettier --write .",
         "test": "vue-tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore src",
         "update-locales": "node translate-file-maker.cjs",
-        "update-translations": "node translate-file-maker.cjs"
+        "update-translations": "npm run update-locales",
+        "update-fa-subset": "node scripts/create-fa-subset.cjs"
     },
     "dependencies": {
         "@asanrom/request-browser": "1.0.4",
@@ -33,5 +34,9 @@
         "vite": "5.0.6",
         "vite-plugin-pwa": "0.17.4",
         "vue-tsc": "1.8.22"
+    },
+    "optionalDependencies": {
+        "fonteditor-core": "2.1.11",
+        "ttf2woff2": "5.0.0"
     }
 }
