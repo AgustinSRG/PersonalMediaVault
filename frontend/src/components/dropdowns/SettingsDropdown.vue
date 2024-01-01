@@ -45,7 +45,7 @@
                         </td>
                     </tr>
 
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
+                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
                         <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
                         <td class="modal-menu-item-title">
                             {{ $t("Change password") }}

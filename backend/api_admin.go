@@ -161,6 +161,7 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 	}
 
 	GetVault().sessions.RemoveUserSessions(p.Username)
+	GetVault().invites.ClearCode(p.Username)
 
 	response.WriteHeader(200)
 }

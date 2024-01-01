@@ -94,7 +94,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err, s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime)
+	err, s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime, "")
 
 	if err != nil {
 		LogError(err)
@@ -115,6 +115,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
+
 	ReturnAPI_JSON(response, request, jsonResult)
 }
 

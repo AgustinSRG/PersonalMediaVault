@@ -35,6 +35,8 @@ tags:
     description: Tasks API. Allows user to check the progress of running tasks
   - name: about
     description: Requests information about the server
+  - name: invites
+    description: Invite codes API. Manages codes to temporally invite users or devices.
   
 
 paths:
@@ -2363,7 +2365,7 @@ paths:
                   type: boolean
                   description: "True if the user has write access to the vault"
     post:
-      summary: Creates account
+      summary: Create account
       description: Creates an account with access to the vault
       tags:
         - admin
@@ -2419,8 +2421,8 @@ paths:
           
   "/api/admin/accounts/delete":
     post:
-      summary: Deletes account
-      description: "Creates an account with access to the vault. Note: Root account cannot be removed"
+      summary: Delete account
+      description: "Deletes an account with access to the vault. Note: Root account cannot be removed"
       tags:
         - admin
       consumes:
@@ -2480,6 +2482,231 @@ paths:
                 type: string
                 description: Current FFmpeg version
                 example: "6.1-full_build-www.gyan.dev"
+
+  "/api/invites":
+    get:
+      summary: Get invite code status
+      description: Gets invite code status for the current user
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied (invited users cannot invite)
+        200:
+          description: Invite code status
+          schema:
+            properties:
+              has_code:
+                type: boolean
+                description: True if the user has a generated invite code
+              code:
+                type: string
+                description: The invite code
+                example: "012345"
+              duration:
+                type: number
+                format: int64
+                description: The session duration if the code is used (Milliseconds)
+              expiration_remaining:
+                type: number
+                format: int64
+                description: Remaining time until code expiration (Milliseconds) (If <=0, the code has expired)
+  
+  "/api/invites/sessions":
+    get:
+      summary: Get list of invited sessions
+      description: Gets list of invited sessions
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied (invited users cannot invite)
+        200:
+          description: Invited sessions
+          schema:
+            type: array
+            items:
+              properties:
+                index:
+                  type: number
+                  format: int64
+                  description: Unique session index
+                timestamp:
+                  type: number
+                  format: int64
+                  description: Session timestamp (Unix milliseconds)
+                expiration:
+                  type: number
+                  format: int64
+                  description: Expiration timestamp (Unix Milliseconds)
+                  
+  "/api/invites/sessions/{index}":
+    delete:
+      summary: Delete an invited session
+      description: Deletes an invited session
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          required: true
+          name: index
+          type: number
+          format: int64
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied (invited users cannot invite)
+        200:
+          description: Success
+          
+  "/api/invites/generate":
+    post:
+      summary: Generate an invite code
+      description: "Generates an invite code. If another code exits, it will be replaced by a new one."
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Invite code parameters
+          schema:
+            properties:
+              duration:
+                type: string
+                description: "Duration of the invite session."
+                enum:
+                  - day
+                  - week
+                  - month
+                  - year
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: You reached the limit of invites
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied (invited users cannot invite)
+        200:
+          description: Updated invite code status
+          schema:
+            properties:
+              has_code:
+                type: boolean
+                description: True if the user has a generated invite code
+              code:
+                type: string
+                description: The invite code
+                example: "012345"
+              duration:
+                type: number
+                format: int64
+                description: The session duration if the code is used (Milliseconds)
+              expiration_remaining:
+                type: number
+                format: int64
+                description: Remaining time until code expiration (Milliseconds) (If <=0, the code has expired)
+                
+  "/api/invites/clear":
+    post:
+      summary: Clear invite code
+      description: "Clears the current invite code"
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied (invited users cannot invite)
+        200:
+          description: Success
+          
+  "/api/invites/login":
+    post:
+      summary: Login with invite code
+      description: Creates an active session from an invite code
+      tags:
+        - invites
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Invite code
+          schema:
+            properties:
+              code:
+                type: string
+                description: Invite code
+                example: "012345"
+      responses:
+        400:
+          description: Bad request (if the code given is blank or has an invalid size)
+        403:
+          description: Login request denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_CODE - Invalid code
+                    * COOLDOWN - When you fail a login request, there is a cooldown of 5 seconds.
+                enum:
+                  - INVALID_CODE
+                  - COOLDOWN
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Login request accepted
+          schema:
+            properties:
+              session_id:
+                type: string
+                description: "Session ID. Set a cookie named 'x-session-token' with that value. Sessions expire when you log out or after 24 hours."
+              vault_fingerprint:
+                type: string
+                description: "Vault fingerprint"
+          
            
 definitions:
     MediaListItem:

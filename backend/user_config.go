@@ -48,6 +48,7 @@ type UserConfig struct {
 	Resolutions           []UserConfigResolution      `json:"resolutions"`             // Resolutions to encode (for videos)
 	ImageResolutions      []UserConfigImageResolution `json:"image_resolutions"`       // Resolutions to encode (For pictures)
 	VideoPreviewsInterval int32                       `json:"video_previews_interval"` // Video previews interval (seconds)
+	InviteLimitPerUser    int32                       `json:"invite_limit"`            // Max number of invites per user
 }
 
 // User configuration manager
