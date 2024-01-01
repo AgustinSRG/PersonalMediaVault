@@ -17,7 +17,11 @@
             </div>
             <div class="modal-body" v-if="!loading">
                 <div v-if="hasCode" class="invite-code-modal-body">
-                    <div class="invite-code-info">{{ code }}</div>
+                    <div class="invite-code-display">
+                        <div v-for="(c, i) in code.split('')" class="invite-code-char-container" :key="i">
+                            <div class="invite-code-char">{{ c }}</div>
+                        </div>
+                    </div>
                     <div class="invite-code-info">
                         {{ $t("Use this code to log into the vault in read-only mode") }}
                     </div>
@@ -66,24 +70,21 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th colspan="3" class="text-center">{{ $t("List of invited sessions") }}</th>
-                            </tr>
-                            <tr>
-                                <th class="text-left">{{ $t("Session creation") }}</th>
-                                <th class="text-left">{{ $t("Session expiration") }}</th>
-                                <th class="text-left"></th>
+                                <th colspan="2" class="text-center">{{ $t("List of invited sessions") }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="sessions.length === 0">
-                                <td colspan="3">
+                                <td colspan="2">
                                     {{ $t("There are no active invited sessions.") }}
                                 </td>
                             </tr>
                             <tr v-for="s in sessions" :key="s.index">
-                                <td>{{ renderTimestamp(s.timestamp) }}</td>
-                                <td>{{ renderTimestamp(s.expiration) }}</td>
-                                <td class="text-right">
+                                <td>
+                                    <b>{{ $t("Created") }}:</b> {{ renderTimestamp(s.timestamp) }}, <b>{{ $t("Expires") }}:</b>
+                                    {{ renderTimestamp(s.expiration) }}
+                                </td>
+                                <td class="text-right td-shrink">
                                     <button type="button" :disabled="busy" @click="askCloseSession(s.index)" class="btn btn-danger btn-xs">
                                         <i class="fas fa-trash-alt"></i> {{ $t("Close") }}
                                     </button>
@@ -511,5 +512,25 @@ export default defineComponent({
 
 .invite-code-select-container label {
     padding-bottom: 0.5rem;
+}
+
+.invite-code-display {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.invite-code-char-container {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.invite-code-char {
+    padding: 1rem;
+    border: solid 1px var(--theme-border-color);
+    font-size: xx-large;
+    font-weight: bold;
 }
 </style>
