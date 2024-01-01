@@ -95,6 +95,19 @@
                             class="form-control form-control-full-width"
                         />
                     </div>
+
+                    <div class="form-group">
+                        <label>{{ $t("Max number of invited sessions by user (if set to 0, by default is 10 sessions)") }}:</label>
+                        <input
+                            type="number"
+                            autocomplete="off"
+                            v-model.number="inviteLimit"
+                            :disabled="busy"
+                            min="0"
+                            @change="onChangesMade"
+                            class="form-control form-control-full-width"
+                        />
+                    </div>
                 </div>
 
                 <div v-if="page === 'resolutions'">
@@ -226,6 +239,7 @@ export default defineComponent({
             maxTasks: 0,
             encodingThreads: 0,
             videoPreviewsInterval: 0,
+            inviteLimit: 0,
             resolutions: [],
             imageResolutions: [],
 
@@ -424,6 +438,7 @@ export default defineComponent({
                     this.maxTasks = response.max_tasks;
                     this.encodingThreads = response.encoding_threads;
                     this.videoPreviewsInterval = response.video_previews_interval;
+                    this.inviteLimit = response.invite_limit;
                     this.updateResolutions(response.resolutions, response.image_resolutions);
                     this.loading = false;
 
@@ -470,6 +485,7 @@ export default defineComponent({
                     resolutions: this.getResolutions(),
                     image_resolutions: this.getImageResolutions(),
                     video_previews_interval: this.videoPreviewsInterval,
+                    invite_limit: this.inviteLimit,
                 }),
             )
                 .onSuccess(() => {

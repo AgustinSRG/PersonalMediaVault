@@ -2771,6 +2771,10 @@ definitions:
           type: number
           format: int32
           description: Video previews interval (seconds)
+        invite_limit:
+          type: number
+          format: int32
+          description: Max number of invited sessions per user
         resolutions:
           type: array
           description: Extra resolutions to encode videos
