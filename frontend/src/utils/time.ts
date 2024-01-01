@@ -41,3 +41,62 @@ export function renderTimeSeconds(s: number): string {
 
     return r;
 }
+
+export function renderDateAndTime(date: Date | string | number, $t: (t: string) => string) {
+    if (!date) return "-";
+    if (typeof date === "string" || typeof date === "number") {
+        date = new Date(date);
+    }
+
+    const template = $t("[m] [d], [y] [hh]:[mm]:[ss]");
+    const months = [
+        $t("January"),
+        $t("February"),
+        $t("March"),
+        $t("April"),
+        $t("May"),
+        $t("June"),
+        $t("July"),
+        $t("August"),
+        $t("September"),
+        $t("October"),
+        $t("November"),
+        $t("December"),
+    ];
+
+    const y = date.getFullYear();
+    const d = date.getDate();
+
+    let m = date.getMonth() + 1;
+
+    m = m - 1;
+    if (m < 0) {
+        m = 0;
+    } else if (m > months.length) {
+        m = months.length - 1;
+    }
+
+    let hh = "" + date.getHours();
+    let mm = "" + date.getMinutes();
+    let ss = "" + date.getSeconds();
+
+    if (hh.length < 2) {
+        hh = "0" + hh;
+    }
+
+    if (mm.length < 2) {
+        mm = "0" + mm;
+    }
+
+    if (ss.length < 2) {
+        ss = "0" + ss;
+    }
+
+    return ("" + template)
+        .replace("[m]", months[m])
+        .replace("[d]", d + "")
+        .replace("[y]", y + "")
+        .replace("[hh]", hh)
+        .replace("[mm]", mm)
+        .replace("[ss]", ss);
+}

@@ -52,6 +52,13 @@
                         </td>
                     </tr>
 
+                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('invite')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-user-check"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Invite") }}
+                        </td>
+                    </tr>
+
                     <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
                         <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
                         <td class="modal-menu-item-title">

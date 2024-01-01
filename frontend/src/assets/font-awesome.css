@@ -355,6 +355,10 @@
     content: "\f007";
 }
 
+.fa-user-check::before {
+    content: "\f4fc";
+}
+
 .fa-users::before {
     content: "\f0c0";
 }

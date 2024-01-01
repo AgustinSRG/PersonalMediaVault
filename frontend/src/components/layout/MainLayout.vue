@@ -42,6 +42,8 @@
         <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
         <BatchOperationModal v-if="displayBatchOperation" v-model:display="displayBatchOperation"></BatchOperationModal>
 
+        <InviteModal v-if="displayInvite" v-model:display="displayInvite"></InviteModal>
+
         <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
         <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
@@ -208,6 +210,12 @@ const BatchOperationModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const InviteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/InviteModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 export default defineComponent({
     components: {
         TopBar,
@@ -232,6 +240,7 @@ export default defineComponent({
         AboutModal,
         KeyboardGuideModal,
         BatchOperationModal,
+        InviteModal,
         SnackBar,
     },
     name: "MainLayout",
@@ -254,6 +263,7 @@ export default defineComponent({
             displayPasswordModal: false,
             displayAdvancedSettings: false,
             displayBatchOperation: false,
+            displayInvite: false,
 
             displayAccountAdmin: false,
 
@@ -318,6 +328,9 @@ export default defineComponent({
                     break;
                 case "admin":
                     this.displayAccountAdmin = true;
+                    break;
+                case "invite":
+                    this.displayInvite = true;
                     break;
             }
         },
@@ -411,6 +424,7 @@ export default defineComponent({
                 this.displayPasswordModal = false;
                 this.displayAdvancedSettings = false;
                 this.displayBatchOperation = false;
+                this.displayInvite = false;
 
                 this.displayAccountAdmin = false;
 
