@@ -289,7 +289,7 @@ export default defineComponent({
         },
 
         renderTimestamp: function (t: number): string {
-            return renderDateAndTime(t, this.$t);
+            return renderDateAndTime(t, this.$locale.value);
         },
 
         askCloseSession: function (s: number) {

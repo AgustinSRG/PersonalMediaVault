@@ -168,10 +168,12 @@ export default defineComponent({
                     handleErr(err, {
                         invalidCredentials: () => {
                             this.error = this.$t("Invalid username or password");
+                            this.autoFocus();
                         },
                         wrongCredentials: () => {
                             this.error = this.$t("Invalid username or password");
                             this.cooldown = Date.now() + 5000;
+                            this.autoFocus();
                         },
                         cooldown: () => {
                             this.error = this.$t("You must wait 5 seconds to try again");
@@ -214,10 +216,12 @@ export default defineComponent({
                     handleErr(err, {
                         invalidCode: () => {
                             this.error = this.$t("Invalid invite code");
+                            this.autoFocus();
                         },
                         wrongCode: () => {
                             this.error = this.$t("Invalid invite code");
                             this.cooldown = Date.now() + 5000;
+                            this.autoFocus();
                         },
                         cooldown: () => {
                             this.error = this.$t("You must wait 5 seconds to try again");
