@@ -97,27 +97,27 @@ func (im *InvitationManager) GetCodeByUser(user string) (has_code bool, code str
 //   - code The generated invite code
 //   - not_after Code expiration (Unix milliseconds)
 func (im *InvitationManager) GenerateCode(user string, key []byte, duration int64) (err error, code string, not_after int64) {
-	codeBytes := make([]byte, 6)
+	codeBytes := make([]byte, 3)
 	_, err_rand := rand.Read(codeBytes)
 
 	if err_rand != nil {
 		return err_rand, "", 0
 	}
 
-	code = strings.ToUpper(hex.EncodeToString(codeBytes))
-	not_after = time.Now().UnixMilli() + INVITE_CODE_EXPIRATION
+	codeStr := strings.ToUpper(hex.EncodeToString(codeBytes))
+	codeExpiration := time.Now().UnixMilli() + INVITE_CODE_EXPIRATION
 
 	im.lock.Lock()
 	defer im.lock.Unlock()
 
 	im.codes[user] = &InviteCode{
-		code:      code,
+		code:      codeStr,
 		key:       key,
-		not_after: not_after,
+		not_after: codeExpiration,
 		duration:  duration,
 	}
 
-	return nil, code, not_after
+	return nil, codeStr, codeExpiration
 }
 
 // Clears user invite code

@@ -113,7 +113,7 @@ func api_getInviteCodeStatus(response http.ResponseWriter, request *http.Request
 	if now > not_after {
 		expiration_remaining = 0
 	} else {
-		not_after = not_after - now
+		expiration_remaining = not_after - now
 	}
 
 	result := InviteStatusAPIResponse{
@@ -239,7 +239,7 @@ func api_generateInviteCode(response http.ResponseWriter, request *http.Request)
 	if now > not_after {
 		expiration_remaining = 0
 	} else {
-		not_after = not_after - now
+		expiration_remaining = not_after - now
 	}
 
 	result := InviteStatusAPIResponse{
