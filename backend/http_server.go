@@ -20,17 +20,29 @@ var (
 	CORS_INSECURE_MODE_ENABLED = false // Insecure CORS mode for development and testing
 )
 
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
+
 // Logging middleware to log requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mark stating time
 		startTime := time.Now()
 
+		lrw := loggingResponseWriter{w, http.StatusOK}
+
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(&lrw, r)
 
 		// Log request
-		LogRequest(r, time.Since(startTime))
+		LogRequest(r, lrw.statusCode, time.Since(startTime))
 	})
 }
 

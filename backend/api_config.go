@@ -81,5 +81,7 @@ func api_setConfig(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	LogSecurity("[ADMIN] [From IP: " + GetClientIP(request) + "] Updated vault internal configuration")
+
 	response.WriteHeader(200)
 }

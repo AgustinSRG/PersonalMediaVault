@@ -52,6 +52,7 @@ func api_loginWithInviteCode(response http.ResponseWriter, request *http.Request
 	if !valid {
 		LAST_INVALID_PASSWORD_MAP[clientIP] = now
 		LAST_INVALID_PASSWORD_MU.Unlock()
+		LogSecurity("[LOGIN] [From IP: " + GetClientIP(request) + "] Failed login attempt with an invite code")
 		ReturnAPIError(response, 403, "INVALID_CODE", "Invalid code provided.")
 		return
 	}
@@ -79,6 +80,8 @@ func api_loginWithInviteCode(response http.ResponseWriter, request *http.Request
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
+
+	LogSecurity("[LOGIN] [From IP: " + GetClientIP(request) + "] Successful login with invite code. Invited By: " + invitedBy)
 
 	ReturnAPI_JSON(response, request, jsonResult)
 }

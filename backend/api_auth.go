@@ -81,6 +81,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		LAST_INVALID_PASSWORD_MAP[clientIP] = now
 		LAST_INVALID_PASSWORD_MU.Unlock()
 		ReturnAPIError(response, 403, "INVALID_CREDENTIALS", "Invalid credentials provided.")
+		LogSecurity("[LOGIN] [From IP: " + GetClientIP(request) + "] Failed login attempt with credentials. Username = " + p.Username)
 		return
 	}
 
@@ -115,6 +116,8 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
+
+	LogSecurity("[LOGIN] [From IP: " + GetClientIP(request) + "] Successful login with credentials. Username: " + p.Username)
 
 	ReturnAPI_JSON(response, request, jsonResult)
 }
