@@ -533,4 +533,23 @@ export default defineComponent({
     font-size: xx-large;
     font-weight: bold;
 }
+
+@media (max-width: 400px) {
+    .invite-code-char {
+        padding: 0.5rem;
+        font-size: large;
+    }
+}
+
+@media (max-width: 250px) {
+    .invite-code-char {
+        padding: 0;
+        border: none;
+        font-size: large;
+    }
+
+    .invite-code-display {
+        flex-wrap: wrap;
+    }
+}
 </style>

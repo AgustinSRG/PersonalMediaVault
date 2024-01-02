@@ -325,4 +325,26 @@ export default defineComponent({
     text-align: center;
     font-size: x-large;
 }
+
+@media(max-width: 500px) {
+    .invite-code-char-input input {
+        width: 3rem;
+        height: 3rem;
+        font-size: large;
+    }
+}
+
+@media(max-width: 400px) {
+    .invite-code-char-input input {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+}
+
+@media(max-width: 340px) {
+    .invite-code-multi-input {
+        flex-wrap: wrap;
+    }
+}
 </style>
