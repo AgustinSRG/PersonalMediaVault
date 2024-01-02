@@ -373,6 +373,38 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
+	case "log-requests", "requests-log":
+		if len(args) == 2 {
+			if checkYesNoAnswer(args[1]) {
+				args[1] = "y"
+			}
+			switch args[1] {
+			case "y", "on", "yes", "1", "true":
+				if vc.SetLogRequests(true) {
+					askRestart(vc)
+				}
+			case "n", "off", "no", "0", "false":
+				if vc.SetLogRequests(false) {
+					askRestart(vc)
+				}
+			default:
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorLogRequestsUsage",
+						Other: "Usage: log-requests [y/n]",
+					},
+				})
+				fmt.Println(msg)
+			}
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorLogRequestsUsage",
+					Other: "Usage: log-requests [y/n]",
+				},
+			})
+			fmt.Println(msg)
+		}
 	case "cache-size", "cs":
 		if len(args) == 1 {
 			currentCacheSize := DEFAULT_CACHE_SIZE
@@ -593,6 +625,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSecDel",
 			Other: "sec-del [y/n] - Enables / disables secure deletion of temp files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandLogRequests",
+			Other: "log-requests [y/n] - Enables / disables request logging",
 		},
 	})
 	manList = append(manList, msg)

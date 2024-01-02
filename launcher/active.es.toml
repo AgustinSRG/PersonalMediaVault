@@ -90,6 +90,10 @@ other = "El par de claves SSL no es correcto. Puede arreglarlo con 'ssl-setup'."
 hash = "sha1-9c2861ada182b97f428ec7d4461bd92b35dd78bd"
 other = "Uso: local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
 
+[ErrorLogRequestsUsage]
+hash = "sha1-a5c30f663412c23556f51b4cea5a9bd843b4db08"
+other = "Uso: log-requests [s/n]"
+
 [ErrorPasswordBlank]
 hash = "sha1-f70cc9bdd80a4c433918161f3079e1595e09de70"
 other = "La contraseña no puede dejarse vacía."
@@ -170,6 +174,14 @@ other = "si selecciona no, el servidor se pondrá a la escucha en todas las inte
 hash = "sha1-cf17e7fdee1c20b4f3d976516bdcc121cf229f9c"
 other = "Fichero de log: {{.File}}"
 
+[LogRequestsDisabled]
+hash = "sha1-be0a1599dc7a39ff8787fd417c71a518c0fac3fb"
+other = "El registro de peticiones se encuentra DESHABILITADO."
+
+[LogRequestsEnabled]
+hash = "sha1-35d293059f46910298fceb0f33251e3d699d504b"
+other = "El registro de peticiones se encuentra HABILITADO."
+
 [ManualCacheSize]
 hash = "sha1-bf1920bebbd1af1f72b82ee502e2843f211bab9a"
 other = "cache-size [tamaño] - Establece el tamaño de la caché"
@@ -197,6 +209,10 @@ other = "help - Imprime la lista de comandos"
 [ManualCommandLocal]
 hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
 other = "local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
+
+[ManualCommandLogRequests]
+hash = "sha1-c20354a3352f3e9aa6d5a5a3453d33891ec9cd9d"
+other = "log-requests [s/n] - Habilita o deshabilita el registro de peticiones"
 
 [ManualCommandPort]
 hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
