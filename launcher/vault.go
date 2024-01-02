@@ -478,7 +478,7 @@ func (vc *VaultController) Start() bool {
 	})
 	fmt.Println(msg)
 
-	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag, "--cache-size", fmt.Sprint(cacheSize))
+	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--log-requests", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag, "--cache-size", fmt.Sprint(cacheSize))
 
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
