@@ -101,6 +101,7 @@ import {
 } from "../../control/auth";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { isTouchDevice } from "@/utils/touch";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -389,7 +390,7 @@ export default defineComponent({
                     break;
                 default:
                     skipTo = this.$el.querySelector(".page-content");
-                    if (skipTo) {
+                    if (skipTo && !isTouchDevice()) {
                         const autoFocused = skipTo.querySelector(".auto-focus");
                         if (autoFocused) {
                             skipTo = autoFocused;

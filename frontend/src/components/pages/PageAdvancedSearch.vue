@@ -192,6 +192,7 @@ import {
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiSearch } from "@/api/api-search";
+import { isTouchDevice } from "@/utils/touch";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -259,6 +260,9 @@ export default defineComponent({
         },
 
         autoFocus: function () {
+            if (isTouchDevice()) {
+                return;
+            }
             nextTick(() => {
                 const el = this.$el.querySelector(".auto-focus");
                 if (el) {

@@ -211,6 +211,9 @@ export default defineComponent({
             nextTick(() => {
                 this.$emit("skip-to-content");
             });
+            if (window.innerWidth < 1000) {
+                this.close();
+            }
         },
 
         goToSearch: function (e) {
@@ -221,6 +224,9 @@ export default defineComponent({
             nextTick(() => {
                 this.$emit("skip-to-content");
             });
+            if (window.innerWidth < 1000) {
+                this.close();
+            }
         },
 
         goToAlbum: function (a, e) {
@@ -231,6 +237,9 @@ export default defineComponent({
             nextTick(() => {
                 this.$emit("skip-to-content");
             });
+            if (window.innerWidth < 1000) {
+                this.close();
+            }
         },
 
         getPageURL: function (page: string): string {

@@ -127,6 +127,7 @@ import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
+import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -175,6 +176,9 @@ export default defineComponent({
         },
 
         autoFocus: function () {
+            if (isTouchDevice()) {
+                return;
+            }
             nextTick(() => {
                 const el = this.$el.querySelector(".auto-focus");
                 if (el) {

@@ -326,7 +326,7 @@ export default defineComponent({
     font-size: x-large;
 }
 
-@media(max-width: 500px) {
+@media (max-width: 500px) {
     .invite-code-char-input input {
         width: 3rem;
         height: 3rem;
@@ -334,7 +334,7 @@ export default defineComponent({
     }
 }
 
-@media(max-width: 400px) {
+@media (max-width: 400px) {
     .invite-code-char-input input {
         width: 2.5rem;
         height: 2.5rem;
@@ -342,7 +342,7 @@ export default defineComponent({
     }
 }
 
-@media(max-width: 340px) {
+@media (max-width: 340px) {
     .invite-code-multi-input {
         flex-wrap: wrap;
     }
