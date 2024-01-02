@@ -7,10 +7,6 @@
     transition: width 0.3s;
 }
 
-.player-volume-control.player-min {
-    height: 32px;
-}
-
 .player-volume-btn {
     display: block;
     width: 40px;
@@ -22,12 +18,6 @@
     color: var(--theme-btn-color);
     background: transparent;
     margin-right: 8px;
-}
-
-.player-min .player-volume-btn {
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
 }
 
 .player-volume-btn:hover {
@@ -42,10 +32,6 @@
     cursor: pointer;
     overflow: hidden;
     transition: width 0.3s;
-}
-
-.player-min .player-volume-btn-expand {
-    height: 32px;
 }
 
 .player-volume-btn-expand.hidden {

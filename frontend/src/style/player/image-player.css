@@ -60,11 +60,6 @@
     background: white;
 }
 
-.player-min .image-scroller {
-    top: 32px;
-    bottom: 32px;
-}
-
 .image-scroller img {
     position: absolute;
     pointer-events: none;
@@ -75,17 +70,8 @@
     bottom: 0;
 }
 
-.player-min.no-controls .image-scroller {
-    top: 0;
-    bottom: 0;
-}
-
 .image-player .player-tooltip {
     bottom: 64px;
-}
-
-.image-player.player-min .player-tooltip {
-    bottom: 40px;
 }
 
 .image-prefetch-container {

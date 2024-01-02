@@ -12,11 +12,6 @@
     pointer-events: none;
 }
 
-.player-min .time-slices-edit-helper-container {
-    top: calc(32px + 0.5rem);
-    bottom: 52px;
-}
-
 .time-slices-edit-helper-btn {
     display: inline-block;
     width: 24px;

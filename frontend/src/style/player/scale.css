@@ -9,10 +9,6 @@
     transition: width 0.3s;
 }
 
-.player-scale-control.player-min {
-    height: 32px;
-}
-
 .player-scale-btn {
     display: block;
     width: 40px;
@@ -24,12 +20,6 @@
     color: var(--theme-btn-color);
     background: transparent;
     margin-right: 8px;
-}
-
-.player-min .player-scale-btn {
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
 }
 
 .player-scale-btn:hover {
@@ -44,10 +34,6 @@
     cursor: pointer;
     overflow: hidden;
     transition: width 0.3s;
-}
-
-.player-min .player-scale-btn-expand {
-    height: 32px;
 }
 
 .player-scale-btn-expand.hidden {

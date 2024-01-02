@@ -897,6 +897,9 @@ export default defineComponent({
         },
 
         onPlayerMouseDown: function (e: MouseEvent) {
+            if (isTouchDevice()) {
+                return;
+            }
             if (e.button !== 0) {
                 return;
             }

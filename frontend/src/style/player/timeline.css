@@ -17,10 +17,6 @@
     pointer-events: none;
 }
 
-.player-min .player-timeline {
-    bottom: 32px;
-}
-
 .player-timeline-back,
 .player-timeline-buffer,
 .player-timeline-current,
@@ -59,10 +55,6 @@
     left: 0;
     width: 3px;
     background: var(--player-timeline-split);
-}
-
-.player-min .player-timeline-split {
-    width: 1px;
 }
 
 .player-timeline-split.start-split {

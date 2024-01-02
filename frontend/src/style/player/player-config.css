@@ -13,11 +13,6 @@
     overflow-y: auto;
 }
 
-.player-min .video-player-config {
-    font-size: small;
-    bottom: 55px;
-}
-
 .video-player-config.hidden {
     display: none;
 }
@@ -76,11 +71,6 @@
     overflow-y: auto;
 }
 
-.player-min .audio-player-config {
-    font-size: small;
-    bottom: 55px;
-}
-
 .audio-player-config.hidden {
     display: none;
 }
@@ -137,11 +127,6 @@
     min-width: 240px;
     max-width: calc(100% - 16px);
     overflow-y: auto;
-}
-
-.player-min .image-player-config {
-    font-size: small;
-    bottom: 55px;
 }
 
 .image-player-config.hidden {
