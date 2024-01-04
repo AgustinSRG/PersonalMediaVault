@@ -64,7 +64,11 @@
 .player-timeline:hover .player-timeline-back,
 .player-timeline:hover .player-timeline-buffer,
 .player-timeline:hover .player-timeline-current,
-.player-timeline:hover .player-timeline-split {
+.player-timeline:hover .player-timeline-split,
+.using-touch-device .player-timeline-back,
+.using-touch-device .player-timeline-buffer,
+.using-touch-device .player-timeline-current,
+.using-touch-device .player-timeline-split {
     height: 5px;
 }
 
@@ -79,6 +83,7 @@
     display: none;
 }
 
-.player-timeline:hover .player-timeline-thumb {
+.player-timeline:hover .player-timeline-thumb,
+.using-touch-device .player-timeline-thumb {
     display: block;
 }

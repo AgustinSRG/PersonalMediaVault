@@ -1,5 +1,5 @@
 <template>
-    <div class="player-container" tabindex="-1">
+    <div class="player-container" :class="{ 'using-touch-device': touchDevice }" tabindex="-1">
         <EmptyPlayer
             v-if="!mediaData || mediaData.type === 0"
             :mid="mid"
@@ -150,6 +150,7 @@ import {
     EVENT_NAME_PAGE_NAV_PREV,
     PagesController,
 } from "@/control/pages";
+import { isTouchDevice } from "@/utils/touch";
 
 const AlbumListModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumListModal.vue"),
@@ -225,6 +226,7 @@ export default defineComponent({
             hasPageNext: PagesController.HasPageNext,
 
             minPlayer: false,
+            touchDevice: isTouchDevice(),
 
             loopForced: false,
             loopForcedValue: false,
@@ -337,6 +339,8 @@ export default defineComponent({
             } else {
                 this.minPlayer = false;
             }
+
+            this.touchDevice = isTouchDevice();
         },
 
         onForceLoop: function (v: boolean) {

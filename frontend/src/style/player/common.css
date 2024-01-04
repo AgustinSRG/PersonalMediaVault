@@ -42,6 +42,13 @@
     color: var(--theme-btn-color);
 }
 
+@media (max-width: 1000px) {
+    .player-btn.player-btn-action-prev,
+    .player-btn.player-btn-action-next {
+        display: none;
+    }
+}
+
 .player-controls-left {
     display: flex;
     align-items: center;

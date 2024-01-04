@@ -12,8 +12,8 @@
         @dblclick="toggleFullScreen"
         @mouseleave="mouseLeavePlayer"
         @mouseup="playerMouseUp"
-        @touchmove="playerMouseMove"
-        @touchend.passive="playerMouseUp"
+        @touchmove="playerTouchMove"
+        @touchend.passive="onPlayerTouchEnd"
         @contextmenu="onContextMenu"
         @wheel="onMouseWheel"
     >
@@ -172,7 +172,7 @@
                     :disabled="!prev && !pagePrev"
                     type="button"
                     :title="$t('Previous')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-prev"
                     @click="goPrev"
                     @mouseenter="enterTooltip('prev')"
                     @mouseleave="leaveTooltip('prev')"
@@ -208,7 +208,7 @@
                     :disabled="!next && !pageNext"
                     type="button"
                     :title="$t('Next')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-next"
                     @click="goNext"
                     @mouseenter="enterTooltip('next')"
                     @mouseleave="leaveTooltip('next')"
@@ -333,8 +333,8 @@
             @mousemove="mouseMoveTimeline"
             @dblclick="stopPropagationEvent"
             @click="clickTimeline"
-            @mousedown="grabTimeline"
-            @touchstart="grabTimeline"
+            @mousedown="grabTimelineByMouse"
+            @touchstart="grabTimelineByTouch"
         >
             <div class="player-timeline-back"></div>
             <div class="player-timeline-buffer" :style="{ width: getTimelineBarWidth(bufferedTime, duration) }"></div>
@@ -641,10 +641,12 @@ export default defineComponent({
             scrollGrabTop: 0,
             scrollGrabLeft: 0,
             scrollMoved: false,
+
+            timeStartTap: 0,
         };
     },
     methods: {
-        onContextMenu: function (e) {
+        onContextMenu: function (e: MouseEvent) {
             this.contextMenuX = e.pageX;
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
@@ -683,11 +685,32 @@ export default defineComponent({
             this.clickPlayer();
         },
 
-        onPlayerTouchStart: function (e) {
+        onPlayerTouchStart: function (e: TouchEvent) {
             if (this.contextMenuShown) {
                 e.stopPropagation();
             }
-            this.clickPlayer();
+            this.leaveControls();
+            if (this.displayConfig || this.contextMenuShown) {
+                this.displayConfig = false;
+                this.contextMenuShown = false;
+            } else {
+                this.timeStartTap = Date.now();
+            }
+            this.interactWithControls();
+        },
+
+        onPlayerTouchEnd: function (e: TouchEvent) {
+            if (this.timelineGrabbed) {
+                this.timelineGrabbed = false;
+                e.touches[0] && this.onTimelineSkip(e.touches[0].pageX);
+            }
+
+            this.tooltipShown = false;
+
+            if (this.timeStartTap && Date.now() - this.timeStartTap < 500) {
+                this.togglePlay();
+                this.timeStartTap = 0;
+            }
         },
 
         clickPlayer: function () {
@@ -705,6 +728,10 @@ export default defineComponent({
             return Math.round(v * 100) + "%";
         },
         enterTooltip: function (t: string) {
+            if (isTouchDevice()) {
+                this.helpTooltip = "";
+                return;
+            }
             this.helpTooltip = t;
         },
 
@@ -742,7 +769,7 @@ export default defineComponent({
             this.setVideoURL();
         },
 
-        clickControls: function (e) {
+        clickControls: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
             if (e) {
@@ -783,7 +810,7 @@ export default defineComponent({
         /* Player events */
 
         onAudioLoadMetadata: function () {
-            const audioElement = this.$el.querySelector("audio");
+            const audioElement = this.$el.querySelector("audio") as HTMLAudioElement;
             if (!audioElement) {
                 return;
             }
@@ -799,8 +826,8 @@ export default defineComponent({
             }
         },
 
-        onLoadMetaData: function (ev) {
-            const videoElement = ev.target;
+        onLoadMetaData: function (ev: Event) {
+            const videoElement = ev.target as HTMLVideoElement;
 
             if (!videoElement) {
                 return;
@@ -818,10 +845,10 @@ export default defineComponent({
                 this.updateCurrentTimeSlice();
             }
         },
-        onVideoTimeUpdate: function (ev) {
+        onVideoTimeUpdate: function (ev: Event) {
             this.hideNextEnd();
             if (this.loading) return;
-            const videoElement = ev.target;
+            const videoElement = ev.target as HTMLVideoElement;
             if (
                 !videoElement ||
                 typeof videoElement.currentTime !== "number" ||
@@ -958,25 +985,31 @@ export default defineComponent({
             }
         },
 
-        playerMouseUp: function (e: TouchEvent | MouseEvent) {
+        playerMouseUp: function (e: MouseEvent) {
             if (this.timelineGrabbed) {
-                if ("touches" in e && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX);
-                } else if ("pageX" in e) {
-                    this.onTimelineSkip(e.pageX);
-                }
                 this.timelineGrabbed = false;
+                this.onTimelineSkip(e.pageX);
+
+                if (isTouchDevice()) {
+                    this.tooltipShown = false;
+                }
             }
         },
-        playerMouseMove: function (e) {
+
+        playerMouseMove: function (e: MouseEvent) {
             this.interactWithControls();
 
             if (this.timelineGrabbed) {
-                if (e.touches && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX);
-                } else {
-                    this.onTimelineSkip(e.pageX);
-                }
+                this.onTimelineSkip(e.pageX);
+            }
+        },
+
+        playerTouchMove: function (e: TouchEvent) {
+            this.interactWithControls();
+
+            if (this.timelineGrabbed && e.touches[0]) {
+                this.onTimelineSkip(e.touches[0].pageX);
+                this.updateTimelineTooltip(e.touches[0].pageX);
             }
         },
 
@@ -997,7 +1030,7 @@ export default defineComponent({
             if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
                 if (Date.now() - this.lastControlsInteraction > 2000) {
                     this.showControls = false;
-                    this.volumeShown = false;
+                    this.volumeShown = isTouchDevice();
                     this.helpTooltip = "";
                     this.displayConfig = false;
                 }
@@ -1154,11 +1187,11 @@ export default defineComponent({
                 this.fullScreenState = false;
             }
         },
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
-        clickTimeline: function (e) {
+        clickTimeline: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
             e.stopPropagation();
@@ -1166,16 +1199,53 @@ export default defineComponent({
 
         /* Timeline */
 
-        grabTimeline: function (e: MouseEvent & TouchEvent) {
+        grabTimelineByMouse: function (e: MouseEvent) {
             e.stopPropagation();
-            if (e.touches && e.touches.length > 0) {
-                this.timelineGrabbed = true;
-                this.onTimelineSkip(e.touches[0].pageX);
-            } else if (e.button === 0) {
+            if (e.button === 0) {
                 this.timelineGrabbed = true;
                 this.onTimelineSkip(e.pageX);
             }
         },
+
+        grabTimelineByTouch: function (e: TouchEvent) {
+            e.stopPropagation();
+
+            if (!e.touches[0]) {
+                return;
+            }
+
+            this.timelineGrabbed = true;
+            this.onTimelineSkip(e.touches[0].pageX);
+
+            this.updateTimelineTooltip(e.touches[0].pageX);
+        },
+
+        updateTimelineTooltip: function (x: number) {
+            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
+            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
+
+            let time: number;
+            if (x < offset) {
+                time = 0;
+            } else {
+                const p = x - offset;
+                const tP = Math.min(1, p / width);
+                time = tP * this.duration;
+            }
+
+            this.tooltipShown = true;
+            this.tooltipText = this.renderTime(time);
+            this.tooltipTimeSlice = this.findTimeSliceName(time);
+            const oldTooltipImage = this.tooltipImage;
+            this.tooltipImage = this.getThumbnailForTime(time);
+            if (oldTooltipImage !== this.tooltipImage) {
+                this.tooltipImageInvalid = false;
+            }
+            this.tooltipEventX = x;
+
+            nextTick(this.tick.bind(this));
+        },
+
         getTimelineBarWidth: function (time: number, duration: number) {
             if (duration > 0) {
                 return Math.min((time / duration) * 100, 100) + "%";
@@ -1202,34 +1272,17 @@ export default defineComponent({
             }
         },
         mouseLeaveTimeline: function () {
-            this.tooltipShown = false;
+            if (!isTouchDevice()) {
+                this.tooltipShown = false;
+            }
             this.leaveControls();
         },
-        mouseMoveTimeline: function (event) {
-            const x = event.pageX;
-            const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
-            const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
-
-            let time: number;
-            if (x < offset) {
-                time = 0;
-            } else {
-                const p = x - offset;
-                const tP = Math.min(1, p / width);
-                time = tP * this.duration;
+        mouseMoveTimeline: function (event: MouseEvent) {
+            if (isTouchDevice()) {
+                return;
             }
 
-            this.tooltipShown = true;
-            this.tooltipText = this.renderTime(time);
-            this.tooltipTimeSlice = this.findTimeSliceName(time);
-            const oldTooltipImage = this.tooltipImage;
-            this.tooltipImage = this.getThumbnailForTime(time);
-            if (oldTooltipImage !== this.tooltipImage) {
-                this.tooltipImageInvalid = false;
-            }
-            this.tooltipEventX = x;
-
-            nextTick(this.tick.bind(this));
+            this.updateTimelineTooltip(event.pageX);
         },
         renderTime: function (s: number): string {
             return renderTimeSeconds(s);
@@ -1881,8 +1934,8 @@ export default defineComponent({
             }
         },
 
-        grabScroll: function (e) {
-            if (e.button !== 0) {
+        grabScroll: function (e: TouchEvent | MouseEvent) {
+            if ("button" in e && e.button !== 0) {
                 return;
             }
 
@@ -1910,10 +1963,11 @@ export default defineComponent({
 
             this.scrollGrabbed = true;
             this.scrollMoved = false;
-            if (e.touches && e.touches.length > 0) {
+
+            if ("touches" in e && e.touches.length > 0) {
                 this.scrollGrabX = e.touches[0].pageX;
                 this.scrollGrabY = e.touches[0].pageY;
-            } else {
+            } else if ("pageX" in e) {
                 this.scrollGrabX = e.pageX;
                 this.scrollGrabY = e.pageY;
             }
@@ -1941,8 +1995,8 @@ export default defineComponent({
             this.scrollMoved = true;
         },
 
-        dropScroll: function (e) {
-            if (e.button !== 0) {
+        dropScroll: function (e: TouchEvent | MouseEvent) {
+            if ("button" in e && e.button !== 0) {
                 return;
             }
 
@@ -1959,21 +2013,21 @@ export default defineComponent({
 
             this.scrollMoved = false;
 
-            if (e.touches && e.touches.length > 0) {
+            if ("touches" in e && e.touches.length > 0) {
                 this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
+            } else if ("pageX" in e) {
                 this.moveScrollByMouse(e.pageX, e.pageY);
             }
         },
 
-        moveScroll: function (e) {
+        moveScroll: function (e: MouseEvent | TouchEvent) {
             if (!this.scrollGrabbed) {
                 return;
             }
 
-            if (e.touches && e.touches.length > 0) {
+            if ("touches" in e && e.touches.length > 0) {
                 this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
+            } else if ("pageX" in e) {
                 this.moveScrollByMouse(e.pageX, e.pageY);
             }
         },
@@ -2060,7 +2114,7 @@ export default defineComponent({
             return true;
         },
 
-        onScrollerTouchStart: function (e) {
+        onScrollerTouchStart: function (e: Event) {
             if (this.scale <= 1) {
                 return;
             }
