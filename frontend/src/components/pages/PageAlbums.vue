@@ -30,7 +30,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
             </div>
 
@@ -63,39 +63,39 @@
             </div>
 
             <div v-if="!loading && total > 0" class="search-results-final-display">
-                <a
-                    v-for="item in pageItems"
-                    :key="item.id"
-                    class="search-result-item clickable"
-                    @click="goToAlbum(item, $event)"
-                    :href="getAlbumURL(item.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div
-                        class="search-result-thumb"
-                        :title="
-                            (item.name || $t('Untitled album')) + (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
-                        "
-                    >
-                        <div class="search-result-thumb-inner">
-                            <div v-if="!item.thumbnail" class="no-thumb">
-                                <i class="fas fa-list-ol"></i>
-                            </div>
-                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
-                            <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
-                            <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
-                                1 {{ $t("item") }}
-                            </div>
-                            <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
-                                {{ item.size }} {{ $t("items") }}
+                <div v-for="item in pageItems" :key="item.id" class="search-result-item">
+                    <a
+                        class="clickable"
+                        @click="goToAlbum(item, $event)"
+                        :href="getAlbumURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><div
+                            class="search-result-thumb"
+                            :title="
+                                (item.name || $t('Untitled album')) +
+                                (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
+                            "
+                        >
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i class="fas fa-list-ol"></i>
+                                </div>
+                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
+                                <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
+                                    1 {{ $t("item") }}
+                                </div>
+                                <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
+                                    {{ item.size }} {{ $t("items") }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="search-result-title">
-                        {{ item.name || $t("Untitled") }}
-                    </div>
-                </a>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.name || $t("Untitled") }}
+                        </div></a
+                    >
+                </div>
             </div>
 
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
@@ -121,7 +121,6 @@ import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
@@ -139,6 +138,8 @@ export default defineComponent({
     props: {
         display: Boolean,
         min: Boolean,
+        pageSize: Number,
+        displayTitles: Boolean,
     },
     setup() {
         return {
@@ -154,7 +155,6 @@ export default defineComponent({
 
             filter: PagesController.AlbumsPageSearch,
 
-            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -402,7 +402,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.page = 0;
             this.load();
@@ -448,8 +447,6 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
-
         this.updateSearchParams();
         this.load();
 
@@ -467,6 +464,9 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        pageSize: function () {
+            this.updatePageSize();
         },
     },
 });

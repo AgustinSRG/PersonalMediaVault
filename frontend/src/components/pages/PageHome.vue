@@ -12,7 +12,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
             </div>
 
@@ -29,34 +29,33 @@
             </div>
 
             <div v-if="!loading && total > 0" class="search-results-final-display">
-                <a
-                    v-for="(item, i) in pageItems"
-                    :key="i"
-                    class="search-result-item clickable"
-                    :class="{ current: currentMedia == item.id }"
-                    @click="goToMedia(item.id, $event)"
-                    :href="getMediaURL(item.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                        <div class="search-result-thumb-inner">
-                            <div v-if="!item.thumbnail" class="no-thumb">
-                                <i v-if="item.type === 1" class="fas fa-image"></i>
-                                <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                <i v-else class="fas fa-ban"></i>
-                            </div>
-                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
-                            <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
-                                {{ renderTime(item.duration) }}
+                <div v-for="(item, i) in pageItems" :key="i" class="search-result-item" :class="{ current: currentMedia == item.id }">
+                    <a
+                        class="clickable"
+                        :href="getMediaURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @click="goToMedia(item.id, $event)"
+                    >
+                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i v-if="item.type === 1" class="fas fa-image"></i>
+                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                    <i v-else class="fas fa-ban"></i>
+                                </div>
+                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                    {{ renderTime(item.duration) }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="search-result-title">
-                        {{ item.title || $t("Untitled") }}
-                    </div>
-                </a>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.title || $t("Untitled") }}
+                        </div>
+                    </a>
+                </div>
             </div>
 
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
@@ -79,7 +78,6 @@ import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { MediaListItem } from "@/api/models";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
-import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {
     EVENT_NAME_MEDIA_DELETE,
@@ -99,6 +97,8 @@ export default defineComponent({
     props: {
         display: Boolean,
         min: Boolean,
+        pageSize: Number,
+        displayTitles: Boolean,
     },
     setup() {
         return {
@@ -112,7 +112,6 @@ export default defineComponent({
             loading: false,
             firstLoaded: false,
 
-            pageSize: getPageMaxItems(),
             order: "desc" as "asc" | "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -219,7 +218,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.page = 0;
             this.load();
@@ -434,8 +432,6 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
-
         this.updateSearchParams();
         this.updateTagData();
         this.load();
@@ -456,6 +452,9 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        pageSize: function () {
+            this.updatePageSize();
         },
     },
 });

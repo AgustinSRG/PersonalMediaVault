@@ -53,3 +53,14 @@ export function saveIntoLocalStorage(key: string, val: any) {
         localStorageCache.set(key, val);
     }
 }
+
+/**
+ * Clears local storage entry
+ * @param key The local storage key
+ */
+export function clearLocalStorage(key: string) {
+    localStorage.removeItem(key);
+    if (localStorageCache.has(key)) {
+        localStorageCache.delete(key);
+    }
+}

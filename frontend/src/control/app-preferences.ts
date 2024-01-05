@@ -4,7 +4,7 @@
 
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./albums";
 import { AppEvents } from "./app-events";
-import { fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
+import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 import { AlbumListItemMin } from "@/api/models";
 
 export type ColorThemeName = "light" | "dark";
@@ -175,71 +175,139 @@ AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
     AppEvents.Emit(EVENT_NAME_ALBUM_SIDEBAR_TOP, AlbumsController.CurrentAlbumData.id);
 });
 
-const LS_KEY_PAGE_MAX_ITEMS = "app-pref-page-max-items";
+const LS_KEY_PAGE_SETTINGS = "app-pref-page-settings";
 
 /**
- * Event triggered when the max items per page setting changes
+ * Page preferences
  */
-export const EVENT_NAME_PAGE_SIZE_UPDATED = "page-size-pref-updated";
+export interface PagePreferences {
+    /**
+     * Max items per page
+     */
+    pageSize: number;
 
-/**
- * Gets max items per page setting
- * @returns Max items per page
- */
-export function getPageMaxItems(): number {
-    return Number(fetchFromLocalStorageCache(LS_KEY_PAGE_MAX_ITEMS, 25)) || 0;
+    /**
+     * Row size when expanded
+     */
+    rowSize: number;
+
+    /**
+     * Row size when split mode
+     */
+    rowSizeMin: number;
+
+    /**
+     * Min size of items
+     */
+    minItemSize: number;
+
+    /**
+     * Max size of items
+     */
+    maxItemSize: number;
+
+    /**
+     * Display titles?
+     */
+    displayTitles: boolean;
+
+    /**
+     * Rounded corners?
+     */
+    roundedCorners: boolean;
+
+    /**
+     * Padding for items
+     */
+    padding: number;
 }
 
 /**
- * Sets max items per page setting
- * @returns Max items per page
+ * Event triggered when the page preferences are updated
  */
-export function setPageMaxItems(maxItems: number) {
-    saveIntoLocalStorage(LS_KEY_PAGE_MAX_ITEMS, maxItems);
-    AppEvents.Emit(EVENT_NAME_PAGE_SIZE_UPDATED);
+export const EVENT_NAME_PAGE_PREFERENCES_UPDATED = "page-preferences-updated";
+
+/**
+ * Default page preferences
+ */
+const DEFAULT_PAGE_PREFERENCES: PagePreferences = {
+    pageSize: 25,
+    rowSize: 5,
+    rowSizeMin: 2,
+    minItemSize: 64,
+    maxItemSize: 464,
+    displayTitles: true,
+    roundedCorners: true,
+    padding: 18,
+};
+
+/**
+ * Gets the page preferences
+ * @returns The page preferences
+ */
+export function getPagePreferences(): PagePreferences {
+    if (window.innerWidth > 1000) {
+        DEFAULT_PAGE_PREFERENCES.rowSize = Math.max(2, Math.round((window.innerWidth - 240) / 250));
+    } else {
+        DEFAULT_PAGE_PREFERENCES.rowSize = Math.max(2, Math.round(window.innerWidth / 250));
+    }
+
+    DEFAULT_PAGE_PREFERENCES.pageSize = Math.min(256, DEFAULT_PAGE_PREFERENCES.rowSize * 6);
+
+    let preferences = fetchFromLocalStorageCache(LS_KEY_PAGE_SETTINGS, DEFAULT_PAGE_PREFERENCES) || DEFAULT_PAGE_PREFERENCES;
+
+    if (typeof preferences !== "object" || Array.isArray(preferences)) {
+        preferences = DEFAULT_PAGE_PREFERENCES;
+    }
+
+    for (const key of Object.keys(DEFAULT_PAGE_PREFERENCES)) {
+        if (preferences[key] === undefined || typeof preferences[key] !== typeof DEFAULT_PAGE_PREFERENCES[key]) {
+            preferences[key] = DEFAULT_PAGE_PREFERENCES[key];
+        }
+    }
+
+    if (isNaN(preferences.pageSize) || preferences.pageSize < 1 || preferences.pageSize > 256) {
+        preferences.pageSize = DEFAULT_PAGE_PREFERENCES.pageSize;
+    }
+
+    if (isNaN(preferences.rowSize) || preferences.rowSize < 1 || preferences.rowSize > 256) {
+        preferences.rowSize = DEFAULT_PAGE_PREFERENCES.rowSize;
+    }
+
+    if (isNaN(preferences.rowSizeMin) || preferences.rowSizeMin < 1 || preferences.rowSizeMin > 256) {
+        preferences.rowSizeMin = DEFAULT_PAGE_PREFERENCES.rowSizeMin;
+    }
+
+    if (isNaN(preferences.minItemSize) || preferences.minItemSize < 1 || preferences.minItemSize > 1000) {
+        preferences.minItemSize = DEFAULT_PAGE_PREFERENCES.minItemSize;
+    }
+
+    if (isNaN(preferences.maxItemSize) || preferences.maxItemSize < 1 || preferences.maxItemSize > 1000) {
+        preferences.maxItemSize = DEFAULT_PAGE_PREFERENCES.maxItemSize;
+    }
+
+    if (isNaN(preferences.padding) || preferences.padding < 0 || preferences.padding > 32) {
+        preferences.maxItemSize = DEFAULT_PAGE_PREFERENCES.maxItemSize;
+    }
+
+    return preferences;
 }
 
 /**
- * Event triggered when the page items settings change
+ * Sets the page preferences
+ * @param preferences The page preferences
  */
-export const EVENT_NAME_PAGE_ITEMS_UPDATED = "page-items-pref-updated";
-
-const LS_KEY_PAGE_ITEMS_SIZE = "app-pref-page-items-size";
-
-/**
- * Gets page items size class
- * @returns The size class
- */
-export function getPageItemsSize(): string {
-    return fetchFromLocalStorageCache(LS_KEY_PAGE_ITEMS_SIZE, "normal") + "";
+export function setPagePreferences(preferences: PagePreferences) {
+    saveIntoLocalStorage(LS_KEY_PAGE_SETTINGS, preferences);
+    AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
 
 /**
- * Sets page items size class
- * @param size The size class
+ * Resets page preferences
  */
-export function setPageItemsSize(size: string) {
-    saveIntoLocalStorage(LS_KEY_PAGE_ITEMS_SIZE, size);
-    AppEvents.Emit(EVENT_NAME_PAGE_ITEMS_UPDATED);
-}
-
-const LS_KEY_PAGE_ITEMS_FIT = "app-pref-page-items-fit";
-
-/**
- * Gets number of items to fit in a row of a page
- * @returns Number of items to fit
- */
-export function getPageItemsFit(): number {
-    return Number(fetchFromLocalStorageCache(LS_KEY_PAGE_ITEMS_FIT, 5)) || 0;
-}
-
-/**
- * Sets number of items to fit in a row of a page
- * @param fit Number of items to fit
- */
-export function setPageItemsFit(fit: number) {
-    saveIntoLocalStorage(LS_KEY_PAGE_ITEMS_FIT, fit);
-    AppEvents.Emit(EVENT_NAME_PAGE_ITEMS_UPDATED);
+export function resetPagePreferences() {
+    clearLocalStorage(LS_KEY_PAGE_SETTINGS);
+    AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
 
 const LS_KEY_LAST_USED_TAGS = "app-last-used-tags";

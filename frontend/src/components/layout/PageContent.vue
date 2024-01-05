@@ -2,13 +2,14 @@
     <div
         class="page-content"
         tabindex="-1"
-        :class="{
-            'items-fit-many': pageItemsFit <= 0,
-            'items-size-small': pageItemsSize === 'small',
-            'items-size-big': pageItemsSize === 'big',
-            'items-size-normal': pageItemsSize !== 'small' && pageItemsSize !== 'big',
+        :class="{ 'rounded-corners-cells': roundedCorners }"
+        :style="{
+            '--row-size': rowSize,
+            '--row-size-min': rowSizeMin,
+            '--min-cell-size': minItemSize + 'px',
+            '--max-cell-size': maxItemSize + 'px',
+            '--cell-padding': padding + 'px',
         }"
-        :style="{ '--page-items-fit': pageItemsFit }"
     >
         <div class="page-header">
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
@@ -71,18 +72,43 @@
             </button>
         </div>
 
-        <PageHome v-if="isDisplayed && page === 'home'" :display="isDisplayed && page === 'home'" :min="min"></PageHome>
-        <PageSearch v-if="isDisplayed && page === 'search'" :display="isDisplayed && page === 'search'" :min="min"></PageSearch>
+        <PageHome
+            v-if="isDisplayed && page === 'home'"
+            :display="isDisplayed && page === 'home'"
+            :min="min"
+            :pageSize="pageSize"
+            :displayTitles="displayTitles"
+        ></PageHome>
+        <PageSearch
+            v-if="isDisplayed && page === 'search'"
+            :display="isDisplayed && page === 'search'"
+            :min="min"
+            :pageSize="pageSize"
+            :displayTitles="displayTitles"
+        ></PageSearch>
         <PageUpload v-if="isDisplayed && page === 'upload'" :display="isDisplayed && page === 'upload'"></PageUpload>
-        <PageRandom v-if="isDisplayed && page === 'random'" :display="isDisplayed && page === 'random'"></PageRandom>
+        <PageRandom
+            v-if="isDisplayed && page === 'random'"
+            :display="isDisplayed && page === 'random'"
+            :pageSize="pageSize"
+            :displayTitles="displayTitles"
+        ></PageRandom>
         <PageAdvancedSearch
             v-if="isDisplayed && page === 'adv-search'"
             :display="isDisplayed && page === 'adv-search'"
             :inModal="false"
             :noAlbum="-1"
             v-model:pageScroll="pageScroll"
+            :pageSize="pageSize"
+            :displayTitles="displayTitles"
         ></PageAdvancedSearch>
-        <PageAlbums v-if="isDisplayed && page === 'albums'" :display="isDisplayed && page === 'albums'" :min="min"></PageAlbums>
+        <PageAlbums
+            v-if="isDisplayed && page === 'albums'"
+            :display="isDisplayed && page === 'albums'"
+            :min="min"
+            :pageSize="pageSize"
+            :displayTitles="displayTitles"
+        ></PageAlbums>
 
         <PageConfigModal v-if="displayConfigModal" v-model:display="displayConfigModal"></PageConfigModal>
     </div>
@@ -96,9 +122,9 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { AuthController } from "@/control/auth";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_RANDOM_PAGE_REFRESH } from "@/control/pages";
+import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -158,6 +184,7 @@ export default defineComponent({
         min: Boolean,
     },
     data: function () {
+        const pagePreferences = getPagePreferences();
         return {
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
@@ -169,8 +196,18 @@ export default defineComponent({
 
             displayConfigModal: false,
 
-            pageItemsFit: getPageItemsFit(),
-            pageItemsSize: getPageItemsSize(),
+            pageSize: pagePreferences.pageSize,
+
+            rowSize: pagePreferences.rowSize,
+            rowSizeMin: pagePreferences.rowSizeMin,
+
+            minItemSize: pagePreferences.minItemSize,
+            maxItemSize: pagePreferences.maxItemSize,
+
+            padding: pagePreferences.padding,
+
+            displayTitles: pagePreferences.displayTitles,
+            roundedCorners: pagePreferences.roundedCorners,
 
             pageScroll: 0,
         };
@@ -328,9 +365,21 @@ export default defineComponent({
             this.onSearchParamsChanged();
         },
 
-        updatePageItemsPreferences: function () {
-            this.pageItemsFit = getPageItemsFit();
-            this.pageItemsSize = getPageItemsSize();
+        updatePagePreferences: function () {
+            const pagePreferences = getPagePreferences();
+
+            this.pageSize = pagePreferences.pageSize;
+
+            this.rowSize = pagePreferences.rowSize;
+            this.rowSizeMin = pagePreferences.rowSizeMin;
+
+            this.minItemSize = pagePreferences.minItemSize;
+            this.maxItemSize = pagePreferences.maxItemSize;
+
+            this.padding = pagePreferences.padding;
+
+            this.displayTitles = pagePreferences.displayTitles;
+            this.roundedCorners = pagePreferences.roundedCorners;
         },
 
         goToTop: function () {
@@ -340,7 +389,7 @@ export default defineComponent({
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updatePage.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_ITEMS_UPDATED, this.updatePageItemsPreferences.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
 
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
 
