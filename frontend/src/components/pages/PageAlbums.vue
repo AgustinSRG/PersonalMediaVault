@@ -323,6 +323,8 @@ export default defineComponent({
             const skip = pageSize * this.page;
 
             this.pageItems = albumsList.slice(skip, skip + this.pageSize);
+
+            this.onSearchParamsChanged();
         },
 
         onAppStatusChanged: function () {

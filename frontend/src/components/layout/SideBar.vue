@@ -49,8 +49,8 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'albums' }"
                 :title="$t('Albums')"
-                @click="goToPage('albums', $event)"
-                :href="getPageURL('albums')"
+                @click="goToPage('albums', $event, cachedAlbumsSearchParams)"
+                :href="getPageURL('albums', cachedAlbumsSearchParams)"
                 target="_blank"
                 rel="noopener noreferrer"
             >
@@ -143,7 +143,7 @@ import {
     getAlbumFavoriteList,
     getAlbumsOrderMap,
 } from "@/control/app-preferences";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { AppStatus, AppStatusPage, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { generateURIQuery } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
@@ -177,6 +177,8 @@ export default defineComponent({
             albums: [],
             albumsFavorite: [],
             albumsRest: [],
+
+            cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
         };
     },
     methods: {
@@ -201,13 +203,17 @@ export default defineComponent({
             this.album = AppStatus.CurrentAlbum;
 
             this.search = AppStatus.CurrentSearch;
+
+            if (AppStatus.CurrentPage === "albums") {
+                this.cachedAlbumsSearchParams = AppStatus.SearchParams;
+            }
         },
 
-        goToPage: function (p, e) {
+        goToPage: function (p: AppStatusPage, e: Event, searchParams?: string) {
             if (e) {
                 e.preventDefault();
             }
-            AppStatus.GoToPageNoSplit(p);
+            AppStatus.GoToPageNoSplit(p, searchParams);
             nextTick(() => {
                 this.$emit("skip-to-content");
             });
@@ -242,7 +248,7 @@ export default defineComponent({
             }
         },
 
-        getPageURL: function (page: string): string {
+        getPageURL: function (page: string, searchParams?: string): string {
             return (
                 window.location.protocol +
                 "//" +
@@ -250,6 +256,7 @@ export default defineComponent({
                 window.location.pathname +
                 generateURIQuery({
                     page: page,
+                    sp: searchParams,
                 })
             );
         },
