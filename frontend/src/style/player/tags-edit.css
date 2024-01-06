@@ -12,11 +12,6 @@
     pointer-events: none;
 }
 
-.player-min .tags-edit-helper-container {
-    top: calc(32px + 0.5rem);
-    bottom: 52px;
-}
-
 .tags-editor-body {
     padding: 1rem;
 }

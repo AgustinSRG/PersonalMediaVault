@@ -38,7 +38,7 @@ export function getAssetURL(path: string): string {
  * @param params The query parameters
  * @returns The query string
  */
-export function generateURIQuery(params: { [key: string]: string }): string {
+export function generateURIQuery(params: { [key: string]: string | undefined }): string {
     const keys = Object.keys(params);
     if (keys.length === 0) {
         return "";

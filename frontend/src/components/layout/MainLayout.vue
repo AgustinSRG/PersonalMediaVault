@@ -42,6 +42,8 @@
         <AdvancedSettingsModal v-if="displayAdvancedSettings" v-model:display="displayAdvancedSettings"></AdvancedSettingsModal>
         <BatchOperationModal v-if="displayBatchOperation" v-model:display="displayBatchOperation"></BatchOperationModal>
 
+        <InviteModal v-if="displayInvite" v-model:display="displayInvite"></InviteModal>
+
         <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
         <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
@@ -99,6 +101,7 @@ import {
 } from "../../control/auth";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { isTouchDevice } from "@/utils/touch";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),
@@ -208,6 +211,12 @@ const BatchOperationModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const InviteModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/InviteModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 export default defineComponent({
     components: {
         TopBar,
@@ -232,6 +241,7 @@ export default defineComponent({
         AboutModal,
         KeyboardGuideModal,
         BatchOperationModal,
+        InviteModal,
         SnackBar,
     },
     name: "MainLayout",
@@ -254,6 +264,7 @@ export default defineComponent({
             displayPasswordModal: false,
             displayAdvancedSettings: false,
             displayBatchOperation: false,
+            displayInvite: false,
 
             displayAccountAdmin: false,
 
@@ -319,6 +330,9 @@ export default defineComponent({
                 case "admin":
                     this.displayAccountAdmin = true;
                     break;
+                case "invite":
+                    this.displayInvite = true;
+                    break;
             }
         },
 
@@ -376,7 +390,7 @@ export default defineComponent({
                     break;
                 default:
                     skipTo = this.$el.querySelector(".page-content");
-                    if (skipTo) {
+                    if (skipTo && !isTouchDevice()) {
                         const autoFocused = skipTo.querySelector(".auto-focus");
                         if (autoFocused) {
                             skipTo = autoFocused;
@@ -411,6 +425,7 @@ export default defineComponent({
                 this.displayPasswordModal = false;
                 this.displayAdvancedSettings = false;
                 this.displayBatchOperation = false;
+                this.displayInvite = false;
 
                 this.displayAccountAdmin = false;
 

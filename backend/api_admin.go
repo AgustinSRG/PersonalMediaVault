@@ -105,6 +105,8 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	LogSecurity("[ADMIN] [From IP: " + GetClientIP(request) + "] Created account. Username: " + p.Username)
+
 	response.WriteHeader(200)
 }
 
@@ -161,6 +163,9 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 	}
 
 	GetVault().sessions.RemoveUserSessions(p.Username)
+	GetVault().invites.ClearCode(p.Username)
+
+	LogSecurity("[ADMIN] [From IP: " + GetClientIP(request) + "] Deleted account. Username: " + p.Username)
 
 	response.WriteHeader(200)
 }

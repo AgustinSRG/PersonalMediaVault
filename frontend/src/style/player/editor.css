@@ -34,11 +34,6 @@
     outline: none;
 }
 
-.player-min .player-media-editor {
-    top: 32px;
-    height: calc(100% - 32px);
-}
-
 .form-group-thumbnail {
     max-width: 100%;
     width: 252px;

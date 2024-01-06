@@ -126,34 +126,44 @@
             </div>
 
             <div v-if="pageItems.length > 0" class="search-results-final-display">
-                <a
-                    v-for="item in pageItems"
-                    :key="item.id"
-                    class="search-result-item clickable"
-                    :class="{ current: currentMedia == item.id }"
-                    @click="goToMedia(item.id, $event)"
-                    :href="getMediaURL(item.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
+                <div v-for="i in rowPaddingPreserveCols" :key="'pad-prev-' + i" class="search-result-item">
+                    <div class="search-result-thumb">
                         <div class="search-result-thumb-inner">
-                            <div v-if="!item.thumbnail" class="no-thumb">
-                                <i v-if="item.type === 1" class="fas fa-image"></i>
-                                <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                <i v-else class="fas fa-ban"></i>
-                            </div>
-                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
-                            <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
-                                {{ renderTime(item.duration) }}
+                            <div class="search-result-loader">
+                                <i class="fa fa-spinner fa-spin"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="search-result-title">
-                        {{ item.title || $t("Untitled") }}
-                    </div>
-                </a>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
+                </div>
+                <div v-for="item in pageItems" :key="item.id" class="search-result-item" :class="{ current: currentMedia == item.id }">
+                    <a
+                        class="clickable"
+                        @click="goToMedia(item.id, $event)"
+                        :href="getMediaURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i v-if="item.type === 1" class="fas fa-image"></i>
+                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                    <i v-else class="fas fa-ban"></i>
+                                </div>
+                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                    {{ renderTime(item.duration) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.title || $t("Untitled") }}
+                        </div>
+                    </a>
+                </div>
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <div v-if="!finished && fullListLength >= pageSize" class="search-continue-mark">
@@ -180,7 +190,6 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import {
     EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
     EVENT_NAME_MEDIA_DELETE,
@@ -192,6 +201,7 @@ import {
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiSearch } from "@/api/api-search";
+import { isTouchDevice } from "@/utils/touch";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -200,9 +210,17 @@ export default defineComponent({
     emits: ["select-media", "update:pageScroll"],
     props: {
         display: Boolean,
+        min: Boolean,
         inModal: Boolean,
         noAlbum: Number,
         pageScroll: Number,
+        pageSize: Number,
+        displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup(props) {
         return {
@@ -214,6 +232,7 @@ export default defineComponent({
             continueCheckInterval: null,
             checkContainerTimer: null,
             pageScrollStatus: useVModel(props, "pageScroll"),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -244,12 +263,48 @@ export default defineComponent({
             matchingTags: [],
             tagMode: "all",
 
-            pageSize: getPageMaxItems(),
-
             albums: [],
             albumSearch: -1,
             albumFilter: null,
+
+            windowPosition: 0,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        rowPaddingPreserveCols() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const itemsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return this.windowPosition % itemsFitInRow;
+        },
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const itemsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            const lastWindowElement = this.windowPosition + this.pageItems.length - 1;
+
+            return Math.max(0, itemsFitInRow - 1 - (lastWindowElement % itemsFitInRow));
+        },
     },
     methods: {
         markDirty: function () {
@@ -259,6 +314,9 @@ export default defineComponent({
         },
 
         autoFocus: function () {
+            if (isTouchDevice()) {
+                return;
+            }
             nextTick(() => {
                 const el = this.$el.querySelector(".auto-focus");
                 if (el) {
@@ -565,7 +623,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = getPageMaxItems();
             this.resetSearch();
         },
 
@@ -902,7 +959,7 @@ export default defineComponent({
             this.listScroller.checkElementScroll(e.target as HTMLElement);
         },
 
-        getContainer: function () {
+        getContainer: function (): HTMLElement {
             if (this.inModal) {
                 if (this.$el.parentElement && this.$el.parentElement.parentElement && this.$el.parentElement.parentElement.parentElement) {
                     return this.$el.parentElement.parentElement.parentElement;
@@ -939,6 +996,16 @@ export default defineComponent({
 
             return changed;
         },
+
+        updateWindowWidth: function () {
+            const cont = this.getContainer();
+
+            if (!cont) {
+                return;
+            }
+
+            this.windowWidth = cont.getBoundingClientRect().width;
+        },
     },
     mounted: function () {
         this.pageScrollStatus = 0;
@@ -968,8 +1035,6 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
-
         this.updateTagData();
 
         this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
@@ -979,6 +1044,9 @@ export default defineComponent({
             set: (l) => {
                 this.pageItems = l;
             },
+            onChange: () => {
+                this.windowPosition = this.listScroller.windowPosition;
+            },
         });
 
         this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
@@ -987,6 +1055,17 @@ export default defineComponent({
 
         if (this.display) {
             this.autoFocus();
+        }
+
+        const container = this.getContainer();
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+
+        if (container) {
+            this.windowWidth = container.getBoundingClientRect().width;
+            this.windowResizeObserver.observe(container);
+        } else {
+            this.windowResizeObserver.observe(this.$el);
         }
     },
     beforeUnmount: function () {
@@ -1006,6 +1085,8 @@ export default defineComponent({
         if (!this.inModal) {
             PagesController.OnPageUnload();
         }
+
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {
@@ -1018,6 +1099,9 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        pageSize: function () {
+            this.updatePageSize();
         },
     },
 });

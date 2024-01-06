@@ -84,7 +84,7 @@
                     :disabled="!prev && !pagePrev"
                     type="button"
                     :title="$t('Previous')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-prev"
                     @click="goPrev"
                     @mouseenter="enterTooltip('prev')"
                     @mouseleave="leaveTooltip('prev')"
@@ -101,7 +101,7 @@
                     :disabled="!next && !pageNext"
                     type="button"
                     :title="$t('Next')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-next"
                     @click="goNext"
                     @mouseenter="enterTooltip('next')"
                     @mouseleave="leaveTooltip('next')"
@@ -409,7 +409,7 @@ export default defineComponent({
         };
     },
     methods: {
-        onContextMenu: function (e) {
+        onContextMenu: function (e: MouseEvent) {
             this.contextMenuX = e.pageX;
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
@@ -435,8 +435,8 @@ export default defineComponent({
             this.$emit("ext-desc-open");
         },
 
-        grabScroll: function (e) {
-            if (e.button !== 0) {
+        grabScroll: function (e: TouchEvent | MouseEvent) {
+            if ("button" in e && e.button !== 0) {
                 return;
             }
 
@@ -457,10 +457,10 @@ export default defineComponent({
             this.scrollGrabLeft = scroller.scrollLeft;
 
             this.scrollGrabbed = true;
-            if (e.touches && e.touches.length > 0) {
+            if ("touches" in e && e.touches.length > 0) {
                 this.scrollGrabX = e.touches[0].pageX;
                 this.scrollGrabY = e.touches[0].pageY;
-            } else {
+            } else if ("pageX" in e) {
                 this.scrollGrabX = e.pageX;
                 this.scrollGrabY = e.pageY;
             }
@@ -485,8 +485,8 @@ export default defineComponent({
             scroller.scrollLeft = Math.max(0, Math.min(maxScrollLeft, this.scrollGrabLeft - diffX));
         },
 
-        dropScroll: function (e) {
-            if (e.button !== 0) {
+        dropScroll: function (e: MouseEvent | TouchEvent) {
+            if ("button" in e && e.button !== 0) {
                 return;
             }
 
@@ -495,21 +495,21 @@ export default defineComponent({
             }
             this.scrollGrabbed = false;
 
-            if (e.touches && e.touches.length > 0) {
+            if ("touches" in e && e.touches.length > 0) {
                 this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
+            } else if ("pageX" in e) {
                 this.moveScrollByMouse(e.pageX, e.pageY);
             }
         },
 
-        moveScroll: function (e) {
+        moveScroll: function (e: MouseEvent | TouchEvent) {
             if (!this.scrollGrabbed) {
                 return;
             }
 
-            if (e.touches && e.touches.length > 0) {
+            if ("touches" in e && e.touches.length > 0) {
                 this.moveScrollByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
+            } else if ("pageX" in e) {
                 this.moveScrollByMouse(e.pageX, e.pageY);
             }
         },
@@ -600,6 +600,10 @@ export default defineComponent({
             return Math.round(50 + v * SCALE_RANGE_PERCENT) + "%";
         },
         enterTooltip: function (t: string) {
+            if (isTouchDevice()) {
+                this.helpTooltip = "";
+                return;
+            }
             this.helpTooltip = t;
         },
 
@@ -614,7 +618,7 @@ export default defineComponent({
             e && e.stopPropagation();
         },
 
-        clickControls: function (e) {
+        clickControls: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
             if (e) {
@@ -679,7 +683,7 @@ export default defineComponent({
                 this.helpTooltip = "";
             }
             if (!this.mouseInControls && this.scaleShown && Date.now() - this.lastControlsInteraction > 2000) {
-                this.scaleShown = false;
+                this.scaleShown = isTouchDevice();
             }
             if (!this.mouseInControls && this.cursorShown && Date.now() - this.lastControlsInteraction > 2000) {
                 this.cursorShown = false;
@@ -701,7 +705,7 @@ export default defineComponent({
         leaveControls: function () {
             this.mouseInControls = false;
             this.helpTooltip = "";
-            this.scaleShown = false;
+            this.scaleShown = isTouchDevice();
         },
 
         clickPlayer: function () {
@@ -724,7 +728,7 @@ export default defineComponent({
                 this.fullScreenState = false;
             }
         },
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 

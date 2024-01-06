@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const LIMIT_LOG_FILES = 256
+const LIMIT_LOG_FILES = 100
 
 func getLogFileName() (string, error) {
 	userCacheDir, err := os.UserCacheDir()

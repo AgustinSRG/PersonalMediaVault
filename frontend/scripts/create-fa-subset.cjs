@@ -1,12 +1,12 @@
-// Script to detect font-awesome usages and 
+// Script to detect font-awesome usages and
 // making a subset using the official release
 
 "use strict";
 
-const Font = require('fonteditor-core').Font;
+const Font = require("fonteditor-core").Font;
 const FS = require("fs");
 const Path = require("path");
-const ttf2woff2 = require('ttf2woff2');
+const ttf2woff2 = require("ttf2woff2");
 
 const FA_VERSION = "6.0.0";
 
@@ -132,7 +132,10 @@ function main() {
 
     console.log("Preparing css file...");
 
-    const allFontAwesomeLines = FS.readFileSync(Path.resolve(__dirname, FA_VERSION, "css", "all.css")).toString().split("\n").slice(5);
+    const allFontAwesomeLines = FS.readFileSync(Path.resolve(__dirname, "..", "font-awesome", FA_VERSION, "css", "all.css"))
+        .toString()
+        .split("\n")
+        .slice(5);
 
     const entries = [];
     let buf = [];
@@ -145,7 +148,7 @@ function main() {
                     affected: getAffectedClassesFromCssRule(buf.join("\n")),
                     isMedia: buf[0].startsWith("@media"),
                     isFontFace: buf[0].startsWith("@font-face"),
-                    isKeyFrames: buf[0].startsWith("@-webkit-keyframes") || buf[0].startsWith("@keyframes")
+                    isKeyFrames: buf[0].startsWith("@-webkit-keyframes") || buf[0].startsWith("@keyframes"),
                 });
             }
             buf = [];
@@ -178,7 +181,7 @@ function main() {
             const cssLines = entry.css.split("\n");
 
             if (cssLines[0].trim().endsWith("::before {")) {
-                const hexCode = ((cssLines[1] + "").split(":").pop().split("\"")[1] + "").substring(1);
+                const hexCode = ((cssLines[1] + "").split(":").pop().split('"')[1] + "").substring(1);
                 const n = parseInt(hexCode, 16);
                 if (!isNaN(n)) {
                     setUnicodeChars.add(n);
@@ -201,14 +204,14 @@ function main() {
 
     console.log("Preparing font files... (TTF)");
 
-    const fontFiles = FS.readdirSync(Path.resolve(__dirname, FA_VERSION, "webfonts"));
+    const fontFiles = FS.readdirSync(Path.resolve(__dirname, "..", "font-awesome", FA_VERSION, "webfonts"));
 
     for (const fontFile of fontFiles) {
         const format = fontFile.split(".").pop();
         if (format !== "ttf") {
             continue;
         }
-        const fontFileContents = FS.readFileSync(Path.resolve(__dirname, FA_VERSION, "webfonts", fontFile));
+        const fontFileContents = FS.readFileSync(Path.resolve(__dirname, "..", "font-awesome", FA_VERSION, "webfonts", fontFile));
 
         const font = Font.create(fontFileContents, {
             type: format,
@@ -247,4 +250,3 @@ function main() {
 }
 
 main();
-

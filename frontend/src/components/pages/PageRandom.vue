@@ -10,7 +10,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
             </div>
 
@@ -47,34 +47,35 @@
             </div>
 
             <div v-if="!loading && total > 0" class="search-results-final-display">
-                <a
-                    v-for="(item, i) in pageItems"
-                    :key="i"
-                    class="search-result-item clickable"
-                    :class="{ current: currentMedia == item.id }"
-                    @click="goToMedia(item.id, $event)"
-                    :href="getMediaURL(item.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                        <div class="search-result-thumb-inner">
-                            <div v-if="!item.thumbnail" class="no-thumb">
-                                <i v-if="item.type === 1" class="fas fa-image"></i>
-                                <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                <i v-else class="fas fa-ban"></i>
-                            </div>
-                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
-                            <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
-                                {{ renderTime(item.duration) }}
+                <div v-for="(item, i) in pageItems" :key="i" class="search-result-item" :class="{ current: currentMedia == item.id }">
+                    <a
+                        class="clickable"
+                        :href="getMediaURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @click="goToMedia(item.id, $event)"
+                    >
+                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i v-if="item.type === 1" class="fas fa-image"></i>
+                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                    <i v-else class="fas fa-ban"></i>
+                                </div>
+                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                    {{ renderTime(item.duration) }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="search-result-title">
-                        {{ item.title || $t("Untitled") }}
-                    </div>
-                </a>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.title || $t("Untitled") }}
+                        </div>
+                    </a>
+                </div>
+
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
         </div>
     </div>
@@ -83,7 +84,6 @@
 <script lang="ts">
 import { MediaListItem } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
@@ -109,10 +109,19 @@ export default defineComponent({
     name: "PageRandom",
     props: {
         display: Boolean,
+        min: Boolean,
+        pageSize: Number,
+        displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -122,7 +131,6 @@ export default defineComponent({
 
             search: AppStatus.CurrentSearch,
 
-            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
             page: 0,
@@ -137,7 +145,26 @@ export default defineComponent({
             switchMediaOnLoad: "",
 
             tagVersion: TagsController.TagsVersion,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
+        },
     },
     methods: {
         scrollToTop: function () {
@@ -232,7 +259,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = getPageMaxItems();
             this.updateLoadingFiller();
             this.load();
         },
@@ -425,6 +451,10 @@ export default defineComponent({
         updateTagData: function () {
             this.tagVersion = TagsController.TagsVersion;
         },
+
+        updateWindowWidth: function () {
+            this.windowWidth = this.$el.getBoundingClientRect().width;
+        },
     },
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
@@ -441,8 +471,6 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
-
         this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.load.bind(this));
 
         this.updateSearchParams();
@@ -452,11 +480,17 @@ export default defineComponent({
         if (this.display) {
             this.autoFocus();
         }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {
@@ -464,6 +498,9 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        pageSize: function () {
+            this.updatePageSize();
         },
     },
 });

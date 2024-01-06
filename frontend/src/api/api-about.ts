@@ -3,7 +3,7 @@
 "use strict";
 
 import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { getApiURL } from "@/utils/api";
+import { getApiURL, API_PREFIX } from "@/utils/api";
 
 /**
  * Response of about API
@@ -32,7 +32,7 @@ export interface AboutResponse {
 export function apiAbout(): RequestParams<AboutResponse, CommonAuthenticatedErrorHandler> {
     return {
         method: "GET",
-        url: getApiURL("/api/about"),
+        url: getApiURL(`${API_PREFIX}/about`),
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)

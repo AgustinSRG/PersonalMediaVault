@@ -116,7 +116,7 @@ func Tags_API_Test_UntagMedia(server *httptest.Server, session string, t *testin
 
 func Tags_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Upload test media
-	media1, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 1", "")
+	media1, _, err := UploadTestMedia(server, session, MediaTypeImage, "Test Tagged 1", "")
 
 	if err != nil {
 		t.Error(err)

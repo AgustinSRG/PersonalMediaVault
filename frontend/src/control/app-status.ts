@@ -307,14 +307,15 @@ export class AppStatus {
     /**
      * Navigates to a page, without split mode
      * @param page The page to navigate to
+     * @param searchParams Search parameters
      */
-    public static GoToPageNoSplit(page: AppStatusPage) {
+    public static GoToPageNoSplit(page: AppStatusPage, searchParams?: string) {
         AppStatus.CurrentPage = page;
 
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
         AppStatus.ListSplitMode = false;
-        AppStatus.SearchParams = "";
+        AppStatus.SearchParams = searchParams || "";
 
         AppStatus.UpdateLayout();
 

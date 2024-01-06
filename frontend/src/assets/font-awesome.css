@@ -315,6 +315,10 @@
     content: "\f074";
 }
 
+.fa-sliders::before {
+    content: "\f1de";
+}
+
 .fa-spinner::before {
     content: "\f110";
 }
@@ -349,6 +353,10 @@
 
 .fa-user::before {
     content: "\f007";
+}
+
+.fa-user-check::before {
+    content: "\f4fc";
 }
 
 .fa-users::before {

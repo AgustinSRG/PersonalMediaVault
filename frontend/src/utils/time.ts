@@ -41,3 +41,17 @@ export function renderTimeSeconds(s: number): string {
 
     return r;
 }
+
+export function renderDateAndTime(date: Date | string | number, locale: string) {
+    if (!date) return "-";
+
+    if (typeof date === "string" || typeof date === "number") {
+        date = new Date(date);
+    }
+
+    return date.toLocaleTimeString(locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+}

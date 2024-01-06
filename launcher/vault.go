@@ -480,6 +480,10 @@ func (vc *VaultController) Start() bool {
 
 	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag, "--cache-size", fmt.Sprint(cacheSize))
 
+	if vc.launchConfig.LogRequests {
+		cmd.Args = append(cmd.Args, "--log-requests")
+	}
+
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
 
@@ -1245,6 +1249,53 @@ func (vc *VaultController) SetSecureTempDelete(d bool) bool {
 			DefaultMessage: &i18n.Message{
 				ID:    "SecureDeleteDisabled",
 				Other: "Secure deletion of temp files is now DISABLED.",
+			},
+		})
+		fmt.Println(msg)
+	}
+
+	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	} else {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
+		return true
+	}
+}
+
+func (vc *VaultController) SetLogRequests(d bool) bool {
+	vc.launchConfig.LogRequests = d
+
+	if d {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LogRequestsEnabled",
+				Other: "Requests logging is now ENABLED.",
+			},
+		})
+		fmt.Println(msg)
+	} else {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LogRequestsDisabled",
+				Other: "Requests logging is now DISABLED.",
 			},
 		})
 		fmt.Println(msg)

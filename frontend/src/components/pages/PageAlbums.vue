@@ -22,7 +22,7 @@
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
+                <div v-for="f in pageSize" :key="f" class="search-result-item">
                     <div class="search-result-thumb">
                         <div class="search-result-thumb-inner">
                             <div class="search-result-loader">
@@ -30,7 +30,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="search-result-title">{{ $t("Loading") }}...</div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
             </div>
 
@@ -63,39 +63,41 @@
             </div>
 
             <div v-if="!loading && total > 0" class="search-results-final-display">
-                <a
-                    v-for="item in pageItems"
-                    :key="item.id"
-                    class="search-result-item clickable"
-                    @click="goToAlbum(item, $event)"
-                    :href="getAlbumURL(item.id)"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <div
-                        class="search-result-thumb"
-                        :title="
-                            (item.name || $t('Untitled album')) + (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
-                        "
-                    >
-                        <div class="search-result-thumb-inner">
-                            <div v-if="!item.thumbnail" class="no-thumb">
-                                <i class="fas fa-list-ol"></i>
-                            </div>
-                            <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
-                            <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
-                            <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
-                                1 {{ $t("item") }}
-                            </div>
-                            <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
-                                {{ item.size }} {{ $t("items") }}
+                <div v-for="item in pageItems" :key="item.id" class="search-result-item">
+                    <a
+                        class="clickable"
+                        @click="goToAlbum(item, $event)"
+                        :href="getAlbumURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><div
+                            class="search-result-thumb"
+                            :title="
+                                (item.name || $t('Untitled album')) +
+                                (item.lm ? '\n' + $t('Last modified') + ': ' + renderDate(item.lm) : '')
+                            "
+                        >
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i class="fas fa-list-ol"></i>
+                                </div>
+                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
+                                <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
+                                    1 {{ $t("item") }}
+                                </div>
+                                <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
+                                    {{ item.size }} {{ $t("items") }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="search-result-title">
-                        {{ item.name || $t("Untitled") }}
-                    </div>
-                </a>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.name || $t("Untitled") }}
+                        </div></a
+                    >
+                </div>
+
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
@@ -121,12 +123,12 @@ import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { EVENT_NAME_PAGE_SIZE_UPDATED, getPageMaxItems } from "@/control/app-preferences";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
+import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -138,10 +140,18 @@ export default defineComponent({
     props: {
         display: Boolean,
         min: Boolean,
+        pageSize: Number,
+        displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -153,7 +163,6 @@ export default defineComponent({
 
             filter: PagesController.AlbumsPageSearch,
 
-            pageSize: getPageMaxItems(),
             order: "desc",
             searchParams: AppStatus.SearchParams,
 
@@ -162,12 +171,29 @@ export default defineComponent({
             totalPages: 0,
             pageItems: [],
 
-            loadingFiller: [],
-
             canWrite: AuthController.CanWrite,
 
             displayAlbumCreate: false,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
+        },
     },
     methods: {
         scrollToTop: function () {
@@ -175,6 +201,9 @@ export default defineComponent({
         },
 
         autoFocus: function () {
+            if (isTouchDevice()) {
+                return;
+            }
             nextTick(() => {
                 const el = this.$el.querySelector(".auto-focus");
                 if (el) {
@@ -319,6 +348,8 @@ export default defineComponent({
             const skip = pageSize * this.page;
 
             this.pageItems = albumsList.slice(skip, skip + this.pageSize);
+
+            this.onSearchParamsChanged();
         },
 
         onAppStatusChanged: function () {
@@ -344,17 +375,6 @@ export default defineComponent({
             const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
             this.order = params.order;
-            this.updateLoadingFiller();
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
         },
 
         getThumbnail(thumb: string) {
@@ -398,8 +418,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.pageSize = getPageMaxItems();
-            this.updateLoadingFiller();
             this.page = 0;
             this.load();
         },
@@ -435,6 +453,10 @@ export default defineComponent({
 
             return false;
         },
+
+        updateWindowWidth: function () {
+            this.windowWidth = this.$el.getBoundingClientRect().width;
+        },
     },
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
@@ -444,18 +466,22 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_SIZE_UPDATED, this.updatePageSize.bind(this));
-
         this.updateSearchParams();
         this.load();
 
         if (this.display) {
             this.autoFocus();
         }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {
@@ -463,6 +489,9 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        pageSize: function () {
+            this.updatePageSize();
         },
     },
 });

@@ -133,6 +133,7 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	}
 
 	GetVault().sessions.ChangeUsername(session.user, p.Username)
+	GetVault().invites.ChangeUsername(session.user, p.Username)
 
 	response.WriteHeader(200)
 }
@@ -142,6 +143,11 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 
 	if session == nil {
 		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if session.user == "" {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 

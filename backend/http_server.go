@@ -20,17 +20,29 @@ var (
 	CORS_INSECURE_MODE_ENABLED = false // Insecure CORS mode for development and testing
 )
 
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
+
 // Logging middleware to log requests
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Mark stating time
 		startTime := time.Now()
 
+		lrw := loggingResponseWriter{w, http.StatusOK}
+
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(&lrw, r)
 
 		// Log request
-		LogRequest(r, time.Since(startTime))
+		LogRequest(r, lrw.statusCode, time.Since(startTime))
 	})
 }
 
@@ -126,6 +138,14 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/account/username", api_getAccountContext).Methods("GET")
 	apiRouter.HandleFunc("/account/username", api_changeUsername).Methods("POST")
 	apiRouter.HandleFunc("/account/password", api_changePassword).Methods("POST")
+
+	// Invite codes API
+	apiRouter.HandleFunc("/invites", api_getInviteCodeStatus).Methods("GET")
+	apiRouter.HandleFunc("/invites/sessions", api_getInviteCodeSessions).Methods("GET")
+	apiRouter.HandleFunc("/invites/login", api_loginWithInviteCode).Methods("POST")
+	apiRouter.HandleFunc("/invites/generate", api_generateInviteCode).Methods("POST")
+	apiRouter.HandleFunc("/invites/clear", api_clearInviteCode).Methods("POST")
+	apiRouter.HandleFunc("/invites/sessions/{index}", api_closeInviteSession).Methods("DELETE")
 
 	// Admin API (Manage accounts)
 	apiRouter.HandleFunc("/admin/accounts", api_getAccounts).Methods("GET")

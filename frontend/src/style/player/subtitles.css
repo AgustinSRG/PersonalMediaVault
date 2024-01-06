@@ -10,12 +10,7 @@
     text-align: center;
 }
 
-.player-min .player-subtitles-container {
-    bottom: 50px;
-}
-
-.player-subtitles-container.controls-hidden,
-.player-min .player-subtitles-container.controls-hidden {
+.player-subtitles-container.controls-hidden {
     bottom: 0;
 }
 

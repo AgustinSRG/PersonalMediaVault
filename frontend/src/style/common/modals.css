@@ -140,6 +140,9 @@
     font-size: 24px;
     font-weight: bold;
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .modal-close-btn {
@@ -172,6 +175,10 @@
 .modal-body.no-padding,
 .modal-footer.no-padding {
     padding: 0;
+}
+
+.modal-body.border-top {
+    border-top: solid 1px var(--theme-border-color);
 }
 
 .modal-footer {
@@ -300,6 +307,25 @@
 
 .modal-container.modal-container-corner.modal-container-help {
     padding-right: 104px;
+}
+
+.modal-container.modal-container-corner.modal-container-page-settings {
+    padding-top: 110px;
+    padding-right: 1rem;
+}
+
+.modal-container.modal-container-corner.modal-container-page-settings .modal-dialog {
+    width: 700px;
+}
+
+@media (max-width: 700px) {
+    .modal-container.modal-container-corner.modal-container-page-settings {
+        padding-right: 0.5rem;
+    }
+
+    .modal-container.modal-container-corner.modal-container-page-settings .modal-dialog {
+        width: 100%;
+    }
 }
 
 /* Z-Indexes */

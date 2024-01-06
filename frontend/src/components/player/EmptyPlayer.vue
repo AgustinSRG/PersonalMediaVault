@@ -34,7 +34,7 @@
                     :disabled="!prev && !pagePrev"
                     type="button"
                     :title="$t('Previous')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-prev"
                     @click="goPrev"
                     @mouseenter="enterTooltip('prev')"
                     @mouseleave="leaveTooltip('prev')"
@@ -51,7 +51,7 @@
                     :disabled="!next && !pageNext"
                     type="button"
                     :title="$t('Next')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-next"
                     @click="goNext"
                     @mouseenter="enterTooltip('next')"
                     @mouseleave="leaveTooltip('next')"
@@ -131,6 +131,7 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
+import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
     components: {
@@ -175,6 +176,10 @@ export default defineComponent({
     },
     methods: {
         enterTooltip: function (t: string) {
+            if (isTouchDevice()) {
+                this.helpTooltip = "";
+                return;
+            }
             this.helpTooltip = t;
         },
 

@@ -1,7 +1,7 @@
 .DS_Store
 node_modules
 /dist
-prepared-translation.txt
+/src/locales/*.txt
 
 # local env files
 .env.local

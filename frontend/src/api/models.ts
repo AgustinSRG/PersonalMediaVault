@@ -168,6 +168,11 @@ export interface VaultUserConfig {
     video_previews_interval: number;
 
     /**
+     * Max number of invited sessions per user
+     */
+    invite_limit: number;
+
+    /**
      * List of video resolutions
      */
     resolutions: VideoResolution[];

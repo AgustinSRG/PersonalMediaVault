@@ -35,6 +35,10 @@ func LogInfo(line string) {
 	LogLine("[INFO] " + line)
 }
 
+func LogSecurity(line string) {
+	LogLine("[SECURITY] " + line)
+}
+
 func LogError(err error) {
 	LogLine("[ERROR] " + err.Error())
 }
@@ -55,8 +59,8 @@ func LogDebug(line string) {
 	}
 }
 
-func LogRequest(r *http.Request, duration time.Duration) {
+func LogRequest(r *http.Request, statusCode int, duration time.Duration) {
 	if log_requests_enabled {
-		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path + " (" + duration.String() + ")")
+		LogLine("[REQUEST] (From: " + GetClientIP(r) + ") " + r.Method + " " + r.URL.Path + " (" + fmt.Sprint(statusCode) + " " + http.StatusText(statusCode) + ") (" + duration.String() + ")")
 	}
 }

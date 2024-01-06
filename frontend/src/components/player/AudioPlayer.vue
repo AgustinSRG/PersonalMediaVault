@@ -12,8 +12,8 @@
         @dblclick="toggleFullScreen"
         @mouseleave="mouseLeavePlayer"
         @mouseup="playerMouseUp"
-        @touchmove="playerMouseMove"
-        @touchend.passive="playerMouseUp"
+        @touchmove="playerTouchMove"
+        @touchend.passive="onPlayerTouchEnd"
         @contextmenu="onContextMenu"
     >
         <audio
@@ -154,7 +154,7 @@
                     :disabled="!prev && !pagePrev"
                     type="button"
                     :title="$t('Previous')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-prev"
                     @click="goPrev"
                     @mouseenter="enterTooltip('prev')"
                     @mouseleave="leaveTooltip('prev')"
@@ -190,7 +190,7 @@
                     :disabled="!next && !pageNext"
                     type="button"
                     :title="$t('Next')"
-                    class="player-btn"
+                    class="player-btn player-btn-action-next"
                     @click="goNext"
                     @mouseenter="enterTooltip('next')"
                     @mouseleave="leaveTooltip('next')"
@@ -315,8 +315,8 @@
             @mousemove="mouseMoveTimeline"
             @dblclick="stopPropagationEvent"
             @click="clickTimeline"
-            @mousedown="grabTimeline"
-            @touchstart="grabTimeline"
+            @mousedown="grabTimelineByMouse"
+            @touchstart="grabTimelineByTouch"
         >
             <div class="player-timeline-back"></div>
             <div class="player-timeline-buffer" :style="{ width: getTimelineBarWidth(bufferedTime, duration) }"></div>
@@ -597,10 +597,12 @@ export default defineComponent({
 
             pendingNextEnd: false,
             pendingNextEndSeconds: 0,
+
+            timeStartTap: 0,
         };
     },
     methods: {
-        onContextMenu: function (e) {
+        onContextMenu: function (e: MouseEvent) {
             this.contextMenuX = e.pageX;
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
@@ -630,6 +632,10 @@ export default defineComponent({
             return Math.round(v * 100) + "%";
         },
         enterTooltip: function (t: string) {
+            if (isTouchDevice()) {
+                this.helpTooltip = "";
+                return;
+            }
             this.helpTooltip = t;
         },
 
@@ -644,7 +650,7 @@ export default defineComponent({
             e && e.stopPropagation();
         },
 
-        clickControls: function (e) {
+        clickControls: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
             if (e) {
@@ -760,7 +766,7 @@ export default defineComponent({
             }
             this.autoPlayApplied = true;
         },
-        onWaitForBuffer: function (b) {
+        onWaitForBuffer: function (b: boolean) {
             this.loading = b;
         },
         onEnded: function () {
@@ -786,27 +792,33 @@ export default defineComponent({
             }
         },
 
-        playerMouseUp: function (e) {
+        playerMouseUp: function (e: MouseEvent) {
             if (this.timelineGrabbed) {
-                if (e.touches && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX);
-                } else {
-                    this.onTimelineSkip(e.pageX);
-                }
                 this.timelineGrabbed = false;
+                this.onTimelineSkip(e.pageX);
+
+                if (isTouchDevice()) {
+                    this.tooltipShown = false;
+                }
             }
         },
-        playerMouseMove: function (e) {
+        playerMouseMove: function (e: MouseEvent) {
             this.interactWithControls();
 
             if (this.timelineGrabbed) {
-                if (e.touches && e.touches.length > 0) {
-                    this.onTimelineSkip(e.touches[0].pageX);
-                } else {
-                    this.onTimelineSkip(e.pageX);
-                }
+                this.onTimelineSkip(e.pageX);
             }
         },
+
+        playerTouchMove: function (e: TouchEvent) {
+            this.interactWithControls();
+
+            if (this.timelineGrabbed && e.touches[0]) {
+                this.onTimelineSkip(e.touches[0].pageX);
+                this.updateTimelineTooltip(e.touches[0].pageX);
+            }
+        },
+
         mouseLeavePlayer: function () {
             this.timelineGrabbed = false;
             if (!this.playing || this.expandedTitle || this.expandedAlbum) return;
@@ -820,7 +832,7 @@ export default defineComponent({
             if (this.showControls && !this.mouseInControls && this.playing && !this.expandedTitle && !this.expandedAlbum) {
                 if (Date.now() - this.lastControlsInteraction > 2000) {
                     this.showControls = false;
-                    this.volumeShown = false;
+                    this.volumeShown = isTouchDevice();
                     this.helpTooltip = "";
                     this.displayConfig = false;
                 }
@@ -897,6 +909,9 @@ export default defineComponent({
         },
 
         onPlayerMouseDown: function (e: MouseEvent) {
+            if (isTouchDevice()) {
+                return;
+            }
             if (e.button !== 0) {
                 return;
             }
@@ -906,11 +921,32 @@ export default defineComponent({
             this.clickPlayer();
         },
 
-        onPlayerTouchStart: function (e) {
+        onPlayerTouchStart: function (e: TouchEvent) {
             if (this.contextMenuShown) {
                 e.stopPropagation();
             }
-            this.clickPlayer();
+            this.leaveControls();
+            if (this.displayConfig || this.contextMenuShown) {
+                this.displayConfig = false;
+                this.contextMenuShown = false;
+            } else {
+                this.timeStartTap = Date.now();
+            }
+            this.interactWithControls();
+        },
+
+        onPlayerTouchEnd: function (e: TouchEvent) {
+            if (this.timelineGrabbed) {
+                this.timelineGrabbed = false;
+                e.touches[0] && this.onTimelineSkip(e.touches[0].pageX);
+            }
+
+            this.tooltipShown = false;
+
+            if (this.timeStartTap && Date.now() - this.timeStartTap < 500) {
+                this.togglePlay();
+                this.timeStartTap = 0;
+            }
         },
 
         play: function () {
@@ -966,11 +1002,11 @@ export default defineComponent({
                 this.fullScreenState = false;
             }
         },
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
-        clickTimeline: function (e) {
+        clickTimeline: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
             e.stopPropagation();
@@ -978,16 +1014,27 @@ export default defineComponent({
 
         /* Timeline */
 
-        grabTimeline: function (e: MouseEvent & TouchEvent) {
+        grabTimelineByMouse: function (e: MouseEvent & TouchEvent) {
             e.stopPropagation();
-            if (e.touches && e.touches.length > 0) {
-                this.timelineGrabbed = true;
-                this.onTimelineSkip(e.touches[0].pageX);
-            } else if (e.button === 0) {
+            if (e.button === 0) {
                 this.timelineGrabbed = true;
                 this.onTimelineSkip(e.pageX);
             }
         },
+
+        grabTimelineByTouch: function (e: TouchEvent) {
+            e.stopPropagation();
+
+            if (!e.touches[0]) {
+                return;
+            }
+
+            this.timelineGrabbed = true;
+            this.onTimelineSkip(e.touches[0].pageX);
+
+            this.updateTimelineTooltip(e.touches[0].pageX);
+        },
+
         getTimelineBarWidth: function (time, duration) {
             if (duration > 0) {
                 return Math.min((time / duration) * 100, 100) + "%";
@@ -1014,11 +1061,13 @@ export default defineComponent({
             }
         },
         mouseLeaveTimeline: function () {
-            this.tooltipShown = false;
+            if (!isTouchDevice()) {
+                this.tooltipShown = false;
+            }
             this.leaveControls();
         },
-        mouseMoveTimeline: function (event) {
-            const x = event.pageX;
+
+        updateTimelineTooltip: function (x: number) {
             const offset = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().left;
             const width = this.$el.querySelector(".player-timeline-back").getBoundingClientRect().width || 1;
 
@@ -1038,6 +1087,15 @@ export default defineComponent({
 
             nextTick(this.tick.bind(this));
         },
+
+        mouseMoveTimeline: function (event: MouseEvent) {
+            if (isTouchDevice()) {
+                return;
+            }
+
+            this.updateTimelineTooltip(event.pageX);
+        },
+
         renderTime: function (s: number): string {
             return renderTimeSeconds(s);
         },

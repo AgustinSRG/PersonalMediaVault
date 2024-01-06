@@ -4,13 +4,14 @@
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
             role="document"
-            :class="{
-                'items-fit-many': pageItemsFit <= 0,
-                'items-size-small': pageItemsSize === 'small',
-                'items-size-big': pageItemsSize === 'big',
-                'items-size-normal': pageItemsSize !== 'small' && pageItemsSize !== 'big',
+            :class="{ 'rounded-corners-cells': roundedCorners }"
+            :style="{
+                '--row-size': rowSize,
+                '--row-size-min': rowSizeMin,
+                '--min-cell-size': minItemSize + 'px',
+                '--max-cell-size': maxItemSize + 'px',
+                '--cell-padding': padding + 'px',
             }"
-            :style="{ '--page-items-fit': pageItemsFit }"
         >
             <div class="modal-header">
                 <div class="modal-title" v-if="!isUpload">
@@ -36,8 +37,15 @@
                     v-if="!isUpload"
                     :display="true"
                     :inModal="true"
+                    :min="false"
                     :noAlbum="aid"
                     @select-media="selectMedia"
+                    :pageSize="pageSize"
+                    :displayTitles="displayTitles"
+                    :row-size="rowSize"
+                    :row-size-min="rowSizeMin"
+                    :min-items-size="minItemSize"
+                    :max-items-size="maxItemSize"
                 ></PageAdvancedSearch>
                 <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
             </div>
@@ -60,10 +68,10 @@ import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { AppEvents } from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
-import { EVENT_NAME_PAGE_ITEMS_UPDATED, getPageItemsFit, getPageItemsSize } from "@/control/app-preferences";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
+import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
 
 export default defineComponent({
     components: {
@@ -82,13 +90,24 @@ export default defineComponent({
         };
     },
     data: function () {
+        const pagePreferences = getPagePreferences();
         return {
             busy: false,
 
             isUpload: true,
 
-            pageItemsFit: getPageItemsFit(),
-            pageItemsSize: getPageItemsSize(),
+            pageSize: pagePreferences.pageSize,
+
+            rowSize: pagePreferences.rowSize,
+            rowSizeMin: pagePreferences.rowSizeMin,
+
+            minItemSize: pagePreferences.minItemSize,
+            maxItemSize: pagePreferences.maxItemSize,
+
+            padding: pagePreferences.padding,
+
+            displayTitles: pagePreferences.displayTitles,
+            roundedCorners: pagePreferences.roundedCorners,
 
             pageScroll: 0,
 
@@ -160,9 +179,21 @@ export default defineComponent({
                 });
         },
 
-        updatePageItemsPreferences: function () {
-            this.pageItemsFit = getPageItemsFit();
-            this.pageItemsSize = getPageItemsSize();
+        updatePagePreferences: function () {
+            const pagePreferences = getPagePreferences();
+
+            this.pageSize = pagePreferences.pageSize;
+
+            this.rowSize = pagePreferences.rowSize;
+            this.rowSizeMin = pagePreferences.rowSizeMin;
+
+            this.minItemSize = pagePreferences.minItemSize;
+            this.maxItemSize = pagePreferences.maxItemSize;
+
+            this.padding = pagePreferences.padding;
+
+            this.displayTitles = pagePreferences.displayTitles;
+            this.roundedCorners = pagePreferences.roundedCorners;
         },
 
         onPageScroll: function (e: Event) {
@@ -188,7 +219,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_ITEMS_UPDATED, this.updatePageItemsPreferences.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
 
         if (this.display) {
             nextTick(() => {

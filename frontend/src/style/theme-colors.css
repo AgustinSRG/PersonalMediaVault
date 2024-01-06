@@ -34,6 +34,9 @@
     --switch-disabled-color: lightgray;
     --switch-enabled-color: red;
 
+    --range-background-color: lightgray;
+    --range-thumb-color: black;
+
     --player-bg-color: white;
     --player-controls-background: rgba(255, 255, 255, 0.2);
     --player-loader-background: rgba(255, 255, 255, 0.3);
@@ -98,6 +101,9 @@
     --switch-shadow-color: rgba(0, 0, 0, 0.33);
     --switch-disabled-color: gray;
     --switch-enabled-color: red;
+
+    --range-background-color: gray;
+    --range-thumb-color: white;
 
     --player-bg-color: black;
     --player-controls-background: rgba(0, 0, 0, 0.2);

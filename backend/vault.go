@@ -9,7 +9,8 @@ type Vault struct {
 	path string // Vault path
 
 	credentials *VaultCredentialsManager // Manages vault credentials
-	sessions    *SessionManager          // Manages active user sessiions
+	sessions    *SessionManager          // Manages active user sessions
+	invites     *InvitationManager       // Manages invite codes
 
 	media *MediaAssetsManager // Media assets
 
@@ -37,6 +38,9 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 
 	vault.sessions = &SessionManager{}
 	vault.sessions.Initialize(vault)
+
+	vault.invites = &InvitationManager{}
+	vault.invites.Initialize(vault)
 
 	vault.media = &MediaAssetsManager{}
 	vault.media.Initialize(base_path, preview_cache_size)

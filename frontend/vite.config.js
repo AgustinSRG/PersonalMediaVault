@@ -16,7 +16,7 @@ export default defineConfig({
                 short_name: "PMV",
                 theme_color: "#FF0000",
                 background_color: "#000000",
-                display: "minimal-ui",
+                display: "standalone",
                 start_url: "/",
                 icons: [
                     {
