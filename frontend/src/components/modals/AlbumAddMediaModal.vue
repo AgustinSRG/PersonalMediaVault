@@ -37,10 +37,15 @@
                     v-if="!isUpload"
                     :display="true"
                     :inModal="true"
+                    :min="false"
                     :noAlbum="aid"
                     @select-media="selectMedia"
                     :pageSize="pageSize"
                     :displayTitles="displayTitles"
+                    :row-size="rowSize"
+                    :row-size-min="rowSizeMin"
+                    :min-items-size="minItemSize"
+                    :max-items-size="maxItemSize"
                 ></PageAdvancedSearch>
                 <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
             </div>

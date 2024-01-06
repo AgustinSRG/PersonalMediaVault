@@ -37,6 +37,11 @@ export class BigListScroller<T = any> {
     public setListWindow: (list: T[]) => void;
 
     /**
+     * Handler for window change events
+     */
+    public onChangeListWindow: () => void;
+
+    /**
      * Minimal window size
      */
     public minWindowSize: number;
@@ -62,11 +67,12 @@ export class BigListScroller<T = any> {
      * @param maxPages Max number of pages to keep
      * @param callbacks Callbacks to get and set the list window
      */
-    constructor(windowSize: number, callbacks: { get: () => T[]; set: (list: T[]) => void }) {
+    constructor(windowSize: number, callbacks: { get: () => T[]; set: (list: T[]) => void; onChange?: () => void }) {
         this.windowSize = windowSize;
         this.minWindowSize = windowSize;
         this.getListWindow = callbacks.get;
         this.setListWindow = callbacks.set;
+        this.onChangeListWindow = callbacks.onChange;
         this.list = [];
         this.windowPosition = 0;
     }
@@ -76,7 +82,7 @@ export class BigListScroller<T = any> {
      * @returns The window center position
      */
     public getCenterPosition(): number {
-        return this.windowPosition + Math.floor(this.windowSize / 2);
+        return this.windowPosition + Math.floor(this.getListWindow().length / 2);
     }
 
     /**
@@ -95,6 +101,7 @@ export class BigListScroller<T = any> {
         this.setListWindow([]);
         this.list = [];
         this.windowPosition = 0;
+        this.onChangeListWindow && this.onChangeListWindow();
     }
 
     /**
@@ -104,14 +111,18 @@ export class BigListScroller<T = any> {
      */
     public addElements(elements: T[]) {
         const listWindow = this.getListWindow();
+        let listWindowChanged = false;
 
         for (let i = 0; i < elements.length; i++) {
             this.list.push(elements[i]);
 
             if (listWindow.length < this.windowSize) {
                 listWindow.push(elements[i]);
+                listWindowChanged = true;
             }
         }
+
+        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
     }
 
     /**
@@ -119,6 +130,7 @@ export class BigListScroller<T = any> {
      */
     private moveWindowDown() {
         const listWindow = this.getListWindow();
+        let listWindowChanged = false;
         const step = BigListScroller.GetWindowStep(this.windowSize);
 
         let windowNext = this.windowPosition + listWindow.length;
@@ -130,7 +142,10 @@ export class BigListScroller<T = any> {
             this.windowPosition++;
             windowNext++;
             moveCount++;
+            listWindowChanged = true;
         }
+
+        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
     }
 
     /**
@@ -138,6 +153,7 @@ export class BigListScroller<T = any> {
      */
     private moveWindowUp() {
         const listWindow = this.getListWindow();
+        let listWindowChanged = false;
         const step = BigListScroller.GetWindowStep(this.windowSize);
         let moveCount = 0;
 
@@ -146,7 +162,10 @@ export class BigListScroller<T = any> {
             listWindow.unshift(this.list[this.windowPosition - 1]);
             this.windowPosition--;
             moveCount++;
+            listWindowChanged = true;
         }
+
+        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
     }
 
     /**
@@ -183,6 +202,7 @@ export class BigListScroller<T = any> {
     public moveWindowToElement(index: number) {
         this.windowPosition = Math.max(0, index - Math.floor(this.windowSize / 2));
         this.setListWindow(this.list.slice(this.windowPosition, this.windowPosition + this.windowSize));
+        this.onChangeListWindow && this.onChangeListWindow();
     }
 
     /**

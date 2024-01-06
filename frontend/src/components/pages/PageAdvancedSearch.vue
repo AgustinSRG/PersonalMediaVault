@@ -126,6 +126,16 @@
             </div>
 
             <div v-if="pageItems.length > 0" class="search-results-final-display">
+                <div v-for="i in rowPaddingPreserveCols" :key="'pad-prev-' + i" class="search-result-item">
+                    <div class="search-result-thumb">
+                        <div class="search-result-thumb-inner">
+                            <div class="search-result-loader">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
+                </div>
                 <div v-for="item in pageItems" :key="item.id" class="search-result-item" :class="{ current: currentMedia == item.id }">
                     <a
                         class="clickable"
@@ -153,6 +163,7 @@
                         </div>
                     </a>
                 </div>
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <div v-if="!finished && fullListLength >= pageSize" class="search-continue-mark">
@@ -199,11 +210,17 @@ export default defineComponent({
     emits: ["select-media", "update:pageScroll"],
     props: {
         display: Boolean,
+        min: Boolean,
         inModal: Boolean,
         noAlbum: Number,
         pageScroll: Number,
         pageSize: Number,
         displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup(props) {
         return {
@@ -215,6 +232,7 @@ export default defineComponent({
             continueCheckInterval: null,
             checkContainerTimer: null,
             pageScrollStatus: useVModel(props, "pageScroll"),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -248,7 +266,45 @@ export default defineComponent({
             albums: [],
             albumSearch: -1,
             albumFilter: null,
+
+            windowPosition: 0,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        rowPaddingPreserveCols() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const itemsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return this.windowPosition % itemsFitInRow;
+        },
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const itemsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            const lastWindowElement = this.windowPosition + this.pageItems.length - 1;
+
+            return Math.max(0, itemsFitInRow - 1 - (lastWindowElement % itemsFitInRow));
+        },
     },
     methods: {
         markDirty: function () {
@@ -903,7 +959,7 @@ export default defineComponent({
             this.listScroller.checkElementScroll(e.target as HTMLElement);
         },
 
-        getContainer: function () {
+        getContainer: function (): HTMLElement {
             if (this.inModal) {
                 if (this.$el.parentElement && this.$el.parentElement.parentElement && this.$el.parentElement.parentElement.parentElement) {
                     return this.$el.parentElement.parentElement.parentElement;
@@ -939,6 +995,16 @@ export default defineComponent({
             }
 
             return changed;
+        },
+
+        updateWindowWidth: function () {
+            const cont = this.getContainer();
+
+            if (!cont) {
+                return;
+            }
+
+            this.windowWidth = cont.getBoundingClientRect().width;
         },
     },
     mounted: function () {
@@ -978,6 +1044,9 @@ export default defineComponent({
             set: (l) => {
                 this.pageItems = l;
             },
+            onChange: () => {
+                this.windowPosition = this.listScroller.windowPosition;
+            },
         });
 
         this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
@@ -986,6 +1055,17 @@ export default defineComponent({
 
         if (this.display) {
             this.autoFocus();
+        }
+
+        const container = this.getContainer();
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+
+        if (container) {
+            this.windowWidth = container.getBoundingClientRect().width;
+            this.windowResizeObserver.observe(container);
+        } else {
+            this.windowResizeObserver.observe(this.$el);
         }
     },
     beforeUnmount: function () {
@@ -1005,6 +1085,8 @@ export default defineComponent({
         if (!this.inModal) {
             PagesController.OnPageUnload();
         }
+
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {

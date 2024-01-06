@@ -56,6 +56,8 @@
                         </div>
                     </a>
                 </div>
+
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
@@ -99,10 +101,16 @@ export default defineComponent({
         min: Boolean,
         pageSize: Number,
         displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -127,7 +135,26 @@ export default defineComponent({
             switchMediaOnLoad: "",
 
             tagVersion: TagsController.TagsVersion,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
+        },
     },
     methods: {
         scrollToTop: function () {
@@ -416,6 +443,10 @@ export default defineComponent({
         updateTagData: function () {
             this.tagVersion = TagsController.TagsVersion;
         },
+
+        updateWindowWidth: function () {
+            this.windowWidth = this.$el.getBoundingClientRect().width;
+        },
     },
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
@@ -439,11 +470,17 @@ export default defineComponent({
         if (this.display) {
             this.autoFocus();
         }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {

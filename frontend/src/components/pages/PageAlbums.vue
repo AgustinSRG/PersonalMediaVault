@@ -22,7 +22,7 @@
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
+                <div v-for="f in pageSize" :key="f" class="search-result-item">
                     <div class="search-result-thumb">
                         <div class="search-result-thumb-inner">
                             <div class="search-result-loader">
@@ -96,6 +96,8 @@
                         </div></a
                     >
                 </div>
+
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
             <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
@@ -140,10 +142,16 @@ export default defineComponent({
         min: Boolean,
         pageSize: Number,
         displayTitles: Boolean,
+
+        rowSize: Number,
+        rowSizeMin: Number,
+        minItemsSize: Number,
+        maxItemsSize: Number,
     },
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
+            windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
@@ -163,12 +171,29 @@ export default defineComponent({
             totalPages: 0,
             pageItems: [],
 
-            loadingFiller: [],
-
             canWrite: AuthController.CanWrite,
 
             displayAlbumCreate: false,
+
+            windowWidth: 0,
         };
+    },
+    computed: {
+        lastRowPadding() {
+            const containerWidth = this.windowWidth;
+
+            const itemWidth = Math.max(
+                this.minItemsSize,
+                Math.min(
+                    this.maxItemsSize,
+                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
+                ),
+            );
+
+            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
+
+            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
+        },
     },
     methods: {
         scrollToTop: function () {
@@ -350,17 +375,6 @@ export default defineComponent({
             const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
             this.order = params.order;
-            this.updateLoadingFiller();
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
         },
 
         getThumbnail(thumb: string) {
@@ -404,7 +418,6 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.updateLoadingFiller();
             this.page = 0;
             this.load();
         },
@@ -440,6 +453,10 @@ export default defineComponent({
 
             return false;
         },
+
+        updateWindowWidth: function () {
+            this.windowWidth = this.$el.getBoundingClientRect().width;
+        },
     },
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
@@ -455,10 +472,16 @@ export default defineComponent({
         if (this.display) {
             this.autoFocus();
         }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
+        this.windowResizeObserver.disconnect();
     },
     watch: {
         display: function () {

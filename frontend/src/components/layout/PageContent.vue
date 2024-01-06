@@ -78,6 +78,10 @@
             :min="min"
             :pageSize="pageSize"
             :displayTitles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
         ></PageHome>
         <PageSearch
             v-if="isDisplayed && page === 'search'"
@@ -85,22 +89,36 @@
             :min="min"
             :pageSize="pageSize"
             :displayTitles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
         ></PageSearch>
         <PageUpload v-if="isDisplayed && page === 'upload'" :display="isDisplayed && page === 'upload'"></PageUpload>
         <PageRandom
             v-if="isDisplayed && page === 'random'"
             :display="isDisplayed && page === 'random'"
+            :min="min"
             :pageSize="pageSize"
             :displayTitles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
         ></PageRandom>
         <PageAdvancedSearch
             v-if="isDisplayed && page === 'adv-search'"
             :display="isDisplayed && page === 'adv-search'"
+            :min="min"
             :inModal="false"
             :noAlbum="-1"
             v-model:pageScroll="pageScroll"
             :pageSize="pageSize"
             :displayTitles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
         ></PageAdvancedSearch>
         <PageAlbums
             v-if="isDisplayed && page === 'albums'"
@@ -108,6 +126,10 @@
             :min="min"
             :pageSize="pageSize"
             :displayTitles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
         ></PageAlbums>
 
         <PageSettingsDropdown v-if="displayConfigModal" v-model:display="displayConfigModal"></PageSettingsDropdown>
