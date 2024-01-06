@@ -1406,7 +1406,15 @@ export default defineComponent({
                             caught = false;
                         }
                     } else if (!this.incrementHorizontalScroll(-40)) {
-                        this.setTime(this.currentTime - 5, true);
+                        if (this.isShort) {
+                            if (this.prev || this.pagePrev) {
+                                this.goPrev();
+                            } else {
+                                caught = false;
+                            }
+                        } else {
+                            this.setTime(this.currentTime - 5, true);
+                        }
                     }
                     break;
                 case "PageUp":
@@ -1426,7 +1434,15 @@ export default defineComponent({
                             caught = false;
                         }
                     } else if (!this.incrementHorizontalScroll(40)) {
-                        this.setTime(this.currentTime + 5, true);
+                        if (this.isShort) {
+                            if (this.next || this.pageNext) {
+                                this.goNext();
+                            } else {
+                                caught = false;
+                            }
+                        } else {
+                            this.setTime(this.currentTime + 5, true);
+                        }
                     }
                     break;
                 case "PageDown":
