@@ -309,6 +309,25 @@
     padding-right: 104px;
 }
 
+.modal-container.modal-container-corner.modal-container-page-settings {
+    padding-top: 110px;
+    padding-right: 1rem;
+}
+
+.modal-container.modal-container-corner.modal-container-page-settings .modal-dialog {
+    width: 700px;
+}
+
+@media (max-width: 700px) {
+    .modal-container.modal-container-corner.modal-container-page-settings {
+        padding-right: 0.5rem;
+    }
+
+    .modal-container.modal-container-corner.modal-container-page-settings .modal-dialog {
+        width: 100%;
+    }
+}
+
 /* Z-Indexes */
 
 .modal-container-login {

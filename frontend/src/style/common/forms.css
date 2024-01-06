@@ -136,3 +136,56 @@ textarea.form-control::-webkit-resizer {
 .adv-search-form {
     padding: 1rem;
 }
+
+.form-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-range:focus {
+    outline: none;
+}
+
+.form-range::-webkit-slider-runnable-track {
+    background-color: var(--range-background-color);
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    /* Override default look */
+    appearance: none;
+    margin-top: -6.4px;
+    /* Centers thumb on the track */
+    background-color: var(--range-thumb-color);
+    border-radius: 0.65rem;
+    height: 1.3rem;
+    width: 1.3rem;
+}
+
+.form-range:focus::-webkit-slider-thumb {
+    outline: none;
+}
+
+.form-range::-moz-range-track {
+    background-color: var(--range-background-color);
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--range-thumb-color);
+    border: none;
+    /*Removes extra border that FF applies*/
+    border-radius: 0.65rem;
+    height: 1.3rem;
+    width: 1.3rem;
+}
+
+.form-range::-moz-range-thumb {
+    outline: none;
+}

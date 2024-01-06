@@ -64,7 +64,7 @@
             >
                 <i class="fas fa-angles-up"></i>
             </button>
-            <button v-if="hasConfigOptions(page)" type="button" :title="$t('Configuration')" class="page-header-btn" @click="openConfig">
+            <button v-if="hasConfigOptions(page)" type="button" :title="$t('Page settings')" class="page-header-btn" @click="openConfig">
                 <i class="fas fa-sliders"></i>
             </button>
             <button type="button" :title="$t('Close')" class="page-header-btn page-close-btn" @click="closePage">
@@ -110,7 +110,7 @@
             :displayTitles="displayTitles"
         ></PageAlbums>
 
-        <PageConfigModal v-if="displayConfigModal" v-model:display="displayConfigModal"></PageConfigModal>
+        <PageSettingsDropdown v-if="displayConfigModal" v-model:display="displayConfigModal"></PageSettingsDropdown>
     </div>
 </template>
 
@@ -162,8 +162,8 @@ const PageAdvancedSearch = defineAsyncComponent({
     delay: 200,
 });
 
-const PageConfigModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/PageConfigModal.vue"),
+const PageSettingsDropdown = defineAsyncComponent({
+    loader: () => import("@/components/dropdowns/PageSettingsDropdown.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
 });
@@ -176,7 +176,7 @@ export default defineComponent({
         PageUpload,
         PageRandom,
         PageAdvancedSearch,
-        PageConfigModal,
+        PageSettingsDropdown,
     },
     name: "PageContent",
     emits: [],
@@ -353,7 +353,7 @@ export default defineComponent({
         },
 
         openConfig: function () {
-            this.displayConfigModal = true;
+            this.displayConfigModal = !this.displayConfigModal;
         },
 
         toggleOrder: function () {
