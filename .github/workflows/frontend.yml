@@ -27,7 +27,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: ./frontend
-      run: npm install --no-optional
+      run: npm install
 
     - name: Test Vue project
       working-directory: ./frontend
