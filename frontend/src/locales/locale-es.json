@@ -245,6 +245,7 @@
     "Invite": "Invitar",
     "Invite code": "Código de invitación",
     "Invite codes are single use, and allow to login into the vault in read-only mode": "Los códigos de invitación son de un solo uso, y permiten acceder a la galería en modo de solo lectura",
+    "Is animation? (Force loop and disable keyboard time skipping)": "¿Es una animación? (Forzar bucle y desactivar saltos de tiempo con el teclado)",
     "It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted.": "El recurso multimedia no está disponible. Podría ser que aún se esté procesando o que los datos se hayan perdido.",
     "Keyboard shortcuts": "Atajos del teclado",
     "Large": "Grande",

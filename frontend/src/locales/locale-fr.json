@@ -245,6 +245,7 @@
     "Invite": "Inviter",
     "Invite code": "Code d'invitation",
     "Invite codes are single use, and allow to login into the vault in read-only mode": "Les codes d'invitation sont à usage unique et permettent de se connecter au coffre-fort en mode lecture seule",
+    "Is animation? (Force loop and disable keyboard time skipping)": "Est-ce que l'animation ? (Forcer la boucle et désactiver le saut de temps du clavier)",
     "It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted.": "Il semble que les médias ne soient pas encore prêts. Cela signifie que le média est toujours en cours de téléchargement ou qu'il est corrompu.",
     "Keyboard shortcuts": "Raccourcis clavier",
     "Large": "Grand",

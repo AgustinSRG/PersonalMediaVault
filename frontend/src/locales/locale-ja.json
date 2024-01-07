@@ -245,6 +245,7 @@
     "Invite": "招待する",
     "Invite code": "招待コード",
     "Invite codes are single use, and allow to login into the vault in read-only mode": "招待コードは 1 回限りの使用であり、読み取り専用モードでボールトにログインできます。",
+    "Is animation? (Force loop and disable keyboard time skipping)": "アニメーションですか？ (ループを強制し、キーボードタイムスキップを無効にします)",
     "It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted.": "メディアの準備がまだ整っていないようです。 これは、メディアがまだアップロード中であるか、破損していることを意味します。",
     "Keyboard shortcuts": "キーボードショートカット",
     "Large": "大きい",

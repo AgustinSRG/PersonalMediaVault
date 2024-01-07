@@ -122,14 +122,20 @@ export type ChangeExtraParamsErrorHandler = MediaEditApiErrorHandler & {
  * Changes media extra parameters
  * @param id Media ID
  * @param forceStartBeginning True to force start from the beginning on load
+ * @param isAnimation True if the video is an animation
  * @returns The request parameters
  */
-export function apiMediaChangeExtraParams(id: number, forceStartBeginning: boolean): RequestParams<void, ChangeExtraParamsErrorHandler> {
+export function apiMediaChangeExtraParams(
+    id: number,
+    forceStartBeginning: boolean,
+    isAnimation: boolean,
+): RequestParams<void, ChangeExtraParamsErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/extra`),
         json: {
             force_start_beginning: forceStartBeginning,
+            is_anim: isAnimation,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()

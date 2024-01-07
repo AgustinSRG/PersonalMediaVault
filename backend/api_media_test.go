@@ -225,8 +225,12 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Change extra data
 
+	fsb := true
+	isAnim := meta.Type == MediaTypeVideo
+
 	body, err = json.Marshal(MediaAPIEditExtraParams{
-		ForceStartBeginning: true,
+		ForceStartBeginning: &fsb,
+		IsAnimation:         &isAnim,
 	})
 
 	if err != nil {
@@ -252,8 +256,12 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		return
 	}
 
-	if !meta.ForceStartBeginning {
-		t.Error(ErrorMismatch("ForceStartBeginning", fmt.Sprint(meta.ForceStartBeginning), fmt.Sprint(true)))
+	if meta.ForceStartBeginning != fsb {
+		t.Error(ErrorMismatch("ForceStartBeginning", fmt.Sprint(meta.ForceStartBeginning), fmt.Sprint(fsb)))
+	}
+
+	if meta.IsAnimation != isAnim {
+		t.Error(ErrorMismatch("ForceStartBeginning", fmt.Sprint(meta.ForceStartBeginning), fmt.Sprint(isAnim)))
 	}
 
 	// Time slices

@@ -374,6 +374,11 @@ export interface MediaData {
     force_start_beginning: boolean;
 
     /**
+     * True if the video is an animation
+     */
+    is_anim: boolean;
+
+    /**
      * True if image notes are available
      */
     img_notes: boolean;

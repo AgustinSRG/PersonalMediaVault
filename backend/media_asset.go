@@ -133,6 +133,7 @@ type MediaMetadata struct {
 	PreviewsAsset    uint64  `json:"previews_asset,omitempty"`    // ID of the asset file (MediaAssetFile) where the video previews are stored
 
 	ForceStartBeginning bool `json:"force_start_beginning,omitempty"` // True to indicate clients not to save the current time for this media
+	IsAnimation         bool `json:"is_anim,omitempty"`               // True if the media is an animation
 
 	HasImageNotes   bool   `json:"img_notes,omitempty"`       // True to indicate the asset has image notes
 	ImageNotesAsset uint64 `json:"img_notes_asset,omitempty"` // Asset where the image notes are stored
@@ -192,6 +193,7 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		ImageNotesAsset:          0,
 		HasExtendedDescription:   false,
 		ExtendedDescriptionAsset: 0,
+		IsAnimation:              media_type == MediaTypeVideo && duration < 10,
 	}
 
 	media.lock.RequestWrite() // Request write

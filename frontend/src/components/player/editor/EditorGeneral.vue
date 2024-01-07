@@ -80,6 +80,19 @@
                             {{ $t("Reset time to the beginning every time the media reloads?") }}
                         </td>
                     </tr>
+
+                    <tr v-if="type === 2">
+                        <td class="text-right td-shrink">
+                            <toggle-switch
+                                v-model:val="isAnimation"
+                                :disabled="busyExtra || !canWrite"
+                                @update:val="changeExtraParams"
+                            ></toggle-switch>
+                        </td>
+                        <td class="">
+                            {{ $t("Is animation? (Force loop and disable keyboard time skipping)") }}
+                        </td>
+                    </tr>
                 </table>
             </div>
             <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
@@ -168,6 +181,9 @@ export default defineComponent({
             originalStartBeginning: false,
             startBeginning: false,
 
+            originalIsAnimation: false,
+            isAnimation: false,
+
             errorTitle: "",
             errorDescription: "",
             errorExtraConfig: "",
@@ -200,6 +216,9 @@ export default defineComponent({
 
             this.originalStartBeginning = MediaController.MediaData.force_start_beginning;
             this.startBeginning = this.originalStartBeginning;
+
+            this.originalIsAnimation = MediaController.MediaData.is_anim;
+            this.isAnimation = this.originalIsAnimation;
 
             this.thumbnail = MediaController.MediaData.thumbnail;
         },
@@ -424,13 +443,15 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            makeNamedApiRequest(this.requestIdExtra, apiMediaChangeExtraParams(mediaId, this.startBeginning))
+            makeNamedApiRequest(this.requestIdExtra, apiMediaChangeExtraParams(mediaId, this.startBeginning, this.isAnimation))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully changed media extra params"));
                     this.busyExtra = false;
                     this.originalStartBeginning = this.startBeginning;
+                    this.originalIsAnimation = this.isAnimation;
                     if (MediaController.MediaData) {
                         MediaController.MediaData.force_start_beginning = this.startBeginning;
+                        MediaController.MediaData.is_anim = this.isAnimation;
                     }
                     this.$emit("changed");
                 })

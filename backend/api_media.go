@@ -130,6 +130,7 @@ type MediaAPIMetaResponse struct {
 	Attachments []MediaAPIMetaAttachment `json:"attachments"`
 
 	ForceStartBeginning bool `json:"force_start_beginning"`
+	IsAnimation         bool `json:"is_anim"`
 
 	TimeSlices []MediaAPIMetaTimeSplit `json:"time_slices"`
 
@@ -369,6 +370,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	// Extra
 
 	result.ForceStartBeginning = meta.ForceStartBeginning
+	result.IsAnimation = meta.IsAnimation
 
 	// Time slices
 
@@ -827,7 +829,8 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 }
 
 type MediaAPIEditExtraParams struct {
-	ForceStartBeginning bool `json:"force_start_beginning"`
+	ForceStartBeginning *bool `json:"force_start_beginning"`
+	IsAnimation         *bool `json:"is_anim"`
 }
 
 func api_editMediaExtraParams(response http.ResponseWriter, request *http.Request) {
@@ -887,7 +890,13 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	meta.ForceStartBeginning = p.ForceStartBeginning
+	if p.ForceStartBeginning != nil {
+		meta.ForceStartBeginning = *p.ForceStartBeginning
+	}
+
+	if p.IsAnimation != nil {
+		meta.IsAnimation = *p.IsAnimation
+	}
 
 	err = media.EndWrite(meta, session.key, false)
 

@@ -1565,7 +1565,7 @@ export default defineComponent({
             if (!this.metadata) {
                 return;
             }
-            this.isShort = this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
+            this.isShort = this.metadata.is_anim || this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
             this.canSaveTime = !this.metadata.force_start_beginning;
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.timeSlices = normalizeTimeSlices(
