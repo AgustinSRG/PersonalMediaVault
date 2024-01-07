@@ -9,6 +9,7 @@
 
     opacity: 1;
     user-select: none;
+    pointer-events: none;
     transition:
         bottom 0.3s,
         opacity 0.1s;
@@ -32,6 +33,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    pointer-events: all;
 }
 
 .snackbar.hidden {
