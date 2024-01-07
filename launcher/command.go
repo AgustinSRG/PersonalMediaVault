@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -49,7 +50,7 @@ func runCommand(cmdText string, vc *VaultController) {
 	case "start", "up":
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+				openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "stop", "down":
@@ -64,11 +65,71 @@ func runCommand(cmdText string, vc *VaultController) {
 		}
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+				openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "browser", "b":
-		openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+		openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
+	case "host", "hostname":
+		if len(args) == 1 {
+			hostName := vc.launchConfig.HostName
+
+			if hostName == "" {
+				hostName = "localhost"
+			}
+
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "VaultHostname",
+					Other: "Vault host: {{.HostName}}",
+				},
+				TemplateData: map[string]interface{}{
+					"HostName": hostName,
+				},
+			})
+			fmt.Println(msg)
+		} else if len(args) == 2 {
+			r, err := regexp.Compile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")
+
+			if err != nil {
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "Error",
+						Other: "Error: {{.Message}}",
+					},
+					TemplateData: map[string]interface{}{
+						"Message": err.Error(),
+					},
+				})
+				fmt.Println(msg)
+				return
+			}
+
+			hostName := args[1]
+
+			if !r.MatchString(hostName) {
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorHostNameInvalid",
+						Other: "Error: Invalid hostname provided",
+					},
+				})
+				fmt.Println(msg)
+				return
+			}
+
+			if vc.SetHostName(hostName) {
+				askRestart(vc)
+			}
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorHostUsage",
+					Other: "Usage: host [hostname] - Sets the vault hostname for the browser",
+				},
+			})
+			fmt.Println(msg)
+		}
 	case "port", "p":
 		if len(args) == 1 {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -225,7 +286,7 @@ func runCommand(cmdText string, vc *VaultController) {
 		vc.Clean()
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+				openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "recover":
@@ -235,7 +296,7 @@ func runCommand(cmdText string, vc *VaultController) {
 		vc.RecoverAssets()
 		if vc.Start() {
 			if vc.WaitForStart() {
-				openBrowser(vc.launchConfig.Port, vc.launchConfig.hasSSL())
+				openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
 			}
 		}
 	case "backup", "bkp", "bk":
@@ -585,6 +646,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandPort",
 			Other: "port [p] - Sets the listening port",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandHostname",
+			Other: "host [hostname] - Sets the hostname to access the vault",
 		},
 	})
 	manList = append(manList, msg)

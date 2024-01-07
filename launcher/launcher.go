@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -21,6 +22,7 @@ var (
 
 type LauncherConfig struct {
 	Path             string `json:"path"`
+	HostName         string `json:"hostname"`
 	Port             int    `json:"port"`
 	Local            bool   `json:"local"`
 	SSL_Cert         string `json:"ssl_cert"`
@@ -115,36 +117,38 @@ func detectLauncherPaths() {
 	FFMPEG_BIN = path.Join(getDirName(), "bin", getBinaryFileName("ffmpeg"))
 
 	if !fileExists(FFMPEG_BIN) {
-		FFMPEG_BIN = path.Join("/usr/bin", getBinaryFileName("ffmpeg"))
+
+		if runtime.GOOS == "windows" {
+			FFMPEG_BIN = path.Join("C:\\ffmpeg\\bin\\", getBinaryFileName("ffmpeg"))
+		} else {
+			FFMPEG_BIN = path.Join("/usr/bin", getBinaryFileName("ffmpeg"))
+		}
 
 		if !fileExists(FFMPEG_BIN) {
-			FFMPEG_BIN = path.Join("/ffmpeg/bin/", getBinaryFileName("ffmpeg"))
-
-			if !fileExists(FFMPEG_BIN) {
-				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "ErrorCodecBin",
-						Other: "Error: Could not find the ffmpeg binary (ffmpeg)",
-					},
-				})
-				fmt.Println(msg)
-				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "FilesMissing",
-						Other: "Seems like some required files are missing.",
-					},
-				})
-				fmt.Println(msg)
-				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "ReinstallFix",
-						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
-					},
-				})
-				fmt.Println(msg)
-				os.Exit(1)
-			}
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorCodecBin",
+					Other: "Error: Could not find the ffmpeg binary (ffmpeg)",
+				},
+			})
+			fmt.Println(msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "FilesMissing",
+					Other: "Seems like some required files are missing.",
+				},
+			})
+			fmt.Println(msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ReinstallFix",
+					Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+				},
+			})
+			fmt.Println(msg)
+			os.Exit(1)
 		}
+
 	}
 
 	// FFPROBE
@@ -152,35 +156,36 @@ func detectLauncherPaths() {
 	FFPROBE_BIN = path.Join(getDirName(), "bin", getBinaryFileName("ffprobe"))
 
 	if !fileExists(FFPROBE_BIN) {
-		FFPROBE_BIN = path.Join("/usr/bin", getBinaryFileName("ffprobe"))
+
+		if runtime.GOOS == "windows" {
+			FFPROBE_BIN = path.Join("C:\\ffmpeg\\bin\\", getBinaryFileName("ffprobe"))
+		} else {
+			FFPROBE_BIN = path.Join("/usr/bin", getBinaryFileName("ffprobe"))
+		}
 
 		if !fileExists(FFPROBE_BIN) {
-			FFPROBE_BIN = path.Join("/ffmpeg/bin/", getBinaryFileName("ffprobe"))
-
-			if !fileExists(FFPROBE_BIN) {
-				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "ErrorProbeBin",
-						Other: "Error: Could not find the ffprobe binary (ffprobe)",
-					},
-				})
-				fmt.Println(msg)
-				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "FilesMissing",
-						Other: "Seems like some required files are missing.",
-					},
-				})
-				fmt.Println(msg)
-				msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "ReinstallFix",
-						Other: "In order to fix this error, you could re-install PersonalMediaVault.",
-					},
-				})
-				fmt.Println(msg)
-				os.Exit(1)
-			}
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorProbeBin",
+					Other: "Error: Could not find the ffprobe binary (ffprobe)",
+				},
+			})
+			fmt.Println(msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "FilesMissing",
+					Other: "Seems like some required files are missing.",
+				},
+			})
+			fmt.Println(msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ReinstallFix",
+					Other: "In order to fix this error, you could re-install PersonalMediaVault.",
+				},
+			})
+			fmt.Println(msg)
+			os.Exit(1)
 		}
 	}
 

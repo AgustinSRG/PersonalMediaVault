@@ -275,6 +275,23 @@ func (vc *VaultController) PrintStatus() {
 	})
 	fmt.Println(msg)
 
+	hostName := vc.launchConfig.HostName
+
+	if hostName == "" {
+		hostName = "localhost"
+	}
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultHostname",
+			Other: "Vault host: {{.HostName}}",
+		},
+		TemplateData: map[string]interface{}{
+			"HostName": hostName,
+		},
+	})
+	fmt.Println(msg)
+
 	if vc.launchConfig.hasSSL() {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
@@ -1337,6 +1354,51 @@ func (vc *VaultController) SetCacheSize(s int) bool {
 		},
 		TemplateData: map[string]interface{}{
 			"Elements": fmt.Sprint(s),
+		},
+	})
+	fmt.Println(msg)
+
+	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	} else {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
+		return true
+	}
+}
+
+func (vc *VaultController) SetHostName(hostName string) bool {
+
+	if hostName == "" {
+		hostName = "localhost"
+	}
+
+	vc.launchConfig.HostName = hostName
+
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VaultHostname",
+			Other: "Vault host: {{.HostName}}",
+		},
+		TemplateData: map[string]interface{}{
+			"HostName": hostName,
 		},
 	})
 	fmt.Println(msg)

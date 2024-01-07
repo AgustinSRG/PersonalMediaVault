@@ -10,21 +10,25 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-func openBrowser(port int, ssl bool) {
+func openBrowser(host string, port int, ssl bool) {
 	// Generate localhost URL
 	var url string
 
+	if host == "" {
+		host = "localhost"
+	}
+
 	if ssl {
 		if port == 443 {
-			url = "https://localhost"
+			url = "https://" + host
 		} else {
-			url = "https://localhost:" + fmt.Sprint(port)
+			url = "https://" + host + ":" + fmt.Sprint(port)
 		}
 	} else {
 		if port == 80 {
-			url = "http://localhost"
+			url = "http://" + host
 		} else {
-			url = "http://localhost:" + fmt.Sprint(port)
+			url = "http://" + host + ":" + fmt.Sprint(port)
 		}
 	}
 

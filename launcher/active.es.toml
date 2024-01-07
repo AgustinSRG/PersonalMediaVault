@@ -82,6 +82,14 @@ other = "Error: No se pudo encontrar el binario codificador multimedia (ffmpeg)"
 hash = "sha1-4eee2930e12911f18c2949f40487432159bf6d63"
 other = "Error: No se pudo encontrar la interfaz de usuario"
 
+[ErrorHostNameInvalid]
+hash = "sha1-f3ae5640c30f81587fe324e31fa07f2cfdaf9991"
+other = "Error: El nombre del host especificado no es válido"
+
+[ErrorHostUsage]
+hash = "sha1-b7029e99ac5ab7391e79518d8b2aba2271eeee21"
+other = "Uso: host [nombre de host] - Establece un host para acceder desde el navegador"
+
 [ErrorInvalidKeyPair]
 hash = "sha1-595aa75a597d4c9e514117a7132adc4d59ee3ab6"
 other = "El par de claves SSL no es correcto. Puede arreglarlo con 'ssl-setup'."
@@ -205,6 +213,10 @@ other = "exit - Detiene la galería. Tras esto el programa se cierra."
 [ManualCommandHelp]
 hash = "sha1-9dc978bce9c8e65aef780f9b19bf34a14a43c92d"
 other = "help - Imprime la lista de comandos"
+
+[ManualCommandHostname]
+hash = "sha1-584a1dedac5917a28b35fbadffe508e1992eab22"
+other = "host [nombre de host] - Establece un host para acceder a la galería"
 
 [ManualCommandLocal]
 hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
@@ -365,6 +377,10 @@ other = "La galería se encuentra detenida."
 [VaultBeingUsed]
 hash = "sha1-d57a4ed560825c9f357b71b197f341482c09e7f7"
 other = "Al parecer esta galería ya está abierta por otro proceso"
+
+[VaultHostname]
+hash = "sha1-dc7734db96256717fb4e015701dbba5abe4cbcda"
+other = "Host de la galería: {{.HostName}}"
 
 [VaultInitialized]
 hash = "sha1-48477ca8d1c61362d9bd871c1864508042a5c41e"
