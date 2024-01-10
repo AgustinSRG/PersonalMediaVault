@@ -989,7 +989,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style>
-@import "@/style/content/batch-operation.css";
-</style>

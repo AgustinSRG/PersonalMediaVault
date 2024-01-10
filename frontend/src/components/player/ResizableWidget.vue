@@ -484,8 +484,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style>
-@import "@/style/player/resizable-widget.css";
-</style>
-@/utils/local-storage

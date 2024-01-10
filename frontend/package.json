@@ -8,7 +8,7 @@
         "dev": "vite",
         "start": "vite",
         "build": "vite build",
-        "lint": "eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
+        "lint": "prettier --write . && eslint --ext .ts,.vue --ignore-path .gitignore --fix src",
         "prettier": "prettier --write .",
         "test": "vue-tsc --noEmit && eslint --ext .ts,.vue --ignore-path .gitignore src",
         "update-locales": "npm run update-translations",

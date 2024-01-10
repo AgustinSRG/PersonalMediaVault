@@ -111,20 +111,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style scoped>
-.pos-input-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.form-control-container {
-    flex: 1;
-}
-.form-control-suffix {
-    padding-left: 0.75rem;
-    white-space: nowrap;
-}
-</style>

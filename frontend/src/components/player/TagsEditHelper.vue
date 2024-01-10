@@ -463,7 +463,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style>
-@import "@/style/player/tags-edit.css";
-</style>

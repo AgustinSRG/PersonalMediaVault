@@ -127,7 +127,7 @@ export default defineComponent({
 <style>
 /* Base style */
 
-@import "./style/base.css";
+@import "@/style/base.css";
 
 /* Font awesome (minified version) */
 
@@ -135,38 +135,75 @@ export default defineComponent({
 
 /* Custom scroll bar */
 
-@import "./style/scrollbar.css";
+@import "@/style/scrollbar.css";
 
 /* Theme colors */
 
-@import "./style/theme-colors.css";
+@import "@/style/theme-colors.css";
 
 /* Common styles */
 
-@import "./style/common/forms.css";
-@import "./style/common/h-menu.css";
-@import "./style/common/modals.css";
-@import "./style/common/switch.css";
-@import "./style/common/tables.css";
+@import "@/style/common/forms.css";
+@import "@/style/common/h-menu.css";
+@import "@/style/common/modals.css";
+@import "@/style/common/switch.css";
+@import "@/style/common/tables.css";
 
 /* Layout */
 
-@import "./style/layout/bottom-bar.css";
-@import "./style/layout/loader.css";
-@import "./style/layout/main-layout.css";
-@import "./style/layout/side-bar.css";
-@import "./style/layout/snack-bar.css";
-@import "./style/layout/top-bar.css";
+@import "@/style/layout/bottom-bar.css";
+@import "@/style/layout/loader.css";
+@import "@/style/layout/main-layout.css";
+@import "@/style/layout/side-bar.css";
+@import "@/style/layout/snack-bar.css";
+@import "@/style/layout/top-bar.css";
 
 /* Content */
 
-@import "./style/content/albums.css";
-@import "./style/content/media-results.css";
-@import "./style/content/media-tags.css";
-@import "./style/content/page.css";
-@import "./style/content/paginated-menu.css";
-@import "./style/content/tasks.css";
-@import "./style/content/upload.css";
+@import "@/style/content/albums.css";
+@import "@/style/content/media-results.css";
+@import "@/style/content/media-tags.css";
+@import "@/style/content/page.css";
+@import "@/style/content/paginated-menu.css";
+@import "@/style/content/tasks.css";
+@import "@/style/content/upload.css";
+@import "@/style/content/batch-operation.css";
+@import "@/style/content/invite-modal.css";
+@import "@/style/content/page-settings.css";
 
-/* Player style imported in PlayerContainer component (for code-split) */
+/* Player styles */
+
+@import "@/style/player/common.css";
+
+@import "@/style/player/loader.css";
+
+@import "@/style/player/player-top-bar.css";
+@import "@/style/player/editor.css";
+
+@import "@/style/player/player-config.css";
+@import "@/style/player/context-menu.css";
+@import "@/style/player/change-preview.css";
+
+@import "@/style/player/empty-player.css";
+
+@import "@/style/player/video-player.css";
+@import "@/style/player/audio-player.css";
+@import "@/style/player/image-player.css";
+
+@import "@/style/player/timeline.css";
+
+@import "@/style/player/volume.css";
+@import "@/style/player/scale.css";
+
+@import "@/style/player/subtitles.css";
+
+@import "@/style/player/image-notes.css";
+
+@import "@/style/player/ext-desc.css";
+
+@import "@/style/player/resizable-widget.css";
+
+@import "@/style/player/time-slices-edit.css";
+
+@import "@/style/player/tags-edit.css";
 </style>

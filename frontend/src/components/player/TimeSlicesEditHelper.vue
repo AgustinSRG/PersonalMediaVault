@@ -498,7 +498,3 @@ export default defineComponent({
     },
 });
 </script>
-
-<style>
-@import "@/style/player/time-slices-edit.css";
-</style>
