@@ -63,7 +63,7 @@ echo "Version:" ${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}-${PMV_VERSION_REVISION
 echo "Section: web" >> ${CONTROL_FILE}
 echo "Priority: optional" >> ${CONTROL_FILE}
 echo "Architecture:" ${PMV_BIN_ARCH} >> ${CONTROL_FILE}
-echo "Depends: ffmpeg" >> ${CONTROL_FILE}
+echo "Depends: libc6,ffmpeg" >> ${CONTROL_FILE}
 echo "Maintainer:" ${PMV_MAINTAINER} >> ${CONTROL_FILE}
 echo "Description:" ${PMV_DESCRIPTION} >> ${CONTROL_FILE}
 
