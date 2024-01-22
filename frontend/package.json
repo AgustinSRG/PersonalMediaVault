@@ -19,25 +19,25 @@
     "dependencies": {
         "@asanrom/request-browser": "1.0.4",
         "sanitize-html": "2.11.0",
-        "vue": "3.3.8"
+        "vue": "3.4.15"
     },
     "devDependencies": {
-        "@types/sanitize-html": "2.6.2",
-        "@typescript-eslint/eslint-plugin": "6.9.0",
-        "@typescript-eslint/parser": "6.9.0",
-        "@vitejs/plugin-vue": "4.5.2",
+        "@types/sanitize-html": "2.9.5",
+        "@typescript-eslint/eslint-plugin": "6.19.0",
+        "@typescript-eslint/parser": "6.19.0",
+        "@vitejs/plugin-vue": "5.0.3",
         "@vue/eslint-config-typescript": "12.0.0",
-        "@vue/tsconfig": "0.4.0",
-        "eslint": "8.49.0",
-        "eslint-plugin-vue": "9.17.0",
-        "prettier": "3.0.0",
-        "typescript": "5.2.2",
-        "vite": "5.0.6",
+        "@vue/tsconfig": "0.5.1",
+        "eslint": "8.56.0",
+        "eslint-plugin-vue": "9.20.1",
+        "prettier": "3.2.4",
+        "typescript": "5.3.3",
+        "vite": "5.0.12",
         "vite-plugin-pwa": "0.17.4",
-        "vue-tsc": "1.8.22"
+        "vue-tsc": "1.8.27"
     },
     "optionalDependencies": {
-        "fonteditor-core": "2.1.11",
+        "fonteditor-core": "2.3.2",
         "ttf2woff2": "5.0.0"
     }
 }
