@@ -140,7 +140,6 @@ import {
     EVENT_NAME_IMAGE_NOTES_UPDATE,
     ImageNotesController,
 } from "@/control/img-notes";
-import { AppEvents } from "@/control/app-events";
 import { escapeHTML } from "@/utils/html";
 import { ImageNote } from "@/utils/notes-format";
 import { PagesController } from "@/control/pages";
@@ -612,8 +611,7 @@ export default defineComponent({
     mounted: function () {
         this.updateRealDimensions();
 
-        this.onNotesUpdateH = this.onNotesUpdate.bind(this);
-        AppEvents.AddEventListener(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdateH);
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdate.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
             switch (mode) {
