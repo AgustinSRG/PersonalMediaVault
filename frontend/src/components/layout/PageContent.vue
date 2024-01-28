@@ -247,7 +247,6 @@ export default defineComponent({
 
         expandPage: function () {
             AppStatus.ExpandPage();
-            this.focusPage();
         },
 
         focusPage: function () {
