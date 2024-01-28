@@ -243,9 +243,10 @@ const DEFAULT_PAGE_PREFERENCES: PagePreferences = {
 
 /**
  * Gets the page preferences
+ * @param page The page name
  * @returns The page preferences
  */
-export function getPagePreferences(): PagePreferences {
+export function getPagePreferences(page: string): PagePreferences {
     if (window.innerWidth > 1000) {
         DEFAULT_PAGE_PREFERENCES.rowSize = Math.max(2, Math.round((window.innerWidth - 240) / 250));
     } else {
@@ -254,7 +255,11 @@ export function getPagePreferences(): PagePreferences {
 
     DEFAULT_PAGE_PREFERENCES.pageSize = Math.min(256, DEFAULT_PAGE_PREFERENCES.rowSize * 6);
 
-    let preferences = fetchFromLocalStorageCache(LS_KEY_PAGE_SETTINGS, DEFAULT_PAGE_PREFERENCES) || DEFAULT_PAGE_PREFERENCES;
+    let preferences =
+        fetchFromLocalStorageCache(
+            LS_KEY_PAGE_SETTINGS + "-" + page,
+            fetchFromLocalStorageCache(LS_KEY_PAGE_SETTINGS, DEFAULT_PAGE_PREFERENCES),
+        ) || DEFAULT_PAGE_PREFERENCES;
 
     if (typeof preferences !== "object" || Array.isArray(preferences)) {
         preferences = DEFAULT_PAGE_PREFERENCES;
@@ -295,17 +300,20 @@ export function getPagePreferences(): PagePreferences {
 
 /**
  * Sets the page preferences
+ * @param page The page name
  * @param preferences The page preferences
  */
-export function setPagePreferences(preferences: PagePreferences) {
-    saveIntoLocalStorage(LS_KEY_PAGE_SETTINGS, preferences);
+export function setPagePreferences(page: string, preferences: PagePreferences) {
+    saveIntoLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page, preferences);
     AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
 
 /**
  * Resets page preferences
+ * @param page Page name
  */
-export function resetPagePreferences() {
+export function resetPagePreferences(page: string) {
+    clearLocalStorage(LS_KEY_PAGE_SETTINGS + page);
     clearLocalStorage(LS_KEY_PAGE_SETTINGS);
     AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }

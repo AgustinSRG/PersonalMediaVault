@@ -222,6 +222,7 @@ export default defineComponent({
     emits: ["update:display"],
     props: {
         display: Boolean,
+        page: String,
     },
     setup(props) {
         return {
@@ -231,7 +232,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const pagePreferences = getPagePreferences();
+        const pagePreferences = getPagePreferences(this.page);
         return {
             dirty: false,
 
@@ -292,7 +293,7 @@ export default defineComponent({
 
             this.page = AppStatus.CurrentPage;
 
-            const pagePreferences = getPagePreferences();
+            const pagePreferences = getPagePreferences(this.page);
 
             this.pageSize = pagePreferences.pageSize;
 
@@ -330,7 +331,7 @@ export default defineComponent({
                 return;
             }
 
-            setPagePreferences({
+            setPagePreferences(this.page, {
                 pageSize: this.pageSize,
                 rowSize: this.rowSize,
                 rowSizeMin: this.rowSizeMin,
@@ -345,7 +346,7 @@ export default defineComponent({
         },
 
         resetDefaultValues: function () {
-            resetPagePreferences();
+            resetPagePreferences(this.page);
             this.reset();
         },
     },
@@ -381,6 +382,11 @@ export default defineComponent({
                 });
             } else {
                 this.focusTrap.deactivate();
+            }
+        },
+        page: function () {
+            if (this.display) {
+                this.reset();
             }
         },
     },

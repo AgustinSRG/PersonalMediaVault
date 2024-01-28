@@ -90,7 +90,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const pagePreferences = getPagePreferences();
+        const pagePreferences = getPagePreferences("adv-search");
         return {
             busy: false,
 
@@ -180,7 +180,7 @@ export default defineComponent({
         },
 
         updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences();
+            const pagePreferences = getPagePreferences("adv-search");
 
             this.pageSize = pagePreferences.pageSize;
 

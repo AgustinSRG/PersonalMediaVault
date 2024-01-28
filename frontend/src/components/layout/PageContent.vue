@@ -132,7 +132,7 @@
             :max-items-size="maxItemSize"
         ></PageAlbums>
 
-        <PageSettingsDropdown v-if="displayConfigModal" v-model:display="displayConfigModal"></PageSettingsDropdown>
+        <PageSettingsDropdown v-if="displayConfigModal" v-model:display="displayConfigModal" :page="page"></PageSettingsDropdown>
     </div>
 </template>
 
@@ -206,7 +206,7 @@ export default defineComponent({
         min: Boolean,
     },
     data: function () {
-        const pagePreferences = getPagePreferences();
+        const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
@@ -242,6 +242,7 @@ export default defineComponent({
 
             this.searchParams = AppStatus.SearchParams;
             this.updateSearchParams();
+            this.updatePagePreferences();
         },
 
         expandPage: function () {
@@ -388,7 +389,7 @@ export default defineComponent({
         },
 
         updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences();
+            const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
 
             this.pageSize = pagePreferences.pageSize;
 
