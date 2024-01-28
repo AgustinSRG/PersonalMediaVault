@@ -236,8 +236,6 @@ export default defineComponent({
         return {
             dirty: false,
 
-            page: AppStatus.CurrentPage,
-
             pageSize: pagePreferences.pageSize,
 
             rowSize: pagePreferences.rowSize,
@@ -290,8 +288,6 @@ export default defineComponent({
                 clearTimeout(this.saveChangesTimer);
                 this.saveChangesTimer = null;
             }
-
-            this.page = AppStatus.CurrentPage;
 
             const pagePreferences = getPagePreferences(this.page);
 
