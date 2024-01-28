@@ -211,7 +211,6 @@ import { getPagePreferences, resetPagePreferences, setPagePreferences } from "@/
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { FocusTrap } from "@/utils/focus-trap";
-import { AppStatus } from "@/control/app-status";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 
 export default defineComponent({
