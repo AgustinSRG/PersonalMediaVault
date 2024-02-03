@@ -70,6 +70,13 @@
             @clicked="clickControls"
         ></TagsEditHelper>
 
+        <ExtendedDescriptionWidget
+            v-if="displayExtendedDescription"
+            v-model:display="displayExtendedDescriptionStatus"
+            :contextOpen="contextMenuShown"
+            @clicked="clickControls"
+        ></ExtendedDescriptionWidget>
+
         <div
             class="player-controls"
             :class="{ hidden: !showControls }"
@@ -292,6 +299,10 @@ const TagsEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TagsEditHelper.vue"),
 });
 
+const ExtendedDescriptionWidget = defineAsyncComponent({
+    loader: () => import("@/components/player/ExtendedDescriptionWidget.vue"),
+});
+
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
 const SCALE_STEP = 0.1 / SCALE_RANGE;
@@ -307,6 +318,7 @@ export default defineComponent({
         PlayerEncodingPending,
         ImageNotes,
         TagsEditHelper,
+        ExtendedDescriptionWidget,
     },
     name: "ImagePlayer",
     emits: [
@@ -316,9 +328,9 @@ export default defineComponent({
         "update:showControls",
         "albums-open",
         "stats-open",
-        "ext-desc-open",
         "delete",
         "update:displayTagList",
+        "update:displayExtendedDescription",
     ],
     props: {
         mid: Number,
@@ -341,6 +353,7 @@ export default defineComponent({
         min: Boolean,
 
         displayTagList: Boolean,
+        displayExtendedDescription: Boolean,
     },
     setup(props) {
         return {
@@ -350,6 +363,7 @@ export default defineComponent({
             fullScreenState: useVModel(props, "fullscreen"),
             showControlsState: useVModel(props, "showControls"),
             displayTagListStatus: useVModel(props, "displayTagList"),
+            displayExtendedDescriptionStatus: useVModel(props, "displayExtendedDescription"),
         };
     },
     data: function () {
@@ -432,7 +446,7 @@ export default defineComponent({
             if (!this.hasExtendedDescription && !this.canWrite) {
                 return;
             }
-            this.$emit("ext-desc-open");
+            this.displayExtendedDescriptionStatus = true;
         },
 
         grabScroll: function (e: TouchEvent | MouseEvent) {

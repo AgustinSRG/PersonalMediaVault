@@ -1,96 +1,68 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" @close="onClose" :lock-close="busy" @key="onKeyPress">
-        <div
-            v-if="display"
-            class="modal-dialog modal-height-100-wf"
-            :class="{ 'modal-lg': modalSize === 'lg', 'modal-xl': modalSize === 'xl' }"
-            role="document"
+    <div class="tags-edit-helper-container">
+        <ResizableWidget
+            :title="$t('Extended description')"
+            v-model:display="displayStatus"
+            :contextOpen="contextOpen"
+            :position-key="'ext-desc-widget-pos'"
+            @clicked="propagateClick"
+            :busy="busy"
+            :action-buttons="actionButtons"
+            @action-btn="clickActionButton"
         >
-            <div class="modal-header">
-                <div class="modal-title">{{ title || $t("Extended description") }}</div>
-                <button
-                    type="button"
-                    class="modal-close-btn"
-                    :title="modalSize === 'xl' ? $t('Compress') : $t('Expand')"
-                    @click="switchModalSize"
-                >
-                    <i v-if="modalSize === 'lg'" class="fas fa-expand"></i>
-                    <i v-if="modalSize === 'xl'" class="fas fa-compress"></i>
-                </button>
-                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="modal-body no-padding">
+            <div class="extended-description-body">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
-                <div v-if="!loading && editing" class="modal-body-textarea-container">
+                <div v-if="!loading && editing" class="extended-description-edit">
                     <textarea
-                        :disabled="busy"
-                        class="form-control form-textarea no-resize auto-focus"
+                        :disabled="busy || !canWrite"
+                        class="form-control form-textarea auto-focus"
                         v-model="contentToChange"
                         :placeholder="$t('Input your description here') + '...'"
                     ></textarea>
                 </div>
-                <div v-if="!loading && !editing" class="extended-description-container" v-html="renderContent(content)"></div>
+                <div v-if="!loading && !editing" class="extended-description-view" v-html="renderContent(content)"></div>
             </div>
-
-            <div class="modal-footer text-right">
-                <button
-                    v-if="canWrite && !editing"
-                    type="button"
-                    @click="startEdit"
-                    :disabled="busy || loading"
-                    class="btn btn-primary btn-mr"
-                >
-                    <i class="fas fa-pencil-alt"></i> {{ $t("Edit") }}
-                </button>
-                <button
-                    v-if="canWrite && editing"
-                    type="button"
-                    @click="cancelEdit"
-                    :disabled="busy || loading"
-                    class="btn btn-primary btn-mr"
-                >
-                    <i class="fas fa-times"></i> {{ $t("Cancel") }}
-                </button>
-                <button v-if="canWrite && editing" type="button" @click="saveChanges" :disabled="busy || loading" class="btn btn-primary">
-                    <i class="fas fa-check"></i> {{ $t("Save changes") }}
-                </button>
-                <button v-if="!editing" type="button" @click="close" :disabled="busy" class="btn btn-primary">
-                    <i class="fas fa-check"></i> {{ $t("Done") }}
-                </button>
-            </div>
-        </div>
-    </ModalDialogContainer>
+        </ResizableWidget>
+    </div>
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { useVModel } from "@/utils/v-model";
+import { defineComponent } from "vue";
 
-import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
-import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { getAssetURL } from "@/utils/api";
-import { RequestErrorHandler, abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { escapeHTML } from "@/utils/html";
-import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
+import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import { nextTick } from "vue";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AppStatus } from "@/control/app-status";
+import { AppEvents } from "@/control/app-events";
+import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
+import { getAssetURL } from "@/utils/api";
+import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiMediaSetExtendedDescription } from "@/api/api-media-edit";
+import { escapeHTML } from "@/utils/html";
+
+import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
+
+interface ActionButton {
+    id: string;
+    name: string;
+    icon: string;
+}
 
 export default defineComponent({
     components: {
+        ResizableWidget,
         LoadingOverlay,
     },
-    name: "ExtendedDescriptionModal",
-    emits: ["update:display"],
+    name: "ExtendedDescriptionWidget",
+    emits: ["update:display", "tags-update", "clicked"],
     props: {
         display: Boolean,
+        contextOpen: Boolean,
+        currentTime: Number,
     },
     setup(props) {
         return {
@@ -114,12 +86,34 @@ export default defineComponent({
             loading: true,
             busy: false,
             canWrite: AuthController.CanWrite,
-
-            modalSize: "xl",
-
-            changed: false,
-            closeSignal: 0,
         };
+    },
+    computed: {
+        actionButtons: function (): ActionButton[] {
+            const buttons: ActionButton[] = [];
+
+            if (this.loading) {
+                return [];
+            }
+
+            if (this.canWrite) {
+                if (this.editing) {
+                    buttons.push({
+                        id: "save",
+                        name: this.$t("Edit"),
+                        icon: "fas fa-check",
+                    });
+                } else {
+                    buttons.push({
+                        id: "edit",
+                        name: this.$t("Save changes"),
+                        icon: "fas fa-pencil-alt",
+                    });
+                }
+            }
+
+            return buttons;
+        },
     },
     methods: {
         load: function () {
@@ -207,6 +201,25 @@ export default defineComponent({
                 });
         },
 
+        clickActionButton: function (id: string) {
+            switch (id) {
+                case "save":
+                    this.saveChanges();
+                    break;
+                case "edit":
+                    this.startEdit();
+                    break;
+            }
+        },
+
+        propagateClick: function () {
+            this.$emit("clicked");
+        },
+
+        close: function () {
+            this.displayStatus = false;
+        },
+
         autoFocus: function () {
             if (!this.display) {
                 return;
@@ -228,27 +241,10 @@ export default defineComponent({
             }
         },
 
-        close: function () {
-            this.closeSignal++;
-        },
-
-        onClose: function () {
-            if (this.changed) {
-                MediaController.Load();
-            }
-        },
-
         updateMediaData: function () {
             this.mid = AppStatus.CurrentMedia;
             this.title = MediaController.MediaData ? MediaController.MediaData.title : "";
             this.load();
-        },
-
-        onKeyPress: function (e: KeyboardEvent) {
-            if (this.canWrite && (e.key === "e" || e.key === "E") && !this.editing) {
-                e.preventDefault();
-                this.startEdit();
-            }
         },
 
         startEdit: function () {
@@ -302,7 +298,7 @@ export default defineComponent({
                     PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
                     this.content = this.contentToChange;
                     this.editing = false;
-                    this.changed = true;
+                    MediaController.Load();
                     this.autoFocus();
                 })
                 .onRequestError((err, handleErr) => {
@@ -335,22 +331,6 @@ export default defineComponent({
                     console.error(err);
                 });
         },
-
-        updateModalSize: function () {
-            this.modalSize = getExtendedDescriptionSize();
-            if (!["lg", "xl"].includes(this.modalSize)) {
-                this.modalSize = "xl";
-            }
-        },
-
-        switchModalSize: function () {
-            if (this.modalSize === "lg") {
-                this.modalSize = "xl";
-            } else {
-                this.modalSize = "lg";
-            }
-            setExtendedDescriptionSize(this.modalSize);
-        },
     },
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
@@ -358,7 +338,6 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
         if (this.display) {
-            this.updateModalSize();
             this.load();
         }
     },
@@ -371,7 +350,6 @@ export default defineComponent({
             if (this.display) {
                 this.contentStoredId = -1;
                 this.contentStored = "";
-                this.updateModalSize();
                 this.load();
             }
         },

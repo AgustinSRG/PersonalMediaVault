@@ -4,10 +4,10 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
         },
         "strict": false,
         "types": ["vite/client"],
-        "verbatimModuleSyntax": false
-    }
+        "verbatimModuleSyntax": false,
+    },
 }

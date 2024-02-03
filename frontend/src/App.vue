@@ -199,11 +199,11 @@ export default defineComponent({
 
 @import "@/style/player/image-notes.css";
 
-@import "@/style/player/ext-desc.css";
-
 @import "@/style/player/resizable-widget.css";
 
 @import "@/style/player/time-slices-edit.css";
 
 @import "@/style/player/tags-edit.css";
+
+@import "@/style/player/extended-description.css";
 </style>

@@ -16,8 +16,21 @@
     >
         <div class="resizable-widget-header" @mousedown="startMoving($event, true)" @touchstart.passive="startMoving($event, false)">
             <div class="resizable-widget-title">{{ title }}</div>
+            <div v-if="actionButtons && actionButtons.length > 0" class="resizable-widget-action-buttons">
+                <button
+                    v-for="btn in actionButtons"
+                    :key="btn.id"
+                    type="button"
+                    :disabled="busy"
+                    class="action-button"
+                    @click="doActionButton(btn.id)"
+                    :title="btn.name"
+                >
+                    <i :class="btn.icon"></i>
+                </button>
+            </div>
             <div class="resizable-widget-close-btn">
-                <button type="button" class="close-button" @click="close" :title="$t('Close')">
+                <button type="button" :disabled="busy" class="close-button" @click="close" :title="$t('Close')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -73,7 +86,7 @@
 <script lang="ts">
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
 import { useVModel } from "@/utils/v-model";
-import { nextTick } from "vue";
+import { PropType, nextTick } from "vue";
 import { defineComponent } from "vue";
 
 const INITIAL_WIDTH = 480;
@@ -82,14 +95,22 @@ const INITIAL_HEIGHT = 360;
 const MIN_WIDTH = 250;
 const MIN_HEIGHT = 250;
 
+interface ActionButton {
+    id: string;
+    name: string;
+    icon: string;
+}
+
 export default defineComponent({
     name: "ResizableWidget",
-    emits: ["update:display", "clicked"],
+    emits: ["update:display", "clicked", "action-btn"],
     props: {
         display: Boolean,
         positionKey: String,
         contextOpen: Boolean,
         title: String,
+        actionButtons: Array as PropType<ActionButton[]>,
+        busy: Boolean,
     },
     setup(props) {
         return {
@@ -456,6 +477,10 @@ export default defineComponent({
                 this.resizing = false;
                 this.savePosition();
             }
+        },
+
+        doActionButton(id: string) {
+            this.$emit("action-btn", id);
         },
     },
 

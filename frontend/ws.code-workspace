@@ -1,14 +1,14 @@
 {
     "folders": [
         {
-            "path": "."
-        }
+            "path": ".",
+        },
     ],
     "settings": {
         "files.exclude": {
             "node_modules": true,
             "font-awesome": true,
-            "dist": true
+            "dist": true,
         },
         "editor.tabSize": 4,
         "editor.insertSpaces": true,
@@ -18,10 +18,10 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "prettier.tabWidth": 4,
         "[typescript]": {
-            "editor.defaultFormatter": "esbenp.prettier-vscode"
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
         },
         "[vue]": {
-            "editor.defaultFormatter": "esbenp.prettier-vscode"
-        }
-    }
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+        },
+    },
 }

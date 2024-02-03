@@ -1,0 +1,18 @@
+/* Extended description widget style */
+
+.extended-description-body {
+    padding: 1rem;
+}
+
+.extended-description-edit textarea {
+    resize: vertical;
+    width: 100%;
+    min-height: 340px;
+}
+
+.extended-description-view {
+    font-size: 18px;
+    line-height: 1.5rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    word-wrap: break-word;
+}

@@ -38,7 +38,7 @@
             @albums-open="openAlbums"
             @stats-open="openStats"
             v-model:display-tag-list="displayTagList"
-            @ext-desc-open="openExtendedDescription"
+            v-model:display-extended-description="displayExtendedDescription"
             :min="minPlayer"
             @delete="openDelete"
         ></ImagePlayer>
@@ -61,12 +61,12 @@
             @albums-open="openAlbums"
             @stats-open="openStats"
             v-model:display-tag-list="displayTagList"
-            @ext-desc-open="openExtendedDescription"
+            v-model:display-extended-description="displayExtendedDescription"
             :min="minPlayer"
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayUpload)"
+            :autoPlay="!(displayAlbumList || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></VideoPlayer>
         <AudioPlayer
@@ -87,20 +87,18 @@
             @albums-open="openAlbums"
             @stats-open="openStats"
             v-model:display-tag-list="displayTagList"
-            @ext-desc-open="openExtendedDescription"
+            v-model:display-extended-description="displayExtendedDescription"
             :min="minPlayer"
             :loopForced="loopForced"
             :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displayExtendedDescription || displaySizeStats || displayUpload)"
+            :autoPlay="!(displayAlbumList || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
         <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
-
-        <ExtendedDescriptionModal v-if="displayExtendedDescription" v-model:display="displayExtendedDescription"></ExtendedDescriptionModal>
 
         <MediaDeleteModal v-if="displayDelete" v-model:display="displayDelete"></MediaDeleteModal>
     </div>
@@ -164,12 +162,6 @@ const SizeStatsModal = defineAsyncComponent({
     delay: 1000,
 });
 
-const ExtendedDescriptionModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/ExtendedDescriptionModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
-});
-
 const MediaDeleteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/MediaDeleteModal.vue"),
     loadingComponent: LoadingOverlay,
@@ -186,7 +178,6 @@ export default defineComponent({
         ImagePlayer,
         AlbumListModal,
         SizeStatsModal,
-        ExtendedDescriptionModal,
         MediaDeleteModal,
     },
     props: {
@@ -273,10 +264,6 @@ export default defineComponent({
 
         openStats: function () {
             this.displaySizeStats = true;
-        },
-
-        openExtendedDescription: function () {
-            this.displayExtendedDescription = true;
         },
 
         openDelete: function () {
