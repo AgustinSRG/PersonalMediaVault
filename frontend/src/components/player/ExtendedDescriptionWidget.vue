@@ -10,7 +10,7 @@
             :action-buttons="actionButtons"
             @action-btn="clickActionButton"
         >
-            <div class="extended-description-body">
+            <div class="extended-description-body" tabindex="-1">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
                 <div v-if="!loading && editing" class="extended-description-edit">
                     <textarea
