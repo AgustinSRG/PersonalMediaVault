@@ -589,20 +589,20 @@ export function setTogglePlayDelay(delay: number) {
     saveIntoLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY, delay);
 }
 
-const LS_KEY_EXTENDED_DESCRIPTION_SIZE = "player-pref-ext-desc-size";
+const LS_KEY_EXTENDED_DESCRIPTION_SIZE = "player-pref-ext-desc-font-size";
 
 /**
  * Gets extended description size
- * @returns The extended description size style
+ * @returns The extended description font size
  */
-export function getExtendedDescriptionSize(): string {
-    return fetchFromLocalStorageCache(LS_KEY_EXTENDED_DESCRIPTION_SIZE, "xl") + "";
+export function getExtendedDescriptionSize(): number {
+    return Number(fetchFromLocalStorageCache(LS_KEY_EXTENDED_DESCRIPTION_SIZE, 18)) || 18;
 }
 
 /**
  * Sets extended description size
- * @param size The extended description size style
+ * @param size The extended description font size
  */
-export function setExtendedDescriptionSize(size: string) {
+export function setExtendedDescriptionSize(size: number) {
     saveIntoLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, size);
 }

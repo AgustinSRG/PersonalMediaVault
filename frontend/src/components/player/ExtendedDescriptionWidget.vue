@@ -20,7 +20,12 @@
                         :placeholder="$t('Input your description here') + '...'"
                     ></textarea>
                 </div>
-                <div v-if="!loading && !editing" class="extended-description-view" v-html="renderContent(content)"></div>
+                <div
+                    v-if="!loading && !editing"
+                    class="extended-description-view"
+                    :style="{ '--base-font-size': baseFontSize + 'px' }"
+                    v-html="renderContent(content)"
+                ></div>
             </div>
         </ResizableWidget>
     </div>
@@ -30,7 +35,7 @@
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
 
-import ResizableWidget from "@/components/player/ResizableWidget.vue";
+import ResizableWidget, { ActionButton } from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
@@ -45,12 +50,7 @@ import { apiMediaSetExtendedDescription } from "@/api/api-media-edit";
 import { escapeHTML } from "@/utils/html";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
-
-interface ActionButton {
-    id: string;
-    name: string;
-    icon: string;
-}
+import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 
 export default defineComponent({
     components: {
@@ -73,7 +73,6 @@ export default defineComponent({
     data: function () {
         return {
             mid: AppStatus.CurrentMedia,
-            title: MediaController.MediaData ? MediaController.MediaData.title : "",
 
             editing: false,
 
@@ -86,6 +85,8 @@ export default defineComponent({
             loading: true,
             busy: false,
             canWrite: AuthController.CanWrite,
+
+            baseFontSize: getExtendedDescriptionSize(),
         };
     },
     computed: {
@@ -94,6 +95,31 @@ export default defineComponent({
 
             if (this.loading) {
                 return [];
+            }
+
+            if (!this.editing) {
+                if (this.baseFontSize !== 18) {
+                    buttons.push({
+                        id: "size-reset",
+                        name: this.$t("Reset font size"),
+                        icon: "fas fa-magnifying-glass",
+                        key: ["r", "R"],
+                    });
+                }
+
+                buttons.push({
+                    id: "size-minus",
+                    name: this.$t("Smaller font size"),
+                    icon: "fas fa-magnifying-glass-minus",
+                    key: "-",
+                });
+
+                buttons.push({
+                    id: "size-plus",
+                    name: this.$t("Bigger font size"),
+                    icon: "fas fa-magnifying-glass-plus",
+                    key: "+",
+                });
             }
 
             if (this.canWrite) {
@@ -209,7 +235,23 @@ export default defineComponent({
                 case "edit":
                     this.startEdit();
                     break;
+                case "size-reset":
+                    this.baseFontSize = 18;
+                    this.saveBaseFontSize();
+                    break;
+                case "size-plus":
+                    this.baseFontSize = Math.min(128, this.baseFontSize + 1);
+                    this.saveBaseFontSize();
+                    break;
+                case "size-minus":
+                    this.baseFontSize = Math.max(1, this.baseFontSize - 1);
+                    this.saveBaseFontSize();
+                    break;
             }
+        },
+
+        saveBaseFontSize: function () {
+            setExtendedDescriptionSize(this.baseFontSize);
         },
 
         propagateClick: function () {
@@ -243,7 +285,6 @@ export default defineComponent({
 
         updateMediaData: function () {
             this.mid = AppStatus.CurrentMedia;
-            this.title = MediaController.MediaData ? MediaController.MediaData.title : "";
             this.load();
         },
 

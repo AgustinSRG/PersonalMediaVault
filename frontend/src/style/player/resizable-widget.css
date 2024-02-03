@@ -38,6 +38,11 @@
 
 /* Close button */
 
+.resizable-widget-action-buttons {
+    display: flex;
+    flex-direction: row;
+}
+
 .resizable-widget .close-button,
 .resizable-widget .action-button {
     display: inline-block;

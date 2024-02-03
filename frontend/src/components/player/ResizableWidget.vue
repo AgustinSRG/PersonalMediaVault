@@ -95,10 +95,11 @@ const INITIAL_HEIGHT = 360;
 const MIN_WIDTH = 250;
 const MIN_HEIGHT = 250;
 
-interface ActionButton {
+export interface ActionButton {
     id: string;
     name: string;
     icon: string;
+    key?: string | string[];
 }
 
 export default defineComponent({
@@ -157,6 +158,21 @@ export default defineComponent({
 
             if (e.key === "Escape") {
                 this.close();
+                return;
+            }
+
+            if (this.actionButtons) {
+                for (const btn of this.actionButtons) {
+                    if (!btn.key) {
+                        continue;
+                    }
+
+                    if ((typeof btn.key === "string" && btn.key === e.key) || (Array.isArray(btn.key) && btn.key.includes(e.key))) {
+                        e.preventDefault();
+                        this.doActionButton(btn.id);
+                        return;
+                    }
+                }
             }
         },
 

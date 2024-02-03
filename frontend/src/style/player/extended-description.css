@@ -11,8 +11,8 @@
 }
 
 .extended-description-view {
-    font-size: 18px;
-    line-height: 1.5rem;
+    font-size: var(--base-font-size);
+    line-height: calc(var(--base-font-size) * 1.5);
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     word-wrap: break-word;
 }

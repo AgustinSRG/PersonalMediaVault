@@ -263,6 +263,14 @@
     content: "\f002";
 }
 
+.fa-magnifying-glass-minus::before {
+    content: "\f010";
+}
+
+.fa-magnifying-glass-plus::before {
+    content: "\f00e";
+}
+
 .fa-moon::before {
     content: "\f186";
 }
