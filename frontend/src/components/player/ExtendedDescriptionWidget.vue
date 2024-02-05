@@ -126,13 +126,13 @@ export default defineComponent({
                 if (this.editing) {
                     buttons.push({
                         id: "save",
-                        name: this.$t("Edit"),
+                        name: this.$t("Save changes"),
                         icon: "fas fa-check",
                     });
                 } else {
                     buttons.push({
                         id: "edit",
-                        name: this.$t("Save changes"),
+                        name: this.$t("Edit"),
                         icon: "fas fa-pencil-alt",
                     });
                 }
