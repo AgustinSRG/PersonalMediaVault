@@ -135,6 +135,10 @@
     content: "\f828";
 }
 
+.fa-book::before {
+    content: "\f02d";
+}
+
 .fa-box-open::before {
     content: "\f49e";
 }

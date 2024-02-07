@@ -29,6 +29,13 @@
                         </td>
                     </tr>
 
+                    <a class="tr-link modal-menu-item" :href="docsURL" target="_blank" rel="noopener noreferrer" @click="close">
+                        <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Documentation") }}
+                        </td>
+                    </a>
+
                     <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
                         <td class="modal-menu-item-icon">
                             <i class="fas fa-keyboard"></i>
@@ -61,7 +68,9 @@ export default defineComponent({
         };
     },
     data: function () {
-        return {};
+        return {
+            docsURL: import.meta.env.VITE__DOCS_URL || "#",
+        };
     },
     methods: {
         close: function () {
