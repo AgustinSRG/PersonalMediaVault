@@ -1,17 +1,5 @@
 /* Time slices editor helper */
 
-.time-slices-edit-helper-container {
-    position: absolute;
-
-    right: 0.5rem;
-
-    top: calc(56px + 0.5rem);
-    bottom: 76px;
-
-    width: calc(100% - 1rem);
-    pointer-events: none;
-}
-
 .time-slices-edit-helper-btn {
     display: inline-block;
     width: 24px;

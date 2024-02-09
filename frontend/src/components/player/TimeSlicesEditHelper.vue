@@ -1,5 +1,5 @@
 <template>
-    <div class="time-slices-edit-helper-container">
+    <div class="resizable-widget-container">
         <ResizableWidget
             :title="$t('Time slices')"
             v-model:display="displayStatus"

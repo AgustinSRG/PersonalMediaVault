@@ -1,17 +1,5 @@
 /* Tags editor helper */
 
-.tags-edit-helper-container {
-    position: absolute;
-
-    right: 0.5rem;
-
-    top: calc(56px + 0.5rem);
-    bottom: 76px;
-
-    width: calc(100% - 1rem);
-    pointer-events: none;
-}
-
 .tags-editor-body {
     padding: 1rem;
 }

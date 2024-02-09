@@ -1,5 +1,17 @@
 /* Resizable widget */
 
+.resizable-widget-container {
+    position: fixed;
+    z-index: 10;
+
+    left: 0.5rem;
+    right: 0.5rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+
+    pointer-events: none;
+}
+
 .resizable-widget {
     position: absolute;
     background-color: var(--player-editor-background);

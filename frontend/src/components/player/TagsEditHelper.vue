@@ -1,5 +1,5 @@
 <template>
-    <div class="tags-edit-helper-container">
+    <div class="resizable-widget-container">
         <ResizableWidget
             :title="$t('Tags')"
             v-model:display="displayStatus"
