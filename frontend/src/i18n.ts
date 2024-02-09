@@ -33,8 +33,20 @@ declare module "vue" {
  */
 export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
     {
+        id: "ca",
+        name: "Català (Catalan)",
+    },
+    {
+        id: "de",
+        name: "Deutsch (German)",
+    },
+    {
+        id: "el",
+        name: "Ελληνικά (Greek)",
+    },
+    {
         id: "en",
-        name: "English",
+        name: "English (English)",
     },
     {
         id: "es",
@@ -43,6 +55,10 @@ export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
     {
         id: "fr",
         name: "Français (French)",
+    },
+    {
+        id: "hi",
+        name: "हिंदी (Hindi)",
     },
     {
         id: "it",
@@ -55,6 +71,14 @@ export const AVAILABLE_LANGUAGES: { id: string; name: string }[] = [
     {
         id: "pt",
         name: "Português (Portuguese)",
+    },
+    {
+        id: "ru",
+        name: "Русский (Russian)",
+    },
+    {
+        id: "zh",
+        name: "中国人 (Chinese)",
     },
 ];
 
