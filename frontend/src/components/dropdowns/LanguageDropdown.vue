@@ -67,6 +67,12 @@ export default defineComponent({
                     id: l.id,
                     name: l.name,
                 };
+            }).sort((a, b) => {
+                if (a.name < b.name) {
+                    return -1;
+                } else {
+                    return 1;
+                }
             }),
             lang: getLanguage(),
         };
