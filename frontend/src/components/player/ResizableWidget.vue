@@ -7,6 +7,7 @@
         @dblclick="stopPropagationEvent"
         @mousedown="propagateClick"
         @touchstart="propagateTouch"
+        @contextmenu="stopPropagationEvent"
         :style="{
             top: y + 'px',
             left: x + 'px',
@@ -36,7 +37,7 @@
             </div>
         </div>
 
-        <div class="resizable-widget-body">
+        <div class="resizable-widget-body" :class="{ resizing: resizing }">
             <slot></slot>
         </div>
 

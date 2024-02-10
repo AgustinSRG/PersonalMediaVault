@@ -19,6 +19,7 @@
     flex-direction: column;
     border: solid 1px var(--theme-border-color);
     pointer-events: all;
+    cursor: default;
 }
 
 .resizable-widget-header {
@@ -38,6 +39,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     padding-right: 12px;
+    user-select: none;
 }
 
 .resizable-widget-body {
@@ -46,6 +48,11 @@
     scrollbar-gutter: stable;
 
     height: calc(100% - 56px);
+    user-select: text;
+}
+
+.resizable-widget-body.resizing {
+    user-select: none;
 }
 
 /* Close button */
