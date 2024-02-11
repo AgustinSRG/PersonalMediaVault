@@ -44,7 +44,7 @@ export default defineConfig({
                 ],
             },
             workbox: {
-                globPatterns: ["**/!(locale-*).{js,css,html}"],
+                globPatterns: ["**/!(locale-*).{js,css,html,woff2}"],
                 navigateFallbackAllowlist: [/^\/$/],
             },
         }),
