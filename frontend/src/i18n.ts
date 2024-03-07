@@ -193,7 +193,7 @@ if (!SUPPORTED_LOCALES.includes(defaultLanguage)) {
 /**
  * Internationalization data
  */
-const i18nData: {
+export const i18nData: {
     /**
      * Locale name
      */

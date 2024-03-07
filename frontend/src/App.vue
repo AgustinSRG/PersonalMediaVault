@@ -11,7 +11,7 @@ import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadEntryMin } from "./control/upload"
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
-import { EVENT_NAME_LOADED_LOCALE } from "./i18n";
+import { EVENT_NAME_LOADED_LOCALE, i18nData } from "./i18n";
 import { PagesController } from "./control/pages";
 
 export default defineComponent({
@@ -120,6 +120,10 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadFinished.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_LOADED_LOCALE, this.onLoadedLocale.bind(this));
+
+        if (i18nData.locale) {
+            this.$updateLocale(i18nData.locale);
+        }
     },
 });
 </script>
