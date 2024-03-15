@@ -71,8 +71,8 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Language | Download | Hash |
 |---|---|---|---|---|
-| 1.16.1 | x64 | English | [Drive](https://drive.google.com/file/d/12baj4tMisvWk1Ne4hM5t8V4k2_odjwvQ/view?usp=sharing) <br /> [Mega](https://mega.nz/file/4WNyXSaK#8U8DNVr8c9gZm5CgqcNvuTiesZsDbyNJQtcl1OyTyBI) | SHA256: `1AC6A5A9348E5527A7D77D539444B018149A08AEF31963D35D4CF60BBA80F76F` |
-| 1.16.1 | x64 | Spanish | [Drive](https://drive.google.com/file/d/14DQ843KZ6c5iNPHjDbY3adv_oaKyn72-/view?usp=sharing) <br /> [Mega](https://mega.nz/file/AT1SxZDR#7hcTjvkmxdgCPgGA1NOB4NWuEIxkkc1MOB4sP5_G0M8) | SHA256: `C637C6395F26C5F57EC121373A8DE234FA3A1E380725F3F65CBB835A9B446C60` |
+| 1.16.1 | x64 | English | [Mega](https://mega.nz/file/4WNyXSaK#8U8DNVr8c9gZm5CgqcNvuTiesZsDbyNJQtcl1OyTyBI) | SHA256: `1AC6A5A9348E5527A7D77D539444B018149A08AEF31963D35D4CF60BBA80F76F` |
+| 1.16.1 | x64 | Spanish | [Mega](https://mega.nz/file/AT1SxZDR#7hcTjvkmxdgCPgGA1NOB4NWuEIxkkc1MOB4sP5_G0M8) | SHA256: `C637C6395F26C5F57EC121373A8DE234FA3A1E380725F3F65CBB835A9B446C60` |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
 
