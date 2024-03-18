@@ -132,6 +132,18 @@
 
             <div class="player-controls-right">
                 <button
+                    v-if="hasExtendedDescription"
+                    type="button"
+                    :title="$t('Extended description')"
+                    class="player-btn"
+                    @click="openExtendedDescription"
+                    @mouseenter="enterTooltip('ext-desc')"
+                    @mouseleave="leaveTooltip('ext-desc')"
+                >
+                    <i class="fas fa-info"></i>
+                </button>
+
+                <button
                     type="button"
                     :title="$t('Manage albums')"
                     class="player-btn"
@@ -196,6 +208,10 @@
 
         <div v-if="helpTooltip === 'scale'" class="player-tooltip player-help-tip-left">
             {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
+        </div>
+
+        <div v-if="!displayConfig && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
+            {{ $t("Extended description") }}
         </div>
 
         <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
