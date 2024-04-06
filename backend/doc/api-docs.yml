@@ -1766,6 +1766,73 @@ paths:
                 description: Search results for this page
                 items:
                   $ref: '#/definitions/MediaListItem'
+
+  "/api/search/advanced":
+    get:
+      summary: Advanced search
+      description: Advanced search. Can filter up to a maximum of 16 tags. Expandable, but not paginated.
+      tags:
+        - search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: "tags_mode"
+          type: string
+          enum:
+            - allof
+            - anyof
+            - noneof
+          description: Tags filtering mode
+        - in: query
+          name: "tags"
+          type: string
+          description: List of tag names, encoded as a JSON array. Up to a max of 16.
+        - in: query
+          name: "order"
+          type: string
+          enum:
+            - asc
+            - desc
+          description: "Order. Can be 'asc' or 'desc'. Descendant by default."
+        - in: query
+          name: "continue"
+          type: number
+          format: int64
+          description: Reference of the last item to continue fetching more items
+        - in: query
+          name: "limit"
+          type: number
+          format: int32
+          description: Max number of items to get. Max is 256.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Search results
+          schema:
+            properties:
+              total_count:
+                type: number
+                format: int64
+                description: "Total number of possible results to be filtered"
+              scanned:
+                type: number
+                format: int64
+                description: Number of scanned items
+              continue:
+                type: number
+                format: int64
+                description: Reference of the last item to continue fetching more items.
+              items:
+                type: array
+                description: Found items
+                items:
+                  $ref: '#/definitions/MediaListItem'
           
   "/api/random":
     get:
