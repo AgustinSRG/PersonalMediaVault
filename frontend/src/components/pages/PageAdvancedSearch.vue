@@ -200,7 +200,7 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
-import { apiSearch } from "@/api/api-search";
+import { apiAdvancedSearch, apiSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
 
 const INITIAL_WINDOW_SIZE = 50;
@@ -249,6 +249,7 @@ export default defineComponent({
             page: 0,
             totalPages: 0,
             progress: 0,
+            continueRef: null as number | null,
 
             fullListLength: 0,
 
@@ -362,14 +363,20 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch(this.getFirstTag(), this.order, this.page, this.pageSize))
+            const pageSize = this.pageSize;
+
+            makeNamedApiRequest(
+                this.loadRequestId,
+                apiAdvancedSearch(this.getTagMode(), this.getTagList(), this.order, this.continueRef, pageSize),
+            )
                 .onSuccess((result) => {
                     const completePageList = this.listScroller.list;
-                    this.filterElements(result.page_items);
-                    this.page = result.page_index + 1;
-                    this.totalPages = result.page_count;
-                    this.progress = (this.page / Math.max(1, this.totalPages)) * 100;
-                    if (completePageList.length >= this.pageSize) {
+                    this.filterElements(result.items);
+                    this.page = result.scanned;
+                    this.totalPages = result.total_count;
+                    this.progress = (Math.max(0, result.scanned) / Math.max(1, result.total_count)) * 100;
+                    this.continueRef = result["continue"];
+                    if (completePageList.length >= pageSize) {
                         // Done for now
                         this.loading = false;
 
@@ -380,7 +387,8 @@ export default defineComponent({
                         if (!this.inModal) {
                             this.onCurrentMediaChanged();
                         }
-                    } else if (this.page < this.totalPages) {
+                    } else if (result.scanned < result.total_count) {
+                        // Maybe there are more items
                         this.load();
                     } else {
                         this.loading = false;
@@ -531,6 +539,7 @@ export default defineComponent({
             this.fullListLength = 0;
             this.mediaIndexMap.clear();
             this.page = 0;
+            this.continueRef = null;
             this.totalPages = 0;
             this.progress = 0;
             this.started = true;
@@ -616,6 +625,7 @@ export default defineComponent({
             this.page = 0;
             this.totalPages = 0;
             this.progress = 0;
+            this.continueRef = null;
             this.loading = false;
             this.finished = true;
             this.started = false;
@@ -690,12 +700,32 @@ export default defineComponent({
             this.onTagAddChanged(false);
         },
 
-        getFirstTag: function () {
-            if (this.tagMode === "all" && this.tags.length > 0) {
-                return this.getTagName(this.tags[0], this.tagVersion);
-            } else {
-                return "";
+        getTagMode: function (): "allof" | "anyof" | "noneof" {
+            switch (this.tagMode) {
+                case "any":
+                    if (this.tags.length > 16) {
+                        return "allof";
+                    }
+                    return "anyof";
+                case "none":
+                    return "noneof";
+                default:
+                    return "allof";
             }
+        },
+
+        getTagList: function (): string[] {
+            if (this.tagMode === "untagged") {
+                return [];
+            }
+            if (this.tagMode === "any" && this.tags.length > 16) {
+                return [];
+            }
+            return this.tags
+                .map((tag) => {
+                    return this.getTagName(tag, this.tagVersion);
+                })
+                .slice(0, 16);
         },
 
         getTagName: function (tag: number, v: number) {
