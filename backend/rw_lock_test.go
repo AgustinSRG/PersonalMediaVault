@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func threadReader(t *testing.T, wg *sync.WaitGroup, lock *ReadWriteLock, msWaitBefore int, msWaitRead int) {
+func threadReader(wg *sync.WaitGroup, lock *ReadWriteLock, msWaitBefore int, msWaitRead int) {
 	time.Sleep(time.Duration(msWaitBefore) * time.Millisecond)
 
 	lock.StartRead()
@@ -20,7 +20,7 @@ func threadReader(t *testing.T, wg *sync.WaitGroup, lock *ReadWriteLock, msWaitB
 	wg.Done()
 }
 
-func threadWriter(t *testing.T, wg *sync.WaitGroup, lock *ReadWriteLock, msWaitBefore int, msWaitWrite int, msWaitSave int) {
+func threadWriter(wg *sync.WaitGroup, lock *ReadWriteLock, msWaitBefore int, msWaitWrite int, msWaitSave int) {
 	time.Sleep(time.Duration(msWaitBefore) * time.Millisecond)
 
 	lock.RequestWrite()
@@ -42,12 +42,12 @@ func TestReadWriteLock(t *testing.T) {
 
 	wg.Add(5)
 
-	go threadReader(t, &wg, lock, 10, 50)
-	go threadReader(t, &wg, lock, 10, 50)
-	go threadReader(t, &wg, lock, 10, 50)
+	go threadReader(&wg, lock, 10, 50)
+	go threadReader(&wg, lock, 10, 50)
+	go threadReader(&wg, lock, 10, 50)
 
-	go threadWriter(t, &wg, lock, 20, 20, 50)
-	go threadWriter(t, &wg, lock, 20, 20, 50)
+	go threadWriter(&wg, lock, 20, 20, 50)
+	go threadWriter(&wg, lock, 20, 20, 50)
 
 	wg.Wait()
 }
