@@ -38,7 +38,7 @@ export function getAssetURL(path: string): string {
  * @param params The query parameters
  * @returns The query string
  */
-export function generateURIQuery(params: { [key: string]: string | undefined }): string {
+export function generateURIQuery(params: { [key: string]: any | undefined }): string {
     const keys = Object.keys(params);
     if (keys.length === 0) {
         return "";
@@ -47,7 +47,7 @@ export function generateURIQuery(params: { [key: string]: string | undefined }):
     let result = "";
 
     for (const key of keys) {
-        if (!params[key]) {
+        if (params[key] === undefined || params[key] === null) {
             continue;
         }
 
@@ -57,7 +57,7 @@ export function generateURIQuery(params: { [key: string]: string | undefined }):
             result += "?";
         }
 
-        result += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
+        result += encodeURIComponent(key) + "=" + encodeURIComponent(params[key] + "");
     }
 
     return result;

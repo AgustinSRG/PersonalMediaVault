@@ -608,6 +608,31 @@ export interface RandomResults {
     page_items: MediaListItem[];
 }
 
+/**
+ * Advanced search results
+ */
+export interface AdvancedSearchResults {
+    /**
+     * Total number of possible items
+     */
+    total_count: number;
+
+    /**
+     * Number of scanned items
+     */
+    scanned: number;
+
+    /**
+     * Reference of the last item, tro continue fetching more items
+     */
+    continue: number;
+
+    /**
+     * List of page items
+     */
+    items: MediaListItem[];
+}
+
 // Tags
 
 /**
