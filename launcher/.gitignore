@@ -5,7 +5,7 @@ pmv
 laucher
 laucher.exe
 
-main-res.syso
+*.syso
 
 lang
 
