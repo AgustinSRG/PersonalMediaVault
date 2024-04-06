@@ -69,10 +69,14 @@ function main() {
             .replace(/VERSION = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `VERSION = "${VERSION}"`);
     });
 
-    updateFile(Path.resolve(__dirname, "launcher", "manifest.xml"), contents => {
+    updateFile(Path.resolve(__dirname, "launcher", "winres", "winres.json"), contents => {
         return contents
-            .replace(/name=\"PersonalMediaVault\" version=\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `name="PersonalMediaVault" version="${VERSION}.0"`);
+            .replace(/\"version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\"/, `"version": "${VERSION}"`)
+            .replace(/\"ProductVersion\":\s\"[0-9]+\.[0-9]+\.[0-9]+\"/, `"ProductVersion": "${VERSION}"`)
+            .replace(/\"file_version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `"file_version": "${VERSION}.0"`)
+            .replace(/\"product_version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `"product_version": "${VERSION}.0"`);
     });
+
 
     updateFile(Path.resolve(__dirname, "packages", "windows-msi", "make-wix.bat"), contents => {
         return contents
