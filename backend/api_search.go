@@ -4,8 +4,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -298,6 +300,167 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 	result.Seed = seed
 	result.PageSize = pageSize
 	result.PageItems = page_items_meta
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
+type AdvancedSearchResultResponse struct {
+	Scanned  int64               `json:"scanned"`
+	Count    int64               `json:"total_count"`
+	Items    []*MediaListAPIItem `json:"items"`
+	Continue uint64              `json:"continue"`
+}
+
+func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	// Parameters
+
+	limit := 50
+	limitStr := request.URL.Query().Get("limit")
+	if limitStr != "" {
+		limit, err := strconv.ParseInt(limitStr, 10, 64)
+
+		if err != nil || limit < 1 {
+			response.WriteHeader(400)
+			return
+		}
+
+		if limit > PAGE_SIZE_LIMIT {
+			limit = PAGE_SIZE_LIMIT
+		}
+	}
+
+	tagMode := TagFilterAllOf
+
+	switch strings.ToLower(request.URL.Query().Get("tags_mode")) {
+	case "anyof":
+		tagMode = TagFilterAnyOf
+	case "noneof":
+		tagMode = TagFilterNoneOf
+	}
+
+	tagNames := make([]string, 0)
+
+	if request.URL.Query().Get("tags") != "" {
+		err := json.Unmarshal([]byte(request.URL.Query().Get("tags")), &tagNames)
+
+		if err != nil {
+			tagNames = make([]string, 0)
+		}
+	}
+
+	for i := 0; i < len(tagNames); i++ {
+		tagNames[i] = ParseTagName(tagNames[i])
+	}
+
+	reversed := request.URL.Query().Get("order") != "asc"
+
+	continueRef := int64(-1)
+
+	if request.URL.Query().Get("continue") != "" {
+		cr, err := strconv.ParseInt(request.URL.Query().Get("continue"), 10, 64)
+
+		if err == nil {
+			continueRef = cr
+		}
+	}
+
+	// Create scanner
+
+	LogDebug("[Scanner] TagMode: " + fmt.Sprint(tagMode) + ", Tags: " + fmt.Sprint(tagNames) + ", Continue: " + fmt.Sprint(continueRef))
+
+	vaultScanner, err := NewVaultScanner(tagMode, reversed, tagNames, continueRef, session.key)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if vaultScanner == nil {
+		// Empty
+
+		result := AdvancedSearchResultResponse{
+			Scanned:  0,
+			Count:    0,
+			Items:    make([]*MediaListAPIItem, 0),
+			Continue: 0,
+		}
+
+		jsonResult, err := json.Marshal(result)
+
+		if err != nil {
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
+
+		ReturnAPI_JSON(response, request, jsonResult)
+		return
+	}
+
+	// Scan
+
+	mediaIdList := make([]uint64, 0)
+	newContinueRef := uint64(0)
+
+	finished := false
+
+	for !finished && len(mediaIdList) < limit {
+		ok, next, err := vaultScanner.Next()
+
+		if err != nil {
+			vaultScanner.Release(session.key)
+
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
+
+		if !ok {
+			finished = true
+		} else {
+			mediaIdList = append(mediaIdList, next)
+			newContinueRef = next
+		}
+	}
+
+	scanned, total := vaultScanner.GetProgress()
+
+	// Release
+
+	vaultScanner.Release(session.key)
+
+	// Read meta of media items
+
+	mediaItemsInfo := GetMediaMinInfoList(mediaIdList, session)
+
+	// Result
+
+	result := AdvancedSearchResultResponse{
+		Scanned:  scanned,
+		Count:    total,
+		Items:    mediaItemsInfo,
+		Continue: newContinueRef,
+	}
 
 	jsonResult, err := json.Marshal(result)
 

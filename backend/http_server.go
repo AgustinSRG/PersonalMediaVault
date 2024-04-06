@@ -189,6 +189,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// Search API
 	apiRouter.HandleFunc("/search", api_searchMedia).Methods("GET")
+	apiRouter.HandleFunc("/search/advanced", api_advancedSearch).Methods("GET")
 	apiRouter.HandleFunc("/random", api_randomMedia).Methods("GET")
 
 	// Tags API
