@@ -209,7 +209,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
-import { apiSearch } from "@/api/api-search";
+import { apiAdvancedSearch } from "@/api/api-search";
 
 const PAGE_SIZE = 50;
 
@@ -540,7 +540,7 @@ export default defineComponent({
             if (this.albumSearch >= 0) {
                 this.loadAlbumSearch();
             } else {
-                this.searchNext(0);
+                this.searchNext(null);
             }
         },
 
@@ -580,28 +580,48 @@ export default defineComponent({
                 });
         },
 
-        getFirstTag: function () {
-            if (this.tagModeSearch === "all" && this.tagsSearch.length > 0) {
-                return this.getTagName(this.tagsSearch[0], this.tagVersion);
-            } else {
-                return "";
+        getTagMode: function (): "allof" | "anyof" | "noneof" {
+            switch (this.tagModeSearch) {
+                case "any":
+                    if (this.tagsSearch.length > 16) {
+                        return "allof";
+                    }
+                    return "anyof";
+                case "none":
+                    return "noneof";
+                default:
+                    return "allof";
             }
         },
 
-        searchNext: function (page: number) {
+        getTagList: function (): string[] {
+            if (this.tagModeSearch === "untagged") {
+                return [];
+            }
+            if (this.tagModeSearch === "any" && this.tagsSearch.length > 16) {
+                return [];
+            }
+            return this.tagsSearch
+                .map((tag) => {
+                    return this.getTagName(tag, this.tagVersion);
+                })
+                .slice(0, 16);
+        },
+
+        searchNext: function (continueRef: number | null) {
             abortNamedApiRequest(this.batchRequestId);
 
-            makeNamedApiRequest(this.batchRequestId, apiSearch(this.getFirstTag(), "asc", page, PAGE_SIZE))
+            makeNamedApiRequest(this.batchRequestId, apiAdvancedSearch(this.getTagMode(), this.getTagList(), "asc", continueRef, PAGE_SIZE))
                 .onSuccess((result) => {
-                    this.filterElements(result.page_items);
+                    this.filterElements(result.items);
 
-                    this.progress = ((page + 1) * 100) / (result.page_count || 1);
+                    this.progress = (Math.max(0, result.scanned) / Math.max(1, result.total_count)) * 100;
 
-                    if (page >= result.page_count - 1) {
+                    if (result.scanned >= result.total_count) {
                         // Finished
                         this.finishSearch();
                     } else {
-                        this.searchNext(page + 1);
+                        this.searchNext(result.continue);
                     }
                 })
                 .onRequestError((err, handleErr) => {

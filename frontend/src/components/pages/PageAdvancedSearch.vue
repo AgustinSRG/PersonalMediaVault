@@ -200,7 +200,7 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
-import { apiAdvancedSearch, apiSearch } from "@/api/api-search";
+import { apiAdvancedSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
 
 const INITIAL_WINDOW_SIZE = 50;
