@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, hidden: !display }" @scroll.passive="onPageScroll" tabindex="-1">
+    <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" @scroll.passive="onPageScroll" tabindex="-1">
         <form class="adv-search-form" @submit="startSearch">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
