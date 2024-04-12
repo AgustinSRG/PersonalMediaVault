@@ -10,6 +10,7 @@
             '--max-cell-size': maxItemSize + 'px',
             '--cell-padding': padding + 'px',
         }"
+        @keydown="onKeyPress"
     >
         <div class="page-header">
             <button type="button" :title="$t('Expand')" class="page-header-btn page-expand-btn" @click="expandPage">
@@ -406,6 +407,12 @@ export default defineComponent({
 
         goToTop: function () {
             AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+        },
+
+        onKeyPress: function (e: KeyboardEvent) {
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.stopPropagation();
+            }
         },
     },
     mounted: function () {
