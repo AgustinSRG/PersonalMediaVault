@@ -1739,7 +1739,7 @@ export default defineComponent({
         findTimeSliceName: function (time: number) {
             const slice = findTimeSlice(this.timeSlices, time);
             if (slice) {
-                return slice.name;
+                return slice.name + " (" + renderTimeSeconds(slice.end - slice.start) + ")";
             } else {
                 return "";
             }
