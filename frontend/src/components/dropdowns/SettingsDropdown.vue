@@ -88,6 +88,13 @@
                             {{ $t("Batch operation") }}
                         </td>
                     </tr>
+
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('clear-browser-data')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-broom"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Clear browser data") }}
+                        </td>
+                    </tr>
                 </table>
             </div>
         </div>

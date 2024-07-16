@@ -3,7 +3,7 @@
 "use strict";
 
 import { MediaData } from "@/api/models";
-import { fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
+import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 
 /**
  * User selected resolution (video)
@@ -248,6 +248,13 @@ export function setCachedInitialTime(mid: number, time: number) {
     saveIntoLocalStorage(LS_KEY_PLAY_TIME_CACHE, cache);
 }
 
+/**
+ * Clears cached initial times
+ */
+export function clearCachedTimes() {
+    clearLocalStorage(LS_KEY_PLAY_TIME_CACHE);
+}
+
 const MAX_CACHE_ALBUM_POS_SIZE = 100;
 const LS_KEY_ALBUM_POS_CACHE = "player-album-pos-cache";
 
@@ -317,6 +324,13 @@ export function setCachedAlbumPosition(id: number, pos: number) {
     });
 
     saveIntoLocalStorage(LS_KEY_ALBUM_POS_CACHE, cache);
+}
+
+/**
+ * Clears cached initial times
+ */
+export function clearCachedAlbumPositions() {
+    clearLocalStorage(LS_KEY_ALBUM_POS_CACHE);
 }
 
 const LS_KEY_VOLUME = "player-pref-volume";
@@ -605,4 +619,38 @@ export function getExtendedDescriptionSize(): number {
  */
 export function setExtendedDescriptionSize(size: number) {
     saveIntoLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, size);
+}
+
+/**
+ * Clears player preferences
+ */
+export function clearPlayerPreferences() {
+    clearLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_VIDEO);
+    clearLocalStorage(LS_KEY_USER_SELECTED_RESOLUTION_IMAGE);
+
+    clearLocalStorage(LS_KEY_VOLUME);
+    clearLocalStorage(LS_KEY_MUTED);
+
+    clearLocalStorage(LS_KEY_SCALE);
+    clearLocalStorage(LS_KEY_IMAGE_FIT);
+
+    clearLocalStorage(LS_KEY_AUDIO_ANIMATION_STYLE);
+
+    clearLocalStorage(LS_KEY_IMAGE_BACKGROUND);
+
+    clearLocalStorage(LS_KEY_AUTO_NEXT_ON_END);
+    clearLocalStorage(LS_KEY_AUTO_NEXT_TIME);
+
+    clearLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE);
+
+    clearLocalStorage(LS_KEY_SUBTITLES_SELECTED);
+    clearLocalStorage(LS_KEY_SUBTITLES_SIZE);
+    clearLocalStorage(LS_KEY_SUBTITLES_BG);
+    clearLocalStorage(LS_KEY_SUBTITLES_HTML);
+
+    clearLocalStorage(LS_KEY_AUDIO_TRACK);
+
+    clearLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY);
+
+    clearLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE);
 }

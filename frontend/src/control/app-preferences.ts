@@ -9,6 +9,8 @@ import { AlbumListItemMin } from "@/api/models";
 
 export type ColorThemeName = "light" | "dark";
 
+const DEFAULT_THEME = "dark";
+
 const LS_KEY_THEME = "app-pref-theme";
 
 /**
@@ -21,7 +23,7 @@ export const EVENT_NAME_THEME_CHANGED = "theme-changed";
  * @returns The theme name
  */
 export function getTheme(): ColorThemeName {
-    return fetchFromLocalStorageCache(LS_KEY_THEME, "dark");
+    return fetchFromLocalStorageCache(LS_KEY_THEME, DEFAULT_THEME);
 }
 
 /**
@@ -106,6 +108,14 @@ export function albumRemoveFav(id: number) {
     }
 }
 
+/**
+ * Clears list of favorite albums
+ */
+export function clearFavAlbums() {
+    clearLocalStorage(LS_KEY_FAVORITE_ALBUMS);
+    AppEvents.Emit(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
+}
+
 AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, AlbumListItemMin>) => {
     // Remove favorite albums removed from the vault
     let favorites = fetchFromLocalStorage(LS_KEY_FAVORITE_ALBUMS, []);
@@ -142,6 +152,13 @@ export function getAlbumsOrderMap(): { [id: string]: number } {
     }
 
     return m;
+}
+
+/**
+ * Clears album ordering map
+ */
+export function clearAlbumsOrderMap() {
+    clearLocalStorage(LS_KEY_ALBUMS_ORDER);
 }
 
 AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
@@ -357,4 +374,21 @@ export function setLastUsedTag(tag: number) {
     }
 
     saveIntoLocalStorage(LS_KEY_LAST_USED_TAGS, r);
+}
+
+/**
+ * Clears list of recently used tags
+ */
+export function clearLastUsedTags() {
+    clearLocalStorage(LS_KEY_LAST_USED_TAGS);
+}
+
+/**
+ * Clears page preferences
+ */
+export function clearPagePreferences() {
+    clearLocalStorage(LS_KEY_THEME);
+    AppEvents.Emit(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
+
+    ["home", "random", "search", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
 }

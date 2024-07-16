@@ -105,3 +105,9 @@
 .keyboard-help-table td {
     white-space: nowrap;
 }
+
+/* Invisible table */
+
+.table.table-invisible td {
+    border-top: none;
+}

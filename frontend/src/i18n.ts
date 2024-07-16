@@ -4,7 +4,7 @@
 
 import { App, Ref, nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
-import { fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
+import { clearLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
 declare module "vue" {
     interface ComponentCustomProperties {
         /**
@@ -180,6 +180,14 @@ export function getLanguage(): string {
 export function setLanguage(lang: string) {
     saveIntoLocalStorage(LS_KEY_LANGUAGE, lang);
     AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, lang);
+}
+
+/**
+ * Clears language setting, changing to the browser language
+ */
+export function clearLanguageSetting() {
+    clearLocalStorage(LS_KEY_LANGUAGE);
+    AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, detectNavigatorLanguage());
 }
 
 // Load default language

@@ -48,6 +48,8 @@
 
         <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
 
+        <ClearBrowserDataModal v-if="displayClearBrowserData" v-model:display="displayClearBrowserData"></ClearBrowserDataModal>
+
         <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
 
         <HelpHubDropdown v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubDropdown>
@@ -181,6 +183,12 @@ const TaskListModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const ClearBrowserDataModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/ClearBrowserDataModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 const SearchInputModal = defineAsyncComponent({
     loader: () => import("@/components/modals/SearchInputModal.vue"),
     loadingComponent: LoadingOverlay,
@@ -236,6 +244,7 @@ export default defineComponent({
         AdvancedSettingsModal,
         AccountsAdminModal,
         TaskListModal,
+        ClearBrowserDataModal,
         SearchInputModal,
         HelpHubDropdown,
         AboutModal,
@@ -269,6 +278,8 @@ export default defineComponent({
             displayAccountAdmin: false,
 
             displayTaskList: false,
+
+            displayClearBrowserData: false,
 
             displaySearchModal: false,
 
@@ -326,6 +337,9 @@ export default defineComponent({
                     break;
                 case "tasks":
                     this.displayTaskList = true;
+                    break;
+                case "clear-browser-data":
+                    this.displayClearBrowserData = true;
                     break;
                 case "admin":
                     this.displayAccountAdmin = true;

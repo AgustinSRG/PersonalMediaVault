@@ -200,6 +200,7 @@ textarea.form-control::-webkit-resizer {
 .form-control-container {
     flex: 1;
 }
+
 .form-control-suffix {
     padding-left: 0.75rem;
     white-space: nowrap;
