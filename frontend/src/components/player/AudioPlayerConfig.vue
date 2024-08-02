@@ -63,6 +63,26 @@
                 </td>
             </tr>
 
+            <tr v-if="!isShort">
+                <td>
+                    <i class="fas fa-eye icon-config"></i>
+                    <b>{{ $t("Show title") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="showTitleState"></ToggleSwitch>
+                </td>
+            </tr>
+
+            <tr v-if="!isShort">
+                <td>
+                    <i class="fas fa-eye icon-config"></i>
+                    <b>{{ $t("Show thumbnail") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="showThumbnailState"></ToggleSwitch>
+                </td>
+            </tr>
+
             <tr
                 v-if="metadata.subtitles && metadata.subtitles.length > 0"
                 class="tr-button"
@@ -274,6 +294,8 @@ export default defineComponent({
         "update:subSize",
         "update:subBackground",
         "update:subHTML",
+        "update:showTitle",
+        "update:showThumbnail",
         "update-auto-next",
         "enter",
         "leave",
@@ -290,6 +312,8 @@ export default defineComponent({
         subHTML: Boolean,
         rTick: Number,
         isShort: Boolean,
+        showTitle: Boolean,
+        showThumbnail: Boolean,
     },
     setup(props) {
         return {
@@ -302,6 +326,8 @@ export default defineComponent({
             subSizeState: useVModel(props, "subSize"),
             subBackgroundState: useVModel(props, "subBackground"),
             subHTMLState: useVModel(props, "subHTML"),
+            showTitleState: useVModel(props, "showTitle"),
+            showThumbnailState: useVModel(props, "showThumbnail"),
         };
     },
     data: function () {

@@ -621,6 +621,42 @@ export function setExtendedDescriptionSize(size: number) {
     saveIntoLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, size);
 }
 
+const LS_KEY_SHOW_AUDIO_TITLE = "player-pref-audio-title";
+
+/**
+ * Gets the option to show audio title
+ * @returns True of false
+ */
+export function getShowAudioTitle(): boolean {
+    return !!fetchFromLocalStorageCache(LS_KEY_SHOW_AUDIO_TITLE, true);
+}
+
+/**
+ * Sets option to show audio title
+ * @param show True or false
+ */
+export function setShowAudioTitle(show: boolean) {
+    saveIntoLocalStorage(LS_KEY_SHOW_AUDIO_TITLE, show);
+}
+
+const LS_KEY_SHOW_AUDIO_THUMBNAIL = "player-pref-audio-thumbnail";
+
+/**
+ * Gets the option to show audio thumbnail
+ * @returns True of false
+ */
+export function getShowAudioThumbnail(): boolean {
+    return !!fetchFromLocalStorageCache(LS_KEY_SHOW_AUDIO_THUMBNAIL, true);
+}
+
+/**
+ * Sets option to show audio thumbnail
+ * @param show True or false
+ */
+export function setShowAudioThumbnail(show: boolean) {
+    saveIntoLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL, show);
+}
+
 /**
  * Clears player preferences
  */
@@ -653,4 +689,7 @@ export function clearPlayerPreferences() {
     clearLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY);
 
     clearLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE);
+
+    clearLocalStorage(LS_KEY_SHOW_AUDIO_TITLE);
+    clearLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL);
 }

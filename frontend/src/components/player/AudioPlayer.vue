@@ -37,7 +37,13 @@
             @error="onMediaError"
         ></audio>
 
-        <canvas v-if="audioURL"></canvas>
+        <canvas v-if="audioURL && animationColors !== 'none'"></canvas>
+        <div v-if="audioURL" class="audio-no-animation">
+            <div v-if="thumbnail && showThumbnail" class="audio-no-animation-thumbnail-container">
+                <img class="audio-no-animation-thumbnail" :src="getThumbnail(thumbnail)" :alt="title" :title="title" loading="lazy" />
+            </div>
+            <div class="audio-no-animation-title" :class="{ hidden: !showTitle }">{{ title }}</div>
+        </div>
 
         <div class="player-feedback-container">
             <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
@@ -368,12 +374,16 @@
             @update:loop="() => $emit('force-loop', loop)"
             v-model:nextEnd="nextEnd"
             v-model:animColors="animationColors"
+            v-model:showTitle="showTitle"
+            v-model:showThumbnail="showThumbnail"
             v-model:subSize="subtitlesSize"
             v-model:subBackground="subtitlesBg"
             v-model:subHTML="subtitlesHTML"
             :rTick="internalTick"
             :metadata="metadata"
             @update:animColors="onUpdateAnimColors"
+            @update:showTitle="onUpdateShowTitle"
+            @update:showThumbnail="onUpdateShowThumbnail"
             @update:subHTML="onUpdateSubHTML"
             @update:nextEnd="onUpdateNextEnd"
             @enter="enterControls"
@@ -425,6 +435,8 @@ import {
     getCachedInitialTime,
     getPlayerMuted,
     getPlayerVolume,
+    getShowAudioThumbnail,
+    getShowAudioTitle,
     getSubtitlesAllowHTML,
     getSubtitlesBackground,
     getSubtitlesSize,
@@ -433,6 +445,8 @@ import {
     setCachedInitialTime,
     setPlayerMuted,
     setPlayerVolume,
+    setShowAudioThumbnail,
+    setShowAudioTitle,
     setSubtitlesAllowHTML,
 } from "@/control/player-preferences";
 import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
@@ -552,6 +566,9 @@ export default defineComponent({
             audioPending: false,
             audioPendingTask: 0,
 
+            thumbnail: "",
+            title: "",
+
             canSaveTime: true,
 
             displayConfig: false,
@@ -593,6 +610,9 @@ export default defineComponent({
             helpTooltip: "",
 
             animationColors: "",
+
+            showTitle: true,
+            showThumbnail: true,
 
             expandedTitle: false,
             expandedAlbum: false,
@@ -706,6 +726,14 @@ export default defineComponent({
 
         onUpdateAnimColors: function () {
             setAudioAnimationStyle(this.animationColors);
+        },
+
+        onUpdateShowTitle: function () {
+            setShowAudioTitle(this.showTitle);
+        },
+
+        onUpdateShowThumbnail: function () {
+            setShowAudioThumbnail(this.showThumbnail);
         },
 
         changeVolume: function (v: number) {
@@ -1401,6 +1429,8 @@ export default defineComponent({
             this.mediaErrorMessage = "";
             if (!this.metadata) {
                 this.audioURL = "";
+                this.thumbnail = "";
+                this.title = "";
                 this.onClearURL();
                 this.duration = 0;
                 this.loading = false;
@@ -1408,6 +1438,9 @@ export default defineComponent({
                 this.getAudioElement().load();
                 return;
             }
+
+            this.thumbnail = this.metadata.thumbnail;
+            this.title = this.metadata.title;
 
             if (this.metadata.encoded) {
                 this.audioURL = getAssetURL(this.metadata.url);
@@ -1489,7 +1522,7 @@ export default defineComponent({
         },
 
         audioAnimationFrame: function () {
-            if (!this.playing) {
+            if (!this.playing || this.animationColors === "none") {
                 return;
             }
 
@@ -1500,33 +1533,31 @@ export default defineComponent({
                 return;
             }
 
-            const rect = this.$el.getBoundingClientRect();
+            const rect = canvas.getBoundingClientRect();
             if (canvas.width !== rect.width || canvas.height !== rect.height) {
                 canvas.width = rect.width;
                 canvas.height = rect.height;
             }
 
-            const bufferLength = analyser.frequencyBinCount;
+            let bufferLength = analyser.frequencyBinCount;
 
             const dataArray = new Uint8Array(bufferLength);
+
+            analyser.getByteFrequencyData(dataArray);
+
+            bufferLength = Math.floor(Math.max(1, bufferLength / 2));
 
             const WIDTH = canvas.width;
             const HEIGHT = canvas.height;
 
-            const barWidth = (WIDTH / bufferLength) * 2.5;
+            const barWidth = Math.max(1, (WIDTH - (bufferLength - 1)) / bufferLength);
             let barHeight;
             let x = 0;
-
-            analyser.getByteFrequencyData(dataArray);
 
             const ctx = canvas.getContext("2d");
 
             ctx.fillStyle = this.theme === "light" ? "#fff" : "#000";
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-            if (this.animationColors === "none") {
-                return;
-            }
 
             for (let i = 0; i < bufferLength; i++) {
                 barHeight = dataArray[i];
@@ -1535,9 +1566,9 @@ export default defineComponent({
                     case "gradient":
                         {
                             if (this.theme === "light") {
-                                const r = Math.min(255, barHeight + 80 * (i / bufferLength));
-                                const g = 250 * (i / bufferLength);
-                                const b = 180;
+                                const r = Math.min(255, (barHeight + 25 * (i / bufferLength)) * 2);
+                                const g = Math.min(255, 250 * (i / bufferLength) * 2);
+                                const b = 100;
                                 ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
                             } else {
                                 const r = Math.min(255, barHeight + 25 * (i / bufferLength));
@@ -1804,12 +1835,18 @@ export default defineComponent({
             this.currentTimeSliceEnd = 0;
             this.updateCurrentTimeSlice();
         },
+
+        getThumbnail(thumb: string) {
+            return getAssetURL(thumb);
+        },
     },
     mounted: function () {
         // Load player preferences
         this.muted = getPlayerMuted();
         this.volume = getPlayerVolume();
         this.animationColors = getAudioAnimationStyle();
+        this.showTitle = getShowAudioTitle();
+        this.showThumbnail = getShowAudioThumbnail();
         this.subtitlesSize = getSubtitlesSize();
         this.subtitlesBg = getSubtitlesBackground();
         this.subtitlesHTML = getSubtitlesAllowHTML();

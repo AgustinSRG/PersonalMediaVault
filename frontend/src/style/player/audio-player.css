@@ -49,3 +49,35 @@
     height: 100%;
     z-index: 100;
 }
+
+.audio-no-animation-thumbnail {
+    width: 250px;
+    height: 250px;
+    border-radius: 125px;
+}
+
+.audio-no-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.audio-no-animation-title {
+    padding: 2rem;
+    font-size: x-large;
+    text-align: center;
+    font-weight: bold;
+    word-wrap: break-word;
+}
+
+.audio-no-animation-title.hidden {
+    visibility: hidden;
+}
