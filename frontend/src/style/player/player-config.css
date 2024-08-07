@@ -7,7 +7,7 @@
     background: var(--player-menu-background);
     padding-top: 8px;
     padding-bottom: 8px;
-    max-height: calc(50% - 80px);
+    max-height: calc(100% - 80px - 56px);
     min-width: 240px;
     max-width: calc(100% - 16px);
     overflow-y: auto;
