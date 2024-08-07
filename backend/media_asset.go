@@ -162,6 +162,8 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 
 	now := time.Now().UnixMilli()
 
+	isShortAnimation := media_type == MediaTypeVideo && duration < 10
+
 	meta := MediaMetadata{
 		Id:                       media.id,
 		Type:                     media_type,
@@ -193,7 +195,8 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 		ImageNotesAsset:          0,
 		HasExtendedDescription:   false,
 		ExtendedDescriptionAsset: 0,
-		IsAnimation:              media_type == MediaTypeVideo && duration < 10,
+		IsAnimation:              isShortAnimation,
+		ForceStartBeginning:      isShortAnimation,
 	}
 
 	media.lock.RequestWrite() // Request write
