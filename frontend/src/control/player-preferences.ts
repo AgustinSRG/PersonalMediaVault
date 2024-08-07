@@ -459,6 +459,24 @@ export function setAutoNextOnEnd(autoNext: boolean) {
     saveIntoLocalStorage(LS_KEY_AUTO_NEXT_ON_END, autoNext);
 }
 
+const LS_KEY_AUTO_NEXT_PAGE_DELAY = "player-pref-next-end-delay";
+
+/**
+ * Gets option to wait several seconds before playing the next media on pages
+ * @returns True for delay on auto next for pages
+ */
+export function getAutoNextPageDelay(): boolean {
+    return !!fetchFromLocalStorageCache(LS_KEY_AUTO_NEXT_PAGE_DELAY, true);
+}
+
+/**
+ * Sets option to wait several seconds before playing the next media on pages
+ * @param autoNextDelay True for delay on auto next for pages
+ */
+export function setAutoNextPageDelay(autoNextDelay: boolean) {
+    saveIntoLocalStorage(LS_KEY_AUTO_NEXT_PAGE_DELAY, autoNextDelay);
+}
+
 const LS_KEY_AUTO_NEXT_TIME = "player-pref-img-auto-next";
 
 /**
@@ -675,6 +693,7 @@ export function clearPlayerPreferences() {
     clearLocalStorage(LS_KEY_IMAGE_BACKGROUND);
 
     clearLocalStorage(LS_KEY_AUTO_NEXT_ON_END);
+    clearLocalStorage(LS_KEY_AUTO_NEXT_PAGE_DELAY);
     clearLocalStorage(LS_KEY_AUTO_NEXT_TIME);
 
     clearLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE);

@@ -373,6 +373,7 @@
             v-model:loop="loop"
             @update:loop="() => $emit('force-loop', loop)"
             v-model:nextEnd="nextEnd"
+            v-model:autoNextPageDelay="autoNextPageDelay"
             v-model:animColors="animationColors"
             v-model:showTitle="showTitle"
             v-model:showThumbnail="showThumbnail"
@@ -386,10 +387,12 @@
             @update:showThumbnail="onUpdateShowThumbnail"
             @update:subHTML="onUpdateSubHTML"
             @update:nextEnd="onUpdateNextEnd"
+            @update:autoNextPageDelay="onUpdateAutoNextPageDelay"
             @enter="enterControls"
             @leave="leaveControls"
             :isShort="isShort"
             @update-auto-next="setupAutoNextTimer"
+            :inAlbum="inAlbum"
         ></AudioPlayerConfig>
 
         <PlayerTopBar
@@ -431,6 +434,7 @@ import {
     CURRENT_TIME_UPDATE_DELAY,
     getAudioAnimationStyle,
     getAutoNextOnEnd,
+    getAutoNextPageDelay,
     getAutoNextTime,
     getCachedInitialTime,
     getPlayerMuted,
@@ -442,6 +446,7 @@ import {
     getSubtitlesSize,
     setAudioAnimationStyle,
     setAutoNextOnEnd,
+    setAutoNextPageDelay,
     setCachedInitialTime,
     setPlayerMuted,
     setPlayerVolume,
@@ -593,6 +598,7 @@ export default defineComponent({
 
             loop: false,
             nextEnd: false,
+            autoNextPageDelay: false,
 
             isShort: false,
 
@@ -844,7 +850,11 @@ export default defineComponent({
                     if (this.next) {
                         this.goNext();
                     } else if (this.pageNext) {
-                        this.showNextEnd();
+                        if (this.autoNextPageDelay) {
+                            this.showNextEnd();
+                        } else {
+                            this.goNext();
+                        }
                     }
                 }
             }
@@ -1666,6 +1676,10 @@ export default defineComponent({
             setAutoNextOnEnd(this.nextEnd);
         },
 
+        onUpdateAutoNextPageDelay: function () {
+            setAutoNextPageDelay(this.autoNextPageDelay);
+        },
+
         themeUpdated: function (theme: ColorThemeName) {
             this.theme = theme;
         },
@@ -1851,6 +1865,7 @@ export default defineComponent({
         this.subtitlesBg = getSubtitlesBackground();
         this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();
+        this.autoNextPageDelay = getAutoNextPageDelay();
 
         this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
 

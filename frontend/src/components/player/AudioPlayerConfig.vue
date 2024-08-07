@@ -42,6 +42,17 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
+
+            <tr v-if="!isShort && !inAlbum">
+                <td>
+                    <i class="fas fa-clock icon-config"></i>
+                    <b>{{ $t("Wait after audio ends") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="autoNextPageDelayState"></ToggleSwitch>
+                </td>
+            </tr>
+
             <tr class="tr-button" tabindex="0" @click="goToSpeeds" @keydown="clickOnEnter">
                 <td>
                     <i class="fas fa-gauge icon-config"></i>
@@ -296,6 +307,7 @@ export default defineComponent({
         "update:subHTML",
         "update:showTitle",
         "update:showThumbnail",
+        "update:autoNextPageDelay",
         "update-auto-next",
         "enter",
         "leave",
@@ -314,6 +326,8 @@ export default defineComponent({
         isShort: Boolean,
         showTitle: Boolean,
         showThumbnail: Boolean,
+        inAlbum: Boolean,
+        autoNextPageDelay: Boolean,
     },
     setup(props) {
         return {
@@ -328,6 +342,7 @@ export default defineComponent({
             subHTMLState: useVModel(props, "subHTML"),
             showTitleState: useVModel(props, "showTitle"),
             showThumbnailState: useVModel(props, "showThumbnail"),
+            autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),
         };
     },
     data: function () {
@@ -403,7 +418,7 @@ export default defineComponent({
             this.focus();
         },
 
-        changeAutoNext: function (b) {
+        changeAutoNext: function (b: number) {
             this.autoNext = b;
             setAutoNextTime(b);
             this.$emit("update-auto-next");
@@ -419,7 +434,7 @@ export default defineComponent({
             }
         },
 
-        renderAnimStyle: function (s) {
+        renderAnimStyle: function (s: string) {
             switch (s) {
                 case "gradient":
                     return this.$t("Gradient");
@@ -430,7 +445,7 @@ export default defineComponent({
             }
         },
 
-        setAnimStyle: function (s) {
+        setAnimStyle: function (s: string) {
             this.animColorsState = s;
         },
 
@@ -506,11 +521,11 @@ export default defineComponent({
             return this.$t("No subtitles");
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 

@@ -528,6 +528,8 @@
     "View Album": "アルバムを見る",
     "View media": "メディアを見る",
     "Volume": "音量",
+    "Wait after audio ends": "音声終了後に待機",
+    "Wait after video ends": "ビデオ終了後に待機",
     "White": "白",
     "Yes": "はい",
     "You are using an older version of PersonalMediaVault than the server's": "サーバーのバージョンよりも古いバージョンの PersonalMediaVault を使用しています。",

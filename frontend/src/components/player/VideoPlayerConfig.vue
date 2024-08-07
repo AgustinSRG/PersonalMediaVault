@@ -42,6 +42,17 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
+
+            <tr v-if="!isShort && !inAlbum">
+                <td>
+                    <i class="fas fa-clock icon-config"></i>
+                    <b>{{ $t("Wait after video ends") }}</b>
+                </td>
+                <td class="td-right">
+                    <ToggleSwitch v-model:val="autoNextPageDelayState"></ToggleSwitch>
+                </td>
+            </tr>
+
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSpeeds">
                 <td>
                     <i class="fas fa-gauge icon-config"></i>
@@ -403,6 +414,7 @@ export default defineComponent({
         "update:subBackground",
         "update:subHTML",
         "update:audioTrack",
+        "update:autoNextPageDelay",
         "update-auto-next",
         "enter",
         "leave",
@@ -421,6 +433,8 @@ export default defineComponent({
         rTick: Number,
         audioTrack: String,
         isShort: Boolean,
+        inAlbum: Boolean,
+        autoNextPageDelay: Boolean,
     },
     setup(props) {
         return {
@@ -435,6 +449,7 @@ export default defineComponent({
             subBackgroundState: useVModel(props, "subBackground"),
             subHTMLState: useVModel(props, "subHTML"),
             audioTrackState: useVModel(props, "audioTrack"),
+            autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),
         };
     },
     data: function () {
@@ -456,11 +471,11 @@ export default defineComponent({
         };
     },
     methods: {
-        changeResolution: function (i) {
+        changeResolution: function (i: number) {
             this.resolutionState = i;
         },
 
-        changeToggleDelay: function (d) {
+        changeToggleDelay: function (d: number) {
             this.toggleDelay = d;
             setTogglePlayDelay(d);
         },
@@ -471,12 +486,12 @@ export default defineComponent({
             SubtitlesController.OnSubtitlesChanged(s);
         },
 
-        changeAudioTrack: function (s) {
+        changeAudioTrack: function (s: string) {
             this.audioTrackState = s;
             setSelectedAudioTrack(s);
         },
 
-        changeAutoNext: function (b) {
+        changeAutoNext: function (b: number) {
             this.autoNext = b;
             setAutoNextTime(b);
             this.$emit("update-auto-next");
@@ -496,7 +511,7 @@ export default defineComponent({
             this.$emit("leave");
         },
 
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
@@ -505,7 +520,7 @@ export default defineComponent({
             this.focus();
         },
 
-        changeSpeed: function (s) {
+        changeSpeed: function (s: number) {
             this.speedState = s;
         },
 
@@ -514,7 +529,7 @@ export default defineComponent({
             this.focus();
         },
 
-        changeScale: function (s) {
+        changeScale: function (s: number) {
             this.scaleState = s;
         },
 
@@ -717,11 +732,11 @@ export default defineComponent({
             }
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 
