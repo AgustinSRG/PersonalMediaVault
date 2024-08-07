@@ -843,7 +843,7 @@ export default defineComponent({
                 if (this.nextEnd) {
                     if (this.next) {
                         this.goNext();
-                    } else {
+                    } else if (this.pageNext) {
                         this.showNextEnd();
                     }
                 }
@@ -1729,7 +1729,7 @@ export default defineComponent({
             if (this.loopForced) {
                 this.loop = this.loopForcedValue;
             } else {
-                this.loop = (!this.next && !this.pageNext) || !this.nextEnd;
+                this.loop = (!this.next && !this.pageNext && !this.inAlbum) || !this.nextEnd;
             }
         },
 
