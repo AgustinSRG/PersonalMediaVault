@@ -80,7 +80,7 @@ import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { MediaListItem } from "@/api/models";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
-import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -311,7 +311,7 @@ export default defineComponent({
         updateSearchParams: function () {
             const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
-            this.order = params.order;
+            this.order = orderSimple(params.order);
             this.updateLoadingFiller();
         },
 

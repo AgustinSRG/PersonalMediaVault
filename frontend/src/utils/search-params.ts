@@ -32,7 +32,7 @@ export interface SearchParams {
     /**
      * Order direction
      */
-    order: "asc" | "desc";
+    order: "asc" | "desc" | "rand";
 }
 
 /**
@@ -53,8 +53,24 @@ export function unPackSearchParams(params: string): SearchParams {
             res.page = 0;
         }
 
-        res.order = spl[1] !== "asc" ? "desc" : "asc";
+        switch (spl[1]) {
+            case "asc":
+            case "rand":
+                res.order = spl[1];
+                break;
+            default:
+                res.order = "desc";
+        }
     }
 
     return res;
+}
+
+/**
+ * Simplifies the order
+ * @param order Order parameter
+ * @returns Simplified order parameter
+ */
+export function orderSimple(order: "asc" | "desc" | "rand"): "asc" | "desc" {
+    return order === "asc" ? "asc" : "desc";
 }

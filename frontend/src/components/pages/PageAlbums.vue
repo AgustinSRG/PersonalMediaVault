@@ -19,7 +19,7 @@
                 </div>
             </div>
 
-            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu v-if="total > 0 && order !== 'rand'" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in pageSize" :key="f" class="search-result-item">
@@ -100,9 +100,9 @@
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
-            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu v-if="total > 0 && order !== 'rand'" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
-            <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
+            <div v-if="total > 0 && order !== 'rand'" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
         </div>
 
         <AlbumCreateModal v-model:display="displayAlbumCreate" @new-album="onNewAlbum"></AlbumCreateModal>
@@ -125,10 +125,11 @@ import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { AlbumListItem } from "@/api/models";
-import { PagesController } from "@/control/pages";
+import { EVENT_NAME_RANDOM_PAGE_REFRESH, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
+import { shuffleArray } from "@/utils/shuffle";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -311,7 +312,17 @@ export default defineComponent({
                 });
             }
 
-            if (this.order !== "asc") {
+            if (this.order === "asc") {
+                albumsList = albumsList.sort((a, b) => {
+                    if (a.nameLowerCase < b.nameLowerCase) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
+            } else if (this.order === "rand") {
+                albumsList = shuffleArray(albumsList);
+            } else {
                 albumsList = albumsList.sort((a, b) => {
                     if (a.lm > b.lm) {
                         return -1;
@@ -321,14 +332,6 @@ export default defineComponent({
                         return 1;
                     } else {
                         return -1;
-                    }
-                });
-            } else {
-                albumsList = albumsList.sort((a, b) => {
-                    if (a.nameLowerCase < b.nameLowerCase) {
-                        return -1;
-                    } else {
-                        return 1;
                     }
                 });
             }
@@ -343,7 +346,11 @@ export default defineComponent({
                 this.totalPages++;
             }
 
-            this.page = Math.max(0, Math.min(this.page, this.totalPages - 1));
+            if (this.order === "rand") {
+                this.page = 0;
+            } else {
+                this.page = Math.max(0, Math.min(this.page, this.totalPages - 1));
+            }
 
             const skip = pageSize * this.page;
 
@@ -381,7 +388,7 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        goToAlbum: function (album, e) {
+        goToAlbum: function (album, e: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -465,6 +472,8 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.updateList.bind(this));
 
         this.updateSearchParams();
         this.load();

@@ -17,7 +17,13 @@
                 <i class="fas fa-chevron-left"></i>
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
-            <button v-if="page === 'random'" type="button" :title="$t('Refresh')" class="page-header-btn" @click="triggerRefresh">
+            <button
+                v-if="page === 'random' || (hasOrderAlbums(page) && order === 'rand')"
+                type="button"
+                :title="$t('Refresh')"
+                class="page-header-btn"
+                @click="triggerRefresh"
+            >
                 <i class="fas fa-sync-alt"></i>
             </button>
             <button
@@ -30,15 +36,6 @@
                 <i class="fas fa-arrow-up-short-wide"></i>
             </button>
             <button
-                v-if="hasOrderAlbums(page) && order === 'desc'"
-                type="button"
-                :title="$t('Order alphabetically')"
-                class="page-header-btn"
-                @click="toggleOrder"
-            >
-                <i class="fas fa-arrow-down-a-z"></i>
-            </button>
-            <button
                 v-if="hasOrderDate(page) && order !== 'desc'"
                 type="button"
                 :title="$t('Show most recent')"
@@ -48,7 +45,25 @@
                 <i class="fas fa-arrow-down-short-wide"></i>
             </button>
             <button
-                v-if="hasOrderAlbums(page) && order !== 'desc'"
+                v-if="hasOrderAlbums(page) && order === 'desc'"
+                type="button"
+                :title="$t('Order alphabetically')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-arrow-down-a-z"></i>
+            </button>
+            <button
+                v-else-if="hasOrderAlbums(page) && order === 'asc'"
+                type="button"
+                :title="$t('Random')"
+                class="page-header-btn"
+                @click="toggleOrder"
+            >
+                <i class="fas fa-shuffle"></i>
+            </button>
+            <button
+                v-else-if="hasOrderAlbums(page)"
                 type="button"
                 :title="$t('Order by last modified date')"
                 class="page-header-btn"
@@ -250,20 +265,6 @@ export default defineComponent({
             AppStatus.ExpandPage();
         },
 
-        focusPage: function () {
-            nextTick(() => {
-                const page: any = document.querySelector(".page-content");
-                if (page) {
-                    const autoFocused = page.querySelector(".auto-focus");
-                    if (autoFocused) {
-                        autoFocused.focus();
-                    } else {
-                        page.focus();
-                    }
-                }
-            });
-        },
-
         closePage: function () {
             AppStatus.ClosePage();
             const player: any = document.querySelector(".player-container");
@@ -372,7 +373,12 @@ export default defineComponent({
 
         triggerRefresh: function () {
             AppEvents.Emit(EVENT_NAME_RANDOM_PAGE_REFRESH);
-            this.focusPage();
+            nextTick(() => {
+                const elementToFocus: any = document.querySelector(".page-content .search-results");
+                if (elementToFocus) {
+                    elementToFocus.focus();
+                }
+            });
         },
 
         openConfig: function () {
@@ -382,6 +388,8 @@ export default defineComponent({
         toggleOrder: function () {
             if (this.order === "desc") {
                 this.order = "asc";
+            } else if (this.order === "asc") {
+                this.order = "rand";
             } else {
                 this.order = "desc";
             }
