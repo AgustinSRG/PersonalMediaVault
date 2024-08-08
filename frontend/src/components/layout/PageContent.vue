@@ -389,7 +389,7 @@ export default defineComponent({
             if (this.order === "desc") {
                 this.order = "asc";
             } else if (this.order === "asc") {
-                this.order = "rand";
+                this.order = this.hasOrderAlbums(this.page) ? "rand" : "desc";
             } else {
                 this.order = "desc";
             }
