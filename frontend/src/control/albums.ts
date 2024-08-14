@@ -3,7 +3,6 @@
 "use strict";
 
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
-import { shuffleArray } from "@/utils/shuffle";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
@@ -422,12 +421,14 @@ export class AlbumsController {
 
         if (mediaPos >= 0) {
             if (AlbumsController.AlbumRandom) {
-                const shuffled = shuffleArray(AlbumsController.CurrentAlbumData.list).filter((a) => {
-                    return a.id !== mediaId;
-                });
+                let randomIndex = Math.floor(Math.random() * (AlbumsController.CurrentAlbumData.list.length - 1));
+
+                if (randomIndex >= mediaPos) {
+                    randomIndex++;
+                }
 
                 AlbumsController.CurrentPrev = null;
-                AlbumsController.CurrentNext = shuffled[1] || null;
+                AlbumsController.CurrentNext = AlbumsController.CurrentAlbumData.list[randomIndex] || null;
 
                 if (AlbumsController.AlbumLoop) {
                     if (AlbumsController.CurrentNext === null) {
