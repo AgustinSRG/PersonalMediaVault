@@ -707,7 +707,6 @@ export default defineComponent({
         },
         mouseLeavePlayer: function () {
             this.helpTooltip = "";
-            this.displayConfig = false;
         },
 
         tick() {

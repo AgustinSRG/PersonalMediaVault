@@ -1058,11 +1058,10 @@ export default defineComponent({
 
         mouseLeavePlayer: function () {
             this.timelineGrabbed = false;
-            if (!this.playing || this.expandedTitle || this.expandedAlbum) return;
+            if (!this.playing || this.expandedTitle || this.expandedAlbum || this.displayConfig) return;
             this.showControls = false;
             this.volumeShown = isTouchDevice();
             this.helpTooltip = "";
-            this.displayConfig = false;
         },
 
         tick() {
