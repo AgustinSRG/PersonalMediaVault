@@ -433,6 +433,7 @@
             v-model:loop="loop"
             @update:loop="() => $emit('force-loop', loop)"
             :url="videoURL"
+            :title="title"
             :canWrite="canWrite"
             :hasExtendedDescription="hasExtendedDescription"
             @stats="openStats"
@@ -581,6 +582,8 @@ export default defineComponent({
         return {
             playing: false,
             loading: true,
+
+            title: "",
 
             autoPlayApplied: false,
 
@@ -1656,11 +1659,14 @@ export default defineComponent({
             this.mediaErrorMessage = "";
             if (!this.metadata) {
                 this.videoURL = "";
+                this.title = "";
                 this.onClearURL();
                 this.duration = 0;
                 this.loading = false;
                 return;
             }
+
+            this.title = this.metadata.title;
 
             if (this.currentResolution < 0) {
                 if (this.metadata.encoded) {

@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -186,6 +187,21 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("X-Content-Type-Options", "nosniff")
 	response.Header().Set("Content-Length", fmt.Sprint(contentLength))
 	response.Header().Set("Cache-Control", "max-age=31536000")
+
+	if request.URL.Query().Get("download") == "force" {
+		fileName := request.URL.Query().Get("filename")
+		extPart := ext
+
+		if len(extPart) > 0 {
+			extPart = "." + extPart
+		}
+
+		if len(fileName) > 0 {
+			response.Header().Set("Content-Disposition", "attachment; filename=\""+url.PathEscape(fileName)+extPart+"\"")
+		} else {
+			response.Header().Set("Content-Disposition", "attachment")
+		}
+	}
 
 	if hasRange {
 		response.Header().Set("Content-Range", "bytes "+fmt.Sprint(fileSeek)+"-"+fmt.Sprint(fileEnding)+"/"+fmt.Sprint(s.FileSize()))

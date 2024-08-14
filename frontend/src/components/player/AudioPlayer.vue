@@ -416,6 +416,7 @@
             v-model:loop="loop"
             @update:loop="() => $emit('force-loop', loop)"
             :url="audioURL"
+            :title="title"
             :canWrite="canWrite"
             :hasExtendedDescription="hasExtendedDescription"
             @stats="openStats"

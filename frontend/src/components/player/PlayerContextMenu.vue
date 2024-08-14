@@ -174,6 +174,7 @@ export default defineComponent({
         y: Number,
 
         url: String,
+        title: String,
 
         loop: Boolean,
         fit: Boolean,
@@ -279,7 +280,15 @@ export default defineComponent({
             const link = document.createElement("a");
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.href = this.url;
+
+            const titlePart = this.title ? ("&filename=" + encodeURIComponent(this.title)) : "";
+
+            if ((this.url + "").includes("?")) {
+                link.href = this.url + "&download=force" + titlePart;
+            } else {
+                link.href = this.url + "?download=force" + titlePart;
+            }
+
             link.click();
             this.$emit("close");
         },

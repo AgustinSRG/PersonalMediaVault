@@ -263,6 +263,7 @@
             v-model:fit="fit"
             @update:fit="onUserFitUpdated"
             :url="imageURL"
+            :title="title"
             v-model:controls="showControlsState"
             :canWrite="canWrite"
             :hasExtendedDescription="hasExtendedDescription"
@@ -385,6 +386,8 @@ export default defineComponent({
     data: function () {
         return {
             loading: true,
+
+            title: "",
 
             imageURL: "",
             imagePending: false,
@@ -1000,9 +1003,12 @@ export default defineComponent({
 
             if (!this.metadata) {
                 this.imageURL = "";
+                this.title = "";
                 this.loading = false;
                 return;
             }
+
+            this.title = this.metadata.title;
 
             if (this.currentResolution < 0) {
                 if (this.metadata.encoded) {
