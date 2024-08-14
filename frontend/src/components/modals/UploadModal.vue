@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" :static="true">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Upload files") }}</div>

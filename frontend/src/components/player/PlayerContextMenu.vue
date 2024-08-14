@@ -281,7 +281,7 @@ export default defineComponent({
             link.target = "_blank";
             link.rel = "noopener noreferrer";
 
-            const titlePart = this.title ? ("&filename=" + encodeURIComponent(this.title)) : "";
+            const titlePart = this.title ? "&filename=" + encodeURIComponent(this.title) : "";
 
             if ((this.url + "").includes("?")) {
                 link.href = this.url + "&download=force" + titlePart;
