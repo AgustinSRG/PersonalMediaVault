@@ -1,38 +1,60 @@
-FROM golang:alpine
+#################################
+# PersonalMediaVault Dockerfile #
+#################################
 
-WORKDIR /root
-RUN mkdir /vault
+# Build backend
 
-# Install dependencies
+FROM golang:alpine as backend_builder
 
-RUN apk add --no-cache ffmpeg
-ENV FFMPEG_PATH=/usr/bin/ffmpeg
-ENV FFPROBE_PATH=/usr/bin/ffprobe
+    ## Copy backend
+    ADD backend /root/backend
 
-# Copy backend
+    ## Compile backend
+    WORKDIR /root/backend
+    RUN go build -o pmvd
 
-ADD backend /root/backend
+# Build frontend
 
-# Copy frontend
+FROM node:alpine as frontend_builder
 
-ADD frontend/dist /root/frontend
+    ## Copy frontend
+    ADD frontend /root/frontend
 
-ENV FRONTEND_PATH=/root/frontend
+    ## Build frontend
+    WORKDIR /root/frontend
+    RUN npm install
+    RUN npm run build
 
-# Compile backend
+# Prepare runner
 
-WORKDIR /root/backend
+FROM alpine as runner
 
-RUN go build -o pmvd
+    ## Install common libraries
+    RUN apk add gcompat
 
-WORKDIR /root
+    ## Install FFMPEG
+    RUN apk add --no-cache ffmpeg
+    ENV FFMPEG_PATH=/usr/bin/ffmpeg
+    ENV FFPROBE_PATH=/usr/bin/ffprobe
 
-# Ports
+    ## Copy backend binary
+    COPY --from=backend_builder /root/backend/pmvd /usr/bin/pmvd
 
-EXPOSE 80
-EXPOSE 443
+    ## Copy frontend
+    RUN mkdir -p /usr/lib/pmv/
+    COPY --from=frontend_builder /root/frontend/dist /usr/lib/pmv/frontend
+    ENV FRONTEND_PATH=/usr/lib/pmv/frontend
 
-# Entry point
+    ## Working directory
+    WORKDIR /root
 
-ENTRYPOINT ["/root/backend/pmvd"]
-CMD ["--daemon", "--vault-path", "/vault"]
+    ## Default vault folder
+    RUN mkdir /vault
+
+    ## Ports
+    EXPOSE 80
+    EXPOSE 443
+
+    ## Entry point
+    ENTRYPOINT ["/usr/bin/pmvd"]
+    CMD ["--daemon", "--vault-path", "/vault"]

@@ -16,15 +16,6 @@ jobs:
     - name: Set env RELEASE_VERSION
       run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-    - name: Install NodeJS
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
-
-    - name: Build VueJS frontend
-      working-directory: ./frontend
-      run: npm install && npm run build
-
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag asanrom/pmv:latest
       
