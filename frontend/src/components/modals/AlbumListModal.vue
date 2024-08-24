@@ -61,52 +61,52 @@
                     </button>
                 </div>
                 <div class="albums-list-table-container">
-                    <table class="modal-menu" v-if="editMode">
+                    <div class="albums-modal-menu" v-if="editMode">
                         <tr v-if="albums.length === 0">
                             <td colspan="2" class="albums-menu-empty">
                                 {{ $t("No albums found") }}
                             </td>
                         </tr>
-                        <tr
+                        <a
                             v-for="a in albums"
+                            :href="getAlbumURL(a.id, mid)"
                             :key="a.id"
-                            class="modal-menu-item"
-                            tabindex="0"
-                            @click="clickOnAlbum(a)"
+                            @click="clickOnAlbum(a, false, $event)"
                             @keydown="clickOnEnter"
+                            class="albums-modal-menu-item"
                         >
-                            <td class="modal-menu-item-icon">
+                            <div class="albums-modal-menu-item-icon">
                                 <i v-if="busy" class="fa fa-spinner fa-spin"></i>
                                 <i v-else-if="a.added" class="far fa-square-check"></i>
                                 <i v-else class="far fa-square"></i>
-                            </td>
-                            <td class="modal-menu-item-title">
+                            </div>
+                            <div class="albums-modal-menu-item-title">
                                 {{ a.name }}
-                            </td>
-                        </tr>
-                    </table>
-                    <table class="modal-menu" v-if="!editMode">
-                        <tr v-if="albums.length === 0">
-                            <td colspan="2" class="albums-menu-empty">
+                            </div>
+                        </a>
+                    </div>
+                    <div class="albums-modal-menu" v-if="!editMode">
+                        <div v-if="albums.length === 0">
+                            <div class="albums-menu-empty">
                                 {{ $t("No albums found") }}
-                            </td>
-                        </tr>
-                        <tr
+                            </div>
+                        </div>
+                        <a
                             v-for="a in albums"
+                            :href="getAlbumURL(a.id, mid)"
                             :key="a.id"
-                            class="modal-menu-item"
-                            tabindex="0"
-                            @click="goToAlbum(a)"
+                            @click="goToAlbum(a, $event)"
                             @keydown="clickOnEnter"
+                            class="albums-modal-menu-item"
                         >
-                            <td class="modal-menu-item-icon">
+                            <div class="albums-modal-menu-item-icon">
                                 <i class="fas fa-list-ol"></i>
-                            </td>
-                            <td class="modal-menu-item-title">
+                            </div>
+                            <div class="albums-modal-menu-item-title">
                                 {{ a.name }}
-                            </td>
-                        </tr>
-                    </table>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -139,6 +139,14 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
+import { generateURIQuery } from "@/utils/api";
+
+interface AlbumModalListItem {
+    id: number;
+    name: string;
+    nameLowerCase: string;
+    added?: boolean;
+}
 
 export default defineComponent({
     components: {
@@ -157,11 +165,11 @@ export default defineComponent({
     },
     data: function () {
         return {
-            albums: [],
+            albums: [] as AlbumModalListItem[],
             filter: "",
 
             mid: AppStatus.CurrentMedia,
-            mediaAlbums: [],
+            mediaAlbums: [] as number[],
 
             loading: true,
             busy: false,
@@ -249,12 +257,16 @@ export default defineComponent({
             this.displayAlbumCreate = true;
         },
 
-        onNewAlbum: function (albumId, albumName) {
+        onNewAlbum: function (albumId: number, albumName: string) {
             this.filter = albumName;
             this.updateAlbums();
         },
 
-        goToAlbum: function (album) {
+        goToAlbum: function (album: AlbumModalListItem, event?: Event) {
+            if (event) {
+                event.preventDefault();
+            }
+
             this.forceCloseSignal++;
             AppStatus.ClickOnAlbumByMedia(album.id, this.mid);
         },
@@ -266,7 +278,11 @@ export default defineComponent({
             this.autoFocus();
         },
 
-        clickOnAlbum: function (album, backToText?: boolean) {
+        clickOnAlbum: function (album: AlbumModalListItem, backToText?: boolean, event?: Event) {
+            if (event) {
+                event.preventDefault();
+            }
+
             if (this.busy) {
                 return;
             }
@@ -438,7 +454,7 @@ export default defineComponent({
                     return;
                 }
 
-                if (this.filter === this.albums[0].name) {
+                if (this.filter === this.albums[0].name || !this.filter) {
                     return;
                 }
 
@@ -448,12 +464,25 @@ export default defineComponent({
             }
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
+        },
+
+        getAlbumURL: function (albumId: number, mid: number): string {
+            return (
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                generateURIQuery({
+                    media: mid + "",
+                    album: albumId + "",
+                })
+            );
         },
     },
     mounted: function () {

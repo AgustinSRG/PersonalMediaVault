@@ -219,6 +219,12 @@
     border-collapse: collapse;
 }
 
+.albums-modal-menu {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 .modal-body.with-menu {
     padding: 0;
 }
@@ -227,7 +233,23 @@
     cursor: pointer;
 }
 
+.albums-modal-menu-item  {
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .modal-menu-item-title {
+    padding-top: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 1rem;
+    font-weight: bold;
+}
+
+.albums-modal-menu-item-title {
+    flex: 1;
     padding-top: 1rem;
     padding-right: 1rem;
     padding-bottom: 1rem;
@@ -240,8 +262,29 @@
     width: 2rem;
 }
 
-.modal-menu-item:hover {
+.albums-modal-menu-item-icon {
+    padding: 1rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-menu-item:hover,
+.albums-modal-menu-item:hover {
     background: var(--hover-color);
+}
+
+.modal-menu-item:focus,
+.albums-modal-menu-item:focus {
+    outline: none;
+}
+
+.modal-menu-item:focus-visible,
+.albums-modal-menu-item:focus-visible {
+    background: var(--hover-color);
+    outline: none;
 }
 
 .modal-body.no-padding {
