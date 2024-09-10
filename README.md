@@ -41,18 +41,18 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Download | Hash | Hash alg.  |
 |---|---|---|---|---|
-| 1.18.2 | amd64 | [Drive](https://drive.google.com/file/d/1gJwO1uxvRY2xfb07XXYQdK29D-CbRMxJ/view?usp=sharing) <br /> [Mega](https://mega.nz/file/MaMXFD4L#VQw2PoONxdF095ceCK85pTeq7j-3MJs0GjNDOGcbHGY) | `b559bc47a09fa1ba6c0423f3427ef658ac37db9bb6e90efc0ff974b6209e45b8` | SHA256 |
+| 1.18.3 | amd64 | [Drive](https://drive.google.com/file/d/1Ga37g25ngcT4YXb7A4c83pkWRlYSPO-h/view?usp=sharing) <br /> [Mega](https://mega.nz/file/USd3SJ6Y#IqYbKNp3bAOzLX1UWaIaib9tEoDDeTm01RhI5m5qKh8) | `1135dc8b74e986fee8e7b679cdf148056956f3da689beb23e45b99cb8d12e408` | SHA256 |
 
 Download it, and check its integrity using:
 
 ```sh
-sha256sum ./personalmediavault_1.18-2.deb
+sha256sum ./personalmediavault_1.18-3.deb
 ```
 
 Then, install it using `apt`:
 
 ```sh
-sudo apt install ./personalmediavault_1.18-2.deb
+sudo apt install ./personalmediavault_1.18-3.deb
 ```
 
 After the installation, the binary files will be available in `/usr/bin`, and the frontend files will be available in `/usr/lib/pmv/www`.
@@ -71,16 +71,16 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Language | Download | Hash |
 |---|---|---|---|---|
-| 1.18.2 | x64 | English | [Mega](https://mega.nz/file/xf123ChR#yqNoPTusb4R8PR_pFvGYk8YAUZPAOcgxyV7QTn9ZlGg) | SHA256: `5247F17F2D88F1E346BB2DCBC92207CBBFEEB003C12B4C640158CBEB5DFCB47A` |
-| 1.18.2 | x64 | Spanish | [Mega](https://mega.nz/file/deFi2AiJ#Nba6ul_FMOy9vXUvBBrHT3Hn9TQrDN3n__iiYGlP9q8) | SHA256: `5A277172E03421DD8E7BCA487416EDCD78943C46755E4D4CF1190229AB6BB565` |
+| 1.18.3 | x64 | English | [Mega](https://mega.nz/file/ALl33BhS#on1Za_La2-AEGSPb1roX7iWVFm9ELtA4ccLXzGVfE9I) | SHA256: `D9B9CD32F838E3B16E2CB866DE4C420E35B6027987E96636128706FB7418259C` |
+| 1.18.3 | x64 | Spanish | [Mega](https://mega.nz/file/wGdnRZiC#yplbaxgTNcV1fXbco2YU5bwQ9gcFxe2pYOC8UQ1PksI) | SHA256: `A5F3D2BD25EACCA3D9EB5BA7F2D147B61D35CF046971D34A7D8C329B25D38563` |
 
 In order to install Personal Media Vault in Windows, run the installer  and everything will be set up for the application to work.
 
 When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
 
 ```ps1
-Get-FileHash -Path "PersonalMediaVault-1.18.2-x64.msi" -Algorithm SHA256
-Get-FileHash -Path "PersonalMediaVault-1.18.2-x64-es.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-1.18.3-x64.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-1.18.3-x64-es.msi" -Algorithm SHA256
 ```
 
 After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
