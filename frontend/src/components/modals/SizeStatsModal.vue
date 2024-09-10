@@ -1,6 +1,6 @@
 <template>
     <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <div v-if="display" class="modal-dialog modal-md" role="document">
+        <div v-if="display" class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Size Statistics") }}
@@ -13,25 +13,66 @@
                 <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
             </div>
             <div v-if="!loading" class="modal-body no-padding table-responsive">
-                <table class="table table-text-overflow">
-                    <thead>
-                        <tr>
-                            <th class="text-left">{{ $t("Asset") }}</th>
-                            <th class="text-left">{{ $t("Size") }}</th>
-                        </tr>
-                    </thead>
+                <table class="table table-text-overflow no-margin">
                     <tbody>
                         <tr>
-                            <td>METADATA</td>
-                            <td>{{ renderSize(metaSize) }}</td>
+                            <td>{{ $t("Metadata") }}</td>
+                            <td class="text-right">{{ renderSize(metaSize) }}</td>
                         </tr>
-                        <tr v-for="a in assets" :key="a.key">
-                            <td>{{ a.name }}</td>
-                            <td>{{ renderSize(a.size) }}</td>
+
+                        <tr v-if="originalSize > 0">
+                            <td>{{ $t("Original") }}</td>
+                            <td class="text-right">{{ renderSize(originalSize) }}</td>
                         </tr>
+
+                        <tr v-if="resizedSize > 0">
+                            <td>{{ $t("Resized media") }}</td>
+                            <td class="text-right">{{ renderSize(resizedSize) }}</td>
+                        </tr>
+
+                        <tr v-if="thumbnailSize > 0">
+                            <td>{{ $t("Thumbnail") }}</td>
+                            <td class="text-right">{{ renderSize(thumbnailSize) }}</td>
+                        </tr>
+
+                        <tr v-if="videoPreviewsSize > 0">
+                            <td>{{ $t("Video previews") }}</td>
+                            <td class="text-right">{{ renderSize(videoPreviewsSize) }}</td>
+                        </tr>
+
+                        <tr v-if="subtitlesSize > 0">
+                            <td>{{ $t("Subtitles") }}</td>
+                            <td class="text-right">{{ renderSize(subtitlesSize) }}</td>
+                        </tr>
+
+                        <tr v-if="audioTracksSize > 0">
+                            <td>{{ $t("Audio tracks") }}</td>
+                            <td class="text-right">{{ renderSize(audioTracksSize) }}</td>
+                        </tr>
+
+                        <tr v-if="imageNotesSize > 0">
+                            <td>{{ $t("Image notes") }}</td>
+                            <td class="text-right">{{ renderSize(imageNotesSize) }}</td>
+                        </tr>
+
+                        <tr v-if="extendedDescriptionSize > 0">
+                            <td>{{ $t("Extended description") }}</td>
+                            <td class="text-right">{{ renderSize(extendedDescriptionSize) }}</td>
+                        </tr>
+
+                        <tr v-if="attachmentsSize > 0">
+                            <td>{{ $t("Attachments") }}</td>
+                            <td class="text-right">{{ renderSize(attachmentsSize) }}</td>
+                        </tr>
+
+                        <tr v-if="otherSize > 0">
+                            <td>{{ $t("Other assets") }}</td>
+                            <td class="text-right">{{ renderSize(otherSize) }}</td>
+                        </tr>
+
                         <tr>
                             <td class="bold">{{ $t("Total") }}</td>
-                            <td class="bold">{{ renderSize(total) }}</td>
+                            <td class="bold text-right">{{ renderSize(total) }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -67,7 +108,24 @@ export default defineComponent({
         return {
             loading: false,
             metaSize: 0,
-            assets: [],
+
+            originalSize: 0,
+
+            thumbnailSize: 0,
+
+            resizedSize: 0,
+
+            videoPreviewsSize: 0,
+
+            subtitlesSize: 0,
+            audioTracksSize: 0,
+            imageNotesSize: 0,
+            extendedDescriptionSize: 0,
+
+            attachmentsSize: 0,
+
+            otherSize: 0,
+
             total: 0,
 
             closeSignal: 0,
@@ -92,17 +150,56 @@ export default defineComponent({
                 .onSuccess((result) => {
                     this.loading = false;
                     this.metaSize = result.meta_size;
-                    this.assets = result.assets;
 
-                    let total = 0;
+                    this.originalSize = 0;
 
-                    total += result.meta_size;
+                    this.resizedSize = 0;
+
+                    this.thumbnailSize = 0;
+
+                    this.subtitlesSize = 0;
+                    this.audioTracksSize = 0;
+                    this.imageNotesSize = 0;
+
+                    this.extendedDescriptionSize = 0;
+
+                    this.attachmentsSize = 0;
+
+                    this.videoPreviewsSize = 0;
+
+                    this.otherSize = 0;
+
+                    this.total = 0;
+
+                    this.total += result.meta_size;
 
                     for (const asset of result.assets) {
-                        total += asset.size;
-                    }
+                        const assetName = asset.name + "";
 
-                    this.total = total;
+                        if (assetName === "ORIGINAL") {
+                            this.originalSize += asset.size;
+                        } else if (assetName === "THUMBNAIL") {
+                            this.thumbnailSize += asset.size;
+                        } else if (assetName === "VIDEO_PREVIEWS") {
+                            this.videoPreviewsSize += asset.size;
+                        } else if (assetName === "IMG_NOTES") {
+                            this.imageNotesSize += asset.size;
+                        } else if (assetName === "EXT_DESC") {
+                            this.extendedDescriptionSize += asset.size;
+                        } else if (assetName.startsWith("RESIZED_")) {
+                            this.resizedSize += asset.size;
+                        } else if (assetName.startsWith("SUBTITLES_")) {
+                            this.subtitlesSize += asset.size;
+                        } else if (assetName.startsWith("AUDIO_TRACK_")) {
+                            this.audioTracksSize += asset.size;
+                        } else if (assetName.startsWith("ATTACHMENT:")) {
+                            this.attachmentsSize += asset.size;
+                        } else {
+                            this.otherSize += asset.size;
+                        }
+
+                        this.total += asset.size;
+                    }
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
