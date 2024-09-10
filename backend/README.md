@@ -71,6 +71,8 @@ Also, here is a list of environment variables to configure other options:
 | SSL_KEY | Path to SSL private key. Required to enable HTTPS |
 | USING_PROXY | Set it to `YES` if you are using a reverse proxy. |
 | TEMP_FILE_DELETE_MODE | Set it to `SECURE` to clear all the bytes of temporal files (secure delete). |
+| VAULT_INITIAL_USER | The initial vault username to set if the vault folder is empty. |
+| VAULT_INITIAL_PASSWORD | The initial vault password to set if the vault folder is empty. |
 
 ## Documentation
 

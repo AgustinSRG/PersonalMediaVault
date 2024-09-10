@@ -6,12 +6,25 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http/httptest"
+	"os"
 )
 
 func LoginTest(server *httptest.Server) (session string, fingerprint string, e error) {
+	initialUser := os.Getenv("VAULT_INITIAL_USER")
+
+	if initialUser == "" {
+		initialUser = VAULT_DEFAULT_USER
+	}
+
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	body, err := json.Marshal(LoginAPIBody{
-		Username: VAULT_DEFAULT_USER,
-		Password: VAULT_DEFAULT_PASSWORD,
+		Username: initialUser,
+		Password: initialPassword,
 	})
 
 	if err != nil {

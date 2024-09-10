@@ -90,7 +90,19 @@ func InitializeTestVault() error {
 
 	apiRouter = RunHTTPServer("", "", true)
 
-	key, _, err := vault.credentials.UnlockVault(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD)
+	initialUser := os.Getenv("VAULT_INITIAL_USER")
+
+	if initialUser == "" {
+		initialUser = VAULT_DEFAULT_USER
+	}
+
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
+	key, _, err := vault.credentials.UnlockVault(initialUser, initialPassword)
 
 	if err != nil {
 		return err

@@ -227,7 +227,20 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		err2 = manager.SetRootCredentials(VAULT_DEFAULT_USER, VAULT_DEFAULT_PASSWORD, key)
+
+		initialUser := os.Getenv("VAULT_INITIAL_USER")
+
+		if initialUser == "" {
+			initialUser = VAULT_DEFAULT_USER
+		}
+
+		initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+		if initialPassword == "" {
+			initialPassword = VAULT_DEFAULT_PASSWORD
+		}
+
+		err2 = manager.SetRootCredentials(initialUser, initialPassword, key)
 
 		if err2 != nil {
 			return err2
@@ -256,7 +269,7 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 
 	if _, err := os.Stat(file); err == nil {
 		// exists
-		return errors.New("There is already an existing vault in the provided path.")
+		return errors.New("there is already an existing vault in the provided path")
 	} else if errors.Is(err, os.ErrNotExist) {
 		// does *not* exist
 
@@ -311,7 +324,7 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 		return err
 	}
 
-	// Store ecrypted key
+	// Store encrypted key
 	pwBytes := []byte(password)
 	ctBytes := make([]byte, len(pwBytes)+16)
 	copy(ctBytes[:len(pwBytes)], pwBytes)
@@ -579,7 +592,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		}
 
 		if !foundAccount {
-			return nil, nil, errors.New("Unknown user")
+			return nil, nil, errors.New("unknown user")
 		}
 	}
 
@@ -593,7 +606,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		pwDoubleHash := sha256.Sum256(pwHash[:])
 
 		if subtle.ConstantTimeCompare(pwDoubleHash[:], pwExpectedHash) != 1 {
-			return nil, nil, errors.New("Invalid credentials")
+			return nil, nil, errors.New("invalid credentials")
 		}
 
 		// Decrypt key
@@ -605,7 +618,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 
 		return key, &result, nil
 	} else {
-		return nil, nil, errors.New("Unknown credentials method")
+		return nil, nil, errors.New("unknown credentials method")
 	}
 }
 

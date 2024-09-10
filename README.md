@@ -91,7 +91,7 @@ You can run this project with docker, using the [official image](https://hub.doc
 
 In order to pull the image, type:
 
-```
+```sh
 docker pull asanrom/pmv
 ```
 
@@ -99,17 +99,17 @@ To run a personal media vault instance, you can create a container, which is goi
 
 Here is an example command to create a container:
 
-```
-docker run -p 80:80 -v /path/to/the/vault:/vault asanrom/pmv --daemon --clean --log-requests --vault-path /vault
+```sh
+docker run -p 80:80 -v /path/to/the/vault:/vault -e VAULT_INITIAL_USER=admin -e VAULT_INITIAL_PASSWORD=admin asanrom/pmv --daemon --clean --log-requests --vault-path /vault
 ```
 
 You can replace `/path/to/the/vault` for the path where you have your vault stored.
 
-For empty vaults, a default `admin`, with password `admin` will be created. You should change the password as soon as you first login into your vault to protect it with a strong password.
+For empty vaults, a default `admin`, with password `admin` will be created. You can also override them by changing the environment variables `VAULT_INITIAL_USER` and `VAULT_INITIAL_PASSWORD` respectively. You should change the password as soon as you first login into your vault to protect it with a strong password.
 
 For more options, run:
 
-```
+```sh
 docker run asanrom/pmv --help
 ```
 

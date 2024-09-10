@@ -334,6 +334,8 @@ func printHelp() {
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 	fmt.Println("        TEMP_FILE_DELETE_MODE      Set it to 'SECURE' to clear all the bytes of temporal files (secure delete).")
+	fmt.Println("        VAULT_INITIAL_USER         The initial vault username to set if the vault folder is empty.")
+	fmt.Println("        VAULT_INITIAL_PASSWORD     The initial vault password to set if the vault folder is empty.")
 }
 
 // Prints version to standard output

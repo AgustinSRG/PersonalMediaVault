@@ -6,11 +6,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
 func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 	// Check get username API
+	initialUser := os.Getenv("VAULT_INITIAL_USER")
+
+	if initialUser == "" {
+		initialUser = VAULT_DEFAULT_USER
+	}
+
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	statusCode, bodyResponseBytes, err := DoTestRequest(server, "GET", "/api/account", nil, session)
 
 	if err != nil {
@@ -35,8 +48,8 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 		t.Error(ErrorMismatch("Root", fmt.Sprint(res1.Root), "true"))
 	}
 
-	if res1.Username != VAULT_DEFAULT_USER {
-		t.Error(ErrorMismatch("Username", fmt.Sprint(res1.Username), VAULT_DEFAULT_USER))
+	if res1.Username != initialUser {
+		t.Error(ErrorMismatch("Username", fmt.Sprint(res1.Username), initialUser))
 	}
 
 	if !res1.Write {
@@ -60,7 +73,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	body, err := json.Marshal(ChangeUsernameBody{
 		Username: "test",
-		Password: VAULT_DEFAULT_PASSWORD,
+		Password: initialPassword,
 	})
 
 	if err != nil {
@@ -83,7 +96,7 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	body, err = json.Marshal(ChangePasswordBody{
 		Password:    "test_password",
-		OldPassword: VAULT_DEFAULT_PASSWORD,
+		OldPassword: initialPassword,
 	})
 
 	if err != nil {
