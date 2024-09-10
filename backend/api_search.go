@@ -333,16 +333,18 @@ func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
 	limit := 50
 	limitStr := request.URL.Query().Get("limit")
 	if limitStr != "" {
-		limit, err := strconv.ParseInt(limitStr, 10, 64)
+		limitParsed, err := strconv.ParseInt(limitStr, 10, 32)
 
-		if err != nil || limit < 1 {
+		if err != nil || limitParsed < 1 {
 			response.WriteHeader(400)
 			return
 		}
 
-		if limit > PAGE_SIZE_LIMIT {
-			limit = PAGE_SIZE_LIMIT
+		if limitParsed > PAGE_SIZE_LIMIT {
+			limitParsed = PAGE_SIZE_LIMIT
 		}
+
+		limit = int(limitParsed)
 	}
 
 	tagMode := TagFilterAllOf

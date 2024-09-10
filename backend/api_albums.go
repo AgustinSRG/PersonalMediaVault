@@ -366,7 +366,7 @@ func api_setAlbumList(response http.ResponseWriter, request *http.Request) {
 	album_found, err := GetVault().albums.SetAlbumList(album_id, p.List, session.key)
 
 	if err != nil {
-		if err == ALBUM_MAX_SIZE_REACHED_ERR {
+		if err == ErrAlbumMaxSizeReached {
 			ReturnAPIError(response, 400, "MAX_SIZE_REACHED", "Album max size reached: "+fmt.Sprint(ALBUM_MAX_SIZE))
 			return
 		}
@@ -424,7 +424,7 @@ func api_albumAddMedia(response http.ResponseWriter, request *http.Request) {
 	album_found, err := GetVault().albums.AddMediaToAlbum(album_id, p.Id, session.key)
 
 	if err != nil {
-		if err == ALBUM_MAX_SIZE_REACHED_ERR {
+		if err == ErrAlbumMaxSizeReached {
 			ReturnAPIError(response, 400, "MAX_SIZE_REACHED", "Album max size reached: "+fmt.Sprint(ALBUM_MAX_SIZE))
 			return
 		}
@@ -530,7 +530,7 @@ func api_albumMoveMedia(response http.ResponseWriter, request *http.Request) {
 	album_found, err := GetVault().albums.MoveMediaToPositionInAlbum(album_id, p.Id, p.Position, session.key)
 
 	if err != nil {
-		if err == ALBUM_MAX_SIZE_REACHED_ERR {
+		if err == ErrAlbumMaxSizeReached {
 			ReturnAPIError(response, 400, "MAX_SIZE_REACHED", "Album max size reached: "+fmt.Sprint(ALBUM_MAX_SIZE))
 			return
 		}

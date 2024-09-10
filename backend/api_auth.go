@@ -95,7 +95,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err, s := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime, "")
+	s, err := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime, "")
 
 	if err != nil {
 		LogError(err)

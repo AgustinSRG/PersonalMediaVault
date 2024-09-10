@@ -59,7 +59,7 @@ func api_loginWithInviteCode(response http.ResponseWriter, request *http.Request
 
 	LAST_INVALID_PASSWORD_MU.Unlock()
 
-	err, s := GetVault().sessions.CreateSession("", key, false, false, duration, invitedBy)
+	s, err := GetVault().sessions.CreateSession("", key, false, false, duration, invitedBy)
 
 	if err != nil {
 		LogError(err)
@@ -233,7 +233,14 @@ func api_generateInviteCode(response http.ResponseWriter, request *http.Request)
 		expirationTime = SESSION_EXPIRATION_TIME_YEAR
 	}
 
-	err, code, not_after := GetVault().invites.GenerateCode(session.user, session.key, expirationTime)
+	code, not_after, err := GetVault().invites.GenerateCode(session.user, session.key, expirationTime)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
 
 	now := time.Now().UnixMilli()
 

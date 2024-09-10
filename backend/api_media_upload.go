@@ -353,7 +353,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 		return // Not applicable
 	}
 
-	err, tmpPath, files := ExtractSubtitlesFiles(tempFile, probe_data)
+	tmpPath, files, err := ExtractSubtitlesFiles(tempFile, probe_data)
 
 	if err != nil {
 		LogError(err)
@@ -474,7 +474,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 		return // Not applicable
 	}
 
-	err, tmpPath, files := ExtractAudioTracks(tempFile, probe_data)
+	tmpPath, files, err := ExtractAudioTracks(tempFile, probe_data)
 
 	if err != nil {
 		LogError(err)

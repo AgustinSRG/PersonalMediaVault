@@ -111,7 +111,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	}
 
 	if data.Format == nil {
-		return nil, errors.New("Invalid media file")
+		return nil, errors.New("invalid media file")
 	}
 
 	format := data.Format.FormatName
@@ -139,10 +139,6 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 		} else {
 			// Video
 			duration := data.Format.Duration()
-
-			if err != nil {
-				return nil, err
-			}
 
 			encoded := validateFormatNameVideo(format)
 			canCopyVideo := true
@@ -193,7 +189,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 
 		return &result, nil
 	} else {
-		return nil, errors.New("Invalid media file. No audio or video streams.")
+		return nil, errors.New("invalid media file. No audio or video streams")
 	}
 }
 
@@ -824,10 +820,10 @@ type ExtractedSubtitlesFile struct {
 // probedata - Media properties
 // Returns:
 //
-//	1 - error
-//	2 - Temporal path created, where the files where stored
-//	3 - List of files
-func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedSubtitlesFile) {
+//		1 - Temporal path created, where the files where stored
+//		2 - List of files
+//	 3  - error
+func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (string, []ExtractedSubtitlesFile, error) {
 	result := make([]ExtractedSubtitlesFile, 0)
 	addedMap := make(map[string]bool)
 
@@ -835,11 +831,11 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 	data, err := ffprobe.GetProbeData(originalFilePath, 5*time.Second)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	if data.Format == nil {
-		return errors.New("Invalid media file"), "", nil
+		return "", nil, errors.New("invalid media file")
 	}
 
 	subtitleStreams := data.GetStreams(ffprobe.StreamSubtitle)
@@ -847,13 +843,13 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 	tmpFolder, err := GetTemporalFolder(false)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	err = os.MkdirAll(tmpFolder, FOLDER_PERMISSION)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	for i := 0; i < len(subtitleStreams); i++ {
@@ -890,7 +886,7 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 		addedMap[lang] = true
 	}
 
-	return nil, tmpFolder, result
+	return tmpFolder, result, nil
 }
 
 // Extracts a subtitles file from a media file (usually .mkv)
@@ -938,10 +934,10 @@ type ExtractedAudioFile struct {
 // probedata - Media properties
 // Returns:
 //
-//	1 - error
-//	2 - Temporal path created, where the files where stored
-//	3 - List of files
-func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) (error, string, []ExtractedAudioFile) {
+//	1 - Temporal path created, where the files where stored
+//	2 - List of files
+//	3 - error
+func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) (string, []ExtractedAudioFile, error) {
 	result := make([]ExtractedAudioFile, 0)
 	addedMap := make(map[string]bool)
 
@@ -949,11 +945,11 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 	data, err := ffprobe.GetProbeData(originalFilePath, 5*time.Second)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	if data.Format == nil {
-		return errors.New("Invalid media file"), "", nil
+		return "", nil, errors.New("invalid media file")
 	}
 
 	audioStreams := data.GetStreams(ffprobe.StreamAudio)
@@ -961,13 +957,13 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 	tmpFolder, err := GetTemporalFolder(false)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	err = os.MkdirAll(tmpFolder, FOLDER_PERMISSION)
 
 	if err != nil {
-		return err, "", nil
+		return "", nil, err
 	}
 
 	if len(audioStreams) > 1 {
@@ -1010,7 +1006,7 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 		}
 	}
 
-	return nil, tmpFolder, result
+	return tmpFolder, result, nil
 }
 
 // Extracts audio track from a media file (usually .mkv)

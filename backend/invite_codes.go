@@ -93,15 +93,15 @@ func (im *InvitationManager) GetCodeByUser(user string) (has_code bool, code str
 // key - Vault decryption key
 // duration - Duration for the invite session
 // Returns:
-//   - err The error
 //   - code The generated invite code
 //   - not_after Code expiration (Unix milliseconds)
-func (im *InvitationManager) GenerateCode(user string, key []byte, duration int64) (err error, code string, not_after int64) {
+//   - err The error
+func (im *InvitationManager) GenerateCode(user string, key []byte, duration int64) (code string, not_after int64, err error) {
 	codeBytes := make([]byte, 3)
 	_, err_rand := rand.Read(codeBytes)
 
 	if err_rand != nil {
-		return err_rand, "", 0
+		return "", 0, err_rand
 	}
 
 	codeStr := strings.ToUpper(hex.EncodeToString(codeBytes))
@@ -117,7 +117,7 @@ func (im *InvitationManager) GenerateCode(user string, key []byte, duration int6
 		duration:  duration,
 	}
 
-	return nil, codeStr, codeExpiration
+	return codeStr, codeExpiration, nil
 }
 
 // Clears user invite code

@@ -14,7 +14,7 @@ import (
 
 const ALBUM_MAX_SIZE = 1024
 
-var ALBUM_MAX_SIZE_REACHED_ERR = errors.New("Max size reached for the album")
+var ErrAlbumMaxSizeReached = errors.New("max size reached for the album")
 
 // Album data
 type VaultAlbumData struct {
@@ -242,7 +242,7 @@ func (am *VaultAlbumsManager) AddMediaToAlbum(album_id uint64, media_id uint64, 
 
 	if len(old_list) >= ALBUM_MAX_SIZE {
 		am.CancelWrite()
-		return false, ALBUM_MAX_SIZE_REACHED_ERR
+		return false, ErrAlbumMaxSizeReached
 	}
 
 	new_list := append(old_list, media_id)
@@ -327,7 +327,7 @@ func (am *VaultAlbumsManager) MoveMediaToPositionInAlbum(album_id uint64, media_
 	if !data.Albums[album_id].HasMedia(media_id) {
 		if len(old_list) >= ALBUM_MAX_SIZE {
 			am.CancelWrite()
-			return false, ALBUM_MAX_SIZE_REACHED_ERR
+			return false, ErrAlbumMaxSizeReached
 		}
 	}
 
@@ -379,7 +379,7 @@ func (am *VaultAlbumsManager) MoveMediaToPositionInAlbum(album_id uint64, media_
 // Returns true if success
 func (am *VaultAlbumsManager) SetAlbumList(album_id uint64, media_list []uint64, key []byte) (bool, error) {
 	if len(media_list) > ALBUM_MAX_SIZE {
-		return false, ALBUM_MAX_SIZE_REACHED_ERR
+		return false, ErrAlbumMaxSizeReached
 	}
 
 	data, err := am.StartWrite(key)
@@ -503,7 +503,7 @@ func (am *VaultAlbumsManager) OnMediaThumbnailUpdate(media_id uint64, key []byte
 	}
 
 	for album_id := range data.Albums {
-		if data.Albums[album_id].List == nil || len(data.Albums[album_id].List) == 0 {
+		if len(data.Albums[album_id].List) == 0 {
 			continue
 		}
 

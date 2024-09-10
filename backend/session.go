@@ -67,12 +67,12 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 // expirationTime - Expiration time (Milliseconds)
 // invitedBy - User who invited
 // Returns an error if failed, and the session ID if successful
-func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool, expirationTime int64, invitedBy string) (error, string) {
+func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool, expirationTime int64, invitedBy string) (string, error) {
 	sessionBytes := make([]byte, 32)
 	_, err_rand := rand.Read(sessionBytes)
 
 	if err_rand != nil {
-		return err_rand, ""
+		return "", err_rand
 	}
 
 	sessionHash := uint8(sessionBytes[0])
@@ -115,7 +115,7 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 		go sm.vault.albums.PreCacheAlbums(key)
 	}
 
-	return nil, sessionId
+	return sessionId, nil
 }
 
 // Closes a session

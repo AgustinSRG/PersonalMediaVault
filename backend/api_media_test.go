@@ -66,7 +66,9 @@ func _TestFetchMetadata(server *httptest.Server, session string, t *testing.T, m
 	}
 
 	if statusCode != 200 {
-		return ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200")
+		err := ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200")
+		t.Error(err)
+		return err
 	}
 
 	return json.Unmarshal(bodyResponseBytes, &res)
