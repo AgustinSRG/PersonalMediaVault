@@ -2,7 +2,7 @@
     <div class="album-container" tabindex="-1">
         <div v-if="!loading && loadedAlbum" class="album-header">
             <div class="album-header-title">
-                <div class="album-title"><i class="fas fa-list-ol"></i> {{ albumName }}</div>
+                <div class="album-title" :title="albumName"><i class="fas fa-list-ol"></i> {{ albumName }}</div>
                 <button type="button" :title="$t('Close')" class="album-header-btn album-close-btn" @click="closePage">
                     <i class="fas fa-times"></i>
                 </button>
