@@ -150,15 +150,6 @@
     max-width: 50%;
 }
 
-.player-tooltip-image {
-    height: 108px;
-    padding-bottom: 0.5rem;
-}
-
-.player-min .player-tooltip-image {
-    height: 72px;
-}
-
 .player-help-tip-left {
     left: 8px;
 }

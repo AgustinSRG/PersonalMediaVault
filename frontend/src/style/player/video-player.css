@@ -87,3 +87,93 @@
 .no-controls .video-scroller::-webkit-scrollbar-thumb {
     background: transparent;
 }
+
+/* Video previews */
+
+.player-tooltip-image {
+    position: relative;
+    height: 108px;
+    width: 192px;
+    margin-bottom: 0.5rem;
+}
+
+.player-tooltip-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+@keyframes delayed-tooltip-image-loader {
+    0% {
+        opacity: 0;
+    }
+    99% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.player-tooltip-image-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: var(--player-loader-background);
+    animation-name: delayed-tooltip-image-loader;
+    animation-duration: 0.33s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-min .player-tooltip-image {
+    height: 72px;
+    width: 128px;
+}
+
+@keyframes player-tooltip-image-loader-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.player-tooltip-image-loader {
+    display: inline-block;
+    position: relative;
+    width: 32px;
+    height: 32px;
+}
+
+.player-tooltip-image-loader div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    border: 2px solid var(--theme-fg-color);
+    border-color: var(--theme-fg-color) transparent transparent transparent;
+    border-radius: 50%;
+    animation: player-tooltip-image-loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.player-tooltip-image-loader div:nth-child(1) {
+    animation-delay: -0.45s;
+}
+
+.player-tooltip-image-loader div:nth-child(2) {
+    animation-delay: -0.3s;
+}
+
+.player-tooltip-image-loader div:nth-child(3) {
+    animation-delay: -0.15s;
+}

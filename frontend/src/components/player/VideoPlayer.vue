@@ -375,8 +375,16 @@
         </div>
 
         <div v-if="tooltipShown" class="player-tooltip" :style="{ left: tooltipX + 'px' }">
-            <div v-if="tooltipImage && !tooltipImageInvalid">
-                <img class="player-tooltip-image" :src="tooltipImage" @error="onTooltipImageError" />
+            <div v-if="tooltipImage && !tooltipImageInvalid" class="player-tooltip-image">
+                <img :src="tooltipImage" @error="onTooltipImageError" @load="onTooltipImageLoaded" />
+                <div class="player-tooltip-image-loading" v-if="tooltipImageLoading">
+                    <div class="player-tooltip-image-loader">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
             </div>
             <div class="player-tooltip-text">{{ tooltipText }}</div>
             <div v-if="tooltipTimeSlice" class="player-tooltip-text">
@@ -609,6 +617,7 @@ export default defineComponent({
             tooltipX: 0,
             tooltipEventX: 0,
             tooltipImage: "",
+            tooltipImageLoading: false,
             tooltipImageInvalid: false,
 
             showControls: true,
@@ -1282,6 +1291,7 @@ export default defineComponent({
             this.tooltipImage = this.getThumbnailForTime(time);
             if (oldTooltipImage !== this.tooltipImage) {
                 this.tooltipImageInvalid = false;
+                this.tooltipImageLoading = true;
             }
             this.tooltipEventX = x;
 
@@ -1710,6 +1720,10 @@ export default defineComponent({
 
         onFeedBackAnimationEnd: function () {
             this.feedback = "";
+        },
+
+        onTooltipImageLoaded: function () {
+            this.tooltipImageLoading = false;
         },
 
         onTooltipImageError: function () {

@@ -2,10 +2,13 @@
 
 @keyframes delayed-player-loader {
     0% {
-        visibility: hidden;
+        opacity: 0;
+    }
+    99% {
+        opacity: 0;
     }
     100% {
-        visibility: visible;
+        opacity: 1;
     }
 }
 
