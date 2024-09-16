@@ -12,7 +12,6 @@
                     <tr>
                         <th class="text-left">{{ $t("Name") }}</th>
                         <th class="text-left">{{ $t("Size") }}</th>
-                        <th class="text-right"></th>
                         <th class="text-right td-shrink" v-if="canWrite"></th>
                     </tr>
                 </thead>
@@ -24,7 +23,9 @@
                         <td class="text-right td-shrink" v-if="canWrite"></td>
                     </tr>
                     <tr v-for="att in attachments" :key="att.id">
-                        <td class="bold" v-if="attachmentEdit != att.id">{{ att.name }}</td>
+                        <td class="bold" v-if="attachmentEdit != att.id">
+                            <a :href="getAttachmentUrl(att)" target="_blank" rel="noopener noreferrer">{{ att.name }}</a>
+                        </td>
                         <td v-if="attachmentEdit == att.id">
                             <input
                                 type="text"
@@ -34,12 +35,7 @@
                                 v-model="attachmentEditName"
                             />
                         </td>
-                        <td>{{ renderSize(att.size) }}</td>
-                        <td class="text-right td-shrink one-line">
-                            <button type="button" class="btn btn-primary btn-xs mr-1" :disabled="busy" @click="downloadAttachment(att)">
-                                <i class="fas fa-download"></i> {{ $t("Download") }}
-                            </button>
-                        </td>
+                        <td class="one-line">{{ renderSize(att.size) }}</td>
                         <td class="text-right td-shrink one-line" v-if="canWrite">
                             <button
                                 v-if="attachmentEdit != att.id"
@@ -326,12 +322,8 @@ export default defineComponent({
                 });
         },
 
-        downloadAttachment: function (att: MediaAttachment) {
-            const link = document.createElement("a");
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.href = getAssetURL(att.url);
-            link.click();
+        getAttachmentUrl: function (att: MediaAttachment): string {
+            return getAssetURL(att.url);
         },
 
         editAttachment: function (att: MediaAttachment) {
