@@ -349,7 +349,7 @@ export default defineComponent({
         return {
             page: "",
             speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-            animStyles: ["gradient", "", "none"],
+            animStyles: ["gradient", "rainbow", "", "none"],
 
             subtitles: "",
 
@@ -438,6 +438,8 @@ export default defineComponent({
             switch (s) {
                 case "gradient":
                     return this.$t("Gradient");
+                case "rainbow":
+                    return this.$t("Rainbow");
                 case "none":
                     return this.$t("None");
                 default:

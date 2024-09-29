@@ -1597,6 +1597,12 @@ export default defineComponent({
                             }
                         }
                         break;
+                    case "rainbow":
+                        {
+                            ctx.fillStyle =
+                                "hsl(" + (i * 300) / bufferLength + ", " + "60%" + ", " + (0.3 + 0.3 * (barHeight / 255)) * 100 + "%)";
+                        }
+                        break;
                     default:
                         ctx.fillStyle = this.theme === "light" ? "rgba(0, 0, 0, 0.5)" : "rgba(255, 255, 255, 0.5)";
                 }
