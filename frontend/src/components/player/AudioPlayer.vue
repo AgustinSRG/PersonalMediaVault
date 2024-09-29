@@ -552,6 +552,7 @@ export default defineComponent({
             audioContext: null as AudioContext,
             audioSource: null,
             audioAnalyser: null as AnalyserNode,
+            audioAnalyserData: null as Uint8Array,
             rendererTimer: null,
             subTag: "",
             nextEndTimer: null,
@@ -1485,6 +1486,7 @@ export default defineComponent({
             }
 
             this.audioAnalyser = null;
+            this.audioAnalyserData = null;
         },
 
         setupAudioRenderer: function () {
@@ -1507,11 +1509,14 @@ export default defineComponent({
 
                 analyser.fftSize = 256;
 
+                this.audioAnalyserData = new Uint8Array(analyser.frequencyBinCount);
+
                 this.rendererTimer = setInterval(this.audioAnimationFrame.bind(this), Math.floor(1000 / 30));
             } else {
                 this.audioContext = null;
                 this.audioSource = null;
                 this.audioAnalyser = null;
+                this.audioAnalyserData = null;
             }
         },
 
@@ -1551,7 +1556,11 @@ export default defineComponent({
 
             let bufferLength = analyser.frequencyBinCount;
 
-            const dataArray = new Uint8Array(bufferLength);
+            const dataArray = this.audioAnalyserData;
+
+            if (!dataArray) {
+                return;
+            }
 
             analyser.getByteFrequencyData(dataArray);
 
@@ -1561,16 +1570,16 @@ export default defineComponent({
             const HEIGHT = canvas.height;
 
             const barWidth = Math.max(1, (WIDTH - (bufferLength - 1)) / bufferLength);
-            let barHeight;
-            let x = 0;
 
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
             ctx.fillStyle = this.theme === "light" ? "#fff" : "#000";
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+            let x = 0;
+
             for (let i = 0; i < bufferLength; i++) {
-                barHeight = dataArray[i];
+                const barHeight = dataArray[i];
 
                 switch (this.animationColors) {
                     case "gradient":
