@@ -6,39 +6,68 @@
     left: 0;
     bottom: 70px;
     width: 100%;
-    padding: 1rem;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .player-subtitles-container.controls-hidden {
     bottom: 0;
 }
 
+.player-subtitles-container-inner {
+    padding: 1rem;
+    text-align: center;
+}
+
 .player-subtitles {
     display: inline;
     color: var(--theme-fg-color);
     padding: 0.5rem;
-    font-weight: bold;
+    font-weight: 700;
+    font-family: Arial, Helvetica, sans-serif;
+    --base-subtitles-section: 0.035;
+    --base-subtitles-size: calc((100vh - 56px - 56px) * var(--base-subtitles-section));
+    font-size: var(--base-subtitles-size);
 }
 
-.player-subtitles-s {
-    font-size: 14px;
+.full-screen .player-subtitles {
+    --base-subtitles-size: calc(100vh * var(--base-subtitles-section));
 }
 
-.player-subtitles-m {
-    font-size: 16px;
+@media (max-height: 650px) {
+    .player-subtitles {
+        --base-subtitles-size: 20px;
+    }
+    .full-screen .player-subtitles {
+        --base-subtitles-size: 22px;
+    }
 }
 
-.player-subtitles-l {
-    font-size: 24px;
+.player-subtitles-bg-0 .player-subtitles {
+    -webkit-text-stroke: thick var(--bg-opaque-100);
+    paint-order: stroke fill;
+    text-shadow: none;
 }
 
-.player-subtitles-xl {
-    font-size: 32px;
+.player-subtitles.player-subtitles-s {
+    font-size: calc(var(--base-subtitles-size) * 0.75);
 }
 
-.player-subtitles-xxl {
-    font-size: 48px;
+.player-subtitles.player-subtitles-m {
+    font-size: calc(var(--base-subtitles-size) * 1);
+}
+
+.player-subtitles.player-subtitles-l {
+    font-size: calc(var(--base-subtitles-size) * 1.5);
+}
+
+.player-subtitles.player-subtitles-xl {
+    font-size: calc(var(--base-subtitles-size) * 2);
+}
+
+.player-subtitles.player-subtitles-xxl {
+    font-size: calc(var(--base-subtitles-size) * 2.5);
 }
 
 .player-subtitles-bg-0 {

@@ -107,25 +107,34 @@
             :errorMessage="mediaErrorMessage"
         ></PlayerEncodingPending>
 
-        <div class="player-subtitles-container" :class="{ 'controls-hidden': !showControls }">
+        <div
+            class="player-subtitles-container"
+            :class="{
+                'controls-hidden': !showControls,
+            }"
+        >
             <div
-                class="player-subtitles"
-                v-if="subtitles"
-                v-html="subtitles"
+                class="player-subtitles-container-inner"
                 :class="{
-                    'player-subtitles-s': subtitlesSize === 's',
-                    'player-subtitles-m': subtitlesSize === 'm',
-                    'player-subtitles-l': subtitlesSize === 'l',
-                    'player-subtitles-xl': subtitlesSize === 'xl',
-                    'player-subtitles-xxl': subtitlesSize === 'xxl',
-
                     'player-subtitles-bg-0': subtitlesBg === '0',
                     'player-subtitles-bg-25': subtitlesBg === '25',
                     'player-subtitles-bg-50': subtitlesBg === '50',
                     'player-subtitles-bg-75': subtitlesBg === '75',
                     'player-subtitles-bg-100': subtitlesBg === '100',
                 }"
-            ></div>
+            >
+                <div
+                    class="player-subtitles"
+                    v-html="subtitles"
+                    :class="{
+                        'player-subtitles-s': subtitlesSize === 's',
+                        'player-subtitles-m': subtitlesSize === 'm',
+                        'player-subtitles-l': subtitlesSize === 'l',
+                        'player-subtitles-xl': subtitlesSize === 'xl',
+                        'player-subtitles-xxl': subtitlesSize === 'xxl',
+                    }"
+                ></div>
+            </div>
         </div>
 
         <TimeSlicesEditHelper

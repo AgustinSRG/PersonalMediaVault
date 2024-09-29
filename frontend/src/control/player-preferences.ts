@@ -556,7 +556,7 @@ const LS_KEY_SUBTITLES_BG = "player-pref-subtitles-bg";
  * @returns The subtitles background style
  */
 export function getSubtitlesBackground(): string {
-    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_BG, "75") + "";
+    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_BG, "0") + "";
 }
 
 /**
