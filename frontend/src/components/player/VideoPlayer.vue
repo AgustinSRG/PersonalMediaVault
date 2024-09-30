@@ -146,6 +146,13 @@
                         'player-subtitles-xl': subtitlesSize === 'xl',
                         'player-subtitles-xxl': subtitlesSize === 'xxl',
                     }"
+                    :style="
+                        subtitlesSize === 'custom'
+                            ? {
+                                  '--subtitles-size-multiplier': subtitlesSizeCustom / 100,
+                              }
+                            : {}
+                    "
                 ></div>
             </div>
         </div>
@@ -413,6 +420,7 @@
             v-model:autoNextPageDelay="autoNextPageDelay"
             v-model:resolution="currentResolution"
             v-model:subSize="subtitlesSize"
+            v-model:subSizeCustom="subtitlesSizeCustom"
             v-model:subBackground="subtitlesBg"
             v-model:subHTML="subtitlesHTML"
             @update:resolution="onResolutionUpdated"
@@ -479,6 +487,7 @@ import {
     getSubtitlesAllowHTML,
     getSubtitlesBackground,
     getSubtitlesSize,
+    getSubtitlesSizeCustom,
     getTogglePlayDelay,
     getUserSelectedResolutionVideo,
     setAutoNextOnEnd,
@@ -668,6 +677,7 @@ export default defineComponent({
             subtitlesStart: -1,
             subtitlesEnd: -1,
             subtitlesSize: "l",
+            subtitlesSizeCustom: 150,
             subtitlesBg: "75",
             subtitlesHTML: false,
 
@@ -785,6 +795,7 @@ export default defineComponent({
         renderVolume: function (v: number): string {
             return Math.round(v * 100) + "%";
         },
+
         enterTooltip: function (t: string) {
             if (isTouchDevice()) {
                 this.helpTooltip = "";
@@ -911,7 +922,10 @@ export default defineComponent({
                 !videoElement ||
                 typeof videoElement.currentTime !== "number" ||
                 isNaN(videoElement.currentTime) ||
-                !isFinite(videoElement.currentTime)
+                !isFinite(videoElement.currentTime) ||
+                typeof videoElement.duration !== "number" ||
+                isNaN(videoElement.duration) ||
+                !isFinite(videoElement.duration)
             ) {
                 return;
             }
@@ -2216,6 +2230,7 @@ export default defineComponent({
         this.muted = getPlayerMuted();
         this.volume = getPlayerVolume();
         this.subtitlesSize = getSubtitlesSize();
+        this.subtitlesSizeCustom = getSubtitlesSizeCustom();
         this.subtitlesBg = getSubtitlesBackground();
         this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();

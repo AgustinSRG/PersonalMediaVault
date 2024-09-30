@@ -133,6 +133,13 @@
                         'player-subtitles-xl': subtitlesSize === 'xl',
                         'player-subtitles-xxl': subtitlesSize === 'xxl',
                     }"
+                    :style="
+                        subtitlesSize === 'custom'
+                            ? {
+                                  '--subtitles-size-multiplier': subtitlesSizeCustom / 100,
+                              }
+                            : {}
+                    "
                 ></div>
             </div>
         </div>
@@ -387,6 +394,7 @@
             v-model:showTitle="showTitle"
             v-model:showThumbnail="showThumbnail"
             v-model:subSize="subtitlesSize"
+            v-model:subSizeCustom="subtitlesSizeCustom"
             v-model:subBackground="subtitlesBg"
             v-model:subHTML="subtitlesHTML"
             :rTick="internalTick"
@@ -454,6 +462,7 @@ import {
     getSubtitlesAllowHTML,
     getSubtitlesBackground,
     getSubtitlesSize,
+    getSubtitlesSizeCustom,
     setAudioAnimationStyle,
     setAutoNextOnEnd,
     setAutoNextPageDelay,
@@ -644,6 +653,7 @@ export default defineComponent({
             subtitlesStart: -1,
             subtitlesEnd: -1,
             subtitlesSize: "l",
+            subtitlesSizeCustom: 150,
             subtitlesBg: "75",
             subtitlesHTML: false,
 
@@ -776,6 +786,10 @@ export default defineComponent({
                 return;
             }
 
+            if (typeof audioElement.duration !== "number" || isNaN(audioElement.duration) || !isFinite(audioElement.duration)) {
+                return;
+            }
+
             this.duration = audioElement.duration;
 
             if (typeof this.currentTime === "number" && !isNaN(this.currentTime) && isFinite(this.currentTime) && this.currentTime >= 0) {
@@ -790,7 +804,15 @@ export default defineComponent({
 
             const audioElement = ev.target;
 
-            if (!audioElement) {
+            if (
+                !audioElement ||
+                typeof audioElement.currentTime !== "number" ||
+                isNaN(audioElement.currentTime) ||
+                !isFinite(audioElement.currentTime) ||
+                typeof audioElement.duration !== "number" ||
+                isNaN(audioElement.duration) ||
+                !isFinite(audioElement.duration)
+            ) {
                 return;
             }
 
@@ -1886,6 +1908,7 @@ export default defineComponent({
         this.showTitle = getShowAudioTitle();
         this.showThumbnail = getShowAudioThumbnail();
         this.subtitlesSize = getSubtitlesSize();
+        this.subtitlesSizeCustom = getSubtitlesSizeCustom();
         this.subtitlesBg = getSubtitlesBackground();
         this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();

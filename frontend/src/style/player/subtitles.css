@@ -28,7 +28,8 @@
     font-family: Arial, Helvetica, sans-serif;
     --base-subtitles-section: 0.035;
     --base-subtitles-size: calc((100vh - 56px - 56px) * var(--base-subtitles-section));
-    font-size: var(--base-subtitles-size);
+    --subtitles-size-multiplier: 1;
+    font-size: calc(var(--base-subtitles-size) * var(--subtitles-size-multiplier));
 }
 
 .full-screen .player-subtitles {
@@ -51,23 +52,23 @@
 }
 
 .player-subtitles.player-subtitles-s {
-    font-size: calc(var(--base-subtitles-size) * 0.75);
+    --subtitles-size-multiplier: 0.75;
 }
 
 .player-subtitles.player-subtitles-m {
-    font-size: calc(var(--base-subtitles-size) * 1);
+    --subtitles-size-multiplier: 1;
 }
 
 .player-subtitles.player-subtitles-l {
-    font-size: calc(var(--base-subtitles-size) * 1.5);
+    --subtitles-size-multiplier: 1.5;
 }
 
 .player-subtitles.player-subtitles-xl {
-    font-size: calc(var(--base-subtitles-size) * 2);
+    --subtitles-size-multiplier: 2;
 }
 
 .player-subtitles.player-subtitles-xxl {
-    font-size: calc(var(--base-subtitles-size) * 2.5);
+    --subtitles-size-multiplier: 2.5;
 }
 
 .player-subtitles-bg-0 {

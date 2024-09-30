@@ -171,3 +171,18 @@
 .image-player-config .check-uncheck {
     visibility: hidden;
 }
+
+/* Custom sizes */
+
+.custom-size-row {
+    white-space: nowrap;
+    text-align: center !important;
+}
+
+.custom-size-input {
+    width: 6rem;
+}
+
+.custom-size-unit {
+    margin-left: 0.5rem;
+}

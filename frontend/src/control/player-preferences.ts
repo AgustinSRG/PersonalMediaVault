@@ -549,6 +549,30 @@ export function setSubtitlesSize(size: string) {
     saveIntoLocalStorage(LS_KEY_SUBTITLES_SIZE, size);
 }
 
+const LS_KEY_SUBTITLES_SIZE_CUSTOM = "player-pref-subtitles-size-custom";
+
+/**
+ * Gets custom subtitles size
+ * @returns The selected subtitles size (percent, 100 = 100%)
+ */
+export function getSubtitlesSizeCustom(): number {
+    const v = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_SIZE_CUSTOM, 150);
+
+    if (typeof v !== "number") {
+        return 150;
+    }
+
+    return v;
+}
+
+/**
+ * Sets custom subtitles size
+ * @param size The custom subtitles size (percent, 100 = 100%)
+ */
+export function setSubtitlesSizeCustom(size: number) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_SIZE_CUSTOM, size);
+}
+
 const LS_KEY_SUBTITLES_BG = "player-pref-subtitles-bg";
 
 /**
@@ -700,6 +724,7 @@ export function clearPlayerPreferences() {
 
     clearLocalStorage(LS_KEY_SUBTITLES_SELECTED);
     clearLocalStorage(LS_KEY_SUBTITLES_SIZE);
+    clearLocalStorage(LS_KEY_SUBTITLES_SIZE_CUSTOM);
     clearLocalStorage(LS_KEY_SUBTITLES_BG);
     clearLocalStorage(LS_KEY_SUBTITLES_HTML);
 

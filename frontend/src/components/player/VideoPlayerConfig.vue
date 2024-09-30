@@ -304,7 +304,9 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <a href="#subtitles-size-custom" @click="goToSubCustomSize">{{ $t("Custom") }}</a>
+                </td>
             </tr>
             <tr v-for="s in subtitlesSizes" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="updateSubtitleSize(s)">
                 <td>
@@ -312,6 +314,51 @@
                     {{ renderSubtitleSize(s) }}
                 </td>
                 <td class="td-right"></td>
+            </tr>
+            <tr v-if="subSize === 'custom'" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="updateSubtitleSize('custom')">
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': subSize !== 'custom' }"></i>
+                    {{ $t("Custom") }}: {{ subSizeCustom + "%" }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+
+        <table v-if="page === 'subSize-custom'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSubSizes">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) ({{ $t("Custom") }}) </b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <input
+                        type="range"
+                        class="form-range"
+                        v-model.number="subSizeCustomState"
+                        @input="saveCustomSubtitleSize"
+                        :min="50"
+                        :max="250"
+                        :step="1"
+                    />
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="custom-size-row">
+                    <input
+                        type="number"
+                        class="form-control custom-size-input"
+                        v-model.number="subSizeCustomNum"
+                        @input="updateSubSizeCustomNum"
+                        :min="1"
+                        :step="1"
+                    />
+                    <b class="custom-size-unit">%</b>
+                </td>
             </tr>
         </table>
 
@@ -392,6 +439,7 @@ import {
     setSelectedSubtitles,
     setSubtitlesBackground,
     setSubtitlesSize,
+    setSubtitlesSizeCustom,
     setTogglePlayDelay,
 } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
@@ -411,6 +459,7 @@ export default defineComponent({
         "update:scale",
         "update:resolution",
         "update:subSize",
+        "update:subSizeCustom",
         "update:subBackground",
         "update:subHTML",
         "update:audioTrack",
@@ -428,6 +477,7 @@ export default defineComponent({
         scale: Number,
         resolution: Number,
         subSize: String,
+        subSizeCustom: Number,
         subBackground: String,
         subHTML: Boolean,
         rTick: Number,
@@ -446,6 +496,8 @@ export default defineComponent({
             scaleState: useVModel(props, "scale"),
             resolutionState: useVModel(props, "resolution"),
             subSizeState: useVModel(props, "subSize"),
+            subSizeSaveDelay: null,
+            subSizeCustomState: useVModel(props, "subSizeCustom"),
             subBackgroundState: useVModel(props, "subBackground"),
             subHTMLState: useVModel(props, "subHTML"),
             audioTrackState: useVModel(props, "audioTrack"),
@@ -462,6 +514,8 @@ export default defineComponent({
             subtitles: "",
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+
+            subSizeCustomNum: this.subSizeCustom,
 
             toggleDelay: getTogglePlayDelay(),
             toggleDelayOptions: [0, 250, 500, 750, 1000],
@@ -573,6 +627,21 @@ export default defineComponent({
             this.focus();
         },
 
+        goToSubCustomSize: function (e?: Event) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            if (this.subSizeCustom !== 150) {
+                this.subSizeState = "custom";
+                setSubtitlesSize("custom");
+            }
+
+            this.page = "subSize-custom";
+            this.focus();
+        },
+
         renderSpeed: function (speed: number) {
             if (speed > 1) {
                 return Math.floor(speed * 100) + "%";
@@ -665,6 +734,8 @@ export default defineComponent({
                     return this.$t("Extra large");
                 case "xxl":
                     return this.$t("Extra extra large");
+                case "custom":
+                    return this.$t("Custom") + " (" + this.subSizeCustom + "%)";
                 default:
                     return this.$t("Medium");
             }
@@ -732,6 +803,31 @@ export default defineComponent({
             }
         },
 
+        saveCustomSubtitleSize: function () {
+            if (this.subSize !== "custom") {
+                this.subSizeState = "custom";
+                setSubtitlesSize("custom");
+            }
+
+            if (this.subSizeSaveDelay) {
+                clearTimeout(this.subSizeSaveDelay);
+            }
+            this.subSizeSaveDelay = setTimeout(() => {
+                this.subSizeSaveDelay = null;
+                setSubtitlesSizeCustom(this.subSizeCustom);
+            }, 333);
+        },
+
+        updateSubSizeCustomNum: function () {
+            if (typeof this.subSizeCustomNum !== "number" || isNaN(this.subSizeCustomNum)) {
+                return;
+            }
+
+            this.subSizeCustomState = this.subSizeCustomNum;
+
+            this.saveCustomSubtitleSize();
+        },
+
         clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -773,6 +869,12 @@ export default defineComponent({
             } else {
                 this.focusTrap.deactivate();
             }
+        },
+        subSizeCustom: function () {
+            if (this.subSizeCustom === this.subSizeCustomNum) {
+                return;
+            }
+            this.subSizeCustomNum = this.subSizeCustom;
         },
         rTick: function () {
             this.updateResolutions();
