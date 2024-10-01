@@ -177,7 +177,9 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Playback speed") }}</b>
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <a href="#playback-speed-custom" @click="goToCustomSpeed">{{ $t("Custom") }}</a>
+                </td>
             </tr>
             <tr v-for="s in speeds" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSpeed(s)">
                 <td>
@@ -185,6 +187,51 @@
                     {{ renderSpeed(s) }}
                 </td>
                 <td class="td-right"></td>
+            </tr>
+            <tr v-if="!speeds.includes(speed)" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSpeed(speed)">
+                <td>
+                    <i class="fas fa-check icon-config"></i>
+                    {{ $t("Custom") }}: {{ renderSpeed(speed) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+
+        <table v-if="page === 'speed-custom'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSpeeds">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Playback speed") }} ({{ $t("Custom") }})</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <input
+                        type="range"
+                        class="form-range"
+                        v-model.number="speedNum"
+                        @input="updateSpeedNum"
+                        :min="1"
+                        :max="200"
+                        :step="1"
+                    />
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="custom-size-row">
+                    <input
+                        type="number"
+                        class="form-control custom-size-input"
+                        v-model.number="speedNum"
+                        @input="updateSpeedNum"
+                        :min="1"
+                        :step="1"
+                    />
+                    <b class="custom-size-unit">%</b>
+                </td>
             </tr>
         </table>
 
@@ -511,6 +558,8 @@ export default defineComponent({
             scales: [1, 1.25, 1.5, 1.75, 2, 4, 8],
             resolutions: [],
 
+            speedNum: Math.floor(this.speed * 100),
+
             subtitles: "",
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
@@ -639,6 +688,16 @@ export default defineComponent({
             }
 
             this.page = "subSize-custom";
+            this.focus();
+        },
+
+        goToCustomSpeed: function (e?: Event) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            this.page = "speed-custom";
             this.focus();
         },
 
@@ -828,6 +887,14 @@ export default defineComponent({
             this.saveCustomSubtitleSize();
         },
 
+        updateSpeedNum: function () {
+            if (typeof this.speedNum !== "number" || isNaN(this.speedNum) || this.speedNum < 0.1) {
+                return;
+            }
+
+            this.speedState = this.speedNum / 100;
+        },
+
         clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -875,6 +942,9 @@ export default defineComponent({
                 return;
             }
             this.subSizeCustomNum = this.subSizeCustom;
+        },
+        speed: function () {
+            this.speedNum = Math.floor(this.speed * 100);
         },
         rTick: function () {
             this.updateResolutions();
