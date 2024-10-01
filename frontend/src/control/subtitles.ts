@@ -98,6 +98,11 @@ export class SubtitlesController {
             }
         }
 
+        if (!SubtitlesController.SelectedSubtitles && prefSubtitles && subtitles.length > 0) {
+            SubtitlesController.SelectedSubtitles = subtitles[0].id;
+            SubtitlesController.SubtitlesFileURL = getAssetURL(subtitles[0].url);
+        }
+
         if (!SubtitlesController.SubtitlesFileURL) {
             abortNamedApiRequest(REQUEST_ID_SUBTITLES_LOAD);
             clearNamedTimeout(REQUEST_ID_SUBTITLES_LOAD);

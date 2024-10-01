@@ -324,7 +324,7 @@
             </tr>
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSubtitle('')">
                 <td>
-                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== subtitles }"></i>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== effectiveSubtitles }"></i>
                     {{ renderSubtitle("", rTick) }}
                 </td>
                 <td class="td-right"></td>
@@ -338,7 +338,7 @@
                 @click="changeSubtitle(sub.id)"
             >
                 <td>
-                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': sub.id !== subtitles }"></i>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': sub.id !== effectiveSubtitles }"></i>
                     {{ sub.name }}
                 </td>
                 <td class="td-right"></td>
@@ -563,6 +563,7 @@ export default defineComponent({
             subtitles: "",
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+            effectiveSubtitles: "",
 
             subSizeCustomNum: this.subSizeCustom,
 
@@ -585,6 +586,7 @@ export default defineComponent({
 
         changeSubtitle: function (s: string) {
             this.subtitles = s;
+            this.updateEffectiveSubtitles();
             setSelectedSubtitles(s);
             SubtitlesController.OnSubtitlesChanged(s);
         },
@@ -755,6 +757,26 @@ export default defineComponent({
             }
         },
 
+        updateEffectiveSubtitles: function () {
+            if (!this.metadata || !this.metadata.subtitles || !this.subtitles) {
+                this.effectiveSubtitles = "";
+                return;
+            }
+
+            for (const sub of this.metadata.subtitles) {
+                if (sub.id === this.subtitles) {
+                    this.effectiveSubtitles = sub.id;
+                    return;
+                }
+            }
+
+            if (this.subtitles && this.metadata.subtitles.length > 0) {
+                this.effectiveSubtitles = this.metadata.subtitles[0].id;
+            } else {
+                this.effectiveSubtitles = "";
+            }
+        },
+
         renderSubtitle: function (subId: string, rTick: number) {
             if (rTick < 0 || !this.metadata || !this.metadata.subtitles || !subId) {
                 return this.$t("No subtitles");
@@ -764,6 +786,10 @@ export default defineComponent({
                 if (sub.id === subId) {
                     return sub.name;
                 }
+            }
+
+            if (subId && this.metadata.subtitles.length > 0) {
+                return this.metadata.subtitles[0].name;
             }
 
             return this.$t("No subtitles");
@@ -920,6 +946,7 @@ export default defineComponent({
     mounted: function () {
         this.updateResolutions();
         this.subtitles = getSelectedSubtitles();
+        this.updateEffectiveSubtitles();
         this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
     },
     beforeUnmount: function () {
@@ -948,6 +975,7 @@ export default defineComponent({
         },
         rTick: function () {
             this.updateResolutions();
+            this.updateEffectiveSubtitles();
         },
     },
 });
