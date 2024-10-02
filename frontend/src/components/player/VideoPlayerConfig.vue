@@ -241,7 +241,9 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Scale") }}</b>
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <a href="#video-scale-custom" @click="goToCustomScale">{{ $t("Custom") }}</a>
+                </td>
             </tr>
             <tr v-for="s in scales" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeScale(s)">
                 <td>
@@ -249,6 +251,51 @@
                     {{ renderScale(s) }}
                 </td>
                 <td class="td-right"></td>
+            </tr>
+            <tr v-if="!scales.includes(scale)" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeScale(scale)">
+                <td>
+                    <i class="fas fa-check icon-config"></i>
+                    {{ $t("Custom") }}: {{ renderScale(scale) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
+
+        <table v-if="page === 'scale-custom'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToScales">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Scale") }} ({{ $t("Custom") }})</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <input
+                        type="range"
+                        class="form-range"
+                        v-model.number="scaleNum"
+                        @input="updateScaleNum"
+                        :min="100"
+                        :max="800"
+                        :step="1"
+                    />
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="custom-size-row">
+                    <input
+                        type="number"
+                        class="form-control custom-size-input"
+                        v-model.number="scaleNum"
+                        @input="updateScaleNum"
+                        :min="1"
+                        :step="1"
+                    />
+                    <b class="custom-size-unit">%</b>
+                </td>
             </tr>
         </table>
 
@@ -559,6 +606,7 @@ export default defineComponent({
             resolutions: [],
 
             speedNum: Math.floor(this.speed * 100),
+            scaleNum: Math.floor(this.scale * 100),
 
             subtitles: "",
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
@@ -700,6 +748,16 @@ export default defineComponent({
             }
 
             this.page = "speed-custom";
+            this.focus();
+        },
+
+        goToCustomScale: function (e?: Event) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            this.page = "scale-custom";
             this.focus();
         },
 
@@ -921,6 +979,14 @@ export default defineComponent({
             this.speedState = this.speedNum / 100;
         },
 
+        updateScaleNum: function () {
+            if (typeof this.scaleNum !== "number" || isNaN(this.scaleNum) || this.scaleNum < 0.1) {
+                return;
+            }
+
+            this.scaleState = this.scaleNum / 100;
+        },
+
         clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -972,6 +1038,9 @@ export default defineComponent({
         },
         speed: function () {
             this.speedNum = Math.floor(this.speed * 100);
+        },
+        scale: function () {
+            this.scaleNum = Math.floor(this.scale * 100);
         },
         rTick: function () {
             this.updateResolutions();
