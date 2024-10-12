@@ -858,8 +858,10 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 		lang := stream.Tags.Language
 
 		if lang == "" {
-			continue
+			lang = "SUB_" + fmt.Sprint(i+1)
 		}
+
+		name := strings.ToUpper(lang)
 
 		if addedMap[lang] {
 			continue
@@ -878,7 +880,7 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 
 		entry := ExtractedSubtitlesFile{
 			Id:   lang,
-			Name: strings.ToUpper(lang),
+			Name: name,
 			file: srtPath,
 		}
 
@@ -977,8 +979,10 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 			lang := stream.Tags.Language
 
 			if lang == "" {
-				continue
+				lang = "AUDIO_" + fmt.Sprint(i+1)
 			}
+
+			name := strings.ToUpper(lang)
 
 			if addedMap[lang] {
 				continue
@@ -997,7 +1001,7 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 
 			entry := ExtractedAudioFile{
 				Id:   lang,
-				Name: strings.ToUpper(lang),
+				Name: name,
 				file: srtPath,
 			}
 
