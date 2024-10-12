@@ -27,12 +27,15 @@
                         <td class="bold">{{ aud.id }}</td>
                         <td class="bold">{{ aud.name }}</td>
                         <td class="text-right td-shrink">
-                            <button type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="downloadAudio(aud)">
+                            <button type="button" class="btn btn-primary btn-xs" @click="downloadAudio(aud)">
                                 <i class="fas fa-download"></i> {{ $t("Download") }}
                             </button>
                         </td>
                         <td class="text-right td-shrink" v-if="canWrite">
-                            <button type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
+                            <button v-if="busyDeleting && busyDeletingId === aud.id" type="button" class="btn btn-danger btn-xs" disabled>
+                                <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
+                            </button>
+                            <button v-else type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
                                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                             </button>
                         </td>
@@ -61,8 +64,15 @@
             <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioName" class="form-control" />
         </div>
         <div class="form-group" v-if="canWrite && type === 2">
-            <button type="button" class="btn btn-primary" :disabled="busy || !audioId || !audioName || !audioFile" @click="addAudio">
+            <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!audioId || !audioName || !audioFile" @click="addAudio">
                 <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
+            </button>
+            <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
+                <i class="fa fa-spinner fa-spin"></i>
+                {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
+            </button>
+            <button v-else type="button" class="btn btn-primary" disabled>
+                <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
             </button>
         </div>
 
@@ -105,13 +115,18 @@ export default defineComponent({
         return {
             type: 0,
 
-            audios: [],
+            audios: [] as MediaAudioTrack[],
             audioFile: null,
             audioFileName: "",
             audioId: "en",
             audioName: "English",
 
             busy: false,
+            busyDeleting: false,
+            busyDeletingId: "",
+
+            uploading: false,
+            uploadProgress: 0,
 
             canWrite: AuthController.CanWrite,
 
@@ -179,6 +194,7 @@ export default defineComponent({
             }
 
             this.busy = true;
+            this.uploading = true;
 
             const mediaId = AppStatus.CurrentMedia;
 
@@ -194,6 +210,10 @@ export default defineComponent({
                 })
                 .onCancel(() => {
                     this.busy = false;
+                })
+                .onUploadProgress((loaded, total) => {
+                    this.uploadProgress = loaded / Math.max(1, total);
+                    this.uploading = loaded < total;
                 })
                 .onRequestError((err, handleErr) => {
                     this.busy = false;
@@ -243,11 +263,12 @@ export default defineComponent({
         removeAudioConfirm: function () {
             const aud = this.trackToDelete;
 
-            if (this.busy || !aud) {
+            if (this.busyDeleting || !aud) {
                 return;
             }
 
-            this.busy = true;
+            this.busyDeleting = true;
+            this.busyDeletingId = aud.id;
 
             const mediaId = AppStatus.CurrentMedia;
             const id = aud.id;
@@ -255,7 +276,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaRemoveAudioTrack(mediaId, id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed audio track") + ": " + aud.name);
-                    this.busy = false;
+                    this.busyDeleting = false;
                     for (let i = 0; i < this.audios.length; i++) {
                         if (this.audios[i].id === id) {
                             this.audios.splice(i, 1);
@@ -268,10 +289,10 @@ export default defineComponent({
                     this.$emit("changed");
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyDeleting = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyDeleting = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -297,7 +318,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
-                    this.busy = false;
+                    this.busyDeleting = false;
                 });
         },
 
@@ -311,6 +332,10 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        renderProgress: function (p: number): string {
+            return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
         },
     },
 

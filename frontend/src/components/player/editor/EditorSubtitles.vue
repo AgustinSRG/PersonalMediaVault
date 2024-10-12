@@ -27,12 +27,21 @@
                         <td class="bold">{{ sub.id }}</td>
                         <td class="bold">{{ sub.name }}</td>
                         <td class="text-right td-shrink">
-                            <button type="button" class="btn btn-primary btn-xs" :disabled="busy" @click="downloadSubtitles(sub)">
+                            <button type="button" class="btn btn-primary btn-xs" @click="downloadSubtitles(sub)">
                                 <i class="fas fa-download"></i> {{ $t("Download") }}
                             </button>
                         </td>
                         <td class="text-right td-shrink" v-if="canWrite">
-                            <button type="button" class="btn btn-danger btn-xs" @click="removeSubtitles(sub)">
+                            <button v-if="busyDeleting && busyDeletingId === sub.id" type="button" class="btn btn-danger btn-xs" disabled>
+                                <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
+                            </button>
+                            <button
+                                v-else
+                                type="button"
+                                class="btn btn-danger btn-xs"
+                                :disabled="busyDeleting"
+                                @click="removeSubtitles(sub)"
+                            >
                                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                             </button>
                         </td>
@@ -61,8 +70,15 @@
             <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtName" class="form-control" />
         </div>
         <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
-            <button type="button" class="btn btn-primary" :disabled="busy || !srtId || !srtName || !srtFile" @click="addSubtitles">
+            <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile" @click="addSubtitles">
                 <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
+            </button>
+            <button v-else-if="uploading" type="button" class="btn btn-primary" disabled>
+                <i class="fa fa-spinner fa-spin"></i>
+                {{ $t("Uploading") + "..." + (uploadProgress > 0 ? " (" + renderProgress(uploadProgress) + ")" : "") }}
+            </button>
+            <button v-else type="button" class="btn btn-primary" disabled>
+                <i class="fa fa-spinner fa-spin"></i> {{ $t("Processing") + "..." }}
             </button>
         </div>
 
@@ -106,13 +122,18 @@ export default defineComponent({
 
             type: 0,
 
-            subtitles: [],
+            subtitles: [] as MediaSubtitle[],
             srtFile: null,
             srtFileName: "",
             srtId: "en",
             srtName: "English",
 
             busy: false,
+            busyDeleting: false,
+            busyDeletingId: "",
+
+            uploading: false,
+            uploadProgress: 0,
 
             canWrite: AuthController.CanWrite,
 
@@ -180,6 +201,7 @@ export default defineComponent({
             }
 
             this.busy = true;
+            this.uploading = true;
 
             const mediaId = AppStatus.CurrentMedia;
 
@@ -195,6 +217,10 @@ export default defineComponent({
                 })
                 .onCancel(() => {
                     this.busy = false;
+                })
+                .onUploadProgress((loaded, total) => {
+                    this.uploadProgress = loaded / Math.max(1, total);
+                    this.uploading = loaded < total;
                 })
                 .onRequestError((err, handleErr) => {
                     this.busy = false;
@@ -249,11 +275,12 @@ export default defineComponent({
         removeSubtitlesConfirm: function () {
             const sub = this.subtitleToDelete;
 
-            if (this.busy || !sub) {
+            if (this.busyDeleting || !sub) {
                 return;
             }
 
-            this.busy = true;
+            this.busyDeleting = true;
+            this.busyDeletingId = sub.id;
 
             const mediaId = AppStatus.CurrentMedia;
             const id = sub.id;
@@ -261,7 +288,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed subtitles") + ": " + sub.name);
-                    this.busy = false;
+                    this.busyDeleting = false;
                     for (let i = 0; i < this.subtitles.length; i++) {
                         if (this.subtitles[i].id === id) {
                             this.subtitles.splice(i, 1);
@@ -274,10 +301,10 @@ export default defineComponent({
                     this.$emit("changed");
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyDeleting = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyDeleting = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -303,7 +330,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
-                    this.busy = false;
+                    this.busyDeleting = false;
                 });
         },
 
@@ -317,6 +344,10 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        renderProgress: function (p: number): string {
+            return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
         },
     },
 
