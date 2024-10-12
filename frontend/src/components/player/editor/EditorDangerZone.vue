@@ -25,7 +25,7 @@
         </div>
         <div class="form-group" v-if="canWrite">
             <input type="file" class="file-hidden replace-file-hidden" @change="replaceFileChanged" name="attachment-upload" />
-            <button v-if="!replacing" type="button" class="btn btn-primary" :disabled="busy" @click="replaceMedia">
+            <button v-if="!replacing" type="button" class="btn btn-primary" :disabled="busy" @click="replaceMedia" @drop="replaceMediaDrop">
                 <i class="fas fa-upload"></i> {{ $t("Replace media") }}
             </button>
             <button v-else-if="replacing && replaceProgress < 100" type="button" class="btn btn-primary" disabled>
@@ -194,8 +194,25 @@ export default defineComponent({
             }
         },
 
-        replaceFileChanged: function (e) {
-            const data = e.target.files;
+        replaceFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
+            if (data && data.length > 0) {
+                const file = data[0] as File;
+                this.fileRef = file;
+                this.replaceFileName = file.name;
+                this.replaceFileSize = file.size;
+                this.displayReplace = true;
+            }
+        },
+
+        replaceMediaDrop: function (e: DragEvent) {
+            e.preventDefault();
+
+            if (this.busy) {
+                return;
+            }
+
+            const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0] as File;
                 this.fileRef = file;

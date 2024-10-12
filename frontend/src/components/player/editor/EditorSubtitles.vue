@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div class="player-editor-sub-content" @drop="onDrop">
         <!--- Subtitles -->
 
         <div class="form-group">
@@ -165,8 +165,18 @@ export default defineComponent({
             this.$el.querySelector(".srt-file-hidden").click();
         },
 
-        srtFileChanged: function (e) {
-            const data = e.target.files;
+        srtFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.srtFile = file;
+                this.srtFileName = file.name;
+            }
+        },
+
+        onDrop: function (e: DragEvent) {
+            e.preventDefault();
+            const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0];
                 this.srtFile = file;

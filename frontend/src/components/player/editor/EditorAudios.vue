@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div class="player-editor-sub-content" @drop="onDrop">
         <!--- Audio tracks -->
 
         <div class="form-group">
@@ -158,8 +158,18 @@ export default defineComponent({
             this.$el.querySelector(".audio-file-hidden").click();
         },
 
-        audioFileChanged: function (e) {
-            const data = e.target.files;
+        audioFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.audioFile = file;
+                this.audioFileName = file.name;
+            }
+        },
+
+        onDrop: function (e: DragEvent) {
+            e.preventDefault();
+            const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0];
                 this.audioFile = file;

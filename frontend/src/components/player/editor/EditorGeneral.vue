@@ -110,7 +110,7 @@
             </div>
             <div class="form-group" v-if="canWrite">
                 <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
-                <button v-if="!busyThumbnail" type="button" class="btn btn-primary" @click="uploadThumbnail">
+                <button v-if="!busyThumbnail" type="button" class="btn btn-primary" @click="uploadThumbnail" @drop="onDrop">
                     <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
                 </button>
                 <button v-if="busyThumbnail" type="button" class="btn btn-primary" disabled>
@@ -235,15 +235,15 @@ export default defineComponent({
             }
         },
 
-        inputFileChanged: function (e) {
-            const data = e.target.files;
+        inputFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
                 const file = data[0];
                 this.changeThumbnail(file);
             }
         },
 
-        onDrop: function (e) {
+        onDrop: function (e: DragEvent) {
             e.preventDefault();
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
@@ -252,7 +252,7 @@ export default defineComponent({
             }
         },
 
-        changeThumbnail: function (file) {
+        changeThumbnail: function (file: File) {
             if (this.busyThumbnail) {
                 return;
             }

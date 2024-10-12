@@ -243,8 +243,8 @@ export default defineComponent({
             UploadController.MaxParallelUploads = m;
         },
 
-        inputFileChanged: function (e) {
-            const data = e.target.files;
+        inputFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
                 const files = [];
                 for (const file of data) {
@@ -254,7 +254,7 @@ export default defineComponent({
             }
         },
 
-        onDrop: function (e) {
+        onDrop: function (e: DragEvent) {
             e.preventDefault();
             this.dragging = false;
             const data = e.dataTransfer.files;
@@ -267,14 +267,14 @@ export default defineComponent({
             }
         },
 
-        dragOver: function (e) {
+        dragOver: function (e: DragEvent) {
             e.preventDefault();
         },
-        dragEnter: function (e) {
+        dragEnter: function (e: DragEvent) {
             e.preventDefault();
             this.dragging = true;
         },
-        dragLeave: function (e) {
+        dragLeave: function (e: DragEvent) {
             e.preventDefault();
             this.dragging = false;
         },

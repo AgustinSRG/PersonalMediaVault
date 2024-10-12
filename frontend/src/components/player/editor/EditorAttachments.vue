@@ -1,5 +1,5 @@
 <template>
-    <div class="player-editor-sub-content">
+    <div class="player-editor-sub-content" @drop="onDrop">
         <!--- Attachments -->
 
         <div class="form-group">
@@ -187,8 +187,17 @@ export default defineComponent({
             }
         },
 
-        attachmentFileChanged: function (e) {
-            const data = e.target.files;
+        attachmentFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
+            if (data && data.length > 0) {
+                const file = data[0];
+                this.addAttachment(file);
+            }
+        },
+
+        onDrop: function (e: DragEvent) {
+            e.preventDefault();
+            const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0];
                 this.addAttachment(file);
