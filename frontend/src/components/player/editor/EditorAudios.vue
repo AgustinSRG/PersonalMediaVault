@@ -73,7 +73,6 @@
                         </td>
                         <td class="text-right td-shrink one-line" v-else-if="canWrite">
                             <button
-                                v-if="!audioRenameSelected"
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
                                 @click="startRename(aud)"

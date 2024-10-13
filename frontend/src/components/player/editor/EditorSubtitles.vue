@@ -24,14 +24,63 @@
                         <td class="text-right td-shrink" v-if="canWrite"></td>
                     </tr>
                     <tr v-for="sub in subtitles" :key="sub.id">
-                        <td class="bold">{{ sub.id }}</td>
-                        <td class="bold">{{ sub.name }}</td>
+                        <td class="bold" v-if="subtitleRenameSelected !== sub.id">{{ sub.id }}</td>
+                        <td v-else>
+                            <input
+                                type="text"
+                                maxlength="255"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
+                                class="form-control form-control-full-width"
+                                v-model="subtitleRenameId"
+                                @keydown="renameInputKeyEventHandler"
+                            />
+                        </td>
+
+                        <td class="bold" v-if="subtitleRenameSelected !== sub.id">{{ sub.name }}</td>
+                        <td v-else>
+                            <input
+                                type="text"
+                                maxlength="255"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
+                                class="form-control form-control-full-width edit-auto-focus"
+                                v-model="subtitleRenameName"
+                                @keydown="renameInputKeyEventHandler"
+                            />
+                        </td>
+
                         <td class="text-right td-shrink">
                             <button type="button" class="btn btn-primary btn-xs" @click="downloadSubtitles(sub)">
                                 <i class="fas fa-download"></i> {{ $t("Download") }}
                             </button>
                         </td>
-                        <td class="text-right td-shrink" v-if="canWrite">
+
+                        <td class="text-right td-shrink one-line" v-if="subtitleRenameSelected === sub.id && canWrite">
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
+                                @click="saveRename"
+                            >
+                                <i class="fas fa-check"></i> {{ $t("Save") }}
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
+                                @click="cancelRename"
+                            >
+                                <i class="fas fa-times"></i> {{ $t("Cancel") }}
+                            </button>
+                        </td>
+                        <td class="text-right td-shrink one-line" v-else-if="canWrite">
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                @click="startRename(sub)"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
+                            >
+                                <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
+                            </button>
                             <button v-if="busyDeleting && busyDeletingId === sub.id" type="button" class="btn btn-danger btn-xs" disabled>
                                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
                             </button>
@@ -39,7 +88,7 @@
                                 v-else
                                 type="button"
                                 class="btn btn-danger btn-xs"
-                                :disabled="busyDeleting"
+                                :disabled="busy || busyDeleting || subtitleRenameBusy"
                                 @click="removeSubtitles(sub)"
                             >
                                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
@@ -98,12 +147,12 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
-import { apiMediaRemoveSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
+import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -134,6 +183,11 @@ export default defineComponent({
 
             uploading: false,
             uploadProgress: 0,
+
+            subtitleRenameSelected: "",
+            subtitleRenameId: "",
+            subtitleRenameName: "",
+            subtitleRenameBusy: false,
 
             canWrite: AuthController.CanWrite,
 
@@ -358,6 +412,121 @@ export default defineComponent({
 
         renderProgress: function (p: number): string {
             return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
+        },
+
+        startRename: function (sub: MediaSubtitle) {
+            this.subtitleRenameSelected = sub.id;
+            this.subtitleRenameId = sub.id;
+            this.subtitleRenameName = sub.name;
+
+            nextTick(() => {
+                const el = this.$el.querySelector(".edit-auto-focus");
+                if (el) {
+                    el.focus();
+                    el.select();
+                }
+            });
+        },
+
+        cancelRename: function () {
+            this.subtitleRenameSelected = "";
+        },
+
+        renameInputKeyEventHandler: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.saveRename();
+            }
+        },
+
+        saveRename: function () {
+            if (this.subtitleRenameBusy) {
+                return;
+            }
+
+            const subtitleId = this.subtitleRenameSelected;
+
+            const newId = this.subtitleRenameId;
+            const newName = this.subtitleRenameName;
+
+            if (!newId) {
+                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
+                return;
+            }
+
+            if (newId !== subtitleId) {
+                for (const subtitle of this.subtitles) {
+                    if (subtitle.id === newId) {
+                        PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Subtitles identifier already in use"));
+                        return;
+                    }
+                }
+            }
+
+            if (!newName) {
+                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
+                return;
+            }
+
+            this.subtitleRenameBusy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            makeNamedApiRequest(this.requestId, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
+                .onSuccess(() => {
+                    PagesController.ShowSnackBarRight(this.$t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
+                    this.subtitleRenameBusy = false;
+                    this.subtitleRenameSelected = "";
+                    for (let i = 0; i < this.subtitles.length; i++) {
+                        if (this.subtitles[i].id === subtitleId) {
+                            this.subtitles[i].id = newId;
+                            this.subtitles[i].name = newName;
+                            break;
+                        }
+                    }
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.subtitles = clone(this.subtitles);
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.subtitleRenameBusy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.subtitleRenameBusy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        invalidId: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles identifier"));
+                        },
+                        invalidName: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid subtitles name"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    PagesController.ShowSnackBarRight(err.message);
+                    console.error(err);
+                    this.subtitleRenameBusy = false;
+                });
         },
     },
 
