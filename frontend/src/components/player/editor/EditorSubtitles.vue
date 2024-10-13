@@ -162,7 +162,9 @@ export default defineComponent({
     emits: ["changed"],
     setup() {
         return {
-            requestId: getUniqueStringId(),
+            requestIdAdd: getUniqueStringId(),
+            requestIdRename: getUniqueStringId(),
+            requestIdDelete: getUniqueStringId(),
         };
     },
     data: function () {
@@ -269,7 +271,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            makeNamedApiRequest(this.requestId, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
+            makeNamedApiRequest(this.requestIdAdd, apiMediaSetSubtitles(mediaId, id, name, this.srtFile))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBarRight(this.$t("Added subtitles") + ": " + res.name);
                     this.busy = false;
@@ -349,7 +351,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = sub.id;
 
-            makeNamedApiRequest(this.requestId, apiMediaRemoveSubtitles(mediaId, id))
+            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveSubtitles(mediaId, id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed subtitles") + ": " + sub.name);
                     this.busyDeleting = false;
@@ -472,7 +474,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            makeNamedApiRequest(this.requestId, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
+            makeNamedApiRequest(this.requestIdRename, apiMediaRenameSubtitles(mediaId, subtitleId, newId, newName))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Renamed subtitles") + ": " + newName + " (" + newId + ")");
                     this.subtitleRenameBusy = false;
@@ -538,7 +540,9 @@ export default defineComponent({
     },
 
     beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
+        abortNamedApiRequest(this.requestIdAdd);
+        abortNamedApiRequest(this.requestIdRename);
+        abortNamedApiRequest(this.requestIdDelete);
     },
 });
 </script>
