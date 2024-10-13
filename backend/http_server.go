@@ -179,9 +179,11 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/subtitles/set", api_addMediaSubtitles).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/subtitles/remove", api_removeMediaSubtitles).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/subtitles/rename", api_renameMediaSubtitles).Methods("POST")
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/audios/set", api_addMediaAudioTrack).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/audios/remove", api_removeMediaAudioTrack).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/audios/rename", api_renameMediaAudioTrack).Methods("POST")
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/attachments/add", api_addMediaAttachment).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/attachments/rename", api_updateMediaAttachment).Methods("POST")

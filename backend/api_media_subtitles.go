@@ -387,3 +387,114 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 
 	response.WriteHeader(200)
 }
+
+type MediaSubtitlesEditBody struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func api_renameMediaSubtitles(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if !session.write {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p MediaSubtitlesEditBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	if p.Id == "" || len(p.Id) > 255 {
+		ReturnAPIError(response, 400, "INVALID_ID", "Invalid subtitles ID")
+		return
+	}
+
+	if p.Name == "" || len(p.Name) > 255 {
+		ReturnAPIError(response, 400, "INVALID_NAME", "Invalid subtitles name")
+		return
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	subtitlesId := request.URL.Query().Get("id")
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWriteWithFullLock(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	subtitlesIndex := meta.FindSubtitle(subtitlesId)
+
+	if subtitlesIndex == -1 {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Audio track not found")
+		return
+	}
+
+	otherSubtitlesIndex := meta.FindSubtitle(p.Id)
+
+	if otherSubtitlesIndex != subtitlesIndex && otherSubtitlesIndex != -1 {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 400, "INVALID_NAME", "There is another subtitles with the same name")
+		return
+	}
+
+	meta.Subtitles[subtitlesIndex].Id = p.Id
+	meta.Subtitles[subtitlesIndex].Name = p.Name
+
+	err = media.EndWrite(meta, session.key, true)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
+}

@@ -1306,6 +1306,69 @@ paths:
           description: Not found
         200:
           description: Success
+          
+  "/api/media/{id}/subtitles/rename":
+    post:
+      summary: Renames subtitles
+      description: Renames subtitles
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID for the subtitles. Example: es"
+        - in: body
+          name: description
+          schema:
+            properties:
+              id:
+                type: string
+                description: "New subtitles ID. Example: es"
+                example: "es"
+              name:
+                type: string
+                description: "Name for the subtitles. Example: Spanish"
+                example: "Spanish"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_ID - Invalid subtitles ID
+                    * INVALID_NAME - Invalid subtitles name
+                    * NOT_SUPPORTED - This API only applies to videos and audios
+                enum:
+                  - INVALID_ID
+                  - INVALID_NAME
+                  - NOT_SUPPORTED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Not found
+        200:
+          description: Success
 
   "/api/media/{id}/audios/set":
     post:
@@ -1410,6 +1473,69 @@ paths:
       responses:
         400:
           description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Not found
+        200:
+          description: Success
+          
+  "/api/media/{id}/audios/rename":
+    post:
+      summary: Renames subtitles
+      description: Renames subtitles
+      tags:
+        - media
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: query
+          name: id
+          type: string
+          required: true
+          description: "ID of the audio track. Example: es"
+        - in: body
+          name: description
+          schema:
+            properties:
+              id:
+                type: string
+                description: "New track ID. Example: es"
+                example: "es"
+              name:
+                type: string
+                description: "Name for the track. Example: Spanish"
+                example: "Spanish"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_ID - Invalid track ID
+                    * INVALID_NAME - Invalid track name
+                    * NOT_SUPPORTED - This API only applies to videos
+                enum:
+                  - INVALID_ID
+                  - INVALID_NAME
+                  - NOT_SUPPORTED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         403:

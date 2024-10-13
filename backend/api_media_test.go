@@ -647,9 +647,47 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			t.Error(ErrorMismatch("len(Subtitles)", meta.Subtitles[0].Id+"/"+meta.Subtitles[0].Name, "en/English"))
 		}
 
+		// Rename the subtitles
+
+		body, err := json.Marshal(MediaSubtitlesEditBody{
+			Id:   "eng",
+			Name: "English (E)",
+		})
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/rename?id=en", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Subtitles) != 1 {
+			t.Error(ErrorMismatch("len(Subtitles)", fmt.Sprint(len(meta.Subtitles)), fmt.Sprint(1)))
+		}
+
+		if meta.Subtitles[0].Id != "eng" || meta.Subtitles[0].Name != "English (E)" {
+			t.Error(ErrorMismatch("len(Subtitles)", meta.Subtitles[0].Id+"/"+meta.Subtitles[0].Name, "eng/English (E)"))
+		}
+
 		// Delete the subtitles
 
-		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/remove?id=en", nil, session)
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/remove?id=eng", nil, session)
 
 		if err != nil {
 			t.Error(err)
@@ -778,9 +816,47 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			t.Error(ErrorMismatch("Audios", meta.Audios[0].Id+"/"+meta.Audios[0].Name, "en/English"))
 		}
 
+		// Rename the audio
+
+		body, err := json.Marshal(MediaAudioEditBody{
+			Id:   "eng",
+			Name: "English2",
+		})
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/rename?id=en", body, session)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if statusCode != 200 {
+			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+		}
+
+		err = _TestFetchMetadata(server, session, t, mediaId, &meta)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		if len(meta.Audios) != 1 {
+			t.Error(ErrorMismatch("len(Audios)", fmt.Sprint(len(meta.Audios)), fmt.Sprint(1)))
+		}
+
+		if meta.Audios[0].Id != "eng" || meta.Audios[0].Name != "English2" {
+			t.Error(ErrorMismatch("Audios", meta.Audios[0].Id+"/"+meta.Audios[0].Name, "eng/English2"))
+		}
+
 		// Delete the audio
 
-		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/remove?id=en", nil, session)
+		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/remove?id=eng", nil, session)
 
 		if err != nil {
 			t.Error(err)
