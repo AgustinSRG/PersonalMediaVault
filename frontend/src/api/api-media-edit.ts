@@ -567,6 +567,64 @@ export function apiMediaSetSubtitles(
 }
 
 /**
+ * Error handler for rename subtitles API
+ */
+export type RenameSubtitlesErrorHandler = MediaEditApiErrorHandler & {
+    /**
+     * Error: Invalid ID
+     */
+    invalidId: () => void;
+
+    /**
+     * Error: Invalid name
+     */
+    invalidName: () => void;
+
+    /**
+     * Error: Bad request
+     */
+    badRequest: () => void;
+};
+
+/**
+ * Renames subtitles file
+ * @param mediaId Media ID
+ * @param id Subtitles file ID
+ * @param newId New subtitles file ID
+ * @param newName New subtitles file name
+ * @returns The request parameters
+ */
+export function apiMediaRenameSubtitles(
+    mediaId: number,
+    id: string,
+    newId: string,
+    newName: string,
+): RequestParams<void, RenameSubtitlesErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(
+            `${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/subtitles/rename?id=${encodeURIComponent(id)}`,
+        ),
+        json: {
+            id: newId,
+            name: newName,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "INVALID_ID", handler.invalidId)
+                .add(400, "INVALID_NAME", handler.invalidName)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
  * Error handler for remove subtitles API
  */
 export type RemoveSubtitlesErrorHandler = MediaEditApiErrorHandler & {
@@ -654,6 +712,62 @@ export function apiMediaSetAudioTrack(
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "INVALID_AUDIO", handler.invalidAudio)
+                .add(400, "INVALID_ID", handler.invalidId)
+                .add(400, "INVALID_NAME", handler.invalidName)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Error handler for rename audio track API
+ */
+export type RenameAudioTrackErrorHandler = MediaEditApiErrorHandler & {
+    /**
+     * Error: Invalid ID
+     */
+    invalidId: () => void;
+
+    /**
+     * Error: Invalid name
+     */
+    invalidName: () => void;
+
+    /**
+     * Error: Bad request
+     */
+    badRequest: () => void;
+};
+
+/**
+ * Renames audio track
+ * @param mediaId Media ID
+ * @param id Audio track ID
+ * @param newId New audio track ID
+ * @param newName New audio track name
+ * @returns The request parameters
+ */
+export function apiMediaRenameAudioTrack(
+    mediaId: number,
+    id: string,
+    newId: string,
+    newName: string,
+): RequestParams<void, RenameAudioTrackErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/audios/rename?id=${encodeURIComponent(id)}`),
+        json: {
+            id: newId,
+            name: newName,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
                 .add(400, "INVALID_ID", handler.invalidId)
                 .add(400, "INVALID_NAME", handler.invalidName)
                 .add(400, "*", handler.badRequest)
