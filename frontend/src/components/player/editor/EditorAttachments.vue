@@ -31,8 +31,9 @@
                                 type="text"
                                 maxlength="255"
                                 :disabled="busy"
-                                class="form-control form-control-full-width"
+                                class="form-control form-control-full-width edit-auto-focus"
                                 v-model="attachmentEditName"
+                                @keydown="editInputKeyEventHandler"
                             />
                         </td>
                         <td class="one-line">{{ renderSize(att.size) }}</td>
@@ -119,7 +120,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
 import { clone } from "@/utils/objects";
@@ -338,11 +339,26 @@ export default defineComponent({
         editAttachment: function (att: MediaAttachment) {
             this.attachmentEdit = att.id;
             this.attachmentEditName = att.name;
+
+            nextTick(() => {
+                const el = this.$el.querySelector(".edit-auto-focus");
+                if (el) {
+                    el.focus();
+                    el.select();
+                }
+            });
         },
 
         cancelEditAttachment: function () {
             this.attachmentEdit = -1;
             this.attachmentEditName = "";
+        },
+
+        editInputKeyEventHandler: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.saveEditAttachment();
+            }
         },
 
         saveEditAttachment: function () {
