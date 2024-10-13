@@ -24,18 +24,73 @@
                         <td class="text-right td-shrink" v-if="canWrite"></td>
                     </tr>
                     <tr v-for="aud in audios" :key="aud.id">
-                        <td class="bold">{{ aud.id }}</td>
-                        <td class="bold">{{ aud.name }}</td>
+                        <td class="bold" v-if="audioRenameSelected !== aud.id">{{ aud.id }}</td>
+                        <td v-else>
+                            <input
+                                type="text"
+                                maxlength="255"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                                class="form-control form-control-full-width"
+                                v-model="audioRenameId"
+                                @keydown="renameInputKeyEventHandler"
+                            />
+                        </td>
+
+                        <td class="bold" v-if="audioRenameSelected !== aud.id">{{ aud.name }}</td>
+                        <td v-else>
+                            <input
+                                type="text"
+                                maxlength="255"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                                class="form-control form-control-full-width edit-auto-focus"
+                                v-model="audioRenameName"
+                                @keydown="renameInputKeyEventHandler"
+                            />
+                        </td>
+
                         <td class="text-right td-shrink">
                             <button type="button" class="btn btn-primary btn-xs" @click="downloadAudio(aud)">
                                 <i class="fas fa-download"></i> {{ $t("Download") }}
                             </button>
                         </td>
-                        <td class="text-right td-shrink" v-if="canWrite">
+                        <td class="text-right td-shrink one-line" v-if="audioRenameSelected === aud.id && canWrite">
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                                @click="saveRename"
+                            >
+                                <i class="fas fa-check"></i> {{ $t("Save") }}
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                                @click="cancelRename"
+                            >
+                                <i class="fas fa-times"></i> {{ $t("Cancel") }}
+                            </button>
+                        </td>
+                        <td class="text-right td-shrink one-line" v-else-if="canWrite">
+                            <button
+                                v-if="!audioRenameSelected"
+                                type="button"
+                                class="btn btn-primary btn-xs mr-1"
+                                @click="startRename(aud)"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                            >
+                                <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
+                            </button>
                             <button v-if="busyDeleting && busyDeletingId === aud.id" type="button" class="btn btn-danger btn-xs" disabled>
                                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
                             </button>
-                            <button v-else type="button" class="btn btn-danger btn-xs" @click="removeAudio(aud)">
+                            <button
+                                v-else
+                                type="button"
+                                class="btn btn-danger btn-xs"
+                                @click="removeAudio(aud)"
+                                :disabled="busy || busyDeleting || audioRenameBusy"
+                            >
                                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                             </button>
                         </td>
@@ -92,13 +147,13 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 
 import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
-import { apiMediaRemoveAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
+import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
@@ -127,6 +182,11 @@ export default defineComponent({
 
             uploading: false,
             uploadProgress: 0,
+
+            audioRenameSelected: "",
+            audioRenameId: "",
+            audioRenameName: "",
+            audioRenameBusy: false,
 
             canWrite: AuthController.CanWrite,
 
@@ -346,6 +406,121 @@ export default defineComponent({
 
         renderProgress: function (p: number): string {
             return Math.max(0, Math.min(100, Math.floor(p * 100))) + "%";
+        },
+
+        startRename: function (aud: MediaAudioTrack) {
+            this.audioRenameSelected = aud.id;
+            this.audioRenameId = aud.id;
+            this.audioRenameName = aud.name;
+
+            nextTick(() => {
+                const el = this.$el.querySelector(".edit-auto-focus");
+                if (el) {
+                    el.focus();
+                    el.select();
+                }
+            });
+        },
+
+        cancelRename: function () {
+            this.audioRenameSelected = "";
+        },
+
+        renameInputKeyEventHandler: function (e: KeyboardEvent) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.saveRename();
+            }
+        },
+
+        saveRename: function () {
+            if (this.audioRenameBusy) {
+                return;
+            }
+
+            const audioId = this.audioRenameSelected;
+
+            const newId = this.audioRenameId;
+            const newName = this.audioRenameName;
+
+            if (!newId) {
+                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
+                return;
+            }
+
+            if (newId !== audioId) {
+                for (const audio of this.audios) {
+                    if (audio.id === newId) {
+                        PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Audio track identifier already in use"));
+                        return;
+                    }
+                }
+            }
+
+            if (!newName) {
+                PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
+                return;
+            }
+
+            this.audioRenameBusy = true;
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            makeNamedApiRequest(this.requestId, apiMediaRenameAudioTrack(mediaId, audioId, newId, newName))
+                .onSuccess(() => {
+                    PagesController.ShowSnackBarRight(this.$t("Renamed audio track") + ": " + newName + " (" + newId + ")");
+                    this.audioRenameBusy = false;
+                    this.audioRenameSelected = "";
+                    for (let i = 0; i < this.audios.length; i++) {
+                        if (this.audios[i].id === audioId) {
+                            this.audios[i].id = newId;
+                            this.audios[i].name = newName;
+                            break;
+                        }
+                    }
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.audios = clone(this.audios);
+                    }
+                    this.$emit("changed");
+                })
+                .onCancel(() => {
+                    this.audioRenameBusy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.audioRenameBusy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        invalidId: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));
+                        },
+                        invalidName: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track name"));
+                        },
+                        badRequest: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        accessDenied: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
+                        },
+                        notFound: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Not found"));
+                        },
+                        serverError: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Internal server error"));
+                        },
+                        networkError: () => {
+                            PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    PagesController.ShowSnackBarRight(err.message);
+                    console.error(err);
+                    this.audioRenameBusy = false;
+                });
         },
     },
 
