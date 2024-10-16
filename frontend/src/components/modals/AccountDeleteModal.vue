@@ -22,7 +22,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button type="submit" :disabled="busy" class="modal-footer-btn auto-focus">
-                    <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                    <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete") }}
                 </button>
             </div>
         </form>
@@ -37,8 +37,12 @@ import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { makeApiRequest } from "@asanrom/request-browser";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "AccountDeleteModal",
     emits: ["update:display", "done"],
     props: {

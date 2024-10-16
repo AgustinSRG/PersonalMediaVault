@@ -30,7 +30,7 @@
                             <input
                                 type="text"
                                 maxlength="255"
-                                :disabled="busy"
+                                :disabled="busyRename || busyDelete"
                                 class="form-control form-control-full-width edit-auto-focus"
                                 v-model="attachmentEditName"
                                 @keydown="editInputKeyEventHandler"
@@ -42,7 +42,7 @@
                                 v-if="attachmentEdit != att.id"
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
-                                :disabled="busy"
+                                :disabled="busyRename || busyDelete"
                                 @click="editAttachment(att)"
                             >
                                 <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
@@ -51,16 +51,16 @@
                                 v-if="attachmentEdit == att.id"
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
-                                :disabled="busy"
+                                :disabled="busyRename || busyDelete"
                                 @click="saveEditAttachment"
                             >
-                                <i class="fas fa-check"></i> {{ $t("Save") }}
+                                <LoadingIcon icon="fas fa-check" :loading="busyRename"></LoadingIcon> {{ $t("Save") }}
                             </button>
                             <button
                                 v-if="attachmentEdit == att.id"
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
-                                :disabled="busy"
+                                :disabled="busyRename || busyDelete"
                                 @click="cancelEditAttachment"
                             >
                                 <i class="fas fa-times"></i> {{ $t("Cancel") }}
@@ -69,10 +69,11 @@
                                 v-if="attachmentEdit != att.id"
                                 type="button"
                                 class="btn btn-danger btn-xs"
-                                :disabled="busy"
+                                :disabled="busyRename || busyDelete"
                                 @click="removeAttachment(att)"
                             >
-                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                                <LoadingIcon icon="fas fa-trash-alt" :loading="busyDelete && busyDeleteId === att.id"></LoadingIcon>
+                                {{ $t("Delete") }}
                             </button>
                         </td>
                     </tr>
@@ -83,23 +84,23 @@
         <div class="form-group" v-if="canWrite">
             <input type="file" class="file-hidden attachment-file-hidden" @change="attachmentFileChanged" name="attachment-upload" />
             <button
-                v-if="!busy || attachmentUploadProgress <= 0"
+                v-if="!busyUpload || attachmentUploadProgress <= 0"
                 type="button"
                 class="btn btn-primary"
-                :disabled="busy"
+                :disabled="busyUpload"
                 @click="selectAttachmentFile"
             >
                 <i class="fas fa-upload"></i> {{ $t("Upload attachment") }}
             </button>
             <button
-                v-if="busy && attachmentUploadProgress > 0 && attachmentUploadProgress < 100"
+                v-if="busyUpload && attachmentUploadProgress > 0 && attachmentUploadProgress < 100"
                 type="button"
                 class="btn btn-primary"
                 disabled
             >
                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading") }}... ({{ attachmentUploadProgress }}%)
             </button>
-            <button v-if="busy && attachmentUploadProgress >= 100" type="button" class="btn btn-primary" disabled>
+            <button v-if="busyUpload && attachmentUploadProgress >= 100" type="button" class="btn btn-primary" disabled>
                 <i class="fa fa-spinner fa-spin"></i> {{ $t("Encrypting") }}...
             </button>
         </div>
@@ -121,7 +122,7 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
-
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import AttachmentDeleteModal from "@/components/modals/AttachmentDeleteModal.vue";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -130,6 +131,7 @@ import { apiMediaRemoveAttachment, apiMediaRenameAttachment, apiMediaUploadAttac
 
 export default defineComponent({
     components: {
+        LoadingIcon,
         AttachmentDeleteModal,
     },
     name: "EditorAttachments",
@@ -148,7 +150,11 @@ export default defineComponent({
             attachmentEdit: -1,
             attachmentEditName: "",
 
-            busy: false,
+            busyUpload: false,
+            busyRename: false,
+
+            busyDelete: false,
+            busyDeleteId: -1,
 
             canWrite: AuthController.CanWrite,
 
@@ -206,18 +212,18 @@ export default defineComponent({
         },
 
         addAttachment: function (file: File) {
-            if (this.busy) {
+            if (this.busyUpload) {
                 return;
             }
 
-            this.busy = true;
+            this.busyUpload = true;
 
             const mediaId = AppStatus.CurrentMedia;
 
             makeNamedApiRequest(this.requestId, apiMediaUploadAttachment(mediaId, file))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBarRight(this.$t("Added attachment") + ": " + res.name);
-                    this.busy = false;
+                    this.busyUpload = false;
                     this.attachmentUploadProgress = 0;
                     this.attachments.push(res);
 
@@ -233,10 +239,10 @@ export default defineComponent({
                     }
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyUpload = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyUpload = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -262,7 +268,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
-                    this.busy = false;
+                    this.busyUpload = false;
                 });
         },
 
@@ -274,11 +280,12 @@ export default defineComponent({
         removeAttachmentConfirm: function () {
             const att = this.attachmentToDelete;
 
-            if (this.busy || !att) {
+            if (this.busyDelete || !att) {
                 return;
             }
 
-            this.busy = true;
+            this.busyDelete = true;
+            this.busyDeleteId = att.id;
 
             const mediaId = AppStatus.CurrentMedia;
             const id = att.id;
@@ -286,7 +293,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaRemoveAttachment(mediaId, id))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed attachment") + ": " + att.name);
-                    this.busy = false;
+                    this.busyDelete = false;
                     for (let i = 0; i < this.attachments.length; i++) {
                         if (this.attachments[i].id === id) {
                             this.attachments.splice(i, 1);
@@ -299,10 +306,10 @@ export default defineComponent({
                     this.$emit("changed");
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyDelete = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyDelete = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -328,7 +335,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
-                    this.busy = false;
+                    this.busyDelete = false;
                 });
         },
 
@@ -362,11 +369,11 @@ export default defineComponent({
         },
 
         saveEditAttachment: function () {
-            if (this.busy) {
+            if (this.busyRename) {
                 return;
             }
 
-            this.busy = true;
+            this.busyRename = true;
 
             const mediaId = AppStatus.CurrentMedia;
             const id = this.attachmentEdit;
@@ -374,7 +381,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaRenameAttachment(mediaId, id, this.attachmentEditName))
                 .onSuccess((res) => {
                     PagesController.ShowSnackBarRight(this.$t("Renamed attachment") + ": " + res.name);
-                    this.busy = false;
+                    this.busyRename = false;
                     this.attachmentEdit = -1;
                     this.attachmentEditName = "";
                     for (let i = 0; i < this.attachments.length; i++) {
@@ -390,10 +397,10 @@ export default defineComponent({
                     this.$emit("changed");
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyRename = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyRename = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -422,7 +429,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     PagesController.ShowSnackBarRight(err.message);
                     console.error(err);
-                    this.busy = false;
+                    this.busyRename = false;
                 });
         },
 

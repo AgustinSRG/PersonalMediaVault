@@ -61,7 +61,7 @@
                                 :disabled="busy || busyDeleting || subtitleRenameBusy"
                                 @click="saveRename"
                             >
-                                <i class="fas fa-check"></i> {{ $t("Save") }}
+                                <LoadingIcon icon="fas fa-check" :loading="subtitleRenameBusy"></LoadingIcon> {{ $t("Save") }}
                             </button>
                             <button
                                 type="button"
@@ -81,17 +81,14 @@
                             >
                                 <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
                             </button>
-                            <button v-if="busyDeleting && busyDeletingId === sub.id" type="button" class="btn btn-danger btn-xs" disabled>
-                                <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
-                            </button>
                             <button
-                                v-else
                                 type="button"
                                 class="btn btn-danger btn-xs"
                                 :disabled="busy || busyDeleting || subtitleRenameBusy"
                                 @click="removeSubtitles(sub)"
                             >
-                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                                <LoadingIcon icon="fas fa-trash-alt" :loading="busyDeleting && busyDeletingId === sub.id"></LoadingIcon>
+                                {{ $t("Delete") }}
                             </button>
                         </td>
                     </tr>
@@ -148,6 +145,7 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import SubtitlesDeleteModal from "@/components/modals/SubtitlesDeleteModal.vue";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -156,6 +154,7 @@ import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles 
 
 export default defineComponent({
     components: {
+        LoadingIcon,
         SubtitlesDeleteModal,
     },
     name: "EditorSubtitles",

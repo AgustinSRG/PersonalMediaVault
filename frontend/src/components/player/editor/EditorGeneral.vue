@@ -23,7 +23,7 @@
                         class="btn btn-primary"
                         :disabled="busyTitle || originalTitle === title || !title"
                     >
-                        <i class="fas fa-pencil-alt"></i> {{ $t("Change title") }}
+                        <LoadingIcon icon="fas fa-pencil-alt" :loading="busyTitle"></LoadingIcon> {{ $t("Change title") }}
                     </button>
                     <button v-else type="button" disabled class="btn btn-primary">
                         <i class="fas fa-check"></i> {{ $t("Saved title") }}
@@ -53,7 +53,7 @@
                     :disabled="busyDescription || originalDesc === desc"
                     @click="changeDescription"
                 >
-                    <i class="fas fa-pencil-alt"></i> {{ $t("Change description") }}
+                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busyDescription"></LoadingIcon> {{ $t("Change description") }}
                 </button>
                 <button v-else type="button" disabled class="btn btn-primary">
                     <i class="fas fa-check"></i> {{ $t("Saved description") }}
@@ -95,6 +95,9 @@
                     </tr>
                 </table>
             </div>
+            <div class="form-group loader-delayed-custom" v-if="busyExtra">
+                <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
+            </div>
             <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
         </div>
 
@@ -132,6 +135,7 @@ import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import {
@@ -144,6 +148,7 @@ import {
 export default defineComponent({
     components: {
         ToggleSwitch,
+        LoadingIcon,
     },
     name: "EditorGeneral",
     emits: ["changed"],

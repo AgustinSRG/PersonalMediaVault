@@ -50,7 +50,9 @@
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Change username") }}</button>
+                <button type="submit" class="modal-footer-btn" :disabled="busy">
+                    <LoadingIcon icon="fas fa-check" :loading="busy"></LoadingIcon> {{ $t("Change username") }}
+                </button>
             </div>
         </form>
     </ModalDialogContainer>
@@ -64,8 +66,12 @@ import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { PagesController } from "@/control/pages";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "ChangeUsernameModal",
     emits: ["update:display"],
     props: {

@@ -57,7 +57,7 @@
 
             <div class="modal-footer no-padding">
                 <button type="submit" :disabled="busy" class="modal-footer-btn">
-                    <i class="fas fa-plus"></i> {{ $t("Create account") }}
+                    <LoadingIcon icon="fas fa-plus" :loading="busy"></LoadingIcon> {{ $t("Create account") }}
                 </button>
             </div>
         </form>
@@ -72,9 +72,12 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAdminCreateAccount } from "@/api/api-admin";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
-    components: {},
+    components: {
+        LoadingIcon,
+    },
     name: "AccountCreateModal",
     emits: ["update:display", "account-created"],
     props: {

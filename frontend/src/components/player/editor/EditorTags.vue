@@ -52,6 +52,9 @@
                     <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
                 </button>
             </div>
+            <div class="form-group loader-delayed-custom" v-if="busy">
+                <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
+            </div>
         </form>
     </div>
 </template>

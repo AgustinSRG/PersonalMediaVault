@@ -37,7 +37,7 @@
                     </div>
                     <div class="invite-code-btn-container">
                         <button type="button" :disabled="busy" @click="clearCode" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> {{ $t("Clear invite code") }}
+                            <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Clear invite code") }}
                         </button>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="invite-code-btn-container">
                         <button type="button" :disabled="busy" @click="generateCode" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> {{ $t("Create invite code") }}
+                            <LoadingIcon icon="fas fa-plus" :loading="busy"></LoadingIcon> {{ $t("Create invite code") }}
                         </button>
                     </div>
                     <div class="invite-code-select-container">
@@ -85,8 +85,17 @@
                                     {{ renderTimestamp(s.expiration) }}
                                 </td>
                                 <td class="text-right td-shrink">
-                                    <button type="button" :disabled="busy" @click="askCloseSession(s.index)" class="btn btn-danger btn-xs">
-                                        <i class="fas fa-trash-alt"></i> {{ $t("Close") }}
+                                    <button
+                                        type="button"
+                                        :disabled="busyClosing"
+                                        @click="askCloseSession(s.index)"
+                                        class="btn btn-danger btn-xs"
+                                    >
+                                        <LoadingIcon
+                                            icon="fas fa-trash-alt"
+                                            :loading="busyClosing && sessionToClose === s.index"
+                                        ></LoadingIcon>
+                                        {{ $t("Close") }}
                                     </button>
                                 </td>
                             </tr>
@@ -122,12 +131,13 @@ import {
 import { getUniqueStringId } from "@/utils/unique-id";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime, renderTimeSeconds } from "@/utils/time";
-
 import InviteCloseSessionConfirmationModal from "@/components/modals/InviteCloseSessionConfirmationModal.vue";
 import { SessionDuration } from "@/api/api-auth";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
     components: {
+        LoadingIcon,
         InviteCloseSessionConfirmationModal,
     },
     name: "InviteModal",
@@ -158,6 +168,7 @@ export default defineComponent({
             durationGenerate: "day" as SessionDuration,
 
             busy: false,
+            busyClosing: false,
 
             loadingSessions: true,
             loadingSessionsSilent: true,
@@ -298,20 +309,28 @@ export default defineComponent({
         },
 
         closeSession: function () {
-            if (this.busy) {
+            if (this.busyClosing) {
                 return;
             }
 
-            this.busy = true;
+            const sessionIndex = this.sessionToClose;
 
-            makeApiRequest(apiInvitesDeleteSession(this.sessionToClose))
+            this.busyClosing = true;
+
+            makeApiRequest(apiInvitesDeleteSession(sessionIndex))
                 .onSuccess(() => {
-                    this.busy = false;
+                    this.busyClosing = false;
                     PagesController.ShowSnackBar(this.$t("Session closed"));
+                    for (let i = 0; i < this.sessions.length; i++) {
+                        if (this.sessions[i].index === sessionIndex) {
+                            this.sessions.splice(i, 1);
+                            break;
+                        }
+                    }
                     this.loadSessions();
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyClosing = false;
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -329,7 +348,7 @@ export default defineComponent({
                     });
                 })
                 .onUnexpectedError((err) => {
-                    this.busy = false;
+                    this.busyClosing = false;
                     console.error(err);
                     PagesController.ShowSnackBar(this.$t("Error") + ": " + err.message);
                 });

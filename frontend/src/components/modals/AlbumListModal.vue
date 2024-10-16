@@ -74,11 +74,13 @@
                             @click="clickOnAlbum(a, false, $event)"
                             @keydown="clickOnEnter"
                             class="albums-modal-menu-item"
+                            :class="{ disabled: busy }"
                         >
                             <div class="albums-modal-menu-item-icon">
-                                <i v-if="busy" class="fa fa-spinner fa-spin"></i>
-                                <i v-else-if="a.added" class="far fa-square-check"></i>
-                                <i v-else class="far fa-square"></i>
+                                <LoadingIcon
+                                    :icon="a.added ? 'far fa-square-check' : 'far fa-square'"
+                                    :loading="busy && busyTarget === a.id"
+                                ></LoadingIcon>
                             </div>
                             <div class="albums-modal-menu-item-title">
                                 {{ a.name }}
@@ -111,7 +113,7 @@
             </div>
 
             <div class="modal-footer no-padding" v-if="!loading && editMode">
-                <button type="button" @click="createAlbum" class="modal-footer-btn">
+                <button type="button" @click="createAlbum" :disabled="busy" class="modal-footer-btn">
                     <i class="fas fa-plus"></i> {{ $t("Create album") }}
                 </button>
             </div>
@@ -133,13 +135,13 @@ import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asan
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
 import { generateURIQuery } from "@/utils/api";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 interface AlbumModalListItem {
     id: number;
@@ -151,6 +153,7 @@ interface AlbumModalListItem {
 export default defineComponent({
     components: {
         AlbumCreateModal,
+        LoadingIcon,
     },
     name: "AlbumListModal",
     emits: ["update:display"],
@@ -173,6 +176,7 @@ export default defineComponent({
 
             loading: true,
             busy: false,
+            busyTarget: -1,
 
             displayAlbumCreate: false,
 
@@ -288,6 +292,7 @@ export default defineComponent({
             }
 
             this.busy = true;
+            this.busyTarget = album.id;
 
             if (album.added) {
                 // Remove

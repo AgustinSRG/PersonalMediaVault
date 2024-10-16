@@ -60,7 +60,7 @@
                                 :disabled="busy || busyDeleting || audioRenameBusy"
                                 @click="saveRename"
                             >
-                                <i class="fas fa-check"></i> {{ $t("Save") }}
+                                <LoadingIcon icon="fas fa-check" :loading="audioRenameBusy"></LoadingIcon> {{ $t("Save") }}
                             </button>
                             <button
                                 type="button"
@@ -80,17 +80,14 @@
                             >
                                 <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
                             </button>
-                            <button v-if="busyDeleting && busyDeletingId === aud.id" type="button" class="btn btn-danger btn-xs" disabled>
-                                <i class="fa fa-spinner fa-spin"></i> {{ $t("Deleting") }}...
-                            </button>
                             <button
-                                v-else
                                 type="button"
                                 class="btn btn-danger btn-xs"
                                 @click="removeAudio(aud)"
                                 :disabled="busy || busyDeleting || audioRenameBusy"
                             >
-                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                                <LoadingIcon icon="fas fa-trash-alt" :loading="busyDeleting && busyDeletingId === aud.id"></LoadingIcon>
+                                {{ $t("Delete") }}
                             </button>
                         </td>
                     </tr>
@@ -147,7 +144,7 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
-
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import AudioTrackDeleteModal from "@/components/modals/AudioTrackDeleteModal.vue";
 import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -156,6 +153,7 @@ import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTra
 
 export default defineComponent({
     components: {
+        LoadingIcon,
         AudioTrackDeleteModal,
     },
     name: "EditorAudios",

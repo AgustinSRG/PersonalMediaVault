@@ -4,6 +4,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -13,6 +14,7 @@
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
     }
@@ -241,6 +243,10 @@
     align-items: center;
 }
 
+.albums-modal-menu-item.disabled {
+    cursor: default;
+}
+
 .modal-menu-item-title {
     padding-top: 1rem;
     padding-right: 1rem;
@@ -250,6 +256,9 @@
 
 .albums-modal-menu-item-title {
     flex: 1;
+    min-width: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding-top: 1rem;
     padding-right: 1rem;
     padding-bottom: 1rem;

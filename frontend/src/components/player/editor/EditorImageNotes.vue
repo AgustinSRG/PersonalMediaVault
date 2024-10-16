@@ -39,7 +39,7 @@
                 :disabled="busy || !dirty"
                 @click="changeImageNotes"
             >
-                <i class="fas fa-pencil-alt"></i> {{ $t("Change image notes") }}
+                <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Change image notes") }}
             </button>
             <button v-else type="button" disabled class="btn btn-primary">
                 <i class="fas fa-check"></i> {{ $t("Saved image notes") }}
@@ -58,9 +58,12 @@ import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/i
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
-    components: {},
+    components: {
+        LoadingIcon,
+    },
     name: "EditorImageNotes",
     emits: ["changed"],
     setup() {

@@ -37,7 +37,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button :disabled="busy" type="submit" class="modal-footer-btn">
-                    <i class="fas fa-trash-alt"></i> {{ $t("Delete album") }}
+                    <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete album") }}
                 </button>
             </div>
         </form>
@@ -53,8 +53,12 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "AlbumDeleteModal",
     emits: ["update:display"],
     props: {

@@ -188,7 +188,9 @@
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Save changes") }}</button>
+                <button type="submit" class="modal-footer-btn" :disabled="busy">
+                    <LoadingIcon icon="fas fa-check" :loading="busy"></LoadingIcon> {{ $t("Save changes") }}
+                </button>
             </div>
         </form>
 
@@ -204,8 +206,8 @@ import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
@@ -214,6 +216,7 @@ import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 export default defineComponent({
     components: {
         ToggleSwitch,
+        LoadingIcon,
         SaveChangesAskModal,
     },
     name: "AdvancedSettingsModal",

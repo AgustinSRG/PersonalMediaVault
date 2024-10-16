@@ -31,7 +31,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button :disabled="busy" type="submit" class="modal-footer-btn">
-                    <i class="fas fa-pencil-alt"></i> {{ $t("Rename album") }}
+                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Rename album") }}
                 </button>
             </div>
         </form>
@@ -47,8 +47,12 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsRenameAlbum } from "@/api/api-albums";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "AlbumRenameModal",
     emits: ["update:display"],
     props: {

@@ -26,7 +26,7 @@
                 :disabled="busy || !dirty"
                 @click="changeTimeSlices"
             >
-                <i class="fas fa-pencil-alt"></i> {{ $t("Change time slices") }}
+                <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Change time slices") }}
             </button>
             <button v-else type="button" disabled class="btn btn-primary">
                 <i class="fas fa-check"></i> {{ $t("Saved time slices") }}
@@ -47,9 +47,12 @@ import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
-    components: {},
+    components: {
+        LoadingIcon,
+    },
     name: "EditorTimeSlices",
     emits: ["changed"],
     setup() {

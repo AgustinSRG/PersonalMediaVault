@@ -9,8 +9,8 @@
             </label>
         </div>
         <div class="form-group" v-if="canWrite">
-            <button type="button" class="btn btn-primary" :disabled="busy" @click="encodeMedia">
-                <i class="fas fa-sync-alt"></i> {{ $t("Re-Encode") }}
+            <button type="button" class="btn btn-primary" :disabled="busyReEncode || busyReplace" @click="encodeMedia">
+                <LoadingIcon icon="fas fa-sync-alt" :loading="busyReEncode"></LoadingIcon> {{ $t("Re-Encode") }}
             </button>
             <div v-if="errorReEncode" class="form-error form-error-pt">{{ errorReEncode }}</div>
         </div>
@@ -25,7 +25,14 @@
         </div>
         <div class="form-group" v-if="canWrite">
             <input type="file" class="file-hidden replace-file-hidden" @change="replaceFileChanged" name="attachment-upload" />
-            <button v-if="!replacing" type="button" class="btn btn-primary" :disabled="busy" @click="replaceMedia" @drop="replaceMediaDrop">
+            <button
+                v-if="!replacing"
+                type="button"
+                class="btn btn-primary"
+                :disabled="busyReEncode || busyReplace"
+                @click="replaceMedia"
+                @drop="replaceMediaDrop"
+            >
                 <i class="fas fa-upload"></i> {{ $t("Replace media") }}
             </button>
             <button v-else-if="replacing && replaceProgress < 100" type="button" class="btn btn-primary" disabled>
@@ -43,7 +50,7 @@
             <label>{{ $t("If you want to delete this media resource, click the button below.") }}</label>
         </div>
         <div class="form-group" v-if="canWrite">
-            <button type="button" class="btn btn-danger" :disabled="busy" @click="deleteMedia">
+            <button type="button" class="btn btn-danger" :disabled="busyReEncode || busyReplace" @click="deleteMedia">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
             </button>
         </div>
@@ -71,7 +78,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
-
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import MediaDeleteModal from "@/components/modals/MediaDeleteModal.vue";
 import ReEncodeConfirmationModal from "@/components/modals/ReEncodeConfirmationModal.vue";
 import ReplaceMediaConfirmationModal from "@/components/modals/ReplaceMediaConfirmationModal.vue";
@@ -84,6 +91,7 @@ export default defineComponent({
         MediaDeleteModal,
         ReEncodeConfirmationModal,
         ReplaceMediaConfirmationModal,
+        LoadingIcon,
     },
     name: "EditorDangerZone",
     emits: ["changed"],
@@ -97,7 +105,8 @@ export default defineComponent({
         return {
             type: 0,
 
-            busy: false,
+            busyReEncode: false,
+            busyReplace: false,
 
             canWrite: AuthController.CanWrite,
 
@@ -128,11 +137,11 @@ export default defineComponent({
         },
 
         doEncodeMedia: function () {
-            if (this.busy) {
+            if (this.busyReEncode) {
                 return;
             }
 
-            this.busy = true;
+            this.busyReEncode = true;
             this.errorReEncode = "";
 
             const mediaId = AppStatus.CurrentMedia;
@@ -140,14 +149,14 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaEncodeMedia(mediaId))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully requested pending encoding tasks"));
-                    this.busy = false;
+                    this.busyReEncode = false;
                     MediaController.Load();
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyReEncode = false;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyReEncode = false;
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
@@ -170,7 +179,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     this.errorReEncode = this.$t("Error") + ": " + err.message;
                     console.error(err);
-                    this.busy = false;
+                    this.busyReEncode = false;
                 });
         },
 
@@ -208,7 +217,7 @@ export default defineComponent({
         replaceMediaDrop: function (e: DragEvent) {
             e.preventDefault();
 
-            if (this.busy) {
+            if (this.busyReplace) {
                 return;
             }
 
@@ -223,7 +232,7 @@ export default defineComponent({
         },
 
         doReplaceMedia: function () {
-            if (this.busy) {
+            if (this.busyReplace) {
                 return;
             }
 
@@ -233,7 +242,7 @@ export default defineComponent({
                 return;
             }
 
-            this.busy = true;
+            this.busyReplace = true;
             this.replacing = true;
             this.replaceProgress = 0;
             this.errorReplace = "";
@@ -243,7 +252,7 @@ export default defineComponent({
             makeNamedApiRequest(this.requestId, apiMediaReplaceMedia(mediaId, file))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully uploaded") + ": " + file.name);
-                    this.busy = false;
+                    this.busyReplace = false;
                     this.replacing = false;
                     this.replaceProgress = 0;
                     this.fileRef = null;
@@ -256,13 +265,13 @@ export default defineComponent({
                     }
                 })
                 .onCancel(() => {
-                    this.busy = false;
+                    this.busyReplace = false;
                     this.replacing = false;
                     this.replaceProgress = 0;
                     this.fileRef = null;
                 })
                 .onRequestError((err, handleErr) => {
-                    this.busy = false;
+                    this.busyReplace = false;
                     this.replacing = false;
                     this.replaceProgress = 0;
                     this.fileRef = null;
@@ -298,7 +307,7 @@ export default defineComponent({
                 .onUnexpectedError((err) => {
                     this.errorReplace = this.$t("Error") + ": " + err.message;
                     console.error(err);
-                    this.busy = false;
+                    this.busyReplace = false;
                     this.replacing = false;
                     this.replaceProgress = 0;
                 });

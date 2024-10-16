@@ -32,6 +32,11 @@
     background: var(--theme-bg-color);
 }
 
+.loader-delayed-custom {
+    animation-name: delayed-loader;
+    animation-duration: 0.33s;
+}
+
 .loading-overlay.loading-overlay-fixed {
     position: fixed;
 }

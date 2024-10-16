@@ -127,7 +127,7 @@ export default defineComponent({
             this.isUpload = false;
         },
 
-        selectMedia: function (mid, callback) {
+        selectMedia: function (mid: number, callback: () => void) {
             if (this.busy) {
                 return;
             }

@@ -37,7 +37,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button :disabled="busy" type="submit" class="modal-footer-btn">
-                    <i class="fas fa-trash-alt"></i> {{ $t("Delete media") }}
+                    <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete media") }}
                 </button>
             </div>
         </form>
@@ -55,8 +55,12 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "MediaDeleteModal",
     emits: ["update:display"],
     props: {

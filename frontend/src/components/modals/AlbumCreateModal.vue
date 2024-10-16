@@ -31,7 +31,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button :disabled="busy" type="submit" class="modal-footer-btn">
-                    <i class="fas fa-plus"></i> {{ $t("Create album") }}
+                    <LoadingIcon icon="fas fa-plus" :loading="busy"></LoadingIcon> {{ $t("Create album") }}
                 </button>
             </div>
         </form>
@@ -47,8 +47,12 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsCreateAlbum } from "@/api/api-albums";
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    components: {
+        LoadingIcon,
+    },
     name: "AlbumCreateModal",
     emits: ["update:display", "new-album"],
     props: {

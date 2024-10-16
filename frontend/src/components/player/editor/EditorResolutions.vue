@@ -40,7 +40,7 @@
                                 :disabled="busy"
                                 @click="addResolution(res)"
                             >
-                                <i class="fas fa-plus"></i> {{ $t("Encode") }}
+                                <LoadingIcon icon="fas fa-plus" :loading="busy && busyTarget === res.name"></LoadingIcon> {{ $t("Encode") }}
                             </button>
                             <button
                                 v-if="res.enabled"
@@ -49,7 +49,8 @@
                                 :disabled="busy"
                                 @click="deleteResolution(res)"
                             >
-                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                                <LoadingIcon icon="fas fa-trash-alt" :loading="busy && busyTarget === res.name"></LoadingIcon>
+                                {{ $t("Delete") }}
                             </button>
                         </td>
                     </tr>
@@ -74,15 +75,16 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
-
+import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ResolutionConfirmationModal from "@/components/modals/ResolutionConfirmationModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, NamedResolution } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MediaResolution, NamedResolution } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 
 export default defineComponent({
     components: {
+        LoadingIcon,
         ResolutionConfirmationModal,
     },
     name: "EditorResolutions",
@@ -178,6 +180,7 @@ export default defineComponent({
             resolutions: [] as NamedResolution[],
 
             busy: false,
+            busyTarget: "",
 
             canWrite: AuthController.CanWrite,
 
@@ -203,7 +206,7 @@ export default defineComponent({
             this.updateResolutions(MediaController.MediaData.resolutions || []);
         },
 
-        updateResolutions: function (resolutions) {
+        updateResolutions: function (resolutions: MediaResolution[]) {
             this.resolutions = this.standardResolutions
                 .filter((r) => {
                     if (this.type === MEDIA_TYPE_IMAGE) {
@@ -258,6 +261,7 @@ export default defineComponent({
             }
 
             this.busy = true;
+            this.busyTarget = r.name;
 
             const mediaId = AppStatus.CurrentMedia;
 
