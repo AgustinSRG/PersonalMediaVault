@@ -307,6 +307,7 @@ import { AlbumsController, EVENT_NAME_NEXT_PRE_FETCH } from "@/control/albums";
 import { MEDIA_TYPE_IMAGE, MediaData } from "@/api/models";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 
 const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),
@@ -1122,7 +1123,7 @@ export default defineComponent({
             }
         },
 
-        handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {
+        handleMediaSessionEvent: function (event: MediaSessionActionDetails) {
             if (!event || !event.action) {
                 return;
             }
@@ -1165,11 +1166,12 @@ export default defineComponent({
         this.initializeImage();
 
         if (window.navigator && window.navigator.mediaSession) {
-            navigator.mediaSession.setActionHandler("play", null);
-            navigator.mediaSession.setActionHandler("pause", null);
-            navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
-            navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
             MediaController.MediaSessionId = this.mediaSessionId;
+            clearMediaSessionActionHandlers();
+
+            addMediaSessionActionHandler(["nexttrack", "previoustrack"], this.handleMediaSessionEvent.bind(this));
+
+            navigator.mediaSession.playbackState = "none";
         }
     },
     beforeUnmount: function () {
@@ -1182,10 +1184,8 @@ export default defineComponent({
         }
 
         if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            navigator.mediaSession.setActionHandler("play", null);
-            navigator.mediaSession.setActionHandler("pause", null);
-            navigator.mediaSession.setActionHandler("nexttrack", null);
-            navigator.mediaSession.setActionHandler("previoustrack", null);
+            clearMediaSessionActionHandlers();
+            navigator.mediaSession.playbackState = "none";
             MediaController.MediaSessionId = "";
         }
     },

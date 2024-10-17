@@ -521,6 +521,7 @@ import { PropType } from "vue";
 import { MediaData } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -970,6 +971,7 @@ export default defineComponent({
                         promise.catch(() => {
                             this.playing = false;
                             this.requiresRefresh = true;
+                            this.updateMediaSessionPlaybackState();
                         });
                     }
                 }
@@ -978,6 +980,7 @@ export default defineComponent({
             if (!this.autoPlay || this.expandedTitle) {
                 this.autoPlayApplied = true;
                 this.playing = false;
+                this.updateMediaSessionPlaybackState();
                 return;
             }
             const player = this.getVideoElement();
@@ -989,6 +992,7 @@ export default defineComponent({
                 promise.catch(() => {
                     this.playing = false;
                     this.requiresRefresh = true;
+                    this.updateMediaSessionPlaybackState();
                 });
             }
             this.autoPlayApplied = true;
@@ -1223,6 +1227,7 @@ export default defineComponent({
             if (video) {
                 video.play();
             }
+            this.updateMediaSessionPlaybackState();
         },
         pause: function () {
             const video = this.getVideoElement();
@@ -1231,6 +1236,8 @@ export default defineComponent({
             if (video) {
                 video.pause();
             }
+
+            this.updateMediaSessionPlaybackState();
 
             if (!this.loading && this.canSaveTime && video && !video.ended) {
                 setCachedInitialTime(this.mid, this.currentTime);
@@ -1243,10 +1250,12 @@ export default defineComponent({
 
         onPlay: function () {
             this.playing = true;
+            this.updateMediaSessionPlaybackState();
         },
 
         onPause: function () {
             this.playing = false;
+            this.updateMediaSessionPlaybackState();
         },
 
         toggleFullScreen: function () {
@@ -1669,6 +1678,7 @@ export default defineComponent({
             this.currentResolution = getUserSelectedResolutionVideo(this.metadata);
             this.loading = true;
             this.playing = true;
+            this.updateMediaSessionPlaybackState();
             this.setVideoURL();
             this.onUpdateAudioTrack();
         },
@@ -1846,7 +1856,7 @@ export default defineComponent({
             setAutoNextPageDelay(this.autoNextPageDelay);
         },
 
-        handleMediaSessionEvent: function (event: { action: string; fastSeek: boolean; seekTime: number; seekOffset: number }) {
+        handleMediaSessionEvent: function (event: MediaSessionActionDetails) {
             if (!event || !event.action) {
                 return;
             }
@@ -1865,6 +1875,17 @@ export default defineComponent({
                 case "previoustrack":
                     if (this.prev || this.pagePrev) {
                         this.goPrev();
+                    }
+                    break;
+                case "seekbackward":
+                    this.setTime(this.currentTime - Math.max(1, Math.abs(event.seekOffset || 5)), true);
+                    break;
+                case "seekforward":
+                    this.setTime(this.currentTime + Math.max(1, Math.abs(event.seekOffset || 5)), true);
+                    break;
+                case "seekto":
+                    if (typeof event.seekTime === "number" && !isNaN(event.seekTime) && isFinite(event.seekTime)) {
+                        this.setTime(event.seekTime, !event.fastSeek);
                     }
                     break;
             }
@@ -2224,6 +2245,18 @@ export default defineComponent({
 
             e.stopPropagation();
         },
+
+        updateMediaSessionPlaybackState: function () {
+            if (!window.navigator || !window.navigator.mediaSession) {
+                return;
+            }
+
+            if (MediaController.MediaSessionId !== this.mediaSessionId) {
+                return;
+            }
+
+            navigator.mediaSession.playbackState = this.playing ? "playing" : "paused";
+        },
     },
     mounted: function () {
         // Load player preferences
@@ -2251,11 +2284,15 @@ export default defineComponent({
         this.initializeVideo();
 
         if (window.navigator && window.navigator.mediaSession) {
-            navigator.mediaSession.setActionHandler("play", this.handleMediaSessionEvent.bind(this));
-            navigator.mediaSession.setActionHandler("pause", this.handleMediaSessionEvent.bind(this));
-            navigator.mediaSession.setActionHandler("nexttrack", this.handleMediaSessionEvent.bind(this));
-            navigator.mediaSession.setActionHandler("previoustrack", this.handleMediaSessionEvent.bind(this));
             MediaController.MediaSessionId = this.mediaSessionId;
+            clearMediaSessionActionHandlers();
+
+            addMediaSessionActionHandler(
+                ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"],
+                this.handleMediaSessionEvent.bind(this),
+            );
+
+            this.updateMediaSessionPlaybackState();
         }
     },
     beforeUnmount: function () {
@@ -2280,10 +2317,8 @@ export default defineComponent({
         }
 
         if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            navigator.mediaSession.setActionHandler("play", null);
-            navigator.mediaSession.setActionHandler("pause", null);
-            navigator.mediaSession.setActionHandler("nexttrack", null);
-            navigator.mediaSession.setActionHandler("previoustrack", null);
+            clearMediaSessionActionHandlers();
+            navigator.mediaSession.playbackState = "none";
             MediaController.MediaSessionId = "";
         }
     },
