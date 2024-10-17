@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +14,10 @@ import (
 
 type ExtendedDescriptionSetBody struct {
 	ExtendedDescription string `json:"ext_desc"`
+}
+
+type ExtendedDescriptionSetResponse struct {
+	Url string `json:"url"`
 }
 
 func api_setExtendedDescription(response http.ResponseWriter, request *http.Request) {
@@ -46,6 +51,10 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 	}
 
 	assetData := []byte(p.ExtendedDescription)
+
+	result := ThumbnailAPIResponse{
+		Url: "",
+	}
 
 	if len(assetData) > 0 {
 		// Encrypt the description file
@@ -146,6 +155,7 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 
 		meta.HasExtendedDescription = true
 		meta.ExtendedDescriptionAsset = desc_asset
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(desc_asset) + "/ext_desc.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 		// Save
 		err = media.EndWrite(meta, session.key, false)
@@ -226,5 +236,14 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 
 	// Response
 
-	response.WriteHeader(200)
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
 }

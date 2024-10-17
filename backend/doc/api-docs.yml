@@ -857,6 +857,12 @@ paths:
           description: Not found
         200:
           description: Success
+          schema:
+            properties:
+              url:
+                type: string
+                description: "New notes URL"
+                example: "/assets/b/0/0/notes.json"
 
   "/api/media/{id}/edit/ext_desc":
     post:
@@ -895,6 +901,12 @@ paths:
           description: Not found
         200:
           description: Success
+          schema:
+            properties:
+              url:
+                type: string
+                description: "New extended description URL"
+                example: "/assets/b/0/0/ext_desc.txt"
           
   "/api/media/{id}/edit/thumbnail":
     post:

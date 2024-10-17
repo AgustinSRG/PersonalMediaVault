@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,6 +18,10 @@ type ImageNote struct {
 	Width     int    `json:"w"`
 	Height    int    `json:"h"`
 	Text      string `json:"text"`
+}
+
+type ImageNotesSetResponse struct {
+	Url string `json:"url"`
 }
 
 func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
@@ -56,6 +61,10 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
+	}
+
+	result := ImageNotesSetResponse{
+		Url: "",
 	}
 
 	// Encrypt the notes file
@@ -164,6 +173,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	meta.HasImageNotes = true
 	meta.ImageNotesAsset = notes_asset
+	result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(notes_asset) + "/notes.json" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 	// Save
 	err = media.EndWrite(meta, session.key, false)
@@ -181,5 +191,14 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	// Response
 
-	response.WriteHeader(200)
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
 }
