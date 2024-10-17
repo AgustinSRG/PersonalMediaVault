@@ -195,9 +195,19 @@ export class ImageNotesController {
         const mediaId = ImageNotesController.MediaId;
 
         makeNamedApiRequest(REQUEST_KEY_SAVE, apiMediaSetNotes(mediaId, ImageNotesController.Notes))
-            .onSuccess(() => {
+            .onSuccess((res) => {
                 ImageNotesController.Saving = false;
                 BusyStateController.RemoveBusy(BUSY_KEY);
+
+                if (ImageNotesController.MediaId === mediaId) {
+                    ImageNotesController.NotesFileURL = res.url || "";
+                }
+
+                if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
+                    MediaController.MediaData.img_notes_url = res.url || "";
+                    MediaController.MediaData.img_notes = !!res.url;
+                }
+
                 if (ImageNotesController.PendingSave) {
                     ImageNotesController.SaveNotes();
                 } else {

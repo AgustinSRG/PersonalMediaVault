@@ -75,6 +75,7 @@
             v-model:display="displayExtendedDescriptionStatus"
             :contextOpen="contextMenuShown"
             @clicked="clickControls"
+            @update-ext-desc="refreshExtendedDescription"
         ></ExtendedDescriptionWidget>
 
         <div
@@ -1143,6 +1144,10 @@ export default defineComponent({
 
         imageNotesVisibleUpdated: function (v: boolean) {
             this.notesVisible = v;
+        },
+
+        refreshExtendedDescription: function () {
+            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
         },
     },
     mounted: function () {

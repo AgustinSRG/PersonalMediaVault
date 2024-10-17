@@ -58,7 +58,7 @@ export default defineComponent({
         LoadingOverlay,
     },
     name: "ExtendedDescriptionWidget",
-    emits: ["update:display", "tags-update", "clicked"],
+    emits: ["update:display", "clicked", "update-ext-desc"],
     props: {
         display: Boolean,
         contextOpen: Boolean,
@@ -68,6 +68,7 @@ export default defineComponent({
         return {
             loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
+            busyTimeout: null,
         };
     },
     data: function () {
@@ -83,7 +84,10 @@ export default defineComponent({
             contentStored: "",
 
             loading: true,
+
             busy: false,
+            busyDisplayLoad: false,
+
             canWrite: AuthController.CanWrite,
 
             baseFontSize: getExtendedDescriptionSize(),
@@ -127,7 +131,7 @@ export default defineComponent({
                     buttons.push({
                         id: "save",
                         name: this.$t("Save changes"),
-                        icon: "fas fa-check",
+                        icon: this.busyDisplayLoad ? "fa fa-spinner fa-spin" : "fas fa-check",
                     });
                 } else {
                     buttons.push({
@@ -331,19 +335,34 @@ export default defineComponent({
                 return;
             }
 
+            this.clearBusyTimeout();
+
             this.busy = true;
 
-            makeApiRequest(apiMediaSetExtendedDescription(this.mid, this.contentToChange))
-                .onSuccess(() => {
+            this.setBusyTimeout();
+
+            const mid = this.mid;
+
+            makeApiRequest(apiMediaSetExtendedDescription(mid, this.contentToChange))
+                .onSuccess((res) => {
                     this.busy = false;
+                    this.clearBusyTimeout();
+
                     PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
                     this.content = this.contentToChange;
                     this.editing = false;
-                    MediaController.Load();
+
+                    if (MediaController.MediaData && MediaController.MediaData.id === mid) {
+                        MediaController.MediaData.ext_desc_url = res.url || "";
+                    }
+
+                    this.$emit("update-ext-desc");
+
                     this.autoFocus();
                 })
                 .onRequestError((err, handleErr) => {
                     this.busy = false;
+                    this.clearBusyTimeout();
                     handleErr(err, {
                         unauthorized: () => {
                             this.contentStoredId = this.mid;
@@ -369,8 +388,25 @@ export default defineComponent({
                 })
                 .onUnexpectedError((err) => {
                     this.busy = false;
+                    this.clearBusyTimeout();
                     console.error(err);
                 });
+        },
+
+        setBusyTimeout: function () {
+            this.busyTimeout = setTimeout(() => {
+                this.busyDisplayLoad = true;
+                this.busyTimeout = null;
+            }, 333);
+        },
+
+        clearBusyTimeout: function () {
+            if (this.busyTimeout) {
+                clearTimeout(this.busyTimeout);
+                this.busyTimeout = null;
+            }
+
+            this.busyDisplayLoad = false;
         },
     },
     mounted: function () {
@@ -383,6 +419,11 @@ export default defineComponent({
         }
     },
     beforeUnmount: function () {
+        if (this.busyTimeout) {
+            clearTimeout(this.busyTimeout);
+            this.busyTimeout = null;
+        }
+
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
     },

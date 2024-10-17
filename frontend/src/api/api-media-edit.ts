@@ -200,7 +200,7 @@ export type SetImageNotesErrorHandler = MediaEditApiErrorHandler & {
  * @param notes List of image notes
  * @returns The request parameters
  */
-export function apiMediaSetNotes(id: number, notes: ImageNote[]): RequestParams<void, SetImageNotesErrorHandler> {
+export function apiMediaSetNotes(id: number, notes: ImageNote[]): RequestParams<ChangeAssetResponse, SetImageNotesErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/notes`),
@@ -234,7 +234,10 @@ export type SetExtendedDescriptionErrorHandler = MediaEditApiErrorHandler & {
  * @param extendedDesc Extended description
  * @returns The request parameters
  */
-export function apiMediaSetExtendedDescription(id: number, extendedDesc: string): RequestParams<void, SetExtendedDescriptionErrorHandler> {
+export function apiMediaSetExtendedDescription(
+    id: number,
+    extendedDesc: string,
+): RequestParams<ChangeAssetResponse, SetExtendedDescriptionErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/ext_desc`),
@@ -270,11 +273,11 @@ export type SetThumbnailErrorHandler = MediaEditApiErrorHandler & {
 };
 
 /**
- * Response of the thumbnail change API
+ * Response of an API that changes an asset (eg: thumbnail)
  */
-export interface ChangeThumbnailResponse {
+export interface ChangeAssetResponse {
     /**
-     * New thumbnail URL
+     * New asset URL
      */
     url: string;
 }
@@ -285,10 +288,7 @@ export interface ChangeThumbnailResponse {
  * @param thumbnail Thumbnail file to upload
  * @returns The request parameters
  */
-export function apiMediaChangeMediaThumbnail(
-    id: number,
-    thumbnail: File,
-): RequestParams<ChangeThumbnailResponse, SetThumbnailErrorHandler> {
+export function apiMediaChangeMediaThumbnail(id: number, thumbnail: File): RequestParams<ChangeAssetResponse, SetThumbnailErrorHandler> {
     const form = new FormData();
     form.append("file", thumbnail);
     return {

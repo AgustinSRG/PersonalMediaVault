@@ -122,7 +122,7 @@ export default defineComponent({
                     this.originalTimeSlices = renderTimeSlices(slices);
                     this.timeSlices = this.originalTimeSlices;
 
-                    if (MediaController.MediaData) {
+                    if (MediaController.MediaData && MediaController.MediaData.id === mediaId) {
                         MediaController.MediaData.time_slices = clone(slices);
                     }
 

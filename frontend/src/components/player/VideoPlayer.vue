@@ -178,6 +178,7 @@
             v-model:display="displayExtendedDescriptionStatus"
             :contextOpen="contextMenuShown"
             @clicked="clickControls"
+            @update-ext-desc="refreshExtendedDescription"
         ></ExtendedDescriptionWidget>
 
         <div
@@ -2036,6 +2037,10 @@ export default defineComponent({
             this.currentTimeSliceStart = 0;
             this.currentTimeSliceEnd = 0;
             this.updateCurrentTimeSlice();
+        },
+
+        refreshExtendedDescription: function () {
+            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
         },
 
         renderScale: function (scale: number) {
