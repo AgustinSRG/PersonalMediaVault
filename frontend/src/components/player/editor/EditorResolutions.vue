@@ -4,10 +4,10 @@
 
         <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
             <label v-if="type === 2"
-                >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}:</label
+                >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}.</label
             >
             <label v-if="type === 1"
-                >{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}:</label
+                >{{ $t("Extra resolutions for images. These resolutions can be used for slow connections or small screens") }}.</label
             >
         </div>
 
@@ -16,7 +16,7 @@
             <label v-if="type === 2"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
         </div>
 
-        <div v-if="canWrite && (type === 2 || type === 1)" class="table-responsive">
+        <div v-if="canWrite && (type === 2 || type === 1) && resolutions.length > 0" class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -90,7 +90,94 @@ export default defineComponent({
     name: "EditorResolutions",
     emits: ["changed"],
     setup() {
+        const standardResolutions = [
+            {
+                name: "144p",
+                width: 256,
+                height: 144,
+                fps: 30,
+            },
+            {
+                name: "240p",
+                width: 352,
+                height: 240,
+                fps: 30,
+            },
+            {
+                name: "360p",
+                width: 480,
+                height: 360,
+                fps: 30,
+            },
+            {
+                name: "480p",
+                width: 858,
+                height: 480,
+                fps: 30,
+            },
+            {
+                name: "720p",
+                width: 1280,
+                height: 720,
+                fps: 30,
+            },
+            {
+                name: "720p60",
+                width: 1280,
+                height: 720,
+                fps: 60,
+            },
+            {
+                name: "1080p",
+                width: 1920,
+                height: 1080,
+                fps: 30,
+            },
+            {
+                name: "1080p60",
+                width: 1920,
+                height: 1080,
+                fps: 60,
+            },
+            {
+                name: "2k",
+                width: 2048,
+                height: 1152,
+                fps: 30,
+            },
+            {
+                name: "2k60",
+                width: 2048,
+                height: 1152,
+                fps: 60,
+            },
+            {
+                name: "4k",
+                width: 3860,
+                height: 2160,
+                fps: 30,
+            },
+            {
+                name: "4k60",
+                width: 3860,
+                height: 2160,
+                fps: 60,
+            },
+        ] as NamedResolution[];
+
+        const standardResolutionsMap = new Map<string, string>();
+
+        standardResolutions.forEach((sr) => {
+            standardResolutionsMap.set(`${sr.width}x${sr.height}-${sr.fps}`, sr.name);
+
+            if (sr.fps === 30) {
+                standardResolutionsMap.set(`${sr.width}x${sr.height}`, sr.name);
+            }
+        });
+
         return {
+            standardResolutions: standardResolutions,
+            standardResolutionsMap: standardResolutionsMap,
             requestId: getUniqueStringId(),
         };
     },
@@ -101,81 +188,6 @@ export default defineComponent({
             width: 0,
             height: 0,
             fps: 0,
-
-            standardResolutions: [
-                {
-                    name: "144p",
-                    width: 256,
-                    height: 144,
-                    fps: 30,
-                },
-                {
-                    name: "240p",
-                    width: 352,
-                    height: 240,
-                    fps: 30,
-                },
-                {
-                    name: "360p",
-                    width: 480,
-                    height: 360,
-                    fps: 30,
-                },
-                {
-                    name: "480p",
-                    width: 858,
-                    height: 480,
-                    fps: 30,
-                },
-                {
-                    name: "720p",
-                    width: 1280,
-                    height: 720,
-                    fps: 30,
-                },
-                {
-                    name: "720p60",
-                    width: 1280,
-                    height: 720,
-                    fps: 60,
-                },
-                {
-                    name: "1080p",
-                    width: 1920,
-                    height: 1080,
-                    fps: 30,
-                },
-                {
-                    name: "1080p60",
-                    width: 1920,
-                    height: 1080,
-                    fps: 60,
-                },
-                {
-                    name: "2k",
-                    width: 2048,
-                    height: 1152,
-                    fps: 30,
-                },
-                {
-                    name: "2k60",
-                    width: 2048,
-                    height: 1152,
-                    fps: 60,
-                },
-                {
-                    name: "4k",
-                    width: 3860,
-                    height: 2160,
-                    fps: 30,
-                },
-                {
-                    name: "4k60",
-                    width: 3860,
-                    height: 2160,
-                    fps: 60,
-                },
-            ] as NamedResolution[],
 
             resolutions: [] as NamedResolution[],
 
@@ -207,12 +219,18 @@ export default defineComponent({
         },
 
         updateResolutions: function (resolutions: MediaResolution[]) {
+            const totalPixels = this.width * this.height;
+            const totalFps = this.fps;
+
+            const resolutionsLeft = resolutions.slice();
+
             this.resolutions = this.standardResolutions
                 .filter((r) => {
                     if (this.type === MEDIA_TYPE_IMAGE) {
-                        return r.fps === 30;
+                        return r.fps === 30 && r.width * r.height < totalPixels;
                     } else if (this.type === MEDIA_TYPE_VIDEO) {
-                        return true;
+                        const pixels = r.width * r.height;
+                        return pixels < totalPixels || (pixels === totalPixels && r.fps < totalFps);
                     } else {
                         return false;
                     }
@@ -220,10 +238,12 @@ export default defineComponent({
                 .map((r) => {
                     let enabled = false;
                     let fps = r.fps;
-                    for (const res of resolutions) {
+                    for (let i = 0; i < resolutionsLeft.length; i++) {
+                        const res = resolutionsLeft[i];
                         if (res.width === r.width && res.height === r.height && (this.type === MEDIA_TYPE_IMAGE || res.fps === r.fps)) {
                             enabled = true;
                             fps = res.fps;
+                            resolutionsLeft.splice(i, 1);
                             break;
                         }
                     }
@@ -234,6 +254,33 @@ export default defineComponent({
                         height: r.height,
                         fps: fps,
                     };
+                })
+                .concat(
+                    resolutionsLeft.map((rl) => {
+                        const customName =
+                            this.type === MEDIA_TYPE_IMAGE ? `${rl.width}x${rl.height}` : `${rl.width}x${rl.height}-${rl.fps}`;
+                        return {
+                            enabled: true,
+                            name: this.standardResolutionsMap.get(customName) || customName,
+                            width: rl.width,
+                            height: rl.height,
+                            fps: rl.fps,
+                        };
+                    }),
+                )
+                .sort((a, b) => {
+                    const aPixels = a.width * a.height;
+                    const bPixels = b.width * b.height;
+
+                    if (aPixels > bPixels) {
+                        return -1;
+                    } else if (aPixels < bPixels) {
+                        return 1;
+                    } else if (a.fps > b.fps) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
                 });
         },
 
