@@ -175,8 +175,8 @@ export default defineComponent({
             subtitles: [] as MediaSubtitle[],
             srtFile: null,
             srtFileName: "",
-            srtId: "en",
-            srtName: "English",
+            srtId: "",
+            srtName: "",
 
             busy: false,
             busyDeleting: false,
@@ -223,9 +223,7 @@ export default defineComponent({
         srtFileChanged: function (e: InputEvent) {
             const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
-                const file = data[0];
-                this.srtFile = file;
-                this.srtFileName = file.name;
+                this.setFile(data[0]);
             }
         },
 
@@ -233,10 +231,15 @@ export default defineComponent({
             e.preventDefault();
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
-                const file = data[0];
-                this.srtFile = file;
-                this.srtFileName = file.name;
+                this.setFile(data[0]);
             }
+        },
+
+        setFile: function (file: File) {
+            this.srtFile = file;
+            this.srtFileName = file.name;
+            this.srtId = (file.name.split(".")[0] || "").toLowerCase();
+            this.srtName = this.srtId.toUpperCase();
         },
 
         addSubtitles: function () {

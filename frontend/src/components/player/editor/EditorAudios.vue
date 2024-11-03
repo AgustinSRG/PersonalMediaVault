@@ -172,8 +172,8 @@ export default defineComponent({
             audios: [] as MediaAudioTrack[],
             audioFile: null,
             audioFileName: "",
-            audioId: "en",
-            audioName: "English",
+            audioId: "",
+            audioName: "",
 
             busy: false,
             busyDeleting: false,
@@ -220,9 +220,7 @@ export default defineComponent({
         audioFileChanged: function (e: InputEvent) {
             const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
-                const file = data[0];
-                this.audioFile = file;
-                this.audioFileName = file.name;
+                this.setFile(data[0]);
             }
         },
 
@@ -230,10 +228,15 @@ export default defineComponent({
             e.preventDefault();
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
-                const file = data[0];
-                this.audioFile = file;
-                this.audioFileName = file.name;
+                this.setFile(data[0]);
             }
+        },
+
+        setFile: function (file: File) {
+            this.audioFile = file;
+            this.audioFileName = file.name;
+            this.audioId = (file.name.split(".")[0] || "").toLowerCase();
+            this.audioName = this.audioId.toUpperCase();
         },
 
         addAudio: function () {
