@@ -406,7 +406,16 @@ export default defineComponent({
             const link = document.createElement("a");
             link.target = "_blank";
             link.rel = "noopener noreferrer";
-            link.href = getAssetURL(sub.url);
+
+            const url = getAssetURL(sub.url);
+            const titlePart = sub.id ? "&filename=" + encodeURIComponent(sub.id) : "";
+
+            if (url.includes("?")) {
+                link.href = url + "&download=force" + titlePart;
+            } else {
+                link.href = url + "?download=force" + titlePart;
+            }
+
             link.click();
         },
 
