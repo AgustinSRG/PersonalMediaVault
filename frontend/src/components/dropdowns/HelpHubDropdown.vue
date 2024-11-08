@@ -23,7 +23,7 @@
             <div class="modal-body with-menu">
                 <table class="modal-menu">
                     <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-info"></i></td>
+                        <td class="modal-menu-item-icon"><i class="fas fa-question"></i></td>
                         <td class="modal-menu-item-title">
                             {{ $t("About PMV") }}
                         </td>

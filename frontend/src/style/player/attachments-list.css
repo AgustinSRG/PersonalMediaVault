@@ -1,0 +1,61 @@
+/* Player attachments list */
+
+.player-attachments-list {
+    position: absolute;
+    bottom: 80px;
+    right: 8px;
+    background: var(--player-menu-background);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    max-height: calc(100% - 80px - 56px);
+    min-width: 240px;
+    max-width: calc(100% - 16px);
+    overflow-y: auto;
+}
+
+.player-attachments-list.hidden {
+    display: none;
+}
+
+.player-attachments-list table {
+    width: 100%;
+    border-spacing: 0;
+    /* Removes the cell spacing via CSS */
+    border-collapse: collapse;
+    /* Optional - if you don't want to have double border where cells touch */
+}
+
+.player-attachments-list table a {
+    display: table-row;
+}
+
+.player-attachments-list table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.player-attachments-list .tr-button {
+    cursor: pointer;
+}
+
+.player-attachments-list .arrow-config {
+    margin-left: 0.5rem;
+}
+
+.player-attachments-list .icon-config {
+    margin-right: 0.5rem;
+    width: 24px;
+}
+
+.player-attachments-list .tr-button:hover {
+    background: var(--hover-color);
+}
+
+.player-attachments-list .td-right {
+    text-align: right;
+}
+
+.player-attachments-list .check-uncheck {
+    visibility: hidden;
+}

@@ -7,6 +7,8 @@
         :aria-hidden="!shown"
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
+        @mousedown="stopPropagationEvent"
+        @touchstart="stopPropagationEvent"
         @mouseenter="enterConfig"
         @mouseleave="leaveConfig"
         @keydown="keyDownHandle"

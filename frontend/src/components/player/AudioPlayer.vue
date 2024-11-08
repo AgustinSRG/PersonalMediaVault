@@ -257,7 +257,19 @@
                     @mouseenter="enterTooltip('ext-desc')"
                     @mouseleave="leaveTooltip('ext-desc')"
                 >
-                    <i class="fas fa-info"></i>
+                    <i class="fas fa-file-lines"></i>
+                </button>
+
+                <button
+                    v-if="hasAttachments"
+                    type="button"
+                    :title="$t('Attachments')"
+                    class="player-btn player-settings-no-trap"
+                    @click="showAttachments"
+                    @mouseenter="enterTooltip('attachments')"
+                    @mouseleave="leaveTooltip('attachments')"
+                >
+                    <i class="fas fa-paperclip"></i>
                 </button>
 
                 <button
@@ -310,46 +322,60 @@
         <div v-if="helpTooltip === 'play'" class="player-tooltip player-help-tip-left">
             {{ $t("Play") }}
         </div>
-        <div v-if="helpTooltip === 'pause'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="helpTooltip === 'pause'" class="player-tooltip player-help-tip-left">
             {{ $t("Pause") }}
         </div>
 
-        <div v-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
             {{ $t("Previous") }}
         </div>
 
-        <div v-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
             {{ $t("Next") }}
         </div>
 
-        <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
             <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
         </div>
 
-        <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
             <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
         </div>
 
-        <div v-if="helpTooltip === 'volume'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="helpTooltip === 'volume'" class="player-tooltip player-help-tip-left">
             {{ $t("Volume") }} ({{ muted ? $t("Muted") : renderVolume(volume) }})
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
             {{ $t("Extended description") }}
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'attachments'"
+            class="player-tooltip player-help-tip-right"
+        >
+            {{ $t("Attachments") }}
+        </div>
+
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
             {{ $t("Player Configuration") }}
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
             {{ $t("Manage albums") }}
         </div>
 
-        <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Full screen") }}
         </div>
-        <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
+
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen-exit'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Exit full screen") }}
         </div>
 
@@ -412,6 +438,15 @@
             @update-auto-next="setupAutoNextTimer"
             :inAlbum="inAlbum"
         ></AudioPlayerConfig>
+
+        <PlayerAttachmentsList
+            v-if="metadata && metadata.attachments"
+            v-model:shown="displayAttachments"
+            :attachments="metadata.attachments"
+            @enter="enterControls"
+            @leave="leaveControls"
+        >
+        </PlayerAttachmentsList>
 
         <PlayerTopBar
             v-if="metadata"
@@ -484,6 +519,7 @@ import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
 import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
@@ -525,6 +561,7 @@ export default defineComponent({
         TimeSlicesEditHelper,
         TagsEditHelper,
         ExtendedDescriptionWidget,
+        PlayerAttachmentsList,
     },
     name: "AudioPlayer",
     emits: [
@@ -674,6 +711,9 @@ export default defineComponent({
 
             hasExtendedDescription: false,
 
+            hasAttachments: false,
+            displayAttachments: false,
+
             pendingNextEnd: false,
             pendingNextEndSeconds: 0,
 
@@ -707,6 +747,14 @@ export default defineComponent({
             this.displayExtendedDescriptionStatus = true;
         },
 
+        showAttachments: function (e?: Event) {
+            if (e) {
+                e.stopPropagation();
+            }
+            this.displayAttachments = !this.displayAttachments;
+            this.displayConfig = false;
+        },
+
         renderVolume: function (v: number): string {
             return Math.round(v * 100) + "%";
         },
@@ -726,12 +774,14 @@ export default defineComponent({
 
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
+            this.displayAttachments = false;
             e && e.stopPropagation();
         },
 
         clickControls: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
+            this.displayAttachments = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -927,7 +977,7 @@ export default defineComponent({
 
         mouseLeavePlayer: function () {
             this.timelineGrabbed = false;
-            if (!this.playing || this.expandedTitle || this.expandedAlbum || this.displayConfig) return;
+            if (!this.playing || this.expandedTitle || this.expandedAlbum || this.displayConfig || this.displayAttachments) return;
             this.showControls = false;
             this.volumeShown = isTouchDevice();
             this.helpTooltip = "";
@@ -940,6 +990,7 @@ export default defineComponent({
                     this.volumeShown = isTouchDevice();
                     this.helpTooltip = "";
                     this.displayConfig = false;
+                    this.displayAttachments = false;
                 }
             }
 
@@ -1000,13 +1051,15 @@ export default defineComponent({
             }
 
             this.displayConfig = false;
+            this.displayAttachments = false;
         },
 
         clickPlayer: function () {
             this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
+                this.displayAttachments = false;
             } else {
                 this.togglePlay();
             }
@@ -1031,9 +1084,10 @@ export default defineComponent({
                 e.stopPropagation();
             }
             this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
+                this.displayAttachments = false;
             } else {
                 this.timeStartTap = Date.now();
             }
@@ -1119,6 +1173,7 @@ export default defineComponent({
         clickTimeline: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
+            this.displayAttachments = false;
             e.stopPropagation();
         },
 
@@ -1435,6 +1490,7 @@ export default defineComponent({
             this.isShort = this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
             this.canSaveTime = !this.metadata.force_start_beginning;
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+            this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
             this.timeSlices = normalizeTimeSlices(
                 (this.metadata.time_slices || []).sort((a, b) => {
                     if (a.time < b.time) {
@@ -1843,7 +1899,7 @@ export default defineComponent({
 
             this.autoNextTimer = setTimeout(() => {
                 this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle) {
+                if (this.displayConfig || this.expandedTitle || this.displayAttachments) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();

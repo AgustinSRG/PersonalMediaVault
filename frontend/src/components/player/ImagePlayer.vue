@@ -141,7 +141,19 @@
                     @mouseenter="enterTooltip('ext-desc')"
                     @mouseleave="leaveTooltip('ext-desc')"
                 >
-                    <i class="fas fa-info"></i>
+                    <i class="fas fa-file-lines"></i>
+                </button>
+
+                <button
+                    v-if="hasAttachments"
+                    type="button"
+                    :title="$t('Attachments')"
+                    class="player-btn player-settings-no-trap"
+                    @click="showAttachments"
+                    @mouseenter="enterTooltip('attachments')"
+                    @mouseleave="leaveTooltip('attachments')"
+                >
+                    <i class="fas fa-paperclip"></i>
                 </button>
 
                 <button
@@ -195,38 +207,52 @@
             {{ $t("Previous") }}
         </div>
 
-        <div v-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
             {{ $t("Next") }}
         </div>
 
-        <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
             <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
         </div>
 
-        <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
             <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
         </div>
 
-        <div v-if="helpTooltip === 'scale'" class="player-tooltip player-help-tip-left">
+        <div v-else-if="helpTooltip === 'scale'" class="player-tooltip player-help-tip-left">
             {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
             {{ $t("Extended description") }}
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'attachments'"
+            class="player-tooltip player-help-tip-right"
+        >
+            {{ $t("Attachments") }}
+        </div>
+
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
             {{ $t("Player Configuration") }}
         </div>
 
-        <div v-if="!displayConfig && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
+        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
             {{ $t("Manage albums") }}
         </div>
 
-        <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Full screen") }}
         </div>
-        <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
+
+        <div
+            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen-exit'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Exit full screen") }}
         </div>
 
@@ -243,6 +269,15 @@
             @enter="enterControls"
             @leave="leaveControls"
         ></ImagePlayerConfig>
+
+        <PlayerAttachmentsList
+            v-if="metadata && metadata.attachments"
+            v-model:shown="displayAttachments"
+            :attachments="metadata.attachments"
+            @enter="enterControls"
+            @leave="leaveControls"
+        >
+        </PlayerAttachmentsList>
 
         <PlayerTopBar
             v-if="metadata"
@@ -290,16 +325,15 @@ import {
     setUserSelectedResolutionImage,
 } from "@/control/player-preferences";
 import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
-
 import ScaleControl from "./ScaleControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import ImageNotes from "./ImageNotes.vue";
-
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
 import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
@@ -338,6 +372,7 @@ export default defineComponent({
         ImageNotes,
         TagsEditHelper,
         ExtendedDescriptionWidget,
+        PlayerAttachmentsList,
     },
     name: "ImagePlayer",
     emits: [
@@ -437,8 +472,12 @@ export default defineComponent({
             prefetchURL: "",
 
             notesEditMode: false,
-            hasExtendedDescription: false,
             notesVisible: getImageNotesVisible(),
+
+            hasExtendedDescription: false,
+
+            hasAttachments: false,
+            displayAttachments: false,
 
             mediaError: false,
         };
@@ -470,14 +509,23 @@ export default defineComponent({
             this.displayExtendedDescriptionStatus = true;
         },
 
+        showAttachments: function (e?: Event) {
+            if (e) {
+                e.stopPropagation();
+            }
+            this.displayAttachments = !this.displayAttachments;
+            this.displayConfig = false;
+        },
+
         grabScroll: function (e: TouchEvent | MouseEvent) {
             if ("button" in e && e.button !== 0) {
                 return;
             }
 
-            if (this.displayConfig || this.contextMenuShown) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
+                this.displayAttachments = false;
                 e.stopPropagation();
                 return;
             }
@@ -650,12 +698,14 @@ export default defineComponent({
 
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
+            this.displayAttachments = false;
             e && e.stopPropagation();
         },
 
         clickControls: function (e: Event) {
             this.displayConfig = false;
             this.contextMenuShown = false;
+            this.displayAttachments = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -745,6 +795,9 @@ export default defineComponent({
         clickPlayer: function () {
             if (this.displayConfig) {
                 this.displayConfig = false;
+            }
+            if (this.displayAttachments) {
+                this.displayAttachments = false;
             }
             this.interactWithControls();
         },
@@ -984,6 +1037,7 @@ export default defineComponent({
                 return;
             }
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+            this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
             this.loading = true;
             this.currentResolution = getUserSelectedResolutionImage(this.metadata);
             this.setImageURL();
@@ -1073,7 +1127,7 @@ export default defineComponent({
 
             this.autoNextTimer = setTimeout(() => {
                 this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle) {
+                if (this.displayConfig || this.expandedTitle || this.displayAttachments) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();

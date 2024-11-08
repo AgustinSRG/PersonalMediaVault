@@ -185,6 +185,7 @@ export default defineComponent({
 @import "@/style/player/editor.css";
 
 @import "@/style/player/player-config.css";
+@import "@/style/player/attachments-list.css";
 @import "@/style/player/context-menu.css";
 @import "@/style/player/change-preview.css";
 

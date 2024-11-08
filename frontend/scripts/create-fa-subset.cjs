@@ -121,7 +121,7 @@ function main() {
     for (const file of filesToCheck) {
         const fileContents = FS.readFileSync(file).toString();
 
-        const matches = fileContents.match(/(\s|\n|\t|\")?((fas)|(far)|(fab)|(fa\-[a-z0-9\-]+))(\s|\n|\t|\")/g) || [];
+        const matches = fileContents.match(/(\s|\n|\t|\"|\')?((fas)|(far)|(fab)|(fa\-[a-z0-9\-]+))(\s|\n|\t|\"|\')/g) || [];
 
         for (let match of matches) {
             usages.add(match.replace(/[^a-z0-9\-]+/g, ""));

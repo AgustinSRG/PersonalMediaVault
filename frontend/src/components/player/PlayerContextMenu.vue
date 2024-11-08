@@ -114,7 +114,7 @@
                 @keydown="clickOnEnter"
             >
                 <td>
-                    <i class="fas fa-info icon-config"></i>
+                    <i class="fas fa-file-lines icon-config"></i>
                     <span class="context-entry-title">{{ $t("Extended description") }}</span>
                 </td>
                 <td class="td-right"></td>

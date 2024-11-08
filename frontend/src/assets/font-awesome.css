@@ -203,6 +203,10 @@
     content: "\f070";
 }
 
+.fa-file-lines::before {
+    content: "\f15c";
+}
+
 .fa-forward::before {
     content: "\f04e";
 }
@@ -233,10 +237,6 @@
 
 .fa-image::before {
     content: "\f03e";
-}
-
-.fa-info::before {
-    content: "\f129";
 }
 
 .fa-key::before {
@@ -281,6 +281,10 @@
 
 .fa-palette::before {
     content: "\f53f";
+}
+
+.fa-paperclip::before {
+    content: "\f0c6";
 }
 
 .fa-pause::before {
