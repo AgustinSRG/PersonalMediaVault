@@ -9,6 +9,7 @@
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
+        @contextmenu="stopPropagationEvent"
         @mouseenter="enterConfig"
         @mouseleave="leaveConfig"
         @keydown="keyDownHandle"
