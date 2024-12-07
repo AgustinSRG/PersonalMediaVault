@@ -120,7 +120,8 @@ textarea.form-control::-webkit-resizer {
     color: red;
 }
 
-.form-error-pt {
+.form-error-pt,
+.form-group-pt {
     padding-top: 0.5rem;
 }
 

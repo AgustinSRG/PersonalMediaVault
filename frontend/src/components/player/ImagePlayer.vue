@@ -22,6 +22,7 @@
         <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
             <img
                 v-if="imageURL"
+                class="player-img-element"
                 :src="imageURL"
                 :key="rTick"
                 @load="onImageLoaded"

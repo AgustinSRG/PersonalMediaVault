@@ -72,3 +72,9 @@
 .row-100p {
     width: 100%;
 }
+
+.image-thumbnail-button {
+    max-width: 252px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

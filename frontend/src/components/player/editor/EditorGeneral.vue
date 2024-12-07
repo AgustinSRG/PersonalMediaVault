@@ -113,13 +113,38 @@
             </div>
             <div class="form-group" v-if="canWrite">
                 <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
-                <button v-if="!busyThumbnail" type="button" class="btn btn-primary" @click="uploadThumbnail" @drop="onDrop">
-                    <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
-                </button>
-                <button v-if="busyThumbnail" type="button" class="btn btn-primary" disabled>
-                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading thumbnail") }}...
-                </button>
-                <div v-if="errorThumbnail" class="form-error form-error-pt">{{ errorThumbnail }}</div>
+                <div class="text-center">
+                    <button v-if="!busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" @click="uploadThumbnail" @drop="onDrop">
+                        <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
+                    </button>
+                    <button v-if="busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" disabled>
+                        <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading thumbnail") }}...
+                    </button>
+                </div>
+
+                <div class="form-group-pt text-center" v-if="mediaElementReady">
+                    <button
+                        v-if="type === 1"
+                        type="button"
+                        class="btn btn-primary btn-sm image-thumbnail-button"
+                        :title="$t('Set current image as thumbnail')"
+                        @click="setCurrentImageAsThumbnail"
+                        :disabled="busyThumbnail"
+                    >
+                        <i class="fas fa-image"></i> {{ $t("Set current image as thumbnail") }}
+                    </button>
+                    <button
+                        v-if="type === 2"
+                        type="button"
+                        class="btn btn-primary btn-sm image-thumbnail-button"
+                        :title="$t('Set current frame as thumbnail')"
+                        @click="setCurrentFrameAsThumbnail"
+                        :disabled="busyThumbnail"
+                    >
+                        <i class="fas fa-image"></i> {{ $t("Set current frame as thumbnail") }}
+                    </button>
+                </div>
+                <div v-if="errorThumbnail" class="form-error form-error-pt text-center">{{ errorThumbnail }}</div>
             </div>
         </div>
     </div>
@@ -158,6 +183,8 @@ export default defineComponent({
             requestIdDescription: getUniqueStringId(),
             requestIdThumbnail: getUniqueStringId(),
             requestIdExtra: getUniqueStringId(),
+
+            mediaElementCheckTimer: null,
         };
     },
     data: function () {
@@ -193,6 +220,8 @@ export default defineComponent({
             errorDescription: "",
             errorExtraConfig: "",
             errorThumbnail: "",
+
+            mediaElementReady: false,
         };
     },
 
@@ -316,7 +345,120 @@ export default defineComponent({
                 });
         },
 
-        changeTitle: function (e) {
+        checkMediaElement: function () {
+            if (this.mediaElementCheckTimer) {
+                clearTimeout(this.mediaElementCheckTimer);
+                this.mediaElementCheckTimer = null;
+            }
+
+            if (this.type === 1) {
+                const imageElement = document.querySelector(".player-container .player-img-element") as HTMLImageElement;
+                this.mediaElementReady = imageElement && imageElement.complete;
+            } else if (this.type === 2) {
+                const videoElement = document.querySelector(".player-container .player-video-element") as HTMLVideoElement;
+                this.mediaElementReady = videoElement && videoElement.readyState === 4;
+            } else {
+                return;
+            }
+
+            if (!this.mediaElementReady) {
+                this.mediaElementCheckTimer = setTimeout(this.checkMediaElement.bind(this), 1500);
+            }
+        },
+
+        setCurrentFrameAsThumbnail: function () {
+            if (this.busyThumbnail) {
+                return;
+            }
+
+            const videoElement = document.querySelector(".player-container .player-video-element") as HTMLVideoElement;
+
+            if (!videoElement || videoElement.readyState !== 4) {
+                this.errorThumbnail =
+                    this.$t("Error") +
+                    ": " +
+                    this.$t("Could not take the current frame") +
+                    ". " +
+                    this.$t("Maybe the media is not yet loaded?");
+            }
+
+            try {
+                // Create canvas
+                const canvas = document.createElement("canvas") as HTMLCanvasElement;
+
+                canvas.height = videoElement.videoHeight;
+                canvas.width = videoElement.videoWidth;
+
+                //  Draw video frame to the canvas
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                // Get frame as blob
+                canvas.toBlob((blob) => {
+                    // Convert to file
+                    const file = new File([blob], "thumbnail.png");
+
+                    // Change thumbnail
+                    this.changeThumbnail(file);
+                }, "image/png");
+            } catch (ex) {
+                console.error(ex);
+                this.errorThumbnail =
+                    this.$t("Error") +
+                    ": " +
+                    this.$t("Could not take the current frame") +
+                    ". " +
+                    this.$t("Maybe the media is not yet loaded?");
+            }
+        },
+
+        setCurrentImageAsThumbnail: function () {
+            if (this.busyThumbnail) {
+                return;
+            }
+
+            const imageElement = document.querySelector(".player-container .player-img-element") as HTMLImageElement;
+
+            if (!imageElement || !imageElement.complete) {
+                this.errorThumbnail =
+                    this.$t("Error") +
+                    ": " +
+                    this.$t("Could not find the current image") +
+                    ". " +
+                    this.$t("Maybe the media is not yet loaded?");
+            }
+
+            try {
+                // Create canvas
+                const canvas = document.createElement("canvas") as HTMLCanvasElement;
+
+                canvas.width = imageElement.width;
+                canvas.height = imageElement.height;
+
+                //  Draw image to the canvas
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+
+                // Get image as blob
+                canvas.toBlob((blob) => {
+                    // Convert to file
+                    const file = new File([blob], "thumbnail.png");
+
+                    // Change thumbnail
+                    this.changeThumbnail(file);
+                }, "image/png");
+            } catch (ex) {
+                console.error(ex);
+                this.errorThumbnail =
+                    this.$t("Error") +
+                    ": " +
+                    this.$t("Could not find the current image") +
+                    ". " +
+                    this.$t("Maybe the media is not yet loaded?");
+            }
+        },
+
+        changeTitle: function (e: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -505,6 +647,8 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
+        this.checkMediaElement();
+
         this.autoFocus();
     },
 
@@ -513,6 +657,10 @@ export default defineComponent({
         abortNamedApiRequest(this.requestIdDescription);
         abortNamedApiRequest(this.requestIdThumbnail);
         abortNamedApiRequest(this.requestIdExtra);
+
+        if (this.mediaElementCheckTimer) {
+            clearTimeout(this.mediaElementCheckTimer);
+        }
     },
 });
 </script>

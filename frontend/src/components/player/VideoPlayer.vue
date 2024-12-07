@@ -20,6 +20,7 @@
         <div class="video-scroller" @mousedown="grabScroll" @touchstart="onScrollerTouchStart">
             <video
                 v-if="videoURL"
+                class="player-video-element"
                 :src="videoURL"
                 crossorigin="use-credentials"
                 :key="rTick"
