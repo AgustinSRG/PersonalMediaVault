@@ -30,6 +30,7 @@ type LauncherConfig struct {
 	SecureTempDelete bool   `json:"secure_tmp_delete"`
 	CacheSize        *int   `json:"cache_size"`
 	LogRequests      bool   `json:"log_requests"`
+	Debug            bool   `json:"debug"`
 }
 
 func (c *LauncherConfig) hasSSL() bool {

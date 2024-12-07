@@ -466,6 +466,38 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
+	case "debug", "log-debug", "debug-log":
+		if len(args) == 2 {
+			if checkYesNoAnswer(args[1]) {
+				args[1] = "y"
+			}
+			switch args[1] {
+			case "y", "on", "yes", "1", "true":
+				if vc.SetLogDebug(true) {
+					askRestart(vc)
+				}
+			case "n", "off", "no", "0", "false":
+				if vc.SetLogDebug(false) {
+					askRestart(vc)
+				}
+			default:
+				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+					DefaultMessage: &i18n.Message{
+						ID:    "ErrorLogDebugUsage",
+						Other: "Usage: debug [y/n]",
+					},
+				})
+				fmt.Println(msg)
+			}
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorLogDebugUsage",
+					Other: "Usage: debug [y/n]",
+				},
+			})
+			fmt.Println(msg)
+		}
 	case "cache-size", "cs":
 		if len(args) == 1 {
 			currentCacheSize := DEFAULT_CACHE_SIZE
@@ -637,7 +669,7 @@ func printCommandList() {
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandRecover",
-			Other: "recover - Restarts the vault and recovers any non-indexed media found in the vault directory",
+			Other: "recover - Restarts the vault and recovers any non-indexed media",
 		},
 	})
 	manList = append(manList, msg)
@@ -702,6 +734,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandLogRequests",
 			Other: "log-requests [y/n] - Enables / disables request logging",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandLogDebug",
+			Other: "debug [y/n] - Enables / disables debug logging",
 		},
 	})
 	manList = append(manList, msg)

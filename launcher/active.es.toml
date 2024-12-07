@@ -98,6 +98,10 @@ other = "El par de claves SSL no es correcto. Puede arreglarlo con 'ssl-setup'."
 hash = "sha1-9c2861ada182b97f428ec7d4461bd92b35dd78bd"
 other = "Uso: local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
 
+[ErrorLogDebugUsage]
+hash = "sha1-4ad4252c6f7e8697f4709045f6dc0c75e1d671f7"
+other = "Uso: debug [s/n]"
+
 [ErrorLogRequestsUsage]
 hash = "sha1-a5c30f663412c23556f51b4cea5a9bd843b4db08"
 other = "Uso: log-requests [s/n]"
@@ -178,6 +182,14 @@ other = "¿Desea establecer el servidor en modo de escucha local?"
 hash = "sha1-8584583bdf47d9a32d476cd4fe1ddc722c9797c0"
 other = "si selecciona no, el servidor se pondrá a la escucha en todas las interfaces de red"
 
+[LogDebugDisabled]
+hash = "sha1-3b06254949eb6db976669208821db12662ce923b"
+other = "El registro de depuración se encuentra DESHABILITADO."
+
+[LogDebugEnabled]
+hash = "sha1-4e5c7916cfcba1cb93d46a67b43d2cef4a6b5072"
+other = "El registro de depuración se encuentra HABILITADO."
+
 [LogFile]
 hash = "sha1-cf17e7fdee1c20b4f3d976516bdcc121cf229f9c"
 other = "Fichero de log: {{.File}}"
@@ -222,6 +234,10 @@ other = "host [nombre de host] - Establece un host para acceder a la galería"
 hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
 other = "local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
 
+[ManualCommandLogDebug]
+hash = "sha1-0e015e00167a8ba507d09d36f2b246c675c94105"
+other = "debug [s/n] - Habilita o deshabilita el registro de depuración"
+
 [ManualCommandLogRequests]
 hash = "sha1-c20354a3352f3e9aa6d5a5a3453d33891ec9cd9d"
 other = "log-requests [s/n] - Habilita o deshabilita el registro de peticiones"
@@ -231,8 +247,8 @@ hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
 other = "port [p] - Establece el puerto de escucha"
 
 [ManualCommandRecover]
-hash = "sha1-10eacde6ce9ff014f6702f018d4473b343f94617"
-other = "recover - Reinicia la galería, re-indexando los elementos perdidos, presentes en el directorio"
+hash = "sha1-cb9cf3d26523ade83b07571d60cf9a84bf9e1033"
+other = "recover - Reinicia la galería, re-indexando los elementos perdidos"
 
 [ManualCommandRestart]
 hash = "sha1-c96e956f8731fc808db8df4da2735a316ad8c083"

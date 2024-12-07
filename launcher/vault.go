@@ -501,6 +501,10 @@ func (vc *VaultController) Start() bool {
 		cmd.Args = append(cmd.Args, "--log-requests")
 	}
 
+	if vc.launchConfig.Debug {
+		cmd.Args = append(cmd.Args, "--debug")
+	}
+
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
 
@@ -1313,6 +1317,53 @@ func (vc *VaultController) SetLogRequests(d bool) bool {
 			DefaultMessage: &i18n.Message{
 				ID:    "LogRequestsDisabled",
 				Other: "Requests logging is now DISABLED.",
+			},
+		})
+		fmt.Println(msg)
+	}
+
+	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	} else {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "ConfigChangesSaved",
+				Other: "Changes in configuration successfully saved.",
+			},
+		})
+		fmt.Println(msg)
+		return true
+	}
+}
+
+func (vc *VaultController) SetLogDebug(d bool) bool {
+	vc.launchConfig.Debug = d
+
+	if d {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LogDebugEnabled",
+				Other: "Debug logging is now ENABLED.",
+			},
+		})
+		fmt.Println(msg)
+	} else {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "LogDebugDisabled",
+				Other: "Debug logging is now DISABLED.",
 			},
 		})
 		fmt.Println(msg)
