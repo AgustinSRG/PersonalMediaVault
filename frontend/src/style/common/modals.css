@@ -361,6 +361,10 @@
     padding-right: 104px;
 }
 
+.modal-container.modal-container-corner.modal-container-account {
+    padding-right: 16px;
+}
+
 .modal-container.modal-container-corner.modal-container-page-settings {
     padding-top: 110px;
     padding-right: 1rem;

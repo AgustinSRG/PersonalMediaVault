@@ -38,34 +38,6 @@
                         </td>
                     </tr>
 
-                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-user"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Change username") }}
-                        </td>
-                    </tr>
-
-                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Change password") }}
-                        </td>
-                    </tr>
-
-                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('invite')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-user-check"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Invite") }}
-                        </td>
-                    </tr>
-
-                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Administrate accounts") }}
-                        </td>
-                    </tr>
-
                     <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
                         <td class="modal-menu-item-icon">
                             <i class="fas fa-bars-progress"></i>
@@ -108,7 +80,7 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
-    name: "SettingsDropdown",
+    name: "VaultSettingsDropdown",
     emits: ["update:display", "goto"],
     props: {
         display: Boolean,
@@ -131,7 +103,7 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        stopPropagationEvent: function (e) {
+        stopPropagationEvent: function (e: Event) {
             e.stopPropagation();
         },
 
@@ -140,11 +112,11 @@ export default defineComponent({
             this.close();
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 
@@ -154,7 +126,7 @@ export default defineComponent({
             this.username = AuthController.Username;
         },
 
-        keyDownHandle: function (e) {
+        keyDownHandle: function (e: KeyboardEvent) {
             e.stopPropagation();
             if (e.key === "Escape") {
                 this.close();

@@ -31,9 +31,21 @@
                             </td>
                         </tr>
                         <tr>
+                            <td>{{ $t("Open help menu") }}</td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + {{ $t("Shift") }} + H</span>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>{{ $t("Open vault settings") }}</td>
                             <td>
                                 <span class="key-shortcut">⌘ ({{ $t("Control") }}) + S</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{{ $t("Open account settings") }}</td>
+                            <td>
+                                <span class="key-shortcut">⌘ ({{ $t("Control") }}) + {{ $t("Shift") }} + S</span>
                             </td>
                         </tr>
                         <tr>

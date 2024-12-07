@@ -367,12 +367,16 @@
     content: "\f093";
 }
 
-.fa-user::before {
-    content: "\f007";
-}
-
 .fa-user-check::before {
     content: "\f4fc";
+}
+
+.fa-user-cog::before {
+    content: "\f4fe";
+}
+
+.fa-user-tag::before {
+    content: "\f507";
 }
 
 .fa-users::before {

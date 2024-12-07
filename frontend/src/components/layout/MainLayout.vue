@@ -18,7 +18,8 @@
         <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
         <TopBar
             @logout="logout"
-            @settings="showSettings"
+            @vault-settings="showVaultSettings"
+            @account-settings="showAccountSettings"
             @menu="toggleSidebar"
             @menu-focus="openSideBar"
             @search-open="openSearchModal"
@@ -34,7 +35,17 @@
         <BottomBar v-if="layout === 'media-split' || layout === 'album'"></BottomBar>
         <div class="sidebar-float-overlay" :class="{ hidden: !displaySidebar }" @click="hideSidebar"></div>
 
-        <SettingsDropdown v-if="displaySettings" v-model:display="displaySettings" @goto="onGoSettings"></SettingsDropdown>
+        <VaultSettingsDropdown
+            v-if="displayVaultSettings"
+            v-model:display="displayVaultSettings"
+            @goto="onGoSettings"
+        ></VaultSettingsDropdown>
+        <AccountSettingsDropdown
+            v-if="displayAccountSettings"
+            v-model:display="displayAccountSettings"
+            @goto="onGoSettings"
+        ></AccountSettingsDropdown>
+
         <LanguageDropdown v-if="displayLang" v-model:display="displayLang"></LanguageDropdown>
         <ThemeDropdown v-if="displayTheme" v-model:display="displayTheme"></ThemeDropdown>
         <ChangeUsernameModal v-if="displayUsernameModal" v-model:display="displayUsernameModal"></ChangeUsernameModal>
@@ -135,8 +146,14 @@ const LogoutModal = defineAsyncComponent({
     delay: 1000,
 });
 
-const SettingsDropdown = defineAsyncComponent({
-    loader: () => import("@/components/dropdowns/SettingsDropdown.vue"),
+const VaultSettingsDropdown = defineAsyncComponent({
+    loader: () => import("@/components/dropdowns/VaultSettingsDropdown.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
+const AccountSettingsDropdown = defineAsyncComponent({
+    loader: () => import("@/components/dropdowns/AccountSettingsDropdown.vue"),
     loadingComponent: LoadingOverlay,
     delay: 1000,
 });
@@ -236,7 +253,8 @@ export default defineComponent({
         LoadingOverlay,
         LoginModal,
         LogoutModal,
-        SettingsDropdown,
+        VaultSettingsDropdown,
+        AccountSettingsDropdown,
         LanguageDropdown,
         ThemeDropdown,
         ChangeUsernameModal,
@@ -266,7 +284,8 @@ export default defineComponent({
             focus: AppStatus.CurrentFocus,
 
             displayLogout: false,
-            displaySettings: false,
+            displayVaultSettings: false,
+            displayAccountSettings: false,
             displayTheme: false,
             displayLang: false,
             displayUsernameModal: false,
@@ -301,8 +320,17 @@ export default defineComponent({
             this.displayLogout = true;
         },
 
-        showSettings: function () {
-            this.displaySettings = !this.displaySettings;
+        showVaultSettings: function () {
+            this.displayVaultSettings = !this.displayVaultSettings;
+            this.displayAccountSettings = false;
+            this.displayHelpModal = false;
+            this.displayTheme = false;
+            this.displayLang = false;
+        },
+
+        showAccountSettings: function () {
+            this.displayAccountSettings = !this.displayAccountSettings;
+            this.displayVaultSettings = false;
             this.displayHelpModal = false;
             this.displayTheme = false;
             this.displayLang = false;
@@ -310,7 +338,8 @@ export default defineComponent({
 
         showHelp: function () {
             this.displayHelpModal = !this.displayHelpModal;
-            this.displaySettings = false;
+            this.displayVaultSettings = false;
+            this.displayAccountSettings = false;
             this.displayTheme = false;
             this.displayLang = false;
         },
@@ -346,6 +375,9 @@ export default defineComponent({
                     break;
                 case "invite":
                     this.displayInvite = true;
+                    break;
+                case "logout":
+                    AuthController.Logout();
                     break;
             }
         },
@@ -432,7 +464,8 @@ export default defineComponent({
             if (this.locked) {
                 // Close all modals
                 this.displayLogout = false;
-                this.displaySettings = false;
+                this.displayVaultSettings = false;
+                this.displayAccountSettings = false;
                 this.displayTheme = false;
                 this.displayLang = false;
                 this.displayUsernameModal = false;

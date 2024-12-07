@@ -75,11 +75,12 @@
                 <i class="fas fa-search"></i>
             </button>
 
-            <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Settings')" @click="settings">
+            <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Vault settings')" @click="vaultSettings">
                 <i class="fas fa-cog"></i>
             </button>
-            <button type="button" class="top-bar-button" :title="$t('Close vault')" @click="logout">
-                <i class="fas fa-sign-out-alt"></i>
+
+            <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Account settings')" @click="accountSettings">
+                <i class="fas fa-user-cog"></i>
             </button>
         </div>
     </div>
@@ -99,7 +100,7 @@ import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 
 export default defineComponent({
     name: "TopBar",
-    emits: ["logout", "settings", "menu", "menu-focus", "search-open", "help"],
+    emits: ["logout", "vault-settings", "account-settings", "menu", "menu-focus", "search-open", "help"],
     setup() {
         return {
             blurTimeout: null,
@@ -129,8 +130,12 @@ export default defineComponent({
             this.$emit("logout");
         },
 
-        settings: function () {
-            this.$emit("settings");
+        vaultSettings: function () {
+            this.$emit("vault-settings");
+        },
+
+        accountSettings: function () {
+            this.$emit("account-settings");
         },
 
         openSearch: function () {
@@ -314,7 +319,7 @@ export default defineComponent({
             }, 200);
         },
 
-        onKeyDown: function (event) {
+        onKeyDown: function (event: KeyboardEvent) {
             if (event.key === "Tab" && this.search && !event.shiftKey) {
                 if (this.suggestions.length > 0 && this.search !== this.suggestions[0].name) {
                     this.search = this.suggestions[0].name;
@@ -344,7 +349,17 @@ export default defineComponent({
             }
 
             if (event.key.toUpperCase() === "S" && event.ctrlKey) {
-                this.settings();
+                if (event.shiftKey) {
+                    this.accountSettings();
+                } else {
+                    this.vaultSettings();
+                }
+
+                return true;
+            }
+
+            if (event.key.toUpperCase() === "H" && event.ctrlKey && event.shiftKey) {
+                this.help();
                 return true;
             }
 
