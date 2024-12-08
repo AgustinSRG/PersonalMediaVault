@@ -25,10 +25,14 @@ type AlbumAPIItemMinified struct {
 }
 
 func getAlbumThumbnail(album_id uint64, session *ActiveSession) string {
-	has_thumbnail, media_id, thumbnail_asset := GetVault().albums.thumbnail_cache.GetAlbumThumbnail(album_id, session.key)
+	has_thumbnail, media_id, thumbnail_asset, has_asset_thumbnail := GetVault().albums.thumbnail_cache.GetAlbumThumbnail(album_id, session.key)
 
 	if has_thumbnail {
-		return "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+		if has_asset_thumbnail {
+			return "/album_thumb/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+		} else {
+			return "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+		}
 	} else {
 		return ""
 	}

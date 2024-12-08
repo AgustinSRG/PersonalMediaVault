@@ -124,6 +124,8 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
 	router.HandleFunc("/assets/p/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
 
+	router.HandleFunc("/album_thumb/{asset:[0-9]+}/{filename}", api_handleAlbumThumbnailAssetGet).Methods("GET", "HEAD")
+
 	// API routes
 
 	apiRouter := router.PathPrefix("/api/").Subrouter()
@@ -215,6 +217,8 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/albums/{id:[0-9]+}/add", api_albumAddMedia).Methods("POST")
 	apiRouter.HandleFunc("/albums/{id:[0-9]+}/remove", api_albumRemoveMedia).Methods("POST")
 	apiRouter.HandleFunc("/albums/{id:[0-9]+}/move", api_albumMoveMedia).Methods("POST")
+
+	apiRouter.HandleFunc("/albums/{id:[0-9]+}/thumbnail", api_editAlbumThumbnail).Methods("POST")
 
 	// Config API
 	apiRouter.HandleFunc("/config", api_getConfig).Methods("GET")

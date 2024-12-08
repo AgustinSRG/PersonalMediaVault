@@ -431,7 +431,7 @@ func (media *MediaAsset) AcquireAsset(asset_id uint64, asset_type string) (bool,
 }
 
 // Releases an asset file
-// Must be called to release the resources creayed by AcquireAsset()
+// Must be called to release the resources created by AcquireAsset()
 // asset_id - Asset file ID
 func (media *MediaAsset) ReleaseAsset(asset_id uint64) {
 	media.mu.Lock()

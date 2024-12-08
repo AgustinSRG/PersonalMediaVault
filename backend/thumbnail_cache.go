@@ -12,9 +12,10 @@ type ThumbnailCacheEntry struct {
 
 	invalid bool // True if invalid (marked when deleting, but pending)
 
-	has_thumbnail bool   // Has thumbnail?
-	media         uint64 // First media of the album
-	asset         uint64 // Thumbnail asset
+	has_thumbnail       bool   // Has thumbnail?
+	has_asset_thumbnail bool   // Has asset thumbnail?
+	media               uint64 // First media of the album
+	asset               uint64 // Thumbnail asset
 }
 
 // Cache for album thumbnails
@@ -48,12 +49,13 @@ func (c *ThumbnailCache) getEntryOrMarkAsPending(album uint64) (result_entry *Th
 
 		// Mark as pending
 		c.cache[album] = &ThumbnailCacheEntry{
-			is_pending:         true,
-			pending_wait_group: wg,
-			invalid:            false,
-			has_thumbnail:      false,
-			media:              0,
-			asset:              0,
+			is_pending:          true,
+			pending_wait_group:  wg,
+			invalid:             false,
+			has_thumbnail:       false,
+			has_asset_thumbnail: false,
+			media:               0,
+			asset:               0,
 		}
 	}
 
@@ -88,7 +90,7 @@ func (c *ThumbnailCache) RemoveEntryOrMarkInvalid(album uint64) {
 }
 
 // Resolves cache entry
-func (c *ThumbnailCache) resolveEntry(album uint64, has_thumbnail bool, media uint64, asset uint64) {
+func (c *ThumbnailCache) resolveEntry(album uint64, has_thumbnail bool, media uint64, asset uint64, has_asset_thumbnail bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -103,6 +105,7 @@ func (c *ThumbnailCache) resolveEntry(album uint64, has_thumbnail bool, media ui
 	entry.has_thumbnail = has_thumbnail
 	entry.media = media
 	entry.asset = asset
+	entry.has_asset_thumbnail = has_asset_thumbnail
 
 	if entry.invalid {
 		delete(c.cache, album)
@@ -110,7 +113,7 @@ func (c *ThumbnailCache) resolveEntry(album uint64, has_thumbnail bool, media ui
 }
 
 // Gets the album thumbnail asset from cache of the vault data
-func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbnail bool, media uint64, asset uint64) {
+func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbnail bool, media uint64, asset uint64, has_asset_thumbnail bool) {
 	entry, wg := c.getEntryOrMarkAsPending(album)
 
 	if entry != nil {
@@ -129,18 +132,20 @@ func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbn
 			has_thumbnail_tmp := entry.has_thumbnail
 			media_tmp := entry.media
 			asset_tmp := entry.asset
+			is_asset_thumb := entry.has_asset_thumbnail
 
 			c.mutex.Unlock()
 
-			return has_thumbnail_tmp, media_tmp, asset_tmp
+			return has_thumbnail_tmp, media_tmp, asset_tmp, is_asset_thumb
 		} else {
 			has_thumbnail_tmp := entry.has_thumbnail
 			media_tmp := entry.media
 			asset_tmp := entry.asset
+			is_asset_thumb := entry.has_asset_thumbnail
 
 			c.mutex.Unlock()
 
-			return has_thumbnail_tmp, media_tmp, asset_tmp
+			return has_thumbnail_tmp, media_tmp, asset_tmp, is_asset_thumb
 		}
 	}
 
@@ -154,20 +159,25 @@ func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbn
 
 	if err != nil {
 		c.removeEntry(album)
-		return false, 0, 0
+		return false, 0, 0, false
 	}
 
 	albumData := albumsData.Albums[album]
 
 	if albumData == nil {
 		c.removeEntry(album)
-		return false, 0, 0
+		return false, 0, 0, false
+	}
+
+	if albumData.Thumbnail != nil {
+		c.resolveEntry(album, false, 0, *albumData.Thumbnail, true)
+		return true, 0, *albumData.Thumbnail, true
 	}
 
 	if len(albumData.List) == 0 {
 		// No thumbnail
-		c.resolveEntry(album, false, 0, 0)
-		return false, 0, 0
+		c.resolveEntry(album, false, 0, 0, false)
+		return false, 0, 0, false
 	}
 
 	firstMediaId := albumData.List[0]
@@ -185,12 +195,12 @@ func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbn
 	if meta == nil {
 		// Not found media
 		c.removeEntry(album)
-		return false, 0, 0
+		return false, 0, 0, false
 	}
 
 	has_thumbnail = meta.ThumbnailReady
 	thumbnail_asset := meta.ThumbnailAsset
 
-	c.resolveEntry(album, has_thumbnail, firstMediaId, thumbnail_asset)
-	return has_thumbnail, firstMediaId, thumbnail_asset
+	c.resolveEntry(album, has_thumbnail, firstMediaId, thumbnail_asset, false)
+	return has_thumbnail, firstMediaId, thumbnail_asset, false
 }

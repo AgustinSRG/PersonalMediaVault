@@ -5,8 +5,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
@@ -18,15 +20,17 @@ var ErrAlbumMaxSizeReached = errors.New("max size reached for the album")
 
 // Album data
 type VaultAlbumData struct {
-	Name         string   `json:"name"` // Name of the album
-	List         []uint64 `json:"list"` // Ordered list of media to play
-	LastModified int64    `json:"lm"`   // Last modified timestamp
+	Name         string   `json:"name"`  // Name of the album
+	List         []uint64 `json:"list"`  // Ordered list of media to play
+	LastModified int64    `json:"lm"`    // Last modified timestamp
+	Thumbnail    *uint64  `json:"thumb"` // Thumbnail asset
 }
 
 // Album list data
 type VaultAlbumsData struct {
-	NextId uint64                     `json:"next_id"` // Id for the next album to create
-	Albums map[uint64]*VaultAlbumData `json:"albums"`  // Albums (Id -> Data)
+	NextId               uint64                     `json:"next_id"`                 // Id for the next album to create
+	NextThumbnailAssetId uint64                     `json:"next_thumb_id,omitempty"` // Id for the next album thumbnail asset
+	Albums               map[uint64]*VaultAlbumData `json:"albums"`                  // Albums (Id -> Data)
 }
 
 // Checks if an album has a media in it
@@ -42,13 +46,25 @@ func (data *VaultAlbumData) HasMedia(media_id uint64) bool {
 	return false
 }
 
+// Represents an asset file that stores a thumbnail of an album
+type AlbumThumbnailAsset struct {
+	id uint64 // File ID
+
+	lock *ReadWriteLock // Lock to control read/write operations
+
+	use_count int32 // Counter of threads accessing the file
+}
+
 // Album manager
 type VaultAlbumsManager struct {
-	path string // Vault path
+	path        string // Vault path
+	albums_file string // Path to the albums data file
 
-	albums_file string           // Path to the albums data file
-	cache       *VaultAlbumsData // Cache
-	lock        *ReadWriteLock   // Lock to control access to the file
+	cache *VaultAlbumsData // Cache
+	lock  *ReadWriteLock   // Lock to control access to the file
+
+	thumbnails   map[uint64]*AlbumThumbnailAsset // Files that the media asset has
+	thumbnailsMu *sync.Mutex
 
 	thumbnail_cache *ThumbnailCache // Thumbnail cache
 }
@@ -58,8 +74,14 @@ type VaultAlbumsManager struct {
 func (am *VaultAlbumsManager) Initialize(base_path string) {
 	am.path = base_path
 	am.albums_file = path.Join(base_path, "albums.pmv")
+
 	am.cache = nil
+
 	am.lock = CreateReadWriteLock()
+
+	am.thumbnails = make(map[uint64]*AlbumThumbnailAsset)
+	am.thumbnailsMu = &sync.Mutex{}
+
 	am.thumbnail_cache = makeThumbnailCache()
 }
 
@@ -105,8 +127,9 @@ func (am *VaultAlbumsManager) readData(key []byte) (*VaultAlbumsData, error) {
 		// No albums yet
 
 		mp := VaultAlbumsData{
-			NextId: 0,
-			Albums: make(map[uint64]*VaultAlbumData),
+			NextId:               0,
+			NextThumbnailAssetId: 0,
+			Albums:               make(map[uint64]*VaultAlbumData),
 		}
 
 		am.cache = &mp
@@ -214,6 +237,25 @@ func (am *VaultAlbumsManager) CreateAlbum(name string, key []byte) (uint64, erro
 	err = am.EndWrite(data, key)
 
 	return album_id, err
+}
+
+// Gets ID for a thumbnail asset
+// key - Vault encryption key
+// Returns the ID of the asset if success
+func (am *VaultAlbumsManager) GetThumbnailAssetId(key []byte) (uint64, error) {
+	data, err := am.StartWrite(key)
+
+	if err != nil {
+		return 0, err
+	}
+
+	id := data.NextThumbnailAssetId
+
+	data.NextThumbnailAssetId++
+
+	err = am.EndWrite(data, key)
+
+	return id, err
 }
 
 // Adds a media file to an album
@@ -428,6 +470,34 @@ func (am *VaultAlbumsManager) RenameAlbum(album_id uint64, name string, key []by
 	return true, err
 }
 
+// Sets album name
+// album_id - Album ID
+// thumb_asset_id - Thumbnail asset ID
+// key - Vault encryption key
+// Returns true if success, and possibly the ID of the old thumbnail asset
+func (am *VaultAlbumsManager) SetAlbumThumbnail(album_id uint64, thumb_asset_id uint64, key []byte) (bool, *uint64, error) {
+	data, err := am.StartWrite(key)
+
+	if err != nil {
+		return false, nil, err
+	}
+
+	if data.Albums[album_id] == nil {
+		am.CancelWrite()
+		return false, nil, nil // Not found
+	}
+
+	old_asset := data.Albums[album_id].Thumbnail
+
+	data.Albums[album_id].Thumbnail = &thumb_asset_id
+
+	err = am.EndWrite(data, key)
+
+	am.thumbnail_cache.RemoveEntryOrMarkInvalid(album_id)
+
+	return true, old_asset, err
+}
+
 // Deletes album
 // album_id - Album ID
 // key - Vault encryption key
@@ -533,4 +603,56 @@ func (am *VaultAlbumsManager) PreCacheAlbums(key []byte) {
 	}
 
 	LogDebug("Pre-cached albums")
+}
+
+// Resolves the path of a thumbnail asset file
+// asset_id - Asset file ID
+// Returns the path to the file
+func (am *VaultAlbumsManager) GetThumbnailAssetPath(asset_id uint64) string {
+	return path.Join(am.path, "thumb_album", "s_"+fmt.Sprint(asset_id)+".pma")
+}
+
+// Acquires a thumbnail asset file, creating a read/write lock for it
+// asset_id - Asset file ID
+// Returns:
+//
+//	1 - True if the asset was acquired, false if the asset was deleted
+//	2 - The full path to the asset file
+//	3 - The lock to control access to the file
+func (am *VaultAlbumsManager) AcquireThumbnailAsset(asset_id uint64) (bool, string, *ReadWriteLock) {
+	am.thumbnailsMu.Lock()
+	defer am.thumbnailsMu.Unlock()
+
+	p := am.GetThumbnailAssetPath(asset_id)
+
+	if am.thumbnails[asset_id] != nil {
+		am.thumbnails[asset_id].use_count++
+		return true, p, am.thumbnails[asset_id].lock
+	}
+
+	f := AlbumThumbnailAsset{
+		id:        asset_id,
+		lock:      CreateReadWriteLock(),
+		use_count: 1,
+	}
+
+	am.thumbnails[asset_id] = &f
+
+	return true, p, f.lock
+}
+
+// Releases a thumbnail asset file
+// Must be called to release the resources created by AcquireThumbnailAsset()
+// asset_id - Asset file ID
+func (am *VaultAlbumsManager) ReleaseThumbnailAsset(asset_id uint64) {
+	am.thumbnailsMu.Lock()
+	defer am.thumbnailsMu.Unlock()
+
+	if am.thumbnails[asset_id] != nil {
+		am.thumbnails[asset_id].use_count--
+
+		if am.thumbnails[asset_id].use_count <= 0 {
+			delete(am.thumbnails, asset_id)
+		}
+	}
 }
