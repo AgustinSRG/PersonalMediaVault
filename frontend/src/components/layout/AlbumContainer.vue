@@ -17,6 +17,10 @@
                         <i class="fas fa-shuffle"></i>
                     </button>
 
+                    <button type="button" :title="$t('Favorite')" class="album-header-btn" :class="{ toggled: isFav }" @click="toggleFav">
+                        <i class="fas fa-star"></i>
+                    </button>
+
                     <button v-if="canWrite" type="button" :title="$t('Add media')" class="album-header-btn" @click="addMediaToAlbum">
                         <i class="fas fa-plus"></i>
                     </button>
@@ -25,8 +29,8 @@
                         <i class="fas fa-pencil-alt"></i>
                     </button>
 
-                    <button type="button" :title="$t('Favorite')" class="album-header-btn" :class="{ toggled: isFav }" @click="toggleFav">
-                        <i class="fas fa-star"></i>
+                    <button v-if="canWrite" type="button" :title="$t('Thumbnail')" class="album-header-btn" @click="changeAlbumThumbnail">
+                        <i class="fas fa-image"></i>
                     </button>
 
                     <button v-if="canWrite" type="button" :title="$t('Delete')" class="album-header-btn" @click="deleteAlbum">
@@ -148,6 +152,10 @@
         ></AlbumContextMenu>
         <AlbumAddMediaModal v-if="displayAlbumAddMedia" v-model:display="displayAlbumAddMedia" :aid="albumId"></AlbumAddMediaModal>
         <AlbumRenameModal v-if="displayAlbumRename" v-model:display="displayAlbumRename"></AlbumRenameModal>
+        <AlbumChangeThumbnailModal
+            v-if="displayAlbumChangeThumbnail"
+            v-model:display="displayAlbumChangeThumbnail"
+        ></AlbumChangeThumbnailModal>
         <AlbumDeleteModal v-if="displayAlbumDelete" v-model:display="displayAlbumDelete"></AlbumDeleteModal>
         <AlbumGoToPosModal v-if="displayAlbumGoPos" v-model:display="displayAlbumGoPos"></AlbumGoToPosModal>
         <AlbumMovePosModal
@@ -195,6 +203,12 @@ const AlbumRenameModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const AlbumChangeThumbnailModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AlbumChangeThumbnailModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 const AlbumDeleteModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumDeleteModal.vue"),
     loadingComponent: LoadingOverlay,
@@ -233,6 +247,7 @@ export default defineComponent({
         AlbumMovePosModal,
         AlbumAddMediaModal,
         AlbumGoToPosModal,
+        AlbumChangeThumbnailModal,
     },
     props: {
         displayUpload: Boolean,
@@ -274,6 +289,7 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             displayAlbumRename: false,
+            displayAlbumChangeThumbnail: false,
             displayAlbumDelete: false,
             displayAlbumMovePos: false,
             displayAlbumGoPos: false,
@@ -435,6 +451,10 @@ export default defineComponent({
 
         renameAlbum: function () {
             this.displayAlbumRename = true;
+        },
+
+        changeAlbumThumbnail: function () {
+            this.displayAlbumChangeThumbnail = true;
         },
 
         renderPos: function (p: number) {

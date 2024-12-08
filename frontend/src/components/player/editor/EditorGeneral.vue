@@ -114,7 +114,13 @@
             <div class="form-group" v-if="canWrite">
                 <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
                 <div class="text-center">
-                    <button v-if="!busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" @click="uploadThumbnail" @drop="onDrop">
+                    <button
+                        v-if="!busyThumbnail"
+                        type="button"
+                        class="btn btn-primary image-thumbnail-button"
+                        @click="uploadThumbnail"
+                        @drop="onDrop"
+                    >
                         <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
                     </button>
                     <button v-if="busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" disabled>
