@@ -490,6 +490,7 @@ func (am *VaultAlbumsManager) SetAlbumThumbnail(album_id uint64, thumb_asset_id 
 	old_asset := data.Albums[album_id].Thumbnail
 
 	data.Albums[album_id].Thumbnail = &thumb_asset_id
+	data.Albums[album_id].LastModified = time.Now().UnixMilli()
 
 	err = am.EndWrite(data, key)
 
