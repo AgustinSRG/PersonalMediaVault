@@ -83,6 +83,9 @@ func (am *VaultAlbumsManager) Initialize(base_path string) {
 	am.thumbnailsMu = &sync.Mutex{}
 
 	am.thumbnail_cache = makeThumbnailCache()
+
+	// Make thumbnails folder if not present
+	_ = os.MkdirAll(path.Join(base_path, "thumb_album"), FOLDER_PERMISSION)
 }
 
 // Reads albums list data
