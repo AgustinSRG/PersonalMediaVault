@@ -8,11 +8,11 @@ Use this document as reference for any software development that requires intera
 
 The vault storage model uses different types of files:
 
- - [**Lock file**](#lock-file): File used to prevent multiple instances of PersonalMediaVault accessing the same vault.
- - [**Unencrypted JSON files**](#unencrypted-json-files): Configuration files that do not contain any protected vault data.
- - [**Encrypted JSON files**](#encrypted-json-files): Used to store metadata.
- - [**Index files**](#index-files): Used to store lists of media asset IDs, in order to make searching faster.
- - [**Encrypted assets**](#encrypted-assets): Encrypted files containing the media assets. They can be single-file or multi-file.
+- [**Lock file**](#lock-file): File used to prevent multiple instances of PersonalMediaVault accessing the same vault.
+- [**Unencrypted JSON files**](#unencrypted-json-files): Configuration files that do not contain any protected vault data.
+- [**Encrypted JSON files**](#encrypted-json-files): Used to store metadata.
+- [**Index files**](#index-files): Used to store lists of media asset IDs, in order to make searching faster.
+- [**Encrypted assets**](#encrypted-assets): Encrypted files containing the media assets. They can be single-file or multi-file.
 
 ### Lock file
 
@@ -42,18 +42,18 @@ They are binary files, with the following structure:
 | ------------- | ------------ | ------------ | -------------------------------------------------------------------------------------------------------------- |
 | `0`           | `2`          | Algorithm ID | Identifier of the algorithm, stored as a **Big Endian unsigned integer**                                       |
 | `2`           | `H`          | Header       | Header containing any parameters required by the encryption algorithm. The size depends on the algorithm used. |
-| `2 + H`       | `N`          | Body         | Body containing the raw encrypted data.  The size depends on the initial unencrypted data and algorithm used.  |
+| `2 + H`       | `N`          | Body         | Body containing the raw encrypted data. The size depends on the initial unencrypted data and algorithm used.   |
 
 The system is flexible enough to allow multiple encryption algorithms. Currently, there are 2 supported ones:
 
- - `AES256_FLAT`: ID = `1`, Uses ZLIB ([RFC 1950](https://datatracker.ietf.org/doc/html/rfc1950)) to compress the data, and then uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
+- `AES256_FLAT`: ID = `1`, Uses ZLIB ([RFC 1950](https://datatracker.ietf.org/doc/html/rfc1950)) to compress the data, and then uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
 
 | Starting byte | Size (bytes) | Value name                | Description                                                        |
 | ------------- | ------------ | ------------------------- | ------------------------------------------------------------------ |
 | `2 + H`       | `4`          | Compressed plaintext size | Size of the compressed plaintext, in bytes, used to remove padding |
 | `2 + H + 4`   | `16`         | IV                        | Initialization vector for AES_256_CBC algorithm                    |
 
- - `AES256_FLAT`: ID = `2`, Uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
+- `AES256_FLAT`: ID = `2`, Uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
 
 | Starting byte | Size (bytes) | Value name     | Description                                             |
 | ------------- | ------------ | -------------- | ------------------------------------------------------- |
@@ -83,8 +83,8 @@ They stored one or multiple encrypted files.
 
 They are also binary files, and they can be of two types:
 
- - [**Single-File encrypted assets**](#single-file-encrypted-assets): They store a single file in size-limited chunks. Their name usually starts with `s_`.
- - [**Multi-File encrypted assets**](#multi-file-encrypted-assets): They store multiple smaller files. Their name usually starts with `m_`.
+- [**Single-File encrypted assets**](#single-file-encrypted-assets): They store a single file in size-limited chunks. Their name usually starts with `s_`.
+- [**Multi-File encrypted assets**](#multi-file-encrypted-assets): They store multiple smaller files. Their name usually starts with `m_`.
 
 #### Single-File encrypted assets
 
@@ -103,7 +103,7 @@ After the header, the chunk index is stored. **For each chunk** the file was spl
 
 | Starting byte | Size (bytes) | Value name    | Description                                                              |
 | ------------- | ------------ | ------------- | ------------------------------------------------------------------------ |
-| `0`           | `8`          | Chunk pointer | Starting byte of the chunk, stored as a  **Big Endian unsigned integer** |
+| `0`           | `8`          | Chunk pointer | Starting byte of the chunk, stored as a **Big Endian unsigned integer**  |
 | `8`           | `8`          | Chunk size    | Size of the chunk, in bytes, stored as a **Big Endian unsigned integer** |
 
 After the chunk index, the encrypted chunks are stored following the same structure described in the [Encrypted JSON files](#encrypted-json-files) section.
@@ -124,10 +124,10 @@ The header contains the following fields:
 
 After the header, a file table is stored. **For each file** stored by the asset, a metadata entry is stored, with the following fields:
 
-| Starting byte | Size (bytes) | Value name        | Description                                                                            |
-| ------------- | ------------ | ----------------- | -------------------------------------------------------------------------------------- |
-| `0`           | `8`          | File data pointer | Starting byte of the file encrypted data, stored as a  **Big Endian unsigned integer** |
-| `8`           | `8`          | File size         | Size of the encrypted file, in bytes, stored as a **Big Endian unsigned integer**      |
+| Starting byte | Size (bytes) | Value name        | Description                                                                           |
+| ------------- | ------------ | ----------------- | ------------------------------------------------------------------------------------- |
+| `0`           | `8`          | File data pointer | Starting byte of the file encrypted data, stored as a **Big Endian unsigned integer** |
+| `8`           | `8`          | File size         | Size of the encrypted file, in bytes, stored as a **Big Endian unsigned integer**     |
 
 After the file table, each file is stored following the same structure described in the [Encrypted JSON files](#encrypted-json-files) section.
 
@@ -137,18 +137,20 @@ This format is useful to store video previews, without the need to use too many 
 
 Media vaults are stored in folders. A vault folder may contain the following files and folders:
 
-| Name                                               | Path               | Type                                             | Description                                                                                                                                                                   |
-| -------------------------------------------------- | ------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**Media assets**](#media-assets-folder)           | `media`            | Folder                                           | Folder where media assets are stored.                                                                                                                                         |
-| [**Tag indexes**](#tag-indexes-folder)             | `tags`             | Folder                                           | Folder where tag indexes are stored.                                                                                                                                          |
-| [**Lock file**](#lock-file)                        | `vault.lock`       | [Lock file](#lock-file)                          | File used to prevent multiple instances of the PersonalMediaVault backend to access a vault at the same time. It may not be present, in case the vault is not being accessed. |
-| [**Credentials file**](#credentials-file)          | `credentials.json` | [Unencrypted JSON file](#unencrypted-json-files) | File to store the existing accounts, along with the hashed credentials and the encrypted vault key, protected with the account password.                                      |
-| [**Media ID tracker**](#media-id-tracker)          | `media_ids.json`   | [Unencrypted JSON file](#unencrypted-json-files) | File to store the last used media asset ID.                                                                                                                                   |
-| [**Tasks tracker**](#tasks-tracker)                | `tasks.json`       | [Unencrypted JSON file](#unencrypted-json-files) | File used to store the last used task ID, along with the list of pending tasks.                                                                                               |
-| [**Albums**](#albums-file)                         | `albums.pmv`       | [Encrypted JSON file](#encrypted-json-files)     | File used to store the existing albums, including the metadata and the list of media assets included in them.                                                                 |
-| [**Tag list**](#tags-file)                         | `tag_list.pmv`     | [Encrypted JSON file](#encrypted-json-files)     | File to store the metadata of the existing vault tags                                                                                                                         |
-| [**User configuration**](#user-configuration-file) | `user_config.pmv`  | [Encrypted JSON file](#encrypted-json-files)     | File to store user configuration, like the vault title or the encoding parameters                                                                                             |
-| [**Main index**](#main-index-file)                 | `main.index`       | [Index file](#index-files)                       | File to index every single media asset existing in the vault.                                                                                                                 |
+| Name                                      | Path               | Type                                             | Description                                                                                                                                                                   |
+| ----------------------------------------- | ------------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**Media assets**](#media-assets-folder)  | `media`            | Folder                                           | Folder where media assets are stored.                                                                                                                                         |
+| [**Tag indexes**](#tag-indexes-folder)    | `tags`             | Folder                                           | Folder where tag indexes are stored.                                                                                                                                          |
+| [**Lock file**](#lock-file)               | `vault.lock`       | [Lock file](#lock-file)                          | File used to prevent multiple instances of the PersonalMediaVault backend to access a vault at the same time. It may not be present, in case the vault is not being accessed. |
+| [**Credentials file**](#credentials-file) | `credentials.json` | [Unencrypted JSON file](#unencrypted-json-files) | File to store the existing accounts, along with the hashed credentials and the encrypted vault key, protected with the account password.                                      |
+| [**Media ID tracker**](#media-id-tracker) | `media_ids.json`   | [Unencrypted JSON file](#unencrypted-json-files) | File to store the last used media asset ID.                                                                                                                                   |
+| [**Tasks tracker**](#tasks-tracker)       | `tasks.json`       | [Unencrypted JSON file](#unencrypted-json-files) | File used to store the last used task ID, along with the list of pending tasks.                                                                                               |
+| [**Albums**](#albums-file)                | `albums.pmv`       | [Encrypted JSON file](#encrypted-json-files)     | File used to store the existing albums, including the metadata and the list of media assets included in them.                                                                 |
+
+|
+| [**Tag list**](#tags-file) | `tag_list.pmv` | [Encrypted JSON file](#encrypted-json-files) | File to store the metadata of the existing vault tags |
+| [**User configuration**](#user-configuration-file) | `user_config.pmv` | [Encrypted JSON file](#encrypted-json-files) | File to store user configuration, like the vault title or the encoding parameters |
+| [**Main index**](#main-index-file) | `main.index` | [Index file](#index-files) | File to index every single media asset existing in the vault. |
 
 ### Media assets folder
 
@@ -160,13 +162,13 @@ Examples: `00`, `01`, `02`..., `fd`, `fe`, `ff`.
 
 Inside each subfolder, the assets are stored inside their own folders, named by turning their identifier into a decimal string. Examples:
 
- - `media_id=0` - Stored inside `{VAULT_FOLDER}/media/00/0`
- - `media_id=15` - Stored inside `{VAULT_FOLDER}/media/0f/15`
+- `media_id=0` - Stored inside `{VAULT_FOLDER}/media/00/0`
+- `media_id=15` - Stored inside `{VAULT_FOLDER}/media/0f/15`
 
 ```go
 import (
     "fmt",
-    "hex", 
+    "hex",
     "path",
 )
 
@@ -179,9 +181,9 @@ func GetMediaAssetFolder(vault_path string, media_id uint64) string {
 
 The media asset folder may contain up to 3 types of files:
 
- - [Media asset metadata file](#media-asset-metadata-file): Named `meta.pmv` and used to store metadata.
- - [Single-File assets](#single-file-encrypted-assets): Named concatenating the `s_` prefix and the asset ID in decimal, with `.pma` extension.
- - [Multi-File assets](#multi-file-encrypted-assets): Named concatenating the `m_` prefix and the asset ID in decimal, with `.pma` extension.
+- [Media asset metadata file](#media-asset-metadata-file): Named `meta.pmv` and used to store metadata.
+- [Single-File assets](#single-file-encrypted-assets): Named concatenating the `s_` prefix and the asset ID in decimal, with `.pma` extension.
+- [Multi-File assets](#multi-file-encrypted-assets): Named concatenating the `m_` prefix and the asset ID in decimal, with `.pma` extension.
 
 #### Media asset metadata file
 
@@ -233,7 +235,7 @@ The `Resolution` object has the following fields:
 | `asset`    | Number (64 bit unsigned integer) | Asset ID of the asset. The asset is Single-File                 |
 | `ext`      | String                           | Asset file extension. Example: `mp4`                            |
 | `task_id`  | Number (64 bit unsigned integer) | If the asset is not ready, ID of the task assigned to encode it |
- 
+
 The `Subtitle` object has the following fields:
 
 | Field name | Type                             | Description                                     |
@@ -292,6 +294,7 @@ func GetTagIndexPath(vault_path string, tag_id uint64) string {
 ```
 
 Each tag index file contains the list of media asset identifiers that have such tag.
+
 ### Credentials file
 
 The credentials file, named `credentials.json` is an [unencrypted JSON file](#unencrypted-json-files) used to store the hashed credentials, along with the encrypted vault key.
@@ -321,7 +324,7 @@ Each `Account` is an object with the following fields:
 
 Currently, the following methods are implemented:
 
- - [AES256 + SHA256 + SALT16](#aes256--sha256--salt16) - Identifier: `aes256/sha256/salt16`
+- [AES256 + SHA256 + SALT16](#aes256--sha256--salt16) - Identifier: `aes256/sha256/salt16`
 
 #### AES256 + SHA256 + SALT16
 
@@ -368,7 +371,7 @@ The JSON file has just one field:
 
 ### Tasks tracker
 
-The task tracker file, named `tasks.json`  is an [unencrypted JSON file](#unencrypted-json-files) used to store the number of used task identifiers, in order to prevent duplicates. It also stores the pending tasks, in order to continue them in case of a vault restart.
+The task tracker file, named `tasks.json` is an [unencrypted JSON file](#unencrypted-json-files) used to store the number of used task identifiers, in order to prevent duplicates. It also stores the pending tasks, in order to continue them in case of a vault restart.
 
 The JSON file contains the following fields:
 
@@ -393,18 +396,26 @@ The albums file, named `albums.pmv` is an [encrypted JSON file](#encrypted-json-
 
 The file has the following fields:
 
-| Field name | Type                              | Description                                                           |
-| ---------- | --------------------------------- | --------------------------------------------------------------------- |
-| `next_id`  | Number (64 bit unsigned integer)  | Identifier to use for the next album, when creating a new one.        |
-| `albums`   | Object { Mapping ID -&gt; Album } | List of albums. For each album it maps its identifier to its metadata |
+| Field name      | Type                              | Description                                                           |
+| --------------- | --------------------------------- | --------------------------------------------------------------------- |
+| `next_id`       | Number (64 bit unsigned integer)  | Identifier to use for the next album, when creating a new one.        |
+| `next_thumb_id` | Number (64 bit unsigned integer)  | Identifier to use for the next thumbnail asset.                       |
+| `albums`        | Object { Mapping ID -&gt; Album } | List of albums. For each album it maps its identifier to its metadata |
 
 The `Album` object has the following fields:
 
-| Field name | Type                                          | Description                                            |
-| ---------- | --------------------------------------------- | ------------------------------------------------------ |
-| `name`     | String                                        | Name of the album                                      |
-| `lm`       | Number (64 bit integer)                       | Last modified timestamp. Unix milliseconds format      |
-| `list`     | Array&lt;Number (64 bit unsigned integer)&gt; | List of media asset identifiers contained in the album |
+| Field name | Type                                          | Description                                                                 |
+| ---------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `name`     | String                                        | Name of the album                                                           |
+| `lm`       | Number (64 bit integer)                       | Last modified timestamp. Unix milliseconds format                           |
+| `list`     | Array&lt;Number (64 bit unsigned integer)&gt; | List of media asset identifiers contained in the album                      |
+| `thumb`    | Number (64 bit unsigned integer)              | ID of the thumbnail asset of the album. May be null if no thumbnail is set. |
+
+### Albums thumbnails
+
+The thumbnail files of the albums are stored in a folder, named `thumb_album`.
+
+This folder contains [**Single-File encrypted assets**](#single-file-encrypted-assets), named concatenating the `s_` prefix and the asset ID in decimal, with `.pma` extension.
 
 ### Tags file
 
