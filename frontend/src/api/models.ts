@@ -74,6 +74,11 @@ export interface Album {
      * Last modified timestamp
      */
     lm: number;
+
+    /**
+     * Album thumbnail
+     */
+    thumbnail: string;
 }
 
 // Config

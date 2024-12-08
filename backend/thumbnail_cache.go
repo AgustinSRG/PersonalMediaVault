@@ -170,7 +170,7 @@ func (c *ThumbnailCache) GetAlbumThumbnail(album uint64, key []byte) (has_thumbn
 	}
 
 	if albumData.Thumbnail != nil {
-		c.resolveEntry(album, false, 0, *albumData.Thumbnail, true)
+		c.resolveEntry(album, true, 0, *albumData.Thumbnail, true)
 		return true, 0, *albumData.Thumbnail, true
 	}
 

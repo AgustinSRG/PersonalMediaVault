@@ -124,7 +124,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	router.HandleFunc("/assets/b/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetGet).Methods("GET", "HEAD")
 	router.HandleFunc("/assets/p/{mid:[0-9]+}/{asset:[0-9]+}/{filename}", api_handleAssetVideoPreviews).Methods("GET")
 
-	router.HandleFunc("/album_thumb/{asset:[0-9]+}/{filename}", api_handleAlbumThumbnailAssetGet).Methods("GET", "HEAD")
+	router.HandleFunc("/assets/album_thumb/{asset:[0-9]+}/{filename}", api_handleAlbumThumbnailAssetGet).Methods("GET", "HEAD")
 
 	// API routes
 

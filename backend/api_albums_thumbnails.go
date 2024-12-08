@@ -450,7 +450,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 
 	var result ThumbnailAPIResponse
 
-	result.Url = "/album_thumb/" + fmt.Sprint(thumb_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+	result.Url = "/assets/album_thumb/" + fmt.Sprint(thumb_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 	jsonResult, err := json.Marshal(result)
 

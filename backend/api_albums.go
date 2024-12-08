@@ -29,7 +29,7 @@ func getAlbumThumbnail(album_id uint64, session *ActiveSession) string {
 
 	if has_thumbnail {
 		if has_asset_thumbnail {
-			return "/album_thumb/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+			return "/assets/album_thumb/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 		} else {
 			return "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(thumbnail_asset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
 		}
@@ -116,7 +116,8 @@ type AlbumAPIDetail struct {
 	Id           uint64              `json:"id"`
 	Name         string              `json:"name"`
 	List         []*MediaListAPIItem `json:"list"`
-	LastModified int64               `json:"lm"` // Last modified timestamp
+	LastModified int64               `json:"lm"`        // Last modified timestamp
+	Thumbnail    string              `json:"thumbnail"` // This thumbnail is from the first media asset in the album
 }
 
 func api_getAlbum(response http.ResponseWriter, request *http.Request) {
@@ -156,6 +157,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		Id:           album_id,
 		Name:         album.Name,
 		LastModified: album.LastModified,
+		Thumbnail:    getAlbumThumbnail(album_id, session),
 	}
 
 	result.List = GetMediaMinInfoList(album.List, session)

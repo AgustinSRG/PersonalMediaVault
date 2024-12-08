@@ -2163,6 +2163,9 @@ paths:
                 type: number
                 format: int64
                 description: Last modified timestamp (Unix millis)
+              thumbnail:
+                type: string
+                description: Thumbnail for the album (of the first media)
 
   "/api/albums/{id}/thumbnail":
     post:
