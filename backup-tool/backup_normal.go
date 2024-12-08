@@ -50,6 +50,9 @@ func RunNormalBackup(vaultPath string, backupPath string, tmpFile string) {
 	mediaFiles := findBackupEntries(vaultPath, backupPath, "./media")
 	totalEntries = append(totalEntries, mediaFiles...)
 
+	albumThumbnails := findBackupEntries(vaultPath, backupPath, "./thumb_album")
+	totalEntries = append(totalEntries, albumThumbnails...)
+
 	resetLineOverWrite()
 
 	// Initialize backup (check files to be copied)
