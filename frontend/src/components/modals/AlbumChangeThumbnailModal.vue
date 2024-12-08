@@ -35,6 +35,17 @@
                             <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading thumbnail") }}...
                         </button>
                     </div>
+                    <div class="text-center form-group-pt" v-if="currentMediaThumbnail">
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm image-thumbnail-button"
+                            :title="$t('Set current media thumbnail')"
+                            @click="setCurrentMediaThumbnail"
+                            :disabled="busyThumbnail"
+                        >
+                            <i class="fas fa-image"></i> {{ $t("Set current media thumbnail") }}
+                        </button>
+                    </div>
                     <div v-if="errorThumbnail" class="form-error form-error-pt text-center">{{ errorThumbnail }}</div>
                 </div>
             </div>
@@ -53,11 +64,12 @@ import { AppEvents } from "@/control/app-events";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
 import { getUniqueStringId } from "@/utils/unique-id";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 
 export default defineComponent({
     name: "AlbumChangeThumbnailModal",
@@ -76,12 +88,15 @@ export default defineComponent({
 
             busyThumbnail: false,
             errorThumbnail: "",
+
+            currentMediaThumbnail: "",
         };
     },
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
             requestIdThumbnail: getUniqueStringId(),
+            fetchMediaThumbnailAbortController: null as AbortController | null,
         };
     },
     methods: {
@@ -190,11 +205,72 @@ export default defineComponent({
                     this.busyThumbnail = false;
                 });
         },
+
+        onMediaUpdate: function () {
+            if (MediaController.MediaData) {
+                this.currentMediaThumbnail = MediaController.MediaData.thumbnail || "";
+            } else {
+                this.currentMediaThumbnail = "";
+            }
+        },
+
+        setCurrentMediaThumbnail: function () {
+            if (this.busyThumbnail) {
+                return;
+            }
+
+            if (!this.currentMediaThumbnail) {
+                return;
+            }
+
+            const thumbnailUrl = getAssetURL(this.currentMediaThumbnail);
+
+            this.busyThumbnail = true;
+
+            const abortController = new AbortController();
+            this.fetchMediaThumbnailAbortController = abortController;
+
+            fetch(thumbnailUrl, {
+                signal: abortController.signal,
+                headers: {
+                    "x-session-token": AuthController.Session,
+                },
+            })
+                .then((response) => {
+                    this.fetchMediaThumbnailAbortController = null;
+                    if (response.status === 200) {
+                        response
+                            .blob()
+                            .then((blob) => {
+                                this.busyThumbnail = false;
+                                this.changeThumbnail(new File([blob], "thumbnail.jpg"));
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                this.errorThumbnail = this.$t("Error") + ": " + err.message;
+                                this.busyThumbnail = false;
+                            });
+                    } else {
+                        this.errorThumbnail = this.$t("Error") + ": " + this.$t("Could not fetch media thumbnail");
+                        this.busyThumbnail = false;
+                    }
+                })
+                .catch((err) => {
+                    this.fetchMediaThumbnailAbortController = null;
+                    console.error(err);
+                    this.errorThumbnail = this.$t("Error") + ": " + err.message;
+                    this.busyThumbnail = false;
+                });
+        },
     },
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
 
         this.onAlbumUpdate();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
+
+        this.onMediaUpdate();
 
         if (this.display) {
             this.errorThumbnail = "";
@@ -203,6 +279,10 @@ export default defineComponent({
     },
     beforeUnmount: function () {
         abortNamedApiRequest(this.requestIdThumbnail);
+
+        if (this.fetchMediaThumbnailAbortController) {
+            this.fetchMediaThumbnailAbortController.abort();
+        }
     },
     watch: {
         display: function () {
