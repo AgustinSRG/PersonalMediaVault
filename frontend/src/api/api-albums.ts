@@ -363,3 +363,68 @@ export function apiAlbumsMoveMediaInAlbum(id: number, media: number, position: n
         },
     };
 }
+
+/**
+ * Error handler for set thumbnail API
+ */
+export type SetAlbumThumbnailErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Error: Invalid thumbnail
+     */
+    invalidThumbnail: () => void;
+
+    /**
+     * Error: Bad request
+     */
+    badRequest: () => void;
+
+    /**
+     * Error: Access denied
+     */
+    accessDenied: () => void;
+
+    /**
+     * Error: Album not found
+     */
+    notFound: () => void;
+};
+
+/**
+ * Response of the API to change the album thumbnail
+ */
+export interface ChangeAlbumThumbnailResponse {
+    /**
+     * New thumbnail URL
+     */
+    url: string;
+}
+
+/**
+ * Sets thumbnail
+ * @param id Album ID
+ * @param thumbnail Thumbnail file to upload
+ * @returns The request parameters
+ */
+export function apiAlbumsChangeAlbumThumbnail(
+    id: number,
+    thumbnail: File,
+): RequestParams<ChangeAlbumThumbnailResponse, SetAlbumThumbnailErrorHandler> {
+    const form = new FormData();
+    form.append("file", thumbnail);
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/thumbnail`),
+        form: form,
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "INVALID_THUMBNAIL", handler.invalidThumbnail)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}

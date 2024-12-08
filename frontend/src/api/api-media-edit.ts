@@ -258,7 +258,7 @@ export function apiMediaSetExtendedDescription(
 }
 
 /**
- * Error handler for set extended description API
+ * Error handler for set thumbnail API
  */
 export type SetThumbnailErrorHandler = MediaEditApiErrorHandler & {
     /**
