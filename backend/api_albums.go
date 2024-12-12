@@ -24,7 +24,11 @@ type AlbumAPIItemMinified struct {
 	Name string `json:"name"`
 }
 
-func getAlbumThumbnail(album_id uint64, session *ActiveSession) string {
+func getAlbumThumbnail(album_id uint64, metadata *VaultAlbumData, session *ActiveSession) string {
+	if metadata != nil && metadata.Thumbnail != nil {
+		return "/assets/album_thumb/" + fmt.Sprint(*metadata.Thumbnail) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()
+	}
+
 	has_thumbnail, media_id, thumbnail_asset, has_asset_thumbnail := GetVault().albums.thumbnail_cache.GetAlbumThumbnail(album_id, session.key)
 
 	if has_thumbnail {
@@ -68,7 +72,7 @@ func api_getAlbums(response http.ResponseWriter, request *http.Request) {
 				Id:           album_id,
 				Name:         album.Name,
 				Size:         len(album.List),
-				Thumbnail:    getAlbumThumbnail(album_id, session),
+				Thumbnail:    getAlbumThumbnail(album_id, album, session),
 				LastModified: album.LastModified,
 			}
 
@@ -157,7 +161,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		Id:           album_id,
 		Name:         album.Name,
 		LastModified: album.LastModified,
-		Thumbnail:    getAlbumThumbnail(album_id, session),
+		Thumbnail:    getAlbumThumbnail(album_id, album, session),
 	}
 
 	result.List = GetMediaMinInfoList(album.List, session)
