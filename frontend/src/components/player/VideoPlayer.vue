@@ -27,9 +27,9 @@
                 playsinline
                 webkit-playsinline
                 x-webkit-airplay="allow"
-                :muted="muted || !!audioTrackURL"
+                :muted="muted"
                 :loop="(loop || isShort) && !sliceLoop"
-                :volume.prop="volume"
+                :volume.prop="audioTrackURL ? 0 : volume"
                 :playbackRate.prop="speed"
                 @ended="onEnded"
                 @timeupdate="onVideoTimeUpdate"
