@@ -206,6 +206,16 @@ export class BigListScroller<T = any> {
     }
 
     /**
+     * Sets window position
+     * @param index The index
+     */
+    public setWindowPosition(index: number) {
+        this.windowPosition = index;
+        this.setListWindow(this.list.slice(this.windowPosition, this.windowPosition + this.windowSize));
+        this.onChangeListWindow && this.onChangeListWindow();
+    }
+
+    /**
      * Increases window size
      * @param newSize The new size
      */

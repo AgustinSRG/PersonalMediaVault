@@ -323,7 +323,7 @@ export default defineComponent({
         updateAlbumList: function (preserveWindowScroll?: boolean) {
             this.currentMenuOpen = -1;
 
-            const centerPosition = this.listScroller.getCenterPosition();
+            const currentWindowPosition = this.listScroller.windowPosition;
 
             let currentScroll = 0;
 
@@ -351,12 +351,12 @@ export default defineComponent({
                 );
 
                 if (preserveWindowScroll) {
-                    this.listScroller.moveWindowToElement(centerPosition);
+                    this.listScroller.setWindowPosition(currentWindowPosition);
                     nextTick(() => {
-                        const conEl = this.$el.querySelector(".album-body");
+                        const conEl = this.$el.querySelector(".album-body") as HTMLElement;
 
                         if (conEl) {
-                            conEl.scrollTop = currentScroll;
+                            conEl.scrollTop = Math.min(currentScroll, conEl.scrollHeight - conEl.getBoundingClientRect().height);
                         }
                     });
                 }
@@ -367,9 +367,9 @@ export default defineComponent({
             });
         },
 
-        onScroll: function (e) {
+        onScroll: function (e: Event) {
             this.closeOptionsMenu();
-            this.listScroller.checkElementScroll(e.target);
+            this.listScroller.checkElementScroll(e.target as HTMLElement);
         },
 
         checkContainerHeight: function () {
@@ -537,7 +537,7 @@ export default defineComponent({
             this.currentPos = AlbumsController.CurrentAlbumPos;
             this.currentPosMedia = newPosMedia;
 
-            if (mustScroll) {
+            if (mustScroll && this.currentPos >= 0) {
                 nextTick(() => {
                     this.listScroller.moveWindowToElement(this.currentPos);
                     nextTick(() => {
