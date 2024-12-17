@@ -271,11 +271,14 @@ export default defineComponent({
                 return;
             }
             nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
+                let elem = this.$el.querySelector(".auto-focus");
                 if (elem) {
                     elem.focus();
                 } else {
-                    this.$el.focus();
+                    elem = this.$el.querySelector(".extended-description-body");
+                    if (elem) {
+                        elem.focus();
+                    }
                 }
             });
         },

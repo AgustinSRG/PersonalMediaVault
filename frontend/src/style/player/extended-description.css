@@ -4,6 +4,10 @@
     padding: 1rem;
 }
 
+.extended-description-body:focus {
+    outline: none;
+}
+
 .extended-description-edit textarea {
     resize: vertical;
     width: 100%;
