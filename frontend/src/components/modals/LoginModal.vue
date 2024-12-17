@@ -57,6 +57,7 @@
                                 :disabled="busy"
                                 :class="'form-control auto-focus code-char-' + i"
                                 @input="goNextChar(c, i)"
+                                @paste="onPaste($event, i)"
                                 v-model="c.c"
                                 maxlength="1"
                             />
@@ -264,22 +265,45 @@ export default defineComponent({
             c.c = c.c.charAt(0).toUpperCase();
 
             if (!c.c) {
+                // Go back
+                if (i > 0) {
+                    const nextInput = this.$el.querySelector(".code-char-" + (i - 1));
+
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.select && nextInput.select();
+                    }
+                }
+
                 return;
             }
 
-            if (i >= this.code.length - 1) {
-                const btn = this.$el.querySelector(".modal-footer-btn");
-
-                if (btn) {
-                    btn.focus();
-                }
-            } else {
+            if (i < this.code.length - 1) {
                 const nextInput = this.$el.querySelector(".code-char-" + (i + 1));
 
                 if (nextInput) {
                     nextInput.focus();
                     nextInput.select && nextInput.select();
                 }
+            }
+        },
+
+        onPaste: function (ev: ClipboardEvent, i: number) {
+            ev.preventDefault();
+
+            const text = ev.clipboardData.getData("text/plain").replace(/[^a-z0-9]+/gi, "");
+
+            let k = 0;
+            for (let j = i; j < this.code.length; j++) {
+                if (k >= text.length) {
+                    break;
+                }
+
+                const c = text.charAt(k).toUpperCase();
+                k++;
+
+                this.code[j].c = c;
+                this.goNextChar(this.code[j], j);
             }
         },
     },
