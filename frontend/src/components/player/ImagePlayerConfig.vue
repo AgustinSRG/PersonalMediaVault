@@ -251,7 +251,7 @@ export default defineComponent({
                     " (" +
                     this.$t("Original") +
                     ")" +
-                    (this.metadata.encoded ? "" : "(" + this.$t("Pending") + ")")
+                    (this.metadata.encoded ? "" : " (" + this.$t("Pending") + ")")
                 );
             } else {
                 const resData = this.metadata.resolutions[res];
@@ -282,7 +282,7 @@ export default defineComponent({
                 }
 
                 if (resData) {
-                    return width + "x" + height + "" + (resData.ready ? "" : "(" + this.$t("Pending") + ")");
+                    return width + "x" + height + "" + (resData.ready ? "" : " (" + this.$t("Pending") + ")");
                 } else {
                     return this.$t("Unknown");
                 }
