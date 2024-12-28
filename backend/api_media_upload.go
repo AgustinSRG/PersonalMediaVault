@@ -728,8 +728,8 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 				// Save resolution
 
 				resolution := MediaResolution{
-					Width:     userConfig.Resolutions[i].Width,
-					Height:    userConfig.Resolutions[i].Height,
+					Width:     userConfig.ImageResolutions[i].Width,
+					Height:    userConfig.ImageResolutions[i].Height,
 					Fps:       1,
 					Ready:     false,
 					Asset:     0,
