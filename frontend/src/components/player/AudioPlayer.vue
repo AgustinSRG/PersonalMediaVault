@@ -105,6 +105,7 @@
             :res="-1"
             :error="mediaError"
             :errorMessage="mediaErrorMessage"
+            :canAutoReload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
         <div

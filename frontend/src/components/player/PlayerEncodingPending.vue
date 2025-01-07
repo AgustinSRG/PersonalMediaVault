@@ -95,6 +95,7 @@ export default defineComponent({
         res: Number,
         error: Boolean,
         errorMessage: String,
+        canAutoReload: Boolean,
     },
     data: function () {
         return {
@@ -107,6 +108,8 @@ export default defineComponent({
             estimatedRemainingTime: 0,
 
             pendingId: "",
+
+            refreshPending: false,
         };
     },
 
@@ -136,7 +139,13 @@ export default defineComponent({
 
             if (this.tid <= 0) {
                 this.status = "not-ready";
-                setNamedTimeout(this.pendingId, 1000, this.refreshMedia.bind(this));
+                setNamedTimeout(this.pendingId, 1000, () => {
+                    if (!this.canAutoReload) {
+                        return;
+                    }
+
+                    this.refreshMedia();
+                });
                 return;
             }
 
@@ -217,13 +226,21 @@ export default defineComponent({
                 .onSuccess((media: MediaData) => {
                     if (this.res >= 0) {
                         if (media.resolutions[this.res] && media.resolutions[this.res].ready) {
-                            this.refreshMedia();
+                            if (this.canAutoReload) {
+                                this.refreshMedia();
+                            } else {
+                                this.refreshPending = true;
+                            }
                         } else {
                             this.status = "not-ready";
                         }
                     } else {
                         if (media.encoded) {
-                            this.refreshMedia();
+                            if (this.canAutoReload) {
+                                this.refreshMedia();
+                            } else {
+                                this.refreshPending = true;
+                            }
                         } else {
                             this.status = "not-ready";
                         }
@@ -235,7 +252,11 @@ export default defineComponent({
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
-                            this.refreshMedia();
+                            if (this.canAutoReload) {
+                                this.refreshMedia();
+                            } else {
+                                this.refreshPending = true;
+                            }
                         },
                         temporalError: () => {
                             // Retry
@@ -286,6 +307,13 @@ export default defineComponent({
         tid: function () {
             this.stop();
             this.start();
+        },
+
+        canAutoReload: function () {
+            if (this.canAutoReload && this.refreshPending) {
+                this.refreshPending = true;
+                MediaController.Load();
+            }
         },
     },
 });

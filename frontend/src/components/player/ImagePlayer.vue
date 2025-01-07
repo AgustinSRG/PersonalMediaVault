@@ -62,6 +62,7 @@
             :tid="imagePendingTask"
             :res="currentResolution"
             :error="mediaError"
+            :canAutoReload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
         <TagsEditHelper

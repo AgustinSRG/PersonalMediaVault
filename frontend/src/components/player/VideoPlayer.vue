@@ -118,6 +118,7 @@
             :res="currentResolution"
             :error="mediaError"
             :errorMessage="mediaErrorMessage"
+            :canAutoReload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
         <div
