@@ -486,8 +486,7 @@ func MakeFFMpegEncodeOriginalToPNGCommand(originalFilePath string, originalFileF
 }
 
 const (
-	THUMBNAIL_SIZE       = 250 // Thumbnail height and width (px)
-	THUMBNAIL_VIDEO_TIME = 30  // Max thumbnail frame start time
+	THUMBNAIL_SIZE = 250 // Thumbnail height and width (px)
 )
 
 // Generates a thumbnail from a video or image file
@@ -511,12 +510,8 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 		args = append(args, "-vframes", "1", "-an")
 
 		// Thumbnail time
-		if probedata.Duration > (THUMBNAIL_VIDEO_TIME * 2) {
-			args = append(args, "-ss", fmt.Sprint(THUMBNAIL_VIDEO_TIME))
-		} else {
-			midPoint := math.Floor(probedata.Duration / 2)
-			args = append(args, "-ss", fmt.Sprint(midPoint))
-		}
+		midPoint := math.Floor(probedata.Duration / 2)
+		args = append(args, "-ss", fmt.Sprint(midPoint))
 
 		// Crop image
 		x := int32(0)
