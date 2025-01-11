@@ -1510,7 +1510,7 @@ export default defineComponent({
             this.currentTimeSliceEnd = 0;
             this.sliceLoop = false;
             this.currentTime = this.canSaveTime ? getCachedInitialTime(this.mid) : 0;
-            this.duration = 0;
+            this.duration = this.metadata.duration || 0;
             this.speed = 1;
             this.setDefaultLoop();
             this.loading = true;
