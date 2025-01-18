@@ -1,5 +1,5 @@
 <template>
-    <div class="album-container" tabindex="-1">
+    <div class="album-container" tabindex="-1" @keydown="onHeaderKeyDown">
         <div v-if="!loading && loadedAlbum" class="album-header">
             <div class="album-header-title">
                 <div class="album-title" :title="albumName"><i class="fas fa-list-ol"></i> {{ albumName }}</div>
@@ -45,6 +45,7 @@
             class="album-body"
             :class="{ 'is-dragging': dragging }"
             @scroll.passive="onScroll"
+            @keydown="onBodyKeyDown"
             tabindex="-1"
         >
             <a
@@ -370,6 +371,24 @@ export default defineComponent({
         onScroll: function (e: Event) {
             this.closeOptionsMenu();
             this.listScroller.checkElementScroll(e.target as HTMLElement);
+        },
+
+        onHeaderKeyDown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                e.stopPropagation();
+
+                const elem = this.$el.querySelector(".album-body");
+
+                if (elem) {
+                    elem.focus();
+                }
+            }
+        },
+
+        onBodyKeyDown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                e.stopPropagation();
+            }
         },
 
         checkContainerHeight: function () {

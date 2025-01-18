@@ -147,6 +147,10 @@
     display: none;
 }
 
+.album-container:focus {
+    outline: none;
+}
+
 .vault-locked .album-container {
     visibility: hidden;
 }
