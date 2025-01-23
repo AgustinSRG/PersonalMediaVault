@@ -327,6 +327,9 @@ export default defineComponent({
                     event.preventDefault();
                 }
             }
+            if (event.key.toUpperCase() === "F" && event.ctrlKey) {
+                this.blurSearch();
+            }
             event.stopPropagation();
         },
 
