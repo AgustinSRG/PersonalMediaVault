@@ -22,7 +22,6 @@
             @account-settings="showAccountSettings"
             @menu="toggleSidebar"
             @menu-focus="openSideBar"
-            @search-open="openSearchModal"
             @help="showHelp"
         ></TopBar>
         <PlayerContainer
@@ -60,8 +59,6 @@
         <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
 
         <ClearBrowserDataModal v-if="displayClearBrowserData" v-model:display="displayClearBrowserData"></ClearBrowserDataModal>
-
-        <SearchInputModal v-if="displaySearchModal" v-model:display="displaySearchModal"></SearchInputModal>
 
         <HelpHubDropdown v-if="displayHelpModal" v-model:display="displayHelpModal" @goto="onGoHelp"></HelpHubDropdown>
 
@@ -206,12 +203,6 @@ const ClearBrowserDataModal = defineAsyncComponent({
     delay: 1000,
 });
 
-const SearchInputModal = defineAsyncComponent({
-    loader: () => import("@/components/modals/SearchInputModal.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 1000,
-});
-
 const HelpHubDropdown = defineAsyncComponent({
     loader: () => import("@/components/dropdowns/HelpHubDropdown.vue"),
     loadingComponent: LoadingOverlay,
@@ -263,7 +254,6 @@ export default defineComponent({
         AccountsAdminModal,
         TaskListModal,
         ClearBrowserDataModal,
-        SearchInputModal,
         HelpHubDropdown,
         AboutModal,
         KeyboardGuideModal,
@@ -299,8 +289,6 @@ export default defineComponent({
             displayTaskList: false,
 
             displayClearBrowserData: false,
-
-            displaySearchModal: false,
 
             displaySidebar: window.innerWidth >= 1000,
 
@@ -419,10 +407,6 @@ export default defineComponent({
             this.displaySidebar = false;
         },
 
-        openSearchModal: function () {
-            this.displaySearchModal = true;
-        },
-
         skipToMainContent: function (event) {
             if (event) {
                 event.preventDefault();
@@ -475,8 +459,6 @@ export default defineComponent({
                 this.displayInvite = false;
 
                 this.displayAccountAdmin = false;
-
-                this.displaySearchModal = false;
             }
         },
 

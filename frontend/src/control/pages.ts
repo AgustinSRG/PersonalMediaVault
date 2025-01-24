@@ -57,12 +57,6 @@ export const EVENT_NAME_MEDIA_METADATA_CHANGE = "media-meta-change";
 export const EVENT_NAME_MEDIA_DELETE = "media-delete";
 
 /**
- * Event triggered when the users submits a search query using the search modal
- * This event is received by the top bar component
- */
-export const EVENT_NAME_SEARCH_MODAL_SUBMIT = "search-modal-submit";
-
-/**
  * Event triggered to show a message in the snackbar
  */
 export const EVENT_NAME_SNACK_BAR = "snack";

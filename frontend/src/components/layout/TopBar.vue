@@ -1,5 +1,5 @@
 <template>
-    <div class="top-bar" tabindex="-1">
+    <div class="top-bar" :class="{ 'search-focused': searchFocus }" tabindex="-1">
         <div class="top-bar-logo-td">
             <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
                 <i class="fas fa-bars"></i>
@@ -102,7 +102,6 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
-import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 
 interface SearchBarSuggestion {
     key: string;
@@ -121,7 +120,7 @@ interface SearchBarSuggestion {
 
 export default defineComponent({
     name: "TopBar",
-    emits: ["logout", "vault-settings", "account-settings", "menu", "menu-focus", "search-open", "help"],
+    emits: ["logout", "vault-settings", "account-settings", "menu", "menu-focus", "help"],
     setup() {
         return {
             blurTimeout: null,
@@ -160,7 +159,14 @@ export default defineComponent({
         },
 
         openSearch: function () {
-            this.$emit("search-open");
+            this.focusSearch();
+
+            nextTick(() => {
+                const searchInput = this.$el.querySelector(".top-bar-search-input");
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            });
         },
 
         help: function () {
@@ -270,11 +276,6 @@ export default defineComponent({
             }
             this.goSearch();
             this.blurSearchInstantly();
-        },
-
-        onSearchModalSubmit: function (search: string) {
-            this.search = search;
-            this.submitSearch();
         },
 
         submitSearch: function (event?: Event) {
@@ -479,8 +480,6 @@ export default defineComponent({
 
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onSearchChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_SEARCH_MODAL_SUBMIT, this.onSearchModalSubmit.bind(this));
 
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
 

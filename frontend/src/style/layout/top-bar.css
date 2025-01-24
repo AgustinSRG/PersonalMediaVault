@@ -153,11 +153,27 @@
         display: none;
     }
 
+    .search-focused .top-bar-search-input-container {
+        display: flex;
+        width: 100%;
+    }
+
+    .search-focused .top-bar-search-td {
+        flex: 1;
+        padding: 0.5rem 0.5rem;
+    }
+
     .top-bar-button-small-version {
         display: inline-block;
     }
 
     .top-bar-button-large-version {
+        display: none;
+    }
+
+    .search-focused .top-bar-button-small-version,
+    .search-focused .top-bar-user-td,
+    .search-focused .top-bar-logo-td {
         display: none;
     }
 }
