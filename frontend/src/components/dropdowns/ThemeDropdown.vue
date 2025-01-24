@@ -80,11 +80,11 @@ export default defineComponent({
             this.theme = theme;
         },
 
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 

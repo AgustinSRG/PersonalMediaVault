@@ -50,11 +50,17 @@
                             v-for="s in suggestions"
                             :key="s.key"
                             class="top-bar-search-suggestion"
+                            tabindex="0"
                             @click="clickSearch(s)"
+                            @keydown="onSuggestionKeyDown"
                             :title="s.name"
                         >
                             <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
                             <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
+                            <i class="fas fa-image" v-else-if="s.type === 'media' && s.mediaType === 1"></i>
+                            <i class="fas fa-video" v-else-if="s.type === 'media' && s.mediaType === 2"></i>
+                            <i class="fas fa-headphones" v-else-if="s.type === 'media' && s.mediaType === 3"></i>
+                            <i class="fas fa-ban" v-else></i>
                             <span>{{ s.name }}</span>
                         </div>
                     </div>
@@ -98,6 +104,21 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
 import { EVENT_NAME_SEARCH_MODAL_SUBMIT } from "@/control/pages";
 
+interface SearchBarSuggestion {
+    key: string;
+
+    id: string;
+
+    name: string;
+    nameLower: string;
+
+    type: "tag" | "album" | "media";
+    mediaType?: number;
+
+    starts: boolean;
+    contains: boolean;
+}
+
 export default defineComponent({
     name: "TopBar",
     emits: ["logout", "vault-settings", "account-settings", "menu", "menu-focus", "search-open", "help"],
@@ -114,7 +135,7 @@ export default defineComponent({
             search: AppStatus.CurrentSearch,
             hasSearch: !!AppStatus.CurrentSearch,
             searchFocus: false,
-            suggestions: [],
+            suggestions: [] as SearchBarSuggestion[],
         };
     },
     methods: {
@@ -202,10 +223,48 @@ export default defineComponent({
             this.selectSearch(s);
         },
 
-        selectSearch: function (s) {
+        onSuggestionKeyDown: function (event: KeyboardEvent) {
+            const target = event.target as HTMLElement;
+            if (event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                target.click();
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                event.stopPropagation();
+                const sibling = target.previousElementSibling as HTMLElement;
+                if (sibling && sibling.focus) {
+                    sibling.focus();
+                } else {
+                    const searchInput = this.$el.querySelector(".top-bar-search-input");
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }
+            } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                event.stopPropagation();
+                const sibling = target.nextElementSibling as HTMLElement;
+                if (sibling && sibling.focus) {
+                    sibling.focus();
+                }
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                const searchInput = this.$el.querySelector(".top-bar-search-input");
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }
+        },
+
+        selectSearch: function (s: SearchBarSuggestion) {
             if (s.type === "album") {
                 this.search = "";
-                AppStatus.ClickOnAlbum(s.id);
+                AppStatus.ClickOnAlbum(Number(s.id));
+            } else if (s.type === "media") {
+                this.search = "";
+                AppStatus.ClickOnMedia(Number(s.id), false);
             } else {
                 this.search = s.name;
             }
@@ -252,47 +311,79 @@ export default defineComponent({
             const albumFilter = normalizeString(this.search).trim().toLowerCase();
             const albumFilterWords = filterToWords(albumFilter);
 
-            const suggestions = Array.from(TagsController.Tags.entries())
-                .map((a: any) => {
-                    const i = tagFilter ? normalizeString(a[1]).indexOf(tagFilter) : 0;
-                    return {
-                        key: "tag:" + a[0],
-                        id: a[0],
-                        name: a[1],
-                        nameLower: a[1],
-                        starts: i === 0,
-                        contains: i >= 0,
-                        type: "tag",
-                    };
-                })
-                .concat(
-                    AlbumsController.GetAlbumsList().map((a) => {
+            let suggestions: SearchBarSuggestion[] = [];
+
+            suggestions = suggestions.concat(
+                Array.from(TagsController.Tags.entries())
+                    .map((a): SearchBarSuggestion => {
+                        const i = tagFilter ? normalizeString(a[1]).indexOf(tagFilter) : 0;
+                        return {
+                            key: "tag:" + a[0],
+                            id: a[0] + "",
+                            name: a[1],
+                            nameLower: a[1],
+                            starts: i === 0,
+                            contains: i >= 0,
+                            type: "tag",
+                        };
+                    })
+                    .filter((a) => {
+                        return a.starts || a.contains;
+                    }),
+            );
+
+            suggestions = suggestions.concat(
+                AlbumsController.GetAlbumsList()
+                    .map((a): SearchBarSuggestion => {
                         const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
                         return {
                             key: "album:" + a.id,
-                            id: a.id,
+                            id: a.id + "",
                             name: a.name,
                             nameLower: a.name.toLowerCase(),
                             starts: i === 0,
                             contains: i >= 0,
                             type: "album",
                         };
+                    })
+                    .filter((a) => {
+                        return a.starts || a.contains;
                     }),
-                )
-                .filter((a) => {
-                    return a.starts || a.contains;
-                })
-                .sort((a, b) => {
-                    if (a.starts && !b.starts) {
-                        return -1;
-                    } else if (b.starts && !a.starts) {
-                        return 1;
-                    } else if (a.nameLower < b.nameLower) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
+            );
+
+            if (AlbumsController.CurrentAlbumData) {
+                suggestions = suggestions.concat(
+                    AlbumsController.CurrentAlbumData.list
+                        .map((a): SearchBarSuggestion => {
+                            const i = albumFilter ? matchSearchFilter(a.title, albumFilter, albumFilterWords) : 0;
+                            return {
+                                key: "media:" + a.id,
+                                id: a.id + "",
+                                name: a.title,
+                                nameLower: a.title.toLowerCase(),
+                                starts: i === 0,
+                                contains: i >= 0,
+                                type: "media",
+                                mediaType: a.type,
+                            };
+                        })
+                        .filter((a) => {
+                            return a.starts || a.contains;
+                        }),
+                );
+            }
+
+            suggestions = suggestions.sort((a, b) => {
+                if (a.starts && !b.starts) {
+                    return -1;
+                } else if (b.starts && !a.starts) {
+                    return 1;
+                } else if (a.nameLower < b.nameLower) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
 
             this.bigListScroller.reset();
             this.bigListScroller.addElements(suggestions);
@@ -325,10 +416,21 @@ export default defineComponent({
                     this.search = this.suggestions[0].name;
                     this.onSearchInput();
                     event.preventDefault();
+                } else if (this.suggestions.length > 0 && this.search === this.suggestions[0].name) {
+                    event.preventDefault();
+                    const suggestionElement = this.$el.querySelector(".top-bar-search-suggestion");
+                    if (suggestionElement) {
+                        suggestionElement.focus();
+                    }
                 }
-            }
-            if (event.key.toUpperCase() === "F" && event.ctrlKey) {
+            } else if (event.key.toUpperCase() === "F" && event.ctrlKey) {
                 this.blurSearch();
+            } else if (event.key === "ArrowDown" && this.suggestions.length > 0) {
+                event.preventDefault();
+                const suggestionElement = this.$el.querySelector(".top-bar-search-suggestion");
+                if (suggestionElement) {
+                    suggestionElement.focus();
+                }
             }
             event.stopPropagation();
         },

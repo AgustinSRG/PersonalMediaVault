@@ -237,6 +237,11 @@
     background: var(--hover-color);
 }
 
+.top-bar-search-suggestion:focus {
+    outline: none;
+    background: var(--hover-color);
+}
+
 .top-bar-search-suggestion i {
     margin-right: 0.5rem;
 }
