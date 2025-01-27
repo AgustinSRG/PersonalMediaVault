@@ -153,6 +153,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/admin/accounts", api_getAccounts).Methods("GET")
 	apiRouter.HandleFunc("/admin/accounts", api_createAccount).Methods("POST")
 	apiRouter.HandleFunc("/admin/accounts/delete", api_deleteAccount).Methods("POST")
+	apiRouter.HandleFunc("/admin/accounts/update", api_updateAccount).Methods("POST")
 	apiRouter.HandleFunc("/admin/launcher/{tag}", api_checkLauncherTag).Methods("GET")
 
 	// Media API

@@ -2686,7 +2686,44 @@ paths:
         200:
           description: Success
           
-          
+  "/api/admin/accounts/update":
+    post:
+      summary: Updates account
+      description: "Updates an account with access to the vault. Note: Root account cannot be updated"
+      tags:
+        - admin
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Account data
+          schema:
+            properties:
+              username:
+                type: string
+                description: Account username (can't be blank, max 255 chars)
+                example: admin
+              newUsername:
+                type: string
+                description: New account username (optional) (can't be blank, max 255 chars)
+                example: admin
+              write:
+                type: boolean
+                description: "True to give the user write access to the vault, false for read-only accounts"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: User not found
+        200:
+          description: Success
+
   "/api/admin/accounts/delete":
     post:
       summary: Delete account

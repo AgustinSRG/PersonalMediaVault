@@ -260,6 +260,24 @@ func (sm *SessionManager) RemoveUserSessions(user string) {
 	}
 }
 
+// Removes all the sessions for an user
+// user - Username
+func (sm *SessionManager) UpdateUserSessions(user string, write bool) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for i := 0; i < len(sm.sessions); i++ {
+		sessionsList := sm.sessions[i]
+
+		for j := 0; j < len(sessionsList); j++ {
+			if sessionsList[j].user == user {
+				// Update
+				sessionsList[j].write = write
+			}
+		}
+	}
+}
+
 // Removes an invite session
 // invitedBy - User who invited
 // index - Session unique index

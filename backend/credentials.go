@@ -449,6 +449,23 @@ func (manager *VaultCredentialsManager) ChangeUsername(user string, new_user str
 	return nil
 }
 
+// Changes username
+// user - Username
+// write - Can write?
+func (manager *VaultCredentialsManager) UpdateWritePermission(user string, write bool) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	for i := 0; i < len(manager.credentials.Accounts); i++ {
+		if manager.credentials.Accounts[i].User == user {
+			manager.credentials.Accounts[i].Write = write
+			break
+		}
+	}
+
+	return nil
+}
+
 // Saves credentials data to the vault permanent storage
 func (manager *VaultCredentialsManager) SaveCredentials() error {
 	manager.lock.Lock()
