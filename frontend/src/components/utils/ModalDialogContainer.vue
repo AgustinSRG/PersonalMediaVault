@@ -4,7 +4,6 @@
         :class="{ hidden: !display, closing: closing }"
         tabindex="-1"
         role="dialog"
-        :aria-hidden="!display"
         @keydown="keyDownHandle"
         @animationend="onAnimationEnd"
         @mousedown="stopPropagationEvent"

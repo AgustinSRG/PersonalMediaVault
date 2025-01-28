@@ -1,5 +1,5 @@
 <template>
-    <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog" :aria-hidden="!display">
+    <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog">
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">

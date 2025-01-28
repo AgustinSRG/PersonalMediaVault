@@ -139,7 +139,11 @@ export type UpdateAccountErrorHandler = AdminApiErrorHandler & {
  * @param write True to give the account write permissions
  * @returns The request parameters
  */
-export function apiAdminUpdateAccount(username: string, newUsername: string, write: boolean): RequestParams<void, UpdateAccountErrorHandler> {
+export function apiAdminUpdateAccount(
+    username: string,
+    newUsername: string,
+    write: boolean,
+): RequestParams<void, UpdateAccountErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/accounts/update`),

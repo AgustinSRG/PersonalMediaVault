@@ -6,7 +6,6 @@
         @keydown="keyDownHandle"
         tabindex="-1"
         :role="initialLayout ? '' : 'dialog'"
-        :aria-hidden="!display"
     >
         <div class="side-bar-header">
             <div class="top-bar-logo-td">

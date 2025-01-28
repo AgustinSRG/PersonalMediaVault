@@ -4,7 +4,6 @@
         :class="{ hidden: !shown }"
         tabindex="-1"
         role="dialog"
-        :aria-hidden="!shown"
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
         @mousedown="stopPropagationEvent"
