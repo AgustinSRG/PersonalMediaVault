@@ -370,6 +370,14 @@
     padding-right: 1rem;
 }
 
+@media (max-width: 370px) {
+    .modal-container.modal-container-corner,
+    .modal-container.modal-container-corner.modal-container-help,
+    .modal-container.modal-container-corner.modal-container-account {
+        padding-right: 16px;
+    }
+}
+
 .modal-container.modal-container-corner.modal-container-page-settings .modal-dialog {
     width: 700px;
 }

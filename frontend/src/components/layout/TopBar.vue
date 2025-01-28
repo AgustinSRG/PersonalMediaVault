@@ -68,17 +68,12 @@
             </div>
         </div>
         <div class="top-bar-user-td">
-            <button
-                type="button"
-                class="top-bar-button top-bar-button-dropdown top-bar-button-large-version"
-                :title="$t('Help')"
-                @click="help"
-            >
-                <i class="fas fa-question"></i>
-            </button>
-
             <button type="button" class="top-bar-button top-bar-button-small-version" :title="$t('Search')" @click="openSearch">
                 <i class="fas fa-search"></i>
+            </button>
+
+            <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Help')" @click="help">
+                <i class="fas fa-question"></i>
             </button>
 
             <button type="button" class="top-bar-button top-bar-button-dropdown" :title="$t('Vault settings')" @click="vaultSettings">
@@ -425,6 +420,9 @@ export default defineComponent({
                     }
                 }
             } else if (event.key.toUpperCase() === "F" && event.ctrlKey) {
+                this.blurSearch();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
                 this.blurSearch();
             } else if (event.key === "ArrowDown" && this.suggestions.length > 0) {
                 event.preventDefault();
