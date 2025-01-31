@@ -1,8 +1,15 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer
+        :closeSignal="closeSignal"
+        :forceCloseSignal="forceCloseSignal"
+        v-model:display="displayStatus"
+        :lock-close="busy"
+    >
         <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
-                <div class="modal-title">{{ $t("Create account") }}</div>
+                <div class="modal-title">
+                    {{ $t("Modify account") }}
+                </div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
@@ -21,43 +28,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label>{{ $t("Account password") }}:</label>
-                    <input
-                        type="password"
-                        autocomplete="new-password"
-                        v-model="accountPassword"
-                        :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label>{{ $t("Account password") }} ({{ $t("Again") }}):</label>
-                    <input
-                        type="password"
-                        autocomplete="new-password"
-                        v-model="accountPassword2"
-                        :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
-                </div>
-
-                <div class="form-group">
                     <label>{{ $t("Account type") }}:</label>
                     <select v-model="accountWrite" :disabled="busy" class="form-control form-select form-control-full-width">
                         <option :value="false">{{ $t("Read only") }}</option>
                         <option :value="true">{{ $t("Read / Write") }}</option>
                     </select>
                 </div>
-
-                <div class="form-group form-error">{{ error }}</div>
+                <div class="form-error">{{ error }}</div>
             </div>
-
             <div class="modal-footer no-padding">
-                <button type="submit" :disabled="busy" class="modal-footer-btn">
-                    <LoadingIcon icon="fas fa-plus" :loading="busy"></LoadingIcon> {{ $t("Create account") }}
+                <button :disabled="busy || (accountWrite === write && accountUsername === username)" type="submit" class="modal-footer-btn">
+                    <LoadingIcon icon="fas fa-check" :loading="busy"></LoadingIcon> {{ $t("Modify account") }}
                 </button>
             </div>
         </form>
@@ -71,45 +52,54 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
-import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { apiAdminUpdateAccount } from "@/api/api-admin";
 
 export default defineComponent({
     components: {
         LoadingIcon,
     },
-    name: "AccountCreateModal",
-    emits: ["update:display", "account-created"],
+    name: "AccountModifyModal",
+    emits: ["update:display", "done"],
     props: {
         display: Boolean,
+        username: String,
+        write: Boolean,
+    },
+    data: function () {
+        return {
+            name: "",
+
+            busy: false,
+            error: "",
+
+            accountUsername: this.username || "",
+            accountWrite: this.write || false,
+
+            closeSignal: 0,
+            forceCloseSignal: 0,
+        };
     },
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
         };
     },
-    data: function () {
-        return {
-            accountUsername: "",
-            accountPassword: "",
-            accountPassword2: "",
-            accountWrite: false,
-
-            busy: false,
-            error: "",
-
-            closeSignal: 0,
-        };
-    },
     methods: {
         autoFocus: function () {
+            if (!this.display) {
+                return;
+            }
             nextTick(() => {
                 const elem = this.$el.querySelector(".auto-focus");
                 if (elem) {
                     elem.focus();
-                    elem.select();
                 }
             });
+        },
+
+        close: function () {
+            this.closeSignal++;
         },
 
         submit: function (e: Event) {
@@ -119,27 +109,14 @@ export default defineComponent({
                 return;
             }
 
-            if (this.accountPassword !== this.accountPassword2) {
-                this.error = this.$t("The passwords do not match");
-                return;
-            }
-
-            const username = this.accountUsername;
-            const password = this.accountPassword;
-            const write = this.accountWrite;
-
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAdminCreateAccount(username, password, write))
+            makeApiRequest(apiAdminUpdateAccount(this.username, this.accountUsername, this.accountWrite))
                 .onSuccess(() => {
                     this.busy = false;
-                    PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);
-                    this.accountUsername = "";
-                    this.accountPassword = "";
-                    this.accountPassword2 = "";
-                    this.accountWrite = false;
-                    this.$emit("account-created");
+                    PagesController.ShowSnackBar(this.$t("Account updated") + ": " + this.accountUsername);
+                    this.$emit("done");
                     this.close();
                 })
                 .onCancel(() => {
@@ -158,14 +135,14 @@ export default defineComponent({
                         usernameInUse: () => {
                             this.error = this.$t("The username is already in use");
                         },
-                        invalidPassword: () => {
-                            this.error = this.$t("Invalid password provided");
-                        },
                         badRequest: () => {
                             this.error = this.$t("Bad request");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");
+                        },
+                        accountNotFound: () => {
+                            this.error = this.$t("Not found");
                         },
                         serverError: () => {
                             this.error = this.$t("Internal server error");
@@ -181,10 +158,6 @@ export default defineComponent({
                     this.busy = false;
                 });
         },
-
-        close: function () {
-            this.closeSignal++;
-        },
     },
     mounted: function () {
         if (this.display) {
@@ -192,13 +165,18 @@ export default defineComponent({
             this.autoFocus();
         }
     },
-    beforeUnmount: function () {},
     watch: {
         display: function () {
             if (this.display) {
                 this.error = "";
                 this.autoFocus();
             }
+        },
+        username: function () {
+            this.accountUsername = this.username || "";
+        },
+        write: function () {
+            this.accountWrite = this.write || false;
         },
     },
 });

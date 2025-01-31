@@ -17,7 +17,8 @@
                             <tr>
                                 <th class="text-left">{{ $t("Username") }}</th>
                                 <th class="text-left">{{ $t("Account type") }}</th>
-                                <th class="text-right"></th>
+                                <th class="text-right td-shrink"></th>
+                                <th class="text-right td-shrink"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -25,6 +26,11 @@
                                 <td class="bold">{{ a.username }}</td>
                                 <td v-if="!a.write">{{ $t("Read only") }}</td>
                                 <td v-if="a.write">{{ $t("Read / Write") }}</td>
+                                <td class="text-right">
+                                    <button type="button" class="btn btn-primary btn-xs" @click="openEditAccount(a)">
+                                        <i class="fas fa-pencil-alt"></i> {{ $t("Edit") }}
+                                    </button>
+                                </td>
                                 <td class="text-right">
                                     <button type="button" class="btn btn-danger btn-xs" @click="askDeleteAccount(a.username)">
                                         <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
@@ -50,13 +56,25 @@
             </div>
         </div>
 
+        <AccountModifyModal
+            v-if="displayAccountModify"
+            v-model:display="displayAccountModify"
+            @update:display="afterSubModalClosed"
+            :username="accountModifyUsername"
+            :write="accountModifyWrite"
+            @done="load"
+        ></AccountModifyModal>
+
         <AccountDeleteModal
+            v-if="displayAccountDelete"
             v-model:display="displayAccountDelete"
             @update:display="afterSubModalClosed"
             :username="accountToDelete"
             @done="load"
         ></AccountDeleteModal>
+
         <AccountCreateModal
+            v-if="displayAccountCreate"
             v-model:display="displayAccountCreate"
             @account-created="load"
             @update:display="afterSubModalClosed"
@@ -70,15 +88,17 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import AccountModifyModal from "../modals/AccountModifyModal.vue";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { apiAdminListAccounts } from "@/api/api-admin";
+import { apiAdminListAccounts, VaultAccount } from "@/api/api-admin";
 
 export default defineComponent({
     components: {
         AccountDeleteModal,
+        AccountModifyModal,
         AccountCreateModal,
     },
     name: "AccountsAdminModal",
@@ -94,12 +114,16 @@ export default defineComponent({
     },
     data: function () {
         return {
-            accounts: [],
+            accounts: [] as VaultAccount[],
 
             accountUsername: "",
             accountPassword: "",
             accountPassword2: "",
             accountWrite: false,
+
+            displayAccountModify: false,
+            accountModifyUsername: "",
+            accountModifyWrite: false,
 
             displayAccountDelete: false,
             accountToDelete: "",
@@ -148,6 +172,12 @@ export default defineComponent({
                     // Retry
                     setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
+        },
+
+        openEditAccount: function (a: VaultAccount) {
+            this.accountModifyUsername = a.username;
+            this.accountModifyWrite = a.write;
+            this.displayAccountModify = true;
         },
 
         askDeleteAccount: function (username: string) {
