@@ -19,8 +19,13 @@
     font-size: 18px;
     font-weight: bold;
     background: transparent;
-    margin: 0.5rem;
     color: var(--theme-fg-color);
+}
+
+.paginated-menu-link {
+    text-decoration: none;
+    border-radius: 100vw;
+    margin: 0.5rem;
 }
 
 .paginated-menu-btn:disabled {

@@ -1,67 +1,111 @@
 <template>
     <div class="paginated-menu" :class="{ 'menu-min': min }">
-        <button
-            :disabled="page <= 0"
-            type="button"
-            class="paginated-menu-btn paginated-menu-btn-edge-extra"
-            @click="clickPage(0)"
-            :title="$t('First page')"
+        <a
+            target="_blank"
+            :href="getPageUrl(0, pageName, order)"
+            rel="noopener noreferrer"
+            class="paginated-menu-link"
+            @click="preventDefaultEvent"
         >
-            <i class="fas fa-angles-left"></i>
-        </button>
+            <button
+                :disabled="page <= 0"
+                type="button"
+                class="paginated-menu-btn paginated-menu-btn-edge-extra"
+                @click="clickPage(0, $event)"
+                :title="$t('First page')"
+            >
+                <i class="fas fa-angles-left"></i>
+            </button>
+        </a>
 
-        <button
-            :disabled="page <= 0"
-            type="button"
-            class="paginated-menu-btn paginated-menu-btn-edge"
-            @click="clickPage(page - 1)"
-            :title="$t('Previous page')"
+        <a
+            target="_blank"
+            :href="getPageUrl(Math.max(0, page - 1), pageName, order)"
+            rel="noopener noreferrer"
+            class="paginated-menu-link"
+            @click="preventDefaultEvent"
         >
-            <i class="fas fa-chevron-left"></i>
-        </button>
+            <button
+                :disabled="page <= 0"
+                type="button"
+                class="paginated-menu-btn paginated-menu-btn-edge"
+                @click="clickPage(page - 1, $event)"
+                :title="$t('Previous page')"
+            >
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </a>
 
-        <button
+        <a
             v-for="(m, i) in menu"
             :key="i"
-            type="button"
-            class="paginated-menu-btn"
-            :class="{ current: m.current, skip: m.type === 'skip' }"
-            :disabled="m.type === 'skip'"
-            @click="clickPage(m.page)"
+            target="_blank"
+            :href="m.type === 'skip' ? '#' : getPageUrl(m.page, pageName, order)"
+            rel="noopener noreferrer"
+            class="paginated-menu-link"
+            @click="preventDefaultEvent"
         >
-            {{ m.type === "skip" ? "..." : m.page + 1 }}
-        </button>
+            <button
+                type="button"
+                class="paginated-menu-btn"
+                :class="{ current: m.current, skip: m.type === 'skip' }"
+                :disabled="m.type === 'skip'"
+                @click="clickPage(m.page, $event)"
+            >
+                {{ m.type === "skip" ? "..." : m.page + 1 }}
+            </button>
+        </a>
 
-        <button
-            :disabled="page >= pages - 1"
-            type="button"
-            class="paginated-menu-btn paginated-menu-btn-edge"
-            @click="clickPage(page + 1)"
-            :title="$t('Next page')"
+        <a
+            target="_blank"
+            :href="getPageUrl(Math.min(page + 1, pages - 1), pageName, order)"
+            rel="noopener noreferrer"
+            class="paginated-menu-link"
+            @click="preventDefaultEvent"
         >
-            <i class="fas fa-chevron-right"></i>
-        </button>
+            <button
+                :disabled="page >= pages - 1"
+                type="button"
+                class="paginated-menu-btn paginated-menu-btn-edge"
+                @click="clickPage(page + 1, $event)"
+                :title="$t('Next page')"
+            >
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </a>
 
-        <button
-            :disabled="page >= pages - 1"
-            type="button"
-            class="paginated-menu-btn paginated-menu-btn-edge-extra"
-            @click="clickPage(pages - 1)"
-            :title="$t('Last page')"
+        <a
+            target="_blank"
+            :href="getPageUrl(pages - 1, pageName, order)"
+            rel="noopener noreferrer"
+            class="paginated-menu-link"
+            @click="preventDefaultEvent"
         >
-            <i class="fas fa-angles-right"></i>
-        </button>
+            <button
+                :disabled="page >= pages - 1"
+                type="button"
+                class="paginated-menu-btn paginated-menu-btn-edge-extra"
+                @click="clickPage(pages - 1, $event)"
+                :title="$t('Last page')"
+            >
+                <i class="fas fa-angles-right"></i>
+            </button>
+        </a>
     </div>
 </template>
 
 <script lang="ts">
+import { generateURIQuery } from "@/utils/api";
 import { generateMenuForPages } from "@/utils/menu-make";
+import { packSearchParams } from "@/utils/search-params";
 import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "PageMenu",
     emits: ["goto"],
     props: {
+        pageName: String,
+        order: String,
         page: Number,
         pages: Number,
         min: Boolean,
@@ -76,8 +120,26 @@ export default defineComponent({
             this.menu = generateMenuForPages(this.page, this.pages);
         },
 
-        clickPage: function (p) {
+        clickPage: function (p: number, e: Event) {
+            e.preventDefault();
             this.$emit("goto", p);
+        },
+
+        preventDefaultEvent: function (e: Event) {
+            e.preventDefault();
+        },
+
+        getPageUrl: function (page: number, pageName: string, order: string): string {
+            return (
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                generateURIQuery({
+                    page: pageName || "",
+                    sp: packSearchParams(page, order || "") || null,
+                })
+            );
         },
     },
     mounted: function () {

@@ -1,7 +1,15 @@
 <template>
     <div class="page-inner" :class="{ hidden: !display }">
         <div class="search-results auto-focus" tabindex="-1">
-            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu
+                v-if="total > 0"
+                :page-name="'home'"
+                :order="order"
+                :page="page"
+                :pages="totalPages"
+                :min="min"
+                @goto="changePage"
+            ></PageMenu>
 
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item">

@@ -19,7 +19,15 @@
                 </div>
             </div>
 
-            <PageMenu v-if="total > 0 && order !== 'rand'" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu
+                v-if="total > 0 && order !== 'rand'"
+                :page-name="'albums'"
+                :order="order"
+                :page="page"
+                :pages="totalPages"
+                :min="min"
+                @goto="changePage"
+            ></PageMenu>
 
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in pageSize" :key="f" class="search-result-item">
