@@ -428,6 +428,10 @@ export default defineComponent({
                 this.blurSearch();
             } else if (event.key === "Escape") {
                 event.preventDefault();
+                const inputElem = event.target as HTMLElement;
+                if (inputElem && inputElem.blur) {
+                    inputElem.blur();
+                }
                 this.blurSearch();
             } else if (event.key === "ArrowDown" && this.suggestions.length > 0) {
                 event.preventDefault();
