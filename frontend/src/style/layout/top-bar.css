@@ -256,6 +256,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    text-decoration: none;
 }
 
 .top-bar-search-suggestion span {
@@ -273,6 +274,7 @@
 .top-bar-search-suggestion:focus {
     outline: none;
     background: var(--hover-color);
+    font-weight: bold;
 }
 
 .top-bar-search-suggestion i {

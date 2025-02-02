@@ -46,12 +46,15 @@
                         :class="{ hidden: suggestions.length === 0 }"
                         @scroll.passive="onSuggestionsScroll"
                     >
-                        <div
+                        <a
                             v-for="s in suggestions"
                             :key="s.key"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :href="getSuggestionUrl(s)"
                             class="top-bar-search-suggestion"
                             tabindex="0"
-                            @click="clickSearch(s)"
+                            @click="clickSearch(s, $event)"
                             @keydown="onSuggestionKeyDown"
                             :title="s.name"
                         >
@@ -62,7 +65,7 @@
                             <i class="fas fa-headphones" v-else-if="s.type === 'media' && s.mediaType === 3"></i>
                             <i class="fas fa-ban" v-else></i>
                             <span>{{ s.name }}</span>
-                        </div>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -97,6 +100,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
+import { generateURIQuery } from "@/utils/api";
 
 interface SearchBarSuggestion {
     key: string;
@@ -219,7 +223,8 @@ export default defineComponent({
             }, 100);
         },
 
-        clickSearch: function (s) {
+        clickSearch: function (s: SearchBarSuggestion, e: Event) {
+            e.preventDefault();
             this.blurSearch();
             this.selectSearch(s);
         },
@@ -473,6 +478,44 @@ export default defineComponent({
             }
 
             return false;
+        },
+
+        getSuggestionUrl: function (s: SearchBarSuggestion): string {
+            switch (s.type) {
+                case "media":
+                    return (
+                        window.location.protocol +
+                        "//" +
+                        window.location.host +
+                        window.location.pathname +
+                        generateURIQuery({
+                            media: s.id + "",
+                        })
+                    );
+                case "album":
+                    return (
+                        window.location.protocol +
+                        "//" +
+                        window.location.host +
+                        window.location.pathname +
+                        generateURIQuery({
+                            album: s.id + "",
+                        })
+                    );
+                case "tag":
+                    return (
+                        window.location.protocol +
+                        "//" +
+                        window.location.host +
+                        window.location.pathname +
+                        generateURIQuery({
+                            page: "search",
+                            search: s.name,
+                        })
+                    );
+                default:
+                    return window.location.protocol + "//" + window.location.host + window.location.pathname;
+            }
         },
     },
 
