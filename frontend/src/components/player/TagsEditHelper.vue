@@ -50,9 +50,10 @@
                             v-for="mt in matchingTags"
                             :key="mt.id"
                             type="button"
-                            class="btn btn-primary btn-sm btn-tag-mini"
+                            class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
                             :disabled="busy"
                             @click="addMatchingTag(mt.name)"
+                            @keydown="onSuggestionKeydown"
                         >
                             <i class="fas fa-plus"></i> {{ mt.name }}
                         </button>
@@ -77,7 +78,7 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { PagesController } from "@/control/pages";
+import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, PagesController } from "@/control/pages";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 
 export default defineComponent({
@@ -297,7 +298,7 @@ export default defineComponent({
                 });
         },
 
-        addMatchingTag: function (tag) {
+        addMatchingTag: function (tag: string) {
             if (this.busy) {
                 return;
             }
@@ -322,6 +323,7 @@ export default defineComponent({
                         }
                     }
                     this.$emit("tags-update");
+                    this.autoFocus();
                 })
                 .onCancel(() => {
                     this.busy = false;
@@ -420,17 +422,62 @@ export default defineComponent({
                 .slice(0, 10);
         },
 
+        onSuggestionKeydown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                let nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+
+                if (nextElem && nextElem.focus) {
+                    nextElem.focus();
+                }
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                let prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+
+                if (prevElem && prevElem.focus) {
+                    prevElem.focus();
+                } else {
+                    const inputElem = this.$el.querySelector(".tag-to-add");
+
+                    if (inputElem) {
+                        inputElem.focus();
+                    }
+                }
+            }
+        },
+
         onTagAddKeyDown: function (e: KeyboardEvent) {
             if (e.key === "Enter") {
                 e.preventDefault();
                 this.addTag();
-            } else if (e.key === "Tab") {
+            } else if (e.key === "Tab" && !e.shiftKey) {
                 this.findTags();
                 if (this.matchingTags.length > 0) {
                     if (this.matchingTags[0].name !== this.tagToAdd) {
                         e.preventDefault();
                         this.tagToAdd = this.matchingTags[0].name;
                     }
+                }
+            } else if (e.key === "ArrowRight") {
+                if (!this.tagToAdd) {
+                    AppEvents.Emit(EVENT_NAME_GO_NEXT);
+                }
+            } else if (e.key === "PageDown") {
+                AppEvents.Emit(EVENT_NAME_GO_NEXT);
+            } else if (e.key === "ArrowLeft") {
+                if (!this.tagToAdd) {
+                    AppEvents.Emit(EVENT_NAME_GO_PREV);
+                }
+            } else if (e.key === "PageUp") {
+                AppEvents.Emit(EVENT_NAME_GO_PREV);
+            } else if (e.key === "ArrowDown") {
+                let suggestionElem = this.$el.querySelector(".btn-add-tag");
+                if (suggestionElem) {
+                    suggestionElem.focus();
                 }
             }
         },
