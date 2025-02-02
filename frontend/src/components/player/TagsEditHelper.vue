@@ -375,8 +375,10 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
+
+            const lastUsedTagsIds = getLastUsedTags();
+
             if (!tagFilter) {
-                const lastUsedTagsIds = getLastUsedTags();
                 const lastUsedTags = [];
 
                 for (const tid of lastUsedTagsIds) {
@@ -388,6 +390,20 @@ export default defineComponent({
                     }
                 }
 
+                if (lastUsedTags.length < 10) {
+                    Array.from(TagsController.Tags.entries())
+                        .filter((t) => {
+                            return !this.tags.includes(t[0]) && !lastUsedTags.includes(t[0]);
+                        })
+                        .slice(0, 10 - lastUsedTags.length)
+                        .forEach((t) => {
+                            lastUsedTags.push({
+                                id: t[0],
+                                name: t[1],
+                            });
+                        });
+                }
+
                 this.matchingTags = lastUsedTags;
 
                 return;
@@ -395,11 +411,13 @@ export default defineComponent({
             this.matchingTags = Array.from(TagsController.Tags.entries())
                 .map((a) => {
                     const i = a[1].indexOf(tagFilter);
+                    const lastUsedIndex = lastUsedTagsIds.indexOf(a[0]);
                     return {
                         id: a[0],
                         name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
+                        lastUsed: lastUsedIndex === -1 ? lastUsedTagsIds.length : lastUsedIndex,
                     };
                 })
                 .filter((a) => {
@@ -412,6 +430,10 @@ export default defineComponent({
                     if (a.starts && !b.starts) {
                         return -1;
                     } else if (b.starts && !a.starts) {
+                        return 1;
+                    } else if (a.lastUsed < b.lastUsed) {
+                        return -1;
+                    } else if (a.lastUsed > b.lastUsed) {
                         return 1;
                     } else if (a.name < b.name) {
                         return -1;
@@ -427,7 +449,7 @@ export default defineComponent({
                 e.preventDefault();
                 e.stopPropagation();
 
-                let nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
 
                 if (nextElem && nextElem.focus) {
                     nextElem.focus();
@@ -436,7 +458,7 @@ export default defineComponent({
                 e.preventDefault();
                 e.stopPropagation();
 
-                let prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
 
                 if (prevElem && prevElem.focus) {
                     prevElem.focus();
@@ -475,7 +497,7 @@ export default defineComponent({
             } else if (e.key === "PageUp") {
                 AppEvents.Emit(EVENT_NAME_GO_PREV);
             } else if (e.key === "ArrowDown") {
-                let suggestionElem = this.$el.querySelector(".btn-add-tag");
+                const suggestionElem = this.$el.querySelector(".btn-add-tag");
                 if (suggestionElem) {
                     suggestionElem.focus();
                 }
