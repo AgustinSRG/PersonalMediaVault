@@ -305,16 +305,25 @@ export class AppStatus {
     }
 
     /**
-     * Navigates to a page, without split mode
+     * Navigates to a page
+     * Sets split mode only if there is a media selected, and no split enabled
      * @param page The page to navigate to
      * @param searchParams Search parameters
      */
-    public static GoToPageNoSplit(page: AppStatusPage, searchParams?: string) {
+    public static GoToPageConditionalSplit(page: AppStatusPage, searchParams?: string) {
+        const changedPage = AppStatus.CurrentPage !== page;
+
         AppStatus.CurrentPage = page;
 
+        if (AppStatus.CurrentMedia !== -1 && AppStatus.CurrentAlbum === -1 && (!AppStatus.ListSplitMode || changedPage)) {
+            AppStatus.ListSplitMode = true;
+        } else {
+            AppStatus.CurrentMedia = -1;
+            AppStatus.ListSplitMode = false;
+        }
+
         AppStatus.CurrentAlbum = -1;
-        AppStatus.CurrentMedia = -1;
-        AppStatus.ListSplitMode = false;
+
         AppStatus.SearchParams = searchParams || "";
 
         AppStatus.UpdateLayout();
@@ -367,11 +376,11 @@ export class AppStatus {
                 AppStatus.CurrentPage = "search";
             }
 
-            AppStatus.CurrentAlbum = -1;
-
             if (AppStatus.CurrentMedia >= 0) {
                 AppStatus.ListSplitMode = true;
             }
+
+            AppStatus.CurrentAlbum = -1;
 
             AppStatus.SearchParams = "";
 

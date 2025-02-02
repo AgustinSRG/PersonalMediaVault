@@ -35,7 +35,7 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'search' }"
                 :title="$t('Search results')"
-                @click="goToSearch($event)"
+                @click="goToPage('search', $event)"
                 :href="getPageURL('search')"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -212,20 +212,7 @@ export default defineComponent({
             if (e) {
                 e.preventDefault();
             }
-            AppStatus.GoToPageNoSplit(p, searchParams);
-            nextTick(() => {
-                this.$emit("skip-to-content");
-            });
-            if (window.innerWidth < 1000) {
-                this.close();
-            }
-        },
-
-        goToSearch: function (e) {
-            if (e) {
-                e.preventDefault();
-            }
-            AppStatus.GoToSearch(this.search, true);
+            AppStatus.GoToPageConditionalSplit(p, searchParams);
             nextTick(() => {
                 this.$emit("skip-to-content");
             });
