@@ -71,7 +71,7 @@
                         <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                         <i v-else class="fas fa-ban"></i>
                     </div>
-                    <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                    <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
                     <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
                         {{ renderTime(item.duration) }}
                     </div>
@@ -122,7 +122,7 @@
                         <i v-else-if="draggingItem.type === 3" class="fas fa-headphones"></i>
                         <i v-else class="fas fa-ban"></i>
                     </div>
-                    <img v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                    <ThumbImage v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)"></ThumbImage>
                     <div class="album-body-item-thumb-tag" v-if="draggingItem.type === 2 || draggingItem.type === 3">
                         {{ renderTime(draggingItem.duration) }}
                     </div>
@@ -236,6 +236,7 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { isTouchDevice } from "@/utils/touch";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
     name: "AlbumContainer",
@@ -249,6 +250,7 @@ export default defineComponent({
         AlbumAddMediaModal,
         AlbumGoToPosModal,
         AlbumChangeThumbnailModal,
+        ThumbImage,
     },
     props: {
         displayUpload: Boolean,

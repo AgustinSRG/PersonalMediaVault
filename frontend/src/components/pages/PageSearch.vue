@@ -61,7 +61,7 @@
                                     <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
-                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
                                 <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                                     {{ renderTime(item.duration) }}
                                 </div>
@@ -91,7 +91,6 @@ import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
-
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { renderTimeSeconds } from "@/utils/time";
 import { MediaListItem } from "@/api/models";
@@ -106,11 +105,13 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearch } from "@/api/api-search";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
     name: "PageSearch",
     components: {
         PageMenu,
+        ThumbImage,
     },
     props: {
         display: Boolean,

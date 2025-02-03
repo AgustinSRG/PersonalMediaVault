@@ -89,7 +89,7 @@
                                 <div v-if="!item.thumbnail" class="no-thumb">
                                     <i class="fas fa-list-ol"></i>
                                 </div>
-                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
                                 <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
                                 <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
                                     1 {{ $t("item") }}
@@ -124,11 +124,9 @@ import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
-
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
-
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -138,6 +136,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
 import { shuffleArray } from "@/utils/shuffle";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
     name: "PageAlbums",
@@ -145,6 +144,7 @@ export default defineComponent({
     components: {
         PageMenu,
         AlbumCreateModal,
+        ThumbImage,
     },
     props: {
         display: Boolean,

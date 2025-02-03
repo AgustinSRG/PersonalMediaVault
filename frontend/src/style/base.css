@@ -18,6 +18,11 @@
     text-align: center;
 }
 
+.flex-center {
+    display: flex;
+    justify-content: center;
+}
+
 .text-left {
     text-align: left;
 }

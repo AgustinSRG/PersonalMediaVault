@@ -63,7 +63,7 @@
                                     <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
-                                <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
                                 <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
                                     {{ renderTime(item.duration) }}
                                 </div>
@@ -104,8 +104,12 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
+    components: {
+        ThumbImage,
+    },
     name: "PageRandom",
     props: {
         display: Boolean,

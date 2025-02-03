@@ -40,7 +40,7 @@
                         <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
                         <i v-else class="fas fa-ban"></i>
                     </div>
-                    <img v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)" :alt="$t('Thumbnail')" loading="lazy" />
+                    <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
                     <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
                         {{ renderTime(item.duration) }}
                     </div>
@@ -78,10 +78,14 @@ import { BigListScroller } from "@/utils/big-list-scroller";
 import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 const INITIAL_WINDOW_SIZE = 100;
 
 export default defineComponent({
+    components: {
+        ThumbImage,
+    },
     name: "PlayerAlbumFullScreen",
     emits: ["close"],
     setup() {

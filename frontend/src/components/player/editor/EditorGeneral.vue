@@ -109,7 +109,7 @@
             </div>
             <div class="form-group" @drop="onDrop">
                 <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}</label>
-                <img v-if="thumbnail" :src="getThumbnail(thumbnail)" :alt="$t('Thumbnail')" class="form-group-thumbnail" loading="lazy" />
+                <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" className="form-group-thumbnail"></ThumbImage>
             </div>
             <div class="form-group" v-if="canWrite">
                 <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
@@ -175,11 +175,13 @@ import {
     apiMediaChangeMediaThumbnail,
     apiMediaChangeMediaTitle,
 } from "@/api/api-media-edit";
+import ThumbImage from "@/components/utils/ThumbImage.vue";
 
 export default defineComponent({
     components: {
         ToggleSwitch,
         LoadingIcon,
+        ThumbImage,
     },
     name: "EditorGeneral",
     emits: ["changed"],

@@ -15,15 +15,9 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group text-center">
+                <div class="form-group flex-center">
                     <label v-if="!thumbnail">{{ $t("No thumbnail set for this album") }}</label>
-                    <img
-                        v-if="thumbnail"
-                        :src="getThumbnail(thumbnail)"
-                        :alt="$t('Thumbnail')"
-                        class="form-group-thumbnail"
-                        loading="lazy"
-                    />
+                    <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" className="form-group-thumbnail"></ThumbImage>
                 </div>
                 <div class="form-group">
                     <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
@@ -70,8 +64,12 @@ import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
+    components: {
+        ThumbImage,
+    },
     name: "AlbumChangeThumbnailModal",
     emits: ["update:display"],
     props: {
