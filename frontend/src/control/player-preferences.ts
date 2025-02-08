@@ -591,24 +591,6 @@ export function setSubtitlesBackground(bg: string) {
     saveIntoLocalStorage(LS_KEY_SUBTITLES_BG, bg);
 }
 
-const LS_KEY_SUBTITLES_HTML = "player-pref-subtitles-html";
-
-/**
- * Gets the HTML allowed in subtitles flag
- * @returns Allow subtitles HTML flag
- */
-export function getSubtitlesAllowHTML(): boolean {
-    return !!fetchFromLocalStorageCache(LS_KEY_SUBTITLES_HTML, false);
-}
-
-/**
- * Sets the HTML allowed in subtitles flag
- * @param allowHTML Allow subtitles HTML flag
- */
-export function setSubtitlesAllowHTML(allowHTML: boolean) {
-    saveIntoLocalStorage(LS_KEY_SUBTITLES_HTML, allowHTML);
-}
-
 const LS_KEY_AUDIO_TRACK = "player-pref-audio-track";
 
 /**
@@ -726,7 +708,6 @@ export function clearPlayerPreferences() {
     clearLocalStorage(LS_KEY_SUBTITLES_SIZE);
     clearLocalStorage(LS_KEY_SUBTITLES_SIZE_CUSTOM);
     clearLocalStorage(LS_KEY_SUBTITLES_BG);
-    clearLocalStorage(LS_KEY_SUBTITLES_HTML);
 
     clearLocalStorage(LS_KEY_AUDIO_TRACK);
 

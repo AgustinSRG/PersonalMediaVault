@@ -149,16 +149,6 @@
                 </td>
             </tr>
 
-            <tr v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles">
-                <td>
-                    <i class="fas fa-closed-captioning icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
-                </td>
-                <td class="td-right">
-                    <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
-                </td>
-            </tr>
-
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToDelays">
                 <td>
                     <i class="fas fa-clock icon-config"></i>
@@ -555,7 +545,6 @@ export default defineComponent({
         "update:subSize",
         "update:subSizeCustom",
         "update:subBackground",
-        "update:subHTML",
         "update:audioTrack",
         "update:autoNextPageDelay",
         "update-auto-next",
@@ -573,7 +562,6 @@ export default defineComponent({
         subSize: String,
         subSizeCustom: Number,
         subBackground: String,
-        subHTML: Boolean,
         rTick: Number,
         audioTrack: String,
         isShort: Boolean,
@@ -593,7 +581,6 @@ export default defineComponent({
             subSizeSaveDelay: null,
             subSizeCustomState: useVModel(props, "subSizeCustom"),
             subBackgroundState: useVModel(props, "subBackground"),
-            subHTMLState: useVModel(props, "subHTML"),
             audioTrackState: useVModel(props, "audioTrack"),
             autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),
         };

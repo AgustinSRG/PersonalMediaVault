@@ -143,16 +143,6 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
-
-            <tr v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles">
-                <td>
-                    <i class="fas fa-closed-captioning icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
-                </td>
-                <td class="td-right">
-                    <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
-                </td>
-            </tr>
         </table>
 
         <table v-if="page === 'speed'">
@@ -402,7 +392,6 @@ export default defineComponent({
         "update:subSize",
         "update:subSizeCustom",
         "update:subBackground",
-        "update:subHTML",
         "update:showTitle",
         "update:showThumbnail",
         "update:autoNextPageDelay",
@@ -420,7 +409,6 @@ export default defineComponent({
         subSize: String,
         subSizeCustom: Number,
         subBackground: String,
-        subHTML: Boolean,
         rTick: Number,
         isShort: Boolean,
         showTitle: Boolean,
@@ -440,7 +428,6 @@ export default defineComponent({
             subSizeSaveDelay: null,
             subSizeCustomState: useVModel(props, "subSizeCustom"),
             subBackgroundState: useVModel(props, "subBackground"),
-            subHTMLState: useVModel(props, "subHTML"),
             showTitleState: useVModel(props, "showTitle"),
             showThumbnailState: useVModel(props, "showThumbnail"),
             autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),

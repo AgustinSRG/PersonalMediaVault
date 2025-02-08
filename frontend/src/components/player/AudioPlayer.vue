@@ -424,13 +424,11 @@
             v-model:subSize="subtitlesSize"
             v-model:subSizeCustom="subtitlesSizeCustom"
             v-model:subBackground="subtitlesBg"
-            v-model:subHTML="subtitlesHTML"
             :rTick="internalTick"
             :metadata="metadata"
             @update:animColors="onUpdateAnimColors"
             @update:showTitle="onUpdateShowTitle"
             @update:showThumbnail="onUpdateShowThumbnail"
-            @update:subHTML="onUpdateSubHTML"
             @update:nextEnd="onUpdateNextEnd"
             @update:autoNextPageDelay="onUpdateAutoNextPageDelay"
             @enter="enterControls"
@@ -496,7 +494,6 @@ import {
     getPlayerVolume,
     getShowAudioThumbnail,
     getShowAudioTitle,
-    getSubtitlesAllowHTML,
     getSubtitlesBackground,
     getSubtitlesSize,
     getSubtitlesSizeCustom,
@@ -508,7 +505,6 @@ import {
     setPlayerVolume,
     setShowAudioThumbnail,
     setShowAudioTitle,
-    setSubtitlesAllowHTML,
 } from "@/control/player-preferences";
 import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
 import VolumeControl from "./VolumeControl.vue";
@@ -525,8 +521,6 @@ import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
-import { sanitizeSubtitlesHTML, getUniqueSubtitlesLoadTag } from "@/utils/subtitles-html";
-import { htmlToText } from "@/utils/html";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
@@ -534,6 +528,7 @@ import { MediaData } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
+import { toHtmlMinimal } from "@/utils/subtitles-colors";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -612,7 +607,6 @@ export default defineComponent({
             audioAnalyser: null as AnalyserNode,
             audioAnalyserData: null as Uint8Array,
             rendererTimer: null,
-            subTag: "",
             nextEndTimer: null,
             mediaSessionId: getUniqueStringId(),
             fullScreenState: useVModel(props, "fullscreen"),
@@ -695,7 +689,6 @@ export default defineComponent({
             subtitlesSize: "l",
             subtitlesSizeCustom: 150,
             subtitlesBg: "75",
-            subtitlesHTML: false,
 
             timeSlices: [],
             currentTimeSlice: null,
@@ -1731,31 +1724,17 @@ export default defineComponent({
             }
             const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
             if (sub) {
-                if (this.subtitlesHTML) {
-                    const subTag = getUniqueSubtitlesLoadTag();
-                    this.subTag = subTag;
-                    sanitizeSubtitlesHTML(sub.text).then((text) => {
-                        if (this.subTag === subTag) {
-                            this.subtitles = text;
-                        }
-                    });
-                } else {
-                    this.subTag = "";
-                    this.subtitles = htmlToText(sub.text);
-                }
+                this.subtitles = toHtmlMinimal(sub.text, {
+                    allowColors: false,
+                    allowLinebreaks: false,
+                });
                 this.subtitlesStart = sub.start;
                 this.subtitlesEnd = sub.end;
             } else {
-                this.subTag = "";
                 this.subtitles = "";
                 this.subtitlesStart = 0;
                 this.subtitlesEnd = 0;
             }
-        },
-
-        onUpdateSubHTML: function () {
-            setSubtitlesAllowHTML(this.subtitlesHTML);
-            this.reloadSubtitles();
         },
 
         findTimeSliceName: function (time: number) {
@@ -2005,7 +1984,6 @@ export default defineComponent({
         this.subtitlesSize = getSubtitlesSize();
         this.subtitlesSizeCustom = getSubtitlesSizeCustom();
         this.subtitlesBg = getSubtitlesBackground();
-        this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();
         this.autoNextPageDelay = getAutoNextPageDelay();
 
