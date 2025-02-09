@@ -564,6 +564,11 @@ export interface SubtitlesOptions {
      * Background opacity style (100, 75, 50, 25, 0)
      */
     bg: string;
+
+    /**
+     * Subtitles position (top, bottom)
+     */
+    pos: string;
 }
 
 const LS_KEY_SUBTITLES_OPTIONS = "player-pref-subtitles-options";
@@ -579,6 +584,7 @@ export function getSubtitlesOptions(): SubtitlesOptions {
         allowColors: true,
         allowLineBreaks: true,
         bg: "0",
+        pos: "bottom",
     };
 
     const parsedOptions: unknown = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_OPTIONS, null);
@@ -605,6 +611,10 @@ export function getSubtitlesOptions(): SubtitlesOptions {
 
     if ("bg" in parsedOptions && typeof parsedOptions.bg === "string") {
         result.bg = parsedOptions.bg;
+    }
+
+    if ("pos" in parsedOptions && typeof parsedOptions.pos === "string") {
+        result.pos = parsedOptions.pos;
     }
 
     return result;

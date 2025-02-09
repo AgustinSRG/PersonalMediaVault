@@ -29,6 +29,16 @@
                 </td>
             </tr>
 
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('subPosition')">
+                <td>
+                    <b>{{ $t("Position") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ renderSubtitlePosition(pos) }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+
             <tr>
                 <td>
                     <b>{{ $t("Allow colors") }}</b>
@@ -135,6 +145,30 @@
                 <td class="td-right"></td>
             </tr>
         </table>
+
+        <table v-if="page === 'subPosition'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('home')">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Position") }}) </b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+            <tr
+                v-for="s in subtitlesPositions"
+                :key="s"
+                class="tr-button"
+                tabindex="0"
+                @keydown="clickOnEnter"
+                @click="updateSubtitlePosition(s)"
+            >
+                <td>
+                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== pos }"></i>
+                    {{ renderSubtitlePosition(s) }}
+                </td>
+                <td class="td-right"></td>
+            </tr>
+        </table>
     </div>
 </template>
 
@@ -152,6 +186,7 @@ export default defineComponent({
         return {
             subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
             subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
+            subtitlesPositions: ["bottom", "top"],
         };
     },
     data: function () {
@@ -163,6 +198,7 @@ export default defineComponent({
             size: options.size,
             customSize: options.customSize,
             bg: options.bg,
+            pos: options.pos,
             allowLineBreaks: options.allowLineBreaks,
             allowColors: options.allowColors,
         };
@@ -196,6 +232,10 @@ export default defineComponent({
 
             if (options.bg !== this.bg) {
                 this.bg = options.bg;
+            }
+
+            if (options.pos !== this.pos) {
+                this.pos = options.pos;
             }
         },
 
@@ -275,6 +315,24 @@ export default defineComponent({
 
             const options = getSubtitlesOptions();
             options.bg = s;
+            setSubtitlesOptions(options);
+            this.onOptionsUpdate();
+        },
+
+        renderSubtitlePosition: function (s: string) {
+            switch (s) {
+                case "top":
+                    return this.$t("Top");
+                default:
+                    return this.$t("Bottom");
+            }
+        },
+
+        updateSubtitlePosition: function (s: string) {
+            this.pos = s;
+
+            const options = getSubtitlesOptions();
+            options.pos = s;
             setSubtitlesOptions(options);
             this.onOptionsUpdate();
         },

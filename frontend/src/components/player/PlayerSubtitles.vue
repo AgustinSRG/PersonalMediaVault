@@ -3,6 +3,8 @@
         class="player-subtitles-container"
         :class="{
             'controls-hidden': !showControls,
+            'pos-top': pos === 'top',
+            'pos-bottom': pos !== 'top',
         }"
     >
         <div
@@ -56,6 +58,7 @@ export default defineComponent({
             size: options.size,
             customSize: options.customSize,
             bg: options.bg,
+            pos: options.pos,
             allowLineBreaks: options.allowLineBreaks,
             allowColors: options.allowColors,
         };
@@ -88,6 +91,10 @@ export default defineComponent({
 
             if (options.bg !== this.bg) {
                 this.bg = options.bg;
+            }
+
+            if (options.pos !== this.pos) {
+                this.pos = options.pos;
             }
         },
     },
