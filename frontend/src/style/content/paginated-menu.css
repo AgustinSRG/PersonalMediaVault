@@ -47,28 +47,28 @@
     background: var(--theme-fg-color);
 }
 
-.paginated-menu-btn.paginated-menu-btn-edge-extra {
+.paginated-menu-link.paginated-menu-link-edge-extra {
     display: none;
 }
 
-.menu-min .paginated-menu-btn {
+.menu-min .paginated-menu-link {
     display: none;
 }
 
-.menu-min .paginated-menu-btn.current,
-.menu-min .paginated-menu-btn.paginated-menu-btn-edge-extra,
-.menu-min .paginated-menu-btn.paginated-menu-btn-edge {
+.menu-min .paginated-menu-link.current,
+.menu-min .paginated-menu-link.paginated-menu-link-edge-extra,
+.menu-min .paginated-menu-link.paginated-menu-link-edge {
     display: block;
 }
 
 @media (max-width: 1000px) {
-    .paginated-menu-btn {
+    .paginated-menu-link {
         display: none;
     }
 
-    .paginated-menu-btn.current,
-    .paginated-menu-btn.paginated-menu-btn-edge-extra,
-    .paginated-menu-btn.paginated-menu-btn-edge {
+    .paginated-menu-link.current,
+    .paginated-menu-btn.paginated-menu-link-edge-extra,
+    .paginated-menu-btn.paginated-menu-link-edge {
         display: block;
     }
 }

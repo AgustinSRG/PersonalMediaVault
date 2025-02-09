@@ -4,7 +4,7 @@
             target="_blank"
             :href="getPageUrl(0, pageName, order)"
             rel="noopener noreferrer"
-            class="paginated-menu-link"
+            class="paginated-menu-link paginated-menu-link-edge-extra"
             @click="preventDefaultEvent"
         >
             <button
@@ -22,7 +22,7 @@
             target="_blank"
             :href="getPageUrl(Math.max(0, page - 1), pageName, order)"
             rel="noopener noreferrer"
-            class="paginated-menu-link"
+            class="paginated-menu-link paginated-menu-link-edge"
             @click="preventDefaultEvent"
         >
             <button
@@ -43,6 +43,7 @@
             :href="m.type === 'skip' ? '#' : getPageUrl(m.page, pageName, order)"
             rel="noopener noreferrer"
             class="paginated-menu-link"
+            :class="{ current: m.current, skip: m.type === 'skip' }"
             @click="preventDefaultEvent"
         >
             <button
@@ -60,7 +61,7 @@
             target="_blank"
             :href="getPageUrl(Math.min(page + 1, pages - 1), pageName, order)"
             rel="noopener noreferrer"
-            class="paginated-menu-link"
+            class="paginated-menu-link paginated-menu-link-edge"
             @click="preventDefaultEvent"
         >
             <button
@@ -78,7 +79,7 @@
             target="_blank"
             :href="getPageUrl(pages - 1, pageName, order)"
             rel="noopener noreferrer"
-            class="paginated-menu-link"
+            class="paginated-menu-link paginated-menu-link-edge-extra"
             @click="preventDefaultEvent"
         >
             <button
