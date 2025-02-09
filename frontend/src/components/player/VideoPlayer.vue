@@ -121,43 +121,7 @@
             :canAutoReload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
-        <div
-            class="player-subtitles-container"
-            v-if="subtitles"
-            :class="{
-                'controls-hidden': !showControls || !userControls,
-            }"
-        >
-            <div
-                class="player-subtitles-container-inner"
-                :class="{
-                    'player-subtitles-bg-0': subtitlesBg === '0',
-                    'player-subtitles-bg-25': subtitlesBg === '25',
-                    'player-subtitles-bg-50': subtitlesBg === '50',
-                    'player-subtitles-bg-75': subtitlesBg === '75',
-                    'player-subtitles-bg-100': subtitlesBg === '100',
-                }"
-            >
-                <div
-                    class="player-subtitles"
-                    v-html="subtitles"
-                    :class="{
-                        'player-subtitles-s': subtitlesSize === 's',
-                        'player-subtitles-m': subtitlesSize === 'm',
-                        'player-subtitles-l': subtitlesSize === 'l',
-                        'player-subtitles-xl': subtitlesSize === 'xl',
-                        'player-subtitles-xxl': subtitlesSize === 'xxl',
-                    }"
-                    :style="
-                        subtitlesSize === 'custom'
-                            ? {
-                                  '--subtitles-size-multiplier': subtitlesSizeCustom / 100,
-                              }
-                            : {}
-                    "
-                ></div>
-            </div>
-        </div>
+        <PlayerSubtitles :show-controls="showControls" :subtitles="subtitles"></PlayerSubtitles>
 
         <TimeSlicesEditHelper
             v-if="timeSlicesEdit"
@@ -449,12 +413,7 @@
             v-model:nextEnd="nextEnd"
             v-model:autoNextPageDelay="autoNextPageDelay"
             v-model:resolution="currentResolution"
-            v-model:subSize="subtitlesSize"
-            v-model:subSizeCustom="subtitlesSizeCustom"
-            v-model:subBackground="subtitlesBg"
-            v-model:subHTML="subtitlesHTML"
             @update:resolution="onResolutionUpdated"
-            @update:subHTML="onUpdateSubHTML"
             @update:nextEnd="onUpdateNextEnd"
             @update:autoNextPageDelay="onUpdateAutoNextPageDelay"
             :rTick="internalTick"
@@ -523,10 +482,6 @@ import {
     getPlayerMuted,
     getPlayerVolume,
     getSelectedAudioTrack,
-    getSubtitlesAllowHTML,
-    getSubtitlesBackground,
-    getSubtitlesSize,
-    getSubtitlesSizeCustom,
     getTogglePlayDelay,
     getUserSelectedResolutionVideo,
     setAutoNextOnEnd,
@@ -534,7 +489,6 @@ import {
     setCachedInitialTime,
     setPlayerMuted,
     setPlayerVolume,
-    setSubtitlesAllowHTML,
     setUserSelectedResolutionVideo,
 } from "@/control/player-preferences";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
@@ -549,12 +503,11 @@ import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
+import PlayerSubtitles from "./PlayerSubtitles.vue";
 import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
-import { htmlToText } from "@/utils/html";
-import { getUniqueSubtitlesLoadTag, sanitizeSubtitlesHTML } from "@/utils/subtitles-html";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { PropType } from "vue";
@@ -591,6 +544,7 @@ export default defineComponent({
         TagsEditHelper,
         ExtendedDescriptionWidget,
         PlayerAttachmentsList,
+        PlayerSubtitles,
     },
     name: "VideoPlayer",
     emits: [
@@ -718,10 +672,6 @@ export default defineComponent({
             subtitles: "",
             subtitlesStart: -1,
             subtitlesEnd: -1,
-            subtitlesSize: "l",
-            subtitlesSizeCustom: 150,
-            subtitlesBg: "75",
-            subtitlesHTML: false,
 
             audioTrack: getSelectedAudioTrack(),
             audioTrackURL: "",
@@ -1838,18 +1788,7 @@ export default defineComponent({
             }
             const sub = SubtitlesController.GetSubtitlesLine(this.currentTime);
             if (sub) {
-                if (this.subtitlesHTML) {
-                    const subTag = getUniqueSubtitlesLoadTag();
-                    this.subTag = subTag;
-                    sanitizeSubtitlesHTML(sub.text).then((text) => {
-                        if (this.subTag === subTag) {
-                            this.subtitles = text;
-                        }
-                    });
-                } else {
-                    this.subTag = "";
-                    this.subtitles = htmlToText(sub.text);
-                }
+                this.subtitles = sub.text;
                 this.subtitlesStart = sub.start;
                 this.subtitlesEnd = sub.end;
             } else {
@@ -1902,11 +1841,6 @@ export default defineComponent({
             }
 
             this.audioTrackURL = "";
-        },
-
-        onUpdateSubHTML: function () {
-            setSubtitlesAllowHTML(this.subtitlesHTML);
-            this.reloadSubtitles();
         },
 
         onUpdateNextEnd: function () {
@@ -2328,10 +2262,6 @@ export default defineComponent({
         // Load player preferences
         this.muted = getPlayerMuted();
         this.volume = getPlayerVolume();
-        this.subtitlesSize = getSubtitlesSize();
-        this.subtitlesSizeCustom = getSubtitlesSizeCustom();
-        this.subtitlesBg = getSubtitlesBackground();
-        this.subtitlesHTML = getSubtitlesAllowHTML();
         this.nextEnd = getAutoNextOnEnd();
         this.autoNextPageDelay = getAutoNextPageDelay();
 

@@ -110,49 +110,6 @@
                     <i class="fas fa-chevron-right arrow-config"></i>
                 </td>
             </tr>
-            <tr
-                v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
-                class="tr-button"
-                tabindex="0"
-                @keydown="clickOnEnter"
-                @click="goToSubSizes"
-            >
-                <td>
-                    <i class="fas fa-closed-captioning icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }})</b>
-                </td>
-                <td class="td-right">
-                    {{ renderSubtitleSize(subSize) }}
-                    <i class="fas fa-chevron-right arrow-config"></i>
-                </td>
-            </tr>
-
-            <tr
-                v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles"
-                class="tr-button"
-                tabindex="0"
-                @keydown="clickOnEnter"
-                @click="goToSubBackgrounds"
-            >
-                <td>
-                    <i class="fas fa-closed-captioning icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Background") }})</b>
-                </td>
-                <td class="td-right">
-                    {{ renderSubtitleBackground(subBackground) }}
-                    <i class="fas fa-chevron-right arrow-config"></i>
-                </td>
-            </tr>
-
-            <tr v-if="metadata.subtitles && metadata.subtitles.length > 0 && subtitles">
-                <td>
-                    <i class="fas fa-closed-captioning icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Allow HTML") }})</b>
-                </td>
-                <td class="td-right">
-                    <ToggleSwitch v-model:val="subHTMLState"></ToggleSwitch>
-                </td>
-            </tr>
         </table>
 
         <table v-if="page === 'speed'">
@@ -249,7 +206,9 @@
                     <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== effectiveSubtitles }"></i>
                     {{ renderSubtitle("", rTick) }}
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <a href="#subtitle-options" @click="goToSubtitlesOptions">{{ $t("Style options") }}</a>
+                </td>
             </tr>
             <tr
                 v-for="sub in metadata.subtitles"
@@ -267,93 +226,7 @@
             </tr>
         </table>
 
-        <table v-if="page === 'subSizes'">
-            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
-                <td>
-                    <i class="fas fa-chevron-left icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
-                </td>
-                <td class="td-right">
-                    <a href="#subtitles-size-custom" @click="goToSubCustomSize">{{ $t("Custom") }}</a>
-                </td>
-            </tr>
-            <tr v-for="s in subtitlesSizes" :key="s" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="updateSubtitleSize(s)">
-                <td>
-                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== subSize }"></i>
-                    {{ renderSubtitleSize(s) }}
-                </td>
-                <td class="td-right"></td>
-            </tr>
-            <tr v-if="subSize === 'custom'" class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="updateSubtitleSize('custom')">
-                <td>
-                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': subSize !== 'custom' }"></i>
-                    {{ $t("Custom") }}: {{ subSizeCustom + "%" }}
-                </td>
-                <td class="td-right"></td>
-            </tr>
-        </table>
-
-        <table v-if="page === 'subSize-custom'">
-            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goToSubSizes">
-                <td>
-                    <i class="fas fa-chevron-left icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) ({{ $t("Custom") }}) </b>
-                </td>
-                <td class="td-right"></td>
-            </tr>
-
-            <tr>
-                <td colspan="2">
-                    <input
-                        type="range"
-                        class="form-range"
-                        v-model.number="subSizeCustomState"
-                        @input="saveCustomSubtitleSize"
-                        :min="50"
-                        :max="250"
-                        :step="1"
-                    />
-                </td>
-            </tr>
-
-            <tr>
-                <td colspan="2" class="custom-size-row">
-                    <input
-                        type="number"
-                        class="form-control custom-size-input"
-                        v-model.number="subSizeCustomNum"
-                        @input="updateSubSizeCustomNum"
-                        :min="1"
-                        :step="1"
-                    />
-                    <b class="custom-size-unit">%</b>
-                </td>
-            </tr>
-        </table>
-
-        <table v-if="page === 'subBackground'">
-            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
-                <td>
-                    <i class="fas fa-chevron-left icon-config"></i>
-                    <b>{{ $t("Subtitles") }} ({{ $t("Background") }}) </b>
-                </td>
-                <td class="td-right"></td>
-            </tr>
-            <tr
-                v-for="s in subtitlesBackgrounds"
-                :key="s"
-                class="tr-button"
-                tabindex="0"
-                @keydown="clickOnEnter"
-                @click="updateSubtitleBackground(s)"
-            >
-                <td>
-                    <i class="fas fa-check icon-config" :class="{ 'check-uncheck': s !== subBackground }"></i>
-                    {{ renderSubtitleBackground(s) }}
-                </td>
-                <td class="td-right"></td>
-            </tr>
-        </table>
+        <PlayerSubtitlesConfig v-if="page === 'subtitle-options'" @page-switch="focus" @go-back="goBack"></PlayerSubtitlesConfig>
 
         <table v-if="page === 'auto-next'">
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
@@ -375,23 +248,16 @@
 </template>
 
 <script lang="ts">
-import {
-    getAutoNextTime,
-    getSelectedSubtitles,
-    setAutoNextTime,
-    setSelectedSubtitles,
-    setSubtitlesBackground,
-    setSubtitlesSize,
-    setSubtitlesSizeCustom,
-} from "@/control/player-preferences";
+import { getAutoNextTime, getSelectedSubtitles, setAutoNextTime, setSelectedSubtitles } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
+import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
 
 export default defineComponent({
-    components: { ToggleSwitch },
+    components: { ToggleSwitch, PlayerSubtitlesConfig },
     name: "AudioPlayerConfig",
     emits: [
         "update:shown",
@@ -399,10 +265,6 @@ export default defineComponent({
         "update:nextEnd",
         "update:speed",
         "update:animColors",
-        "update:subSize",
-        "update:subSizeCustom",
-        "update:subBackground",
-        "update:subHTML",
         "update:showTitle",
         "update:showThumbnail",
         "update:autoNextPageDelay",
@@ -417,10 +279,6 @@ export default defineComponent({
         nextEnd: Boolean,
         speed: Number,
         animColors: String,
-        subSize: String,
-        subSizeCustom: Number,
-        subBackground: String,
-        subHTML: Boolean,
         rTick: Number,
         isShort: Boolean,
         showTitle: Boolean,
@@ -436,11 +294,6 @@ export default defineComponent({
             nextEndState: useVModel(props, "nextEnd"),
             speedState: useVModel(props, "speed"),
             animColorsState: useVModel(props, "animColors"),
-            subSizeState: useVModel(props, "subSize"),
-            subSizeSaveDelay: null,
-            subSizeCustomState: useVModel(props, "subSizeCustom"),
-            subBackgroundState: useVModel(props, "subBackground"),
-            subHTMLState: useVModel(props, "subHTML"),
             showTitleState: useVModel(props, "showTitle"),
             showThumbnailState: useVModel(props, "showThumbnail"),
             autoNextPageDelayState: useVModel(props, "autoNextPageDelay"),
@@ -456,11 +309,6 @@ export default defineComponent({
 
             subtitles: "",
             effectiveSubtitles: "",
-
-            subtitlesSizes: ["s", "m", "l", "xl", "xxl"],
-            subtitlesBackgrounds: ["100", "75", "50", "25", "0"],
-
-            subSizeCustomNum: this.subSizeCustom,
 
             autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
@@ -530,18 +378,13 @@ export default defineComponent({
             this.$emit("update-auto-next");
         },
 
-        goToSubCustomSize: function (e?: Event) {
+        goToSubtitlesOptions: function (e?: Event) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
 
-            if (this.subSizeCustom !== 150) {
-                this.subSizeState = "custom";
-                setSubtitlesSize("custom");
-            }
-
-            this.page = "subSize-custom";
+            this.page = "subtitle-options";
             this.focus();
         },
 
@@ -589,43 +432,6 @@ export default defineComponent({
             SubtitlesController.OnSubtitlesChanged(s);
         },
 
-        renderSubtitleSize: function (s: string) {
-            switch (s) {
-                case "s":
-                    return this.$t("Small");
-                case "l":
-                    return this.$t("Large");
-                case "xl":
-                    return this.$t("Extra large");
-                case "xxl":
-                    return this.$t("Extra extra large");
-                case "custom":
-                    return this.$t("Custom") + " (" + this.subSizeCustom + "%)";
-                default:
-                    return this.$t("Medium");
-            }
-        },
-
-        updateSubtitleSize: function (s: string) {
-            this.subSizeState = s;
-            setSubtitlesSize(s);
-        },
-
-        renderSubtitleBackground: function (s: string) {
-            switch (s) {
-                case "0":
-                    return this.$t("Transparent");
-                case "25":
-                    return this.$t("Translucid") + " (75%)";
-                case "50":
-                    return this.$t("Translucid") + " (50%)";
-                case "75":
-                    return this.$t("Translucid") + " (25%)";
-                default:
-                    return this.$t("Opaque");
-            }
-        },
-
         renderAutoNext: function (s: number) {
             if (!isNaN(s) && isFinite(s) && s > 0) {
                 if (s === 1) {
@@ -636,11 +442,6 @@ export default defineComponent({
             } else {
                 return this.$t("Disabled");
             }
-        },
-
-        updateSubtitleBackground: function (s: string) {
-            this.subBackgroundState = s;
-            setSubtitlesBackground(s);
         },
 
         updateEffectiveSubtitles: function () {
@@ -679,31 +480,6 @@ export default defineComponent({
             }
 
             return this.$t("No subtitles");
-        },
-
-        saveCustomSubtitleSize: function () {
-            if (this.subSize !== "custom") {
-                this.subSizeState = "custom";
-                setSubtitlesSize("custom");
-            }
-
-            if (this.subSizeSaveDelay) {
-                clearTimeout(this.subSizeSaveDelay);
-            }
-            this.subSizeSaveDelay = setTimeout(() => {
-                this.subSizeSaveDelay = null;
-                setSubtitlesSizeCustom(this.subSizeCustom);
-            }, 333);
-        },
-
-        updateSubSizeCustomNum: function () {
-            if (typeof this.subSizeCustomNum !== "number" || isNaN(this.subSizeCustomNum)) {
-                return;
-            }
-
-            this.subSizeCustomState = this.subSizeCustomNum;
-
-            this.saveCustomSubtitleSize();
         },
 
         updateSpeedNum: function () {
@@ -755,12 +531,6 @@ export default defineComponent({
             } else {
                 this.focusTrap.deactivate();
             }
-        },
-        subSizeCustom: function () {
-            if (this.subSizeCustom === this.subSizeCustomNum) {
-                return;
-            }
-            this.subSizeCustomNum = this.subSizeCustom;
         },
         speed: function () {
             this.speedNum = Math.floor(this.speed * 100);

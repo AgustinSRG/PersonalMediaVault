@@ -20,7 +20,6 @@ export function fetchFromLocalStorage<T>(key: string, defaultVal: T): T {
     try {
         return JSON.parse(v);
     } catch (ex) {
-        console.error(ex);
         return defaultVal;
     }
 }

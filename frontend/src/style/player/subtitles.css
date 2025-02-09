@@ -4,15 +4,26 @@
     pointer-events: none;
     position: absolute;
     left: 0;
-    bottom: 70px;
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.player-subtitles-container.controls-hidden {
-    bottom: 0;
+.player-subtitles-container.pos-top {
+    top: 60px;
+}
+
+.player-subtitles-container.pos-top.controls-hidden {
+    top: 3px;
+}
+
+.player-subtitles-container.pos-bottom {
+    bottom: 64px;
+}
+
+.player-subtitles-container.pos-bottom.controls-hidden {
+    bottom: 3px;
 }
 
 .player-subtitles-container-inner {

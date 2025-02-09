@@ -39,10 +39,11 @@ function parseDurationSRT(duration: string): number {
 
 function replaceSRT_HTMLFormat(text: string): string {
     return text
-        .replace(/[\n\r]+/g, " ")
+        .replace(/[\r]+/g, " ")
         .replace(/\{\\an[0-9]\}/g, "")
         .replace(/\}\}/g, "<")
-        .replace(/\}\}/g, ">");
+        .replace(/\}\}/g, ">")
+        .trim();
 }
 
 export function parseSRT(srt: string): SubtitlesEntry[] {
