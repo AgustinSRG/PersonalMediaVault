@@ -41,7 +41,7 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Download | Hash | Hash alg.  |
 |---|---|---|---|---|
-| 1.21.1 | amd64 | [Drive](https://drive.google.com/file/d/1lSMz-in1Un7_d3EaecbFMHMFnq-Q370U/view?usp=sharing) <br /> [Mega](https://mega.nz/file/oD1BFAxA#kXY6cxdq5vZpcvJmNEQavvdXm9Adt6BfTbRpDTMR7W4) | `4e0c1379a66947d8d52c47b00f722df2500af881751fe0aeaf785a2ee095a1f4` | SHA256 |
+| 1.21.1 | amd64 | [Drive](https://drive.google.com/file/d/1lSMz-in1Un7_d3EaecbFMHMFnq-Q370U/view?usp=sharing) <br /> [Mega](https://mega.nz/file/VKEzhZ5b#RXeHNkXVYFF1J4V8NNB2mo10_ljqjpPC_ZVoNPgoRlE) | `4e0c1379a66947d8d52c47b00f722df2500af881751fe0aeaf785a2ee095a1f4` | SHA256 |
 
 Download it, and check its integrity using:
 
