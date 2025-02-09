@@ -67,7 +67,7 @@ export type HtmlRemoverOptions = {
     allowColors: boolean;
 
     // True to allow line breaks
-    allowLinebreaks: boolean;
+    allowLineBreaks: boolean;
 };
 
 class HtmlRemover {
@@ -189,6 +189,8 @@ class HtmlRemover {
         } else if (c === "\n") {
             if (this.allowLineBreaks) {
                 this.appendResult("<br />");
+            } else {
+                this.appendResult(" ");
             }
         } else {
             this.appendResult(c);
@@ -377,7 +379,7 @@ class HtmlRemover {
     public parse(html: string, options: HtmlRemoverOptions): string {
         this.reset();
         this.allowColors = options.allowColors;
-        this.allowLineBreaks = options.allowLinebreaks;
+        this.allowLineBreaks = options.allowLineBreaks;
 
         for (let i = 0; i < html.length; i = this.handleChar(html.charAt(i), i));
 

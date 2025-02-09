@@ -531,64 +531,91 @@ export function setSelectedSubtitles(sub: string) {
     saveIntoLocalStorage(LS_KEY_SUBTITLES_SELECTED, sub);
 }
 
-const LS_KEY_SUBTITLES_SIZE = "player-pref-subtitles-size";
+/**
+ * Event triggered when the subtitles options change
+ */
+export const EVENT_NAME_SUBTITLES_OPTIONS_CHANGED = "subtitles-options-changed";
 
 /**
- * Gets selected subtitles size
- * @returns The selected subtitles size
+ * Subtitles options
  */
-export function getSubtitlesSize(): string {
-    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_SIZE, "l") + "";
+export interface SubtitlesOptions {
+    /**
+     * Labeled size (s, m, l, xl, xll) - Default l
+     */
+    size: string;
+
+    /**
+     * Custom subtitles size (percent, 100 = 100%)
+     */
+    customSize: number;
+
+    /**
+     * Allow colors from SRT?
+     */
+    allowColors: boolean;
+
+    /**
+     * Allow line breaks?
+     */
+    allowLineBreaks: boolean;
+
+    /**
+     * Background opacity style (100, 75, 50, 25, 0)
+     */
+    bg: string;
 }
 
-/**
- * Sets selected subtitles size
- * @param size The selected subtitles size
- */
-export function setSubtitlesSize(size: string) {
-    saveIntoLocalStorage(LS_KEY_SUBTITLES_SIZE, size);
-}
-
-const LS_KEY_SUBTITLES_SIZE_CUSTOM = "player-pref-subtitles-size-custom";
+const LS_KEY_SUBTITLES_OPTIONS = "player-pref-subtitles-options";
 
 /**
- * Gets custom subtitles size
- * @returns The selected subtitles size (percent, 100 = 100%)
+ * Gets subtitles style options
+ * @returns The configured subtitles options
  */
-export function getSubtitlesSizeCustom(): number {
-    const v = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_SIZE_CUSTOM, 150);
+export function getSubtitlesOptions(): SubtitlesOptions {
+    const result: SubtitlesOptions = {
+        size: "l",
+        customSize: 150,
+        allowColors: true,
+        allowLineBreaks: true,
+        bg: "0",
+    };
 
-    if (typeof v !== "number") {
-        return 150;
+    const parsedOptions: unknown = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_OPTIONS, null);
+
+    if (!parsedOptions || typeof parsedOptions !== "object") {
+        return result;
     }
 
-    return v;
+    if ("size" in parsedOptions && typeof parsedOptions.size === "string") {
+        result.size = parsedOptions.size;
+    }
+
+    if ("customSize" in parsedOptions && typeof parsedOptions.customSize === "number" && !isNaN(parsedOptions.customSize)) {
+        result.customSize = parsedOptions.customSize;
+    }
+
+    if ("allowColors" in parsedOptions && typeof parsedOptions.allowColors === "boolean") {
+        result.allowColors = parsedOptions.allowColors;
+    }
+
+    if ("allowLineBreaks" in parsedOptions && typeof parsedOptions.allowLineBreaks === "boolean") {
+        result.allowLineBreaks = parsedOptions.allowLineBreaks;
+    }
+
+    if ("bg" in parsedOptions && typeof parsedOptions.bg === "string") {
+        result.bg = parsedOptions.bg;
+    }
+
+    return result;
 }
 
 /**
- * Sets custom subtitles size
- * @param size The custom subtitles size (percent, 100 = 100%)
+ * Sets the subtitles style options
+ * @param options The subtitles options
  */
-export function setSubtitlesSizeCustom(size: number) {
-    saveIntoLocalStorage(LS_KEY_SUBTITLES_SIZE_CUSTOM, size);
-}
-
-const LS_KEY_SUBTITLES_BG = "player-pref-subtitles-bg";
-
-/**
- * Gets subtitles background
- * @returns The subtitles background style
- */
-export function getSubtitlesBackground(): string {
-    return fetchFromLocalStorageCache(LS_KEY_SUBTITLES_BG, "0") + "";
-}
-
-/**
- * Sets subtitles background
- * @param bg The subtitles background style
- */
-export function setSubtitlesBackground(bg: string) {
-    saveIntoLocalStorage(LS_KEY_SUBTITLES_BG, bg);
+export function setSubtitlesOptions(options: SubtitlesOptions) {
+    saveIntoLocalStorage(LS_KEY_SUBTITLES_OPTIONS, options);
 }
 
 const LS_KEY_AUDIO_TRACK = "player-pref-audio-track";
@@ -705,9 +732,7 @@ export function clearPlayerPreferences() {
     clearLocalStorage(LS_KEY_IMAGE_NOTES_VISIBLE);
 
     clearLocalStorage(LS_KEY_SUBTITLES_SELECTED);
-    clearLocalStorage(LS_KEY_SUBTITLES_SIZE);
-    clearLocalStorage(LS_KEY_SUBTITLES_SIZE_CUSTOM);
-    clearLocalStorage(LS_KEY_SUBTITLES_BG);
+    clearLocalStorage(LS_KEY_SUBTITLES_OPTIONS);
 
     clearLocalStorage(LS_KEY_AUDIO_TRACK);
 
