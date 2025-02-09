@@ -199,16 +199,16 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Subtitles") }}</b>
                 </td>
-                <td class="td-right"></td>
+                <td class="td-right">
+                    <a href="#subtitle-options" @click="goToSubtitlesOptions">{{ $t("Style options") }}</a>
+                </td>
             </tr>
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="changeSubtitle('')">
                 <td>
                     <i class="fas fa-check icon-config" :class="{ 'check-uncheck': '' !== effectiveSubtitles }"></i>
                     {{ renderSubtitle("", rTick) }}
                 </td>
-                <td class="td-right">
-                    <a href="#subtitle-options" @click="goToSubtitlesOptions">{{ $t("Style options") }}</a>
-                </td>
+                <td class="td-right"></td>
             </tr>
             <tr
                 v-for="sub in metadata.subtitles"
