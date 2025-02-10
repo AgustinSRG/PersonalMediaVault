@@ -42,19 +42,39 @@ rm -rf ${PMV_PKG_FOLDER}
 rm -rf ${PMV_PKG_FOLDER}.deb
 mkdir -p ${PMV_PKG_FOLDER}
 
-mkdir -p ${PMV_PKG_FOLDER}/usr/bin
-mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
-mkdir -p ${PMV_PKG_FOLDER}/DEBIAN
-
 echo "Copying files..."
+
+# Binaries + frontend
+
+mkdir -p ${PMV_PKG_FOLDER}/usr/bin
 
 cp ../../backend/pmvd ${PMV_PKG_FOLDER}/usr/bin/pmvd
 cp ../../backup-tool/pmv-backup ${PMV_PKG_FOLDER}/usr/bin/pmv-backup
 cp ../../launcher/pmv ${PMV_PKG_FOLDER}/usr/bin/pmv
 
+mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
+
 cp -rf ../../frontend/dist ${PMV_PKG_FOLDER}/usr/lib/pmv/www
 
+# Application icon
+
+mkdir -p ${PMV_PKG_FOLDER}/usr/share/pixmaps/
+cp ./assets/pmv.svg ${PMV_PKG_FOLDER}/usr/share/pixmaps/pmv.svg
+
+# Application desktop entry
+
+mkdir -p ${PMV_PKG_FOLDER}/usr/share/applications
+cp ./assets/pmv.desktop ${PMV_PKG_FOLDER}/usr/share/applications/pmv.desktop
+
+# Custom actions for Nemo file explorer
+
+mkdir -p ${PMV_PKG_FOLDER}/usr/share/nemo/actions
+cp ./assets/pmv.nemo_action ${PMV_PKG_FOLDER}/usr/share/nemo/actions/pmv.nemo_action
+cp ./assets/pmv-noselect.nemo_action ${PMV_PKG_FOLDER}/usr/share/nemo/actions/pmv-noselect.nemo_action
+
 echo "Configuring package..."
+
+mkdir -p ${PMV_PKG_FOLDER}/DEBIAN
 
 CONTROL_FILE=${PMV_PKG_FOLDER}/DEBIAN/control
 
@@ -70,6 +90,10 @@ echo "Description:" ${PMV_DESCRIPTION} >> ${CONTROL_FILE}
 echo "Building package..."
 
 dpkg-deb --build ${PMV_PKG_FOLDER}
+
+echo "Cleaning up..."
+
+rm -r ${PMV_PKG_FOLDER}
 
 echo "DONE!"
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=PersonalMediaVault
+GenericName=Media Gallery Manager
+TryExec=pmv
+Exec=gnome-terminal --window --class="pmv" --working-directory="%F" --title="PersonalMediaVault" -x sh -c "pmv"
+Type=Application
+Icon=pmv
+StartupNotify=false
