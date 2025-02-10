@@ -226,7 +226,7 @@
             </tr>
         </table>
 
-        <PlayerSubtitlesConfig v-if="page === 'subtitle-options'" @page-switch="focus" @go-back="goBack"></PlayerSubtitlesConfig>
+        <PlayerSubtitlesConfig v-if="page === 'subtitle-options'" @page-switch="focus" @go-back="goToSubtitles"></PlayerSubtitlesConfig>
 
         <table v-if="page === 'auto-next'">
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goBack">
