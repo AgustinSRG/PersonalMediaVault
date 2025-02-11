@@ -284,6 +284,7 @@
     "Main menu": "मुख्य मेन्यू",
     "Make sure you actually want to delete it.": "सुनिश्चित करें कि आप वास्तव में इसे हटाना चाहते हैं।",
     "Manage albums": "एल्बम प्रबंधित करें",
+    "Margin": "अंतर",
     "Max items per page": "प्रति पृष्ठ अधिकतम आइटम",
     "Max number of invited sessions by user (if set to 0, by default is 10 sessions)": "उपयोगकर्ता द्वारा आमंत्रित सत्रों की अधिकतम संख्या (यदि 0 पर सेट है, तो डिफ़ॉल्ट रूप से 10 सत्र हैं)",
     "Max number of tasks in parallel (0 for unlimited)": "समानांतर में कार्यों की अधिकतम संख्या (असीमित के लिए 0)",

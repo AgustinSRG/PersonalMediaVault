@@ -121,7 +121,7 @@
             :canAutoReload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
-        <PlayerSubtitles :show-controls="showControls" :subtitles="subtitles"></PlayerSubtitles>
+        <PlayerSubtitles :show-controls="showControls && userControls" :subtitles="subtitles"></PlayerSubtitles>
 
         <TimeSlicesEditHelper
             v-if="timeSlicesEdit"

@@ -39,6 +39,16 @@
                 </td>
             </tr>
 
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('margin')">
+                <td>
+                    <b>{{ $t("Margin") }}</b>
+                </td>
+                <td class="td-right">
+                    {{ margin + " px" }}
+                    <i class="fas fa-chevron-right arrow-config"></i>
+                </td>
+            </tr>
+
             <tr>
                 <td>
                     <b>{{ $t("Allow colors") }}</b>
@@ -122,6 +132,44 @@
             </tr>
         </table>
 
+        <table v-if="page === 'margin'">
+            <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('home')">
+                <td>
+                    <i class="fas fa-chevron-left icon-config"></i>
+                    <b>{{ $t("Subtitles") }} ({{ $t("Margin") }})</b>
+                </td>
+                <td class="td-right"></td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <input
+                        type="range"
+                        class="form-range"
+                        v-model.number="margin"
+                        @input="updateSubtitlesMargin"
+                        :min="0"
+                        :max="250"
+                        :step="1"
+                    />
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="custom-size-row">
+                    <input
+                        type="number"
+                        class="form-control custom-size-input"
+                        v-model.number="margin"
+                        @input="updateSubtitlesMargin"
+                        :min="0"
+                        :step="1"
+                    />
+                    <b class="custom-size-unit">px</b>
+                </td>
+            </tr>
+        </table>
+
         <table v-if="page === 'subBackground'">
             <tr class="tr-button" tabindex="0" @keydown="clickOnEnter" @click="goPage('home')">
                 <td>
@@ -201,6 +249,7 @@ export default defineComponent({
             pos: options.pos,
             allowLineBreaks: options.allowLineBreaks,
             allowColors: options.allowColors,
+            margin: options.margin,
         };
     },
     methods: {
@@ -236,6 +285,10 @@ export default defineComponent({
 
             if (options.pos !== this.pos) {
                 this.pos = options.pos;
+            }
+
+            if (options.margin !== this.margin) {
+                this.margin = options.margin;
             }
         },
 
@@ -333,6 +386,17 @@ export default defineComponent({
 
             const options = getSubtitlesOptions();
             options.pos = s;
+            setSubtitlesOptions(options);
+            this.onOptionsUpdate();
+        },
+
+        updateSubtitlesMargin: function () {
+            if (typeof this.margin !== "number" || isNaN(this.margin)) {
+                return;
+            }
+
+            const options = getSubtitlesOptions();
+            options.margin = this.margin;
             setSubtitlesOptions(options);
             this.onOptionsUpdate();
         },

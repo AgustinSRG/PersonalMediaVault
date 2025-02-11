@@ -284,6 +284,7 @@
     "Main menu": "メインメニュー",
     "Make sure you actually want to delete it.": "本当に削除したいのかを確認してください。",
     "Manage albums": "アルバムを管理する",
+    "Margin": "マージン",
     "Max items per page": "ページあたりの最大アイテム数",
     "Max number of invited sessions by user (if set to 0, by default is 10 sessions)": "ユーザーごとに招待されるセッションの最大数 (0 に設定した場合、デフォルトでは 10 セッション)",
     "Max number of tasks in parallel (0 for unlimited)": "並列タスクの最大数 (無制限の場合は 0)",

@@ -569,6 +569,11 @@ export interface SubtitlesOptions {
      * Subtitles position (top, bottom)
      */
     pos: string;
+
+    /**
+     * Margin (pixels)
+     */
+    margin: number;
 }
 
 const LS_KEY_SUBTITLES_OPTIONS = "player-pref-subtitles-options";
@@ -585,6 +590,7 @@ export function getSubtitlesOptions(): SubtitlesOptions {
         allowLineBreaks: true,
         bg: "0",
         pos: "bottom",
+        margin: 0,
     };
 
     const parsedOptions: unknown = fetchFromLocalStorageCache(LS_KEY_SUBTITLES_OPTIONS, null);
@@ -615,6 +621,10 @@ export function getSubtitlesOptions(): SubtitlesOptions {
 
     if ("pos" in parsedOptions && typeof parsedOptions.pos === "string") {
         result.pos = parsedOptions.pos;
+    }
+
+    if ("margin" in parsedOptions && typeof parsedOptions.margin === "number") {
+        result.margin = parsedOptions.margin;
     }
 
     return result;

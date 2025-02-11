@@ -6,6 +6,9 @@
             'pos-top': pos === 'top',
             'pos-bottom': pos !== 'top',
         }"
+        :style="{
+            '--subtitles-margin': margin + 'px',
+        }"
     >
         <div
             v-if="subtitles"
@@ -61,6 +64,7 @@ export default defineComponent({
             pos: options.pos,
             allowLineBreaks: options.allowLineBreaks,
             allowColors: options.allowColors,
+            margin: options.margin,
         };
     },
     methods: {
@@ -95,6 +99,10 @@ export default defineComponent({
 
             if (options.pos !== this.pos) {
                 this.pos = options.pos;
+            }
+
+            if (options.margin !== this.margin) {
+                this.margin = options.margin;
             }
         },
     },

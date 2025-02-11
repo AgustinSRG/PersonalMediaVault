@@ -284,6 +284,7 @@
     "Main menu": "Menu principal",
     "Make sure you actually want to delete it.": "Assurez-vous que vous souhaitez réellement le supprimer.",
     "Manage albums": "Gérer les albums",
+    "Margin": "Marge",
     "Max items per page": "Nombre maximum d'articles par page",
     "Max number of invited sessions by user (if set to 0, by default is 10 sessions)": "Nombre maximum de sessions invitées par utilisateur (si défini sur 0, 10 sessions par défaut)",
     "Max number of tasks in parallel (0 for unlimited)": "Nombre maximum de tâches en parallèle (0 pour illimité)",

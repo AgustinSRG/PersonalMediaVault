@@ -284,6 +284,7 @@
     "Main menu": "Главное меню",
     "Make sure you actually want to delete it.": "Убедитесь, что вы действительно хотите его удалить.",
     "Manage albums": "Управление альбомами",
+    "Margin": "Допуск",
     "Max items per page": "Максимальное количество элементов на странице",
     "Max number of invited sessions by user (if set to 0, by default is 10 sessions)": "Максимальное количество приглашенных сеансов пользователем (если установлено значение 0, по умолчанию — 10 сеансов).",
     "Max number of tasks in parallel (0 for unlimited)": "Максимальное количество параллельных задач (0 — неограниченно)",

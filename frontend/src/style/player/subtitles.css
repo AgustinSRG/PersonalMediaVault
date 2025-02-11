@@ -11,19 +11,19 @@
 }
 
 .player-subtitles-container.pos-top {
-    top: 60px;
+    top: calc(57px + var(--subtitles-margin));
 }
 
 .player-subtitles-container.pos-top.controls-hidden {
-    top: 3px;
+    top: var(--subtitles-margin);
 }
 
 .player-subtitles-container.pos-bottom {
-    bottom: 64px;
+    bottom: calc(60px + var(--subtitles-margin));
 }
 
 .player-subtitles-container.pos-bottom.controls-hidden {
-    bottom: 3px;
+    bottom: var(--subtitles-margin);
 }
 
 .player-subtitles-container-inner {
