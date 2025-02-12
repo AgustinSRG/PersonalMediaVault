@@ -34,12 +34,15 @@ PMV_BIN_ARCH=amd64
 PMV_MAINTAINER="AgustinSRG <agustinsanromanguzman@gmail.com>"
 PMV_DESCRIPTION="PersonalMediaVault - Web application to store media files in an encrypted storage, and to visualize them using a web browser."
 
-PMV_PKG_FOLDER=./personalmediavault_${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}-${PMV_VERSION_REVISION}
+PMV_DEB_NAME=personalmediavault_${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}_amd64
+
+PMV_PKG_FOLDER=./${PMV_DEB_NAME}
+PMV_DEB_FILE=./${PMV_DEB_NAME}.dev
 
 echo "Preparing folder:" ${PMV_PKG_FOLDER}
 
 rm -rf ${PMV_PKG_FOLDER}
-rm -rf ${PMV_PKG_FOLDER}.deb
+rm -rf ${PMV_DEB_FILE}
 mkdir -p ${PMV_PKG_FOLDER}
 
 echo "Copying files..."
@@ -94,6 +97,12 @@ dpkg-deb --build ${PMV_PKG_FOLDER}
 echo "Cleaning up..."
 
 rm -r ${PMV_PKG_FOLDER}
+
+if [ "$1" = "ppa" ]
+then
+    mkdir -p ./ppa
+    mv ${PMV_DEB_FILE} ./ppa/${PMV_DEB_NAME}.dev
+fi
 
 echo "DONE!"
 
