@@ -55,6 +55,22 @@ Then, install it using `apt`:
 sudo apt install ./personalmediavault_1.21-1.deb
 ```
 
+You can also install it directly from the PPA repository (built automatically with GitHub actions):
+
+```sh
+# Download the public key
+curl -s --compressed "https://agustinsrg.github.io/PersonalMediaVault/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/pmv.gpg >/dev/null
+
+# Add the API list file
+sudo curl -s --compressed -o /etc/apt/sources.list.d/pmv.list "https://agustinsrg.github.io/PersonalMediaVault/pmv.list"
+
+# Update APT lists
+sudo apt update
+
+# Install the package
+sudo apt install personalmediavault
+```
+
 After the installation, the binary files will be available in `/usr/bin`, and the frontend files will be available in `/usr/lib/pmv/www`.
 
 To run a vault, type:
@@ -62,8 +78,6 @@ To run a vault, type:
 ```sh
 pmv /path/to/vault
 ```
-
-You can change the language the launcher uses setting the `PMV_LANGUAGE` environment variable to `en` or `es`.
 
 ### Windows
 

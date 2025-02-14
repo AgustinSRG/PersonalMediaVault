@@ -1,0 +1,53 @@
+name: PPA distribution CI
+
+on:
+  push:
+    branches: [ "master" ]
+  release:
+    types: [published]
+
+env:
+  GITHUB_USERNAME: agustinsrg
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.22.x
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install GPG
+        run: sudo apt install -y gpg
+
+      - name: Import GPG key
+        run: echo -n "${{ secrets.GPG_SIGNING_KEY }}" | base64 --decode | gpg --import
+
+      - name: Install DPKG tools
+        run: sudo apt install -y dpkg-dev
+
+      - name: Build DEB
+        working-directory: ./packages/dpkg-deb
+        run: ./build.sh ppa
+
+      - name: Build PPA repository
+        working-directory: ./packages/dpkg-deb
+        run: ./ppa-build.sh
+        env:
+          EMAIL: ${{ secrets.GPG_SIGNING_EMAIL }}
+          GITHUB_USERNAME: ${{ env.GITHUB_USERNAME }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./packages/dpkg-deb/ppa

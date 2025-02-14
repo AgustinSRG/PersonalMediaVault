@@ -1,0 +1,13 @@
+[Nemo Action]
+Name=Open with PersonalMediaVault
+Comment=Opens folder a media vault with PersonalMediaVault
+
+Exec=gnome-terminal --window --class="pmv" --working-directory="%F" --title="PersonalMediaVault" -x sh -c "pmv ."
+
+Selection=S
+Extensions=dir
+
+Icon-Name=pmv
+
+Name[es]=Abrir con PersonalMediaVault
+Comment[es]=Abre el directorio como una galería multimedia, con PersonalMediaVault
