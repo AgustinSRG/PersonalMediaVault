@@ -37,7 +37,7 @@ PMV_DESCRIPTION="PersonalMediaVault - Web application to store media files in an
 PMV_DEB_NAME=personalmediavault_${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}_amd64
 
 PMV_PKG_FOLDER=./${PMV_DEB_NAME}
-PMV_DEB_FILE=./${PMV_DEB_NAME}.dev
+PMV_DEB_FILE=./${PMV_DEB_NAME}.deb
 
 echo "Preparing folder:" ${PMV_PKG_FOLDER}
 
@@ -101,7 +101,7 @@ rm -r ${PMV_PKG_FOLDER}
 if [ "$1" = "ppa" ]
 then
     mkdir -p ./ppa
-    mv ${PMV_DEB_FILE} ./ppa/${PMV_DEB_NAME}.dev
+    mv ${PMV_DEB_FILE} ./ppa/${PMV_DEB_NAME}.deb
 fi
 
 echo "DONE!"
