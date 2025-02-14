@@ -23,4 +23,4 @@ gpg --default-key "${EMAIL}" --clearsign -o - Release > InRelease
 
 # Create list file
 
-echo "deb [signed-by=/etc/apt/trusted.gpg.d/pmv.gpg] https://${GITHUB_USERNAME}.github.io/ ./" > pmv.list
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/pmv.gpg] https://${GITHUB_USERNAME}.github.io/PersonalMediaVault/ ./" > pmv.list
