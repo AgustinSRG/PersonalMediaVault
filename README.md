@@ -41,7 +41,7 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Download | Hash | Hash alg.  |
 |---|---|---|---|---|
-| 1.21.2 | amd64 | [Drive](https://drive.google.com/file/d/1bSDkfabOSVl8TZoHfy3PkjR1qdR2NBtG/view?usp=sharing) <br /> [Mega](https://mega.nz/file/AOUwUQYa#0UD7yNUMLti2Uup8ndNXRWOYGY_iWFbAvs6j9CB1JrE) | `54918dd4ba31a3ac39104a4567f12fa4c6b86daf940f3d9a9a67f02f4e819d73` | SHA256 |
+| 1.21.2 | amd64 | [GitHub](https://github.com/AgustinSRG/PersonalMediaVault/releases/download/v1.21.2/personalmediavault_1.21.2_amd64.deb) <br /> [Mega](https://mega.nz/file/AOUwUQYa#0UD7yNUMLti2Uup8ndNXRWOYGY_iWFbAvs6j9CB1JrE) | `54918dd4ba31a3ac39104a4567f12fa4c6b86daf940f3d9a9a67f02f4e819d73` | SHA256 |
 
 Download it, and check its integrity using:
 
