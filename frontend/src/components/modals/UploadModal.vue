@@ -19,12 +19,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
-                    <select v-model="album" :disabled="inModal" class="form-control form-select form-control-full-width">
-                        <option :value="-1">--</option>
-                        <option v-for="a in albums" :key="a.id" :value="a.id">
-                            {{ a.name }}
-                        </option>
-                    </select>
+                    <AlbumSelect v-model:album="album" :disabled="inModal"></AlbumSelect>
                 </div>
                 <div class="form-group" v-if="!inModal">
                     <button type="button" @click="createAlbum" class="btn btn-primary btn-sm">
@@ -89,6 +84,7 @@ import { parseTagName } from "@/utils/tags";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { getLastUsedTags } from "@/control/app-preferences";
+import AlbumSelect from "../utils/AlbumSelect.vue";
 
 const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
@@ -97,6 +93,7 @@ const AlbumCreateModal = defineAsyncComponent({
 export default defineComponent({
     components: {
         AlbumCreateModal,
+        AlbumSelect,
     },
     name: "UploadModal",
     emits: ["update:display", "upload"],

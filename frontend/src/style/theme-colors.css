@@ -10,6 +10,7 @@
     --theme-btn-color: rgba(0, 0, 0, 0.75);
 
     --theme-border-color: rgba(0, 0, 0, 0.1);
+    --theme-border-color-focus: rgba(0, 0, 0, 0.5);
 
     --theme-option-hover-color: rgba(0, 0, 0, 0.1);
     --theme-option-selected-color: rgba(0, 0, 0, 0.2);
@@ -78,6 +79,7 @@
     --theme-btn-color: rgba(255, 255, 255, 0.75);
 
     --theme-border-color: rgba(255, 255, 255, 0.1);
+    --theme-border-color-focus: rgba(255, 255, 255, 0.5);
 
     --theme-option-hover-color: rgba(255, 255, 255, 0.1);
     --theme-option-selected-color: rgba(255, 255, 255, 0.2);

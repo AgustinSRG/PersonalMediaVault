@@ -76,12 +76,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("Album") }}:</label>
-                    <select v-model="albumSearch" class="form-control form-select form-control-full-width" @change="markDirty">
-                        <option :value="-1">--</option>
-                        <option v-for="a in albums" :key="a.id" :value="a.id">
-                            {{ a.name }}
-                        </option>
-                    </select>
+                    <AlbumSelect v-model:album="albumSearch" @update:album="markDirty"></AlbumSelect>
                 </div>
 
                 <div class="form-group">
@@ -203,12 +198,14 @@ import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiAdvancedSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
 import ThumbImage from "../utils/ThumbImage.vue";
+import AlbumSelect from "../utils/AlbumSelect.vue";
 
 const INITIAL_WINDOW_SIZE = 50;
 
 export default defineComponent({
     components: {
         ThumbImage,
+        AlbumSelect,
     },
     name: "PageAdvancedSearch",
     emits: ["select-media", "update:pageScroll"],

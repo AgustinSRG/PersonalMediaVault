@@ -33,12 +33,7 @@
 
                     <div class="form-group">
                         <label>{{ $t("Album") }}:</label>
-                        <select v-model="albumSearch" class="form-control form-select form-control-full-width">
-                            <option :value="-1">--</option>
-                            <option v-for="a in albums" :key="a.id" :value="a.id">
-                                {{ a.name }}
-                            </option>
-                        </select>
+                        <AlbumSelect v-model:album="albumSearch" :disabled="displayProgress"></AlbumSelect>
                     </div>
 
                     <div class="form-group">
@@ -161,12 +156,7 @@
                     <div v-if="action === 'album-add' || action === 'album-remove'">
                         <div class="form-group">
                             <label>{{ $t("Album") }}:</label>
-                            <select v-model="albumToAdd" class="form-control form-select form-control-full-width">
-                                <option :value="-1">--</option>
-                                <option v-for="a in albums" :key="a.id" :value="a.id">
-                                    {{ a.name }}
-                                </option>
-                            </select>
+                            <AlbumSelect v-model:album="albumToAdd" :disabled="displayProgress"></AlbumSelect>
                         </div>
                     </div>
                 </div>
@@ -210,12 +200,14 @@ import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAl
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { apiAdvancedSearch } from "@/api/api-search";
+import AlbumSelect from "../utils/AlbumSelect.vue";
 
 const PAGE_SIZE = 50;
 
 export default defineComponent({
     components: {
         BatchOperationProgressModal,
+        AlbumSelect,
     },
     name: "BatchOperationModal",
     emits: ["update:display"],

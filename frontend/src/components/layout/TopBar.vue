@@ -124,7 +124,7 @@ export default defineComponent({
         return {
             blurTimeout: null,
             focusTrap: null as FocusTrap,
-            bigListScroller: null as BigListScroller,
+            bigListScroller: null as BigListScroller<SearchBarSuggestion>,
             findTagTimeout: null,
         };
     },
