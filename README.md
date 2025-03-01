@@ -61,7 +61,7 @@ You can also install it directly from the PPA repository (built automatically wi
 # Download the public key
 curl -s --compressed "https://agustinsrg.github.io/PersonalMediaVault/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/pmv.gpg >/dev/null
 
-# Add the API list file
+# Add the APT list file
 sudo curl -s --compressed -o /etc/apt/sources.list.d/pmv.list "https://agustinsrg.github.io/PersonalMediaVault/pmv.list"
 
 # Update APT lists
