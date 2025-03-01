@@ -1,7 +1,7 @@
 {
     "name": "pmv-frontend",
     "type": "module",
-    "version": "1.21.2",
+    "version": "1.21.3",
     "private": true,
     "scripts": {
         "serve": "vite",
