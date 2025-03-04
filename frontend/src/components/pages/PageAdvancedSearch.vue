@@ -1,6 +1,6 @@
 <template>
     <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" @scroll.passive="onPageScroll" tabindex="-1">
-        <form class="adv-search-form" @submit="startSearch">
+        <form class="adv-search-form" @submit="onSubmit">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
                 <input
@@ -46,7 +46,7 @@
                         v-model="tagToAdd"
                         @input="onTagAddChanged(false)"
                         @keydown="onTagAddKeyDown"
-                        class="form-control auto-focus"
+                        class="form-control auto-focus tags-input-search"
                         :placeholder="$t('Search for tags') + '...'"
                     />
                 </div>
@@ -56,8 +56,9 @@
                     v-for="mt in matchingTags"
                     :key="mt.id"
                     type="button"
-                    class="btn btn-primary btn-sm btn-tag-mini"
+                    class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
                     @click="addMatchingTag(mt)"
+                    @keydown="onSuggestionKeydown"
                 >
                     <i class="fas fa-plus"></i> {{ mt.name }}
                 </button>
@@ -66,7 +67,12 @@
             <div v-if="advancedSearch">
                 <div class="form-group">
                     <label>{{ $t("Media type") }}:</label>
-                    <select class="form-control form-select form-control-full-width" v-model="type" @change="markDirty">
+                    <select
+                        class="form-control form-select form-control-full-width tags-focus-skip"
+                        v-model="type"
+                        @change="markDirty"
+                        @keydown="onTagsSkipKeyDown"
+                    >
                         <option :value="0">{{ $t("Any media") }}</option>
                         <option :value="1">{{ $t("Images") }}</option>
                         <option :value="2">{{ $t("Videos") }}</option>
@@ -89,17 +95,28 @@
             </div>
 
             <div class="">
+                <button
+                    v-if="!advancedSearch"
+                    type="button"
+                    class="btn btn-primary advanced-toggle-btn btn-mr tags-focus-skip"
+                    @click="toggleAdvancedSearch"
+                    @keydown="onTagsSkipKeyDown"
+                >
+                    <i class="fas fa-cog"></i> {{ $t("More options") }}
+                </button>
+                <button
+                    v-if="advancedSearch"
+                    type="button"
+                    class="btn btn-primary advanced-toggle-btn btn-mr"
+                    @click="toggleAdvancedSearch"
+                >
+                    <i class="fas fa-cog"></i> {{ $t("Less options") }}
+                </button>
                 <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
                     <i class="fas fa-search"></i> {{ $t("Search") }}
                 </button>
                 <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
-                </button>
-                <button v-if="!advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
-                    <i class="fas fa-cog"></i> {{ $t("More options") }}
-                </button>
-                <button v-if="advancedSearch" type="button" class="btn btn-primary btn-mr" @click="toggleAdvancedSearch">
-                    <i class="fas fa-cog"></i> {{ $t("Less options") }}
                 </button>
                 <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
                     <i class="fas fa-times"></i> {{ $t("Cancel") }}
@@ -107,14 +124,14 @@
             </div>
         </form>
 
-        <div class="search-results">
+        <div class="search-results" tabindex="-1">
             <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
                     {{ $t("Could not find any result") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="startSearch()" class="btn btn-primary">
+                    <button type="button" @click="onSubmit()" class="btn btn-primary">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>
                 </div>
@@ -419,6 +436,14 @@ export default defineComponent({
 
         toggleAdvancedSearch: function () {
             this.advancedSearch = !this.advancedSearch;
+
+            nextTick(() => {
+                const btn = this.$el.querySelector(".advanced-toggle-btn");
+
+                if (btn) {
+                    btn.focus();
+                }
+            });
         },
 
         filterElements: function (results: MediaListItem[]) {
@@ -530,11 +555,22 @@ export default defineComponent({
             });
         },
 
-        startSearch: function (event?: Event) {
+        onSubmit: function (event?: Event) {
             if (event) {
                 event.preventDefault();
             }
+
+            this.startSearch();
+
+            const elementToFocus = this.$el.querySelector(".search-results");
+            if (elementToFocus) {
+                elementToFocus.focus();
+            }
+        },
+
+        startSearch: function () {
             clearNamedTimeout(this.dirtyTimeoutId);
+
             this.loading = true;
             this.listScroller.reset();
             this.fullListLength = 0;
@@ -546,6 +582,7 @@ export default defineComponent({
             this.started = true;
             this.finished = false;
             this.albumFilter = null;
+
             if (this.albumSearch >= 0) {
                 this.loadAlbumSearch();
             } else {
@@ -733,12 +770,16 @@ export default defineComponent({
             return TagsController.GetTagName(tag, v);
         },
 
-        removeTag: function (tag) {
+        removeTag: function (tag: number) {
             this.tags = this.tags.filter((t) => {
                 return tag !== t;
             });
             this.markDirty();
             this.onTagAddChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         addMatchingTag: function (tag) {
@@ -748,6 +789,10 @@ export default defineComponent({
             this.tags.push(tag.id);
             this.markDirty();
             this.onTagAddChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         onTagAddKeyDown: function (event: KeyboardEvent) {
@@ -768,6 +813,58 @@ export default defineComponent({
                     this.tagToAdd = this.matchingTags[0].name;
                     this.onTagAddChanged(true);
                     event.preventDefault();
+                }
+            } else if (event.key === "Tab" && !event.shiftKey) {
+                const toFocus = this.$el.querySelector(".tags-focus-skip");
+                if (toFocus) {
+                    event.preventDefault();
+                    toFocus.focus();
+                }
+            } else if (event.key === "ArrowDown") {
+                const suggestionElem = this.$el.querySelector(".btn-add-tag");
+                if (suggestionElem) {
+                    event.preventDefault();
+                    suggestionElem.focus();
+                }
+            }
+
+            event.stopPropagation();
+        },
+
+        onTagsSkipKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab" && event.shiftKey) {
+                const inputElem = this.$el.querySelector(".tags-input-search");
+                if (inputElem) {
+                    event.preventDefault();
+                    inputElem.focus();
+                }
+            }
+        },
+
+        onSuggestionKeydown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+
+                if (nextElem && nextElem.focus) {
+                    nextElem.focus();
+                }
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+
+                if (prevElem && prevElem.focus) {
+                    prevElem.focus();
+                } else {
+                    const inputElem = this.$el.querySelector(".tags-input-search");
+
+                    if (inputElem) {
+                        inputElem.focus();
+                    }
                 }
             }
         },
