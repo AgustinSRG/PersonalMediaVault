@@ -68,7 +68,7 @@
                                 v-model="tagToAddSearch"
                                 @input="onTagSearchChanged(false)"
                                 @keydown="onTagSearchKeyDown"
-                                class="form-control"
+                                class="form-control tags-input-search"
                                 :placeholder="$t('Search for tags') + '...'"
                             />
                         </div>
@@ -78,8 +78,9 @@
                             v-for="mt in matchingTagsSearch"
                             :key="mt.id"
                             type="button"
-                            class="btn btn-primary btn-sm btn-tag-mini"
+                            class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
                             @click="addMatchingTagSearch(mt)"
+                            @keydown="onSuggestionKeydown"
                         >
                             <i class="fas fa-plus"></i> {{ mt.name }}
                         </button>
@@ -92,7 +93,11 @@
                     <div class="form-group"></div>
                     <div class="form-group">
                         <label>{{ $t("Select and action to apply") }}:</label>
-                        <select class="form-control form-select form-control-full-width" v-model="action">
+                        <select
+                            class="form-control form-select form-control-full-width tags-focus-skip"
+                            @keydown="onTagsSkipKeyDown"
+                            v-model="action"
+                        >
                             <option :value="''">
                                 {{ $t("--- Select an action ---") }}
                             </option>
@@ -130,12 +135,18 @@
                                     v-model="tagToAddAction"
                                     @input="onTagActionChanged(false)"
                                     @keydown="onTagActionKeyDown"
-                                    class="form-control tags-adder"
+                                    class="form-control tags-adder tags-input-search-action"
                                     :placeholder="$t('Add tags') + '...'"
                                 />
                             </div>
                             <div class="media-tags-adder">
-                                <button type="button" :disabled="!tagToAddAction" class="btn btn-primary btn-xs" @click="addTagAction">
+                                <button
+                                    type="button"
+                                    :disabled="!tagToAddAction"
+                                    class="btn btn-primary btn-xs"
+                                    @click="addTagAction"
+                                    @keydown="onAddTagActionKeyDown"
+                                >
                                     <i class="fas fa-plus"></i> {{ $t("Add tag") }}
                                 </button>
                             </div>
@@ -145,8 +156,9 @@
                                 v-for="mt in matchingTagsAction"
                                 :key="mt.id"
                                 type="button"
-                                class="btn btn-primary btn-sm btn-tag-mini"
+                                class="btn btn-primary btn-sm btn-tag-mini btn-add-tag-action"
                                 @click="addMatchingTagAction(mt)"
+                                @keydown="onSuggestionActionKeydown"
                             >
                                 <i class="fas fa-plus"></i> {{ mt.name }}
                             </button>
@@ -162,7 +174,13 @@
                 </div>
             </div>
             <div class="modal-footer no-padding">
-                <button type="button" class="modal-footer-btn" :disabled="displayProgress" @click="start">
+                <button
+                    type="button"
+                    class="modal-footer-btn tags-focus-skip-action"
+                    :disabled="displayProgress"
+                    @click="start"
+                    @keydown="onTagsSkipActionKeyDown"
+                >
                     <i class="fas fa-check"></i> {{ $t("Apply") }}
                 </button>
             </div>
@@ -414,6 +432,10 @@ export default defineComponent({
                 return tag !== t;
             });
             this.onTagSearchChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         addMatchingTagSearch: function (tag) {
@@ -422,6 +444,10 @@ export default defineComponent({
             }
             this.tagsSearch.push(tag.id);
             this.onTagSearchChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         removeTagAction: function (tag: string) {
@@ -429,6 +455,10 @@ export default defineComponent({
                 return tag !== t;
             });
             this.onTagActionChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search-action");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         addMatchingTagAction: function (tag) {
@@ -437,11 +467,101 @@ export default defineComponent({
             }
             this.tagsAction.push(tag.name);
             this.onTagActionChanged(true);
+            const inputElem = this.$el.querySelector(".tags-input-search-action");
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
-        onTagSearchKeyDown: function (e: KeyboardEvent) {
-            if (e.key === "Enter") {
+        onTagsSkipKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab" && event.shiftKey) {
+                const inputElem = this.$el.querySelector(".tags-input-search");
+                if (inputElem) {
+                    event.preventDefault();
+                    inputElem.focus();
+                }
+            }
+        },
+
+        onTagsSkipActionKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab" && event.shiftKey) {
+                const inputElem = this.$el.querySelector(".tags-input-search-action");
+                if (inputElem) {
+                    event.preventDefault();
+                    inputElem.focus();
+                }
+            }
+        },
+
+        onAddTagActionKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Tab") {
+                const inputElem = this.$el.querySelector(".tags-focus-skip-action");
+                if (inputElem) {
+                    event.preventDefault();
+                    inputElem.focus();
+                }
+            }
+        },
+
+        onSuggestionKeydown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
                 e.preventDefault();
+                e.stopPropagation();
+
+                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+
+                if (nextElem && nextElem.focus) {
+                    nextElem.focus();
+                }
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+
+                if (prevElem && prevElem.focus) {
+                    prevElem.focus();
+                } else {
+                    const inputElem = this.$el.querySelector(".tags-input-search");
+
+                    if (inputElem) {
+                        inputElem.focus();
+                    }
+                }
+            }
+        },
+
+        onSuggestionActionKeydown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+
+                if (nextElem && nextElem.focus) {
+                    nextElem.focus();
+                }
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+
+                if (prevElem && prevElem.focus) {
+                    prevElem.focus();
+                } else {
+                    const inputElem = this.$el.querySelector(".tags-input-search-action");
+
+                    if (inputElem) {
+                        inputElem.focus();
+                    }
+                }
+            }
+        },
+
+        onTagSearchKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Enter") {
+                event.preventDefault();
 
                 this.onTagSearchChanged(true);
 
@@ -450,15 +570,29 @@ export default defineComponent({
                     this.tagToAddSearch = "";
                     this.onTagSearchChanged(true);
                 }
-            } else if (e.key === "Tab") {
+            } else if (event.key === "Tab" && this.tagToAddSearch && !event.shiftKey) {
                 if (this.matchingTagsSearch.length > 0) {
                     if (this.matchingTagsSearch[0].name !== this.tagToAddSearch) {
-                        e.preventDefault();
+                        event.preventDefault();
                         this.tagToAddSearch = this.matchingTagsSearch[0].name;
                         this.onTagSearchChanged(true);
                     }
                 }
+            } else if (event.key === "Tab" && !event.shiftKey) {
+                const toFocus = this.$el.querySelector(".tags-focus-skip");
+                if (toFocus) {
+                    event.preventDefault();
+                    toFocus.focus();
+                }
+            } else if (event.key === "ArrowDown") {
+                const suggestionElem = this.$el.querySelector(".btn-add-tag");
+                if (suggestionElem) {
+                    event.preventDefault();
+                    suggestionElem.focus();
+                }
             }
+
+            event.stopPropagation();
         },
 
         addTagAction: function () {
@@ -470,20 +604,32 @@ export default defineComponent({
             this.onTagActionChanged(true);
         },
 
-        onTagActionKeyDown: function (e: KeyboardEvent) {
-            if (e.key === "Enter") {
-                e.preventDefault();
+        onTagActionKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "Enter") {
+                event.preventDefault();
 
                 this.addTagAction();
-            } else if (e.key === "Tab") {
+            } else if (event.key === "Tab" && this.tagToAddSearch && !event.shiftKey) {
                 this.onTagActionChanged(true);
 
                 if (this.matchingTagsAction.length > 0) {
                     if (this.tagToAddAction !== this.matchingTagsAction[0].name) {
-                        e.preventDefault();
+                        event.preventDefault();
                         this.tagToAddAction = this.matchingTagsAction[0].name;
                         this.onTagActionChanged(true);
                     }
+                }
+            } else if (event.key === "Tab" && !this.tagToAddAction && !event.shiftKey) {
+                const toFocus = this.$el.querySelector(".tags-focus-skip-action");
+                if (toFocus) {
+                    event.preventDefault();
+                    toFocus.focus();
+                }
+            } else if (event.key === "ArrowDown") {
+                const suggestionElem = this.$el.querySelector(".btn-add-tag-action");
+                if (suggestionElem) {
+                    event.preventDefault();
+                    suggestionElem.focus();
                 }
             }
         },
