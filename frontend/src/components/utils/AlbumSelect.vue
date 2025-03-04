@@ -171,6 +171,7 @@ export default defineComponent({
             } else if (event.key === "Escape") {
                 event.preventDefault();
                 this.closeInstantly();
+                this.$el.focus();
             }
             event.stopPropagation();
         },
@@ -204,6 +205,7 @@ export default defineComponent({
                 event.preventDefault();
                 event.stopPropagation();
                 this.closeInstantly();
+                this.$el.focus();
             }
         },
 
@@ -261,6 +263,7 @@ export default defineComponent({
         toggleExpand: function () {
             if (this.expanded) {
                 this.closeInstantly();
+                this.$el.focus();
             } else if (!this.disabled) {
                 this.expand();
             }
