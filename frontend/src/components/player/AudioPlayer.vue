@@ -1809,7 +1809,7 @@ export default defineComponent({
             if (this.expandedTitle) {
                 this.hideNextEnd();
                 this.pause();
-            } else {
+            } else if (!this.expandedAlbum) {
                 this.play();
             }
         },
