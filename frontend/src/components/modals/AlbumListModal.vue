@@ -73,6 +73,7 @@
                             :key="a.id"
                             @click="clickOnAlbum(a, false, $event)"
                             @keydown="clickOnEnter"
+                            :title="a.name"
                             class="albums-modal-menu-item"
                             :class="{ disabled: busy }"
                         >
@@ -99,6 +100,7 @@
                             :key="a.id"
                             @click="goToAlbum(a, $event)"
                             @keydown="clickOnEnter"
+                            :title="a.name"
                             class="albums-modal-menu-item"
                         >
                             <div class="albums-modal-menu-item-icon">
@@ -501,7 +503,7 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(6), {
             get: () => {
                 return this.albums;
             },
