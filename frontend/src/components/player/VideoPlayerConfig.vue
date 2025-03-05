@@ -134,7 +134,7 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Playback speed") }}</b>
                 </td>
-                <td class="td-right">
+                <td class="td-right" @click="goToCustomSpeed">
                     <a href="#playback-speed-custom" @click="goToCustomSpeed">{{ $t("Custom") }}</a>
                 </td>
             </tr>
@@ -198,7 +198,7 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Scale") }}</b>
                 </td>
-                <td class="td-right">
+                <td class="td-right" @click="goToCustomScale">
                     <a href="#video-scale-custom" @click="goToCustomScale">{{ $t("Custom") }}</a>
                 </td>
             </tr>
@@ -324,7 +324,7 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Subtitles") }}</b>
                 </td>
-                <td class="td-right">
+                <td class="td-right" @click="goToSubtitlesOptions">
                     <a href="#subtitle-options" @click="goToSubtitlesOptions">{{ $t("Style options") }}</a>
                 </td>
             </tr>

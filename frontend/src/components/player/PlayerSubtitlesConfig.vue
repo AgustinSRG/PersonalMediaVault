@@ -74,7 +74,7 @@
                     <i class="fas fa-chevron-left icon-config"></i>
                     <b>{{ $t("Subtitles") }} ({{ $t("Size") }}) </b>
                 </td>
-                <td class="td-right">
+                <td class="td-right" @click="goPage('subSize-custom', $event)">
                     <a href="#subtitles-size-custom" @click="goPage('subSize-custom', $event)">{{ $t("Custom") }}</a>
                 </td>
             </tr>
