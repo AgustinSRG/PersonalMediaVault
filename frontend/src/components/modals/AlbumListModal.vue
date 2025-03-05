@@ -61,7 +61,7 @@
                     </button>
                 </div>
                 <div class="albums-list-table-container">
-                    <div class="albums-modal-menu" v-if="editMode">
+                    <div class="albums-modal-menu" v-if="editMode" @scroll="onScroll">
                         <tr v-if="albums.length === 0">
                             <td colspan="2" class="albums-menu-empty">
                                 {{ $t("No albums found") }}
@@ -87,7 +87,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="albums-modal-menu" v-if="!editMode">
+                    <div class="albums-modal-menu" v-if="!editMode" @scroll="onScroll">
                         <div v-if="albums.length === 0">
                             <div class="albums-menu-empty">
                                 {{ $t("No albums found") }}
@@ -142,12 +142,16 @@ import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/a
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
 import { generateURIQuery } from "@/utils/api";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { BigListScroller } from "@/utils/big-list-scroller";
+import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 
 interface AlbumModalListItem {
     id: number;
     name: string;
     nameLowerCase: string;
-    added?: boolean;
+    added: boolean;
+    starts: boolean;
+    contains: boolean;
 }
 
 export default defineComponent({
@@ -164,6 +168,8 @@ export default defineComponent({
         return {
             loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
+
+            bigListScroller: null as BigListScroller<AlbumModalListItem>,
         };
     },
     data: function () {
@@ -401,37 +407,37 @@ export default defineComponent({
 
         updateAlbums: function () {
             const mid = AppStatus.CurrentMedia;
-            const filter = (this.filter + "").toLowerCase();
-            this.albums = AlbumsController.GetAlbumsListMin()
-                .filter((a) => {
-                    return !filter || a.nameLowerCase.indexOf(filter) >= 0;
+
+            const albumFilter = normalizeString(this.filter).trim().toLowerCase();
+            const albumFilterWords = filterToWords(albumFilter);
+
+            const albums = AlbumsController.GetAlbumsListMin()
+                .map((a) => {
+                    const i = albumFilter ? matchSearchFilter(a.name, albumFilter, albumFilterWords) : 0;
+                    return {
+                        ...a,
+                        added: mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0,
+                        starts: i === 0,
+                        contains: i >= 0,
+                    };
                 })
-                .map((a: any) => {
-                    a.added = mid >= 0 && this.mediaAlbums.indexOf(a.id) >= 0;
-                    return a;
-                })
                 .filter((a) => {
-                    return this.editMode || a.added;
+                    return (a.starts || a.contains) && (this.editMode || a.added);
                 })
                 .sort((a, b) => {
-                    if (filter) {
-                        const aStarts = a.nameLowerCase.indexOf(filter) === 0;
-                        const bStarts = b.nameLowerCase.indexOf(filter) === 0;
-
-                        if (aStarts && !bStarts) {
-                            return -1;
-                        } else if (bStarts && !aStarts) {
-                            return 1;
-                        }
-                    }
-                    if (a.nameLowerCase < b.nameLowerCase) {
+                    if (a.starts && !b.starts) {
                         return -1;
-                    } else if (a.nameLowerCase > b.nameLowerCase) {
+                    } else if (b.starts && !a.starts) {
                         return 1;
+                    } else if (a.nameLowerCase < b.nameLowerCase) {
+                        return -1;
                     } else {
                         return 1;
                     }
                 });
+
+            this.bigListScroller.reset();
+            this.bigListScroller.addElements(albums);
         },
 
         onFilterKeyDown: function (e: KeyboardEvent) {
@@ -489,8 +495,21 @@ export default defineComponent({
                 })
             );
         },
+
+        onScroll: function (e) {
+            this.bigListScroller.checkElementScroll(e.target);
+        },
     },
     mounted: function () {
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
+            get: () => {
+                return this.albums;
+            },
+            set: (list) => {
+                this.albums = list;
+            },
+        });
+
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onUpdateStatus.bind(this));
