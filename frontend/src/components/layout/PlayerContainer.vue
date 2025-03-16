@@ -314,6 +314,7 @@ export default defineComponent({
 
         focusLost: function () {
             closeFullscreen();
+            this.fullScreen = false;
         },
 
         checkPlayerSize() {
