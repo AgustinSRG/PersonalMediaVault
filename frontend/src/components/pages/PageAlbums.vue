@@ -4,16 +4,16 @@
             <div class="search-results-options">
                 <div class="search-results-option">
                     <input
+                        v-model="filter"
                         type="text"
                         class="form-control form-control-full-width auto-focus"
                         autocomplete="off"
-                        v-model="filter"
                         :placeholder="$t('Filter by name') + '...'"
                         @input="changeFilter"
                     />
                 </div>
                 <div class="search-results-option text-right">
-                    <button v-if="canWrite" type="button" @click="createAlbum" class="btn btn-primary">
+                    <button v-if="canWrite" type="button" class="btn btn-primary" @click="createAlbum">
                         <i class="fas fa-plus"></i> {{ $t("Create album") }}
                     </button>
                 </div>
@@ -50,7 +50,7 @@
                     {{ $t("This vault does not have any albums yet") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="refreshAlbums" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" @click="refreshAlbums">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>
                 </div>
@@ -64,7 +64,7 @@
                     {{ $t("Could not find any albums matching your filter") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="clearFilter" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" @click="clearFilter">
                         <i class="fas fa-times"></i> {{ $t("Clear filter") }}
                     </button>
                 </div>
@@ -74,10 +74,10 @@
                 <div v-for="item in pageItems" :key="item.id" class="search-result-item">
                     <a
                         class="clickable"
-                        @click="goToAlbum(item, $event)"
                         :href="getAlbumURL(item.id)"
                         target="_blank"
                         rel="noopener noreferrer"
+                        @click="goToAlbum(item, $event)"
                         ><div
                             class="search-result-thumb"
                             :title="
@@ -90,11 +90,11 @@
                                     <i class="fas fa-list-ol"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div class="search-result-thumb-tag" :title="$t('Empty')" v-if="item.size == 0">({{ $t("Empty") }})</div>
-                                <div class="search-result-thumb-tag" :title="'1' + $t('item')" v-else-if="item.size == 1">
+                                <div v-if="item.size == 0" class="search-result-thumb-tag" :title="$t('Empty')">({{ $t("Empty") }})</div>
+                                <div v-else-if="item.size == 1" class="search-result-thumb-tag" :title="'1' + $t('item')">
                                     1 {{ $t("item") }}
                                 </div>
-                                <div class="search-result-thumb-tag" :title="item.size + $t('items')" v-else-if="item.size > 1">
+                                <div v-else-if="item.size > 1" class="search-result-thumb-tag" :title="item.size + $t('items')">
                                     {{ item.size }} {{ $t("items") }}
                                 </div>
                             </div>
@@ -140,7 +140,6 @@ import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
     name: "PageAlbums",
-    emits: [],
     components: {
         PageMenu,
         AlbumCreateModal,
@@ -157,6 +156,7 @@ export default defineComponent({
         minItemsSize: Number,
         maxItemsSize: Number,
     },
+    emits: [],
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
@@ -203,6 +203,44 @@ export default defineComponent({
 
             return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
         },
+    },
+    watch: {
+        display: function () {
+            this.load();
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+        pageSize: function () {
+            this.updatePageSize();
+        },
+    },
+    mounted: function () {
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.updateList.bind(this));
+
+        this.updateSearchParams();
+        this.load();
+
+        if (this.display) {
+            this.autoFocus();
+        }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
+        this.windowResizeObserver.disconnect();
     },
     methods: {
         scrollToTop: function () {
@@ -471,44 +509,6 @@ export default defineComponent({
 
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.updateList.bind(this));
-
-        this.updateSearchParams();
-        this.load();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-
-        this.windowWidth = this.$el.getBoundingClientRect().width;
-
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-        this.windowResizeObserver.observe(this.$el);
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        this.windowResizeObserver.disconnect();
-    },
-    watch: {
-        display: function () {
-            this.load();
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        pageSize: function () {
-            this.updatePageSize();
         },
     },
 });

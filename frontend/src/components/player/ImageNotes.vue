@@ -73,6 +73,7 @@
             ></div>
 
             <div
+                v-if="editing && !moving && !resizing && selectedNotes === note.id"
                 class="image-notes-text-edit"
                 :class="{
                     top: note.y + note.h / 2 < imageHeight / 2,
@@ -80,7 +81,6 @@
                     bottom: note.y + note.h / 2 >= imageHeight / 2,
                     right: note.x + note.w / 2 >= imageWidth / 2,
                 }"
-                v-if="editing && !moving && !resizing && selectedNotes === note.id"
                 tabindex="-1"
                 @dblclick="stopPropagationEvent"
                 @keydown="stopPropagationEvent"
@@ -91,9 +91,9 @@
             >
                 <div class="form-group">
                     <textarea
+                        v-model="note.text"
                         class="form-control form-textarea form-control-full-width auto-focus"
                         :placeholder="$t('Type the notes text') + '...'"
-                        v-model="note.text"
                         @change="saveNote(note)"
                     ></textarea>
                 </div>
@@ -119,15 +119,15 @@
         ></div>
 
         <div
-            class="image-notes-hover"
             v-if="!editing && selectedNote"
-            v-html="escapeText(selectedNote.text)"
+            class="image-notes-hover"
             :style="{
                 top: hoverTop,
                 bottom: hoverBottom,
                 left: hoverLeft,
                 right: hoverRight,
             }"
+            v-html="escapeText(selectedNote.text)"
         ></div>
     </div>
 </template>
@@ -146,7 +146,6 @@ import { PagesController } from "@/control/pages";
 
 export default defineComponent({
     name: "ImageNotes",
-    emits: [],
     props: {
         top: String,
         left: String,
@@ -159,6 +158,7 @@ export default defineComponent({
 
         contextOpen: Boolean,
     },
+    emits: [],
 
     data: function () {
         return {
@@ -205,6 +205,54 @@ export default defineComponent({
             hoverBottom: "",
             hoverPinned: false,
         };
+    },
+
+    watch: {
+        top: function () {
+            this.updateRealDimensions();
+        },
+
+        left: function () {
+            this.updateRealDimensions();
+        },
+
+        width: function () {
+            this.updateRealDimensions();
+        },
+
+        height: function () {
+            this.updateRealDimensions();
+        },
+    },
+
+    mounted: function () {
+        this.updateRealDimensions();
+
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
+            switch (mode) {
+                case "push":
+                    this.onNotesPush(note);
+                    break;
+                case "rm":
+                    this.onNotesRemove(index);
+                    break;
+                case "update":
+                    this.onNotesChange(index, note);
+                    break;
+            }
+        });
+
+        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
+
+        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
+
+        this.onNotesUpdate();
+
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED, this.onNotesSaved.bind(this));
     },
 
     methods: {
@@ -605,54 +653,6 @@ export default defineComponent({
 
         onNotesSaved: function () {
             PagesController.ShowSnackBar(this.$t("Image notes have been saved"));
-        },
-    },
-
-    mounted: function () {
-        this.updateRealDimensions();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.onNotesUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_CHANGE, (mode: "push" | "rm" | "update", note?: ImageNote, index?: number) => {
-            switch (mode) {
-                case "push":
-                    this.onNotesPush(note);
-                    break;
-                case "rm":
-                    this.onNotesRemove(index);
-                    break;
-                case "update":
-                    this.onNotesChange(index, note);
-                    break;
-            }
-        });
-
-        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
-
-        this.onNotesUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED, this.onNotesSaved.bind(this));
-    },
-
-    watch: {
-        top: function () {
-            this.updateRealDimensions();
-        },
-
-        left: function () {
-            this.updateRealDimensions();
-        },
-
-        width: function () {
-            this.updateRealDimensions();
-        },
-
-        height: function () {
-            this.updateRealDimensions();
         },
     },
 });

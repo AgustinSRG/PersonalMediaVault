@@ -1,8 +1,8 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busyThumbnail"
     >
         <div v-if="display" class="modal-dialog modal-md" role="document" @drop="onDrop">
@@ -17,10 +17,10 @@
             <div class="modal-body">
                 <div class="form-group flex-center">
                     <label v-if="!thumbnail">{{ $t("No thumbnail set for this album") }}</label>
-                    <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" className="form-group-thumbnail"></ThumbImage>
+                    <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" class-name="form-group-thumbnail"></ThumbImage>
                 </div>
                 <div class="form-group">
-                    <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
+                    <input type="file" class="file-hidden" name="thumbnail-upload" @change="inputFileChanged" />
                     <div class="text-center">
                         <button v-if="!busyThumbnail" type="button" class="btn btn-primary image-thumbnail-button" @click="uploadThumbnail">
                             <i class="fas fa-upload"></i> {{ $t("Upload new thumbnail") }}
@@ -29,13 +29,13 @@
                             <i class="fa fa-spinner fa-spin"></i> {{ $t("Uploading thumbnail") }}...
                         </button>
                     </div>
-                    <div class="text-center form-group-pt" v-if="currentMediaThumbnail">
+                    <div v-if="currentMediaThumbnail" class="text-center form-group-pt">
                         <button
                             type="button"
                             class="btn btn-primary btn-sm image-thumbnail-button"
                             :title="$t('Set current media thumbnail')"
-                            @click="setCurrentMediaThumbnail"
                             :disabled="busyThumbnail"
+                            @click="setCurrentMediaThumbnail"
                         >
                             <i class="fas fa-image"></i> {{ $t("Set current media thumbnail") }}
                         </button>
@@ -67,13 +67,20 @@ import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
+    name: "AlbumChangeThumbnailModal",
     components: {
         ThumbImage,
     },
-    name: "AlbumChangeThumbnailModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
+    },
+    emits: ["update:display"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+            requestIdThumbnail: getUniqueStringId(),
+            fetchMediaThumbnailAbortController: null as AbortController | null,
+        };
     },
     data: function () {
         return {
@@ -90,12 +97,34 @@ export default defineComponent({
             currentMediaThumbnail: "",
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-            requestIdThumbnail: getUniqueStringId(),
-            fetchMediaThumbnailAbortController: null as AbortController | null,
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.errorThumbnail = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+
+        this.onAlbumUpdate();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
+
+        this.onMediaUpdate();
+
+        if (this.display) {
+            this.errorThumbnail = "";
+            this.autoFocus();
+        }
+    },
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestIdThumbnail);
+
+        if (this.fetchMediaThumbnailAbortController) {
+            this.fetchMediaThumbnailAbortController.abort();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -259,35 +288,6 @@ export default defineComponent({
                     this.errorThumbnail = this.$t("Error") + ": " + err.message;
                     this.busyThumbnail = false;
                 });
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
-
-        this.onAlbumUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
-
-        this.onMediaUpdate();
-
-        if (this.display) {
-            this.errorThumbnail = "";
-            this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdThumbnail);
-
-        if (this.fetchMediaThumbnailAbortController) {
-            this.fetchMediaThumbnailAbortController.abort();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.errorThumbnail = "";
-                this.autoFocus();
-            }
         },
     },
 });

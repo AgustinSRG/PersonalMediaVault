@@ -92,8 +92,8 @@
             v-if="isDisplayed && page === 'home'"
             :display="isDisplayed && page === 'home'"
             :min="min"
-            :pageSize="pageSize"
-            :displayTitles="displayTitles"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
             :row-size="rowSize"
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
@@ -103,8 +103,8 @@
             v-if="isDisplayed && page === 'search'"
             :display="isDisplayed && page === 'search'"
             :min="min"
-            :pageSize="pageSize"
-            :displayTitles="displayTitles"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
             :row-size="rowSize"
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
@@ -115,8 +115,8 @@
             v-if="isDisplayed && page === 'random'"
             :display="isDisplayed && page === 'random'"
             :min="min"
-            :pageSize="pageSize"
-            :displayTitles="displayTitles"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
             :row-size="rowSize"
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
@@ -124,13 +124,13 @@
         ></PageRandom>
         <PageAdvancedSearch
             v-if="isDisplayed && page === 'adv-search'"
+            v-model:page-scroll="pageScroll"
             :display="isDisplayed && page === 'adv-search'"
             :min="min"
-            :inModal="false"
-            :noAlbum="-1"
-            v-model:pageScroll="pageScroll"
-            :pageSize="pageSize"
-            :displayTitles="displayTitles"
+            :in-modal="false"
+            :no-album="-1"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
             :row-size="rowSize"
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
@@ -140,8 +140,8 @@
             v-if="isDisplayed && page === 'albums'"
             :display="isDisplayed && page === 'albums'"
             :min="min"
-            :pageSize="pageSize"
-            :displayTitles="displayTitles"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
             :row-size="rowSize"
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
@@ -207,6 +207,7 @@ const PageSettingsDropdown = defineAsyncComponent({
 });
 
 export default defineComponent({
+    name: "PageContent",
     components: {
         PageHome,
         PageSearch,
@@ -216,11 +217,10 @@ export default defineComponent({
         PageAdvancedSearch,
         PageSettingsDropdown,
     },
-    name: "PageContent",
-    emits: [],
     props: {
         min: Boolean,
     },
+    emits: [],
     data: function () {
         const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {
@@ -249,6 +249,15 @@ export default defineComponent({
 
             pageScroll: 0,
         };
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updatePage.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
+
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
+
+        this.updateSearchParams();
     },
     methods: {
         updatePage: function () {
@@ -422,15 +431,6 @@ export default defineComponent({
                 e.stopPropagation();
             }
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updatePage.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
-
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
-
-        this.updateSearchParams();
     },
 });
 </script>

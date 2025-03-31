@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Create account") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -11,9 +11,9 @@
                 <div class="form-group">
                     <label>{{ $t("Account name") }}:</label>
                     <input
+                        v-model="accountUsername"
                         type="text"
                         autocomplete="off"
-                        v-model="accountUsername"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -23,9 +23,9 @@
                 <div class="form-group">
                     <label>{{ $t("Account password") }}:</label>
                     <input
+                        v-model="accountPassword"
                         type="password"
                         autocomplete="new-password"
-                        v-model="accountPassword"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width"
@@ -35,9 +35,9 @@
                 <div class="form-group">
                     <label>{{ $t("Account password") }} ({{ $t("Again") }}):</label>
                     <input
+                        v-model="accountPassword2"
                         type="password"
                         autocomplete="new-password"
-                        v-model="accountPassword2"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width"
@@ -75,14 +75,14 @@ import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "AccountCreateModal",
     components: {
         LoadingIcon,
     },
-    name: "AccountCreateModal",
-    emits: ["update:display", "account-created"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display", "account-created"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -101,6 +101,21 @@ export default defineComponent({
             closeSignal: 0,
         };
     },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
+        }
+    },
+    beforeUnmount: function () {},
     methods: {
         autoFocus: function () {
             nextTick(() => {
@@ -184,21 +199,6 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {},
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
         },
     },
 });

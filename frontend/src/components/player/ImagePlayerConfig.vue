@@ -129,9 +129,8 @@ import { FocusTrap } from "../../utils/focus-trap";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
-    components: { ToggleSwitch },
     name: "ImagePlayerConfig",
-    emits: ["update:shown", "update:resolution", "update:background", "update-auto-next", "update-notes-visible", "enter", "leave"],
+    components: { ToggleSwitch },
     props: {
         shown: Boolean,
         metadata: Object,
@@ -139,6 +138,7 @@ export default defineComponent({
         background: String,
         rTick: Number,
     },
+    emits: ["update:shown", "update:resolution", "update:background", "update-auto-next", "update-notes-visible", "enter", "leave"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -156,6 +156,29 @@ export default defineComponent({
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
             hideNotes: !getImageNotesVisible(),
         };
+    },
+    watch: {
+        shown: function () {
+            this.page = "";
+            if (this.shown) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+        rTick: function () {
+            this.updateResolutions();
+        },
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+        this.updateResolutions();
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         changeResolution: function (i) {
@@ -315,29 +338,6 @@ export default defineComponent({
                 this.close();
                 e.stopPropagation();
             }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
-        this.updateResolutions();
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        shown: function () {
-            this.page = "";
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-        rTick: function () {
-            this.updateResolutions();
         },
     },
 });

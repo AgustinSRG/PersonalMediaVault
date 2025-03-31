@@ -22,7 +22,6 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "ModalDialogContainer",
-    emits: ["update:display", "key", "close"],
     props: {
         display: Boolean,
         lockClose: Boolean,
@@ -31,6 +30,7 @@ export default defineComponent({
         forceCloseSignal: Number,
         closeCallback: Function,
     },
+    emits: ["update:display", "key", "close"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -41,6 +41,42 @@ export default defineComponent({
         return {
             closing: false,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.closing = false;
+                if (this.focusTrap) {
+                    this.focusTrap.activate();
+                }
+            } else {
+                if (this.focusTrap) {
+                    this.focusTrap.deactivate();
+                }
+            }
+        },
+        closeSignal: function () {
+            if (this.closeSignal > 0) {
+                this.close();
+            }
+        },
+        forceCloseSignal: function () {
+            if (this.forceCloseSignal > 0) {
+                this.close(true);
+            }
+        },
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
+
+        if (this.display) {
+            this.focusTrap.activate();
+        }
+    },
+    beforeUnmount: function () {
+        if (this.focusTrap) {
+            this.focusTrap.destroy();
+        }
     },
     methods: {
         close: function (forced?: boolean) {
@@ -96,42 +132,6 @@ export default defineComponent({
         focusLost: function () {
             if (this.display) {
                 this.$el.focus();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
-
-        if (this.display) {
-            this.focusTrap.activate();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.focusTrap) {
-            this.focusTrap.destroy();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.closing = false;
-                if (this.focusTrap) {
-                    this.focusTrap.activate();
-                }
-            } else {
-                if (this.focusTrap) {
-                    this.focusTrap.deactivate();
-                }
-            }
-        },
-        closeSignal: function () {
-            if (this.closeSignal > 0) {
-                this.close();
-            }
-        },
-        forceCloseSignal: function () {
-            if (this.forceCloseSignal > 0) {
-                this.close(true);
             }
         },
     },

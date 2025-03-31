@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Modify account") }}
@@ -18,9 +18,9 @@
                 <div class="form-group">
                     <label>{{ $t("Account name") }}:</label>
                     <input
+                        v-model="accountUsername"
                         type="text"
                         autocomplete="off"
-                        v-model="accountUsername"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -56,15 +56,20 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { apiAdminUpdateAccount } from "@/api/api-admin";
 
 export default defineComponent({
+    name: "AccountModifyModal",
     components: {
         LoadingIcon,
     },
-    name: "AccountModifyModal",
-    emits: ["update:display", "done"],
     props: {
         display: Boolean,
         username: String,
         write: Boolean,
+    },
+    emits: ["update:display", "done"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -80,10 +85,25 @@ export default defineComponent({
             forceCloseSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
+        username: function () {
+            this.accountUsername = this.username || "";
+        },
+        write: function () {
+            this.accountWrite = this.write || false;
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -157,26 +177,6 @@ export default defineComponent({
                     console.error(err);
                     this.busy = false;
                 });
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
-        },
-        username: function () {
-            this.accountUsername = this.username || "";
-        },
-        write: function () {
-            this.accountWrite = this.write || false;
         },
     },
 });

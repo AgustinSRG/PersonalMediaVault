@@ -25,24 +25,24 @@
                         <div class="page-settings-label">{{ $t("Max items per page") }}</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="pageSize"
                                 type="range"
                                 class="form-range"
-                                v-model.number="pageSize"
-                                @input="markDirty"
                                 :min="1"
                                 :max="256"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="pageSize"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="pageSize"
-                                @input="markDirty"
                                 :min="1"
                                 :max="256"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -51,24 +51,24 @@
                         <div class="page-settings-label">{{ $t("Preferred row size") }}</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="rowSize"
                                 type="range"
                                 class="form-range"
-                                v-model.number="rowSize"
-                                @input="markDirty"
                                 :min="computedMinRowSize"
                                 :max="computedMaxRowSize"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="rowSize"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="rowSize"
-                                @input="markDirty"
                                 :min="1"
                                 :max="256"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -77,24 +77,24 @@
                         <div class="page-settings-label">{{ $t("Preferred row size") }} ({{ $t("For screen split mode") }})</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="rowSizeMin"
                                 type="range"
                                 class="form-range"
-                                v-model.number="rowSizeMin"
-                                @input="markDirty"
                                 :min="computedMinRowSizeMin"
                                 :max="computedMaxRowSizeMin"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="rowSizeMin"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="rowSizeMin"
-                                @input="markDirty"
                                 :min="1"
                                 :max="256"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -103,24 +103,24 @@
                         <div class="page-settings-label">{{ $t("Min size of cells (pixels)") }}</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="minItemSize"
                                 type="range"
                                 class="form-range"
-                                v-model.number="minItemSize"
-                                @input="markDirty"
                                 :min="25"
                                 :max="250"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="minItemSize"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="minItemSize"
-                                @input="markDirty"
                                 :min="25"
                                 :max="500"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -129,24 +129,24 @@
                         <div class="page-settings-label">{{ $t("Max size of cells (pixels)") }}</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="maxItemSize"
                                 type="range"
                                 class="form-range"
-                                v-model.number="maxItemSize"
-                                @input="markDirty"
                                 :min="250"
                                 :max="750"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="maxItemSize"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="maxItemSize"
-                                @input="markDirty"
                                 :min="25"
                                 :max="1000"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -155,24 +155,24 @@
                         <div class="page-settings-label">{{ $t("Cell padding (pixels)") }}</div>
                         <div class="page-settings-range">
                             <input
+                                v-model.number="padding"
                                 type="range"
                                 class="form-range"
-                                v-model.number="padding"
-                                @input="markDirty"
                                 :min="0"
                                 :max="32"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                         <div class="page-settings-input">
                             <input
+                                v-model.number="padding"
                                 type="number"
                                 class="form-control form-control-full-width"
-                                v-model.number="padding"
-                                @input="markDirty"
                                 :min="0"
                                 :max="64"
                                 :step="1"
+                                @input="markDirty"
                             />
                         </div>
                     </div>
@@ -217,11 +217,11 @@ export default defineComponent({
     components: {
         ToggleSwitch,
     },
-    emits: ["update:display"],
     props: {
         display: Boolean,
         page: String,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -264,6 +264,46 @@ export default defineComponent({
         computedMinRowSizeMin() {
             return Math.max(1, Math.floor(Math.min(500, window.innerWidth) / Math.max(1, this.maxItemSize)));
         },
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.reset();
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+        page: function () {
+            if (this.display) {
+                this.reset();
+            }
+        },
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "page-header-btn");
+
+        this.reset();
+
+        if (this.display) {
+            this.focusTrap.activate();
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        if (this.saveChangesTimer) {
+            clearTimeout(this.saveChangesTimer);
+            this.saveChangesTimer = null;
+
+            this.saveChanges();
+        }
+
+        this.focusTrap.destroy();
     },
     methods: {
         close: function () {
@@ -342,46 +382,6 @@ export default defineComponent({
         resetDefaultValues: function () {
             resetPagePreferences(this.page);
             this.reset();
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "page-header-btn");
-
-        this.reset();
-
-        if (this.display) {
-            this.focusTrap.activate();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        if (this.saveChangesTimer) {
-            clearTimeout(this.saveChangesTimer);
-            this.saveChangesTimer = null;
-
-            this.saveChanges();
-        }
-
-        this.focusTrap.destroy();
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.reset();
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-        page: function () {
-            if (this.display) {
-                this.reset();
-            }
         },
     },
 });

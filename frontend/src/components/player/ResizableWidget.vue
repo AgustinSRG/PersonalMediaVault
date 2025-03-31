@@ -3,17 +3,17 @@
         class="resizable-widget"
         :class="{ hidden: !display }"
         tabindex="-1"
-        @keydown="onKeyDown"
-        @dblclick="stopPropagationEvent"
-        @mousedown="propagateClick"
-        @touchstart="propagateTouch"
-        @contextmenu="stopPropagationEvent"
         :style="{
             top: y + 'px',
             left: x + 'px',
             width: width + 'px',
             height: height + 'px',
         }"
+        @keydown="onKeyDown"
+        @dblclick="stopPropagationEvent"
+        @mousedown="propagateClick"
+        @touchstart="propagateTouch"
+        @contextmenu="stopPropagationEvent"
     >
         <div class="resizable-widget-header" @mousedown="startMoving($event, true)" @touchstart.passive="startMoving($event, false)">
             <div class="resizable-widget-title">{{ title }}</div>
@@ -24,14 +24,14 @@
                     type="button"
                     :disabled="busy"
                     class="action-button"
-                    @click="doActionButton(btn.id)"
                     :title="btn.name"
+                    @click="doActionButton(btn.id)"
                 >
                     <i :class="btn.icon"></i>
                 </button>
             </div>
             <div class="resizable-widget-close-btn">
-                <button type="button" :disabled="busy" class="close-button" @click="close" :title="$t('Close')">
+                <button type="button" :disabled="busy" class="close-button" :title="$t('Close')" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -105,7 +105,6 @@ export interface ActionButton {
 
 export default defineComponent({
     name: "ResizableWidget",
-    emits: ["update:display", "clicked", "action-btn"],
     props: {
         display: Boolean,
         positionKey: String,
@@ -114,6 +113,7 @@ export default defineComponent({
         actionButtons: Array as PropType<ActionButton[]>,
         busy: Boolean,
     },
+    emits: ["update:display", "clicked", "action-btn"],
     setup(props) {
         return {
             fixPositionTimer: null,
@@ -143,6 +143,30 @@ export default defineComponent({
             resizeStartY: 0,
             resizeMode: "",
         };
+    },
+
+    watch: {
+        positionKey: function () {
+            this.loadPosition();
+        },
+    },
+
+    mounted: function () {
+        this.fixPositionTimer = setInterval(this.fixPosition.bind(this), 1000);
+
+        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
+
+        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
+
+        nextTick(() => {
+            this.loadPosition();
+        });
+    },
+
+    beforeUnmount: function () {
+        clearInterval(this.fixPositionTimer);
     },
 
     methods: {
@@ -498,30 +522,6 @@ export default defineComponent({
 
         doActionButton(id: string) {
             this.$emit("action-btn", id);
-        },
-    },
-
-    mounted: function () {
-        this.fixPositionTimer = setInterval(this.fixPosition.bind(this), 1000);
-
-        this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
-
-        this.$listenOnDocumentEvent("mouseup", this.mouseDrop.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
-
-        nextTick(() => {
-            this.loadPosition();
-        });
-    },
-
-    beforeUnmount: function () {
-        clearInterval(this.fixPositionTimer);
-    },
-
-    watch: {
-        positionKey: function () {
-            this.loadPosition();
         },
     },
 });

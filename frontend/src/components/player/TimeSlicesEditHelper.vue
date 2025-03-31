@@ -1,9 +1,9 @@
 <template>
     <div class="resizable-widget-container">
         <ResizableWidget
-            :title="$t('Time slices')"
             v-model:display="displayStatus"
-            :contextOpen="contextOpen"
+            :title="$t('Time slices')"
+            :context-open="contextOpen"
             :position-key="'time-slices-helper-pos'"
             @clicked="propagateClick"
         >
@@ -29,8 +29,8 @@
                             <td v-if="!slice.deleted" class="one-line">
                                 <input
                                     v-if="sliceEditIndex === i"
-                                    type="text"
                                     v-model="sliceEditTimestamp"
+                                    type="text"
                                     class="form-control form-control-full-width"
                                     placeholder="00:00:00"
                                 />
@@ -39,8 +39,8 @@
                             <td v-if="!slice.deleted">
                                 <input
                                     v-if="sliceEditIndex === i"
-                                    type="text"
                                     v-model="sliceEditName"
+                                    type="text"
                                     class="form-control form-control-full-width auto-focus"
                                     @keydown="keyDownEdit"
                                 />
@@ -51,8 +51,8 @@
                                     v-if="sliceEditIndex < 0"
                                     type="button"
                                     class="time-slices-edit-helper-btn mr-1"
-                                    @click="editSlice(i)"
                                     :title="$t('Edit')"
+                                    @click="editSlice(i)"
                                 >
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
@@ -60,8 +60,8 @@
                                     v-if="sliceEditIndex === i"
                                     type="button"
                                     class="time-slices-edit-helper-btn mr-1"
-                                    @click="finishEdit"
                                     :title="$t('Save')"
+                                    @click="finishEdit"
                                 >
                                     <i class="fas fa-check"></i>
                                 </button>
@@ -71,8 +71,8 @@
                                     v-if="sliceEditIndex < 0"
                                     type="button"
                                     class="time-slices-edit-helper-btn"
-                                    @click="deleteSlice(i)"
                                     :title="$t('Delete')"
+                                    @click="deleteSlice(i)"
                                 >
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -80,8 +80,8 @@
                                     v-if="sliceEditIndex === i"
                                     type="button"
                                     class="time-slices-edit-helper-btn"
-                                    @click="cancelEdit"
                                     :title="$t('Cancel')"
+                                    @click="cancelEdit"
                                 >
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -93,23 +93,23 @@
                         <tr v-if="canWrite && sliceEditIndex < 0">
                             <td>
                                 <input
-                                    type="text"
                                     v-model="sliceAddTimestamp"
+                                    type="text"
                                     class="form-control form-control-full-width"
                                     :placeholder="timeSlicesArray.length > 0 ? '00:01:00' : '00:00:00'"
                                 />
                             </td>
                             <td colspan="2">
                                 <input
-                                    type="text"
                                     v-model="sliceAddName"
+                                    type="text"
                                     class="form-control form-control-full-width auto-focus"
                                     :placeholder="timeSlicesArray.length > 0 ? $t('Rest of the video') : $t('Opening')"
                                     @keydown="keyDownAdd"
                                 />
                             </td>
                             <td class="td-shrink text-right">
-                                <button type="button" class="time-slices-edit-helper-btn" @click="addSlice" :title="$t('Add')">
+                                <button type="button" class="time-slices-edit-helper-btn" :title="$t('Add')" @click="addSlice">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </td>
@@ -222,16 +222,16 @@ function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
 }
 
 export default defineComponent({
+    name: "TimeSlicesEditHelper",
     components: {
         ResizableWidget,
     },
-    name: "TimeSlicesEditHelper",
-    emits: ["update:display", "update-time-slices", "clicked"],
     props: {
         display: Boolean,
         contextOpen: Boolean,
         currentTime: Number,
     },
+    emits: ["update:display", "update-time-slices", "clicked"],
     setup(props) {
         return {
             saveState: {
@@ -257,6 +257,52 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
         };
+    },
+
+    watch: {
+        currentTime: function () {
+            this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
+        },
+
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    const elem = this.$el.querySelector(".auto-focus");
+
+                    if (elem) {
+                        elem.focus();
+                        elem.select();
+                    }
+                });
+            }
+        },
+    },
+
+    mounted: function () {
+        this.saveState.callback = this.onSaved.bind(this);
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
+
+        this.updateMediaData();
+
+        if (this.display) {
+            nextTick(() => {
+                const elem = this.$el.querySelector(".auto-focus");
+
+                if (elem) {
+                    elem.focus();
+                    elem.select();
+                }
+            });
+        }
+    },
+
+    beforeUnmount: function () {
+        this.saveState.callback = null;
     },
 
     methods: {
@@ -447,52 +493,6 @@ export default defineComponent({
                 event.preventDefault();
                 event.stopPropagation();
                 this.finishEdit();
-            }
-        },
-    },
-
-    mounted: function () {
-        this.saveState.callback = this.onSaved.bind(this);
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
-
-        this.updateMediaData();
-
-        if (this.display) {
-            nextTick(() => {
-                const elem = this.$el.querySelector(".auto-focus");
-
-                if (elem) {
-                    elem.focus();
-                    elem.select();
-                }
-            });
-        }
-    },
-
-    beforeUnmount: function () {
-        this.saveState.callback = null;
-    },
-
-    watch: {
-        currentTime: function () {
-            this.sliceAddTimestamp = renderTimeSeconds(this.currentTime || 0);
-        },
-
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    const elem = this.$el.querySelector(".auto-focus");
-
-                    if (elem) {
-                        elem.focus();
-                        elem.select();
-                    }
-                });
             }
         },
     },

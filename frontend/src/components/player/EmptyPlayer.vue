@@ -7,7 +7,7 @@
         }"
         @dblclick="toggleFullScreen"
     >
-        <div class="player-loader" v-if="status === 'loading' || (status === 'none' && albumLoading)">
+        <div v-if="status === 'loading' || (status === 'none' && albumLoading)" class="player-loader">
             <div class="player-lds-ring">
                 <div></div>
                 <div></div>
@@ -16,12 +16,12 @@
             </div>
         </div>
 
-        <div class="player-error-container" v-if="status === '404'">
+        <div v-if="status === '404'" class="player-error-container">
             <div class="player-info-icon"><i class="fas fa-ban"></i></div>
             <div class="player-error">{{ $t("Media asset does not exist or was removed from the vault") }}</div>
         </div>
 
-        <div class="player-error-container" v-if="status === 'none' && !albumLoading">
+        <div v-if="status === 'none' && !albumLoading" class="player-error-container">
             <div class="player-info-icon"><i class="fas fa-list-ol"></i></div>
             <div class="player-info">{{ $t("The album is empty") }}</div>
             <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
@@ -110,13 +110,13 @@
         </div>
 
         <PlayerTopBar
+            v-model:expanded="expandedTitle"
+            v-model:album-expanded="expandedAlbum"
             :mid="mid"
             :metadata="null"
             :shown="true"
             :fullscreen="fullscreen"
-            v-model:expanded="expandedTitle"
-            v-model:albumExpanded="expandedAlbum"
-            :inAlbum="inAlbum"
+            :in-album="inAlbum"
         ></PlayerTopBar>
     </div>
 </template>
@@ -134,12 +134,11 @@ import { AuthController } from "@/control/auth";
 import { isTouchDevice } from "@/utils/touch";
 
 export default defineComponent({
+    name: "EmptyPlayer",
     components: {
         PlayerMediaChangePreview,
         PlayerTopBar,
     },
-    name: "EmptyPlayer",
-    emits: ["go-next", "go-prev", "update:fullscreen", "delete"],
     props: {
         mid: Number,
         status: String,
@@ -161,6 +160,7 @@ export default defineComponent({
 
         min: Boolean,
     },
+    emits: ["go-next", "go-prev", "update:fullscreen", "delete"],
     setup(props) {
         return {
             fullScreenState: useVModel(props, "fullscreen"),
@@ -173,6 +173,16 @@ export default defineComponent({
             expandedTitle: false,
             expandedAlbum: false,
         };
+    },
+    watch: {
+        rTick: function () {
+            this.expandedTitle = false;
+        },
+    },
+    mounted: function () {
+        // Load player preferences
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
+        this.$listenOnAppEvent("fullscreenchange", this.onExitFullScreen.bind(this));
     },
     methods: {
         enterTooltip: function (t: string) {
@@ -280,16 +290,6 @@ export default defineComponent({
             }
 
             return caught;
-        },
-    },
-    mounted: function () {
-        // Load player preferences
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-        this.$listenOnAppEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-    },
-    watch: {
-        rTick: function () {
-            this.expandedTitle = false;
         },
     },
 });

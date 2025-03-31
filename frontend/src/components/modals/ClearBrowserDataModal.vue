@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-md" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Clear browser data") }}</div>
@@ -98,7 +98,6 @@
                 <button
                     type="button"
                     class="modal-footer-btn auto-focus"
-                    @click="submit"
                     :disabled="
                         !clearSavedTimestamps &&
                         !clearSavedAlbumPositions &&
@@ -106,6 +105,7 @@
                         !clearPlayerPreferences &&
                         !clearPagePreferences
                     "
+                    @click="submit"
                 >
                     <i class="fas fa-broom"></i> {{ $t("Clear browser data") }}
                 </button>
@@ -127,12 +127,12 @@ import { AppEvents } from "@/control/app-events";
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 
 export default defineComponent({
-    components: { ToggleSwitch },
     name: "ClearBrowserDataModal",
-    emits: ["update:display"],
+    components: { ToggleSwitch },
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -151,6 +151,18 @@ export default defineComponent({
             clearPagePreferences: false,
             clearResizableWidgets: false,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         close: function () {
@@ -207,18 +219,6 @@ export default defineComponent({
             this.close();
 
             PagesController.ShowSnackBar(this.$t("Successfully cleared browser data!"));
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

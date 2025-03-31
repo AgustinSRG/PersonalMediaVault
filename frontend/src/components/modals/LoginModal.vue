@@ -1,6 +1,6 @@
 <template>
     <div class="modal-container modal-container-login" :class="{ hidden: !display }" tabindex="-1" role="dialog">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("The media vault is locked") }}
@@ -8,10 +8,10 @@
             </div>
             <div class="modal-body">
                 <div class="horizontal-filter-menu two-child no-border">
-                    <a href="javascript:;" @click="changeToCredentials" class="horizontal-filter-menu-item" :class="{ selected: !isCode }"
+                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isCode }" @click="changeToCredentials"
                         ><i class="fas fa-key"></i> {{ $t("Credentials") }}</a
                     >
-                    <a href="javascript:;" @click="changeToCode" class="horizontal-filter-menu-item" :class="{ selected: isCode }"
+                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: isCode }" @click="changeToCode"
                         ><i class="fas fa-user-check"></i> {{ $t("Invite code") }}</a
                     >
                 </div>
@@ -19,9 +19,9 @@
                     <div class="form-group">
                         <label>{{ $t("Username") }}:</label>
                         <input
+                            v-model="username"
                             type="text"
                             name="username"
-                            v-model="username"
                             :disabled="busy"
                             maxlength="255"
                             class="form-control form-control-full-width auto-focus"
@@ -30,9 +30,9 @@
                     <div class="form-group">
                         <label>{{ $t("Password") }}:</label>
                         <input
+                            v-model="password"
                             type="password"
                             name="password"
-                            v-model="password"
                             :disabled="busy"
                             maxlength="255"
                             class="form-control form-control-full-width"
@@ -53,13 +53,13 @@
                     <div class="invite-code-multi-input">
                         <div v-for="(c, i) in code" :key="i" class="invite-code-char-input">
                             <input
+                                v-model="c.c"
                                 type="text"
                                 :disabled="busy"
                                 :class="'form-control auto-focus code-char-' + i"
+                                maxlength="1"
                                 @input="goNextChar(c, i)"
                                 @paste="onPaste($event, i)"
-                                v-model="c.c"
-                                maxlength="1"
                             />
                         </div>
                     </div>
@@ -120,6 +120,20 @@ export default defineComponent({
             error: "",
         };
     },
+    watch: {
+        display: function () {
+            this.error = "";
+            this.autoFocus();
+        },
+    },
+    mounted: function () {
+        this.autoFocus();
+
+        this.timer = setInterval(this.updateNow.bind(this), 200);
+    },
+    beforeUnmount: function () {
+        clearInterval(this.timer);
+    },
     methods: {
         autoFocus: function () {
             if (!this.display) {
@@ -129,8 +143,8 @@ export default defineComponent({
                 const elem = this.$el.querySelector(".auto-focus");
                 if (elem) {
                     elem.focus();
-                    if (this.isCode) {
-                        elem.select && elem.select();
+                    if (this.isCode && elem.select) {
+                        elem.select();
                     }
                 }
             });
@@ -271,7 +285,9 @@ export default defineComponent({
 
                     if (nextInput) {
                         nextInput.focus();
-                        nextInput.select && nextInput.select();
+                        if (nextInput.select) {
+                            nextInput.select();
+                        }
                     }
                 }
 
@@ -283,7 +299,9 @@ export default defineComponent({
 
                 if (nextInput) {
                     nextInput.focus();
-                    nextInput.select && nextInput.select();
+                    if (nextInput.select) {
+                        nextInput.select();
+                    }
                 }
             }
         },
@@ -306,20 +324,6 @@ export default defineComponent({
                 this.goNextChar(this.code[j], j);
             }
         },
-    },
-    mounted: function () {
-        this.autoFocus();
-
-        this.timer = setInterval(this.updateNow.bind(this), 200);
-    },
-    watch: {
-        display: function () {
-            this.error = "";
-            this.autoFocus();
-        },
-    },
-    beforeUnmount: function () {
-        clearInterval(this.timer);
     },
 });
 </script>

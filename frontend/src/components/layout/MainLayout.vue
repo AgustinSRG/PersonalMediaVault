@@ -14,8 +14,8 @@
             'vault-locked': locked,
         }"
     >
-        <a v-if="!locked" href="javascript:;" @click="skipToMainContent" class="skip-to-main-content">{{ $t("Skip to main content") }}</a>
-        <SideBar v-model:display="displaySidebar" :initialLayout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
+        <a v-if="!locked" href="javascript:;" class="skip-to-main-content" @click="skipToMainContent">{{ $t("Skip to main content") }}</a>
+        <SideBar v-model:display="displaySidebar" :initial-layout="layout === 'initial'" @skip-to-content="skipToMainContent"></SideBar>
         <TopBar
             @logout="logout"
             @vault-settings="showVaultSettings"
@@ -74,7 +74,7 @@
 
         <SnackBar></SnackBar>
 
-        <div class="new-version-notice" v-if="newVersionAvailable && !newVersionDismissed">
+        <div v-if="newVersionAvailable && !newVersionDismissed" class="new-version-notice">
             <div class="new-version-notice-msg">
                 {{ $t("You are using an older version of PersonalMediaVault than the server's") }}.
                 {{ $t("Refresh the page in order to use the latest version") }}.
@@ -234,6 +234,7 @@ const InviteModal = defineAsyncComponent({
 });
 
 export default defineComponent({
+    name: "MainLayout",
     components: {
         TopBar,
         BottomBar,
@@ -261,7 +262,6 @@ export default defineComponent({
         InviteModal,
         SnackBar,
     },
-    name: "MainLayout",
     data: function () {
         return {
             theme: getTheme(),
@@ -302,6 +302,19 @@ export default defineComponent({
 
             displayUpload: false,
         };
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.onThemeChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthStatusChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_LOADING, this.onAuthStatusLoading.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_ERROR, this.onAuthLoadingError.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_NEW_VERSION, this.onNewAppVersion.bind(this));
     },
     methods: {
         logout: function () {
@@ -498,19 +511,6 @@ export default defineComponent({
                 console.error(ex);
             }
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.onThemeChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_LOADING, this.onAuthStatusLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_ERROR, this.onAuthLoadingError.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_NEW_VERSION, this.onNewAppVersion.bind(this));
     },
 });
 </script>

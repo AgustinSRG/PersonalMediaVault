@@ -25,6 +25,26 @@ export default defineComponent({
             displayLoader: false,
         };
     },
+    watch: {
+        loading: function () {
+            if (this.loading) {
+                this.onLoadingTrue();
+            } else {
+                this.onLoadingFalse();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.loading) {
+            this.onLoadingTrue();
+        }
+    },
+    beforeUnmount: function () {
+        if (this.displayTimeout) {
+            clearTimeout(this.displayTimeout);
+            this.displayTimeout = null;
+        }
+    },
     methods: {
         getClass: function (displayLoader: boolean, icon: string, extraClass: string): string {
             const classes = [];
@@ -61,26 +81,6 @@ export default defineComponent({
             }
 
             this.displayLoader = false;
-        },
-    },
-    mounted: function () {
-        if (this.loading) {
-            this.onLoadingTrue();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.displayTimeout) {
-            clearTimeout(this.displayTimeout);
-            this.displayTimeout = null;
-        }
-    },
-    watch: {
-        loading: function () {
-            if (this.loading) {
-                this.onLoadingTrue();
-            } else {
-                this.onLoadingFalse();
-            }
         },
     },
 });

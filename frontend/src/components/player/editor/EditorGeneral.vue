@@ -7,16 +7,16 @@
                 <div class="form-group">
                     <label>{{ $t("Title") }}:</label>
                     <input
+                        v-model="title"
                         type="text"
                         autocomplete="off"
                         :readonly="!canWrite"
                         maxlength="255"
                         :disabled="busyTitle"
-                        v-model="title"
                         class="form-control form-control-full-width auto-focus"
                     />
                 </div>
-                <div class="form-group" v-if="canWrite">
+                <div v-if="canWrite" class="form-group">
                     <button
                         v-if="originalTitle !== title || busyTitle || !savedTitle"
                         type="submit"
@@ -45,7 +45,7 @@
                     :disabled="busyDescription"
                 ></textarea>
             </div>
-            <div class="form-group" v-if="canWrite">
+            <div v-if="canWrite" class="form-group">
                 <button
                     v-if="originalDesc !== desc || busyDescription || !savedDescription"
                     type="button"
@@ -63,10 +63,10 @@
 
             <!--- Extra config -->
 
-            <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+            <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
                 <label>{{ $t("Extra media configuration") }}:</label>
             </div>
-            <div class="table-responsive" v-if="type === 2 || type === 3">
+            <div v-if="type === 2 || type === 3" class="table-responsive">
                 <table class="table no-border">
                     <tr v-if="type === 2 || type === 3">
                         <td class="text-right td-shrink">
@@ -95,7 +95,7 @@
                     </tr>
                 </table>
             </div>
-            <div class="form-group loader-delayed-custom" v-if="busyExtra">
+            <div v-if="busyExtra" class="form-group loader-delayed-custom">
                 <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
             </div>
             <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
@@ -109,10 +109,10 @@
             </div>
             <div class="form-group" @drop="onDrop">
                 <label v-if="!thumbnail">{{ $t("No thumbnail set for this media") }}</label>
-                <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" className="form-group-thumbnail"></ThumbImage>
+                <ThumbImage v-if="thumbnail" :src="getThumbnail(thumbnail)" class-name="form-group-thumbnail"></ThumbImage>
             </div>
-            <div class="form-group" v-if="canWrite">
-                <input type="file" class="file-hidden" @change="inputFileChanged" name="thumbnail-upload" />
+            <div v-if="canWrite" class="form-group">
+                <input type="file" class="file-hidden" name="thumbnail-upload" @change="inputFileChanged" />
                 <div class="text-center">
                     <button
                         v-if="!busyThumbnail"
@@ -128,14 +128,14 @@
                     </button>
                 </div>
 
-                <div class="form-group-pt text-center" v-if="mediaElementReady">
+                <div v-if="mediaElementReady" class="form-group-pt text-center">
                     <button
                         v-if="type === 1"
                         type="button"
                         class="btn btn-primary btn-sm image-thumbnail-button"
                         :title="$t('Set current image as thumbnail')"
-                        @click="setCurrentImageAsThumbnail"
                         :disabled="busyThumbnail"
+                        @click="setCurrentImageAsThumbnail"
                     >
                         <i class="fas fa-image"></i> {{ $t("Set current image as thumbnail") }}
                     </button>
@@ -144,8 +144,8 @@
                         type="button"
                         class="btn btn-primary btn-sm image-thumbnail-button"
                         :title="$t('Set current frame as thumbnail')"
-                        @click="setCurrentFrameAsThumbnail"
                         :disabled="busyThumbnail"
+                        @click="setCurrentFrameAsThumbnail"
                     >
                         <i class="fas fa-image"></i> {{ $t("Set current frame as thumbnail") }}
                     </button>
@@ -178,12 +178,12 @@ import {
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 
 export default defineComponent({
+    name: "EditorGeneral",
     components: {
         ToggleSwitch,
         LoadingIcon,
         ThumbImage,
     },
-    name: "EditorGeneral",
     emits: ["changed"],
     setup() {
         return {
@@ -231,6 +231,28 @@ export default defineComponent({
 
             mediaElementReady: false,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.checkMediaElement();
+
+        this.autoFocus();
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestIdTitle);
+        abortNamedApiRequest(this.requestIdDescription);
+        abortNamedApiRequest(this.requestIdThumbnail);
+        abortNamedApiRequest(this.requestIdExtra);
+
+        if (this.mediaElementCheckTimer) {
+            clearTimeout(this.mediaElementCheckTimer);
+        }
     },
 
     methods: {
@@ -647,28 +669,6 @@ export default defineComponent({
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.checkMediaElement();
-
-        this.autoFocus();
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdTitle);
-        abortNamedApiRequest(this.requestIdDescription);
-        abortNamedApiRequest(this.requestIdThumbnail);
-        abortNamedApiRequest(this.requestIdExtra);
-
-        if (this.mediaElementCheckTimer) {
-            clearTimeout(this.mediaElementCheckTimer);
-        }
     },
 });
 </script>

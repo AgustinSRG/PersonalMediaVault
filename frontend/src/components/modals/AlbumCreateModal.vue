@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Create new album") }}
@@ -18,10 +18,10 @@
                 <div class="form-group">
                     <label>{{ $t("Album name") }}:</label>
                     <input
+                        v-model="name"
                         type="text"
                         name="album-name"
                         autocomplete="off"
-                        v-model="name"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -50,13 +50,18 @@ import { apiAlbumsCreateAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "AlbumCreateModal",
     components: {
         LoadingIcon,
     },
-    name: "AlbumCreateModal",
-    emits: ["update:display", "new-album"],
     props: {
         display: Boolean,
+    },
+    emits: ["update:display", "new-album"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -69,10 +74,19 @@ export default defineComponent({
             forceCloseSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -155,20 +169,6 @@ export default defineComponent({
                     console.error(err);
                     this.busy = false;
                 });
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
         },
     },
 });

@@ -2,13 +2,13 @@
     <div class="player-editor-sub-content">
         <!--- Re-Encode -->
 
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <label>
                 {{ $t("If the media resource did not encode properly, try using the button below.") }}
                 {{ $t("If it still does not work, try re-uploading the media.") }}
             </label>
         </div>
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <button type="button" class="btn btn-primary" :disabled="busyReEncode || busyReplace" @click="encodeMedia">
                 <LoadingIcon icon="fas fa-sync-alt" :loading="busyReEncode"></LoadingIcon> {{ $t("Re-Encode") }}
             </button>
@@ -17,14 +17,14 @@
 
         <!--- Replace -->
 
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <label>
                 {{ $t("If you want to replace the media file, try using the button below.") }}
                 {{ $t("You can use it to upgrade the media quality or fix any issues it may have.") }}
             </label>
         </div>
-        <div class="form-group" v-if="canWrite">
-            <input type="file" class="file-hidden replace-file-hidden" @change="replaceFileChanged" name="attachment-upload" />
+        <div v-if="canWrite" class="form-group">
+            <input type="file" class="file-hidden replace-file-hidden" name="attachment-upload" @change="replaceFileChanged" />
             <button
                 v-if="!replacing"
                 type="button"
@@ -46,10 +46,10 @@
 
         <!--- Delete -->
 
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <label>{{ $t("If you want to delete this media resource, click the button below.") }}</label>
         </div>
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <button type="button" class="btn btn-danger" :disabled="busyReEncode || busyReplace" @click="deleteMedia">
                 <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
             </button>
@@ -87,13 +87,13 @@ import { PagesController } from "@/control/pages";
 import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
 
 export default defineComponent({
+    name: "EditorDangerZone",
     components: {
         MediaDeleteModal,
         ReEncodeConfirmationModal,
         ReplaceMediaConfirmationModal,
         LoadingIcon,
     },
-    name: "EditorDangerZone",
     emits: ["changed"],
     setup() {
         return {
@@ -125,6 +125,17 @@ export default defineComponent({
             errorReplace: "",
             errorReEncode: "",
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
     },
 
     methods: {
@@ -312,17 +323,6 @@ export default defineComponent({
                     this.replaceProgress = 0;
                 });
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

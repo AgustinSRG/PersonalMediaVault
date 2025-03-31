@@ -23,7 +23,6 @@
         >
             <div
                 class="player-subtitles"
-                v-html="renderSubtitles(subtitles, allowLineBreaks, allowColors)"
                 :class="{
                     'player-subtitles-s': size === 's',
                     'player-subtitles-m': size === 'm',
@@ -38,6 +37,7 @@
                           }
                         : {}
                 "
+                v-html="renderSubtitles(subtitles, allowLineBreaks, allowColors)"
             ></div>
         </div>
     </div>
@@ -66,6 +66,9 @@ export default defineComponent({
             allowColors: options.allowColors,
             margin: options.margin,
         };
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, this.fetchSubtitlesOptions.bind(this));
     },
     methods: {
         renderSubtitles: function (text: string, allowLineBreaks: boolean, allowColors: boolean): string {
@@ -105,9 +108,6 @@ export default defineComponent({
                 this.margin = options.margin;
             }
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, this.fetchSubtitlesOptions.bind(this));
     },
 });
 </script>

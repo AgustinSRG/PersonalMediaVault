@@ -13,7 +13,7 @@
                         <th class="text-left">{{ $t("ID") }}</th>
                         <th class="text-left">{{ $t("Name") }}</th>
                         <th class="text-right td-shrink"></th>
-                        <th class="text-right td-shrink" v-if="canWrite"></th>
+                        <th v-if="canWrite" class="text-right td-shrink"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,29 +21,29 @@
                         <td colspan="3">
                             {{ $t("There are no audio tracks yet for this media.") }}
                         </td>
-                        <td class="text-right td-shrink" v-if="canWrite"></td>
+                        <td v-if="canWrite" class="text-right td-shrink"></td>
                     </tr>
                     <tr v-for="aud in audios" :key="aud.id">
-                        <td class="bold" v-if="audioRenameSelected !== aud.id">{{ aud.id }}</td>
+                        <td v-if="audioRenameSelected !== aud.id" class="bold">{{ aud.id }}</td>
                         <td v-else>
                             <input
+                                v-model="audioRenameId"
                                 type="text"
                                 maxlength="255"
                                 :disabled="busy || busyDeleting || audioRenameBusy"
                                 class="form-control form-control-full-width"
-                                v-model="audioRenameId"
                                 @keydown="renameInputKeyEventHandler"
                             />
                         </td>
 
-                        <td class="bold" v-if="audioRenameSelected !== aud.id">{{ aud.name }}</td>
+                        <td v-if="audioRenameSelected !== aud.id" class="bold">{{ aud.name }}</td>
                         <td v-else>
                             <input
+                                v-model="audioRenameName"
                                 type="text"
                                 maxlength="255"
                                 :disabled="busy || busyDeleting || audioRenameBusy"
                                 class="form-control form-control-full-width edit-auto-focus"
-                                v-model="audioRenameName"
                                 @keydown="renameInputKeyEventHandler"
                             />
                         </td>
@@ -53,7 +53,7 @@
                                 <i class="fas fa-download"></i> {{ $t("Download") }}
                             </button>
                         </td>
-                        <td class="text-right td-shrink one-line" v-if="audioRenameSelected === aud.id && canWrite">
+                        <td v-if="audioRenameSelected === aud.id && canWrite" class="text-right td-shrink one-line">
                             <button
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
@@ -71,20 +71,20 @@
                                 <i class="fas fa-times"></i> {{ $t("Cancel") }}
                             </button>
                         </td>
-                        <td class="text-right td-shrink one-line" v-else-if="canWrite">
+                        <td v-else-if="canWrite" class="text-right td-shrink one-line">
                             <button
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
-                                @click="startRename(aud)"
                                 :disabled="busy || busyDeleting || audioRenameBusy"
+                                @click="startRename(aud)"
                             >
                                 <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
                             </button>
                             <button
                                 type="button"
                                 class="btn btn-danger btn-xs"
-                                @click="removeAudio(aud)"
                                 :disabled="busy || busyDeleting || audioRenameBusy"
+                                @click="removeAudio(aud)"
                             >
                                 <LoadingIcon icon="fas fa-trash-alt" :loading="busyDeleting && busyDeletingId === aud.id"></LoadingIcon>
                                 {{ $t("Delete") }}
@@ -95,9 +95,9 @@
             </table>
         </div>
 
-        <div class="form-group" v-if="canWrite && type === 2">
+        <div v-if="canWrite && type === 2" class="form-group">
             <label>{{ $t("You can upload extra audio tracks for the video (.mp3)") }}:</label>
-            <input type="file" class="file-hidden audio-file-hidden" @change="audioFileChanged" name="mp3-upload" accept=".mp3" />
+            <input type="file" class="file-hidden audio-file-hidden" name="mp3-upload" accept=".mp3" @change="audioFileChanged" />
             <button v-if="!audioFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectAudioFile">
                 <i class="fas fa-upload"></i> {{ $t("Select audio file") }}
             </button>
@@ -106,15 +106,15 @@
                 <i class="fas fa-upload"></i> {{ $t("Audio file") }}: {{ audioFileName }}
             </button>
         </div>
-        <div class="form-group" v-if="canWrite && type === 2">
+        <div v-if="canWrite && type === 2" class="form-group">
             <label>{{ $t("Audio track identifier") }}:</label>
-            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioId" class="form-control" />
+            <input v-model="audioId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
         </div>
-        <div class="form-group" v-if="canWrite && type === 2">
+        <div v-if="canWrite && type === 2" class="form-group">
             <label>{{ $t("Audio track name") }}:</label>
-            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="audioName" class="form-control" />
+            <input v-model="audioName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
         </div>
-        <div class="form-group" v-if="canWrite && type === 2">
+        <div v-if="canWrite && type === 2" class="form-group">
             <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!audioId || !audioName || !audioFile" @click="addAudio">
                 <i class="fas fa-plus"></i> {{ $t("Add audio track file") }}
             </button>
@@ -129,7 +129,7 @@
 
         <AudioTrackDeleteModal
             v-model:display="displayAudioTrackDelete"
-            :trackToDelete="trackToDelete"
+            :track-to-delete="trackToDelete"
             @confirm="removeAudioConfirm"
         ></AudioTrackDeleteModal>
     </div>
@@ -152,11 +152,11 @@ import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
 
 export default defineComponent({
+    name: "EditorAudios",
     components: {
         LoadingIcon,
         AudioTrackDeleteModal,
     },
-    name: "EditorAudios",
     emits: ["changed"],
     setup() {
         return {
@@ -192,6 +192,19 @@ export default defineComponent({
             displayAudioTrackDelete: false,
             trackToDelete: null as MediaAudioTrack,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestIdAdd);
+        abortNamedApiRequest(this.requestIdRename);
+        abortNamedApiRequest(this.requestIdDelete);
     },
 
     methods: {
@@ -533,19 +546,6 @@ export default defineComponent({
                     this.audioRenameBusy = false;
                 });
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdAdd);
-        abortNamedApiRequest(this.requestIdRename);
-        abortNamedApiRequest(this.requestIdDelete);
     },
 });
 </script>

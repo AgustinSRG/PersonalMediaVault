@@ -1,7 +1,7 @@
 <template>
     <div :class="'thumb' + (className ? ' ' + className : '')">
         <img v-if="!isError" :src="src" :alt="$t('Thumbnail')" loading="lazy" @load="onLoadingFalse" @error="onError" />
-        <div class="thumb-load" v-if="displayLoader">
+        <div v-if="displayLoader" class="thumb-load">
             <i class="fa fa-spinner fa-spin"></i>
         </div>
     </div>
@@ -30,6 +30,28 @@ export default defineComponent({
             displayLoader: false,
             isError: false,
         };
+    },
+    watch: {
+        src: function () {
+            this.onLoadingTrue();
+        },
+    },
+    mounted: function () {
+        const elem = this.$el as HTMLImageElement;
+        if (!elem || !elem.complete) {
+            this.onLoadingTrue();
+        }
+    },
+    beforeUnmount: function () {
+        if (this.displayTimeout) {
+            clearTimeout(this.displayTimeout);
+            this.displayTimeout = null;
+        }
+
+        if (this.reloadTimeout) {
+            clearTimeout(this.reloadTimeout);
+            this.reloadTimeout = null;
+        }
     },
     methods: {
         onLoadingTrue: function () {
@@ -77,28 +99,6 @@ export default defineComponent({
                 this.reloadTimeout = null;
                 this.onLoadingTrue();
             }, RELOAD_DELAY);
-        },
-    },
-    mounted: function () {
-        const elem = this.$el as HTMLImageElement;
-        if (!elem || !elem.complete) {
-            this.onLoadingTrue();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.displayTimeout) {
-            clearTimeout(this.displayTimeout);
-            this.displayTimeout = null;
-        }
-
-        if (this.reloadTimeout) {
-            clearTimeout(this.reloadTimeout);
-            this.reloadTimeout = null;
-        }
-    },
-    watch: {
-        src: function () {
-            this.onLoadingTrue();
         },
     },
 });

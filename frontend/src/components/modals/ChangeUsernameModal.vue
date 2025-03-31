@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Change username") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -16,9 +16,9 @@
                 <div class="form-group">
                     <label>{{ $t("Current username") }}:</label>
                     <input
+                        v-model="currentUsername"
                         type="text"
                         name="current-username"
-                        v-model="currentUsername"
                         :disabled="busy"
                         maxlength="255"
                         readonly
@@ -28,9 +28,9 @@
                 <div class="form-group">
                     <label>{{ $t("New username") }}:</label>
                     <input
+                        v-model="username"
                         type="text"
                         name="username"
-                        v-model="username"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -39,9 +39,9 @@
                 <div class="form-group">
                     <label>{{ $t("Password") }}:</label>
                     <input
+                        v-model="password"
                         type="password"
                         name="password"
-                        v-model="password"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width"
@@ -69,14 +69,14 @@ import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "ChangeUsernameModal",
     components: {
         LoadingIcon,
     },
-    name: "ChangeUsernameModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -93,6 +93,24 @@ export default defineComponent({
             closeSignal: 0,
             forceCloseSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.currentUsername = AuthController.Username;
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.usernameUpdated.bind(this));
+
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -167,24 +185,6 @@ export default defineComponent({
 
         usernameUpdated: function () {
             this.currentUsername = AuthController.Username;
-        },
-    },
-    mounted: function () {
-        this.currentUsername = AuthController.Username;
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.usernameUpdated.bind(this));
-
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-            }
         },
     },
 });

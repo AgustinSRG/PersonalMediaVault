@@ -31,7 +31,7 @@
             ></textarea>
         </div>
 
-        <div class="form-group" v-if="canWrite">
+        <div v-if="canWrite" class="form-group">
             <button
                 v-if="dirty || busy || !saved"
                 type="button"
@@ -61,10 +61,10 @@ import { apiMediaSetNotes } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "EditorImageNotes",
     components: {
         LoadingIcon,
     },
-    name: "EditorImageNotes",
     emits: ["changed"],
     setup() {
         return {
@@ -84,6 +84,20 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
         };
+    },
+
+    mounted: function () {
+        this.updateImageNotes();
+
+        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.updateImageNotes.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.autoFocus();
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
     },
     methods: {
         autoFocus: function () {
@@ -163,20 +177,6 @@ export default defineComponent({
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
-    },
-
-    mounted: function () {
-        this.updateImageNotes();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE, this.updateImageNotes.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.autoFocus();
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

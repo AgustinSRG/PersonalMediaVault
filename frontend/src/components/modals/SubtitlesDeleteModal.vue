@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete subtitles") }}
@@ -33,20 +33,32 @@ import { MediaSubtitle } from "@/api/models";
 
 export default defineComponent({
     name: "SubtitlesDeleteModal",
-    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
         subtitleToDelete: Object as PropType<MediaSubtitle>,
+    },
+    emits: ["update:display", "confirm"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
             closeSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -71,18 +83,6 @@ export default defineComponent({
             this.$emit("confirm");
 
             this.close();
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

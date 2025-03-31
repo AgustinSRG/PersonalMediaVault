@@ -6,7 +6,7 @@
                     $t("Error: Could not load the media. This may be a network error or maybe the media resource is corrupted.")
                 }}</span>
             </div>
-            <div class="player-task-info-row" v-if="errorMessage">
+            <div v-if="errorMessage" class="player-task-info-row">
                 <span>{{ errorMessage }}</span>
             </div>
             <div class="player-task-info-row">
@@ -59,13 +59,13 @@
                 <span v-if="stage === 'FINISH'">{{ $t("Cleaning up") }}...</span>
             </div>
 
-            <div class="player-task-info-row" v-if="progress > 0">
+            <div v-if="progress > 0" class="player-task-info-row">
                 <span
                     >{{ $t("Stage progress") }}: {{ cssProgress(progress) }} / {{ $t("Remaining time (estimated)") }}:
                     {{ renderTime(estimatedRemainingTime) }}</span
                 >
             </div>
-            <div class="player-task-info-row" v-if="progress > 0">
+            <div v-if="progress > 0" class="player-task-info-row">
                 <div class="player-task-progress-bar">
                     <div class="player-task-progress-bar-current" :style="{ width: cssProgress(progress) }"></div>
                 </div>
@@ -111,6 +111,39 @@ export default defineComponent({
 
             refreshPending: false,
         };
+    },
+
+    watch: {
+        mid: function () {
+            this.stop();
+            this.start();
+        },
+
+        res: function () {
+            this.stop();
+            this.start();
+        },
+
+        tid: function () {
+            this.stop();
+            this.start();
+        },
+
+        canAutoReload: function () {
+            if (this.canAutoReload && this.refreshPending) {
+                this.refreshPending = true;
+                MediaController.Load();
+            }
+        },
+    },
+
+    mounted: function () {
+        this.pendingId = getUniqueStringId();
+        this.start();
+    },
+
+    beforeUnmount: function () {
+        this.stop();
     },
 
     methods: {
@@ -281,39 +314,6 @@ export default defineComponent({
 
         cssProgress: function (p: number) {
             return Math.round(p) + "%";
-        },
-    },
-
-    mounted: function () {
-        this.pendingId = getUniqueStringId();
-        this.start();
-    },
-
-    beforeUnmount: function () {
-        this.stop();
-    },
-
-    watch: {
-        mid: function () {
-            this.stop();
-            this.start();
-        },
-
-        res: function () {
-            this.stop();
-            this.start();
-        },
-
-        tid: function () {
-            this.stop();
-            this.start();
-        },
-
-        canAutoReload: function () {
-            if (this.canAutoReload && this.refreshPending) {
-                this.refreshPending = true;
-                MediaController.Load();
-            }
         },
     },
 });

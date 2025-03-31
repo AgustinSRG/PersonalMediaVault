@@ -21,21 +21,21 @@
                 </button>
             </div>
         </div>
-        <form @submit="addTag" v-if="canWrite">
+        <form v-if="canWrite" @submit="addTag">
             <div class="form-group">
                 <label>{{ $t("Tag to add") }}:</label>
                 <input
+                    v-model="tagToAdd"
                     type="text"
                     autocomplete="off"
                     maxlength="255"
-                    v-model="tagToAdd"
                     :disabled="busy"
+                    class="form-control tag-to-add auto-focus"
                     @input="onTagAddChanged"
                     @keydown="onTagAddKeyDown"
-                    class="form-control tag-to-add auto-focus"
                 />
             </div>
-            <div class="form-group" v-if="matchingTags.length > 0">
+            <div v-if="matchingTags.length > 0" class="form-group">
                 <button
                     v-for="mt in matchingTags"
                     :key="mt.id"
@@ -52,7 +52,7 @@
                     <i class="fas fa-plus"></i> {{ $t("Add Tag") }}
                 </button>
             </div>
-            <div class="form-group loader-delayed-custom" v-if="busy">
+            <div v-if="busy" class="form-group loader-delayed-custom">
                 <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
             </div>
         </form>
@@ -74,8 +74,8 @@ import { PagesController } from "@/control/pages";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 
 export default defineComponent({
-    components: {},
     name: "EditorTags",
+    components: {},
     emits: ["changed"],
     setup() {
         return {
@@ -96,6 +96,28 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+        this.updateTagData();
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        TagsController.Load();
+
+        this.autoFocus();
+    },
+
+    beforeUnmount: function () {
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
+        }
+
+        abortNamedApiRequest(this.requestId);
     },
 
     methods: {
@@ -392,28 +414,6 @@ export default defineComponent({
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-        this.updateTagData();
-
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        TagsController.Load();
-
-        this.autoFocus();
-    },
-
-    beforeUnmount: function () {
-        if (this.findTagTimeout) {
-            clearTimeout(this.findTagTimeout);
-        }
-
-        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

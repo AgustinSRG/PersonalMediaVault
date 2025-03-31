@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" :static="true">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" :static="true">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Upload files") }}</div>
@@ -21,8 +21,8 @@
                     <label>{{ $t("Select an album to add the uploaded media into") }}:</label>
                     <AlbumSelect v-model:album="album" :disabled="inModal"></AlbumSelect>
                 </div>
-                <div class="form-group" v-if="!inModal">
-                    <button type="button" @click="createAlbum" class="btn btn-primary btn-sm">
+                <div v-if="!inModal" class="form-group">
+                    <button type="button" class="btn btn-primary btn-sm" @click="createAlbum">
                         <i class="fas fa-plus"></i> {{ $t("Create album") }}
                     </button>
                 </div>
@@ -39,14 +39,14 @@
                     </div>
                     <div class="media-tags-finder">
                         <input
+                            v-model="tagToAdd"
                             type="text"
                             autocomplete="off"
                             maxlength="255"
-                            v-model="tagToAdd"
-                            @input="onTagAddChanged(false)"
-                            @keydown="onTagInputKeyDown"
                             class="form-control tag-to-add auto-focus"
                             :placeholder="$t('Add tags') + '...'"
+                            @input="onTagAddChanged(false)"
+                            @keydown="onTagInputKeyDown"
                         />
                     </div>
                     <div class="media-tags-adder">
@@ -55,7 +55,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="form-group" v-if="matchingTags.length > 0">
+                <div v-if="matchingTags.length > 0" class="form-group">
                     <button
                         v-for="mt in matchingTags"
                         :key="mt.id"
@@ -91,18 +91,18 @@ const AlbumCreateModal = defineAsyncComponent({
 });
 
 export default defineComponent({
+    name: "UploadModal",
     components: {
         AlbumCreateModal,
         AlbumSelect,
     },
-    name: "UploadModal",
-    emits: ["update:display", "upload"],
     props: {
         display: Boolean,
         inModal: Boolean,
         fixedAlbum: Number,
         files: Array,
     },
+    emits: ["update:display", "upload"],
     setup(props) {
         return {
             findTagTimeout: null,
@@ -123,6 +123,35 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.reset();
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.updateTagData();
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.updateAlbums();
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+
+        this.reset();
+
+        if (this.display) {
+            this.autoFocus();
+        }
+    },
+    beforeUnmount: function () {
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
+            this.findTagTimeout = null;
+        }
     },
     methods: {
         close: function () {
@@ -335,35 +364,6 @@ export default defineComponent({
 
         onNewAlbum: function (albumId) {
             this.album = albumId;
-        },
-    },
-    mounted: function () {
-        this.updateTagData();
-
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.updateAlbums();
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
-        this.reset();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.findTagTimeout) {
-            clearTimeout(this.findTagTimeout);
-            this.findTagTimeout = null;
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.reset();
-                this.autoFocus();
-            }
         },
     },
 });

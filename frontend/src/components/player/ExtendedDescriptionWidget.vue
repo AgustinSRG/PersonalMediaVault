@@ -1,22 +1,22 @@
 <template>
     <div class="resizable-widget-container">
         <ResizableWidget
-            :title="$t('Extended description')"
             v-model:display="displayStatus"
-            :contextOpen="contextOpen"
+            :title="$t('Extended description')"
+            :context-open="contextOpen"
             :position-key="'ext-desc-widget-pos'"
-            @clicked="propagateClick"
             :busy="busy"
             :action-buttons="actionButtons"
+            @clicked="propagateClick"
             @action-btn="clickActionButton"
         >
             <div class="extended-description-body" tabindex="-1">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
                 <div v-if="!loading && editing" class="extended-description-edit">
                     <textarea
+                        v-model="contentToChange"
                         :disabled="busy || !canWrite"
                         class="form-control form-textarea auto-focus"
-                        v-model="contentToChange"
                         :placeholder="$t('Input your description here') + '...'"
                     ></textarea>
                 </div>
@@ -53,17 +53,17 @@ import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
 
 export default defineComponent({
+    name: "ExtendedDescriptionWidget",
     components: {
         ResizableWidget,
         LoadingOverlay,
     },
-    name: "ExtendedDescriptionWidget",
-    emits: ["update:display", "clicked", "update-ext-desc"],
     props: {
         display: Boolean,
         contextOpen: Boolean,
         currentTime: Number,
     },
+    emits: ["update:display", "clicked", "update-ext-desc"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -144,6 +144,33 @@ export default defineComponent({
 
             return buttons;
         },
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.contentStoredId = -1;
+                this.contentStored = "";
+                this.load();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+
+        if (this.display) {
+            this.load();
+        }
+    },
+    beforeUnmount: function () {
+        if (this.busyTimeout) {
+            clearTimeout(this.busyTimeout);
+            this.busyTimeout = null;
+        }
+
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     methods: {
         load: function () {
@@ -410,33 +437,6 @@ export default defineComponent({
             }
 
             this.busyDisplayLoad = false;
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-
-        if (this.display) {
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.busyTimeout) {
-            clearTimeout(this.busyTimeout);
-            this.busyTimeout = null;
-        }
-
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.contentStoredId = -1;
-                this.contentStored = "";
-                this.load();
-            }
         },
     },
 });

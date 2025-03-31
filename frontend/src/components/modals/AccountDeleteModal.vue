@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete account") }}
@@ -40,14 +40,19 @@ import { makeApiRequest } from "@asanrom/request-browser";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "AccountDeleteModal",
     components: {
         LoadingIcon,
     },
-    name: "AccountDeleteModal",
-    emits: ["update:display", "done"],
     props: {
         display: Boolean,
         username: String,
+    },
+    emits: ["update:display", "done"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -56,10 +61,17 @@ export default defineComponent({
             error: "",
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -127,18 +139,6 @@ export default defineComponent({
                     console.error(err);
                     this.busy = false;
                 });
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

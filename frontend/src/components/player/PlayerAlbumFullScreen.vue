@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <div v-show="!loading && loadedAlbum" class="album-body" @scroll.passive="onScroll" tabindex="-1">
+        <div v-show="!loading && loadedAlbum" class="album-body" tabindex="-1" @scroll.passive="onScroll">
             <div
                 v-for="item in albumList"
                 :key="item.pos"
@@ -41,7 +41,7 @@
                         <i v-else class="fas fa-ban"></i>
                     </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                    <div v-if="item.type === 2 || item.type === 3" class="album-body-item-thumb-tag">
                         {{ renderTime(item.duration) }}
                     </div>
                     <div class="album-body-item-thumb-pos">
@@ -83,10 +83,10 @@ import ThumbImage from "../utils/ThumbImage.vue";
 const INITIAL_WINDOW_SIZE = 100;
 
 export default defineComponent({
+    name: "PlayerAlbumFullScreen",
     components: {
         ThumbImage,
     },
-    name: "PlayerAlbumFullScreen",
     emits: ["close"],
     setup() {
         return {
@@ -110,6 +110,33 @@ export default defineComponent({
             loop: false,
             random: false,
         };
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.albumList;
+            },
+            set: (l) => {
+                this.albumList = l;
+            },
+        });
+
+        this.updateAlbumList();
+
+        this.onAlbumPosUpdate();
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
+
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this.autoFocus();
+    },
+    beforeUnmount: function () {
+        clearInterval(this.checkContainerTimer);
     },
     methods: {
         onAlbumUpdate: function () {
@@ -263,33 +290,6 @@ export default defineComponent({
                 }
             });
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
-
-        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
-            get: () => {
-                return this.albumList;
-            },
-            set: (l) => {
-                this.albumList = l;
-            },
-        });
-
-        this.updateAlbumList();
-
-        this.onAlbumPosUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
-
-        this.autoFocus();
-    },
-    beforeUnmount: function () {
-        clearInterval(this.checkContainerTimer);
     },
 });
 </script>

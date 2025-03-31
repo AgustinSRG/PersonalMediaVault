@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Re-Encode") }}
@@ -27,10 +27,10 @@ import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
     name: "ReEncodeConfirmationModal",
-    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display", "confirm"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -40,6 +40,18 @@ export default defineComponent({
         return {
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -62,18 +74,6 @@ export default defineComponent({
             e.preventDefault();
             this.close();
             this.$emit("confirm");
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

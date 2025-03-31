@@ -12,10 +12,11 @@
                 <form
                     class="top-bar-search-input-container"
                     :class="{ focused: searchFocus, 'has-search': hasSearch }"
-                    @submit="submitSearch"
                     tabindex="-1"
+                    @submit="submitSearch"
                 >
                     <input
+                        v-model="search"
                         type="text"
                         class="top-bar-search-input"
                         name="pmv-search-input"
@@ -24,7 +25,6 @@
                         autocomplete="off"
                         autocapitalize="none"
                         :placeholder="$t('Search')"
-                        v-model="search"
                         @keydown="onKeyDown"
                         @input="onSearchInput"
                         @focus="focusSearch"
@@ -54,16 +54,16 @@
                             :href="getSuggestionUrl(s)"
                             class="top-bar-search-suggestion"
                             tabindex="0"
+                            :title="s.name"
                             @click="clickSearch(s, $event)"
                             @keydown="onSuggestionKeyDown"
-                            :title="s.name"
                         >
-                            <i class="fas fa-tag" v-if="s.type === 'tag'"></i>
-                            <i class="fas fa-list-ol" v-else-if="s.type === 'album'"></i>
-                            <i class="fas fa-image" v-else-if="s.type === 'media' && s.mediaType === 1"></i>
-                            <i class="fas fa-video" v-else-if="s.type === 'media' && s.mediaType === 2"></i>
-                            <i class="fas fa-headphones" v-else-if="s.type === 'media' && s.mediaType === 3"></i>
-                            <i class="fas fa-ban" v-else></i>
+                            <i v-if="s.type === 'tag'" class="fas fa-tag"></i>
+                            <i v-else-if="s.type === 'album'" class="fas fa-list-ol"></i>
+                            <i v-else-if="s.type === 'media' && s.mediaType === 1" class="fas fa-image"></i>
+                            <i v-else-if="s.type === 'media' && s.mediaType === 2" class="fas fa-video"></i>
+                            <i v-else-if="s.type === 'media' && s.mediaType === 3" class="fas fa-headphones"></i>
+                            <i v-else class="fas fa-ban"></i>
                             <span>{{ s.name }}</span>
                         </a>
                     </div>
@@ -135,6 +135,38 @@ export default defineComponent({
             searchFocus: false,
             suggestions: [] as SearchBarSuggestion[],
         };
+    },
+
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onSearchChanged.bind(this));
+
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
+
+        this.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
+
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
+            get: (): any[] => {
+                return this.suggestions;
+            },
+            set: (list) => {
+                this.suggestions = list;
+            },
+        });
+    },
+
+    beforeUnmount: function () {
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
+        }
+
+        if (this.blurTimeout) {
+            clearTimeout(this.blurTimeout);
+            this.blurTimeout = null;
+        }
+
+        if (this.focusTrap) {
+            this.focusTrap.destroy();
+        }
     },
     methods: {
         getAppTitle: function () {
@@ -521,38 +553,6 @@ export default defineComponent({
                     return window.location.protocol + "//" + window.location.host + window.location.pathname;
             }
         },
-    },
-
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onSearchChanged.bind(this));
-
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el.querySelector(".top-bar-search-input-container"), this.blurSearch.bind(this));
-
-        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
-            get: (): any[] => {
-                return this.suggestions;
-            },
-            set: (list) => {
-                this.suggestions = list;
-            },
-        });
-    },
-
-    beforeUnmount: function () {
-        if (this.findTagTimeout) {
-            clearTimeout(this.findTagTimeout);
-        }
-
-        if (this.blurTimeout) {
-            clearTimeout(this.blurTimeout);
-            this.blurTimeout = null;
-        }
-
-        if (this.focusTrap) {
-            this.focusTrap.destroy();
-        }
     },
 });
 </script>

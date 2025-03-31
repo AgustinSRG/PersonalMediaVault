@@ -1,20 +1,20 @@
 <template>
-    <div class="album-selector-container" tabindex="0" @keydown="onKeyDown" :class="{ expanded: expanded }">
-        <div class="album-selector" @click="toggleExpand" :class="{ expanded: expanded, disabled: disabled }">
+    <div class="album-selector-container" tabindex="0" :class="{ expanded: expanded }" @keydown="onKeyDown">
+        <div class="album-selector" :class="{ expanded: expanded, disabled: disabled }" @click="toggleExpand">
             <div class="album-selected-name">{{ getAlbumName(album, albumsListUpdateCount) }}</div>
             <div class="album-selector-chevron">
                 <div class="chevron"></div>
             </div>
         </div>
 
-        <div class="album-selector-suggestions-container" v-if="expanded">
+        <div v-if="expanded" class="album-selector-suggestions-container">
             <div class="name-filter-input-container">
                 <input
+                    v-model="filter"
                     type="text"
                     class="form-control form-control-full-width name-filter-input"
                     autocomplete="off"
                     :placeholder="$t('Filter by name') + '...'"
-                    v-model="filter"
                     @input="onFilterChanged"
                     @keydown="onInputKeyDown"
                 />
@@ -28,9 +28,9 @@
                     :href="getSuggestionURL(s)"
                     class="album-selector-suggestion"
                     tabindex="0"
+                    :title="s.name"
                     @click="clickSuggestion(s, $event)"
                     @keydown="onSuggestionKeyDown"
-                    :title="s.name"
                 >
                     <span>{{ s.name }}</span>
                 </a>
@@ -70,11 +70,11 @@ interface AlbumItemFiltered {
 
 export default defineComponent({
     name: "AlbumSelect",
-    emits: ["update:album"],
     props: {
         album: Number,
         disabled: Boolean,
     },
+    emits: ["update:album"],
     setup(props) {
         return {
             albums: AlbumsController.GetAlbumsListMin(),
@@ -96,6 +96,33 @@ export default defineComponent({
 
             albumsListUpdateCount: 0,
         };
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.onAlbumsListUpdated.bind(this));
+
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
+
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
+            get: (): any[] => {
+                return this.suggestions;
+            },
+            set: (list) => {
+                this.suggestions = list;
+            },
+        });
+    },
+    beforeUnmount: function () {
+        if (this.focusTrap) {
+            this.focusTrap.destroy();
+        }
+
+        if (this.blurTimeout) {
+            clearTimeout(this.blurTimeout);
+        }
+
+        if (this.filterChangedTimeout) {
+            clearTimeout(this.filterChangedTimeout);
+        }
     },
     methods: {
         onAlbumsListUpdated: function () {
@@ -318,33 +345,6 @@ export default defineComponent({
                 }
             }, 10);
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.onAlbumsListUpdated.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this));
-
-        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(9), {
-            get: (): any[] => {
-                return this.suggestions;
-            },
-            set: (list) => {
-                this.suggestions = list;
-            },
-        });
-    },
-    beforeUnmount: function () {
-        if (this.focusTrap) {
-            this.focusTrap.destroy();
-        }
-
-        if (this.blurTimeout) {
-            clearTimeout(this.blurTimeout);
-        }
-
-        if (this.filterChangedTimeout) {
-            clearTimeout(this.filterChangedTimeout);
-        }
     },
 });
 </script>

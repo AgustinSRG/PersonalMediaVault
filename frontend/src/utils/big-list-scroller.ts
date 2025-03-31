@@ -101,7 +101,9 @@ export class BigListScroller<T = any> {
         this.setListWindow([]);
         this.list = [];
         this.windowPosition = 0;
-        this.onChangeListWindow && this.onChangeListWindow();
+        if (this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**
@@ -122,7 +124,9 @@ export class BigListScroller<T = any> {
             }
         }
 
-        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
+        if (listWindowChanged && this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**
@@ -145,7 +149,9 @@ export class BigListScroller<T = any> {
             listWindowChanged = true;
         }
 
-        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
+        if (listWindowChanged && this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**
@@ -165,7 +171,9 @@ export class BigListScroller<T = any> {
             listWindowChanged = true;
         }
 
-        listWindowChanged && this.onChangeListWindow && this.onChangeListWindow();
+        if (listWindowChanged && this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**
@@ -202,7 +210,9 @@ export class BigListScroller<T = any> {
     public moveWindowToElement(index: number) {
         this.windowPosition = Math.max(0, index - Math.floor(this.windowSize / 2));
         this.setListWindow(this.list.slice(this.windowPosition, this.windowPosition + this.windowSize));
-        this.onChangeListWindow && this.onChangeListWindow();
+        if (this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**
@@ -212,7 +222,9 @@ export class BigListScroller<T = any> {
     public setWindowPosition(index: number) {
         this.windowPosition = index;
         this.setListWindow(this.list.slice(this.windowPosition, this.windowPosition + this.windowSize));
-        this.onChangeListWindow && this.onChangeListWindow();
+        if (this.onChangeListWindow) {
+            this.onChangeListWindow();
+        }
     }
 
     /**

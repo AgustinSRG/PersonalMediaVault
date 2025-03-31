@@ -59,6 +59,13 @@ export default defineComponent({
             hasPageNext: PagesController.HasPageNext,
         };
     },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onStatusUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
+    },
     methods: {
         onStatusUpdate: function () {
             this.focus = AppStatus.CurrentFocus;
@@ -97,13 +104,6 @@ export default defineComponent({
                 event.target.click();
             }
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onStatusUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
     },
 });
 </script>

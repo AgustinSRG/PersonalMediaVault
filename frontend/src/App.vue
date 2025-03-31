@@ -22,6 +22,21 @@ export default defineComponent({
     data: function () {
         return {};
     },
+    mounted: function () {
+        this.updateAppStatus();
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateAppStatus.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.updateAppStatus.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateAppStatus.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadFinished.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_LOADED_LOCALE, this.onLoadedLocale.bind(this));
+
+        if (i18nData.locale) {
+            this.$updateLocale(i18nData.locale);
+        }
+    },
     methods: {
         updateTitle: function () {
             if (AppStatus.CurrentMedia >= 0 && MediaController.MediaData) {
@@ -109,21 +124,6 @@ export default defineComponent({
         onLoadedLocale: function (locale: string) {
             this.$updateLocale(locale);
         },
-    },
-    mounted: function () {
-        this.updateAppStatus();
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateAppStatus.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.updateAppStatus.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateAppStatus.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadFinished.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_LOADED_LOCALE, this.onLoadedLocale.bind(this));
-
-        if (i18nData.locale) {
-            this.$updateLocale(i18nData.locale);
-        }
     },
 });
 </script>

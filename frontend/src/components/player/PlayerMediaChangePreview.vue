@@ -8,7 +8,7 @@
                 <i v-if="type === 2" class="fas fa-video"></i>
                 <i v-if="type === 3" class="fas fa-headphones"></i>
             </div>
-            <div class="preview-thumb-tag" v-if="type === 2 || type === 3">
+            <div v-if="type === 2 || type === 3" class="preview-thumb-tag">
                 {{ renderDuration(duration) }}
             </div>
         </div>
@@ -28,11 +28,11 @@ import { renderTimeSeconds } from "../../utils/time";
 
 export default defineComponent({
     name: "PlayerMediaChangePreview",
-    emits: [],
     props: {
         media: Object,
         next: Boolean,
     },
+    emits: [],
     data: function () {
         return {
             type: 0,
@@ -44,6 +44,15 @@ export default defineComponent({
             fps: 0,
         };
     },
+    watch: {
+        media: function () {
+            this.updateData();
+        },
+    },
+    mounted: function () {
+        this.updateData();
+    },
+    beforeUnmount: function () {},
     methods: {
         getThumbnail(thumb: string) {
             return getAssetURL(thumb);
@@ -61,15 +70,6 @@ export default defineComponent({
         },
         renderDuration: function (s) {
             return renderTimeSeconds(s);
-        },
-    },
-    mounted: function () {
-        this.updateData();
-    },
-    beforeUnmount: function () {},
-    watch: {
-        media: function () {
-            this.updateData();
         },
     },
 });

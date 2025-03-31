@@ -22,11 +22,9 @@
         <div class="image-scroller" :class="{ 'cursor-hidden': !cursorShown }" @mousedown="grabScroll">
             <img
                 v-if="imageURL"
+                :key="rTick"
                 class="player-img-element"
                 :src="imageURL"
-                :key="rTick"
-                @load="onImageLoaded"
-                @error="onMediaError"
                 :style="{
                     width: imageWidth,
                     height: imageHeight,
@@ -34,12 +32,14 @@
                     left: imageLeft,
                 }"
                 decoding="async"
+                @load="onImageLoaded"
+                @error="onMediaError"
             />
 
             <ImageNotes
                 :visible="notesVisible"
                 :editing="notesEditMode"
-                :contextOpen="contextMenuShown"
+                :context-open="contextMenuShown"
                 :width="imageWidth"
                 :height="imageHeight"
                 :top="imageTop"
@@ -47,7 +47,7 @@
             ></ImageNotes>
         </div>
 
-        <div class="player-loader" v-if="loading && !mediaError">
+        <div v-if="loading && !mediaError" class="player-loader">
             <div class="player-lds-ring">
                 <div></div>
                 <div></div>
@@ -62,20 +62,20 @@
             :tid="imagePendingTask"
             :res="currentResolution"
             :error="mediaError"
-            :canAutoReload="!expandedTitle && !expandedAlbum"
+            :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
         <TagsEditHelper
             v-if="displayTagList"
             v-model:display="displayTagListStatus"
-            :contextOpen="contextMenuShown"
+            :context-open="contextMenuShown"
             @clicked="clickControls"
         ></TagsEditHelper>
 
         <ExtendedDescriptionWidget
             v-if="displayExtendedDescription"
             v-model:display="displayExtendedDescriptionStatus"
-            :contextOpen="contextMenuShown"
+            :context-open="contextMenuShown"
             @clicked="clickControls"
             @update-ext-desc="refreshExtendedDescription"
         ></ExtendedDescriptionWidget>
@@ -121,11 +121,11 @@
 
                 <ScaleControl
                     ref="scaleControl"
-                    :min="min"
-                    :width="min ? 70 : 100"
                     v-model:fit="fit"
                     v-model:scale="scale"
                     v-model:expanded="scaleShown"
+                    :min="min"
+                    :width="min ? 70 : 100"
                     @update:scale="onUserScaleUpdated"
                     @update:fit="onUserFitUpdated"
                     @enter="enterTooltip('scale')"
@@ -262,12 +262,12 @@
             v-model:shown="displayConfig"
             v-model:resolution="currentResolution"
             v-model:background="background"
+            :r-tick="internalTick"
+            :metadata="metadata"
             @update:resolution="onResolutionUpdated"
             @update:background="onBackgroundChanged"
             @update-auto-next="setupAutoNextTimer"
             @update-notes-visible="imageNotesVisibleUpdated"
-            :rTick="internalTick"
-            :metadata="metadata"
             @enter="enterControls"
             @leave="leaveControls"
         ></ImagePlayerConfig>
@@ -283,29 +283,29 @@
 
         <PlayerTopBar
             v-if="metadata"
+            v-model:expanded="expandedTitle"
+            v-model:album-expanded="expandedAlbum"
             :mid="mid"
             :metadata="metadata"
             :shown="showControls"
             :fullscreen="fullscreen"
-            v-model:expanded="expandedTitle"
-            v-model:albumExpanded="expandedAlbum"
-            :inAlbum="inAlbum"
+            :in-album="inAlbum"
             @click-player="clickControls"
         ></PlayerTopBar>
 
         <PlayerContextMenu
-            type="image"
             v-model:shown="contextMenuShown"
+            v-model:fit="fit"
+            v-model:controls="showControlsState"
+            v-model:notes-edit="notesEditMode"
+            type="image"
             :x="contextMenuX"
             :y="contextMenuY"
-            v-model:fit="fit"
-            @update:fit="onUserFitUpdated"
             :url="imageURL"
             :title="title"
-            v-model:controls="showControlsState"
-            :canWrite="canWrite"
-            :hasExtendedDescription="hasExtendedDescription"
-            v-model:notesEdit="notesEditMode"
+            :can-write="canWrite"
+            :has-extended-description="hasExtendedDescription"
+            @update:fit="onUserFitUpdated"
             @stats="openStats"
             @open-tags="openTags"
             @open-ext-desc="openExtendedDescription"
@@ -364,6 +364,7 @@ const SCALE_STEP = 0.1 / SCALE_RANGE;
 const SCALE_STEP_MIN = 0.01 / SCALE_RANGE;
 
 export default defineComponent({
+    name: "ImagePlayer",
     components: {
         ScaleControl,
         ImagePlayerConfig,
@@ -376,18 +377,6 @@ export default defineComponent({
         ExtendedDescriptionWidget,
         PlayerAttachmentsList,
     },
-    name: "ImagePlayer",
-    emits: [
-        "go-next",
-        "go-prev",
-        "update:fullscreen",
-        "update:showControls",
-        "albums-open",
-        "stats-open",
-        "delete",
-        "update:displayTagList",
-        "update:displayExtendedDescription",
-    ],
     props: {
         mid: Number,
         metadata: Object as PropType<MediaData>,
@@ -411,6 +400,17 @@ export default defineComponent({
         displayTagList: Boolean,
         displayExtendedDescription: Boolean,
     },
+    emits: [
+        "go-next",
+        "go-prev",
+        "update:fullscreen",
+        "update:showControls",
+        "albums-open",
+        "stats-open",
+        "delete",
+        "update:displayTagList",
+        "update:displayExtendedDescription",
+    ],
     setup(props) {
         return {
             timer: null,
@@ -483,6 +483,68 @@ export default defineComponent({
 
             mediaError: false,
         };
+    },
+    watch: {
+        rTick: function () {
+            this.internalTick++;
+            this.expandedTitle = false;
+            this.initializeImage();
+        },
+        imageURL: function () {
+            if (this.imageURL) {
+                this.loading = true;
+            }
+        },
+        next: function () {
+            this.setupAutoNextTimer();
+        },
+        pageNext: function () {
+            this.setupAutoNextTimer();
+        },
+    },
+    mounted: function () {
+        // Load player preferences
+        this.fit = getImageFit();
+        this.scale = getImageScale();
+        this.background = getImageBackgroundStyle();
+
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
+
+        this.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
+
+        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
+
+        this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
+
+        this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_NEXT_PRE_FETCH, this.onAlbumPrefetch.bind(this));
+
+        this.initializeImage();
+
+        if (window.navigator && window.navigator.mediaSession) {
+            MediaController.MediaSessionId = this.mediaSessionId;
+            clearMediaSessionActionHandlers();
+
+            addMediaSessionActionHandler(["nexttrack", "previoustrack"], this.handleMediaSessionEvent.bind(this));
+
+            navigator.mediaSession.playbackState = "none";
+        }
+    },
+    beforeUnmount: function () {
+        this.imageURL = "";
+        clearInterval(this.timer);
+
+        if (this.autoNextTimer) {
+            clearTimeout(this.autoNextTimer);
+            this.autoNextTimer = null;
+        }
+
+        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
+            clearMediaSessionActionHandlers();
+            navigator.mediaSession.playbackState = "none";
+            MediaController.MediaSessionId = "";
+        }
     },
     methods: {
         onContextMenu: function (e: MouseEvent) {
@@ -701,7 +763,9 @@ export default defineComponent({
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
             this.displayAttachments = false;
-            e && e.stopPropagation();
+            if (e) {
+                e.stopPropagation();
+            }
         },
 
         clickControls: function (e: Event) {
@@ -1204,68 +1268,6 @@ export default defineComponent({
 
         refreshExtendedDescription: function () {
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
-        },
-    },
-    mounted: function () {
-        // Load player preferences
-        this.fit = getImageFit();
-        this.scale = getImageScale();
-        this.background = getImageBackgroundStyle();
-
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-
-        this.timer = setInterval(this.tick.bind(this), Math.floor(1000 / 30));
-
-        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-
-        this.$listenOnDocumentEvent("mouseup", this.dropScroll.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_NEXT_PRE_FETCH, this.onAlbumPrefetch.bind(this));
-
-        this.initializeImage();
-
-        if (window.navigator && window.navigator.mediaSession) {
-            MediaController.MediaSessionId = this.mediaSessionId;
-            clearMediaSessionActionHandlers();
-
-            addMediaSessionActionHandler(["nexttrack", "previoustrack"], this.handleMediaSessionEvent.bind(this));
-
-            navigator.mediaSession.playbackState = "none";
-        }
-    },
-    beforeUnmount: function () {
-        this.imageURL = "";
-        clearInterval(this.timer);
-
-        if (this.autoNextTimer) {
-            clearTimeout(this.autoNextTimer);
-            this.autoNextTimer = null;
-        }
-
-        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            clearMediaSessionActionHandlers();
-            navigator.mediaSession.playbackState = "none";
-            MediaController.MediaSessionId = "";
-        }
-    },
-    watch: {
-        rTick: function () {
-            this.internalTick++;
-            this.expandedTitle = false;
-            this.initializeImage();
-        },
-        imageURL: function () {
-            if (this.imageURL) {
-                this.loading = true;
-            }
-        },
-        next: function () {
-            this.setupAutoNextTimer();
-        },
-        pageNext: function () {
-            this.setupAutoNextTimer();
         },
     },
 });

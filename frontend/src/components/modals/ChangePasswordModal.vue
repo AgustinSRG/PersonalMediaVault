@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Change password") }}</div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -16,9 +16,9 @@
                 <div class="form-group">
                     <label>{{ $t("Current password") }}:</label>
                     <input
+                        v-model="currentPassword"
                         type="password"
                         name="password"
-                        v-model="currentPassword"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -27,9 +27,9 @@
                 <div class="form-group">
                     <label>{{ $t("New password") }}:</label>
                     <input
+                        v-model="password"
                         type="password"
                         name="new-password"
-                        v-model="password"
                         :disabled="busy"
                         autocomplete="new-password"
                         maxlength="255"
@@ -39,9 +39,9 @@
                 <div class="form-group">
                     <label>{{ $t("New password") }} ({{ $t("Repeat it for confirmation") }}):</label>
                     <input
+                        v-model="password2"
                         type="password"
                         name="new-password-repeat"
-                        v-model="password2"
                         :disabled="busy"
                         autocomplete="new-password"
                         maxlength="255"
@@ -71,14 +71,14 @@ import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "ChangePasswordModal",
     components: {
         LoadingIcon,
     },
-    name: "ChangePasswordModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -95,6 +95,26 @@ export default defineComponent({
             closeSignal: 0,
             forceCloseSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.currentPassword = "";
+                this.password = "";
+                this.password2 = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.error = "";
+            this.currentPassword = "";
+            this.password = "";
+            this.password2 = "";
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -166,26 +186,6 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.error = "";
-            this.currentPassword = "";
-            this.password = "";
-            this.password2 = "";
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.currentPassword = "";
-                this.password = "";
-                this.password2 = "";
-                this.autoFocus();
-            }
         },
     },
 });

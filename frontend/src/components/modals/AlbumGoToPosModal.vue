@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Go to position") }}
@@ -13,17 +13,17 @@
                 <div class="pos-input-container">
                     <div class="form-control-container">
                         <input
+                            v-model.number="currentPos"
                             type="number"
                             name="album-position"
                             autocomplete="off"
-                            v-model.number="currentPos"
                             step="1"
                             min="1"
                             :max="albumLength"
                             class="form-control form-control-full-width auto-focus"
                         />
                     </div>
-                    <div class="form-control-suffix" v-if="albumLength > 0">
+                    <div v-if="albumLength > 0" class="form-control-suffix">
                         {{ "/ " + albumLength }}
                     </div>
                 </div>
@@ -46,9 +46,14 @@ import { AppStatus } from "@/control/app-status";
 
 export default defineComponent({
     name: "AlbumGoToPosModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
+    },
+    emits: ["update:display"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -58,10 +63,19 @@ export default defineComponent({
             closeSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.reset();
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.reset();
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -93,20 +107,6 @@ export default defineComponent({
             }
 
             this.close();
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.reset();
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.reset();
-                this.autoFocus();
-            }
         },
     },
 });

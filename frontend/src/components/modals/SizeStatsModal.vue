@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-sm" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -93,11 +93,11 @@ import { apiMediaGetMediaSizeStats } from "@/api/api-media";
 
 export default defineComponent({
     name: "SizeStatsModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
         mid: Number,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -130,6 +130,32 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.load();
+            }
+        },
+
+        mid: function () {
+            this.load();
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+            this.load();
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     methods: {
         load: function () {
@@ -242,32 +268,6 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.load();
-            }
-        },
-
-        mid: function () {
-            this.load();
         },
     },
 });

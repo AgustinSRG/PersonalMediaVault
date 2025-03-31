@@ -6,7 +6,7 @@
         @mouseenter="onEnter"
         @mouseleave="onLeave"
     >
-        <button class="player-volume-btn" @click="clickOnVolumeButton" :title="$t('Volume')">
+        <button class="player-volume-btn" :title="$t('Volume')" @click="clickOnVolumeButton">
             <i v-if="!muted && volume > 0.5" class="fas fa-volume-up"></i>
             <i v-if="!muted && volume <= 0" class="fas fa-volume-off"></i>
             <i v-if="!muted && volume > 0 && volume <= 0.5" class="fas fa-volume-down"></i>
@@ -35,7 +35,6 @@ import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({
     name: "VolumeControl",
-    emits: ["update:volume", "update:muted", "update:expanded", "enter", "leave"],
     props: {
         width: Number,
         volume: Number,
@@ -43,6 +42,7 @@ export default defineComponent({
         muted: Boolean,
         expanded: Boolean,
     },
+    emits: ["update:volume", "update:muted", "update:expanded", "enter", "leave"],
     setup(props) {
         return {
             volumeState: useVModel(props, "volume"),
@@ -54,6 +54,17 @@ export default defineComponent({
         return {
             volumeGrabbed: false,
         };
+    },
+    mounted: function () {
+        if (isTouchDevice()) {
+            this.expandedState = true;
+        }
+
+        this.$listenOnDocumentEvent("mouseup", this.dropVolume.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.dropVolume.bind(this));
+
+        this.$listenOnDocumentEvent("mousemove", this.moveVolume.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.moveVolume.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -160,17 +171,6 @@ export default defineComponent({
             this.mutedState = false;
             this.volumeState = v;
         },
-    },
-    mounted: function () {
-        if (isTouchDevice()) {
-            this.expandedState = true;
-        }
-
-        this.$listenOnDocumentEvent("mouseup", this.dropVolume.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropVolume.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveVolume.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveVolume.bind(this));
     },
 });
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-xl modal-height-100" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Tasks") }}</div>
@@ -34,7 +34,7 @@
                                     <i class="fas fa-circle task-status" :class="{ 'task-running': t.running }"></i>
                                 </td>
                                 <td class="task-progress-bar-td one-line td-shrink">
-                                    <div class="task-progress-bar-container" v-if="t.running">
+                                    <div v-if="t.running" class="task-progress-bar-container">
                                         <div
                                             class="task-progress-bar-current"
                                             :style="{
@@ -48,10 +48,10 @@
                                 </td>
                                 <td class="bold one-line td-shrink">
                                     <a
-                                        @click="goToMedia(t.media_id, $event)"
                                         :href="getMediaURL(t.media_id)"
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        @click="goToMedia(t.media_id, $event)"
                                         >{{ t.media_id }}</a
                                     >
                                 </td>
@@ -82,10 +82,10 @@ import { apiTasksGetTasks } from "@/api/api-tasks";
 
 export default defineComponent({
     name: "TaskListModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -101,6 +101,31 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.load();
+            }
+        },
+    },
+    mounted: function () {
+        this.load();
+
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
+        clearNamedTimeout(this.updateRequestId);
+        abortNamedApiRequest(this.updateRequestId);
     },
     methods: {
         setTasks: function (tasks) {
@@ -319,31 +344,6 @@ export default defineComponent({
                     media: mid + "",
                 })
             );
-        },
-    },
-    mounted: function () {
-        this.load();
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        clearNamedTimeout(this.updateRequestId);
-        abortNamedApiRequest(this.updateRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.load();
-            }
         },
     },
 });

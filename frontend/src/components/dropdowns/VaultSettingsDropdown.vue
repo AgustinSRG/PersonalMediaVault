@@ -80,10 +80,10 @@ import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
     name: "VaultSettingsDropdown",
-    emits: ["update:display", "goto"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display", "goto"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -96,6 +96,33 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
             username: AuthController.Username,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+
+        if (this.display) {
+            this.focusTrap.activate();
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         close: function () {
@@ -129,33 +156,6 @@ export default defineComponent({
             e.stopPropagation();
             if (e.key === "Escape") {
                 this.close();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
-
-        if (this.display) {
-            this.focusTrap.activate();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
             }
         },
     },

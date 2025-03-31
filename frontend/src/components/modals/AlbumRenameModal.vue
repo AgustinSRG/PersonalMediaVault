@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Rename album") }}
@@ -18,10 +18,10 @@
                 <div class="form-group">
                     <label>{{ $t("Album name") }}:</label>
                     <input
+                        v-model="name"
                         type="text"
                         name="album-name"
                         autocomplete="off"
-                        v-model="name"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -50,13 +50,18 @@ import { apiAlbumsRenameAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "AlbumRenameModal",
     components: {
         LoadingIcon,
     },
-    name: "AlbumRenameModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
+    },
+    emits: ["update:display"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -71,10 +76,25 @@ export default defineComponent({
             forceCloseSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.name = this.oldName;
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+
+        this.onAlbumUpdate();
+
+        if (this.display) {
+            this.error = "";
+            this.name = this.oldName;
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -166,26 +186,6 @@ export default defineComponent({
                     console.error(err);
                     this.busy = false;
                 });
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
-
-        this.onAlbumUpdate();
-
-        if (this.display) {
-            this.error = "";
-            this.name = this.oldName;
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.name = this.oldName;
-                this.autoFocus();
-            }
         },
     },
 });

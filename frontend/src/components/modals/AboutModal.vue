@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title about-modal-title">
@@ -85,10 +85,10 @@ import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth
 
 export default defineComponent({
     name: "AboutModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             requestId: getUniqueStringId(),
@@ -111,6 +111,29 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.load();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+        if (this.display) {
+            this.load();
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
+        clearNamedTimeout(this.requestId);
     },
     methods: {
         close: function () {
@@ -152,29 +175,6 @@ export default defineComponent({
 
         getReleaseLink: function (version: string, gitRepository: string) {
             return gitRepository + "/releases/tag/v" + version;
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-        if (this.display) {
-            this.load();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-        clearNamedTimeout(this.requestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.load();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
         },
     },
 });

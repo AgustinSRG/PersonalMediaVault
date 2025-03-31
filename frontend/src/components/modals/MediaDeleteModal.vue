@@ -1,11 +1,11 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">
                     {{ $t("Delete media") }}
@@ -24,10 +24,10 @@
                 <div class="form-group">
                     <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
                     <input
+                        v-model="confirmation"
                         type="text"
                         name="confirmation"
                         autocomplete="off"
-                        v-model="confirmation"
                         :disabled="busy"
                         maxlength="255"
                         class="form-control form-control-full-width auto-focus"
@@ -58,13 +58,18 @@ import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "MediaDeleteModal",
     components: {
         LoadingIcon,
     },
-    name: "MediaDeleteModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
+    },
+    emits: ["update:display"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
     },
     data: function () {
         return {
@@ -80,10 +85,26 @@ export default defineComponent({
             forceCloseSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.confirmation = "";
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onMediaUpdate.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
+
+        this.onMediaUpdate();
+
+        if (this.display) {
+            this.error = "";
+            this.confirmation = "";
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -164,27 +185,6 @@ export default defineComponent({
                     console.error(err);
                     this.busy = false;
                 });
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onMediaUpdate.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.onMediaUpdate.bind(this));
-
-        this.onMediaUpdate();
-
-        if (this.display) {
-            this.error = "";
-            this.confirmation = "";
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.confirmation = "";
-                this.autoFocus();
-            }
         },
     },
 });

@@ -13,7 +13,7 @@
                 {{ v }}
             </button>
         </div>
-        <input type="file" class="file-hidden" @change="inputFileChanged" name="media-upload" multiple />
+        <input type="file" class="file-hidden" name="media-upload" multiple @change="inputFileChanged" />
         <div
             class="upload-box auto-focus"
             :class="{ dragging: dragging }"
@@ -35,23 +35,23 @@
         <div class="horizontal-filter-menu">
             <a
                 href="javascript:;"
-                @click="updateSelectedState('pending')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: selectedState === 'pending' }"
+                @click="updateSelectedState('pending')"
                 >{{ $t("Pending") }} ({{ countPending }})</a
             >
             <a
                 href="javascript:;"
-                @click="updateSelectedState('ready')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: selectedState === 'ready' }"
+                @click="updateSelectedState('ready')"
                 >{{ $t("Ready") }} ({{ countReady }})</a
             >
             <a
                 href="javascript:;"
-                @click="updateSelectedState('error')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: selectedState === 'error' }"
+                @click="updateSelectedState('error')"
                 >{{ $t("Error") }} ({{ countError }})</a
             >
         </div>
@@ -64,10 +64,10 @@
                         <a
                             v-if="m.status === 'ready'"
                             class="bold"
-                            @click="goToMedia(m, $event)"
                             :href="getMediaURL(m.mid)"
                             target="_blank"
                             rel="noopener noreferrer"
+                            @click="goToMedia(m, $event)"
                             >{{ m.name }}</a
                         >
                     </div>
@@ -113,13 +113,13 @@
             </div>
         </div>
 
-        <div class="upload-table table-responsive" v-if="pendingToUpload.length > 0">
-            <div class="form-group" v-if="pendingToUpload.length > 0">
+        <div v-if="pendingToUpload.length > 0" class="upload-table table-responsive">
+            <div v-if="pendingToUpload.length > 0" class="form-group">
                 <button type="button" class="btn btn-primary" @click="clearList">
                     <i class="fas fa-broom"></i> {{ $t("Clear list") }}
                 </button>
             </div>
-            <div class="form-group" v-if="countCancellable > 0">
+            <div v-if="countCancellable > 0" class="form-group">
                 <button type="button" class="btn btn-primary" @click="cancelAll">
                     <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
                 </button>
@@ -157,16 +157,16 @@ const STATE_FILTER_READY = ["ready"];
 const STATE_FILTER_ERROR = ["error"];
 
 export default defineComponent({
+    name: "PageUpload",
     components: {
         UploadModal,
     },
-    name: "PageUpload",
-    emits: ["media-go"],
     props: {
         display: Boolean,
         inModal: Boolean,
         fixedAlbum: Number,
     },
+    emits: ["media-go"],
     data: function () {
         return {
             dragging: false,
@@ -191,6 +191,42 @@ export default defineComponent({
 
             parallelOptions: [1, 2, 4, 8, 16, 32, 64],
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        this.pendingToUpload = UploadController.GetEntries();
+        this.updateCountCancellable(this.pendingToUpload);
+        this.updateFilteredEntries();
+
+        this.$listenOnAppEvent(
+            EVENT_NAME_UPLOAD_LIST_UPDATE,
+            (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
+                switch (mode) {
+                    case "clear":
+                        this.onPendingClear();
+                        break;
+                    case "push":
+                        this.onPendingPush(entry);
+                        break;
+                    case "rm":
+                        this.onPendingRemove(index);
+                        break;
+                    case "update":
+                        this.onPendingUpdate(index, entry);
+                        break;
+                }
+            },
+        );
+
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         clickToSelect: function () {
@@ -505,42 +541,6 @@ export default defineComponent({
                     media: mid + "",
                 })
             );
-        },
-    },
-    mounted: function () {
-        this.pendingToUpload = UploadController.GetEntries();
-        this.updateCountCancellable(this.pendingToUpload);
-        this.updateFilteredEntries();
-
-        this.$listenOnAppEvent(
-            EVENT_NAME_UPLOAD_LIST_UPDATE,
-            (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
-                switch (mode) {
-                    case "clear":
-                        this.onPendingClear();
-                        break;
-                    case "push":
-                        this.onPendingPush(entry);
-                        break;
-                    case "rm":
-                        this.onPendingRemove(index);
-                        break;
-                    case "update":
-                        this.onPendingUpdate(index, entry);
-                        break;
-                }
-            },
-        );
-
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

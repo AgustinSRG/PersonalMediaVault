@@ -1,14 +1,14 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" @scroll.passive="onPageScroll" tabindex="-1">
+    <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" tabindex="-1" @scroll.passive="onPageScroll">
         <form class="adv-search-form" @submit="onSubmit">
             <div class="form-group">
                 <label>{{ $t("Title or description must contain") }}:</label>
                 <input
+                    v-model="textSearch"
                     type="text"
                     name="title-search"
                     autocomplete="off"
                     maxlength="255"
-                    v-model="textSearch"
                     class="form-control form-control-full-width"
                     @input="markDirty"
                 />
@@ -16,7 +16,7 @@
 
             <div class="form-group">
                 <label>{{ $t("Tags") }}:</label>
-                <select class="form-control form-select form-control-full-width" v-model="tagMode" @change="markDirty">
+                <select v-model="tagMode" class="form-control form-select form-control-full-width" @change="markDirty">
                     <option :value="'all'">
                         {{ $t("Media must contain ALL of the selected tags") }}
                     </option>
@@ -31,7 +31,7 @@
                     </option>
                 </select>
             </div>
-            <div class="form-group media-tags" v-if="tagMode !== 'untagged'">
+            <div v-if="tagMode !== 'untagged'" class="form-group media-tags">
                 <div v-for="tag in tags" :key="tag" class="media-tag">
                     <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                     <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
@@ -40,18 +40,18 @@
                 </div>
                 <div class="media-tags-finder">
                     <input
+                        v-model="tagToAdd"
                         type="text"
                         autocomplete="off"
                         maxlength="255"
-                        v-model="tagToAdd"
-                        @input="onTagAddChanged(false)"
-                        @keydown="onTagAddKeyDown"
                         class="form-control auto-focus tags-input-search"
                         :placeholder="$t('Search for tags') + '...'"
+                        @input="onTagAddChanged(false)"
+                        @keydown="onTagAddKeyDown"
                     />
                 </div>
             </div>
-            <div class="form-group" v-if="tagMode !== 'untagged' && matchingTags.length > 0">
+            <div v-if="tagMode !== 'untagged' && matchingTags.length > 0" class="form-group">
                 <button
                     v-for="mt in matchingTags"
                     :key="mt.id"
@@ -68,8 +68,8 @@
                 <div class="form-group">
                     <label>{{ $t("Media type") }}:</label>
                     <select
-                        class="form-control form-select form-control-full-width tags-focus-skip"
                         v-model="type"
+                        class="form-control form-select form-control-full-width tags-focus-skip"
                         @change="markDirty"
                         @keydown="onTagsSkipKeyDown"
                     >
@@ -87,7 +87,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("Order") }}:</label>
-                    <select class="form-control form-select form-control-full-width" v-model="order" @change="markDirty">
+                    <select v-model="order" class="form-control form-select form-control-full-width" @change="markDirty">
                         <option :value="'desc'">{{ $t("Show most recent") }}</option>
                         <option :value="'asc'">{{ $t("Show oldest") }}</option>
                     </select>
@@ -131,7 +131,7 @@
                     {{ $t("Could not find any result") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="onSubmit()" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" @click="onSubmit()">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>
                 </div>
@@ -151,10 +151,10 @@
                 <div v-for="item in pageItems" :key="item.id" class="search-result-item" :class="{ current: currentMedia == item.id }">
                     <a
                         class="clickable"
-                        @click="goToMedia(item.id, $event)"
                         :href="getMediaURL(item.id)"
                         target="_blank"
                         rel="noopener noreferrer"
+                        @click="goToMedia(item.id, $event)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div class="search-result-thumb-inner">
@@ -165,7 +165,7 @@
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                <div v-if="item.type === 2 || item.type === 3" class="search-result-thumb-tag">
                                     {{ renderTime(item.duration) }}
                                 </div>
                             </div>
@@ -220,12 +220,11 @@ import AlbumSelect from "../utils/AlbumSelect.vue";
 const INITIAL_WINDOW_SIZE = 50;
 
 export default defineComponent({
+    name: "PageAdvancedSearch",
     components: {
         ThumbImage,
         AlbumSelect,
     },
-    name: "PageAdvancedSearch",
-    emits: ["select-media", "update:pageScroll"],
     props: {
         display: Boolean,
         min: Boolean,
@@ -240,6 +239,7 @@ export default defineComponent({
         minItemsSize: Number,
         maxItemsSize: Number,
     },
+    emits: ["select-media", "update:pageScroll"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -324,6 +324,103 @@ export default defineComponent({
 
             return Math.max(0, itemsFitInRow - 1 - (lastWindowElement % itemsFitInRow));
         },
+    },
+    watch: {
+        display: function () {
+            this.load();
+            if (this.display && this.inModal) {
+                this.startSearch();
+            } else if (this.inModal) {
+                this.cancel();
+            }
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+        pageSize: function () {
+            this.updatePageSize();
+        },
+    },
+    mounted: function () {
+        this.pageScrollStatus = 0;
+
+        this.advancedSearch = false;
+
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.resetSearch.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.resetSearch.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
+
+        this.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this.goTop.bind(this));
+
+        this.updateAlbums();
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+
+        this.updateTagData();
+
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.pageItems;
+            },
+            set: (l) => {
+                this.pageItems = l;
+            },
+            onChange: () => {
+                this.windowPosition = this.listScroller.windowPosition;
+            },
+        });
+
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this.startSearch();
+
+        if (this.display) {
+            this.autoFocus();
+        }
+
+        const container = this.getContainer();
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+
+        if (container) {
+            this.windowWidth = container.getBoundingClientRect().width;
+            this.windowResizeObserver.observe(container);
+        } else {
+            this.windowResizeObserver.observe(this.$el);
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
+
+        clearNamedTimeout(this.dirtyTimeoutId);
+
+        if (this.findTagTimeout) {
+            clearTimeout(this.findTagTimeout);
+        }
+
+        clearInterval(this.continueCheckInterval);
+
+        clearInterval(this.checkContainerTimer);
+
+        if (!this.inModal) {
+            PagesController.OnPageUnload();
+        }
+
+        this.windowResizeObserver.disconnect();
     },
     methods: {
         markDirty: function () {
@@ -1133,103 +1230,6 @@ export default defineComponent({
             }
 
             this.windowWidth = cont.getBoundingClientRect().width;
-        },
-    },
-    mounted: function () {
-        this.pageScrollStatus = 0;
-
-        this.advancedSearch = false;
-
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.resetSearch.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.resetSearch.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
-
-        this.continueCheckInterval = setInterval(this.checkContinueSearch.bind(this), 500);
-
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP, this.goTop.bind(this));
-
-        this.updateAlbums();
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
-        this.updateTagData();
-
-        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
-            get: () => {
-                return this.pageItems;
-            },
-            set: (l) => {
-                this.pageItems = l;
-            },
-            onChange: () => {
-                this.windowPosition = this.listScroller.windowPosition;
-            },
-        });
-
-        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
-
-        this.startSearch();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-
-        const container = this.getContainer();
-
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-
-        if (container) {
-            this.windowWidth = container.getBoundingClientRect().width;
-            this.windowResizeObserver.observe(container);
-        } else {
-            this.windowResizeObserver.observe(this.$el);
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-
-        clearNamedTimeout(this.dirtyTimeoutId);
-
-        if (this.findTagTimeout) {
-            clearTimeout(this.findTagTimeout);
-        }
-
-        clearInterval(this.continueCheckInterval);
-
-        clearInterval(this.checkContainerTimer);
-
-        if (!this.inModal) {
-            PagesController.OnPageUnload();
-        }
-
-        this.windowResizeObserver.disconnect();
-    },
-    watch: {
-        display: function () {
-            this.load();
-            if (this.display && this.inModal) {
-                this.startSearch();
-            } else if (this.inModal) {
-                this.cancel();
-            }
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        pageSize: function () {
-            this.updatePageSize();
         },
     },
 });

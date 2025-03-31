@@ -32,7 +32,6 @@ import { isTouchDevice } from "../../utils/touch";
 
 export default defineComponent({
     name: "ScaleControl",
-    emits: ["update:scale", "update:fit", "update:expanded", "enter", "leave"],
     props: {
         width: Number,
         scale: Number,
@@ -40,6 +39,7 @@ export default defineComponent({
         fit: Boolean,
         expanded: Boolean,
     },
+    emits: ["update:scale", "update:fit", "update:expanded", "enter", "leave"],
     setup(props) {
         return {
             scaleState: useVModel(props, "scale"),
@@ -51,6 +51,17 @@ export default defineComponent({
         return {
             scaleGrabbed: false,
         };
+    },
+    mounted: function () {
+        if (isTouchDevice()) {
+            this.expandedState = true;
+        }
+
+        this.$listenOnDocumentEvent("mouseup", this.dropScale.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.dropScale.bind(this));
+
+        this.$listenOnDocumentEvent("mousemove", this.moveScale.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.moveScale.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -157,17 +168,6 @@ export default defineComponent({
             this.fitState = false;
             this.scaleState = z;
         },
-    },
-    mounted: function () {
-        if (isTouchDevice()) {
-            this.expandedState = true;
-        }
-
-        this.$listenOnDocumentEvent("mouseup", this.dropScale.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropScale.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveScale.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveScale.bind(this));
     },
 });
 </script>

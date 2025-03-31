@@ -150,13 +150,13 @@
             <tr>
                 <td colspan="2">
                     <input
+                        v-model.number="speedNum"
                         type="range"
                         class="form-range"
-                        v-model.number="speedNum"
-                        @input="updateSpeedNum"
                         :min="1"
                         :max="200"
                         :step="1"
+                        @input="updateSpeedNum"
                     />
                 </td>
             </tr>
@@ -164,12 +164,12 @@
             <tr>
                 <td colspan="2" class="custom-size-row">
                     <input
+                        v-model.number="speedNum"
                         type="number"
                         class="form-control custom-size-input"
-                        v-model.number="speedNum"
-                        @input="updateSpeedNum"
                         :min="1"
                         :step="1"
+                        @input="updateSpeedNum"
                     />
                     <b class="custom-size-unit">%</b>
                 </td>
@@ -257,21 +257,8 @@ import { FocusTrap } from "../../utils/focus-trap";
 import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
 
 export default defineComponent({
-    components: { ToggleSwitch, PlayerSubtitlesConfig },
     name: "AudioPlayerConfig",
-    emits: [
-        "update:shown",
-        "update:loop",
-        "update:nextEnd",
-        "update:speed",
-        "update:animColors",
-        "update:showTitle",
-        "update:showThumbnail",
-        "update:autoNextPageDelay",
-        "update-auto-next",
-        "enter",
-        "leave",
-    ],
+    components: { ToggleSwitch, PlayerSubtitlesConfig },
     props: {
         shown: Boolean,
         metadata: Object,
@@ -286,6 +273,19 @@ export default defineComponent({
         inAlbum: Boolean,
         autoNextPageDelay: Boolean,
     },
+    emits: [
+        "update:shown",
+        "update:loop",
+        "update:nextEnd",
+        "update:speed",
+        "update:animColors",
+        "update:showTitle",
+        "update:showThumbnail",
+        "update:autoNextPageDelay",
+        "update-auto-next",
+        "enter",
+        "leave",
+    ],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -313,6 +313,33 @@ export default defineComponent({
             autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
         };
+    },
+    watch: {
+        shown: function () {
+            this.page = "";
+            if (this.shown) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+        speed: function () {
+            this.speedNum = Math.floor(this.speed * 100);
+        },
+        rTick: function () {
+            this.updateEffectiveSubtitles();
+        },
+    },
+    mounted: function () {
+        this.subtitles = getSelectedSubtitles();
+        this.updateEffectiveSubtitles();
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         enterConfig: function () {
@@ -510,33 +537,6 @@ export default defineComponent({
                 this.close();
                 e.stopPropagation();
             }
-        },
-    },
-    mounted: function () {
-        this.subtitles = getSelectedSubtitles();
-        this.updateEffectiveSubtitles();
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        shown: function () {
-            this.page = "";
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-        speed: function () {
-            this.speedNum = Math.floor(this.speed * 100);
-        },
-        rTick: function () {
-            this.updateEffectiveSubtitles();
         },
     },
 });

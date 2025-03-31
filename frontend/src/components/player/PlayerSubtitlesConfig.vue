@@ -106,13 +106,13 @@
             <tr>
                 <td colspan="2">
                     <input
+                        v-model.number="customSize"
                         type="range"
                         class="form-range"
-                        v-model.number="customSize"
-                        @input="saveCustomSubtitleSize"
                         :min="50"
                         :max="250"
                         :step="1"
+                        @input="saveCustomSubtitleSize"
                     />
                 </td>
             </tr>
@@ -120,12 +120,12 @@
             <tr>
                 <td colspan="2" class="custom-size-row">
                     <input
+                        v-model.number="customSize"
                         type="number"
                         class="form-control custom-size-input"
-                        v-model.number="customSize"
-                        @input="saveCustomSubtitleSize"
                         :min="1"
                         :step="1"
+                        @input="saveCustomSubtitleSize"
                     />
                     <b class="custom-size-unit">%</b>
                 </td>
@@ -144,13 +144,13 @@
             <tr>
                 <td colspan="2">
                     <input
+                        v-model.number="margin"
                         type="range"
                         class="form-range"
-                        v-model.number="margin"
-                        @input="updateSubtitlesMargin"
                         :min="0"
                         :max="250"
                         :step="1"
+                        @input="updateSubtitlesMargin"
                     />
                 </td>
             </tr>
@@ -158,12 +158,12 @@
             <tr>
                 <td colspan="2" class="custom-size-row">
                     <input
+                        v-model.number="margin"
                         type="number"
                         class="form-control custom-size-input"
-                        v-model.number="margin"
-                        @input="updateSubtitlesMargin"
                         :min="0"
                         :step="1"
+                        @input="updateSubtitlesMargin"
                     />
                     <b class="custom-size-unit">px</b>
                 </td>
@@ -227,8 +227,8 @@ import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, getSubtitlesOptions, setSubtitles
 import { AppEvents } from "@/control/app-events";
 
 export default defineComponent({
-    components: { ToggleSwitch },
     name: "PlayerSubtitlesConfig",
+    components: { ToggleSwitch },
     emits: ["page-switch", "go-back"],
     setup: function () {
         return {
@@ -251,6 +251,10 @@ export default defineComponent({
             allowColors: options.allowColors,
             margin: options.margin,
         };
+    },
+    mounted: function () {
+        this.page = "home";
+        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, this.fetchSubtitlesOptions.bind(this));
     },
     methods: {
         goBack: function () {
@@ -414,10 +418,6 @@ export default defineComponent({
             setSubtitlesOptions(options);
             this.onOptionsUpdate();
         },
-    },
-    mounted: function () {
-        this.page = "home";
-        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, this.fetchSubtitlesOptions.bind(this));
     },
 });
 </script>

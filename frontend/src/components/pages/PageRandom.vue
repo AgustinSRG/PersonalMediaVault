@@ -22,7 +22,7 @@
                     {{ $t("The vault is empty") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="load" class="btn btn-primary"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
                 </div>
             </div>
 
@@ -32,15 +32,15 @@
                     {{ $t("Could not find any result") }}
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="load" class="btn btn-primary"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="clearSearch" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" @click="clearSearch">
                         <i class="fas fa-times"></i> {{ $t("Clear search") }}
                     </button>
                 </div>
                 <div class="search-results-msg-btn">
-                    <button type="button" @click="goAdvancedSearch" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" @click="goAdvancedSearch">
                         <i class="fas fa-search"></i> {{ $t("Advanced search") }}
                     </button>
                 </div>
@@ -64,7 +64,7 @@
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div class="search-result-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                                <div v-if="item.type === 2 || item.type === 3" class="search-result-thumb-tag">
                                     {{ renderTime(item.duration) }}
                                 </div>
                             </div>
@@ -107,10 +107,10 @@ import { apiSearchRandom } from "@/api/api-search";
 import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
+    name: "PageRandom",
     components: {
         ThumbImage,
     },
-    name: "PageRandom",
     props: {
         display: Boolean,
         min: Boolean,
@@ -169,6 +169,53 @@ export default defineComponent({
 
             return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
         },
+    },
+    watch: {
+        display: function () {
+            this.load();
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+        pageSize: function () {
+            this.updatePageSize();
+        },
+    },
+    mounted: function () {
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.load.bind(this));
+
+        this.updateSearchParams();
+        this.updateTagData();
+        this.load();
+
+        if (this.display) {
+            this.autoFocus();
+        }
+
+        this.windowWidth = this.$el.getBoundingClientRect().width;
+
+        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
+        this.windowResizeObserver.observe(this.$el);
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
+        PagesController.OnPageUnload();
+        this.windowResizeObserver.disconnect();
     },
     methods: {
         scrollToTop: function () {
@@ -458,53 +505,6 @@ export default defineComponent({
 
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
-        },
-    },
-    mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.load.bind(this));
-
-        this.updateSearchParams();
-        this.updateTagData();
-        this.load();
-
-        if (this.display) {
-            this.autoFocus();
-        }
-
-        this.windowWidth = this.$el.getBoundingClientRect().width;
-
-        this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
-        this.windowResizeObserver.observe(this.$el);
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-        PagesController.OnPageUnload();
-        this.windowResizeObserver.disconnect();
-    },
-    watch: {
-        display: function () {
-            this.load();
-            if (this.display) {
-                this.autoFocus();
-            }
-        },
-        pageSize: function () {
-            this.updatePageSize();
         },
     },
 });

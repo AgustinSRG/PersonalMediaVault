@@ -46,20 +46,20 @@
         </div>
 
         <div class="player-feedback-container">
-            <div class="player-feedback player-feedback-play" key="play" v-if="feedback === 'play'" @animationend="onFeedBackAnimationEnd">
+            <div v-if="feedback === 'play'" key="play" class="player-feedback player-feedback-play" @animationend="onFeedBackAnimationEnd">
                 <div><i class="fas fa-play"></i></div>
             </div>
             <div
-                class="player-feedback player-feedback-pause"
-                key="pause"
                 v-if="feedback === 'pause'"
+                key="pause"
+                class="player-feedback player-feedback-pause"
                 @animationend="onFeedBackAnimationEnd"
             >
                 <div><i class="fas fa-pause"></i></div>
             </div>
         </div>
 
-        <div class="player-loader" v-if="loading && !mediaError">
+        <div v-if="loading && !mediaError" class="player-loader">
             <div class="player-lds-ring">
                 <div></div>
                 <div></div>
@@ -69,8 +69,8 @@
         </div>
 
         <div
-            class="player-auto-next-overlay"
             v-if="pendingNextEnd"
+            class="player-auto-next-overlay"
             @click="stopPropagationEvent"
             @mousedown="stopPropagationEvent"
             @touchstart="stopPropagationEvent"
@@ -104,8 +104,8 @@
             :tid="audioPendingTask"
             :res="-1"
             :error="mediaError"
-            :errorMessage="mediaErrorMessage"
-            :canAutoReload="!expandedTitle && !expandedAlbum"
+            :error-message="mediaErrorMessage"
+            :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
         <PlayerSubtitles :show-controls="showControls" :subtitles="subtitles"></PlayerSubtitles>
@@ -114,22 +114,22 @@
             v-if="timeSlicesEdit"
             v-model:display="timeSlicesEdit"
             :current-time="currentTime"
+            :context-open="contextMenuShown"
             @update-time-slices="refreshTimeSlices"
-            :contextOpen="contextMenuShown"
             @clicked="clickControls"
         ></TimeSlicesEditHelper>
 
         <TagsEditHelper
             v-if="displayTagList"
             v-model:display="displayTagListStatus"
-            :contextOpen="contextMenuShown"
+            :context-open="contextMenuShown"
             @clicked="clickControls"
         ></TagsEditHelper>
 
         <ExtendedDescriptionWidget
             v-if="displayExtendedDescription"
             v-model:display="displayExtendedDescriptionStatus"
-            :contextOpen="contextMenuShown"
+            :context-open="contextMenuShown"
             @clicked="clickControls"
             @update-ext-desc="refreshExtendedDescription"
         ></ExtendedDescriptionWidget>
@@ -196,18 +196,18 @@
 
                 <VolumeControl
                     ref="volumeControl"
-                    :min="min"
-                    :width="min ? 50 : 80"
                     v-model:muted="muted"
                     v-model:volume="volume"
                     v-model:expanded="volumeShown"
+                    :min="min"
+                    :width="min ? 50 : 80"
                     @update:volume="onUserVolumeUpdated"
                     @update:muted="onUserMutedUpdated"
                     @enter="enterTooltip('volume')"
                     @leave="leaveTooltip('volume')"
                 ></VolumeControl>
 
-                <div class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }" v-if="!min">
+                <div v-if="!min" class="player-time-label-container" :class="{ 'in-album': !!next || !!prev }">
                     <span>{{ renderTime(currentTime) }} / {{ renderTime(duration) }}</span>
                     <span v-if="currentTimeSlice" class="times-slice-name"><b class="separator"> - </b>{{ currentTimeSliceName }}</span>
                 </div>
@@ -380,24 +380,24 @@
             v-model:shown="displayConfig"
             v-model:speed="speed"
             v-model:loop="loop"
-            @update:loop="() => $emit('force-loop', loop)"
-            v-model:nextEnd="nextEnd"
-            v-model:autoNextPageDelay="autoNextPageDelay"
-            v-model:animColors="animationColors"
-            v-model:showTitle="showTitle"
-            v-model:showThumbnail="showThumbnail"
-            :rTick="internalTick"
+            v-model:next-end="nextEnd"
+            v-model:auto-next-page-delay="autoNextPageDelay"
+            v-model:anim-colors="animationColors"
+            v-model:show-title="showTitle"
+            v-model:show-thumbnail="showThumbnail"
+            :r-tick="internalTick"
             :metadata="metadata"
-            @update:animColors="onUpdateAnimColors"
-            @update:showTitle="onUpdateShowTitle"
-            @update:showThumbnail="onUpdateShowThumbnail"
-            @update:nextEnd="onUpdateNextEnd"
-            @update:autoNextPageDelay="onUpdateAutoNextPageDelay"
+            :is-short="isShort"
+            :in-album="inAlbum"
+            @update:loop="() => $emit('force-loop', loop)"
+            @update:anim-colors="onUpdateAnimColors"
+            @update:show-title="onUpdateShowTitle"
+            @update:show-thumbnail="onUpdateShowThumbnail"
+            @update:next-end="onUpdateNextEnd"
+            @update:auto-next-page-delay="onUpdateAutoNextPageDelay"
             @enter="enterControls"
             @leave="leaveControls"
-            :isShort="isShort"
             @update-auto-next="setupAutoNextTimer"
-            :inAlbum="inAlbum"
         ></AudioPlayerConfig>
 
         <PlayerAttachmentsList
@@ -411,35 +411,35 @@
 
         <PlayerTopBar
             v-if="metadata"
+            v-model:expanded="expandedTitle"
+            v-model:album-expanded="expandedAlbum"
             :mid="mid"
             :metadata="metadata"
             :shown="showControls"
             :fullscreen="fullscreen"
-            v-model:expanded="expandedTitle"
-            v-model:albumExpanded="expandedAlbum"
+            :in-album="inAlbum"
             @update:expanded="onTopBarExpand"
-            :inAlbum="inAlbum"
             @click-player="clickControls"
         ></PlayerTopBar>
 
         <PlayerContextMenu
-            type="audio"
             v-model:shown="contextMenuShown"
+            v-model:loop="loop"
+            v-model:slice-loop="sliceLoop"
+            v-model:time-slices-edit="timeSlicesEdit"
+            type="audio"
             :x="contextMenuX"
             :y="contextMenuY"
-            v-model:loop="loop"
-            @update:loop="() => $emit('force-loop', loop)"
             :url="audioURL"
             :title="title"
-            :canWrite="canWrite"
-            :hasExtendedDescription="hasExtendedDescription"
+            :can-write="canWrite"
+            :has-extended-description="hasExtendedDescription"
+            :has-slices="timeSlices && timeSlices.length > 0"
+            :is-short="isShort"
+            @update:loop="() => $emit('force-loop', loop)"
             @stats="openStats"
-            v-model:sliceLoop="sliceLoop"
-            :hasSlices="timeSlices && timeSlices.length > 0"
-            :isShort="isShort"
             @open-tags="openTags"
             @open-ext-desc="openExtendedDescription"
-            v-model:timeSlicesEdit="timeSlicesEdit"
         ></PlayerContextMenu>
     </div>
 </template>
@@ -506,6 +506,7 @@ const ExtendedDescriptionWidget = defineAsyncComponent({
 });
 
 export default defineComponent({
+    name: "AudioPlayer",
     components: {
         VolumeControl,
         AudioPlayerConfig,
@@ -519,19 +520,6 @@ export default defineComponent({
         PlayerAttachmentsList,
         PlayerSubtitles,
     },
-    name: "AudioPlayer",
-    emits: [
-        "go-next",
-        "go-prev",
-        "ended",
-        "update:fullscreen",
-        "albums-open",
-        "stats-open",
-        "force-loop",
-        "delete",
-        "update:displayTagList",
-        "update:displayExtendedDescription",
-    ],
     props: {
         mid: Number,
         metadata: Object as PropType<MediaData>,
@@ -558,6 +546,18 @@ export default defineComponent({
         displayTagList: Boolean,
         displayExtendedDescription: Boolean,
     },
+    emits: [
+        "go-next",
+        "go-prev",
+        "ended",
+        "update:fullscreen",
+        "albums-open",
+        "stats-open",
+        "force-loop",
+        "delete",
+        "update:displayTagList",
+        "update:displayExtendedDescription",
+    ],
     setup(props) {
         return {
             timer: null,
@@ -671,6 +671,94 @@ export default defineComponent({
             timeStartTap: 0,
         };
     },
+    watch: {
+        rTick: function () {
+            this.internalTick++;
+            this.expandedTitle = false;
+            this.subtitles = "";
+            this.subtitlesStart = -1;
+            this.subtitlesEnd = -1;
+            this.autoPlayApplied = false;
+            this.initializeAudio();
+        },
+        audioURL: function () {
+            if (this.audioURL) {
+                this.loading = true;
+            }
+        },
+        next: function () {
+            this.setDefaultLoop();
+            this.setupAutoNextTimer();
+            if (!this.next && !this.pageNext) {
+                this.hideNextEnd();
+            }
+        },
+        pageNext: function () {
+            this.setDefaultLoop();
+            this.setupAutoNextTimer();
+            if (!this.next && !this.pageNext) {
+                this.hideNextEnd();
+            }
+        },
+    },
+    mounted: function () {
+        // Load player preferences
+        this.muted = getPlayerMuted();
+        this.volume = getPlayerVolume();
+        this.animationColors = getAudioAnimationStyle();
+        this.showTitle = getShowAudioTitle();
+        this.showThumbnail = getShowAudioThumbnail();
+        this.nextEnd = getAutoNextOnEnd();
+        this.autoNextPageDelay = getAutoNextPageDelay();
+
+        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
+
+        this.timer = setInterval(this.tick.bind(this), 100);
+
+        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_UPDATE, this.reloadSubtitles.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.themeUpdated.bind(this));
+
+        this.initializeAudio();
+
+        if (window.navigator && window.navigator.mediaSession) {
+            MediaController.MediaSessionId = this.mediaSessionId;
+            clearMediaSessionActionHandlers();
+
+            addMediaSessionActionHandler(
+                ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"],
+                this.handleMediaSessionEvent.bind(this),
+            );
+
+            this.updateMediaSessionPlaybackState();
+        }
+    },
+    beforeUnmount: function () {
+        this.audioURL = "";
+        this.onClearURL();
+        clearInterval(this.timer);
+
+        if (this.autoNextTimer) {
+            clearTimeout(this.autoNextTimer);
+            this.autoNextTimer = null;
+        }
+
+        if (this.nextEndTimer) {
+            clearTimeout(this.nextEndTimer);
+            this.nextEndTimer = null;
+        }
+
+        this.clearAudioRenderer();
+        this.closeAudioContext();
+
+        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
+            clearMediaSessionActionHandlers();
+            navigator.mediaSession.playbackState = "none";
+            MediaController.MediaSessionId = "";
+        }
+    },
     methods: {
         onContextMenu: function (e: MouseEvent) {
             this.contextMenuX = e.pageX;
@@ -726,7 +814,9 @@ export default defineComponent({
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
             this.displayAttachments = false;
-            e && e.stopPropagation();
+            if (e) {
+                e.stopPropagation();
+            }
         },
 
         clickControls: function (e: Event) {
@@ -1048,7 +1138,9 @@ export default defineComponent({
         onPlayerTouchEnd: function (e: TouchEvent) {
             if (this.timelineGrabbed) {
                 this.timelineGrabbed = false;
-                e.touches[0] && this.onTimelineSkip(e.touches[0].pageX);
+                if (e.touches[0]) {
+                    this.onTimelineSkip(e.touches[0].pageX);
+                }
             }
 
             this.tooltipShown = false;
@@ -1794,7 +1886,9 @@ export default defineComponent({
             }
 
             this.mediaErrorMessage = err.message || "";
-            this.mediaErrorMessage && console.error(this.mediaErrorMessage);
+            if (this.mediaErrorMessage) {
+                console.error(this.mediaErrorMessage);
+            }
         },
 
         setDefaultLoop: function () {
@@ -1926,94 +2020,6 @@ export default defineComponent({
             }
 
             navigator.mediaSession.playbackState = this.playing ? "playing" : "paused";
-        },
-    },
-    mounted: function () {
-        // Load player preferences
-        this.muted = getPlayerMuted();
-        this.volume = getPlayerVolume();
-        this.animationColors = getAudioAnimationStyle();
-        this.showTitle = getShowAudioTitle();
-        this.showThumbnail = getShowAudioThumbnail();
-        this.nextEnd = getAutoNextOnEnd();
-        this.autoNextPageDelay = getAutoNextPageDelay();
-
-        this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-
-        this.timer = setInterval(this.tick.bind(this), 100);
-
-        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_SUBTITLES_UPDATE, this.reloadSubtitles.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_THEME_CHANGED, this.themeUpdated.bind(this));
-
-        this.initializeAudio();
-
-        if (window.navigator && window.navigator.mediaSession) {
-            MediaController.MediaSessionId = this.mediaSessionId;
-            clearMediaSessionActionHandlers();
-
-            addMediaSessionActionHandler(
-                ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"],
-                this.handleMediaSessionEvent.bind(this),
-            );
-
-            this.updateMediaSessionPlaybackState();
-        }
-    },
-    beforeUnmount: function () {
-        this.audioURL = "";
-        this.onClearURL();
-        clearInterval(this.timer);
-
-        if (this.autoNextTimer) {
-            clearTimeout(this.autoNextTimer);
-            this.autoNextTimer = null;
-        }
-
-        if (this.nextEndTimer) {
-            clearTimeout(this.nextEndTimer);
-            this.nextEndTimer = null;
-        }
-
-        this.clearAudioRenderer();
-        this.closeAudioContext();
-
-        if (window.navigator && window.navigator.mediaSession && MediaController.MediaSessionId === this.mediaSessionId) {
-            clearMediaSessionActionHandlers();
-            navigator.mediaSession.playbackState = "none";
-            MediaController.MediaSessionId = "";
-        }
-    },
-    watch: {
-        rTick: function () {
-            this.internalTick++;
-            this.expandedTitle = false;
-            this.subtitles = "";
-            this.subtitlesStart = -1;
-            this.subtitlesEnd = -1;
-            this.autoPlayApplied = false;
-            this.initializeAudio();
-        },
-        audioURL: function () {
-            if (this.audioURL) {
-                this.loading = true;
-            }
-        },
-        next: function () {
-            this.setDefaultLoop();
-            this.setupAutoNextTimer();
-            if (!this.next && !this.pageNext) {
-                this.hideNextEnd();
-            }
-        },
-        pageNext: function () {
-            this.setDefaultLoop();
-            this.setupAutoNextTimer();
-            if (!this.next && !this.pageNext) {
-                this.hideNextEnd();
-            }
         },
     },
 });

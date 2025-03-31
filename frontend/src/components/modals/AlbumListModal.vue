@@ -1,8 +1,8 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
         <div v-if="display" class="modal-dialog modal-sm" role="document">
@@ -13,39 +13,39 @@
                 </button>
             </div>
 
-            <div class="modal-body" v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</div>
+            <div v-if="loading" class="modal-body"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</div>
 
-            <div class="modal-body with-menu" v-if="!loading">
-                <div class="albums-modal-filter" v-if="!canWrite">
+            <div v-if="!loading" class="modal-body with-menu">
+                <div v-if="!canWrite" class="albums-modal-filter">
                     <input
+                        v-model="filter"
                         type="text"
                         autocomplete="off"
-                        @keydown="onFilterKeyDown"
-                        @input="updateAlbums"
                         :disabled="busy"
-                        v-model="filter"
                         class="form-control form-control-full-width auto-focus"
                         :placeholder="$t('Filter by name') + '...'"
-                    />
-                </div>
-                <div class="albums-modal-filter with-edit-mode" v-if="canWrite">
-                    <input
-                        type="text"
-                        autocomplete="off"
                         @keydown="onFilterKeyDown"
                         @input="updateAlbums"
-                        :disabled="busy"
+                    />
+                </div>
+                <div v-if="canWrite" class="albums-modal-filter with-edit-mode">
+                    <input
                         v-model="filter"
+                        type="text"
+                        autocomplete="off"
+                        :disabled="busy"
                         class="form-control auto-focus"
                         :placeholder="$t('Filter by name') + '...'"
+                        @keydown="onFilterKeyDown"
+                        @input="updateAlbums"
                     />
                     <button
                         v-if="!editMode"
                         type="button"
                         :disabled="busy"
-                        @click="changeEditMode"
                         class="album-edit-mode-btn"
                         :title="$t('Change to edit mode')"
+                        @click="changeEditMode"
                     >
                         <i class="fas fa-pencil-alt"></i>
                     </button>
@@ -53,15 +53,15 @@
                         v-if="editMode"
                         type="button"
                         :disabled="busy"
-                        @click="changeEditMode"
                         class="album-edit-mode-btn"
                         :title="$t('Change to view mode')"
+                        @click="changeEditMode"
                     >
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
                 <div class="albums-list-table-container">
-                    <div class="albums-modal-menu" v-if="editMode" @scroll="onScroll">
+                    <div v-if="editMode" class="albums-modal-menu" @scroll="onScroll">
                         <tr v-if="albums.length === 0">
                             <td colspan="2" class="albums-menu-empty">
                                 {{ $t("No albums found") }}
@@ -69,13 +69,13 @@
                         </tr>
                         <a
                             v-for="a in albums"
-                            :href="getAlbumURL(a.id, mid)"
                             :key="a.id"
-                            @click="clickOnAlbum(a, false, $event)"
-                            @keydown="clickOnEnter"
+                            :href="getAlbumURL(a.id, mid)"
                             :title="a.name"
                             class="albums-modal-menu-item"
                             :class="{ disabled: busy }"
+                            @click="clickOnAlbum(a, false, $event)"
+                            @keydown="clickOnEnter"
                         >
                             <div class="albums-modal-menu-item-icon">
                                 <LoadingIcon
@@ -88,7 +88,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="albums-modal-menu" v-if="!editMode" @scroll="onScroll">
+                    <div v-if="!editMode" class="albums-modal-menu" @scroll="onScroll">
                         <div v-if="albums.length === 0">
                             <div class="albums-menu-empty">
                                 {{ $t("No albums found") }}
@@ -96,12 +96,12 @@
                         </div>
                         <a
                             v-for="a in albums"
-                            :href="getAlbumURL(a.id, mid)"
                             :key="a.id"
-                            @click="goToAlbum(a, $event)"
-                            @keydown="clickOnEnter"
+                            :href="getAlbumURL(a.id, mid)"
                             :title="a.name"
                             class="albums-modal-menu-item"
+                            @click="goToAlbum(a, $event)"
+                            @keydown="clickOnEnter"
                         >
                             <div class="albums-modal-menu-item-icon">
                                 <i class="fas fa-list-ol"></i>
@@ -114,8 +114,8 @@
                 </div>
             </div>
 
-            <div class="modal-footer no-padding" v-if="!loading && editMode">
-                <button type="button" @click="createAlbum" :disabled="busy" class="modal-footer-btn">
+            <div v-if="!loading && editMode" class="modal-footer no-padding">
+                <button type="button" :disabled="busy" class="modal-footer-btn" @click="createAlbum">
                     <i class="fas fa-plus"></i> {{ $t("Create album") }}
                 </button>
             </div>
@@ -157,15 +157,15 @@ interface AlbumModalListItem {
 }
 
 export default defineComponent({
+    name: "AlbumListModal",
     components: {
         AlbumCreateModal,
         LoadingIcon,
     },
-    name: "AlbumListModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -195,6 +195,49 @@ export default defineComponent({
             closeSignal: 0,
             forceCloseSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            this.displayAlbumCreate = false;
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                AlbumsController.Load();
+                this.load();
+            } else {
+                clearNamedTimeout(this.loadRequestId);
+                abortNamedApiRequest(this.loadRequestId);
+            }
+        },
+    },
+    mounted: function () {
+        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(6), {
+            get: () => {
+                return this.albums;
+            },
+            set: (list) => {
+                this.albums = list;
+            },
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onUpdateStatus.bind(this));
+
+        this.updateAlbums();
+        this.load();
+
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+            AlbumsController.Load();
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     methods: {
         autoFocus: function () {
@@ -500,49 +543,6 @@ export default defineComponent({
 
         onScroll: function (e) {
             this.bigListScroller.checkElementScroll(e.target);
-        },
-    },
-    mounted: function () {
-        this.bigListScroller = new BigListScroller(BigListScroller.GetWindowSize(6), {
-            get: () => {
-                return this.albums;
-            },
-            set: (list) => {
-                this.albums = list;
-            },
-        });
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onUpdateStatus.bind(this));
-
-        this.updateAlbums();
-        this.load();
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-            AlbumsController.Load();
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    watch: {
-        display: function () {
-            this.displayAlbumCreate = false;
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                AlbumsController.Load();
-                this.load();
-            } else {
-                clearNamedTimeout(this.loadRequestId);
-                abortNamedApiRequest(this.loadRequestId);
-            }
         },
     },
 });

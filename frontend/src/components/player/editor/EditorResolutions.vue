@@ -2,7 +2,7 @@
     <div class="player-editor-sub-content">
         <!--- Resolutions -->
 
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
+        <div v-if="canWrite && (type === 2 || type === 1)" class="form-group">
             <label v-if="type === 2"
                 >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}.</label
             >
@@ -11,7 +11,7 @@
             >
         </div>
 
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 1)">
+        <div v-if="canWrite && (type === 2 || type === 1)" class="form-group">
             <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
             <label v-if="type === 2"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
         </div>
@@ -83,11 +83,11 @@ import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
 
 export default defineComponent({
+    name: "EditorResolutions",
     components: {
         LoadingIcon,
         ResolutionConfirmationModal,
     },
-    name: "EditorResolutions",
     emits: ["changed"],
     setup() {
         const standardResolutions = [
@@ -201,6 +201,17 @@ export default defineComponent({
             resolutionToConfirm: null as NamedResolution,
             resolutionToConfirmDeleting: false,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
     },
 
     methods: {
@@ -485,17 +496,6 @@ export default defineComponent({
 
             return width + "x" + height;
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

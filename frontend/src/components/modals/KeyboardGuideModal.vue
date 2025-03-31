@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">
@@ -378,10 +378,10 @@ import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
     name: "KeyboardGuideModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -392,9 +392,13 @@ export default defineComponent({
             closeSignal: 0,
         };
     },
-    methods: {
-        close: function () {
-            this.closeSignal++;
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
         },
     },
     mounted: function () {
@@ -404,13 +408,9 @@ export default defineComponent({
             });
         }
     },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
+    methods: {
+        close: function () {
+            this.closeSignal++;
         },
     },
 });

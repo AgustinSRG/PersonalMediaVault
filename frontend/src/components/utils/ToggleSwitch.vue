@@ -17,11 +17,11 @@ import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
     name: "ToggleSwitch",
-    emits: ["update:val"],
     props: {
         val: Boolean,
         disabled: Boolean,
     },
+    emits: ["update:val"],
     setup(props) {
         return {
             valState: useVModel(props, "val"),
@@ -30,6 +30,8 @@ export default defineComponent({
     data: function () {
         return {};
     },
+    mounted: function () {},
+    beforeUnmount: function () {},
     methods: {
         toggle: function () {
             if (this.disabled) {
@@ -44,7 +46,5 @@ export default defineComponent({
             e.stopPropagation();
         },
     },
-    mounted: function () {},
-    beforeUnmount: function () {},
 });
 </script>

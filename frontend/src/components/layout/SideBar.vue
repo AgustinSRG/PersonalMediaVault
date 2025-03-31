@@ -2,10 +2,10 @@
     <div
         class="side-bar"
         :class="{ hidden: !display }"
-        @click="stopPropagationEvent"
-        @keydown="keyDownHandle"
         tabindex="-1"
         :role="initialLayout ? '' : 'dialog'"
+        @click="stopPropagationEvent"
+        @keydown="keyDownHandle"
     >
         <div class="side-bar-header">
             <div class="top-bar-logo-td">
@@ -21,10 +21,10 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'home' }"
                 :title="$t('Home')"
-                @click="goToPage('home', $event)"
                 :href="getPageURL('home')"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('home', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-home"></i></div>
                 <div class="side-bar-option-text">{{ $t("Home") }}</div>
@@ -35,10 +35,10 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'search' }"
                 :title="$t('Search results')"
-                @click="goToPage('search', $event)"
                 :href="getPageURL('search')"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('search', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
                 <div class="side-bar-option-text">{{ $t("Search results") }}</div>
@@ -48,10 +48,10 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'albums' }"
                 :title="$t('Albums')"
-                @click="goToPage('albums', $event, cachedAlbumsSearchParams)"
                 :href="getPageURL('albums', cachedAlbumsSearchParams)"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('albums', $event, cachedAlbumsSearchParams)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-list"></i></div>
                 <div class="side-bar-option-text">{{ $t("Albums") }}</div>
@@ -62,10 +62,10 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'upload' }"
                 :title="$t('Upload')"
-                @click="goToPage('upload', $event)"
                 :href="getPageURL('upload')"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('upload', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
                 <div class="side-bar-option-text">{{ $t("Upload") }}</div>
@@ -75,10 +75,10 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'random' }"
                 :title="$t('Random')"
-                @click="goToPage('random', $event)"
                 :href="getPageURL('random')"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('random', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-shuffle"></i></div>
                 <div class="side-bar-option-text">{{ $t("Random") }}</div>
@@ -88,16 +88,16 @@
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'adv-search' }"
                 :title="$t('Advanced search')"
-                @click="goToPage('adv-search', $event)"
                 :href="getPageURL('adv-search')"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToPage('adv-search', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
                 <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
             </a>
 
-            <div class="side-bar-separator" v-if="albumsFavorite.length > 0"></div>
+            <div v-if="albumsFavorite.length > 0" class="side-bar-separator"></div>
 
             <a
                 v-for="a in albumsFavorite"
@@ -105,10 +105,10 @@
                 class="side-bar-option"
                 :class="{ selected: album == a.id }"
                 :title="a.name"
-                @click="goToAlbum(a, $event)"
                 :href="getAlbumURL(a.id)"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToAlbum(a, $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-star"></i></div>
                 <div class="side-bar-option-text">{{ a.name }}</div>
@@ -122,10 +122,10 @@
                 class="side-bar-option"
                 :class="{ selected: album == a.id }"
                 :title="a.name"
-                @click="goToAlbum(a, $event)"
                 :href="getAlbumURL(a.id)"
                 target="_blank"
                 rel="noopener noreferrer"
+                @click="goToAlbum(a, $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-list-ol"></i></div>
                 <div class="side-bar-option-text">{{ a.name }}</div>
@@ -153,11 +153,11 @@ const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 
 export default defineComponent({
     name: "SideBar",
-    emits: ["update:display", "skip-to-content"],
     props: {
         display: Boolean,
         initialLayout: Boolean,
     },
+    emits: ["update:display", "skip-to-content"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -179,6 +179,42 @@ export default defineComponent({
 
             cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.focusTrap.activate();
+                if (!this.initialLayout) {
+                    nextTick(() => {
+                        this.$el.focus();
+                    });
+                }
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateStatus.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateAlbums.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, this.putAlbumFirst.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
+
+        if (this.display) {
+            this.focusTrap.activate();
+        }
+
+        this.updateStatus();
+        this.updateAlbums();
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         close: function () {
@@ -350,42 +386,6 @@ export default defineComponent({
             if (!this.initialLayout && e.key === "Escape") {
                 e.stopPropagation();
                 this.close();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.updateStatus.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateAlbums.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, this.putAlbumFirst.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.lostFocus.bind(this));
-
-        if (this.display) {
-            this.focusTrap.activate();
-        }
-
-        this.updateStatus();
-        this.updateAlbums();
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                if (!this.initialLayout) {
-                    nextTick(() => {
-                        this.$el.focus();
-                    });
-                }
-            } else {
-                this.focusTrap.deactivate();
             }
         },
     },

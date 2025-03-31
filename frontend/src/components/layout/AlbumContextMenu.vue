@@ -19,23 +19,23 @@
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
     >
-        <div v-if="mediaIndex > 0" tabindex="0" @click="moveMediaUp" @keydown="clickOnEnter" class="album-body-item-options-menu-btn">
+        <div v-if="mediaIndex > 0" tabindex="0" class="album-body-item-options-menu-btn" @click="moveMediaUp" @keydown="clickOnEnter">
             <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
         </div>
         <div
             v-if="mediaIndex < albumLength - 1"
             tabindex="0"
+            class="album-body-item-options-menu-btn"
             @keydown="clickOnEnter"
             @click="moveMediaDown"
-            class="album-body-item-options-menu-btn"
         >
             <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
         </div>
-        <div tabindex="0" @keydown="clickOnEnter" @click="changePosition" class="album-body-item-options-menu-btn">
+        <div tabindex="0" class="album-body-item-options-menu-btn" @keydown="clickOnEnter" @click="changePosition">
             <i class="fas fa-arrows-up-down-left-right"></i>
             {{ $t("Change position") }}
         </div>
-        <div tabindex="0" @keydown="clickOnEnter" @click="removeMedia" class="album-body-item-options-menu-btn">
+        <div tabindex="0" class="album-body-item-options-menu-btn" @keydown="clickOnEnter" @click="removeMedia">
             <i class="fas fa-trash-alt"></i> {{ $t("Remove from the album") }}
         </div>
     </div>
@@ -48,7 +48,6 @@ import { FocusTrap } from "../../utils/focus-trap";
 
 export default defineComponent({
     name: "AlbumContextMenu",
-    emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
     props: {
         shown: Boolean,
 
@@ -58,6 +57,7 @@ export default defineComponent({
         x: Number,
         y: Number,
     },
+    emits: ["update:shown", "move-up", "move-down", "change-pos", "media-remove"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -76,6 +76,35 @@ export default defineComponent({
             maxWidth: "",
             maxHeight: "",
         };
+    },
+    watch: {
+        x: function () {
+            this.computeDimensions();
+        },
+        y: function () {
+            this.computeDimensions();
+        },
+        shown: function () {
+            if (this.shown) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+    },
+    mounted: function () {
+        this.computeDimensions();
+
+        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
+        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
+
+        this.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         stopPropagationEvent: function (e) {
@@ -151,35 +180,6 @@ export default defineComponent({
                 event.preventDefault();
                 event.stopPropagation();
                 event.target.click();
-            }
-        },
-    },
-    mounted: function () {
-        this.computeDimensions();
-
-        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
-        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
-
-        this.focusTrap = new FocusTrap(this.$el, this.hide.bind(this), "album-body-btn");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        x: function () {
-            this.computeDimensions();
-        },
-        y: function () {
-            this.computeDimensions();
-        },
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
             }
         },
     },

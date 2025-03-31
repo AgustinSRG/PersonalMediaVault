@@ -44,9 +44,9 @@
             v-show="!loading && loadedAlbum"
             class="album-body"
             :class="{ 'is-dragging': dragging }"
+            tabindex="-1"
             @scroll.passive="onScroll"
             @keydown="onBodyKeyDown"
-            tabindex="-1"
         >
             <a
                 v-for="item in albumList"
@@ -72,7 +72,7 @@
                         <i v-else class="fas fa-ban"></i>
                     </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <div class="album-body-item-thumb-tag" v-if="item.type === 2 || item.type === 3">
+                    <div v-if="item.type === 2 || item.type === 3" class="album-body-item-thumb-tag">
                         {{ renderTime(item.duration) }}
                     </div>
                     <div class="album-body-item-thumb-pos">
@@ -123,7 +123,7 @@
                         <i v-else class="fas fa-ban"></i>
                     </div>
                     <ThumbImage v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)"></ThumbImage>
-                    <div class="album-body-item-thumb-tag" v-if="draggingItem.type === 2 || draggingItem.type === 3">
+                    <div v-if="draggingItem.type === 2 || draggingItem.type === 3" class="album-body-item-thumb-tag">
                         {{ renderTime(draggingItem.duration) }}
                     </div>
                     <div class="album-body-item-thumb-pos">
@@ -142,8 +142,8 @@
         </div>
         <AlbumContextMenu
             v-model:shown="contextShown"
-            :mediaIndex="contextIndex"
-            :albumLength="albumListLength"
+            :media-index="contextIndex"
+            :album-length="albumListLength"
             :x="contextX"
             :y="contextY"
             @move-up="moveMediaUp"
@@ -240,7 +240,6 @@ import ThumbImage from "../utils/ThumbImage.vue";
 
 export default defineComponent({
     name: "AlbumContainer",
-    emits: ["update:displayUpload"],
     components: {
         AlbumContextMenu,
         LoadingOverlay,
@@ -255,6 +254,7 @@ export default defineComponent({
     props: {
         displayUpload: Boolean,
     },
+    emits: ["update:displayUpload"],
     setup(props) {
         return {
             listScroller: null as BigListScroller,
@@ -305,6 +305,52 @@ export default defineComponent({
             draggingOverPosition: -1,
             positionToMove: 0,
         };
+    },
+    mounted: function () {
+        if (this.displayAlbumAddMedia) {
+            this.displayAlbumAddMedia = false;
+        }
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
+
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
+
+        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
+            get: () => {
+                return this.albumList;
+            },
+            set: (l) => {
+                this.albumList = l;
+            },
+        });
+
+        this.updateAlbumList();
+
+        this.mustScroll = true;
+
+        this.onAlbumPosUpdate();
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateFav.bind(this));
+
+        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
+
+        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
+    },
+    beforeUnmount: function () {
+        clearInterval(this.checkContainerTimer);
+
+        if (this.dragCheckInterval) {
+            clearInterval(this.dragCheckInterval);
+            this.dragCheckInterval = null;
+        }
     },
     methods: {
         onAlbumUpdate: function () {
@@ -833,52 +879,6 @@ export default defineComponent({
                 Math.max(firstPos, firstPos + Math.round((this.mouseY - conBounds.top + containerScrollTop) / itemHeight)),
             );
         },
-    },
-    mounted: function () {
-        if (this.displayAlbumAddMedia) {
-            this.displayAlbumAddMedia = false;
-        }
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.onAlbumUpdate.bind(this));
-
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
-
-        this.listScroller = new BigListScroller(INITIAL_WINDOW_SIZE, {
-            get: () => {
-                return this.albumList;
-            },
-            set: (l) => {
-                this.albumList = l;
-            },
-        });
-
-        this.updateAlbumList();
-
-        this.mustScroll = true;
-
-        this.onAlbumPosUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.onAlbumLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED, this.updateFav.bind(this));
-
-        this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
-
-        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
-
-        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
-    },
-    beforeUnmount: function () {
-        clearInterval(this.checkContainerTimer);
-
-        if (this.dragCheckInterval) {
-            clearInterval(this.dragCheckInterval);
-            this.dragCheckInterval = null;
-        }
     },
 });
 </script>

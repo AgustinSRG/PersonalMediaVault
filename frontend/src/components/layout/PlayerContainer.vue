@@ -2,103 +2,103 @@
     <div class="player-container" :class="{ 'using-touch-device': touchDevice }" tabindex="-1">
         <EmptyPlayer
             v-if="!mediaData || mediaData.type === 0"
+            v-model:fullscreen="fullScreen"
             :mid="mid"
             :status="status"
-            :rTick="tick"
+            :r-tick="tick"
             :prev="prev"
-            :pagePrev="hasPagePrev"
-            :pageNext="hasPageNext"
+            :page-prev="hasPagePrev"
+            :page-next="hasPageNext"
             :next="next"
-            :inAlbum="isInAlbum"
-            :albumLoading="albumLoading"
-            :canWrite="canWrite"
+            :in-album="isInAlbum"
+            :album-loading="albumLoading"
+            :can-write="canWrite"
+            :min="minPlayer"
             @go-next="goNext"
             @go-prev="goPrev"
-            v-model:fullscreen="fullScreen"
             @update:fullscreen="onUpdateFullScreen"
-            :min="minPlayer"
             @delete="openDelete"
         ></EmptyPlayer>
         <ImagePlayer
             v-if="mediaData && mediaData.type === 1"
-            :mid="mid"
-            :metadata="mediaData"
-            :rTick="tick"
-            :prev="prev"
-            :next="next"
-            :pagePrev="hasPagePrev"
-            :pageNext="hasPageNext"
-            :inAlbum="isInAlbum"
-            :canWrite="canWrite"
-            @go-next="goNext"
-            @go-prev="goPrev"
             v-model:fullscreen="fullScreen"
-            @update:fullscreen="onUpdateFullScreen"
-            v-model:showControls="showControls"
-            @albums-open="openAlbums"
-            @stats-open="openStats"
+            v-model:show-controls="showControls"
             v-model:display-tag-list="displayTagList"
             v-model:display-extended-description="displayExtendedDescription"
+            :mid="mid"
+            :metadata="mediaData"
+            :r-tick="tick"
+            :prev="prev"
+            :next="next"
+            :page-prev="hasPagePrev"
+            :page-next="hasPageNext"
+            :in-album="isInAlbum"
+            :can-write="canWrite"
             :min="minPlayer"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            @update:fullscreen="onUpdateFullScreen"
+            @albums-open="openAlbums"
+            @stats-open="openStats"
             @delete="openDelete"
         ></ImagePlayer>
         <VideoPlayer
             v-if="mediaData && mediaData.type === 2"
-            :mid="mid"
-            :metadata="mediaData"
-            :rTick="tick"
-            :prev="prev"
-            :next="next"
-            :pagePrev="hasPagePrev"
-            :pageNext="hasPageNext"
-            :inAlbum="isInAlbum"
-            :canWrite="canWrite"
-            @go-next="goNext"
-            @go-prev="goPrev"
             v-model:fullscreen="fullScreen"
-            @update:fullscreen="onUpdateFullScreen"
-            v-model:userControls="showControls"
-            @albums-open="openAlbums"
-            @stats-open="openStats"
+            v-model:user-controls="showControls"
             v-model:display-tag-list="displayTagList"
             v-model:display-extended-description="displayExtendedDescription"
+            :mid="mid"
+            :metadata="mediaData"
+            :r-tick="tick"
+            :prev="prev"
+            :next="next"
+            :page-prev="hasPagePrev"
+            :page-next="hasPageNext"
+            :in-album="isInAlbum"
+            :can-write="canWrite"
             :min="minPlayer"
-            :loopForced="loopForced"
-            :loopForcedValue="loopForcedValue"
+            :loop-forced="loopForced"
+            :loop-forced-value="loopForcedValue"
+            :auto-play="!(displayAlbumList || displaySizeStats || displayUpload)"
+            @go-next="goNext"
+            @go-prev="goPrev"
+            @update:fullscreen="onUpdateFullScreen"
+            @albums-open="openAlbums"
+            @stats-open="openStats"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></VideoPlayer>
         <AudioPlayer
             v-if="mediaData && mediaData.type === 3"
+            v-model:fullscreen="fullScreen"
+            v-model:display-tag-list="displayTagList"
+            v-model:display-extended-description="displayExtendedDescription"
             :mid="mid"
             :metadata="mediaData"
-            :rTick="tick"
+            :r-tick="tick"
             :prev="prev"
             :next="next"
-            :pagePrev="hasPagePrev"
-            :pageNext="hasPageNext"
-            :inAlbum="isInAlbum"
-            :canWrite="canWrite"
+            :page-prev="hasPagePrev"
+            :page-next="hasPageNext"
+            :in-album="isInAlbum"
+            :can-write="canWrite"
+            :min="minPlayer"
+            :loop-forced="loopForced"
+            :loop-forced-value="loopForcedValue"
+            :auto-play="!(displayAlbumList || displaySizeStats || displayUpload)"
             @go-next="goNext"
             @go-prev="goPrev"
-            v-model:fullscreen="fullScreen"
             @update:fullscreen="onUpdateFullScreen"
             @albums-open="openAlbums"
             @stats-open="openStats"
-            v-model:display-tag-list="displayTagList"
-            v-model:display-extended-description="displayExtendedDescription"
-            :min="minPlayer"
-            :loopForced="loopForced"
-            :loopForcedValue="loopForcedValue"
             @force-loop="onForceLoop"
-            :autoPlay="!(displayAlbumList || displaySizeStats || displayUpload)"
             @delete="openDelete"
         ></AudioPlayer>
 
         <AlbumListModal v-if="displayAlbumList" v-model:display="displayAlbumList"></AlbumListModal>
 
-        <SizeStatsModal :mid="mid" v-if="displaySizeStats" v-model:display="displaySizeStats"></SizeStatsModal>
+        <SizeStatsModal v-if="displaySizeStats" v-model:display="displaySizeStats" :mid="mid"></SizeStatsModal>
 
         <MediaDeleteModal v-if="displayDelete" v-model:display="displayDelete"></MediaDeleteModal>
     </div>
@@ -170,7 +170,6 @@ const MediaDeleteModal = defineAsyncComponent({
 
 export default defineComponent({
     name: "PlayerContainer",
-    emits: [],
     components: {
         EmptyPlayer,
         AudioPlayer,
@@ -183,6 +182,7 @@ export default defineComponent({
     props: {
         displayUpload: Boolean,
     },
+    emits: [],
     setup() {
         return {
             focusTrap: null as FocusTrap,
@@ -222,6 +222,38 @@ export default defineComponent({
             loopForced: false,
             loopForcedValue: false,
         };
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
+
+        this.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
+        this.checkPlayerSize();
+
+        this.updateStatus();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_LOADING, this.updateLoading.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMedia.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.updateAlbumsLoading.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_GO_PREV, this.goPrev.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_GO_NEXT, this.goNext.bind(this));
+
+        nextTick(() => {
+            this.$el.focus();
+        });
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
+        clearInterval(this.timer);
     },
     methods: {
         updateMedia: function () {
@@ -335,38 +367,6 @@ export default defineComponent({
             this.loopForced = true;
             this.loopForcedValue = v;
         },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
-
-        this.timer = setInterval(this.checkPlayerSize.bind(this), 1000);
-        this.checkPlayerSize();
-
-        this.updateStatus();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_LOADING, this.updateLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED, this.onAlbumPosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, this.onPagePosUpdate.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, this.updateAlbumsLoading.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_GO_PREV, this.goPrev.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_GO_NEXT, this.goNext.bind(this));
-
-        nextTick(() => {
-            this.$el.focus();
-        });
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-        clearInterval(this.timer);
     },
 });
 </script>

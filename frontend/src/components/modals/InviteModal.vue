@@ -1,8 +1,8 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :lock-close="busy"
     >
         <div v-if="display" class="modal-dialog modal-lg" role="document">
@@ -12,13 +12,13 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body" v-if="loading">
+            <div v-if="loading" class="modal-body">
                 <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
             </div>
-            <div class="modal-body" v-if="!loading">
+            <div v-if="!loading" class="modal-body">
                 <div v-if="hasCode" class="invite-code-modal-body">
                     <div class="invite-code-display">
-                        <div v-for="(c, i) in code.split('')" class="invite-code-char-container" :key="i">
+                        <div v-for="(c, i) in code.split('')" :key="i" class="invite-code-char-container">
                             <div class="invite-code-char">{{ c }}</div>
                         </div>
                     </div>
@@ -28,15 +28,15 @@
                     <div class="invite-code-info">
                         <label>{{ $t("Session duration") }}:</label> {{ renderDuration(duration) }}
                     </div>
-                    <div class="invite-code-warning" v-if="expirationRemaining > 0">
+                    <div v-if="expirationRemaining > 0" class="invite-code-warning">
                         {{ $t("Remaining time until expiration") }}:
                         {{ renderTime(getExpirationRemaining(expirationRemaining, lasReceivedTimestamp, now)) }}
                     </div>
-                    <div class="invite-code-error" v-if="expirationRemaining <= 0">
+                    <div v-if="expirationRemaining <= 0" class="invite-code-error">
                         {{ $t("The invite code has expired") }}
                     </div>
                     <div class="invite-code-btn-container">
-                        <button type="button" :disabled="busy" @click="clearCode" class="btn btn-danger">
+                        <button type="button" :disabled="busy" class="btn btn-danger" @click="clearCode">
                             <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Clear invite code") }}
                         </button>
                     </div>
@@ -47,7 +47,7 @@
                         {{ $t("Invite codes are single use, and allow to login into the vault in read-only mode") }}
                     </div>
                     <div class="invite-code-btn-container">
-                        <button type="button" :disabled="busy" @click="generateCode" class="btn btn-primary">
+                        <button type="button" :disabled="busy" class="btn btn-primary" @click="generateCode">
                             <LoadingIcon icon="fas fa-plus" :loading="busy"></LoadingIcon> {{ $t("Create invite code") }}
                         </button>
                     </div>
@@ -62,10 +62,10 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-body" v-if="loadingSessions">
+            <div v-if="loadingSessions" class="modal-body">
                 <p><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</p>
             </div>
-            <div class="modal-body no-padding border-top" v-if="!loadingSessions">
+            <div v-if="!loadingSessions" class="modal-body no-padding border-top">
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -88,8 +88,8 @@
                                     <button
                                         type="button"
                                         :disabled="busyClosing"
-                                        @click="askCloseSession(s.index)"
                                         class="btn btn-danger btn-xs"
+                                        @click="askCloseSession(s.index)"
                                     >
                                         <LoadingIcon
                                             icon="fas fa-trash-alt"
@@ -136,15 +136,15 @@ import { SessionDuration } from "@/api/api-auth";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({
+    name: "InviteModal",
     components: {
         LoadingIcon,
         InviteCloseSessionConfirmationModal,
     },
-    name: "InviteModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -180,6 +180,33 @@ export default defineComponent({
             closeSignal: 0,
             forceCloseSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.load();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+
+        this.updateStatusTimer = setInterval(this.checkForLoad.bind(this), 2000);
+        this.updateNowTimer = setInterval(this.updateNow.bind(this), 500);
+
+        if (this.display) {
+            this.load();
+        }
+    },
+    beforeUnmount: function () {
+        clearInterval(this.updateStatusTimer);
+        clearInterval(this.updateNowTimer);
+
+        clearNamedTimeout(this.loadStatusRequestId);
+        abortNamedApiRequest(this.loadStatusRequestId);
+
+        clearNamedTimeout(this.loadSessionsRequestId);
+        abortNamedApiRequest(this.loadSessionsRequestId);
     },
     methods: {
         autoFocus: function () {
@@ -465,33 +492,6 @@ export default defineComponent({
                 return "1" + " " + this.$t("day");
             } else {
                 return days + " " + this.$t("days");
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-
-        this.updateStatusTimer = setInterval(this.checkForLoad.bind(this), 2000);
-        this.updateNowTimer = setInterval(this.updateNow.bind(this), 500);
-
-        if (this.display) {
-            this.load();
-        }
-    },
-    beforeUnmount: function () {
-        clearInterval(this.updateStatusTimer);
-        clearInterval(this.updateNowTimer);
-
-        clearNamedTimeout(this.loadStatusRequestId);
-        abortNamedApiRequest(this.loadStatusRequestId);
-
-        clearNamedTimeout(this.loadSessionsRequestId);
-        abortNamedApiRequest(this.loadSessionsRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.load();
             }
         },
     },

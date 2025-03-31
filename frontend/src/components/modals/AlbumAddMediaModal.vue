@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus" :static="true" @scroll.passive="onPageScroll">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" :static="true" @scroll.passive="onPageScroll">
         <div
             v-if="display"
             class="modal-dialog modal-xl modal-height-100"
@@ -14,10 +14,10 @@
             }"
         >
             <div class="modal-header">
-                <div class="modal-title" v-if="!isUpload">
+                <div v-if="!isUpload" class="modal-title">
                     {{ $t("Search media to add to the album") }}
                 </div>
-                <div class="modal-title" v-if="isUpload">
+                <div v-if="isUpload" class="modal-title">
                     {{ $t("Upload media to add to the album") }}
                 </div>
                 <button class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -26,28 +26,28 @@
             </div>
             <div class="modal-body no-padding">
                 <div class="horizontal-filter-menu two-child modal-top-menu">
-                    <a href="javascript:;" @click="changeToUpload" class="horizontal-filter-menu-item" :class="{ selected: isUpload }"
+                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: isUpload }" @click="changeToUpload"
                         ><i class="fas fa-upload"></i> {{ $t("Upload") }}</a
                     >
-                    <a href="javascript:;" @click="changeToSearch" class="horizontal-filter-menu-item" :class="{ selected: !isUpload }"
+                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isUpload }" @click="changeToSearch"
                         ><i class="fas fa-search"></i> {{ $t("Search") }}</a
                     >
                 </div>
                 <PageAdvancedSearch
                     v-if="!isUpload"
                     :display="true"
-                    :inModal="true"
+                    :in-modal="true"
                     :min="false"
-                    :noAlbum="aid"
-                    @select-media="selectMedia"
-                    :pageSize="pageSize"
-                    :displayTitles="displayTitles"
+                    :no-album="aid"
+                    :page-size="pageSize"
+                    :display-titles="displayTitles"
                     :row-size="rowSize"
                     :row-size-min="rowSizeMin"
                     :min-items-size="minItemSize"
                     :max-items-size="maxItemSize"
+                    @select-media="selectMedia"
                 ></PageAdvancedSearch>
-                <PageUpload v-if="isUpload" :display="true" :inModal="true" :fixedAlbum="aid" @media-go="close"></PageUpload>
+                <PageUpload v-if="isUpload" :display="true" :in-modal="true" :fixed-album="aid" @media-go="close"></PageUpload>
             </div>
 
             <div v-if="pageScroll > 0" class="modal-button-br-container">
@@ -74,16 +74,16 @@ import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
 
 export default defineComponent({
+    name: "AlbumAddMediaModal",
     components: {
         PageAdvancedSearch,
         PageUpload,
     },
-    name: "AlbumAddMediaModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
         aid: Number,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -113,6 +113,24 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
+
+        if (this.display) {
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
     },
     methods: {
         close: function () {
@@ -215,24 +233,6 @@ export default defineComponent({
             } else {
                 this.$el.scrollTop = 0;
                 this.$el.focus();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
-
-        if (this.display) {
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
             }
         },
     },

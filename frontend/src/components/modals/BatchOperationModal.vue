@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-xl" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Batch operation") }}</div>
@@ -12,18 +12,18 @@
                     <div class="form-group">
                         <label>{{ $t("Title or description must contain") }}:</label>
                         <input
+                            v-model="textSearch"
                             type="text"
                             name="title-search"
                             autocomplete="off"
                             maxlength="255"
-                            v-model="textSearch"
                             class="form-control form-control-full-width auto-focus"
                         />
                     </div>
 
                     <div class="form-group">
                         <label>{{ $t("Media type") }}:</label>
-                        <select class="form-control form-select form-control-full-width" v-model="typeSearch">
+                        <select v-model="typeSearch" class="form-control form-select form-control-full-width">
                             <option :value="0">{{ $t("Any media") }}</option>
                             <option :value="1">{{ $t("Images") }}</option>
                             <option :value="2">{{ $t("Videos") }}</option>
@@ -38,7 +38,7 @@
 
                     <div class="form-group">
                         <label>{{ $t("Tags") }}:</label>
-                        <select class="form-control form-select form-control-full-width" v-model="tagModeSearch">
+                        <select v-model="tagModeSearch" class="form-control form-select form-control-full-width">
                             <option :value="'all'">
                                 {{ $t("Media must contain ALL of the selected tags") }}
                             </option>
@@ -53,7 +53,7 @@
                             </option>
                         </select>
                     </div>
-                    <div class="form-group media-tags" v-if="tagModeSearch !== 'untagged'">
+                    <div v-if="tagModeSearch !== 'untagged'" class="form-group media-tags">
                         <div v-for="tag in tagsSearch" :key="tag" class="media-tag">
                             <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                             <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTagSearch(tag)">
@@ -62,18 +62,18 @@
                         </div>
                         <div class="media-tags-finder">
                             <input
+                                v-model="tagToAddSearch"
                                 type="text"
                                 autocomplete="off"
                                 maxlength="255"
-                                v-model="tagToAddSearch"
-                                @input="onTagSearchChanged(false)"
-                                @keydown="onTagSearchKeyDown"
                                 class="form-control tags-input-search"
                                 :placeholder="$t('Search for tags') + '...'"
+                                @input="onTagSearchChanged(false)"
+                                @keydown="onTagSearchKeyDown"
                             />
                         </div>
                     </div>
-                    <div class="form-group" v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0">
+                    <div v-if="tagModeSearch !== 'untagged' && matchingTagsSearch.length > 0" class="form-group">
                         <button
                             v-for="mt in matchingTagsSearch"
                             :key="mt.id"
@@ -94,9 +94,9 @@
                     <div class="form-group">
                         <label>{{ $t("Select and action to apply") }}:</label>
                         <select
+                            v-model="action"
                             class="form-control form-select form-control-full-width tags-focus-skip"
                             @keydown="onTagsSkipKeyDown"
-                            v-model="action"
                         >
                             <option :value="''">
                                 {{ $t("--- Select an action ---") }}
@@ -129,14 +129,14 @@
                             </div>
                             <div class="media-tags-finder">
                                 <input
+                                    v-model="tagToAddAction"
                                     type="text"
                                     autocomplete="off"
                                     maxlength="255"
-                                    v-model="tagToAddAction"
-                                    @input="onTagActionChanged(false)"
-                                    @keydown="onTagActionKeyDown"
                                     class="form-control tags-adder tags-input-search-action"
                                     :placeholder="$t('Add tags') + '...'"
+                                    @input="onTagActionChanged(false)"
+                                    @keydown="onTagActionKeyDown"
                                 />
                             </div>
                             <div class="media-tags-adder">
@@ -151,7 +151,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="form-group" v-if="matchingTagsAction.length > 0">
+                        <div v-if="matchingTagsAction.length > 0" class="form-group">
                             <button
                                 v-for="mt in matchingTagsAction"
                                 :key="mt.id"
@@ -189,11 +189,11 @@
         <BatchOperationProgressModal
             v-if="displayProgress"
             v-model:display="displayProgress"
-            @update:display="afterSubModalClosed"
             :status="status"
             :progress="progress"
             :error="error"
-            :actionCount="actionCount"
+            :action-count="actionCount"
+            @update:display="afterSubModalClosed"
             @cancel="cancel"
             @confirm="confirm"
         ></BatchOperationProgressModal>
@@ -223,15 +223,15 @@ import AlbumSelect from "../utils/AlbumSelect.vue";
 const PAGE_SIZE = 50;
 
 export default defineComponent({
+    name: "BatchOperationModal",
     components: {
         BatchOperationProgressModal,
         AlbumSelect,
     },
-    name: "BatchOperationModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             findTagSearchTimeout: null,
@@ -275,6 +275,45 @@ export default defineComponent({
             error: "",
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                this.autoFocus();
+                TagsController.Load();
+                AlbumsController.Load();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.updateTagData();
+
+        this.updateAlbums();
+
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
+
+        if (this.display) {
+            this.error = "";
+            this.autoFocus();
+            TagsController.Load();
+            AlbumsController.Load();
+        }
+    },
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.batchRequestId);
+
+        if (this.findTagSearchTimeout) {
+            clearTimeout(this.findTagSearchTimeout);
+            this.findTagSearchTimeout = null;
+        }
+
+        if (this.findTagActionTimeout) {
+            clearTimeout(this.findTagActionTimeout);
+            this.findTagActionTimeout = null;
+        }
     },
     methods: {
         autoFocus: function () {
@@ -1104,45 +1143,6 @@ export default defineComponent({
                     console.error(err);
                     this.status = "error";
                 });
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.updateTagData();
-
-        this.updateAlbums();
-
-        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, this.updateAlbums.bind(this));
-
-        if (this.display) {
-            this.error = "";
-            this.autoFocus();
-            TagsController.Load();
-            AlbumsController.Load();
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.batchRequestId);
-
-        if (this.findTagSearchTimeout) {
-            clearTimeout(this.findTagSearchTimeout);
-            this.findTagSearchTimeout = null;
-        }
-
-        if (this.findTagActionTimeout) {
-            clearTimeout(this.findTagActionTimeout);
-            this.findTagActionTimeout = null;
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                this.autoFocus();
-                TagsController.Load();
-                AlbumsController.Load();
-            }
         },
     },
 });

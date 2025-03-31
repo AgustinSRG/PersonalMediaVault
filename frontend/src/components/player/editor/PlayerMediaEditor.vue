@@ -10,67 +10,67 @@
         >
             <a
                 href="javascript:;"
-                @click="changePage('general')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'general' }"
+                @click="changePage('general')"
                 >{{ $t("General") }}</a
             >
-            <a href="javascript:;" @click="changePage('tags')" class="horizontal-filter-menu-item" :class="{ selected: page === 'tags' }">{{
+            <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: page === 'tags' }" @click="changePage('tags')">{{
                 $t("Tags")
             }}</a>
             <a
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
-                @click="changePage('subtitles')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'subtitles' }"
+                @click="changePage('subtitles')"
                 >{{ $t("Subtitles") }}</a
             >
             <a
                 v-if="type === 2"
                 href="javascript:;"
-                @click="changePage('audios')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'audios' }"
+                @click="changePage('audios')"
                 >{{ $t("Audio tracks") }}</a
             >
             <a
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
-                @click="changePage('time-slices')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'time-slices' }"
+                @click="changePage('time-slices')"
                 >{{ $t("Time slices") }}</a
             >
             <a
                 v-if="type === 1"
                 href="javascript:;"
-                @click="changePage('image-notes')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'image-notes' }"
+                @click="changePage('image-notes')"
                 >{{ $t("Image notes") }}</a
             >
             <a
                 href="javascript:;"
-                @click="changePage('attachments')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'attachments' }"
+                @click="changePage('attachments')"
                 >{{ $t("Attachments") }}</a
             >
             <a
                 v-if="(type === 1 || type === 2) && canWrite"
                 href="javascript:;"
-                @click="changePage('resolutions')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'resolutions' }"
+                @click="changePage('resolutions')"
                 >{{ $t("Resolutions") }}</a
             >
             <a
                 v-if="canWrite"
                 href="javascript:;"
-                @click="changePage('danger')"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'danger' }"
+                @click="changePage('danger')"
                 >{{ $t("Danger zone") }}</a
             >
         </div>
@@ -129,6 +129,7 @@ const EditorDangerZone = defineAsyncComponent({
 });
 
 export default defineComponent({
+    name: "PlayerMediaEditor",
     components: {
         EditorGeneral,
         EditorTags,
@@ -140,7 +141,6 @@ export default defineComponent({
         EditorResolutions,
         EditorDangerZone,
     },
-    name: "PlayerMediaEditor",
     emits: ["changed"],
     data: function () {
         return {
@@ -152,6 +152,13 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
     },
 
     methods: {
@@ -174,13 +181,6 @@ export default defineComponent({
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
     },
 });
 </script>

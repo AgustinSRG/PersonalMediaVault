@@ -13,7 +13,7 @@
                         <th class="text-left">{{ $t("ID") }}</th>
                         <th class="text-left">{{ $t("Name") }}</th>
                         <th class="text-right td-shrink"></th>
-                        <th class="text-right td-shrink" v-if="canWrite"></th>
+                        <th v-if="canWrite" class="text-right td-shrink"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,29 +21,29 @@
                         <td colspan="3">
                             {{ $t("There are no subtitles yet for this media.") }}
                         </td>
-                        <td class="text-right td-shrink" v-if="canWrite"></td>
+                        <td v-if="canWrite" class="text-right td-shrink"></td>
                     </tr>
                     <tr v-for="sub in subtitles" :key="sub.id">
-                        <td class="bold" v-if="subtitleRenameSelected !== sub.id">{{ sub.id }}</td>
+                        <td v-if="subtitleRenameSelected !== sub.id" class="bold">{{ sub.id }}</td>
                         <td v-else>
                             <input
+                                v-model="subtitleRenameId"
                                 type="text"
                                 maxlength="255"
                                 :disabled="busy || busyDeleting || subtitleRenameBusy"
                                 class="form-control form-control-full-width"
-                                v-model="subtitleRenameId"
                                 @keydown="renameInputKeyEventHandler"
                             />
                         </td>
 
-                        <td class="bold" v-if="subtitleRenameSelected !== sub.id">{{ sub.name }}</td>
+                        <td v-if="subtitleRenameSelected !== sub.id" class="bold">{{ sub.name }}</td>
                         <td v-else>
                             <input
+                                v-model="subtitleRenameName"
                                 type="text"
                                 maxlength="255"
                                 :disabled="busy || busyDeleting || subtitleRenameBusy"
                                 class="form-control form-control-full-width edit-auto-focus"
-                                v-model="subtitleRenameName"
                                 @keydown="renameInputKeyEventHandler"
                             />
                         </td>
@@ -54,7 +54,7 @@
                             </button>
                         </td>
 
-                        <td class="text-right td-shrink one-line" v-if="subtitleRenameSelected === sub.id && canWrite">
+                        <td v-if="subtitleRenameSelected === sub.id && canWrite" class="text-right td-shrink one-line">
                             <button
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
@@ -72,12 +72,12 @@
                                 <i class="fas fa-times"></i> {{ $t("Cancel") }}
                             </button>
                         </td>
-                        <td class="text-right td-shrink one-line" v-else-if="canWrite">
+                        <td v-else-if="canWrite" class="text-right td-shrink one-line">
                             <button
                                 type="button"
                                 class="btn btn-primary btn-xs mr-1"
-                                @click="startRename(sub)"
                                 :disabled="busy || busyDeleting || subtitleRenameBusy"
+                                @click="startRename(sub)"
                             >
                                 <i class="fas fa-pencil-alt"></i> {{ $t("Rename") }}
                             </button>
@@ -96,9 +96,9 @@
             </table>
         </div>
 
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
             <label>{{ $t("You can upload subtitles in SubRip format (.srt)") }}:</label>
-            <input type="file" class="file-hidden srt-file-hidden" @change="srtFileChanged" name="srt-upload" accept=".srt" />
+            <input type="file" class="file-hidden srt-file-hidden" name="srt-upload" accept=".srt" @change="srtFileChanged" />
             <button v-if="!srtFileName" type="button" class="btn btn-primary" :disabled="busy" @click="selectSRTFile">
                 <i class="fas fa-upload"></i> {{ $t("Select SRT file") }}
             </button>
@@ -107,15 +107,15 @@
                 <i class="fas fa-upload"></i> {{ $t("SRT file") }}: {{ srtFileName }}
             </button>
         </div>
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
             <label>{{ $t("Subtitles identifier") }}:</label>
-            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtId" class="form-control" />
+            <input v-model="srtId" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
         </div>
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
             <label>{{ $t("Subtitles name") }}:</label>
-            <input type="text" autocomplete="off" maxlength="255" :disabled="busy" v-model="srtName" class="form-control" />
+            <input v-model="srtName" type="text" autocomplete="off" maxlength="255" :disabled="busy" class="form-control" />
         </div>
-        <div class="form-group" v-if="canWrite && (type === 2 || type === 3)">
+        <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
             <button v-if="!busy" type="button" class="btn btn-primary" :disabled="!srtId || !srtName || !srtFile" @click="addSubtitles">
                 <i class="fas fa-plus"></i> {{ $t("Add subtitles file") }}
             </button>
@@ -153,11 +153,11 @@ import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
 
 export default defineComponent({
+    name: "EditorSubtitles",
     components: {
         LoadingIcon,
         SubtitlesDeleteModal,
     },
-    name: "EditorSubtitles",
     emits: ["changed"],
     setup() {
         return {
@@ -195,6 +195,19 @@ export default defineComponent({
             displaySubtitlesDelete: false,
             subtitleToDelete: null as MediaSubtitle,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestIdAdd);
+        abortNamedApiRequest(this.requestIdRename);
+        abortNamedApiRequest(this.requestIdDelete);
     },
 
     methods: {
@@ -541,19 +554,6 @@ export default defineComponent({
                     this.subtitleRenameBusy = false;
                 });
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestIdAdd);
-        abortNamedApiRequest(this.requestIdRename);
-        abortNamedApiRequest(this.requestIdDelete);
     },
 });
 </script>

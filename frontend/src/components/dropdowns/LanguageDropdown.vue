@@ -49,10 +49,10 @@ import { AVAILABLE_LANGUAGES } from "@/i18n";
 
 export default defineComponent({
     name: "LanguageDropdown",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -75,6 +75,30 @@ export default defineComponent({
             }),
             lang: getLanguage(),
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+        if (this.display) {
+            this.focusTrap.activate();
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         close: function () {
@@ -102,30 +126,6 @@ export default defineComponent({
             e.stopPropagation();
             if (e.key === "Escape") {
                 this.close();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
-        if (this.display) {
-            this.focusTrap.activate();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
             }
         },
     },

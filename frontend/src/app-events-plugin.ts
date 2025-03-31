@@ -59,6 +59,23 @@ declare module "vue" {
 export const appEventsPlugin = {
     install: (app: App) => {
         app.mixin({
+            beforeUnmount() {
+                if (this.$appEventHandlers) {
+                    this.$appEventHandlers.forEach((handler, eventName) => {
+                        AppEvents.RemoveEventListener(eventName, handler);
+                    });
+                }
+
+                if (this.$documentEventHandlers) {
+                    this.$documentEventHandlers.forEach((listener, eventName) => {
+                        document.removeEventListener(eventName, listener);
+                    });
+                }
+
+                if (this.$keyboardHandlers) {
+                    this.$keyboardHandlers.forEach(KeyboardManager.RemoveHandler);
+                }
+            },
             methods: {
                 $listenOnAppEvent: function (eventName: string, handler: CallbackFunctionVariadic) {
                     if (!this.$appEventHandlers) {
@@ -90,17 +107,6 @@ export const appEventsPlugin = {
                     this.$keyboardHandlers.push(handler);
                     KeyboardManager.AddHandler(handler, priority);
                 },
-            },
-            beforeUnmount() {
-                this.$appEventHandlers &&
-                    this.$appEventHandlers.forEach((handler, eventName) => {
-                        AppEvents.RemoveEventListener(eventName, handler);
-                    });
-                this.$documentEventHandlers &&
-                    this.$documentEventHandlers.forEach((listener, eventName) => {
-                        document.removeEventListener(eventName, listener);
-                    });
-                this.$keyboardHandlers && this.$keyboardHandlers.forEach(KeyboardManager.RemoveHandler);
             },
         });
     },

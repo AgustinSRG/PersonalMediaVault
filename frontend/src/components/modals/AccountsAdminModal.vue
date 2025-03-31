@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
         <div v-if="display" class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Administrate accounts") }}</div>
@@ -39,7 +39,7 @@
                             </tr>
                             <tr class="tr-align-middle">
                                 <td colspan="4" class="text-right">
-                                    <button type="button" @click="createAccount" :disabled="busy" class="btn btn-primary btn-xs">
+                                    <button type="button" :disabled="busy" class="btn btn-primary btn-xs" @click="createAccount">
                                         <i class="fas fa-plus"></i> {{ $t("Create account") }}
                                     </button>
                                 </td>
@@ -50,7 +50,7 @@
             </div>
 
             <div class="modal-footer no-padding">
-                <button type="button" @click="close" :disabled="busy" class="modal-footer-btn">
+                <button type="button" :disabled="busy" class="modal-footer-btn" @click="close">
                     <i class="fas fa-check"></i> {{ $t("Done") }}
                 </button>
             </div>
@@ -59,17 +59,17 @@
         <AccountModifyModal
             v-if="displayAccountModify"
             v-model:display="displayAccountModify"
-            @update:display="afterSubModalClosed"
             :username="accountModifyUsername"
             :write="accountModifyWrite"
+            @update:display="afterSubModalClosed"
             @done="load"
         ></AccountModifyModal>
 
         <AccountDeleteModal
             v-if="displayAccountDelete"
             v-model:display="displayAccountDelete"
-            @update:display="afterSubModalClosed"
             :username="accountToDelete"
+            @update:display="afterSubModalClosed"
             @done="load"
         ></AccountDeleteModal>
 
@@ -96,16 +96,16 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAdminListAccounts, VaultAccount } from "@/api/api-admin";
 
 export default defineComponent({
+    name: "AccountsAdminModal",
     components: {
         AccountDeleteModal,
         AccountModifyModal,
         AccountCreateModal,
     },
-    name: "AccountsAdminModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -136,6 +136,35 @@ export default defineComponent({
 
             closeSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.displayAccountDelete = false;
+                this.displayAccountCreate = false;
+                this.load();
+            }
+        },
+    },
+    mounted: function () {
+        this.load();
+
+        if (this.display) {
+            this.error = "";
+            nextTick(() => {
+                this.$el.focus();
+            });
+            this.displayAccountDelete = false;
+            this.displayAccountCreate = false;
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     methods: {
         load: function () {
@@ -200,35 +229,6 @@ export default defineComponent({
                 nextTick(() => {
                     this.$el.focus();
                 });
-            }
-        },
-    },
-    mounted: function () {
-        this.load();
-
-        if (this.display) {
-            this.error = "";
-            nextTick(() => {
-                this.$el.focus();
-            });
-            this.displayAccountDelete = false;
-            this.displayAccountCreate = false;
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.displayAccountDelete = false;
-                this.displayAccountCreate = false;
-                this.load();
             }
         },
     },

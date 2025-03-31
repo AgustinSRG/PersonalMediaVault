@@ -1,11 +1,11 @@
 <template>
-    <ModalDialogContainer :closeSignal="closeSignal" v-model:display="displayStatus">
-        <form v-if="display" @submit="submit" class="modal-dialog modal-md" role="document">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+        <form v-if="display" class="modal-dialog modal-md" role="document" @submit="submit">
             <div class="modal-header">
-                <div class="modal-title" v-if="deleting">
+                <div v-if="deleting" class="modal-title">
                     {{ $t("Delete extra resolution") }}
                 </div>
-                <div class="modal-title" v-if="!deleting">
+                <div v-if="!deleting" class="modal-title">
                     {{ $t("Encode to extra resolution") }}
                 </div>
                 <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close">
@@ -13,15 +13,15 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group" v-if="!deleting">
+                <div v-if="!deleting" class="form-group">
                     <label>{{ $t("Do you want to encode the media to this resolution? It will take more space in your vault.") }}</label>
                 </div>
 
-                <div class="form-group" v-if="deleting">
+                <div v-if="deleting" class="form-group">
                     <label>{{ $t("Do you want to delete this extra resolution?") }}</label>
                 </div>
 
-                <div class="form-group" v-if="resolution">
+                <div v-if="resolution" class="form-group">
                     <label v-if="type === 1">{{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}</label>
                     <label v-if="type === 2">
                         {{ resolution.name }}: {{ resolution.width }}x{{ resolution.height }}, {{ resolution.fps }} fps
@@ -48,22 +48,34 @@ import { NamedResolution } from "@/api/models";
 
 export default defineComponent({
     name: "ResolutionConfirmationModal",
-    emits: ["update:display", "confirm"],
     props: {
         display: Boolean,
         resolution: Object as PropType<NamedResolution>,
         type: Number,
         deleting: Boolean,
     },
+    emits: ["update:display", "confirm"],
+    setup(props) {
+        return {
+            displayStatus: useVModel(props, "display"),
+        };
+    },
     data: function () {
         return {
             closeSignal: 0,
         };
     },
-    setup(props) {
-        return {
-            displayStatus: useVModel(props, "display"),
-        };
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+            }
+        },
+    },
+    mounted: function () {
+        if (this.display) {
+            this.autoFocus();
+        }
     },
     methods: {
         autoFocus: function () {
@@ -88,18 +100,6 @@ export default defineComponent({
             this.$emit("confirm");
 
             this.close();
-        },
-    },
-    mounted: function () {
-        if (this.display) {
-            this.autoFocus();
-        }
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-            }
         },
     },
 });

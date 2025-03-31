@@ -1,15 +1,15 @@
 <template>
     <ModalDialogContainer
-        :closeSignal="closeSignal"
-        :forceCloseSignal="forceCloseSignal"
         v-model:display="displayStatus"
+        :close-signal="closeSignal"
+        :force-close-signal="forceCloseSignal"
         :static="true"
         :close-callback="askClose"
     >
-        <form v-if="display" @submit="submit" class="modal-dialog modal-xl" role="document">
+        <form v-if="display" class="modal-dialog modal-xl" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Advanced settings") }}</div>
-                <button type="button" class="modal-close-btn" :title="$t('Close')" @click="close" :disabled="busy">
+                <button type="button" class="modal-close-btn" :title="$t('Close')" :disabled="busy" @click="close">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -20,23 +20,23 @@
                 <div class="horizontal-filter-menu">
                     <a
                         href="javascript:;"
-                        @click="changePage('general')"
                         class="horizontal-filter-menu-item"
                         :class="{ selected: page === 'general' }"
+                        @click="changePage('general')"
                         >{{ $t("General") }}</a
                     >
                     <a
                         href="javascript:;"
-                        @click="changePage('resolutions')"
                         class="horizontal-filter-menu-item"
                         :class="{ selected: page == 'resolutions' }"
+                        @click="changePage('resolutions')"
                         >{{ $t("Extra resolutions") }}</a
                     >
                     <a
                         href="javascript:;"
-                        @click="changePage('css')"
                         class="horizontal-filter-menu-item"
                         :class="{ selected: page === 'css' }"
+                        @click="changePage('css')"
                         >{{ $t("Custom style") }}</a
                     >
                 </div>
@@ -47,65 +47,65 @@
                     <div class="form-group">
                         <label>{{ $t("Vault title") }}:</label>
                         <input
+                            v-model="title"
                             type="text"
                             autocomplete="off"
-                            v-model="title"
                             :disabled="busy"
                             :placeholder="$t('Personal Media Vault')"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width"
+                            @change="onChangesMade"
                         />
                     </div>
 
                     <div class="form-group">
                         <label>{{ $t("Max number of tasks in parallel (0 for unlimited)") }}:</label>
                         <input
+                            v-model.number="maxTasks"
                             type="number"
                             autocomplete="off"
-                            v-model.number="maxTasks"
                             :disabled="busy"
                             min="0"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width"
+                            @change="onChangesMade"
                         />
                     </div>
 
                     <div class="form-group">
                         <label>{{ $t("Max number threads for each task (0 to use the number of cores)") }}:</label>
                         <input
+                            v-model.number="encodingThreads"
                             type="number"
                             autocomplete="off"
-                            v-model.number="encodingThreads"
                             :disabled="busy"
                             min="0"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width"
+                            @change="onChangesMade"
                         />
                     </div>
 
                     <div class="form-group">
                         <label>{{ $t("Video previews interval (seconds) (if set to 0, by default is 3 seconds)") }}:</label>
                         <input
+                            v-model.number="videoPreviewsInterval"
                             type="number"
                             autocomplete="off"
-                            v-model.number="videoPreviewsInterval"
                             :disabled="busy"
                             min="0"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width"
+                            @change="onChangesMade"
                         />
                     </div>
 
                     <div class="form-group">
                         <label>{{ $t("Max number of invited sessions by user (if set to 0, by default is 10 sessions)") }}:</label>
                         <input
+                            v-model.number="inviteLimit"
                             type="number"
                             autocomplete="off"
-                            v-model.number="inviteLimit"
                             :disabled="busy"
                             min="0"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width"
+                            @change="onChangesMade"
                         />
                     </div>
                 </div>
@@ -174,9 +174,9 @@
                             v-model="css"
                             :disabled="busy"
                             rows="12"
-                            @change="onChangesMade"
                             class="form-control form-control-full-width form-textarea"
                             :placeholder="'.main-layout.dark-theme {\n\tbackground: blue;\n}'"
+                            @change="onChangesMade"
                         ></textarea>
                     </div>
                     <div>
@@ -214,16 +214,16 @@ import { PagesController } from "@/control/pages";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
 
 export default defineComponent({
+    name: "AdvancedSettingsModal",
     components: {
         ToggleSwitch,
         LoadingIcon,
         SaveChangesAskModal,
     },
-    name: "AdvancedSettingsModal",
-    emits: ["update:display"],
     props: {
         display: Boolean,
     },
+    emits: ["update:display"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -328,6 +328,32 @@ export default defineComponent({
             closeSignal: 0,
             forceCloseSignal: 0,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.error = "";
+                nextTick(() => {
+                    this.$el.focus();
+                });
+                this.dirty = false;
+                this.displayAskSave = false;
+                this.load();
+            }
+        },
+    },
+    mounted: function () {
+        this.load();
+        if (this.display) {
+            this.error = "";
+            nextTick(() => {
+                this.$el.focus();
+            });
+        }
+    },
+    beforeUnmount: function () {
+        clearNamedTimeout(this.loadRequestId);
+        abortNamedApiRequest(this.loadRequestId);
     },
     methods: {
         autoFocus: function () {
@@ -535,32 +561,6 @@ export default defineComponent({
 
         closeForced: function () {
             this.forceCloseSignal++;
-        },
-    },
-    mounted: function () {
-        this.load();
-        if (this.display) {
-            this.error = "";
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.error = "";
-                nextTick(() => {
-                    this.$el.focus();
-                });
-                this.dirty = false;
-                this.displayAskSave = false;
-                this.load();
-            }
         },
     },
 });

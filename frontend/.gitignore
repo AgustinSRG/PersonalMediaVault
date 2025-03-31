@@ -2,6 +2,7 @@
 node_modules
 /dist
 /src/locales/*.txt
+tsconfig.tsbuildinfo
 
 # local env files
 .env.local

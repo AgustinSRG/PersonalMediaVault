@@ -22,6 +22,15 @@ export default defineComponent({
             position: "left",
         };
     },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_SNACK_BAR, this.show.bind(this));
+    },
+    beforeUnmount: function () {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    },
     methods: {
         show: function (msg: string, position?: string) {
             if (this.timeout) {
@@ -45,15 +54,6 @@ export default defineComponent({
             }
             this.shown = false;
         },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_SNACK_BAR, this.show.bind(this));
-    },
-    beforeUnmount: function () {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        }
     },
 });
 </script>

@@ -12,7 +12,7 @@
                     <tr>
                         <th class="text-left">{{ $t("Name") }}</th>
                         <th class="text-left">{{ $t("Size") }}</th>
-                        <th class="text-right td-shrink" v-if="canWrite"></th>
+                        <th v-if="canWrite" class="text-right td-shrink"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,24 +20,24 @@
                         <td colspan="3">
                             {{ $t("There are no attachments yet for this media.") }}
                         </td>
-                        <td class="text-right td-shrink" v-if="canWrite"></td>
+                        <td v-if="canWrite" class="text-right td-shrink"></td>
                     </tr>
                     <tr v-for="att in attachments" :key="att.id">
-                        <td class="bold" v-if="attachmentEdit != att.id">
+                        <td v-if="attachmentEdit != att.id" class="bold">
                             <a :href="getAttachmentUrl(att)" target="_blank" rel="noopener noreferrer">{{ att.name }}</a>
                         </td>
                         <td v-if="attachmentEdit == att.id">
                             <input
+                                v-model="attachmentEditName"
                                 type="text"
                                 maxlength="255"
                                 :disabled="busyRename || busyDelete"
                                 class="form-control form-control-full-width edit-auto-focus"
-                                v-model="attachmentEditName"
                                 @keydown="editInputKeyEventHandler"
                             />
                         </td>
                         <td class="one-line">{{ renderSize(att.size) }}</td>
-                        <td class="text-right td-shrink one-line" v-if="canWrite">
+                        <td v-if="canWrite" class="text-right td-shrink one-line">
                             <button
                                 v-if="attachmentEdit != att.id"
                                 type="button"
@@ -81,8 +81,8 @@
             </table>
         </div>
 
-        <div class="form-group" v-if="canWrite">
-            <input type="file" class="file-hidden attachment-file-hidden" @change="attachmentFileChanged" name="attachment-upload" />
+        <div v-if="canWrite" class="form-group">
+            <input type="file" class="file-hidden attachment-file-hidden" name="attachment-upload" @change="attachmentFileChanged" />
             <button
                 v-if="!busyUpload || attachmentUploadProgress <= 0"
                 type="button"
@@ -130,11 +130,11 @@ import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAttachment, apiMediaRenameAttachment, apiMediaUploadAttachment } from "@/api/api-media-edit";
 
 export default defineComponent({
+    name: "EditorAttachments",
     components: {
         LoadingIcon,
         AttachmentDeleteModal,
     },
-    name: "EditorAttachments",
     emits: ["changed"],
     setup() {
         return {
@@ -161,6 +161,17 @@ export default defineComponent({
             displayAttachmentDelete: false,
             attachmentToDelete: null as MediaAttachment,
         };
+    },
+
+    mounted: function () {
+        this.updateMediaData();
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+    },
+
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
     },
 
     methods: {
@@ -457,17 +468,6 @@ export default defineComponent({
                 return bytes + " Bytes";
             }
         },
-    },
-
-    mounted: function () {
-        this.updateMediaData();
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-    },
-
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
     },
 });
 </script>

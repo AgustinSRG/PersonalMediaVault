@@ -44,11 +44,11 @@ import { getAssetURL } from "@/utils/api";
 
 export default defineComponent({
     name: "PlayerAttachmentsList",
-    emits: ["update:shown", "enter", "leave"],
     props: {
         shown: Boolean,
         attachments: Array as PropType<MediaAttachment[]>,
     },
+    emits: ["update:shown", "enter", "leave"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -61,6 +61,24 @@ export default defineComponent({
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
             hideNotes: !getImageNotesVisible(),
         };
+    },
+    watch: {
+        shown: function () {
+            if (this.shown) {
+                this.focusTrap.activate();
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            } else {
+                this.focusTrap.deactivate();
+            }
+        },
+    },
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
     },
     methods: {
         enterConfig: function () {
@@ -109,24 +127,6 @@ export default defineComponent({
             if (e.key === "Escape") {
                 this.close();
                 e.stopPropagation();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "player-settings-no-trap");
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    watch: {
-        shown: function () {
-            if (this.shown) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
             }
         },
     },

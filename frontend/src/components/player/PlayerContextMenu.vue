@@ -154,19 +154,6 @@ import { useVModel } from "../../utils/v-model";
 
 export default defineComponent({
     name: "PlayerContextMenu",
-    emits: [
-        "update:shown",
-        "update:loop",
-        "update:controls",
-        "update:fit",
-        "update:notesEdit",
-        "update:sliceLoop",
-        "update:timeSlicesEdit",
-        "open-tags",
-        "open-ext-desc",
-        "stats",
-        "close",
-    ],
     props: {
         shown: Boolean,
         type: String,
@@ -192,6 +179,19 @@ export default defineComponent({
 
         timeSlicesEdit: Boolean,
     },
+    emits: [
+        "update:shown",
+        "update:loop",
+        "update:controls",
+        "update:fit",
+        "update:notesEdit",
+        "update:sliceLoop",
+        "update:timeSlicesEdit",
+        "open-tags",
+        "open-ext-desc",
+        "stats",
+        "close",
+    ],
     setup(props) {
         return {
             shownState: useVModel(props, "shown"),
@@ -215,6 +215,27 @@ export default defineComponent({
             maxWidth: "",
             maxHeight: "",
         };
+    },
+    watch: {
+        x: function () {
+            this.computeDimensions();
+        },
+        y: function () {
+            this.computeDimensions();
+        },
+        shown: function () {
+            if (this.shown) {
+                nextTick(() => {
+                    this.$el.focus();
+                });
+            }
+        },
+    },
+    mounted: function () {
+        this.computeDimensions();
+
+        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
+        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
     },
     methods: {
         stopPropagationEvent: function (e) {
@@ -332,27 +353,6 @@ export default defineComponent({
                 event.preventDefault();
                 event.stopPropagation();
                 event.target.click();
-            }
-        },
-    },
-    mounted: function () {
-        this.computeDimensions();
-
-        this.$listenOnDocumentEvent("mousedown", this.hide.bind(this));
-        this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
-    },
-    watch: {
-        x: function () {
-            this.computeDimensions();
-        },
-        y: function () {
-            this.computeDimensions();
-        },
-        shown: function () {
-            if (this.shown) {
-                nextTick(() => {
-                    this.$el.focus();
-                });
             }
         },
     },

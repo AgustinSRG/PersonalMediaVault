@@ -11,8 +11,8 @@
                 :disabled="page <= 0"
                 type="button"
                 class="paginated-menu-btn paginated-menu-btn-edge-extra"
-                @click="clickPage(0, $event)"
                 :title="$t('First page')"
+                @click="clickPage(0, $event)"
             >
                 <i class="fas fa-angles-left"></i>
             </button>
@@ -29,8 +29,8 @@
                 :disabled="page <= 0"
                 type="button"
                 class="paginated-menu-btn paginated-menu-btn-edge"
-                @click="clickPage(page - 1, $event)"
                 :title="$t('Previous page')"
+                @click="clickPage(page - 1, $event)"
             >
                 <i class="fas fa-chevron-left"></i>
             </button>
@@ -68,8 +68,8 @@
                 :disabled="page >= pages - 1"
                 type="button"
                 class="paginated-menu-btn paginated-menu-btn-edge"
-                @click="clickPage(page + 1, $event)"
                 :title="$t('Next page')"
+                @click="clickPage(page + 1, $event)"
             >
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -86,8 +86,8 @@
                 :disabled="page >= pages - 1"
                 type="button"
                 class="paginated-menu-btn paginated-menu-btn-edge-extra"
-                @click="clickPage(pages - 1, $event)"
                 :title="$t('Last page')"
+                @click="clickPage(pages - 1, $event)"
             >
                 <i class="fas fa-angles-right"></i>
             </button>
@@ -103,7 +103,6 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "PageMenu",
-    emits: ["goto"],
     props: {
         pageName: String,
         order: String,
@@ -111,10 +110,22 @@ export default defineComponent({
         pages: Number,
         min: Boolean,
     },
+    emits: ["goto"],
     data: function () {
         return {
             menu: [],
         };
+    },
+    watch: {
+        page: function () {
+            this.updatePageMenu();
+        },
+        pages: function () {
+            this.updatePageMenu();
+        },
+    },
+    mounted: function () {
+        this.updatePageMenu();
     },
     methods: {
         updatePageMenu: function () {
@@ -141,17 +152,6 @@ export default defineComponent({
                     sp: packSearchParams(page, order || "") || null,
                 })
             );
-        },
-    },
-    mounted: function () {
-        this.updatePageMenu();
-    },
-    watch: {
-        page: function () {
-            this.updatePageMenu();
-        },
-        pages: function () {
-            this.updatePageMenu();
         },
     },
 });

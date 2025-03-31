@@ -1,9 +1,9 @@
 <template>
     <div class="resizable-widget-container">
         <ResizableWidget
-            :title="$t('Tags')"
             v-model:display="displayStatus"
-            :contextOpen="contextOpen"
+            :title="$t('Tags')"
+            :context-open="contextOpen"
             :position-key="'tags-edit-helper-pos'"
             @clicked="propagateClick"
         >
@@ -28,15 +28,15 @@
                     <div class="form-group media-tags">
                         <div class="media-tags-finder">
                             <input
+                                v-model="tagToAdd"
                                 type="text"
                                 autocomplete="off"
                                 maxlength="255"
-                                v-model="tagToAdd"
                                 :disabled="busy"
-                                @input="onTagAddChanged"
-                                @keydown="onTagAddKeyDown"
                                 class="form-control tag-to-add auto-focus"
                                 :placeholder="$t('Add tags') + '...'"
+                                @input="onTagAddChanged"
+                                @keydown="onTagAddKeyDown"
                             />
                         </div>
                         <div class="media-tags-adder">
@@ -45,7 +45,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-group" v-if="matchingTags.length > 0">
+                    <div v-if="matchingTags.length > 0" class="form-group">
                         <button
                             v-for="mt in matchingTags"
                             :key="mt.id"
@@ -82,16 +82,16 @@ import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, PagesController } from "@/contr
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 
 export default defineComponent({
+    name: "TagsEditHelper",
     components: {
         ResizableWidget,
     },
-    name: "TagsEditHelper",
-    emits: ["update:display", "tags-update", "clicked"],
     props: {
         display: Boolean,
         contextOpen: Boolean,
         currentTime: Number,
     },
+    emits: ["update:display", "tags-update", "clicked"],
     setup(props) {
         return {
             requestId: getUniqueStringId(),
@@ -113,6 +113,32 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
         };
+    },
+    watch: {
+        display: function () {
+            if (this.display) {
+                this.autoFocus();
+                this.load();
+                TagsController.Load();
+            }
+        },
+    },
+    mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
+
+        this.load();
+
+        if (this.display) {
+            this.autoFocus();
+            TagsController.Load();
+        }
+    },
+    beforeUnmount: function () {
+        abortNamedApiRequest(this.requestId);
     },
     methods: {
         propagateClick: function () {
@@ -501,32 +527,6 @@ export default defineComponent({
                 if (suggestionElem) {
                     suggestionElem.focus();
                 }
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
-
-        this.load();
-
-        if (this.display) {
-            this.autoFocus();
-            TagsController.Load();
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.autoFocus();
-                this.load();
-                TagsController.Load();
             }
         },
     },
