@@ -21,28 +21,30 @@
             </div>
             <div class="modal-body with-menu">
                 <table class="modal-menu">
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-question"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("About PMV") }}
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-question"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("About PMV") }}
+                            </td>
+                        </tr>
 
-                    <a class="tr-link modal-menu-item" :href="docsURL" target="_blank" rel="noopener noreferrer" @click="close">
-                        <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Documentation") }}
-                        </td>
-                    </a>
+                        <a class="tr-link modal-menu-item" :href="docsURL" target="_blank" rel="noopener noreferrer" @click="close">
+                            <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Documentation") }}
+                            </td>
+                        </a>
 
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
-                        <td class="modal-menu-item-icon">
-                            <i class="fas fa-keyboard"></i>
-                        </td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Keyboard shortcuts") }}
-                        </td>
-                    </tr>
+                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
+                            <td class="modal-menu-item-icon">
+                                <i class="fas fa-keyboard"></i>
+                            </td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Keyboard shortcuts") }}
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

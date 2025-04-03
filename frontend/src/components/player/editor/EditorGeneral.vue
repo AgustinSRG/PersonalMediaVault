@@ -68,31 +68,33 @@
             </div>
             <div v-if="type === 2 || type === 3" class="table-responsive">
                 <table class="table no-border">
-                    <tr v-if="type === 2 || type === 3">
-                        <td class="text-right td-shrink">
-                            <toggle-switch
-                                v-model:val="startBeginning"
-                                :disabled="busyExtra || !canWrite"
-                                @update:val="changeExtraParams"
-                            ></toggle-switch>
-                        </td>
-                        <td class="">
-                            {{ $t("Reset time to the beginning every time the media reloads?") }}
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr v-if="type === 2 || type === 3">
+                            <td class="text-right td-shrink">
+                                <toggle-switch
+                                    v-model:val="startBeginning"
+                                    :disabled="busyExtra || !canWrite"
+                                    @update:val="changeExtraParams"
+                                ></toggle-switch>
+                            </td>
+                            <td class="">
+                                {{ $t("Reset time to the beginning every time the media reloads?") }}
+                            </td>
+                        </tr>
 
-                    <tr v-if="type === 2">
-                        <td class="text-right td-shrink">
-                            <toggle-switch
-                                v-model:val="isAnimation"
-                                :disabled="busyExtra || !canWrite"
-                                @update:val="changeExtraParams"
-                            ></toggle-switch>
-                        </td>
-                        <td class="">
-                            {{ $t("Is animation? (Force loop and disable keyboard time skipping)") }}
-                        </td>
-                    </tr>
+                        <tr v-if="type === 2">
+                            <td class="text-right td-shrink">
+                                <toggle-switch
+                                    v-model:val="isAnimation"
+                                    :disabled="busyExtra || !canWrite"
+                                    @update:val="changeExtraParams"
+                                ></toggle-switch>
+                            </td>
+                            <td class="">
+                                {{ $t("Is animation? (Force loop and disable keyboard time skipping)") }}
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             <div v-if="busyExtra" class="form-group loader-delayed-custom">

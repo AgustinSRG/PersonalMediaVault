@@ -13,24 +13,24 @@
         @mouseleave="leaveConfig"
         @keydown="keyDownHandle"
     >
-        <table>
-            <a
-                v-for="att in attachments || []"
-                :key="att.id"
-                class="tr-button"
-                tabindex="0"
-                :href="getAttachmentUrl(att)"
-                target="_blank"
-                rel="noopener noreferrer"
-                @click="clickAttachmentLink"
-                @keydown="clickOnEnter"
-            >
-                <td>
-                    <i class="fas fa-paperclip icon-config"></i>
-                    <b>{{ att.name }}</b>
-                </td>
-            </a>
-        </table>
+        <a
+            v-for="att in attachments || []"
+            :key="att.id"
+            class="player-attachment-link"
+            tabindex="0"
+            :href="getAttachmentUrl(att)"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click="clickAttachmentLink"
+            @keydown="clickOnEnter"
+        >
+            <div class="attachment-icon-link">
+                <i class="fas fa-paperclip"></i>
+            </div>
+            <div class="attachment-name">
+                {{ att.name }}
+            </div>
+        </a>
     </div>
 </template>
 

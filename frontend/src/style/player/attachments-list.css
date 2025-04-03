@@ -11,51 +11,42 @@
     min-width: 240px;
     max-width: calc(100% - 16px);
     overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .player-attachments-list.hidden {
     display: none;
 }
 
-.player-attachments-list table {
-    width: 100%;
-    border-spacing: 0;
-    /* Removes the cell spacing via CSS */
-    border-collapse: collapse;
-    /* Optional - if you don't want to have double border where cells touch */
-}
-
-.player-attachments-list table a {
-    display: table-row;
-}
-
-.player-attachments-list table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    vertical-align: middle;
-}
-
-.player-attachments-list .tr-button {
+.player-attachment-link {
     cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-decoration: none;
+    width: 100%;
 }
 
-.player-attachments-list .arrow-config {
-    margin-left: 0.5rem;
+.attachment-icon-link {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.player-attachments-list .icon-config {
-    margin-right: 0.5rem;
-    width: 24px;
+.attachment-name {
+    flex: 1;
+    font-weight: bold;
+    text-decoration: underline;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
 }
 
-.player-attachments-list .tr-button:hover {
+.player-attachment-link:hover {
     background: var(--hover-color);
-}
-
-.player-attachments-list .td-right {
-    text-align: right;
-}
-
-.player-attachments-list .check-uncheck {
-    visibility: hidden;
 }

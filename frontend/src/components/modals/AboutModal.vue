@@ -12,61 +12,63 @@
             </div>
             <div class="modal-body no-padding table-responsive">
                 <table class="table table-text-overflow">
-                    <tr>
-                        <td>{{ $t("Version") }}</td>
-                        <td>{{ version }}</td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>{{ $t("Version") }}</td>
+                            <td>{{ version }}</td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("Version date") }}</td>
-                        <td>{{ versionDate }}</td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("Version date") }}</td>
+                            <td>{{ versionDate }}</td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("Server version") }}</td>
-                        <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
-                        <td v-else>{{ serverVersion }}</td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("Server version") }}</td>
+                            <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
+                            <td v-else>{{ serverVersion }}</td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("Update status") }}</td>
-                        <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
-                        <td v-else>
-                            <span v-if="serverVersion === lastRelease"> {{ $t("You are using the latest version") }}</span>
-                            <span v-if="serverVersion !== lastRelease"
-                                ><a :href="getReleaseLink(lastRelease, gitRepo)" target="_blank" rel="noopener noreferrer"
-                                    >{{ $t("Download the latest release") }}: {{ lastRelease }}</a
-                                ></span
-                            >
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("Update status") }}</td>
+                            <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
+                            <td v-else>
+                                <span v-if="serverVersion === lastRelease"> {{ $t("You are using the latest version") }}</span>
+                                <span v-if="serverVersion !== lastRelease"
+                                    ><a :href="getReleaseLink(lastRelease, gitRepo)" target="_blank" rel="noopener noreferrer"
+                                        >{{ $t("Download the latest release") }}: {{ lastRelease }}</a
+                                    ></span
+                                >
+                            </td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("FFmpeg version") }}</td>
-                        <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
-                        <td v-else>{{ ffmpegVersion }}</td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("FFmpeg version") }}</td>
+                            <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
+                            <td v-else>{{ ffmpegVersion }}</td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("Home page") }}</td>
-                        <td>
-                            <a :href="homePage" target="_blank" rel="noopener noreferrer">{{ homePage }}</a>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("Home page") }}</td>
+                            <td>
+                                <a :href="homePage" target="_blank" rel="noopener noreferrer">{{ homePage }}</a>
+                            </td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("Git repository") }}</td>
-                        <td>
-                            <a :href="gitRepo" target="_blank" rel="noopener noreferrer">{{ gitRepo }}</a>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("Git repository") }}</td>
+                            <td>
+                                <a :href="gitRepo" target="_blank" rel="noopener noreferrer">{{ gitRepo }}</a>
+                            </td>
+                        </tr>
 
-                    <tr>
-                        <td>{{ $t("License") }}</td>
-                        <td>
-                            <a :href="license" target="_blank" rel="noopener noreferrer">MIT</a>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ $t("License") }}</td>
+                            <td>
+                                <a :href="license" target="_blank" rel="noopener noreferrer">MIT</a>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

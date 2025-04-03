@@ -21,18 +21,20 @@
             </div>
             <div class="modal-body with-menu limited-height">
                 <table class="modal-menu">
-                    <tr class="modal-menu-item" tabindex="0" @click="changeTheme('dark')" @keydown="clickOnEnter">
-                        <td class="modal-menu-item-icon">
-                            <i class="fas fa-check" :class="{ unchecked: theme !== 'dark' }"></i>
-                        </td>
-                        <td class="modal-menu-item-title">{{ $t("Dark Theme") }}</td>
-                    </tr>
-                    <tr class="modal-menu-item" tabindex="0" @click="changeTheme('light')" @keydown="clickOnEnter">
-                        <td class="modal-menu-item-icon">
-                            <i class="fas fa-check" :class="{ unchecked: theme !== 'light' }"></i>
-                        </td>
-                        <td class="modal-menu-item-title">{{ $t("Light Theme") }}</td>
-                    </tr>
+                    <tbody>
+                        <tr class="modal-menu-item" tabindex="0" @click="changeTheme('dark')" @keydown="clickOnEnter">
+                            <td class="modal-menu-item-icon">
+                                <i class="fas fa-check" :class="{ unchecked: theme !== 'dark' }"></i>
+                            </td>
+                            <td class="modal-menu-item-title">{{ $t("Dark Theme") }}</td>
+                        </tr>
+                        <tr class="modal-menu-item" tabindex="0" @click="changeTheme('light')" @keydown="clickOnEnter">
+                            <td class="modal-menu-item-icon">
+                                <i class="fas fa-check" :class="{ unchecked: theme !== 'light' }"></i>
+                            </td>
+                            <td class="modal-menu-item-title">{{ $t("Light Theme") }}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

@@ -21,19 +21,21 @@
             </div>
             <div class="modal-body with-menu limited-height">
                 <table class="modal-menu">
-                    <tr
-                        v-for="l in languages"
-                        :key="l.id"
-                        class="modal-menu-item"
-                        tabindex="0"
-                        @keydown="clickOnEnter"
-                        @click="changeLocale(l.id)"
-                    >
-                        <td class="modal-menu-item-icon">
-                            <i class="fas fa-check" :class="{ unchecked: lang !== l.id }"></i>
-                        </td>
-                        <td class="modal-menu-item-title">{{ l.name }}</td>
-                    </tr>
+                    <tbody>
+                        <tr
+                            v-for="l in languages"
+                            :key="l.id"
+                            class="modal-menu-item"
+                            tabindex="0"
+                            @keydown="clickOnEnter"
+                            @click="changeLocale(l.id)"
+                        >
+                            <td class="modal-menu-item-icon">
+                                <i class="fas fa-check" :class="{ unchecked: lang !== l.id }"></i>
+                            </td>
+                            <td class="modal-menu-item-title">{{ l.name }}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

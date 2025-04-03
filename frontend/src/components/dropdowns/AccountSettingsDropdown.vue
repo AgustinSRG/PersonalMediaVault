@@ -21,40 +21,42 @@
             </div>
             <div class="modal-body with-menu">
                 <table class="modal-menu">
-                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-user-tag"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Change username") }}
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('username')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-user-tag"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Change username") }}
+                            </td>
+                        </tr>
 
-                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Change password") }}
-                        </td>
-                    </tr>
+                        <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('password')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-key"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Change password") }}
+                            </td>
+                        </tr>
 
-                    <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('invite')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-user-check"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Invite") }}
-                        </td>
-                    </tr>
+                        <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('invite')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-user-check"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Invite") }}
+                            </td>
+                        </tr>
 
-                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Administrate accounts") }}
-                        </td>
-                    </tr>
+                        <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('admin')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-users"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Administrate accounts") }}
+                            </td>
+                        </tr>
 
-                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('logout')">
-                        <td class="modal-menu-item-icon"><i class="fas fa-sign-out-alt"></i></td>
-                        <td class="modal-menu-item-title">
-                            {{ $t("Close vault") }}
-                        </td>
-                    </tr>
+                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('logout')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-sign-out-alt"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Close vault") }}
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
