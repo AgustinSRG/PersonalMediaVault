@@ -553,21 +553,7 @@ func (vc *VaultController) Start() bool {
 	}
 
 	// Add process as a child process
-	err = child_process_manager.AddChildProcess(cmd.Process)
-
-	if err != nil {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "Error",
-				Other: "Error: {{.Message}}",
-			},
-			TemplateData: map[string]interface{}{
-				"Message": err.Error(),
-			},
-		})
-		fmt.Println(msg)
-		os.Exit(1)
-	}
+	_ = child_process_manager.AddChildProcess(cmd.Process)
 
 	vc.started = true
 	vc.errorMessage = ""
