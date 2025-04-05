@@ -4,7 +4,7 @@
 
 # Build backend
 
-FROM golang:alpine as backend_builder
+FROM golang:alpine AS backend_builder
 
     ## Copy backend
     ADD backend /root/backend
@@ -15,7 +15,7 @@ FROM golang:alpine as backend_builder
 
 # Build frontend
 
-FROM node:alpine as frontend_builder
+FROM node:alpine AS frontend_builder
 
     ## Copy frontend
     ADD frontend /root/frontend
@@ -27,7 +27,7 @@ FROM node:alpine as frontend_builder
 
 # Prepare runner
 
-FROM alpine as runner
+FROM alpine AS runner
 
     ## Install common libraries
     RUN apk add gcompat
