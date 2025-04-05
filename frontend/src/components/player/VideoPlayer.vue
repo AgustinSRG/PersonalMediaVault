@@ -827,7 +827,7 @@ export default defineComponent({
                 // Chrome audio de-sync workaround
                 const videoElement = this.getVideoElement() as HTMLMediaElement;
 
-                if (videoElement) {
+                if (videoElement && !videoElement.paused) {
                     const currentTime = videoElement.currentTime;
                     if (!isNaN(currentTime)) {
                         videoElement.currentTime = currentTime;
