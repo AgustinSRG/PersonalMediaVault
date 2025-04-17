@@ -1,6 +1,6 @@
 <template>
     <div :class="'thumb' + (className ? ' ' + className : '')">
-        <img v-if="!isError" :src="src" :alt="$t('Thumbnail')" loading="lazy" @load="onLoadingFalse" @error="onError" />
+        <img v-if="!isError" :src="src" loading="lazy" @load="onLoadingFalse" @error="onError" />
         <div v-if="displayLoader" class="thumb-load">
             <i class="fa fa-spinner fa-spin"></i>
         </div>
