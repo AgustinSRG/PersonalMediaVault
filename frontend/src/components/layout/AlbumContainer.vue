@@ -72,9 +72,12 @@
                         <i v-else class="fas fa-ban"></i>
                     </div>
                     <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                    <div v-if="item.type === 2 || item.type === 3" class="album-body-item-thumb-tag">
-                        {{ renderTime(item.duration) }}
-                    </div>
+                    <DurationIndicator
+                        v-if="item.type === 2 || item.type === 3"
+                        :type="item.type"
+                        :duration="item.duration"
+                        :small="true"
+                    ></DurationIndicator>
                     <div class="album-body-item-thumb-pos">
                         {{ renderPos(item.pos) }}
                     </div>
@@ -123,9 +126,11 @@
                         <i v-else class="fas fa-ban"></i>
                     </div>
                     <ThumbImage v-if="draggingItem.thumbnail" :src="getThumbnail(draggingItem.thumbnail)"></ThumbImage>
-                    <div v-if="draggingItem.type === 2 || draggingItem.type === 3" class="album-body-item-thumb-tag">
-                        {{ renderTime(draggingItem.duration) }}
-                    </div>
+                    <DurationIndicator
+                        v-if="draggingItem.type === 2 || draggingItem.type === 3"
+                        :type="draggingItem.type"
+                        :duration="draggingItem.duration"
+                    ></DurationIndicator>
                     <div class="album-body-item-thumb-pos">
                         {{ renderPos(draggingItem.pos) }}
                     </div>
@@ -182,13 +187,17 @@ import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { renderTimeSeconds } from "@/utils/time";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-
 import AlbumContextMenu from "./AlbumContextMenu.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-
 import AlbumMovePosModal from "@/components/modals/AlbumMovePosModal.vue";
+import { useVModel } from "@/utils/v-model";
+import { BigListScroller } from "@/utils/big-list-scroller";
+import { isTouchDevice } from "@/utils/touch";
+import { PagesController } from "@/control/pages";
+import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
+import ThumbImage from "../utils/ThumbImage.vue";
+import DurationIndicator from "../utils/DurationIndicator.vue";
 
 const INITIAL_WINDOW_SIZE = 100;
 
@@ -231,13 +240,6 @@ interface AlbumListItem {
     duration: number;
 }
 
-import { useVModel } from "@/utils/v-model";
-import { BigListScroller } from "@/utils/big-list-scroller";
-import { isTouchDevice } from "@/utils/touch";
-import { PagesController } from "@/control/pages";
-import { apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
-import ThumbImage from "../utils/ThumbImage.vue";
-
 export default defineComponent({
     name: "AlbumContainer",
     components: {
@@ -250,6 +252,7 @@ export default defineComponent({
         AlbumGoToPosModal,
         AlbumChangeThumbnailModal,
         ThumbImage,
+        DurationIndicator,
     },
     props: {
         displayUpload: Boolean,
@@ -534,10 +537,6 @@ export default defineComponent({
 
         deleteAlbum: function () {
             this.displayAlbumDelete = true;
-        },
-
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
         },
 
         getThumbnail(thumb: string) {

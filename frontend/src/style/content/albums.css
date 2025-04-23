@@ -168,16 +168,6 @@
     height: 100%;
 }
 
-.album-body-item-thumb-tag {
-    position: absolute;
-    background: var(--bg-opaque-75);
-    color: var(--theme-fg-color);
-    bottom: 0.25rem;
-    right: 0.25rem;
-    font-size: small;
-    padding: 0.25rem;
-}
-
 .album-body-item-thumb-pos {
     position: absolute;
     background: var(--bg-opaque-75);

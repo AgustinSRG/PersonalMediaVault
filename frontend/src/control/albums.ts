@@ -51,6 +51,26 @@ const REQUEST_ID_CURRENT_ALBUM_LOAD = "album-current-load";
 const REQUEST_ID_NEXT_PRE_FETCH = "album-next-prefetch-load";
 
 /**
+ * Minified album data (with lowercased name)
+ */
+export interface AlbumListItemMinExt {
+    /**
+     * Album ID
+     */
+    id: number;
+
+    /**
+     * Album name
+     */
+    name: string;
+
+    /**
+     * Album name (lowercase)
+     */
+    nameLowerCase: string;
+}
+
+/**
  * Management object for albums
  */
 export class AlbumsController {
@@ -95,7 +115,7 @@ export class AlbumsController {
      * Gets a minified version of the albums list
      * @returns A minified version of the albums list
      */
-    public static GetAlbumsListMin(): { id: number; name: string; nameLowerCase: string }[] {
+    public static GetAlbumsListMin(): AlbumListItemMinExt[] {
         const result = [];
 
         for (const album of AlbumsController.AlbumsMap.values()) {

@@ -64,9 +64,11 @@
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div v-if="item.type === 2 || item.type === 3" class="search-result-thumb-tag">
-                                    {{ renderTime(item.duration) }}
-                                </div>
+                                <DurationIndicator
+                                    v-if="item.type === 2 || item.type === 3"
+                                    :type="item.type"
+                                    :duration="item.duration"
+                                ></DurationIndicator>
                             </div>
                         </div>
                         <div v-if="displayTitles" class="search-result-title">
@@ -89,7 +91,6 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { MediaController } from "@/control/media";
@@ -105,11 +106,13 @@ import {
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
 import ThumbImage from "../utils/ThumbImage.vue";
+import DurationIndicator from "../utils/DurationIndicator.vue";
 
 export default defineComponent({
     name: "PageRandom",
     components: {
         ThumbImage,
+        DurationIndicator,
     },
     props: {
         display: Boolean,
@@ -141,10 +144,10 @@ export default defineComponent({
 
             currentMedia: AppStatus.CurrentMedia,
 
-            pageItems: [],
+            pageItems: [] as MediaListItem[],
             total: 0,
 
-            loadingFiller: [],
+            loadingFiller: [] as number[],
 
             switchMediaOnLoad: "",
 
@@ -388,15 +391,11 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
-        },
-
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 

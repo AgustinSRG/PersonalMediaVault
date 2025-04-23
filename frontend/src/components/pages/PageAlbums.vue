@@ -90,12 +90,18 @@
                                     <i class="fas fa-list-ol"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div v-if="item.size == 0" class="search-result-thumb-tag" :title="$t('Empty')">({{ $t("Empty") }})</div>
-                                <div v-else-if="item.size == 1" class="search-result-thumb-tag" :title="'1' + $t('item')">
-                                    1 {{ $t("item") }}
+                                <div v-if="item.size == 0" class="thumb-bottom-right-tag" :title="$t('Album') + ' - ' + $t('Empty')">
+                                    <i class="fas fa-list-ol"></i> {{ $t("Empty") }}
                                 </div>
-                                <div v-else-if="item.size > 1" class="search-result-thumb-tag" :title="item.size + $t('items')">
-                                    {{ item.size }} {{ $t("items") }}
+                                <div v-else-if="item.size == 1" class="thumb-bottom-right-tag" :title="$t('Album') + ' - 1 ' + $t('item')">
+                                    <i class="fas fa-list-ol"></i> 1 {{ $t("item") }}
+                                </div>
+                                <div
+                                    v-else-if="item.size > 1"
+                                    class="thumb-bottom-right-tag"
+                                    :title="$t('Album') + ' - ' + item.size + ' ' + $t('items')"
+                                >
+                                    <i class="fas fa-list-ol"></i> {{ item.size }} {{ $t("items") }}
                                 </div>
                             </div>
                         </div>

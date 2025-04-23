@@ -165,9 +165,11 @@
                                     <i v-else class="fas fa-ban"></i>
                                 </div>
                                 <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <div v-if="item.type === 2 || item.type === 3" class="search-result-thumb-tag">
-                                    {{ renderTime(item.duration) }}
-                                </div>
+                                <DurationIndicator
+                                    v-if="item.type === 2 || item.type === 3"
+                                    :type="item.type"
+                                    :duration="item.duration"
+                                ></DurationIndicator>
                             </div>
                         </div>
                         <div v-if="displayTitles" class="search-result-title">
@@ -189,15 +191,14 @@
 
 <script lang="ts">
 import { MediaListItem } from "@/api/models";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
@@ -216,6 +217,7 @@ import { apiAdvancedSearch } from "@/api/api-search";
 import { isTouchDevice } from "@/utils/touch";
 import ThumbImage from "../utils/ThumbImage.vue";
 import AlbumSelect from "../utils/AlbumSelect.vue";
+import DurationIndicator from "../utils/DurationIndicator.vue";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -224,6 +226,7 @@ export default defineComponent({
     components: {
         ThumbImage,
         AlbumSelect,
+        DurationIndicator,
     },
     props: {
         display: Boolean,
@@ -263,7 +266,7 @@ export default defineComponent({
 
             currentMedia: AppStatus.CurrentMedia,
 
-            pageItems: [],
+            pageItems: [] as MediaListItem[],
             page: 0,
             totalPages: 0,
             progress: 0,
@@ -277,12 +280,12 @@ export default defineComponent({
             advancedSearch: false,
 
             tagVersion: TagsController.TagsVersion,
-            tags: [],
+            tags: [] as number[],
             tagToAdd: "",
-            matchingTags: [],
+            matchingTags: [] as MatchingTag[],
             tagMode: "all",
 
-            albums: [],
+            albums: [] as AlbumListItemMinExt[],
             albumSearch: -1,
             albumFilter: null,
 
@@ -814,15 +817,11 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        renderTime: function (s: number): string {
-            return renderTimeSeconds(s);
-        },
-
-        clickOnEnter: function (event) {
+        clickOnEnter: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
-                event.target.click();
+                (event.target as HTMLElement).click();
             }
         },
 

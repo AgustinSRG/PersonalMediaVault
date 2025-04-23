@@ -193,3 +193,28 @@ export class TagsController {
         }
     }
 }
+
+/**
+ * Tag data with the matching information
+ */
+export interface MatchingTag {
+    /**
+     * Tag ID
+     */
+    id: number;
+
+    /**
+     * Tag name
+     */
+    name: string;
+
+    /**
+     * True if the tag name starts with the matching filter
+     */
+    starts: boolean;
+
+    /**
+     * True if the tag name contains the matching filter
+     */
+    contains: boolean;
+}

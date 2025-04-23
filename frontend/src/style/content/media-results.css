@@ -149,7 +149,7 @@
     }
 }
 
-.search-result-thumb-tag {
+.thumb-bottom-right-tag {
     position: absolute;
     background: var(--bg-opaque-75);
     color: var(--theme-fg-color);
@@ -160,4 +160,10 @@
     max-width: calc(100% - 1rem);
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.thumb-bottom-right-tag.small {
+    bottom: 0.25rem;
+    right: 0.25rem;
+    max-width: calc(100% - 0.5rem);
 }
