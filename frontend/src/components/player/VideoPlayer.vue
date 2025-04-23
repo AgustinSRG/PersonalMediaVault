@@ -516,16 +516,6 @@ import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 
-// Checks if the browser is a Chromium browser
-const IS_CHROMIUM =
-    "navigator" in window &&
-    "userAgentData" in navigator &&
-    !!navigator.userAgentData &&
-    typeof navigator.userAgentData === "object" &&
-    "brands" in navigator.userAgentData &&
-    Array.isArray(navigator.userAgentData.brands) &&
-    navigator.userAgentData.brands.some((data) => data && data.brand === "Chromium");
-
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
 });
@@ -767,8 +757,6 @@ export default defineComponent({
 
         this.$listenOnDocumentEvent("mousemove", this.moveScroll.bind(this));
 
-        this.$listenOnDocumentEvent("visibilitychange", this.onVisibilityChange.bind(this));
-
         this.initializeVideo();
 
         if (window.navigator && window.navigator.mediaSession) {
@@ -816,24 +804,6 @@ export default defineComponent({
             this.contextMenuY = e.pageY;
             this.contextMenuShown = true;
             e.preventDefault();
-        },
-
-        onVisibilityChange: function () {
-            if (document.visibilityState !== "visible") {
-                return;
-            }
-
-            if (IS_CHROMIUM) {
-                // Chrome audio de-sync workaround
-                const videoElement = this.getVideoElement() as HTMLMediaElement;
-
-                if (videoElement && !videoElement.paused) {
-                    const currentTime = videoElement.currentTime;
-                    if (!isNaN(currentTime)) {
-                        videoElement.currentTime = currentTime;
-                    }
-                }
-            }
         },
 
         manageAlbums: function () {
