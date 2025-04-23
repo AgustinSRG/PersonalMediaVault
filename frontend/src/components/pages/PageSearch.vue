@@ -413,14 +413,6 @@ export default defineComponent({
             AppStatus.GoToPage("adv-search");
         },
 
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
         findCurrentMediaIndex: function (): number {
             for (let i = 0; i < this.pageItems.length; i++) {
                 if (this.pageItems[i].id === this.currentMedia) {

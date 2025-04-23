@@ -391,14 +391,6 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
         clearSearch: function () {
             AppStatus.ClearSearch();
         },

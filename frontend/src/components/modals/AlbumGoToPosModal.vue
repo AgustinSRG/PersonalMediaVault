@@ -97,7 +97,7 @@ export default defineComponent({
             this.closeSignal++;
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
             if (AlbumsController.CurrentAlbumData && AlbumsController.CurrentAlbumData.list.length > 0) {

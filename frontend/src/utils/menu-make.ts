@@ -4,9 +4,23 @@
 
 const MAX_MENU_ITEMS = 9;
 
-interface PageNode {
+/**
+ * Node for a pages menu
+ */
+export interface PageNode {
+    /**
+     * Type of node
+     */
     type: "page" | "skip";
+
+    /**
+     * True if current
+     */
     current: boolean;
+
+    /**
+     * The page the node represents
+     */
     page: number;
 }
 

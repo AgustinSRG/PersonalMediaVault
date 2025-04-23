@@ -46,10 +46,11 @@
 
 <script lang="ts">
 import { MediaController } from "@/control/media";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick, PropType } from "vue";
 import { useVModel } from "../../utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import { AuthController } from "@/control/auth";
+import { MediaData } from "@/api/models";
 
 const PlayerMediaEditor = defineAsyncComponent({
     loader: () => import("@/components/player/editor/PlayerMediaEditor.vue"),
@@ -63,7 +64,7 @@ export default defineComponent({
     },
     props: {
         mid: Number,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
 
         inAlbum: Boolean,
 
@@ -156,10 +157,6 @@ export default defineComponent({
         close: function () {
             this.closeTitle();
             this.closeAlbum();
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         onKeyDown: function (e) {

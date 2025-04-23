@@ -130,7 +130,7 @@ export default defineComponent({
             this.closeSignal++;
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
             if (this.busy) {

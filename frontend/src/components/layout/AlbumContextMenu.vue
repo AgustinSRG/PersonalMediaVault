@@ -107,10 +107,6 @@ export default defineComponent({
         this.focusTrap.destroy();
     },
     methods: {
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         moveMediaUp: function () {
             this.$emit("move-up", this.mediaIndex);
             this.hide();
@@ -172,14 +168,6 @@ export default defineComponent({
                 this.width = "auto";
                 this.maxWidth = maxWidth + "px";
                 this.maxHeight = maxHeight + "px";
-            }
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
             }
         },
     },

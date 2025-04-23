@@ -194,7 +194,7 @@ export default defineComponent({
             requestIdThumbnail: getUniqueStringId(),
             requestIdExtra: getUniqueStringId(),
 
-            mediaElementCheckTimer: null,
+            mediaElementCheckTimer: null as ReturnType<typeof setInterval> | null,
         };
     },
     data: function () {

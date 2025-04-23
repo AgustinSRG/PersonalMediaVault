@@ -96,14 +96,6 @@ export default defineComponent({
         goPrev: function () {
             AppEvents.Emit(EVENT_NAME_GO_PREV);
         },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
-        },
     },
 });
 </script>

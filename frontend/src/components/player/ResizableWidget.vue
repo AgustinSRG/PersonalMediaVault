@@ -116,7 +116,7 @@ export default defineComponent({
     emits: ["update:display", "clicked", "action-btn"],
     setup(props) {
         return {
-            fixPositionTimer: null,
+            fixPositionTimer: null as ReturnType<typeof setInterval> | null,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -172,10 +172,6 @@ export default defineComponent({
     methods: {
         close: function () {
             this.displayStatus = false;
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         onKeyDown: function (e: KeyboardEvent) {

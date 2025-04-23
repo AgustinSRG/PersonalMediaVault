@@ -427,18 +427,19 @@ import {
     setTogglePlayDelay,
 } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
-import { defineComponent, nextTick } from "vue";
+import { defineComponent, nextTick, PropType } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
+import { MediaData, MediaResolution } from "@/api/models";
 
 export default defineComponent({
     name: "VideoPlayerConfig",
     components: { ToggleSwitch, PlayerSubtitlesConfig },
     props: {
         shown: Boolean,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
         loop: Boolean,
         nextEnd: Boolean,
         speed: Number,
@@ -465,7 +466,7 @@ export default defineComponent({
     ],
     setup(props) {
         return {
-            focusTrap: null,
+            focusTrap: null as FocusTrap,
             shownState: useVModel(props, "shown"),
             loopState: useVModel(props, "loop"),
             nextEndState: useVModel(props, "nextEnd"),
@@ -481,7 +482,7 @@ export default defineComponent({
             page: "",
             speeds: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
             scales: [1, 1.25, 1.5, 1.75, 2, 4, 8],
-            resolutions: [],
+            resolutions: [] as MediaResolution[],
 
             speedNum: Math.floor(this.speed * 100),
             scaleNum: Math.floor(this.scale * 100),
@@ -570,10 +571,6 @@ export default defineComponent({
 
         leaveConfig: function () {
             this.$emit("leave");
-        },
-
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
         },
 
         goBack: function () {
@@ -821,14 +818,6 @@ export default defineComponent({
             }
 
             this.scaleState = this.scaleNum / 100;
-        },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
         },
 
         close: function () {

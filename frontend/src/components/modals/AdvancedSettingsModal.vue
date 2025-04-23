@@ -199,7 +199,7 @@
 </template>
 
 <script lang="ts">
-import { VaultUserConfig } from "@/api/models";
+import { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -212,6 +212,12 @@ import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
+import {
+    ImageResolutionStandardToggleable,
+    STANDARD_IMAGE_RESOLUTIONS,
+    STANDARD_VIDEO_RESOLUTIONS,
+    VideoResolutionStandardToggleable,
+} from "@/utils/resolutions";
 
 export default defineComponent({
     name: "AdvancedSettingsModal",
@@ -228,6 +234,8 @@ export default defineComponent({
         return {
             loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
+            standardResolutions: STANDARD_VIDEO_RESOLUTIONS,
+            standardImageResolutions: STANDARD_IMAGE_RESOLUTIONS,
         };
     },
     data: function () {
@@ -243,83 +251,8 @@ export default defineComponent({
             encodingThreads: 0,
             videoPreviewsInterval: 0,
             inviteLimit: 0,
-            resolutions: [],
-            imageResolutions: [],
-
-            standardResolutions: [
-                {
-                    name: "144p",
-                    width: 256,
-                    height: 144,
-                    fps: 30,
-                },
-                {
-                    name: "240p",
-                    width: 352,
-                    height: 240,
-                    fps: 30,
-                },
-                {
-                    name: "360p",
-                    width: 480,
-                    height: 360,
-                    fps: 30,
-                },
-                {
-                    name: "480p",
-                    width: 858,
-                    height: 480,
-                    fps: 30,
-                },
-                {
-                    name: "720p",
-                    width: 1280,
-                    height: 720,
-                    fps: 30,
-                },
-                {
-                    name: "720p60",
-                    width: 1280,
-                    height: 720,
-                    fps: 60,
-                },
-                {
-                    name: "1080p",
-                    width: 1920,
-                    height: 1080,
-                    fps: 30,
-                },
-                {
-                    name: "1080p60",
-                    width: 1920,
-                    height: 1080,
-                    fps: 60,
-                },
-                {
-                    name: "2k",
-                    width: 2048,
-                    height: 1152,
-                    fps: 30,
-                },
-                {
-                    name: "2k60",
-                    width: 2048,
-                    height: 1152,
-                    fps: 60,
-                },
-                {
-                    name: "4k",
-                    width: 3860,
-                    height: 2160,
-                    fps: 30,
-                },
-                {
-                    name: "4k60",
-                    width: 3860,
-                    height: 2160,
-                    fps: 60,
-                },
-            ],
+            resolutions: [] as VideoResolutionStandardToggleable[],
+            imageResolutions: [] as ImageResolutionStandardToggleable[],
 
             loading: true,
             busy: false,
@@ -384,7 +317,7 @@ export default defineComponent({
             this.dirty = true;
         },
 
-        updateResolutions: function (resolutions, imageResolutions) {
+        updateResolutions: function (resolutions: VideoResolution[], imageResolutions: ImageResolution[]) {
             this.resolutions = this.standardResolutions.map((r) => {
                 let enabled = false;
                 for (const res of resolutions) {
@@ -402,25 +335,21 @@ export default defineComponent({
                 };
             });
 
-            this.imageResolutions = this.standardResolutions
-                .filter((r) => {
-                    return r.fps === 30;
-                })
-                .map((r) => {
-                    let enabled = false;
-                    for (const res of imageResolutions) {
-                        if (res.width === r.width && res.height === r.height) {
-                            enabled = true;
-                            break;
-                        }
+            this.imageResolutions = this.standardImageResolutions.map((r) => {
+                let enabled = false;
+                for (const res of imageResolutions) {
+                    if (res.width === r.width && res.height === r.height) {
+                        enabled = true;
+                        break;
                     }
-                    return {
-                        enabled: enabled,
-                        name: r.name,
-                        width: r.width,
-                        height: r.height,
-                    };
-                });
+                }
+                return {
+                    enabled: enabled,
+                    name: r.name,
+                    width: r.width,
+                    height: r.height,
+                };
+            });
         },
 
         getResolutions: function () {
@@ -493,7 +422,7 @@ export default defineComponent({
                 });
         },
 
-        submit: function (e) {
+        submit: function (e?: Event) {
             if (e) {
                 e.preventDefault();
             }

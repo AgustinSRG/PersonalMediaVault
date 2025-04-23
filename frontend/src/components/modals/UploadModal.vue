@@ -78,11 +78,11 @@
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick, PropType } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { parseTagName } from "@/utils/tags";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
+import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { getLastUsedTags } from "@/control/app-preferences";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 
@@ -100,24 +100,24 @@ export default defineComponent({
         display: Boolean,
         inModal: Boolean,
         fixedAlbum: Number,
-        files: Array,
+        files: Array as PropType<File[]>,
     },
     emits: ["update:display", "upload"],
     setup(props) {
         return {
-            findTagTimeout: null,
+            findTagTimeout: null as ReturnType<typeof setTimeout> | null,
             displayStatus: useVModel(props, "display"),
         };
     },
     data: function () {
         return {
-            tags: [],
+            tags: [] as string[],
             tagToAdd: "",
             tagVersion: TagsController.TagsVersion,
-            matchingTags: [],
+            matchingTags: [] as MatchingTag[],
 
             album: -1,
-            albums: [],
+            albums: [] as AlbumListItemMinExt[],
 
             displayAlbumCreate: false,
 
@@ -158,7 +158,7 @@ export default defineComponent({
             this.closeSignal++;
         },
 
-        renderFiles: function (files) {
+        renderFiles: function (files: File[]) {
             return files
                 .map((file) => {
                     return file.name + " (" + this.renderSize(file.size) + ")";
@@ -166,7 +166,7 @@ export default defineComponent({
                 .join("\n");
         },
 
-        computeTotalSize: function (files) {
+        computeTotalSize: function (files: File[]) {
             let size = 0;
 
             for (const file of files) {
@@ -227,10 +227,11 @@ export default defineComponent({
                 const lastUsedTags = [];
 
                 for (const tid of lastUsedTagsIds) {
-                    if (TagsController.Tags.has(tid) && !this.tags.includes(tid)) {
+                    const tagName = TagsController.Tags.get(tid);
+                    if (TagsController.Tags.has(tid) && !this.tags.includes(tagName)) {
                         lastUsedTags.push({
                             id: tid,
-                            name: TagsController.Tags.get(tid),
+                            name: tagName,
                         });
                     }
                 }
@@ -362,7 +363,7 @@ export default defineComponent({
             this.displayAlbumCreate = true;
         },
 
-        onNewAlbum: function (albumId) {
+        onNewAlbum: function (albumId: number) {
             this.album = albumId;
         },
     },

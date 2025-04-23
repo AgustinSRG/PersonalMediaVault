@@ -262,18 +262,19 @@
 <script lang="ts">
 import { getAutoNextTime, getSelectedSubtitles, setAutoNextTime, setSelectedSubtitles } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
-import { defineComponent, nextTick } from "vue";
+import { defineComponent, nextTick, PropType } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
+import { MediaData } from "@/api/models";
 
 export default defineComponent({
     name: "AudioPlayerConfig",
     components: { ToggleSwitch, PlayerSubtitlesConfig },
     props: {
         shown: Boolean,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
         loop: Boolean,
         nextEnd: Boolean,
         speed: Number,
@@ -360,10 +361,6 @@ export default defineComponent({
 
         leaveConfig: function () {
             this.$emit("leave");
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         focus: function () {
@@ -528,15 +525,6 @@ export default defineComponent({
 
             this.speedState = this.speedNum / 100;
         },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
         close: function () {
             this.shownState = false;
         },

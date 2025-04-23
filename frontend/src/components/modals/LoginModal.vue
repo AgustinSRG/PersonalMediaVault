@@ -100,7 +100,7 @@ export default defineComponent({
     },
     setup() {
         return {
-            timer: null,
+            timer: null as ReturnType<typeof setInterval> | null,
         };
     },
     data: function () {
@@ -150,7 +150,7 @@ export default defineComponent({
             });
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
             if (this.isCode) {

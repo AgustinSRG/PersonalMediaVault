@@ -375,8 +375,8 @@
             <div class="player-timeline-current" :style="{ width: getTimelineBarWidth(currentTime, duration) }"></div>
 
             <div
-                v-for="ts in timeSlices"
-                :key="ts"
+                v-for="(ts, tsi) in timeSlices"
+                :key="tsi"
                 class="player-timeline-split"
                 :class="{ 'start-split': ts.start <= 0 }"
                 :style="{ left: getTimelineBarWidth(ts.start, duration) }"
@@ -498,7 +498,7 @@ import PlayerTopBar from "./PlayerTopBar.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
-import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
+import { findTimeSlice, NormalizedTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
 import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
@@ -511,7 +511,7 @@ import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subt
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { PropType } from "vue";
-import { MediaData } from "@/api/models";
+import { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
@@ -554,8 +554,8 @@ export default defineComponent({
 
         fullscreen: Boolean,
 
-        next: Object,
-        prev: Object,
+        next: Object as PropType<MediaListItem | null>,
+        prev: Object as PropType<MediaListItem | null>,
         inAlbum: Boolean,
 
         pageNext: Boolean,
@@ -589,11 +589,11 @@ export default defineComponent({
     ],
     setup(props) {
         return {
-            togglePlayDelayTimeout: null,
-            autoNextTimer: null,
+            togglePlayDelayTimeout: null as ReturnType<typeof setTimeout> | null,
+            autoNextTimer: null as ReturnType<typeof setInterval> | null,
             subTag: "",
-            nextEndTimer: null,
-            timer: null,
+            nextEndTimer: null as ReturnType<typeof setInterval> | null,
+            timer: null as ReturnType<typeof setInterval> | null,
             mediaSessionId: getUniqueStringId(),
             fullScreenState: useVModel(props, "fullscreen"),
             userControlsState: useVModel(props, "userControls"),
@@ -676,8 +676,8 @@ export default defineComponent({
             audioTrack: getSelectedAudioTrack(),
             audioTrackURL: "",
 
-            timeSlices: [],
-            currentTimeSlice: null,
+            timeSlices: [] as NormalizedTimeSlice[],
+            currentTimeSlice: null as NormalizedTimeSlice | null,
             currentTimeSliceName: "",
             currentTimeSliceStart: 0,
             currentTimeSliceEnd: 0,
@@ -1373,9 +1373,6 @@ export default defineComponent({
             if (!document.fullscreenElement) {
                 this.fullScreenState = false;
             }
-        },
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
         },
 
         clickTimeline: function (e: Event) {

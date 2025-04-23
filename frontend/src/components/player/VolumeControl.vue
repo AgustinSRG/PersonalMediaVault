@@ -16,8 +16,8 @@
             class="player-volume-btn-expand"
             :class="{ hidden: !expanded }"
             :style="{ width: computeBarContainerWidth(width) }"
-            @mousedown="grabVolume"
-            @touchstart="grabVolume"
+            @mousedown="grabVolumeMouse"
+            @touchstart="grabVolumeTouch"
         >
             <div class="player-volume-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
                 <div class="player-volume-bar" :style="{ width: getVolumeBarWidth(width) }"></div>
@@ -32,6 +32,7 @@
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
+import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "VolumeControl",
@@ -60,11 +61,11 @@ export default defineComponent({
             this.expandedState = true;
         }
 
-        this.$listenOnDocumentEvent("mouseup", this.dropVolume.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropVolume.bind(this));
+        this.$listenOnDocumentEvent("mouseup", this.dropVolumeMouse.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.dropVolumeTouch.bind(this));
 
-        this.$listenOnDocumentEvent("mousemove", this.moveVolume.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveVolume.bind(this));
+        this.$listenOnDocumentEvent("mousemove", this.moveVolumeMouse.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.moveVolumeTouch.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -85,21 +86,21 @@ export default defineComponent({
 
             return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
         },
-        computeBarContainerWidth(width: number) {
+        computeBarContainerWidth: function (width: number) {
             const margins = 32;
             return width + margins + "px";
         },
-        computeBarContainerInnerWidth(width: number) {
+        computeBarContainerInnerWidth: function (width: number) {
             const margins = 16;
             return width + margins + "px";
         },
-        clickOnVolumeButton() {
+        clickOnVolumeButton: function () {
             this.mutedState = !this.mutedState;
         },
-        getVolumeBarWidth(width: number) {
+        getVolumeBarWidth: function (width: number) {
             return width + 16 + "px";
         },
-        getVolumeBarCurrentWidth(width: number, volume: number, muted: boolean) {
+        getVolumeBarCurrentWidth: function (width: number, volume: number, muted: boolean) {
             let actualVolume = volume;
 
             if (muted) {
@@ -110,7 +111,7 @@ export default defineComponent({
 
             return Math.floor(actualVolume * width) + "px";
         },
-        getVolumeThumbLeft(width: number, volume: number, muted: boolean) {
+        getVolumeThumbLeft: function (width: number, volume: number, muted: boolean) {
             return this.getVolumeBarCurrentWidth(width, volume, muted);
         },
         showVolumeBar: function () {
@@ -122,36 +123,52 @@ export default defineComponent({
             }
             this.expandedState = false;
         },
-        grabVolume(e) {
-            this.volumeGrabbed = true;
-            if (e.touches && e.touches.length > 0) {
-                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyVolumeByMouse(e.pageX, e.pageY);
-            }
+
+        grabVolumeMouse: function (e: MouseEvent) {
+            this.grabVolume(positionEventFromMouseEvent(e));
         },
-        dropVolume(e) {
+
+        grabVolumeTouch: function (e: TouchEvent) {
+            this.grabVolume(positionEventFromTouchEvent(e));
+        },
+
+        grabVolume: function (e: PositionEvent) {
+            this.volumeGrabbed = true;
+            this.modifyVolumeByMouse(e.x, e.y);
+        },
+
+        dropVolumeMouse: function (e: MouseEvent) {
+            this.dropVolume(positionEventFromMouseEvent(e));
+        },
+
+        dropVolumeTouch: function (e: TouchEvent) {
+            this.dropVolume(positionEventFromTouchEvent(e));
+        },
+
+        dropVolume: function (e: PositionEvent) {
             if (!this.volumeGrabbed) {
                 return;
             }
             this.volumeGrabbed = false;
-            if (e.touches && e.touches.length > 0) {
-                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyVolumeByMouse(e.pageX, e.pageY);
-            }
+            this.modifyVolumeByMouse(e.x, e.y);
         },
-        moveVolume(e) {
+
+        moveVolumeMouse: function (e: MouseEvent) {
+            this.moveVolume(positionEventFromMouseEvent(e));
+        },
+
+        moveVolumeTouch: function (e: TouchEvent) {
+            this.moveVolume(positionEventFromTouchEvent(e));
+        },
+
+        moveVolume: function (e: PositionEvent) {
             if (!this.volumeGrabbed) {
                 return;
             }
-            if (e.touches && e.touches.length > 0) {
-                this.modifyVolumeByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyVolumeByMouse(e.pageX, e.pageY);
-            }
+            this.modifyVolumeByMouse(e.x, e.y);
         },
-        modifyVolumeByMouse: function (x, y) {
+
+        modifyVolumeByMouse: function (x: number, y: number) {
             if (typeof x !== "number" || typeof y !== "number" || isNaN(x) || isNaN(y)) {
                 return;
             }
@@ -167,6 +184,7 @@ export default defineComponent({
                 this.changeVolume(vol);
             }
         },
+
         changeVolume: function (v: number) {
             this.mutedState = false;
             this.volumeState = v;

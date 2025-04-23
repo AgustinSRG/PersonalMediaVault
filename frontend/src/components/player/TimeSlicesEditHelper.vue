@@ -136,6 +136,7 @@ import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
+import { MediaTimeSlice } from "@/api/models";
 
 interface SaveRequestState {
     saving: boolean;
@@ -221,6 +222,23 @@ function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
         });
 }
 
+/**
+ * Time slice being modified
+ */
+export type EditorTimeSlice = {
+    // Start time
+    time: number;
+
+    // Start time (string)
+    timeStr: string;
+
+    // Slice name
+    name: string;
+
+    // True if deleted
+    deleted: boolean;
+};
+
 export default defineComponent({
     name: "TimeSlicesEditHelper",
     components: {
@@ -238,15 +256,15 @@ export default defineComponent({
                 saving: false,
                 pendingSave: false,
                 mid: -1,
-                timeSlices: [],
-                callback: null,
+                timeSlices: [] as MediaTimeSlice[],
+                callback: null as (() => void) | null,
             },
             displayStatus: useVModel(props, "display"),
         };
     },
     data: function () {
         return {
-            timeSlicesArray: [],
+            timeSlicesArray: [] as EditorTimeSlice[],
 
             sliceAddTimestamp: "",
             sliceAddName: "",
@@ -318,10 +336,6 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
         },
@@ -382,10 +396,11 @@ export default defineComponent({
             }
 
             let foundSpace = false;
-            const newSlice = {
+            const newSlice: EditorTimeSlice = {
                 time: timeSeconds,
                 timeStr: renderTimeSeconds(timeSeconds),
                 name: this.sliceAddName,
+                deleted: false,
             };
 
             for (let j = 0; j < this.timeSlicesArray.length; j++) {
@@ -457,10 +472,12 @@ export default defineComponent({
             this.timeSlicesArray.splice(this.sliceEditIndex, 1);
 
             let foundSpace = false;
-            const newSlice = {
+
+            const newSlice: EditorTimeSlice = {
                 time: timeSeconds,
                 timeStr: renderTimeSeconds(timeSeconds),
                 name: this.sliceEditName,
+                deleted: false,
             };
 
             for (let j = 0; j < this.timeSlicesArray.length; j++) {
@@ -480,7 +497,7 @@ export default defineComponent({
             this.save();
         },
 
-        keyDownAdd: function (event) {
+        keyDownAdd: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();
@@ -488,7 +505,7 @@ export default defineComponent({
             }
         },
 
-        keyDownEdit: function (event) {
+        keyDownEdit: function (event: KeyboardEvent) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 event.stopPropagation();

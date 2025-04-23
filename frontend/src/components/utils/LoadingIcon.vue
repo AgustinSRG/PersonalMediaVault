@@ -17,7 +17,7 @@ export default defineComponent({
     },
     setup: function () {
         return {
-            displayTimeout: null,
+            displayTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {

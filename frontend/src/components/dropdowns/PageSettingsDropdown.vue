@@ -226,7 +226,7 @@ export default defineComponent({
         return {
             focusTrap: null as FocusTrap,
             displayStatus: useVModel(props, "display"),
-            saveChangesTimer: null,
+            saveChangesTimer: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {
@@ -308,10 +308,6 @@ export default defineComponent({
     methods: {
         close: function () {
             this.displayStatus = false;
-        },
-
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
         },
 
         keyDownHandle: function (e: KeyboardEvent) {

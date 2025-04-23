@@ -17,7 +17,7 @@ export class BusyStateController {
      * Initialization logic
      */
     public static Initialize() {
-        window.addEventListener("beforeunload", function (e) {
+        window.addEventListener("beforeunload", function (e: BeforeUnloadEvent) {
             if (
                 BusyStateController.BusySet.size > 0 ||
                 UploadController.GetEntries().filter((a) => a.status !== "error" && a.status !== "ready").length > 0

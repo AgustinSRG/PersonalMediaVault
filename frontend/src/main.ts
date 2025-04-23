@@ -32,12 +32,12 @@ import { appEventsPlugin } from "./app-events-plugin";
 import App from "./App.vue";
 import ModalDialogContainer from "@/components/utils/ModalDialogContainer.vue";
 
-document.addEventListener("drop", function (e) {
+document.addEventListener("drop", function (e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
 });
 
-document.addEventListener("dragover", function (e) {
+document.addEventListener("dragover", function (e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
 });

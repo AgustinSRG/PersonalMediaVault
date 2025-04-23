@@ -261,8 +261,8 @@ export default defineComponent({
     setup(props) {
         return {
             listScroller: null as BigListScroller,
-            dragCheckInterval: null,
-            checkContainerTimer: null,
+            dragCheckInterval: null as ReturnType<typeof setInterval> | null,
+            checkContainerTimer: null as ReturnType<typeof setInterval> | null,
             displayAlbumAddMedia: useVModel(props, "displayUpload"),
         };
     },
@@ -613,10 +613,6 @@ export default defineComponent({
             }
         },
 
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
-        },
-
         moveMediaUp: function (i: number) {
             if (i > 0) {
                 AlbumsController.MoveCurrentAlbumOrder(i, i - 1, this.$t);
@@ -696,14 +692,6 @@ export default defineComponent({
             const scroll = Math.max(0, Math.min(cont.scrollHeight - contBounds.height, elTopRel - expectedTop));
 
             cont.scrollTop = scroll;
-        },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
         },
 
         updateAuthInfo: function () {

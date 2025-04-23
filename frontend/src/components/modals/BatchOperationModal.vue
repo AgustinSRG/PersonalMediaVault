@@ -205,9 +205,9 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
@@ -234,8 +234,8 @@ export default defineComponent({
     emits: ["update:display"],
     setup(props) {
         return {
-            findTagSearchTimeout: null,
-            findTagActionTimeout: null,
+            findTagSearchTimeout: null as ReturnType<typeof setTimeout> | null,
+            findTagActionTimeout: null as ReturnType<typeof setTimeout> | null,
             batchRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
         };
@@ -245,24 +245,24 @@ export default defineComponent({
             busy: false,
 
             tagVersion: TagsController.TagsVersion,
-            albums: [],
+            albums: [] as AlbumListItemMinExt[],
 
-            matchingTagsSearch: [],
+            matchingTagsSearch: [] as MatchingTag[],
             tagToAddSearch: "",
 
-            matchingTagsAction: [],
+            matchingTagsAction: [] as MatchingTag[],
             tagToAddAction: "",
 
             textSearch: "",
             typeSearch: 0,
             albumSearch: -1,
-            tagsSearch: [],
+            tagsSearch: [] as number[],
 
             tagModeSearch: "all",
 
             action: "",
 
-            tagsAction: [],
+            tagsAction: [] as string[],
 
             albumToAdd: -1,
 
@@ -271,7 +271,7 @@ export default defineComponent({
             progress: 0,
             status: "",
             actionCount: 0,
-            actionItems: [],
+            actionItems: [] as number[],
             error: "",
             closeSignal: 0,
         };
@@ -447,7 +447,7 @@ export default defineComponent({
                     };
                 })
                 .filter((a) => {
-                    if (this.tagsAction.indexOf(a.id) >= 0) {
+                    if (this.tagsAction.indexOf(a.name) >= 0) {
                         return false;
                     }
                     return a.starts || a.contains;

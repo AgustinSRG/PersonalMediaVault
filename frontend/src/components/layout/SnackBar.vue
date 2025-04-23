@@ -12,7 +12,7 @@ export default defineComponent({
     name: "SnackBar",
     setup() {
         return {
-            timeout: null,
+            timeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {

@@ -95,10 +95,6 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         changeTheme: function (t: ColorThemeName) {
             setTheme(t);
         },
@@ -107,15 +103,7 @@ export default defineComponent({
             this.theme = theme;
         },
 
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
-        keyDownHandle: function (e) {
+        keyDownHandle: function (e: KeyboardEvent) {
             e.stopPropagation();
             if (e.key === "Escape") {
                 this.close();

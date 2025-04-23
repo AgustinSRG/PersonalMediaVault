@@ -125,7 +125,7 @@ export default defineComponent({
             });
         },
 
-        submit: function (e) {
+        submit: function (e: Event) {
             e.preventDefault();
 
             if (this.busy) {

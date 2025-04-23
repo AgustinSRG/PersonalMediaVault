@@ -89,22 +89,10 @@ export default defineComponent({
             this.$emit("leave");
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         focus: function () {
             nextTick(() => {
                 this.$el.focus();
             });
-        },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
         },
 
         clickAttachmentLink: function (event: Event) {

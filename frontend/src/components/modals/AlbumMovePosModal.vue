@@ -54,8 +54,6 @@ export default defineComponent({
     data: function () {
         return {
             currentPos: 0,
-            callback: null,
-
             closeSignal: 0,
         };
     },

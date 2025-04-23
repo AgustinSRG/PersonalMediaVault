@@ -72,7 +72,7 @@ import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
@@ -95,7 +95,7 @@ export default defineComponent({
     setup(props) {
         return {
             requestId: getUniqueStringId(),
-            findTagTimeout: null,
+            findTagTimeout: null as ReturnType<typeof setTimeout> | null,
             displayStatus: useVModel(props, "display"),
         };
     },
@@ -103,10 +103,10 @@ export default defineComponent({
         return {
             mid: AppStatus.CurrentMedia,
 
-            tags: [],
+            tags: [] as number[],
             tagToAdd: "",
             tagVersion: TagsController.TagsVersion,
-            matchingTags: [],
+            matchingTags: [] as MatchingTag[],
 
             loading: true,
             busy: false,

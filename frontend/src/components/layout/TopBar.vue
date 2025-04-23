@@ -122,10 +122,10 @@ export default defineComponent({
     emits: ["logout", "vault-settings", "account-settings", "menu", "menu-focus", "help"],
     setup() {
         return {
-            blurTimeout: null,
+            blurTimeout: null as ReturnType<typeof setTimeout> | null,
             focusTrap: null as FocusTrap,
             bigListScroller: null as BigListScroller<SearchBarSuggestion>,
-            findTagTimeout: null,
+            findTagTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {
@@ -429,8 +429,8 @@ export default defineComponent({
             });
         },
 
-        onSuggestionsScroll: function (e) {
-            this.bigListScroller.checkElementScroll(e.target);
+        onSuggestionsScroll: function (e: Event) {
+            this.bigListScroller.checkElementScroll(e.target as HTMLElement);
         },
 
         onSearchInput: function () {

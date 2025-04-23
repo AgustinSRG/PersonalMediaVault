@@ -420,7 +420,7 @@ export default defineComponent({
             this.displaySidebar = false;
         },
 
-        skipToMainContent: function (event) {
+        skipToMainContent: function (event: Event) {
             if (event) {
                 event.preventDefault();
             }

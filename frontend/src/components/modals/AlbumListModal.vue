@@ -520,14 +520,6 @@ export default defineComponent({
             }
         },
 
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
         getAlbumURL: function (albumId: number, mid: number): string {
             return (
                 window.location.protocol +
@@ -541,8 +533,8 @@ export default defineComponent({
             );
         },
 
-        onScroll: function (e) {
-            this.bigListScroller.checkElementScroll(e.target);
+        onScroll: function (e: Event) {
+            this.bigListScroller.checkElementScroll(e.target as HTMLElement);
         },
     },
 });

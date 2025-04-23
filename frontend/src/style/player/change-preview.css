@@ -55,12 +55,3 @@
 .player-min .player-media-change-preview-type {
     font-size: x-small;
 }
-
-.preview-thumb-tag {
-    position: absolute;
-    background: var(--bg-opaque-75);
-    bottom: 0.25rem;
-    right: 0.25rem;
-    font-size: small;
-    padding: 0.25rem;
-}

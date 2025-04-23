@@ -170,7 +170,7 @@ export default defineComponent({
             type: 0,
 
             audios: [] as MediaAudioTrack[],
-            audioFile: null,
+            audioFile: null as File | null,
             audioFileName: "",
             audioId: "",
             audioName: "",

@@ -83,8 +83,8 @@ export default defineComponent({
             bigListScroller: null as BigListScroller<AlbumItemFiltered>,
             focusTrap: null as FocusTrap,
 
-            blurTimeout: null,
-            filterChangedTimeout: null,
+            blurTimeout: null as ReturnType<typeof setTimeout> | null,
+            filterChangedTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {
@@ -145,8 +145,8 @@ export default defineComponent({
             return album.name;
         },
 
-        onSuggestionsScroll: function (e) {
-            this.bigListScroller.checkElementScroll(e.target);
+        onSuggestionsScroll: function (e: Event) {
+            this.bigListScroller.checkElementScroll(e.target as HTMLElement);
         },
 
         getSuggestionURL: function (s: AlbumItemFiltered): string {

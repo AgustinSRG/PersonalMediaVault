@@ -173,7 +173,7 @@ export default defineComponent({
             type: 0,
 
             subtitles: [] as MediaSubtitle[],
-            srtFile: null,
+            srtFile: null as File | null,
             srtFileName: "",
             srtId: "",
             srtName: "",

@@ -98,7 +98,7 @@ export default defineComponent({
     setup() {
         return {
             requestId: getUniqueStringId(),
-            fileRef: null,
+            fileRef: null as File | null,
         };
     },
     data: function () {

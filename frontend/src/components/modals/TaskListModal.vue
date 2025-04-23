@@ -79,6 +79,7 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiTasksGetTasks } from "@/api/api-tasks";
+import { TaskStatus } from "@/api/models";
 
 export default defineComponent({
     name: "TaskListModal",
@@ -95,7 +96,7 @@ export default defineComponent({
     },
     data: function () {
         return {
-            tasks: [],
+            tasks: [] as TaskStatus[],
 
             loading: true,
 
@@ -128,7 +129,7 @@ export default defineComponent({
         abortNamedApiRequest(this.updateRequestId);
     },
     methods: {
-        setTasks: function (tasks) {
+        setTasks: function (tasks: TaskStatus[]) {
             this.tasks = tasks.sort((a, b) => {
                 if (a.running && !b.running) {
                     return -1;

@@ -97,7 +97,7 @@
 
 <script lang="ts">
 import { generateURIQuery } from "@/utils/api";
-import { generateMenuForPages } from "@/utils/menu-make";
+import { generateMenuForPages, PageNode } from "@/utils/menu-make";
 import { packSearchParams } from "@/utils/search-params";
 import { defineComponent } from "vue";
 
@@ -113,7 +113,7 @@ export default defineComponent({
     emits: ["goto"],
     data: function () {
         return {
-            menu: [],
+            menu: [] as PageNode[],
         };
     },
     watch: {

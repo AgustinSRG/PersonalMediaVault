@@ -107,24 +107,12 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         changeLocale: function (l: string) {
             this.lang = l;
             setLanguage(l);
         },
 
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
-        },
-
-        keyDownHandle: function (e) {
+        keyDownHandle: function (e: KeyboardEvent) {
             e.stopPropagation();
             if (e.key === "Escape") {
                 this.close();

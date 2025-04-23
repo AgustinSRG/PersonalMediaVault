@@ -3,9 +3,9 @@
         class="image-notes-container"
         :class="{ 'edit-active': editing, 'add-active': adding, 'always-visible': visible && !editing && !adding }"
         :style="{ top: top, left: left, width: width, height: height }"
-        @mousedown="startAdding"
-        @touchstart.passive="startAdding"
-        @mousemove="onMouseMove"
+        @mousedown="startAddingMouse"
+        @touchstart.passive="startAddingTouch"
+        @mousemove="onMouseMoveInsideContainer"
         @mouseleave="onMouseLeave"
     >
         <div
@@ -143,6 +143,7 @@ import {
 import { escapeHTML } from "@/utils/html";
 import { ImageNote } from "@/utils/notes-format";
 import { PagesController } from "@/control/pages";
+import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "ImageNotes",
@@ -158,14 +159,12 @@ export default defineComponent({
 
         contextOpen: Boolean,
     },
-    emits: [],
-
     data: function () {
         return {
-            notes: [],
+            notes: [] as ImageNote[],
 
             selectedNotes: -1,
-            selectedNotesData: null,
+            selectedNotesData: null as ImageNote | null,
 
             realWidth: 1,
             realHeight: 1,
@@ -198,7 +197,7 @@ export default defineComponent({
             resizeStartY: 0,
             resizeMode: "",
 
-            selectedNote: null,
+            selectedNote: null as ImageNote | null,
             hoverRight: "",
             hoverLeft: "",
             hoverTop: "",
@@ -248,7 +247,7 @@ export default defineComponent({
         this.$listenOnDocumentEvent("touchend", this.mouseDrop.bind(this));
 
         this.$listenOnDocumentEvent("mousemove", this.mouseMove.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.mouseMove.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.touchMove.bind(this));
 
         this.onNotesUpdate();
 
@@ -264,10 +263,19 @@ export default defineComponent({
             return escapeHTML(txt).replace(/\n/g, "<br>");
         },
 
-        startAdding: function (e) {
-            if ((e.which || e.button) !== 1) {
-                return;
+        startAddingMouse: function (e: MouseEvent) {
+            if (e.button !== 0) {
+                return; // Not the main button
             }
+
+            this.startAdding(positionEventFromMouseEvent(e));
+        },
+
+        startAddingTouch: function (e: TouchEvent) {
+            this.startAdding(positionEventFromTouchEvent(e));
+        },
+
+        startAdding: function (e: PositionEvent) {
             if (!this.editing) {
                 this.onClickFindNotes(e);
                 return;
@@ -280,17 +288,12 @@ export default defineComponent({
                 this.selectedNotes = -1;
                 return;
             }
+
             e.stopPropagation();
+
             const bounds = this.$el.getBoundingClientRect();
-            let x: number;
-            let y: number;
-            if (e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX;
-                y = e.touches[0].pageY;
-            } else {
-                x = e.pageX;
-                y = e.pageY;
-            }
+            const x = e.x;
+            const y = e.y;
 
             const trueX = Math.max(0, Math.min(this.imageWidth - 32, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
             const trueY = Math.max(0, Math.min(this.imageHeight - 32, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
@@ -305,9 +308,9 @@ export default defineComponent({
             this.addH = 32;
         },
 
-        onClickFindNotes: function (e) {
+        onClickFindNotes: function (e: PositionEvent) {
             this.hoverPinned = false;
-            this.onMouseMove(e);
+            this.onMoveInsideNotesContainer(e);
 
             this.hoverPinned = !!this.selectedNote;
         },
@@ -319,16 +322,13 @@ export default defineComponent({
             this.selectedNote = null;
         },
 
-        onMouseMove: function (e) {
-            let x: number;
-            let y: number;
-            if (e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX;
-                y = e.touches[0].pageY;
-            } else {
-                x = e.pageX;
-                y = e.pageY;
-            }
+        onMouseMoveInsideContainer: function (e: MouseEvent) {
+            this.onMoveInsideNotesContainer(positionEventFromMouseEvent(e));
+        },
+
+        onMoveInsideNotesContainer: function (e: PositionEvent) {
+            const x = e.x;
+            const y = e.y;
 
             const bounds = this.$el.getBoundingClientRect();
 
@@ -410,20 +410,22 @@ export default defineComponent({
             }
         },
 
-        mouseMove: function (e) {
+        touchMove: function (e: TouchEvent) {
+            this.move(positionEventFromTouchEvent(e));
+        },
+
+        mouseMove(e: MouseEvent) {
+            this.move(positionEventFromMouseEvent(e));
+        },
+
+        move: function (e: PositionEvent) {
             if (!this.adding && !this.moving && !this.resizing) {
                 return;
             }
             const bounds = this.$el.getBoundingClientRect();
-            let x: number;
-            let y: number;
-            if (e.touches && e.touches.length > 0) {
-                x = e.touches[0].pageX;
-                y = e.touches[0].pageY;
-            } else {
-                x = e.pageX;
-                y = e.pageY;
-            }
+            const x = e.x;
+            const y = e.y;
+
             if (this.adding) {
                 const trueX = Math.min(this.imageWidth, Math.max(0, Math.round(((x - bounds.left) * this.imageWidth) / bounds.width)));
                 const trueY = Math.min(this.imageHeight, Math.max(0, Math.round(((y - bounds.top) * this.imageHeight) / bounds.height)));
@@ -595,16 +597,16 @@ export default defineComponent({
             this.resizeStartY = trueY;
         },
 
-        saveNote: function (note) {
+        saveNote: function (note: ImageNote) {
             ImageNotesController.ModifyNote(note);
             this.selectedNotes = -1;
-            this.selectedNotesData = "";
+            this.selectedNotesData = null;
         },
 
-        deleteNote: function (note) {
+        deleteNote: function (note: ImageNote) {
             ImageNotesController.RemoveNote(note);
             this.selectedNotes = -1;
-            this.selectedNotesData = "";
+            this.selectedNotesData = null;
         },
 
         onNotesUpdate: function () {
@@ -645,10 +647,6 @@ export default defineComponent({
                 this.realWidth = bounds.width;
                 this.realHeight = bounds.height;
             });
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         onNotesSaved: function () {

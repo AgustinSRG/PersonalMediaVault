@@ -131,21 +131,9 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
-        },
-
         clickOnOption: function (o: string) {
             this.$emit("goto", o);
             this.close();
-        },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
         },
 
         updateAuthInfo: function () {

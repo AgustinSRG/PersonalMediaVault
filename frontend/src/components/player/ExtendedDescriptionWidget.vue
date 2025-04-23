@@ -68,7 +68,7 @@ export default defineComponent({
         return {
             loadRequestId: getUniqueStringId(),
             displayStatus: useVModel(props, "display"),
-            busyTimeout: null,
+            busyTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {

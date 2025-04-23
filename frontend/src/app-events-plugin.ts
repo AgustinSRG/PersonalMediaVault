@@ -53,6 +53,18 @@ declare module "vue" {
          * @param priority The priority
          */
         $addKeyboardHandler: (handler: KeyboardEventHandler, priority?: number) => void;
+
+        /**
+         * Clicks element whenever the enter key is pressed
+         * @param event The keyboard event
+         */
+        clickOnEnter: (event: KeyboardEvent) => void;
+
+        /**
+         * Prevents the propagation of an event to the parent elements
+         * @param event The DOM event
+         */
+        stopPropagationEvent: (event: Event) => void;
     }
 }
 
@@ -106,6 +118,16 @@ export const appEventsPlugin = {
                     }
                     this.$keyboardHandlers.push(handler);
                     KeyboardManager.AddHandler(handler, priority);
+                },
+                clickOnEnter: function (event: KeyboardEvent) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        (event.target as HTMLElement).click();
+                    }
+                },
+                stopPropagationEvent: function (e: Event) {
+                    e.stopPropagation();
                 },
             },
         });

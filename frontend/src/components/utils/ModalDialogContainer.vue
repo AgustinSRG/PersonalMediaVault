@@ -102,17 +102,13 @@ export default defineComponent({
             }
         },
 
-        keyDownHandle: function (e) {
+        keyDownHandle: function (e: KeyboardEvent) {
             e.stopPropagation();
             if (e.key === "Escape" && this.display && !this.closing) {
                 this.close();
             } else {
                 this.$emit("key", e);
             }
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         onTouchOutside: function (e: TouchEvent) {

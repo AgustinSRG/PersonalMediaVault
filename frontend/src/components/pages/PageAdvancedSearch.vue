@@ -249,9 +249,9 @@ export default defineComponent({
             dirtyTimeoutId: getUniqueStringId(),
             mediaIndexMap: new Map<number, number>(),
             listScroller: null as BigListScroller,
-            findTagTimeout: null,
-            continueCheckInterval: null,
-            checkContainerTimer: null,
+            findTagTimeout: null as ReturnType<typeof setTimeout> | null,
+            continueCheckInterval: null as ReturnType<typeof setInterval> | null,
+            checkContainerTimer: null as ReturnType<typeof setInterval> | null,
             pageScrollStatus: useVModel(props, "pageScroll"),
             windowResizeObserver: null as ResizeObserver,
         };
@@ -287,7 +287,6 @@ export default defineComponent({
 
             albums: [] as AlbumListItemMinExt[],
             albumSearch: -1,
-            albumFilter: null,
 
             windowPosition: 0,
 
@@ -575,10 +574,6 @@ export default defineComponent({
                     continue;
                 }
 
-                if (this.albumFilter && !this.albumFilter.has(e.id)) {
-                    continue;
-                }
-
                 if (filterText) {
                     if (
                         matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
@@ -681,7 +676,6 @@ export default defineComponent({
             this.progress = 0;
             this.started = true;
             this.finished = false;
-            this.albumFilter = null;
 
             if (this.albumSearch >= 0) {
                 this.loadAlbumSearch();
@@ -733,8 +727,15 @@ export default defineComponent({
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
-                            this.albumFilter = new Set();
-                            this.load();
+                            this.filterElements([]);
+                            this.page = 1;
+                            this.totalPages = 1;
+                            this.progress = 100;
+                            this.loading = false;
+                            this.finished = true;
+                            if (!this.inModal) {
+                                this.onCurrentMediaChanged();
+                            }
                         },
                         temporalError: () => {
                             setNamedTimeout(this.loadRequestId, 1500, this.loadAlbumSearch.bind(this));
@@ -815,14 +816,6 @@ export default defineComponent({
 
         getThumbnail(thumb: string) {
             return getAssetURL(thumb);
-        },
-
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
         },
 
         cssProgress: function (p: number) {

@@ -65,7 +65,7 @@ import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
 import { clone } from "@/utils/objects";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -80,17 +80,17 @@ export default defineComponent({
     setup() {
         return {
             requestId: getUniqueStringId(),
-            findTagTimeout: null,
+            findTagTimeout: null as ReturnType<typeof setTimeout> | null,
         };
     },
     data: function () {
         return {
             type: 0,
 
-            tags: [],
+            tags: [] as number[],
             tagToAdd: "",
             tagVersion: TagsController.TagsVersion,
-            matchingTags: [],
+            matchingTags: [] as MatchingTag[],
 
             busy: false,
 
@@ -275,7 +275,7 @@ export default defineComponent({
                 });
         },
 
-        addMatchingTag: function (tag) {
+        addMatchingTag: function (tag: string) {
             if (this.busy) {
                 return;
             }

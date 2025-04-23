@@ -182,11 +182,10 @@ export default defineComponent({
     props: {
         displayUpload: Boolean,
     },
-    emits: [],
     setup() {
         return {
             focusTrap: null as FocusTrap,
-            timer: null,
+            timer: null as ReturnType<typeof setInterval> | null,
         };
     },
     data: function () {

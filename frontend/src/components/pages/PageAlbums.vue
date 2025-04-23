@@ -162,7 +162,6 @@ export default defineComponent({
         minItemsSize: Number,
         maxItemsSize: Number,
     },
-    emits: [],
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
@@ -174,7 +173,7 @@ export default defineComponent({
             loading: false,
             firstLoaded: false,
 
-            albumsList: [],
+            albumsList: [] as AlbumListItem[],
 
             filter: PagesController.AlbumsPageSearch,
 
@@ -184,7 +183,7 @@ export default defineComponent({
             page: 0,
             total: 0,
             totalPages: 0,
-            pageItems: [],
+            pageItems: [] as AlbumListItem[],
 
             canWrite: AuthController.CanWrite,
 
@@ -461,14 +460,6 @@ export default defineComponent({
 
         renderDate: function (ts: number): string {
             return new Date(ts).toLocaleString();
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
         },
 
         updateAuthInfo: function () {

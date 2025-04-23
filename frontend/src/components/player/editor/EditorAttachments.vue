@@ -145,7 +145,7 @@ export default defineComponent({
         return {
             type: 0,
 
-            attachments: [],
+            attachments: [] as MediaAttachment[],
             attachmentUploadProgress: 0,
             attachmentEdit: -1,
             attachmentEditName: "",

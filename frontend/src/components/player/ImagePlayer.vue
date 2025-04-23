@@ -341,7 +341,7 @@ import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { AlbumsController, EVENT_NAME_NEXT_PRE_FETCH } from "@/control/albums";
-import { MEDIA_TYPE_IMAGE, MediaData } from "@/api/models";
+import { MEDIA_TYPE_IMAGE, MediaData, MediaListItem } from "@/api/models";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
@@ -386,8 +386,8 @@ export default defineComponent({
 
         fullscreen: Boolean,
 
-        next: Object,
-        prev: Object,
+        next: Object as PropType<MediaListItem | null>,
+        prev: Object as PropType<MediaListItem | null>,
         inAlbum: Boolean,
 
         pageNext: Boolean,
@@ -413,8 +413,8 @@ export default defineComponent({
     ],
     setup(props) {
         return {
-            timer: null,
-            autoNextTimer: null,
+            timer: null as ReturnType<typeof setInterval> | null,
+            autoNextTimer: null as ReturnType<typeof setInterval> | null,
             mediaSessionId: getUniqueStringId(),
             fullScreenState: useVModel(props, "fullscreen"),
             showControlsState: useVModel(props, "showControls"),
@@ -880,9 +880,6 @@ export default defineComponent({
             if (!document.fullscreenElement) {
                 this.fullScreenState = false;
             }
-        },
-        stopPropagationEvent: function (e: Event) {
-            e.stopPropagation();
         },
 
         onMediaError: function () {

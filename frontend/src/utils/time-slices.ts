@@ -2,6 +2,7 @@
 
 "use strict";
 
+import { MediaTimeSlice } from "@/api/models";
 import { renderTimeSeconds } from "./time";
 
 export function parseTimeSeconds(str: string): number {
@@ -25,7 +26,7 @@ export function parseTimeSeconds(str: string): number {
     return h * 3600 + m * 60 + s;
 }
 
-export function renderTimeSlices(time_slices: { time: number; name: string }[]): string {
+export function renderTimeSlices(time_slices: MediaTimeSlice[]): string {
     return (time_slices || [])
         .map((t) => {
             return renderTimeSeconds(t.time) + " " + t.name;
@@ -33,8 +34,8 @@ export function renderTimeSlices(time_slices: { time: number; name: string }[]):
         .join("\n");
 }
 
-export function parseTimeSlices(text: string): { time: number; name: string }[] {
-    const res: { time: number; name: string }[] = [];
+export function parseTimeSlices(text: string): MediaTimeSlice[] {
+    const res: MediaTimeSlice[] = [];
 
     const lines = text.split("\n");
 
@@ -77,19 +78,36 @@ export function parseTimeSlices(text: string): { time: number; name: string }[] 
     return res.slice(0, 1024);
 }
 
-export function normalizeTimeSlices(
-    time_slices: { time: number; name: string }[],
-    duration: number,
-): { start: number; end: number; name: string }[] {
-    const res: { start: number; end: number; name: string }[] = [];
+/**
+ * Normalized time slice
+ */
+export interface NormalizedTimeSlice {
+    // Start time (seconds)
+    start: number;
 
-    for (let i = 0; i < time_slices.length; i++) {
-        const name = time_slices[i].name;
-        const start = time_slices[i].time;
+    // End time (seconds)
+    end: number;
+
+    // Slice name
+    name: string;
+}
+
+/**
+ * Normalizes time slices (resolving the full time range for each slice)
+ * @param timeSlices The list of time slices
+ * @param duration The media duration
+ * @returns The list of normalized time slices
+ */
+export function normalizeTimeSlices(timeSlices: MediaTimeSlice[], duration: number): NormalizedTimeSlice[] {
+    const res: NormalizedTimeSlice[] = [];
+
+    for (let i = 0; i < timeSlices.length; i++) {
+        const name = timeSlices[i].name;
+        const start = timeSlices[i].time;
         let end = duration;
 
-        if (i < time_slices.length - 1) {
-            end = time_slices[i + 1].time;
+        if (i < timeSlices.length - 1) {
+            end = timeSlices[i + 1].time;
         }
 
         res.push({
@@ -102,20 +120,23 @@ export function normalizeTimeSlices(
     return res;
 }
 
-export function findTimeSlice(
-    time_slices: { start: number; end: number; name: string }[],
-    time: number,
-): { start: number; end: number; name: string } {
-    if (time_slices.length === 0) {
+/**
+ * Finds a time slice
+ * @param timeSlices The list of time slices
+ * @param time The current time
+ * @returns The found time slice, or null
+ */
+export function findTimeSlice(timeSlices: NormalizedTimeSlice[], time: number): NormalizedTimeSlice | null {
+    if (timeSlices.length === 0) {
         return null;
     }
 
     let low = 0;
-    let high = time_slices.length - 1;
+    let high = timeSlices.length - 1;
 
     while (low <= high) {
         const m = (low + high) >> 1;
-        const v = time_slices[m].start;
+        const v = timeSlices[m].start;
 
         if (v < time) {
             low = m + 1;
@@ -127,10 +148,10 @@ export function findTimeSlice(
         }
     }
 
-    if (time_slices[low] && time >= time_slices[low].start && time <= time_slices[low].end) {
-        return time_slices[low];
-    } else if (time_slices[low - 1] && low > 0 && time >= time_slices[low - 1].start && time <= time_slices[low - 1].end) {
-        return time_slices[low - 1];
+    if (timeSlices[low] && time >= timeSlices[low].start && time <= timeSlices[low].end) {
+        return timeSlices[low];
+    } else if (timeSlices[low - 1] && low > 0 && time >= timeSlices[low - 1].start && time <= timeSlices[low - 1].end) {
+        return timeSlices[low - 1];
     } else {
         return null;
     }

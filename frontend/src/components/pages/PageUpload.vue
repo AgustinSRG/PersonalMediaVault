@@ -170,7 +170,7 @@ export default defineComponent({
     data: function () {
         return {
             dragging: false,
-            pendingToUpload: [],
+            pendingToUpload: [] as UploadEntryMin[],
             countCancellable: 0,
 
             optionsShown: false,
@@ -184,10 +184,10 @@ export default defineComponent({
             stateFilter: STATE_FILTER_PENDING.slice(),
             selectedState: "pending",
 
-            filteredEntries: [],
+            filteredEntries: [] as UploadEntryMin[],
 
             displayUploadModal: false,
-            files: [],
+            files: [] as File[],
 
             parallelOptions: [1, 2, 4, 8, 16, 32, 64],
         };
@@ -424,14 +424,6 @@ export default defineComponent({
                     return "100%";
                 default:
                     return "0";
-            }
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
             }
         },
 

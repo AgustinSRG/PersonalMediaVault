@@ -81,6 +81,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { MEDIA_TYPE_IMAGE, MEDIA_TYPE_VIDEO, MediaResolution, NamedResolution } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { apiMediaAddResolution, apiMediaRemoveResolution } from "@/api/api-media-edit";
+import { STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
 
 export default defineComponent({
     name: "EditorResolutions",
@@ -90,80 +91,7 @@ export default defineComponent({
     },
     emits: ["changed"],
     setup() {
-        const standardResolutions = [
-            {
-                name: "144p",
-                width: 256,
-                height: 144,
-                fps: 30,
-            },
-            {
-                name: "240p",
-                width: 352,
-                height: 240,
-                fps: 30,
-            },
-            {
-                name: "360p",
-                width: 480,
-                height: 360,
-                fps: 30,
-            },
-            {
-                name: "480p",
-                width: 858,
-                height: 480,
-                fps: 30,
-            },
-            {
-                name: "720p",
-                width: 1280,
-                height: 720,
-                fps: 30,
-            },
-            {
-                name: "720p60",
-                width: 1280,
-                height: 720,
-                fps: 60,
-            },
-            {
-                name: "1080p",
-                width: 1920,
-                height: 1080,
-                fps: 30,
-            },
-            {
-                name: "1080p60",
-                width: 1920,
-                height: 1080,
-                fps: 60,
-            },
-            {
-                name: "2k",
-                width: 2048,
-                height: 1152,
-                fps: 30,
-            },
-            {
-                name: "2k60",
-                width: 2048,
-                height: 1152,
-                fps: 60,
-            },
-            {
-                name: "4k",
-                width: 3860,
-                height: 2160,
-                fps: 30,
-            },
-            {
-                name: "4k60",
-                width: 3860,
-                height: 2160,
-                fps: 60,
-            },
-        ] as NamedResolution[];
+        const standardResolutions = STANDARD_VIDEO_RESOLUTIONS;
 
         const standardResolutionsMap = new Map<string, string>();
 

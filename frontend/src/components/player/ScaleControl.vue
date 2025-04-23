@@ -13,8 +13,8 @@
             class="player-scale-btn-expand"
             :class="{ hidden: !expanded }"
             :style="{ width: computeBarContainerWidth(width) }"
-            @mousedown="grabScale"
-            @touchstart.passive="grabScale"
+            @mousedown="grabScaleMouse"
+            @touchstart.passive="grabScaleTouch"
         >
             <div class="player-scale-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
                 <div class="player-scale-bar" :style="{ width: getScaleBarWidth(width) }"></div>
@@ -29,6 +29,7 @@
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
+import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "ScaleControl",
@@ -57,11 +58,11 @@ export default defineComponent({
             this.expandedState = true;
         }
 
-        this.$listenOnDocumentEvent("mouseup", this.dropScale.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropScale.bind(this));
+        this.$listenOnDocumentEvent("mouseup", this.dropScaleMouse.bind(this));
+        this.$listenOnDocumentEvent("touchend", this.dropScaleTouch.bind(this));
 
-        this.$listenOnDocumentEvent("mousemove", this.moveScale.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveScale.bind(this));
+        this.$listenOnDocumentEvent("mousemove", this.moveScaleMouse.bind(this));
+        this.$listenOnDocumentEvent("touchmove", this.moveScaleTouch.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -82,21 +83,21 @@ export default defineComponent({
 
             return btnWidth + (expanded ? barWidth + margins : margins / 2) + "px";
         },
-        computeBarContainerWidth(width: number) {
+        computeBarContainerWidth: function (width: number) {
             const margins = 32;
             return width + margins + "px";
         },
-        computeBarContainerInnerWidth(width: number) {
+        computeBarContainerInnerWidth: function (width: number) {
             const margins = 16;
             return width + margins + "px";
         },
-        clickOnScaleButton() {
+        clickOnScaleButton: function () {
             this.fitState = !this.fitState;
         },
-        getScaleBarWidth(width: number) {
+        getScaleBarWidth: function (width: number) {
             return width + 16 + "px";
         },
-        getScaleBarCurrentWidth(width: number, scale: number, fit: boolean) {
+        getScaleBarCurrentWidth: function (width: number, scale: number, fit: boolean) {
             let actualScale = scale;
 
             if (fit) {
@@ -107,7 +108,7 @@ export default defineComponent({
 
             return Math.floor(actualScale * width) + "px";
         },
-        getScaleThumbLeft(width: number, scale: number, fit: boolean) {
+        getScaleThumbLeft: function (width: number, scale: number, fit: boolean) {
             return this.getScaleBarCurrentWidth(width, scale, fit);
         },
         showScaleBar: function () {
@@ -119,36 +120,52 @@ export default defineComponent({
             }
             this.expandedState = false;
         },
-        grabScale(e) {
-            this.scaleGrabbed = true;
-            if (e.touches && e.touches.length > 0) {
-                this.modifyScaleByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyScaleByMouse(e.pageX, e.pageY);
-            }
+
+        grabScaleMouse: function (e: MouseEvent) {
+            this.grabScale(positionEventFromMouseEvent(e));
         },
-        dropScale(e) {
+
+        grabScaleTouch: function (e: TouchEvent) {
+            this.grabScale(positionEventFromTouchEvent(e));
+        },
+
+        grabScale: function (e: PositionEvent) {
+            this.scaleGrabbed = true;
+            this.modifyScaleByMouse(e.x, e.y);
+        },
+
+        dropScaleMouse: function (e: MouseEvent) {
+            this.dropScale(positionEventFromMouseEvent(e));
+        },
+
+        dropScaleTouch: function (e: TouchEvent) {
+            this.dropScale(positionEventFromTouchEvent(e));
+        },
+
+        dropScale(e: PositionEvent) {
             if (!this.scaleGrabbed) {
                 return;
             }
             this.scaleGrabbed = false;
-            if (e.touches && e.touches.length > 0) {
-                this.modifyScaleByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyScaleByMouse(e.pageX, e.pageY);
-            }
+            this.modifyScaleByMouse(e.x, e.y);
         },
-        moveScale(e) {
+
+        moveScaleMouse: function (e: MouseEvent) {
+            this.moveScale(positionEventFromMouseEvent(e));
+        },
+
+        moveScaleTouch: function (e: TouchEvent) {
+            this.moveScale(positionEventFromTouchEvent(e));
+        },
+
+        moveScale: function (e: PositionEvent) {
             if (!this.scaleGrabbed) {
                 return;
             }
-            if (e.touches && e.touches.length > 0) {
-                this.modifyScaleByMouse(e.touches[0].pageX, e.touches[0].pageY);
-            } else {
-                this.modifyScaleByMouse(e.pageX, e.pageY);
-            }
+            this.modifyScaleByMouse(e.x, e.y);
         },
-        modifyScaleByMouse: function (x, y) {
+
+        modifyScaleByMouse: function (x: number, y: number) {
             if (typeof x !== "number" || typeof y !== "number" || isNaN(x) || isNaN(y)) {
                 return;
             }
@@ -164,6 +181,7 @@ export default defineComponent({
                 this.changeScale(vol);
             }
         },
+
         changeScale: function (z: number) {
             this.fitState = false;
             this.scaleState = z;

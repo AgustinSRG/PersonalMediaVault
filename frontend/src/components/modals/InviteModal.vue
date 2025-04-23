@@ -150,8 +150,8 @@ export default defineComponent({
             displayStatus: useVModel(props, "display"),
             loadStatusRequestId: getUniqueStringId(),
             loadSessionsRequestId: getUniqueStringId(),
-            updateStatusTimer: null,
-            updateNowTimer: null,
+            updateStatusTimer: null as ReturnType<typeof setInterval> | null,
+            updateNowTimer: null as ReturnType<typeof setInterval> | null,
         };
     },
     data: function () {

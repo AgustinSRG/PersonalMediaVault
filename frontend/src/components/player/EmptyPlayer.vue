@@ -122,7 +122,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
@@ -132,6 +132,7 @@ import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { isTouchDevice } from "@/utils/touch";
+import { MediaListItem } from "@/api/models";
 
 export default defineComponent({
     name: "EmptyPlayer",
@@ -149,8 +150,8 @@ export default defineComponent({
 
         rTick: Number,
 
-        next: Object,
-        prev: Object,
+        next: Object as PropType<MediaListItem | null>,
+        prev: Object as PropType<MediaListItem | null>,
         inAlbum: Boolean,
 
         pageNext: Boolean,
@@ -231,9 +232,6 @@ export default defineComponent({
             if (!document.fullscreenElement) {
                 this.fullScreenState = false;
             }
-        },
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         onKeyPress: function (event: KeyboardEvent): boolean {

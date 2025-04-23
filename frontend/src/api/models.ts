@@ -260,6 +260,16 @@ export interface MediaListItem {
 }
 
 /**
+ * Positioned media element
+ */
+export type PositionedMediaListItem = MediaListItem & {
+    /**
+     * Position in the list
+     */
+    pos: number;
+};
+
+/**
  * Full media information
  */
 export interface MediaData {

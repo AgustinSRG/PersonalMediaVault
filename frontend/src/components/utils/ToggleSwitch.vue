@@ -39,7 +39,7 @@ export default defineComponent({
             }
             this.valState = !this.valState;
         },
-        keyToggle: function (e) {
+        keyToggle: function (e: KeyboardEvent) {
             if (e.key === " " || e.key === "Enter") {
                 this.toggle();
             }

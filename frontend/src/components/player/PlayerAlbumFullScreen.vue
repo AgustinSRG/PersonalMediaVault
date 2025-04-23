@@ -79,6 +79,7 @@ import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 import ThumbImage from "../utils/ThumbImage.vue";
+import { MediaListItem, PositionedMediaListItem } from "@/api/models";
 
 const INITIAL_WINDOW_SIZE = 100;
 
@@ -90,7 +91,7 @@ export default defineComponent({
     emits: ["close"],
     setup() {
         return {
-            checkContainerTimer: null,
+            checkContainerTimer: null as ReturnType<typeof setInterval> | null,
             listScroller: null as BigListScroller,
         };
     },
@@ -101,7 +102,7 @@ export default defineComponent({
             albumListLength: AlbumsController.CurrentAlbumData ? AlbumsController.CurrentAlbumData.list.length : 0,
             loadedAlbum: !!AlbumsController.CurrentAlbumData,
 
-            albumList: [],
+            albumList: [] as PositionedMediaListItem[],
 
             loading: AlbumsController.CurrentAlbumLoading,
 
@@ -167,7 +168,7 @@ export default defineComponent({
             }
         },
 
-        onAlbumLoading: function (l) {
+        onAlbumLoading: function (l: boolean) {
             if (l) {
                 if (this.albumId !== AlbumsController.CurrentAlbum) {
                     this.loading = true;
@@ -185,7 +186,7 @@ export default defineComponent({
             AlbumsController.ToggleRandom();
         },
 
-        renderPos: function (p) {
+        renderPos: function (p: number) {
             if (p < 0) {
                 return "?";
             } else {
@@ -201,7 +202,7 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        clickMedia: function (item) {
+        clickMedia: function (item: MediaListItem) {
             AppStatus.ClickOnMedia(item.id, false);
             this.$emit("close");
         },
@@ -245,20 +246,8 @@ export default defineComponent({
             cont.scrollTop = scroll;
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
-        },
-
-        onScroll: function (e) {
-            this.listScroller.checkElementScroll(e.target);
+        onScroll: function (e: Event) {
+            this.listScroller.checkElementScroll(e.target as HTMLElement);
         },
 
         checkContainerHeight: function () {

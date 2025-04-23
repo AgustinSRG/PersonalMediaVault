@@ -220,7 +220,6 @@ export default defineComponent({
     props: {
         min: Boolean,
     },
-    emits: [],
     data: function () {
         const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {

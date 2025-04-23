@@ -135,7 +135,7 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
@@ -173,9 +173,9 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
 
-            albums: [],
-            albumsFavorite: [],
-            albumsRest: [],
+            albums: [] as AlbumListItemMinExt[],
+            albumsFavorite: [] as AlbumListItemMinExt[],
+            albumsRest: [] as AlbumListItemMinExt[],
 
             cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
         };
@@ -295,10 +295,6 @@ export default defineComponent({
             );
         },
 
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         updateAlbums: function () {
             const albumsOrderMap = getAlbumsOrderMap();
             this.albums = AlbumsController.GetAlbumsListMin().sort((a, b) => {
@@ -328,14 +324,6 @@ export default defineComponent({
             });
             this.albumsFavorite = albumsFavorite;
             this.albumsRest = albumsRest.slice(0, MAX_ALBUMS_LIST_LENGTH_SIDEBAR);
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
         },
 
         updateAuthInfo: function () {
@@ -382,7 +370,7 @@ export default defineComponent({
             }
         },
 
-        keyDownHandle: function (e) {
+        keyDownHandle: function (e: KeyboardEvent) {
             if (!this.initialLayout && e.key === "Escape") {
                 e.stopPropagation();
                 this.close();

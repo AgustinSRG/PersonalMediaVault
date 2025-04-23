@@ -131,17 +131,18 @@
 
 <script lang="ts">
 import { getAutoNextTime, getImageNotesVisible, setAutoNextTime, setImageNotesVisible } from "@/control/player-preferences";
-import { defineComponent, nextTick } from "vue";
+import { defineComponent, nextTick, PropType } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { MediaData, MediaResolution } from "@/api/models";
 
 export default defineComponent({
     name: "ImagePlayerConfig",
     components: { ToggleSwitch },
     props: {
         shown: Boolean,
-        metadata: Object,
+        metadata: Object as PropType<MediaData>,
         resolution: Number,
         background: String,
         rTick: Number,
@@ -158,7 +159,7 @@ export default defineComponent({
     data: function () {
         return {
             page: "",
-            resolutions: [],
+            resolutions: [] as MediaResolution[],
             bgOptions: ["default", "black", "white"],
             autoNext: getAutoNextTime(),
             autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
@@ -189,15 +190,15 @@ export default defineComponent({
         this.focusTrap.destroy();
     },
     methods: {
-        changeResolution: function (i) {
+        changeResolution: function (i: number) {
             this.resolutionState = i;
         },
 
-        changeBackground: function (b) {
+        changeBackground: function (b: string) {
             this.backgroundState = b;
         },
 
-        changeAutoNext: function (b) {
+        changeAutoNext: function (b: number) {
             this.autoNext = b;
             setAutoNextTime(b);
             this.$emit("update-auto-next");
@@ -214,10 +215,6 @@ export default defineComponent({
 
         leaveConfig: function () {
             this.$emit("leave");
-        },
-
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
         },
 
         focus: function () {
@@ -323,14 +320,6 @@ export default defineComponent({
                 this.resolutions = this.metadata.resolutions.slice();
             } else {
                 this.resolutions = [];
-            }
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
             }
         },
 

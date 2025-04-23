@@ -246,10 +246,6 @@ export default defineComponent({
         this.$listenOnDocumentEvent("touchstart", this.hide.bind(this));
     },
     methods: {
-        stopPropagationEvent: function (e) {
-            e.stopPropagation();
-        },
-
         toggleLoop: function () {
             this.loopState = !this.loopState;
             this.shownState = false;
@@ -354,14 +350,6 @@ export default defineComponent({
             this.width = "auto";
             this.maxWidth = maxWidth + "px";
             this.maxHeight = maxHeight + "px";
-        },
-
-        clickOnEnter: function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.target.click();
-            }
         },
     },
 });

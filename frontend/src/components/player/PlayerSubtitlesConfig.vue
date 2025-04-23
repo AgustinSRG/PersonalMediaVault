@@ -315,14 +315,6 @@ export default defineComponent({
             }
         },
 
-        clickOnEnter: function (event: KeyboardEvent) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                event.stopPropagation();
-                (event.target as HTMLElement).click();
-            }
-        },
-
         goPage: function (page: string, e?: Event) {
             if (e) {
                 e.preventDefault();
