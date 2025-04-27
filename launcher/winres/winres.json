@@ -12,7 +12,7 @@
       "0409": {
         "identity": {
           "name": "PersonalMediaVault",
-          "version": "1.21.5"
+          "version": "1.21.6"
         },
         "description": "",
         "minimum-os": "win7",
@@ -36,8 +36,8 @@
     "#1": {
       "0000": {
         "fixed": {
-          "file_version": "1.21.5.0",
-          "product_version": "1.21.5.0"
+          "file_version": "1.21.6.0",
+          "product_version": "1.21.6.0"
         },
         "info": {
           "0409": {
@@ -51,7 +51,7 @@
             "OriginalFilename": "",
             "PrivateBuild": "",
             "ProductName": "PersonalMediaVault",
-            "ProductVersion": "1.21.5",
+            "ProductVersion": "1.21.6",
             "SpecialBuild": ""
           }
         }
