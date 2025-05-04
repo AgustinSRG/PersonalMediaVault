@@ -38,14 +38,7 @@
                 </div>
                 <div class="form-group">
                     <label>{{ $t("Password") }}:</label>
-                    <input
-                        v-model="password"
-                        type="password"
-                        name="password"
-                        :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
+                    <PasswordInput v-model:val="password" :name="'password'" :disabled="busy" @tab-skip="passwordTabSkip"></PasswordInput>
                 </div>
                 <div class="form-error">{{ error }}</div>
             </div>
@@ -67,11 +60,13 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import PasswordInput from "@/components/utils/PasswordInput.vue";
 
 export default defineComponent({
     name: "ChangeUsernameModal",
     components: {
         LoadingIcon,
+        PasswordInput,
     },
     props: {
         display: Boolean,
@@ -185,6 +180,15 @@ export default defineComponent({
 
         usernameUpdated: function () {
             this.currentUsername = AuthController.Username;
+        },
+
+        passwordTabSkip: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector(".modal-footer-btn");
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+            }
         },
     },
 });

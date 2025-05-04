@@ -3,15 +3,15 @@
         <div class="password-input">
             <input
                 v-model="valState"
-                class="form-control form-control-full-width"
                 :type="hidden ? 'password' : 'text'"
+                class="form-control form-control-full-width"
                 :disabled="disabled"
                 maxlength="255"
                 :name="name"
-                :autocomplete="!hidden ? 'off' : undefined"
+                :autocomplete="!hidden ? 'off' : isNewPassword ? 'new-password' : undefined"
                 :class="{ 'auto-focus': !!autoFocus }"
                 @keydown="onKeyDown"
-                @blur="onBlur"
+                @focus="onFocus"
             />
             <button
                 type="button"
@@ -30,6 +30,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
+import { FocusTrap } from "@/utils/focus-trap";
 
 export default defineComponent({
     name: "PasswordInput",
@@ -38,11 +39,13 @@ export default defineComponent({
         disabled: Boolean,
         autoFocus: Boolean,
         name: String,
+        isNewPassword: Boolean,
     },
     emits: ["update:val", "tab-skip"],
     setup(props) {
         return {
             valState: useVModel(props, "val"),
+            focusTrap: null as FocusTrap,
         };
     },
     data: function () {
@@ -50,8 +53,12 @@ export default defineComponent({
             hidden: true,
         };
     },
-    mounted: function () {},
-    beforeUnmount: function () {},
+    mounted: function () {
+        this.focusTrap = new FocusTrap(this.$el, this.onBlur.bind(this));
+    },
+    beforeUnmount: function () {
+        this.focusTrap.destroy();
+    },
     methods: {
         toggleHide: function () {
             this.hidden = !this.hidden;
@@ -63,8 +70,13 @@ export default defineComponent({
             }
         },
 
+        onFocus: function () {
+            this.focusTrap.activate();
+        },
+
         onBlur: function () {
             this.hidden = true;
+            this.focusTrap.deactivate();
         },
 
         onKeyDown: function (event: KeyboardEvent) {

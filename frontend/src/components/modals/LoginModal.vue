@@ -38,7 +38,7 @@
                     </div>
                     <div class="form-group">
                         <label>{{ $t("Session duration") }}:</label>
-                        <select v-model="duration" class="form-control form-control-full-width form-select skip-focus-target">
+                        <select v-model="duration" name="session-duration" class="form-control form-control-full-width form-select">
                             <option :value="'day'">1 {{ $t("day") }}</option>
                             <option :value="'week'">1 {{ $t("week") }} | 7 {{ $t("days") }}</option>
                             <option :value="'month'">1 {{ $t("month") }} | 30 {{ $t("days") }}</option>
@@ -328,7 +328,7 @@ export default defineComponent({
         },
 
         passwordTabSkip: function (e: KeyboardEvent) {
-            const nextElement = document.querySelector(".skip-focus-target") as HTMLElement;
+            const nextElement = this.$el.querySelector('[name="session-duration"]');
 
             if (nextElement) {
                 e.preventDefault();

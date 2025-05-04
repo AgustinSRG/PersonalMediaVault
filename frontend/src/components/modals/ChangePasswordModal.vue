@@ -15,38 +15,33 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>{{ $t("Current password") }}:</label>
-                    <input
-                        v-model="currentPassword"
-                        type="password"
-                        name="password"
+                    <PasswordInput
+                        v-model:val="currentPassword"
+                        :name="'password'"
                         :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width auto-focus"
-                    />
+                        :auto-focus="true"
+                        @tab-skip="passwordTabSkip1"
+                    ></PasswordInput>
                 </div>
                 <div class="form-group">
                     <label>{{ $t("New password") }}:</label>
-                    <input
-                        v-model="password"
-                        type="password"
-                        name="new-password"
+                    <PasswordInput
+                        v-model:val="password"
+                        :name="'new-password'"
                         :disabled="busy"
-                        autocomplete="new-password"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
+                        :is-new-password="true"
+                        @tab-skip="passwordTabSkip2"
+                    ></PasswordInput>
                 </div>
                 <div class="form-group">
                     <label>{{ $t("New password") }} ({{ $t("Repeat it for confirmation") }}):</label>
-                    <input
-                        v-model="password2"
-                        type="password"
-                        name="new-password-repeat"
+                    <PasswordInput
+                        v-model:val="password2"
+                        :name="'new-password-repeat'"
                         :disabled="busy"
-                        autocomplete="new-password"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
+                        :is-new-password="true"
+                        @tab-skip="passwordTabSkip3"
+                    ></PasswordInput>
                 </div>
 
                 <div class="form-error">{{ error }}</div>
@@ -69,11 +64,13 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import PasswordInput from "@/components/utils/PasswordInput.vue";
 
 export default defineComponent({
     name: "ChangePasswordModal",
     components: {
         LoadingIcon,
+        PasswordInput,
     },
     props: {
         display: Boolean,
@@ -186,6 +183,41 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
+        },
+
+        passwordTabSkip1: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector('[name="new-password"]');
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+
+                if (typeof nextElement.select === "function") {
+                    nextElement.select();
+                }
+            }
+        },
+
+        passwordTabSkip2: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector('[name="new-password-repeat"]');
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+
+                if (typeof nextElement.select === "function") {
+                    nextElement.select();
+                }
+            }
+        },
+
+        passwordTabSkip3: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector(".modal-footer-btn");
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+            }
         },
     },
 });

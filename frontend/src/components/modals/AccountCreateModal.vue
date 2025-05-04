@@ -22,31 +22,34 @@
 
                 <div class="form-group">
                     <label>{{ $t("Account password") }}:</label>
-                    <input
-                        v-model="accountPassword"
-                        type="password"
-                        autocomplete="new-password"
+                    <PasswordInput
+                        v-model:val="accountPassword"
+                        :name="'account-new-password'"
                         :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
+                        :is-new-password="true"
+                        @tab-skip="passwordTabSkip1"
+                    ></PasswordInput>
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Account password") }} ({{ $t("Again") }}):</label>
-                    <input
-                        v-model="accountPassword2"
-                        type="password"
-                        autocomplete="new-password"
+                    <PasswordInput
+                        v-model:val="accountPassword2"
+                        :name="'account-new-password-repeat'"
                         :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width"
-                    />
+                        :is-new-password="true"
+                        @tab-skip="passwordTabSkip2"
+                    ></PasswordInput>
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Account type") }}:</label>
-                    <select v-model="accountWrite" :disabled="busy" class="form-control form-select form-control-full-width">
+                    <select
+                        v-model="accountWrite"
+                        :disabled="busy"
+                        name="account-type"
+                        class="form-control form-select form-control-full-width"
+                    >
                         <option :value="false">{{ $t("Read only") }}</option>
                         <option :value="true">{{ $t("Read / Write") }}</option>
                     </select>
@@ -73,11 +76,13 @@ import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import PasswordInput from "@/components/utils/PasswordInput.vue";
 
 export default defineComponent({
     name: "AccountCreateModal",
     components: {
         LoadingIcon,
+        PasswordInput,
     },
     props: {
         display: Boolean,
@@ -199,6 +204,28 @@ export default defineComponent({
 
         close: function () {
             this.closeSignal++;
+        },
+
+        passwordTabSkip1: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector('[name="account-new-password-repeat"]');
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+
+                if (typeof nextElement.select === "function") {
+                    nextElement.select();
+                }
+            }
+        },
+
+        passwordTabSkip2: function (e: KeyboardEvent) {
+            const nextElement = this.$el.querySelector('[name="account-type"]');
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
+            }
         },
     },
 });
