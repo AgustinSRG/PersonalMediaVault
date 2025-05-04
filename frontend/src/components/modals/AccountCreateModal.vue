@@ -29,6 +29,7 @@
                         :is-new-password="true"
                         @tab-skip="passwordTabSkip1"
                     ></PasswordInput>
+                    <PasswordStrengthIndicator v-if="accountPassword" :password="accountPassword"></PasswordStrengthIndicator>
                 </div>
 
                 <div class="form-group">
@@ -77,12 +78,14 @@ import { PagesController } from "@/control/pages";
 import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
+import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
 
 export default defineComponent({
     name: "AccountCreateModal",
     components: {
         LoadingIcon,
         PasswordInput,
+        PasswordStrengthIndicator,
     },
     props: {
         display: Boolean,

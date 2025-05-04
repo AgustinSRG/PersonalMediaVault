@@ -243,3 +243,60 @@ textarea.form-control::-webkit-resizer {
     opacity: 0.7;
     cursor: default;
 }
+
+.password-strength-indicator {
+    padding-top: 0.3rem;
+    padding-bottom: 0.5rem;
+}
+
+.password-strength-indicator-label {
+    padding-top: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: small;
+}
+
+.password-strength-indicator-progress {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border: solid 1px var(--progress-segment-border-color);
+    width: 100%;
+    height: 0.75rem;
+    --segment-count: 16;
+    overflow: hidden;
+    border-radius: 0.25rem;
+}
+
+.password-strength-indicator-progress-segment {
+    height: 100%;
+    width: calc(100% / var(--segment-count));
+}
+
+.password-strength-indicator-progress-segment:not(:first-child) {
+    border-left: solid 1px var(--progress-segment-border-color);
+}
+
+.password-strength-indicator-progress-segment.active {
+    background-color: rgba(255, 0, 0, 0.5);
+}
+
+.weak .password-strength-indicator-progress-segment.active {
+    background-color: rgba(255, 165, 0, 0.5);
+}
+
+.medium .password-strength-indicator-progress-segment.active {
+    background-color: rgba(255, 255, 0, 0.5);
+}
+
+.strong .password-strength-indicator-progress-segment.active {
+    background-color: rgba(0, 196, 0, 0.5);
+}
+
+.very-strong .password-strength-indicator-progress-segment.active {
+    background-color: rgba(0, 255, 0, 0.5);
+}
+
+.crypto-secure .password-strength-indicator-progress-segment.active {
+    background-color: rgba(0, 255, 255, 0.5);
+}

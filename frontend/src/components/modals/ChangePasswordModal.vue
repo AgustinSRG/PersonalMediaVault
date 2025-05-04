@@ -32,6 +32,7 @@
                         :is-new-password="true"
                         @tab-skip="passwordTabSkip2"
                     ></PasswordInput>
+                    <PasswordStrengthIndicator v-if="password" :password="password"></PasswordStrengthIndicator>
                 </div>
                 <div class="form-group">
                     <label>{{ $t("New password") }} ({{ $t("Repeat it for confirmation") }}):</label>
@@ -65,12 +66,14 @@ import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
+import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
 
 export default defineComponent({
     name: "ChangePasswordModal",
     components: {
         LoadingIcon,
         PasswordInput,
+        PasswordStrengthIndicator,
     },
     props: {
         display: Boolean,

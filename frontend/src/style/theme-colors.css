@@ -66,6 +66,8 @@
     --search-input-background: #f8f8f8;
     --search-input-inner-background: white;
     --search-suggestions-background: rgba(255, 255, 255, 0.8);
+
+    --progress-segment-border-color: black;
 }
 
 .main-layout.dark-theme {
@@ -135,4 +137,6 @@
     --search-input-background: hsla(0, 0%, 100%, 0.08);
     --search-input-inner-background: hsl(0, 0%, 7%);
     --search-suggestions-background: rgba(0, 0, 0, 0.8);
+
+    --progress-segment-border-color: #e3e3e3;
 }

@@ -8,7 +8,7 @@
                 :disabled="disabled"
                 maxlength="255"
                 :name="name"
-                :autocomplete="!hidden ? 'off' : isNewPassword ? 'new-password' : undefined"
+                :autocomplete="!hidden ? 'off' : isNewPassword ? 'new-password' : 'current-password'"
                 :class="{ 'auto-focus': !!autoFocus }"
                 @keydown="onKeyDown"
                 @focus="onFocus"
