@@ -29,18 +29,16 @@
                     </div>
                     <div class="form-group">
                         <label>{{ $t("Password") }}:</label>
-                        <input
-                            v-model="password"
-                            type="password"
-                            name="password"
+                        <PasswordInput
+                            v-model:val="password"
+                            :name="'password'"
                             :disabled="busy"
-                            maxlength="255"
-                            class="form-control form-control-full-width"
-                        />
+                            @tab-skip="passwordTabSkip"
+                        ></PasswordInput>
                     </div>
                     <div class="form-group">
                         <label>{{ $t("Session duration") }}:</label>
-                        <select v-model="duration" class="form-control form-control-full-width form-select">
+                        <select v-model="duration" class="form-control form-control-full-width form-select skip-focus-target">
                             <option :value="'day'">1 {{ $t("day") }}</option>
                             <option :value="'week'">1 {{ $t("week") }} | 7 {{ $t("days") }}</option>
                             <option :value="'month'">1 {{ $t("month") }} | 30 {{ $t("days") }}</option>
@@ -92,9 +90,13 @@ import { apiInvitesLogin } from "@/api/api-invites";
 import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
+import PasswordInput from "@/components/utils/PasswordInput.vue";
 
 export default defineComponent({
     name: "LoginModal",
+    components: {
+        PasswordInput,
+    },
     props: {
         display: Boolean,
     },
@@ -322,6 +324,15 @@ export default defineComponent({
 
                 this.code[j].c = c;
                 this.goNextChar(this.code[j], j);
+            }
+        },
+
+        passwordTabSkip: function (e: KeyboardEvent) {
+            const nextElement = document.querySelector(".skip-focus-target") as HTMLElement;
+
+            if (nextElement) {
+                e.preventDefault();
+                nextElement.focus();
             }
         },
     },

@@ -206,3 +206,40 @@ textarea.form-control::-webkit-resizer {
     padding-left: 0.75rem;
     white-space: nowrap;
 }
+
+/* Password inputs */
+
+.password-input {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.password-input .form-control {
+    padding-right: 40px;
+}
+
+.password-input-hide-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-size: 18px;
+    background: transparent;
+    color: var(--theme-fg-color);
+    mix-blend-mode: difference;
+}
+
+.password-input-hide-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
