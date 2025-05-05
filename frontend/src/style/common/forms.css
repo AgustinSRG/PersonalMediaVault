@@ -278,25 +278,25 @@ textarea.form-control::-webkit-resizer {
 }
 
 .password-strength-indicator-progress-segment.active {
-    background-color: rgba(255, 0, 0, 0.5);
+    background-color: var(--progress-segment-color-very-weak);
 }
 
 .weak .password-strength-indicator-progress-segment.active {
-    background-color: rgba(255, 165, 0, 0.5);
+    background-color: var(--progress-segment-color-weak);
 }
 
 .medium .password-strength-indicator-progress-segment.active {
-    background-color: rgba(255, 255, 0, 0.5);
+    background-color: var(--progress-segment-color-medium);
 }
 
 .strong .password-strength-indicator-progress-segment.active {
-    background-color: rgba(0, 196, 0, 0.5);
+    background-color: var(--progress-segment-color-strong);
 }
 
 .very-strong .password-strength-indicator-progress-segment.active {
-    background-color: rgba(0, 255, 0, 0.5);
+    background-color: var(--progress-segment-color-very-strong);
 }
 
 .crypto-secure .password-strength-indicator-progress-segment.active {
-    background-color: rgba(0, 255, 255, 0.5);
+    background-color: var(--progress-segment-color-crypto-secure);
 }

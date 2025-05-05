@@ -68,6 +68,13 @@
     --search-suggestions-background: rgba(255, 255, 255, 0.8);
 
     --progress-segment-border-color: black;
+
+    --progress-segment-color-crypto-secure: rgba(0, 255, 255, 0.5);
+    --progress-segment-color-very-strong: rgba(0, 255, 0, 0.5);
+    --progress-segment-color-strong: rgba(0, 196, 0, 0.5);
+    --progress-segment-color-medium: rgba(255, 255, 0, 0.5);
+    --progress-segment-color-weak: rgba(255, 165, 0, 0.5);
+    --progress-segment-color-very-weak: rgba(255, 0, 0, 0.5);
 }
 
 .main-layout.dark-theme {
@@ -139,4 +146,11 @@
     --search-suggestions-background: rgba(0, 0, 0, 0.8);
 
     --progress-segment-border-color: #e3e3e3;
+
+    --progress-segment-color-crypto-secure: rgba(0, 255, 255, 0.5);
+    --progress-segment-color-very-strong: rgba(0, 255, 0, 0.5);
+    --progress-segment-color-strong: rgba(0, 196, 0, 0.5);
+    --progress-segment-color-medium: rgba(255, 255, 0, 0.5);
+    --progress-segment-color-weak: rgba(255, 165, 0, 0.5);
+    --progress-segment-color-very-weak: rgba(255, 0, 0, 0.5);
 }
