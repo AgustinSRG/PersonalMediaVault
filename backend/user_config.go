@@ -22,8 +22,29 @@ type UserConfigResolution struct {
 // width - Original width
 // height - Original height
 // fps - Original frames per second
-func (res UserConfigResolution) Fits(width int32, height int32, fps int32) bool {
+func (res *UserConfigResolution) Fits(width int32, height int32, fps int32) bool {
 	return (res.Width < width) && (res.Height < height) && (res.Fps < fps || res.Fps <= 30)
+}
+
+// Adapts the resolution, rotating it in case
+// the video is in the opposite orientation
+// width - Original width
+// height - Original height
+func (res *UserConfigResolution) Adapt(width int32, height int32) UserConfigResolution {
+	if (res.Width >= res.Height && width >= height) || (res.Width <= res.Height && width <= height) {
+		return *res
+	} else {
+		return res.Rotate()
+	}
+}
+
+// Rotares the resolution 90 degrees
+func (res *UserConfigResolution) Rotate() UserConfigResolution {
+	return UserConfigResolution{
+		Width:  res.Height,
+		Height: res.Width,
+		Fps:    res.Fps,
+	}
 }
 
 // Picture resolution config
@@ -35,8 +56,28 @@ type UserConfigImageResolution struct {
 // Check if resolution is the same or smaller than the original resolution
 // width - Original width
 // height - Original height
-func (res UserConfigImageResolution) Fits(width int32, height int32) bool {
+func (res *UserConfigImageResolution) Fits(width int32, height int32) bool {
 	return (res.Width < width) && (res.Height < height)
+}
+
+// Adapts the resolution, rotating it in case
+// the image is in the opposite orientation
+// width - Original width
+// height - Original height
+func (res *UserConfigImageResolution) Adapt(width int32, height int32) UserConfigImageResolution {
+	if (res.Width >= res.Height && width >= height) || (res.Width <= res.Height && width <= height) {
+		return *res
+	} else {
+		return res.Rotate()
+	}
+}
+
+// Rotares the resolution 90 degrees
+func (res *UserConfigImageResolution) Rotate() UserConfigImageResolution {
+	return UserConfigImageResolution{
+		Width:  res.Height,
+		Height: res.Width,
+	}
 }
 
 // User vault configuration data

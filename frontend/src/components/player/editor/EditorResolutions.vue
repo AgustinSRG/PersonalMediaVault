@@ -97,9 +97,11 @@ export default defineComponent({
 
         standardResolutions.forEach((sr) => {
             standardResolutionsMap.set(`${sr.width}x${sr.height}-${sr.fps}`, sr.name);
+            standardResolutionsMap.set(`${sr.height}x${sr.width}-${sr.fps}`, sr.name);
 
             if (sr.fps === 30) {
                 standardResolutionsMap.set(`${sr.width}x${sr.height}`, sr.name);
+                standardResolutionsMap.set(`${sr.height}x${sr.width}`, sr.name);
             }
         });
 
@@ -172,6 +174,19 @@ export default defineComponent({
                         return pixels < totalPixels || (pixels === totalPixels && r.fps < totalFps);
                     } else {
                         return false;
+                    }
+                })
+                .map((r) => {
+                    if ((r.width >= r.height && this.width >= this.height) || (r.width <= r.height && this.width <= this.height)) {
+                        return r;
+                    } else {
+                        // Rotate the resolution for vertical videos or images
+                        return {
+                            name: r.name,
+                            width: r.height,
+                            height: r.width,
+                            fps: r.fps,
+                        };
                     }
                 })
                 .map((r) => {

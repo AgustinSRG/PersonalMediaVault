@@ -690,21 +690,23 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 	// Other resolutions
 	if meta.Type == MediaTypeVideo && userConfig.Resolutions != nil {
 		for i := 0; i < len(userConfig.Resolutions); i++ {
-			if userConfig.Resolutions[i].Fits(meta.Width, meta.Height, probe_data.Fps) {
+			adaptedResolution := userConfig.Resolutions[i].Adapt(meta.Width, meta.Height)
+
+			if adaptedResolution.Fits(meta.Width, meta.Height, probe_data.Fps) {
 				// Spawn task
 
 				task_id := GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_RESOLUTION, &UserConfigResolution{
-					Width:  userConfig.Resolutions[i].Width,
-					Height: userConfig.Resolutions[i].Height,
-					Fps:    userConfig.Resolutions[i].Fps,
+					Width:  adaptedResolution.Width,
+					Height: adaptedResolution.Height,
+					Fps:    adaptedResolution.Fps,
 				}, false)
 
 				// Save resolution
 
 				resolution := MediaResolution{
-					Width:     userConfig.Resolutions[i].Width,
-					Height:    userConfig.Resolutions[i].Height,
-					Fps:       userConfig.Resolutions[i].Fps,
+					Width:     adaptedResolution.Width,
+					Height:    adaptedResolution.Height,
+					Fps:       adaptedResolution.Fps,
 					Ready:     false,
 					Asset:     0,
 					Extension: "",
@@ -716,20 +718,22 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 		}
 	} else if meta.Type == MediaTypeImage && userConfig.ImageResolutions != nil {
 		for i := 0; i < len(userConfig.ImageResolutions); i++ {
-			if userConfig.ImageResolutions[i].Fits(meta.Width, meta.Height) {
+			adaptedResolution := userConfig.ImageResolutions[i].Adapt(meta.Width, meta.Height)
+
+			if adaptedResolution.Fits(meta.Width, meta.Height) {
 				// Spawn task
 
 				task_id := GetVault().tasks.AddTask(session, media_id, TASK_ENCODE_RESOLUTION, &UserConfigResolution{
-					Width:  userConfig.ImageResolutions[i].Width,
-					Height: userConfig.ImageResolutions[i].Height,
+					Width:  adaptedResolution.Width,
+					Height: adaptedResolution.Height,
 					Fps:    1,
 				}, false)
 
 				// Save resolution
 
 				resolution := MediaResolution{
-					Width:     userConfig.ImageResolutions[i].Width,
-					Height:    userConfig.ImageResolutions[i].Height,
+					Width:     adaptedResolution.Width,
+					Height:    adaptedResolution.Height,
 					Fps:       1,
 					Ready:     false,
 					Asset:     0,
