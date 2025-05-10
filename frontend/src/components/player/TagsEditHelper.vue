@@ -223,6 +223,14 @@ export default defineComponent({
                         }
                     }
                     this.$emit("tags-update");
+
+                    nextTick(() => {
+                        const inputElem = this.$el.querySelector(".tag-to-add");
+
+                        if (inputElem) {
+                            inputElem.focus();
+                        }
+                    });
                 })
                 .onCancel(() => {
                     this.busy = false;

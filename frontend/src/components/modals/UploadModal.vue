@@ -60,8 +60,9 @@
                         v-for="mt in matchingTags"
                         :key="mt.id"
                         type="button"
-                        class="btn btn-primary btn-sm btn-tag-mini"
-                        @click="addTagByName(mt.name)"
+                        class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
+                        @click="addTagAndFocusInput(mt.name)"
+                        @keydown="onSuggestionKeydown"
                     >
                         <i class="fas fa-plus"></i> {{ mt.name }}
                     </button>
@@ -296,6 +297,39 @@ export default defineComponent({
                 if (this.tagToAdd) {
                     this.addTag();
                 }
+            } else if (event.key === "ArrowDown") {
+                const suggestionElem = this.$el.querySelector(".btn-add-tag");
+                if (suggestionElem) {
+                    suggestionElem.focus();
+                }
+            }
+        },
+
+        onSuggestionKeydown: function (e: KeyboardEvent) {
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const nextElem = (e.target as HTMLElement).nextSibling as HTMLElement;
+
+                if (nextElem && nextElem.focus) {
+                    nextElem.focus();
+                }
+            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const prevElem = (e.target as HTMLElement).previousSibling as HTMLElement;
+
+                if (prevElem && prevElem.focus) {
+                    prevElem.focus();
+                } else {
+                    const inputElem = this.$el.querySelector(".tag-to-add");
+
+                    if (inputElem) {
+                        inputElem.focus();
+                    }
+                }
             }
         },
 
@@ -325,12 +359,35 @@ export default defineComponent({
                     break;
                 }
             }
+
+            const inputElem = this.$el.querySelector(".tag-to-add");
+
+            if (inputElem) {
+                inputElem.focus();
+            }
         },
 
         addTag: function () {
             this.addTagByName(this.tagToAdd);
             this.tagToAdd = "";
             this.onTagAddChanged(true);
+
+            const inputElement = this.$el.querySelector(".tag-to-add");
+
+            if (inputElement) {
+                inputElement.focus();
+            }
+        },
+
+        addTagAndFocusInput: function (tag: string) {
+            this.addTagByName(tag);
+
+            const inputElement = this.$el.querySelector(".tag-to-add");
+
+            if (inputElement) {
+                inputElement.focus();
+                inputElement.select();
+            }
         },
 
         addTagByName: function (tag: string) {
