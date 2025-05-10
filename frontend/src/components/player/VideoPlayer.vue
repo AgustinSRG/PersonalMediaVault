@@ -2051,7 +2051,7 @@ export default defineComponent({
 
             this.autoNextTimer = setTimeout(() => {
                 this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle || this.displayAttachments) {
+                if (this.displayConfig || this.expandedTitle || this.displayAttachments || !this.playing) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();
