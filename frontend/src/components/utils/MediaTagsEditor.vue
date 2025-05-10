@@ -67,6 +67,9 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 
+// Max number of tag suggestions
+const TAGS_SUGGESTION_LIMIT = 10;
+
 export default defineComponent({
     name: "MediaTagsEditor",
     props: {
@@ -373,13 +376,13 @@ export default defineComponent({
 
                         addedTagIds.push(tid);
 
-                        if (lastUsedTags.length >= 10) {
+                        if (lastUsedTags.length >= TAGS_SUGGESTION_LIMIT) {
                             break;
                         }
                     }
                 }
 
-                if (lastUsedTags.length < 10) {
+                if (lastUsedTags.length < TAGS_SUGGESTION_LIMIT) {
                     Array.from(TagsController.Tags.entries())
                         .filter((t) => {
                             return !this.tags.includes(t[0]) && !addedTagIds.includes(t[0]);
@@ -391,7 +394,7 @@ export default defineComponent({
                                 return 1;
                             }
                         })
-                        .slice(0, 10 - lastUsedTags.length)
+                        .slice(0, TAGS_SUGGESTION_LIMIT - lastUsedTags.length)
                         .forEach((t) => {
                             lastUsedTags.push({
                                 id: t[0],
@@ -418,7 +421,7 @@ export default defineComponent({
                     };
                 })
                 .filter((a) => {
-                    if (this.tags.indexOf(a.id) >= 0) {
+                    if (this.tags.includes(a.id)) {
                         return false;
                     }
                     return a.starts || a.contains;
@@ -438,7 +441,7 @@ export default defineComponent({
                         return 1;
                     }
                 })
-                .slice(0, 10);
+                .slice(0, TAGS_SUGGESTION_LIMIT);
         },
 
         onSuggestionKeydown: function (e: KeyboardEvent) {

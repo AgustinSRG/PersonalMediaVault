@@ -91,6 +91,9 @@ const AlbumCreateModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumCreateModal.vue"),
 });
 
+// Max number of tag suggestions
+const TAGS_SUGGESTION_LIMIT = 10;
+
 export default defineComponent({
     name: "UploadModal",
     components: {
@@ -223,18 +226,49 @@ export default defineComponent({
                 .trim()
                 .replace(/[\s]/g, "_")
                 .toLowerCase();
+
+            const lastUsedTagsIds = getLastUsedTags();
+
             if (!tagFilter) {
-                const lastUsedTagsIds = getLastUsedTags();
-                const lastUsedTags = [];
+                const lastUsedTags: MatchingTag[] = [];
+                const addedTagIds: number[] = [];
 
                 for (const tid of lastUsedTagsIds) {
                     const tagName = TagsController.Tags.get(tid);
-                    if (TagsController.Tags.has(tid) && !this.tags.includes(tagName)) {
+
+                    if (TagsController.Tags.has(tid) && !this.tags.includes(tagName) && !addedTagIds.includes(tid)) {
                         lastUsedTags.push({
                             id: tid,
                             name: tagName,
                         });
+
+                        addedTagIds.push(tid);
+
+                        if (lastUsedTags.length >= TAGS_SUGGESTION_LIMIT) {
+                            break;
+                        }
                     }
+                }
+
+                if (lastUsedTags.length < TAGS_SUGGESTION_LIMIT) {
+                    Array.from(TagsController.Tags.entries())
+                        .filter((t) => {
+                            return !this.tags.includes(t[1]) && !addedTagIds.includes(t[0]);
+                        })
+                        .sort((a, b) => {
+                            if (a[1] < b[1]) {
+                                return -1;
+                            } else {
+                                return 1;
+                            }
+                        })
+                        .slice(0, TAGS_SUGGESTION_LIMIT - lastUsedTags.length)
+                        .forEach((t) => {
+                            lastUsedTags.push({
+                                id: t[0],
+                                name: t[1],
+                            });
+                        });
                 }
 
                 this.matchingTags = lastUsedTags;
@@ -244,15 +278,17 @@ export default defineComponent({
             this.matchingTags = Array.from(TagsController.Tags.entries())
                 .map((a) => {
                     const i = a[1].indexOf(tagFilter);
+                    const lastUsedIndex = lastUsedTagsIds.indexOf(a[0]);
                     return {
                         id: a[0],
                         name: a[1],
                         starts: i === 0,
                         contains: i >= 0,
+                        lastUsed: lastUsedIndex === -1 ? lastUsedTagsIds.length : lastUsedIndex,
                     };
                 })
                 .filter((a) => {
-                    if (this.tags.indexOf(a.name) >= 0) {
+                    if (this.tags.includes(a.name)) {
                         return false;
                     }
                     return a.starts || a.contains;
@@ -262,13 +298,17 @@ export default defineComponent({
                         return -1;
                     } else if (b.starts && !a.starts) {
                         return 1;
+                    } else if (a.lastUsed < b.lastUsed) {
+                        return -1;
+                    } else if (a.lastUsed > b.lastUsed) {
+                        return 1;
                     } else if (a.name < b.name) {
                         return -1;
                     } else {
                         return 1;
                     }
                 })
-                .slice(0, 10);
+                .slice(0, TAGS_SUGGESTION_LIMIT);
         },
 
         updateTagData: function () {
