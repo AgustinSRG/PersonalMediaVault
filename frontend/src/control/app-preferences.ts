@@ -337,7 +337,7 @@ export function resetPagePreferences(page: string) {
 
 const LS_KEY_LAST_USED_TAGS = "app-last-used-tags";
 
-const LAST_USED_TAGS_LIMIT = 10;
+const LAST_USED_TAGS_LIMIT = 64;
 
 /**
  * Gets the list of last used tags
