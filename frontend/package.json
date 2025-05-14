@@ -10,7 +10,7 @@
         "build": "vite build",
         "lint": "prettier --write . && eslint --fix",
         "prettier": "prettier --write .",
-        "test": "vue-tsc --noEmit && eslint",
+        "test": "eslint && prettier --check . && vue-tsc --noEmit",
         "update-locales": "npm run update-translations",
         "update-translations": "node scripts/translate-file-maker.cjs",
         "apply-missing-translations": "node scripts/apply-missing-translations.cjs",
