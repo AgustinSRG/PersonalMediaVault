@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/rivo/uniseg"
 )
 
 func readNextCommand(reader *bufio.Reader, vaultPathAbs string, vc *VaultController) {
@@ -779,8 +780,8 @@ func prepareCommandManualList(manList []string) string {
 
 		key := strings.TrimSpace(parts[0])
 
-		if len(key) > largestKeyLength {
-			largestKeyLength = len(key)
+		if uniseg.GraphemeClusterCount(key) > largestKeyLength {
+			largestKeyLength = uniseg.GraphemeClusterCount(key)
 		}
 	}
 
@@ -798,7 +799,7 @@ func prepareCommandManualList(manList []string) string {
 
 		key := strings.TrimSpace(parts[0])
 
-		for len(key) < largestKeyLength {
+		for uniseg.GraphemeClusterCount(key) < largestKeyLength {
 			key = key + " "
 		}
 

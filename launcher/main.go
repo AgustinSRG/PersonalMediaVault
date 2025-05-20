@@ -360,7 +360,7 @@ func main() {
 
 	var vaultController VaultController
 
-	// Initailize the vault if needed
+	// Initialize the vault if needed
 
 	vaultController.Initialize(vaultPath, launcherConfig, reader)
 
