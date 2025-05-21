@@ -876,9 +876,9 @@ func (vc *VaultController) Backup(p string, re_encrypt bool) {
 	var cmd *exec.Cmd
 
 	if re_encrypt {
-		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p, "--re-encrypt")
+		cmd = exec.Command(BACKUP_BIN, "re-encrypt", vc.vaultPath, p)
 	} else {
-		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p)
+		cmd = exec.Command(BACKUP_BIN, "backup", vc.vaultPath, p)
 	}
 
 	cmd.Env = os.Environ()

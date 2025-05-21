@@ -307,20 +307,30 @@ func runCommand(cmdText string, vc *VaultController) {
 				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 					DefaultMessage: &i18n.Message{
 						ID:    "ErrorBackupUsage",
-						Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
+						Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
 					},
 				})
 				fmt.Println(msg)
 			} else {
 				vc.Backup(ap, false)
 			}
-		} else if len(args) == 3 && args[2] == "--re-encrypt" {
+		} else {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorBackupUsage",
+					Other: "Usage: backup [path] - Makes a backup of the vault in the specified path",
+				},
+			})
+			fmt.Println(msg)
+		}
+	case "re-encrypt":
+		if len(args) == 2 {
 			ap, err := filepath.Abs(args[1])
 			if err != nil {
 				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 					DefaultMessage: &i18n.Message{
-						ID:    "ErrorBackupUsage",
-						Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
+						ID:    "ErrorReEncryptUsage",
+						Other: "Usage: re-encrypt [path] - Makes a re-encrypted backup of the vault in the specified path",
 					},
 				})
 				fmt.Println(msg)
@@ -330,8 +340,8 @@ func runCommand(cmdText string, vc *VaultController) {
 		} else {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 				DefaultMessage: &i18n.Message{
-					ID:    "ErrorBackupUsage",
-					Other: "Usage: backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
+					ID:    "ErrorReEncryptUsage",
+					Other: "Usage: re-encrypt [path] - Makes a re-encrypted backup of the vault in the specified path",
 				},
 			})
 			fmt.Println(msg)
@@ -758,7 +768,15 @@ func printCommandList() {
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandBackup",
-			Other: "backup [path] [--re-encrypt] - Makes a backup of the vault in the specified path",
+			Other: "backup [path] - Makes a backup of the vault in the specified path",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandReEncrypt",
+			Other: "re-encrypt [path] - Makes a re-encrypted backup of the vault in the specified path",
 		},
 	})
 	manList = append(manList, msg)
@@ -809,7 +827,48 @@ func prepareCommandManualList(manList []string) string {
 			first = false
 		}
 
-		result += "    " + key + " - " + strings.TrimSpace(strings.Join(parts[1:], " - "))
+		desc := strings.TrimSpace(strings.Join(parts[1:], " - "))
+
+		linePrefix := "    " + key + " - "
+
+		linePrefixSpaces := ""
+
+		for j := 0; j < uniseg.GraphemeClusterCount(linePrefix); j++ {
+			linePrefixSpaces += " "
+		}
+
+		sizeAvailableForDescription := 80 - uniseg.GraphemeClusterCount(linePrefix)
+
+		descLines := make([]string, 0)
+		curDescLine := ""
+
+		curDescLineState := -1
+		var curDescWord string
+
+		for len(desc) > 0 {
+			curDescWord, desc, curDescLineState = uniseg.FirstWordInString(desc, curDescLineState)
+
+			if len(curDescLine) > 0 && uniseg.GraphemeClusterCount(curDescLine+curDescWord) > sizeAvailableForDescription {
+				descLines = append(descLines, curDescLine)
+				curDescLine = ""
+			}
+
+			curDescLine += curDescWord
+		}
+
+		if len(curDescLine) > 0 {
+			descLines = append(descLines, curDescLine)
+		}
+
+		if len(descLines) == 0 {
+			continue
+		}
+
+		result += linePrefix + descLines[0]
+
+		for j := 1; j < len(descLines); j++ {
+			result += "\n" + linePrefixSpaces + descLines[j]
+		}
 	}
 
 	return result

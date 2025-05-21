@@ -63,8 +63,8 @@ hash = "sha1-8b9e0d563e76ea1308549eb89510c77e063dabcf"
 other = "Error: No se pudo encontrar el binario de copias de seguridad (pmv-backup)"
 
 [ErrorBackupUsage]
-hash = "sha1-826be9387c350f25b90a9adb3950556b0aef1f19"
-other = "Uso: backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-d1b976aaeb974ef95196c148b25dbc586aa94ee8"
+other = "Uso del comando: backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ErrorBrowser]
 hash = "sha1-da7c1fd0c0d54733790f8123554431eadd886b76"
@@ -129,6 +129,10 @@ other = "Uso: port [p] - Establece el puerto de escucha del servidor"
 [ErrorProbeBin]
 hash = "sha1-46902e3d2b6426a50b3b4819a1b622f473617c77"
 other = "Error: No se pudo encontrar el binario de análisis multimedia (ffprobe)"
+
+[ErrorReEncryptUsage]
+hash = "sha1-4f754e00694106c002970e3f55d1eb233bc9c218"
+other = "Uso del comando: re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
 
 [ErrorSecDelUsage]
 hash = "sha1-906676a0ee2327e4ba99fd0fce44c060fed5bc96"
@@ -207,8 +211,8 @@ hash = "sha1-bf1920bebbd1af1f72b82ee502e2843f211bab9a"
 other = "cache-size [tamaño] - Establece el tamaño de la caché"
 
 [ManualCommandBackup]
-hash = "sha1-01d28d9e4f273bf2123d46736efe820a143922d0"
-other = "backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-95d4e25c102b2241378287acb639ca244140dd49"
+other = "backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ManualCommandBrowser]
 hash = "sha1-e9d23a48574b81db3810d616f47d3ab437c7c72c"
@@ -245,6 +249,10 @@ other = "log-requests [s/n] - Habilita o deshabilita el registro de peticiones"
 [ManualCommandPort]
 hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
 other = "port [p] - Establece el puerto de escucha"
+
+[ManualCommandReEncrypt]
+hash = "sha1-cb18c1e9366b4938096fce4fc83753ceee69bb0d"
+other = "re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
 
 [ManualCommandRecover]
 hash = "sha1-cb9cf3d26523ade83b07571d60cf9a84bf9e1033"
