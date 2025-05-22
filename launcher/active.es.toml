@@ -234,6 +234,14 @@ other = "help - Imprime la lista de comandos"
 hash = "sha1-584a1dedac5917a28b35fbadffe508e1992eab22"
 other = "host [nombre de host] - Establece un host para acceder a la galería"
 
+[ManualCommandKeyExport]
+hash = "sha1-bccdcf3b23713108dc49edaf865754a6c6ad75c5"
+other = "key-export - Exporta la clave de cifrado de la galería, para poder guardar una copia de seguridad"
+
+[ManualCommandKeyRecover]
+hash = "sha1-27bcc6ecdf861679a39e95c9fe44cb187b3b1433"
+other = "key-recover - Recupera el acceso a la galería, usando una copia de seguridad de la clave de cifrado"
+
 [ManualCommandLocal]
 hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
 other = "local [s/n] - Establece el modo de escucha (local o todas las interfaces)"

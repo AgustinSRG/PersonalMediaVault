@@ -346,6 +346,18 @@ func runCommand(cmdText string, vc *VaultController) {
 			})
 			fmt.Println(msg)
 		}
+	case "key-export":
+		vc.KeyExport()
+	case "key-recover":
+		if vc.Stop() {
+			vc.WaitForStop()
+		}
+		vc.KeyRecover()
+		if vc.Start() {
+			if vc.WaitForStart() {
+				openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
+			}
+		}
 	case "ssl-check", "ssl":
 		if vc.launchConfig.SSL_Cert == "" {
 			notSetMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -777,6 +789,22 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandReEncrypt",
 			Other: "re-encrypt [path] - Makes a re-encrypted backup of the vault in the specified path",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandKeyExport",
+			Other: "key-export - Exports the encryption key of the vault, in order to make a backup",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandKeyRecover",
+			Other: "key-recover - Recovers access to the vault, using a backup of the encryption key",
 		},
 	})
 	manList = append(manList, msg)

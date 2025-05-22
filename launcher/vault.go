@@ -904,6 +904,58 @@ func (vc *VaultController) Backup(p string, re_encrypt bool) {
 	}
 }
 
+func (vc *VaultController) KeyExport() {
+	cmd := exec.Command(BACKUP_BIN, "key-export", vc.vaultPath)
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+	}
+}
+
+func (vc *VaultController) KeyRecover() {
+	cmd := exec.Command(BACKUP_BIN, "key-recover", vc.vaultPath)
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+	}
+}
+
 func (vc *VaultController) SetupSSL() bool {
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
