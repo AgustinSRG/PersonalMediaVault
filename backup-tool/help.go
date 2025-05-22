@@ -29,6 +29,26 @@ func printUsageReEncrypt() {
 	fmt.Fprintln(os.Stderr, msg)
 }
 
+func printUsageKeyExport() {
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ProgramUsageKeyExport",
+			Other: "Usage: pmv-backup key-export </path/to/vault>",
+		},
+	})
+	fmt.Fprintln(os.Stderr, msg)
+}
+
+func printUsageKeyRecover() {
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ProgramUsageKeyRecover",
+			Other: "Usage: pmv-backup key-recover </path/to/vault>",
+		},
+	})
+	fmt.Fprintln(os.Stderr, msg)
+}
+
 func printHelp() {
 	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
@@ -67,4 +87,26 @@ func printHelp() {
 	})
 	fmt.Fprintln(os.Stderr, msg)
 	printUsageReEncrypt()
+
+	fmt.Fprintln(os.Stderr, "")
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ProgramUsageKeyExportTitle",
+			Other: "If you want to export the encryption key in order to save a backup of it, run the 'key-export' command.",
+		},
+	})
+	fmt.Fprintln(os.Stderr, msg)
+	printUsageKeyExport()
+
+	fmt.Fprintln(os.Stderr, "")
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ProgramUsageKeyRecoverTitle",
+			Other: "If you lost access to the vault and you have the encryption key, you can run the 'key-recover' command to restore access.",
+		},
+	})
+	fmt.Fprintln(os.Stderr, msg)
+	printUsageKeyRecover()
 }

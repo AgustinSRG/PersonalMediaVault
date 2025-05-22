@@ -24,6 +24,10 @@ func main() {
 		runBackupCommand(false)
 	} else if command == "re-encrypt" {
 		runBackupCommand(true)
+	} else if command == "key-export" {
+		runKeyExportCommand()
+	} else if command == "key-recover" {
+		runKeyRecoverCommand()
 	} else {
 		printHelp()
 		os.Exit(1)

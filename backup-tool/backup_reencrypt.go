@@ -769,12 +769,6 @@ func ReEncryptMultiAssetFile(src string, dst string, tmpFile string, generalProg
 
 	readStream.Close()
 
-	if err != nil {
-		writeStream.Close()
-		os.Remove(tmpFile)
-		return 0, err
-	}
-
 	err = writeStream.Close()
 
 	if err != nil {
