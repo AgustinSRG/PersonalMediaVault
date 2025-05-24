@@ -99,11 +99,6 @@
     transition: width 0.2s;
 }
 
-.upload-list-item-status-bar-current.right {
-    right: 0;
-    left: auto;
-}
-
 .upload-list-item-status-bar-current.success {
     background: var(--progress-bar-bg-success);
 }

@@ -1,9 +1,6 @@
 {
     "$N left": "残り $N",
     "--- Select an action ---": "--- アクションを選択 ---",
-    "10 available": "利用可能：10個",
-    "10 free": "空き：10個",
-    "10 total size": "合計サイズ：10個",
     "About PMV": "PMVについて",
     "Access denied": "アクセスが拒否されました",
     "Account created": "アカウントが作成されました",

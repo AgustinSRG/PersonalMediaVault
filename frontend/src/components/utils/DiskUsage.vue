@@ -1,13 +1,13 @@
 <template>
     <div class="upload-list-item-status-bar">
-        <div v-if="loaded" class="upload-list-item-status-bar-current success" :style="{ width: percentUsage(100 - usage) }"></div>
-        <div v-if="loaded" class="upload-list-item-status-bar-current right error" :style="{ width: percentUsage(usage) }"></div>
         <div
-            v-if="loaded || loadingTimedOut"
-            class="upload-list-item-status-bar-text"
-            :title="renderDiskUsage(loaded, usage, available, free, total)"
-        >
-            {{ renderDiskUsage(loaded, usage, available, free, total) }}
+            v-if="loaded"
+            class="upload-list-item-status-bar-current"
+            :class="{ error: usage > 90 }"
+            :style="{ width: percentUsage(usage) }"
+        ></div>
+        <div v-if="loaded || loadingTimedOut" class="upload-list-item-status-bar-text" :title="renderDiskUsage(loaded, usage, free, total)">
+            {{ renderDiskUsage(loaded, usage, free, total) }}
         </div>
     </div>
 </template>
@@ -115,22 +115,13 @@ export default defineComponent({
             return Math.min(100, Math.max(0, Math.round(usage))) + "%";
         },
 
-        renderDiskUsage: function (loaded: boolean, usage: number, available: number, free: number, total: number): string {
+        renderDiskUsage: function (loaded: boolean, usage: number, free: number, total: number): string {
             if (!loaded) {
                 return this.$t("Loading disk usage") + "...";
             }
 
             return (
-                this.$t("Disk usage") +
-                ": " +
-                this.percentUsage(usage) +
-                " (" +
-                this.$t("10 available").replace("10", renderSize(available)) +
-                ", " +
-                this.$t("10 free").replace("10", renderSize(free)) +
-                ", " +
-                this.$t("10 total size").replace("10", renderSize(total)) +
-                ")"
+                this.$t("Disk usage") + ": " + this.percentUsage(usage) + " (" + renderSize(total - free) + " / " + renderSize(total) + ")"
             );
         },
 
