@@ -239,7 +239,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		LogInfo("Openned vault: " + absolutePath)
+		LogInfo("Loaded vault: " + absolutePath)
 
 		GLOBAL_VAULT = &vault
 

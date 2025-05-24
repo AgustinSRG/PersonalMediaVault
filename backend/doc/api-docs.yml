@@ -4,6 +4,8 @@ info:
   description: API to access PersonalMediaVault from a web client.
   version: 2.0.0
 
+# cSpell:ignore allof, anyof, noneof, gyan
+
 schemes:
   - http
   - https
@@ -207,7 +209,7 @@ paths:
         401:
           description: Unauthorized (No valid session)
         403:
-          description: Invalid password or acess denied (if not root)
+          description: Invalid password or access denied (if not root)
         200:
           description: Success   
           
@@ -365,7 +367,7 @@ paths:
                 description: "Upload timestamp (server time, Unix milliseconds)"
               thumbnail:
                 type: string
-                description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
+                description: "Path to reach the thumbnail. Empty if no thumbnail. Thumbnails are squared images."
                 example: "/assets/b/0/0/thumbnail.jpg"
               duration:
                 type: number
@@ -407,7 +409,7 @@ paths:
                 example: "/assets/p/0/0/preview_{INDEX}.jpg"
               video_previews_interval:
                 type: number
-                format: doiuble
+                format: double
                 description: Interval for each video preview, in seconds.
               resolutions:
                 type: array
@@ -494,7 +496,7 @@ paths:
                       example: "/assets/b/0/0/example.txt"
               force_start_beginning:
                 type: boolean
-                description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+                description: "True to indicate clients that this media cannot save it's time status (for songs / short animations)"
               is_anim:
                 type: boolean
                 description: "True to indicate the video is an animation, for example an animated gif"
@@ -739,7 +741,7 @@ paths:
             properties:
               force_start_beginning:
                 type: boolean
-                description: "True to indicate clients that this media cannot save it's time status (for songs / short anims)"
+                description: "True to indicate clients that this media cannot save it's time status (for songs / short animations)"
               is_anim:
                 type: boolean
                 description: "True to indicate the video is an animation, for example an animated gif"
@@ -1991,7 +1993,7 @@ paths:
           name: "seed"
           type: number
           format: int64
-          description: PRNG seed
+          description: Pseudo-random number generator seed
         - in: query
           name: "page_size"
           type: number
@@ -2009,7 +2011,7 @@ paths:
               seed:
                 type: number
                 format: int64
-                description: PRNG seed
+                description: Pseudo-random number generator seed
               page_size:
                 type: number
                 format: int32
@@ -2068,7 +2070,7 @@ paths:
                 lm:
                   type: number
                   format: int64
-                  description: Last modified timestamp (Unix millis)
+                  description: Last modified timestamp (Unix milliseconds)
                     
     post:
       summary: Create album
@@ -2162,7 +2164,7 @@ paths:
               lm:
                 type: number
                 format: int64
-                description: Last modified timestamp (Unix millis)
+                description: Last modified timestamp (Unix milliseconds)
               thumbnail:
                 type: string
                 description: Thumbnail for the album (of the first media)
@@ -3088,7 +3090,7 @@ definitions:
             format: int64
         thumbnail:
           type: string
-          description: "Path to reach the thumbnail. Empty if no thumbnail. Thumnails are squared images."
+          description: "Path to reach the thumbnail. Empty if no thumbnail. Thumbnails are squared images."
           example: "/assets/b/0/0/thumbnail.jpg"
         duration:
           type: number

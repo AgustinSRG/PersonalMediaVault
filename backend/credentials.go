@@ -1,5 +1,7 @@
 // Credentials manager
 
+// cSpell:ignore pwhash, enckey
+
 package main
 
 import (
@@ -54,7 +56,7 @@ type VaultCredentials struct {
 	Accounts []VaultCredentialsAccount `json:"accounts"` // Accounts
 }
 
-// Credentials managger
+// Credentials manager
 type VaultCredentialsManager struct {
 	credentials VaultCredentials // Credentials data
 
@@ -382,7 +384,7 @@ func (manager *VaultCredentialsManager) SetAccountCredentials(user string, passw
 		return err
 	}
 
-	// Store ecrypted key
+	// Store encrypted key
 	pwBytes := []byte(password)
 	ctBytes := make([]byte, len(pwBytes)+16)
 	copy(ctBytes[:len(pwBytes)], pwBytes)
@@ -506,7 +508,7 @@ type CredentialsCheckResult struct {
 // user - Username
 // password - Password
 // Returns (success, result)
-// - success is true if the credentails chccek succedded
+// - success is true if the credentials check succeeded
 // - result contains info if the credentials are root credentials and if the have write access
 func (manager *VaultCredentialsManager) CheckCredentials(user string, password string) (bool, *CredentialsCheckResult) {
 	manager.lock.Lock()
@@ -584,7 +586,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 	var pwMethod string
 	var pwSalt []byte
 	var pwExpectedHash []byte
-	var pwEcryptedKey []byte
+	var pwEncryptedKey []byte
 
 	if manager.credentials.User == user {
 		result.root = true
@@ -592,7 +594,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		pwMethod = manager.credentials.Method
 		pwSalt = manager.credentials.Salt
 		pwExpectedHash = manager.credentials.PasswordHash
-		pwEcryptedKey = manager.credentials.EncryptedKey
+		pwEncryptedKey = manager.credentials.EncryptedKey
 	} else {
 		result.root = false
 		var foundAccount bool = false
@@ -603,7 +605,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 				pwMethod = manager.credentials.Accounts[i].Method
 				pwSalt = manager.credentials.Accounts[i].Salt
 				pwExpectedHash = manager.credentials.Accounts[i].PasswordHash
-				pwEcryptedKey = manager.credentials.Accounts[i].EncryptedKey
+				pwEncryptedKey = manager.credentials.Accounts[i].EncryptedKey
 				break
 			}
 		}
@@ -627,7 +629,7 @@ func (manager *VaultCredentialsManager) UnlockVault(user string, password string
 		}
 
 		// Decrypt key
-		key, err := encrypted_storage.DecryptFileContents(pwEcryptedKey, pwHash[:])
+		key, err := encrypted_storage.DecryptFileContents(pwEncryptedKey, pwHash[:])
 
 		if err != nil {
 			return nil, nil, err

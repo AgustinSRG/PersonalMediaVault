@@ -12,5 +12,20 @@
 			"pmvd": true,
 			"pmvd.exe": true
 		},
+		"cSpell.words": [
+			"etag",
+			"felixge",
+			"ffprobe",
+			"github",
+			"golangci",
+			"httpsnoop",
+			"muxing",
+			"nightlyone",
+			"nolint",
+			"pmvd",
+			"rgba",
+			"subrip",
+			"vansante"
+		]
 	}
 }

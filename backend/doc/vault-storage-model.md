@@ -297,6 +297,8 @@ Each tag index file contains the list of media asset identifiers that have such 
 
 ### Credentials file
 
+<!--- cSpell:ignore pwhash, enckey --->
+
 The credentials file, named `credentials.json` is an [unencrypted JSON file](#unencrypted-json-files) used to store the hashed credentials, along with the encrypted vault key.
 
 The JSON file contains the following fields:

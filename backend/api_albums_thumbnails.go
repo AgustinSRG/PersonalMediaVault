@@ -1,5 +1,7 @@
 // Albums thumbnail assets API
 
+// cSpell:ignore webp, nosniff
+
 package main
 
 import (

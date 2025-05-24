@@ -1,5 +1,7 @@
 // Search API
 
+// cSpell:ignore anyof, noneof
+
 package main
 
 import (

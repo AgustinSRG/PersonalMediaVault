@@ -248,7 +248,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if subtitlesIndex == -1 {
 		meta.AddSubtitle(subtitlesId, subtitlesName, srt_asset)
 	} else {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.Subtitles[subtitlesIndex].Asset
 		success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
@@ -354,7 +354,7 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 	subtitlesIndex := meta.FindSubtitle(subtitlesId)
 
 	if subtitlesIndex != -1 {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.Subtitles[subtitlesIndex].Asset
 		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 

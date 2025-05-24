@@ -1,5 +1,7 @@
 // HTTP Server
 
+// cSpell:ignore Subrouter, msapplication, mstile
+
 package main
 
 import (
@@ -286,13 +288,13 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 	ssl_port = 443
 	customSSLPort := portOption
 	if customSSLPort != "" {
-		sslp, e := strconv.Atoi(customSSLPort)
+		p, e := strconv.Atoi(customSSLPort)
 		if e == nil {
-			ssl_port = sslp
+			ssl_port = p
 		}
 	}
 
-	// Check keypair
+	// Check key pair
 	_, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -322,9 +324,9 @@ func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 	tcp_port = 80
 	customTCPPort := portOption
 	if customTCPPort != "" {
-		tcpp, e := strconv.Atoi(customTCPPort)
+		p, e := strconv.Atoi(customTCPPort)
 		if e == nil {
-			tcp_port = tcpp
+			tcp_port = p
 		}
 	}
 

@@ -350,7 +350,7 @@ func api_removeMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 	audioIndex := meta.FindAudioTrack(audioId)
 
 	if audioIndex != -1 {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.AudioTracks[audioIndex].Asset
 		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
