@@ -2,6 +2,8 @@ github.com/AgustinSRG/encrypted-storage v1.0.0 h1:u/uhLm4V60EpP3YO87NSBkyywQeKJ1
 github.com/AgustinSRG/encrypted-storage v1.0.0/go.mod h1:aiaBk/FyX/fhXBuqkTnFeuK+rGO678oN+yCBm7ptikE=
 github.com/AgustinSRG/go-child-process-manager v1.0.1 h1:wZpPE0LAXc5rzlU028CDt/K/Woc2IhgCV4/g+9x2WHo=
 github.com/AgustinSRG/go-child-process-manager v1.0.1/go.mod h1:JgXUSAhyOo1awWbBKGVJ4fU9a5Q6JBo4eR+sXqmYC1w=
+github.com/AgustinSRG/go-disk-usage v1.0.0 h1:jrakCwcR1SEkzn47Ulic9SfFqBPx44QfjT6qp85g7mk=
+github.com/AgustinSRG/go-disk-usage v1.0.0/go.mod h1:ubDo63h2O9AH1w2sO0e12gLdQyriPNMTufnHuqi1JzM=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/gorilla/handlers v1.5.2 h1:cLTUSsNkgcwhgRqvCNmdbRWG0A3N4F+M2nWKdScwyEE=

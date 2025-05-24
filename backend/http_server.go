@@ -231,6 +231,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// About API
 	apiRouter.HandleFunc("/about", api_about).Methods("GET")
+	apiRouter.HandleFunc("/about/disk_usage", api_getDiskUsage).Methods("GET")
 
 	// Is Test?
 	if isTest {

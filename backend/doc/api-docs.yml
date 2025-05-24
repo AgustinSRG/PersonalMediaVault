@@ -2787,6 +2787,43 @@ paths:
                 type: string
                 description: Current FFmpeg version
                 example: "6.1-full_build-www.gyan.dev"
+  
+  "/api/about/disk_usage":
+    get:
+      summary: Gets disk usage
+      description: Gets disk usage of the vault
+      tags:
+        - about
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: Success
+          schema:
+            properties:
+              usage:
+                type: number
+                format: double
+                description: Usage of the disk in percent
+              available:
+                type: number
+                format: int64
+                description: Bytes available
+              free:
+                type: number
+                format: int64
+                description: Bytes free
+              total:
+                type: number
+                format: int64
+                description: Bytes total (size of the disk)
 
   "/api/invites":
     get:
