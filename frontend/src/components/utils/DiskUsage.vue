@@ -94,6 +94,7 @@ export default defineComponent({
                     setNamedTimeout(this.loadRequestId, RELOAD_INTERVAL_MS, this.load.bind(this));
                 })
                 .onRequestError((err, handleErr) => {
+                    this.loading = false;
                     handleErr(err, {
                         unauthorized: () => {
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
@@ -104,6 +105,7 @@ export default defineComponent({
                     });
                 })
                 .onUnexpectedError((err) => {
+                    this.loading = false;
                     console.error(err);
                     setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                 });
