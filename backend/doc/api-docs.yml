@@ -3080,6 +3080,9 @@ definitions:
           type: number
           format: int32
           description: Max number of invited sessions per user
+        preserve_originals:
+          type: boolean
+          description: Preserve original media files, before encoding, as attachments?
         resolutions:
           type: array
           description: Extra resolutions to encode videos
