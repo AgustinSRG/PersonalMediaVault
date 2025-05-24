@@ -87,6 +87,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    z-index: 10;
 }
 
 .upload-list-item-status-bar-current {
@@ -96,7 +97,6 @@
     height: 100%;
     background: var(--progress-bar-bg);
     transition: width 0.2s;
-    z-index: -1;
 }
 
 .upload-list-item-status-bar-current.right {
