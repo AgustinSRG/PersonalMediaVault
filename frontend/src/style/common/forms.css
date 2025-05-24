@@ -300,3 +300,46 @@ textarea.form-control::-webkit-resizer {
 .crypto-secure .password-strength-indicator-progress-segment.active {
     background-color: var(--progress-segment-color-crypto-secure);
 }
+
+.six-digit-code-input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+@media (max-width: 340px) {
+    .six-digit-code-input {
+        flex-wrap: wrap;
+    }
+}
+
+.six-digit-code-char-input {
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+}
+
+.six-digit-code-char-input input {
+    width: 4rem;
+    height: 4rem;
+    text-align: center;
+    font-size: x-large;
+}
+
+@media (max-width: 500px) {
+    .six-digit-code-char-input input {
+        width: 3rem;
+        height: 3rem;
+        font-size: large;
+    }
+}
+
+@media (max-width: 400px) {
+    .six-digit-code-char-input input {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+}

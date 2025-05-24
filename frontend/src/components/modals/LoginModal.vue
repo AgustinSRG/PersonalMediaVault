@@ -48,19 +48,7 @@
                 </div>
                 <div v-if="isCode" class="div-pt">
                     <div class="invite-code-label">{{ $t("Input your invite code below") }}</div>
-                    <div class="invite-code-multi-input">
-                        <div v-for="(c, i) in code" :key="i" class="invite-code-char-input">
-                            <input
-                                v-model="c.c"
-                                type="text"
-                                :disabled="busy"
-                                :class="'form-control auto-focus code-char-' + i"
-                                maxlength="1"
-                                @input="goNextChar(c, i)"
-                                @paste="onPaste($event, i)"
-                            />
-                        </div>
-                    </div>
+                    <SixDigitCodeInput v-model:val="code" :disabled="busy"></SixDigitCodeInput>
                 </div>
                 <div class="form-error">{{ error }}</div>
             </div>
@@ -91,11 +79,13 @@ import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
+import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 
 export default defineComponent({
     name: "LoginModal",
     components: {
         PasswordInput,
+        SixDigitCodeInput,
     },
     props: {
         display: Boolean,
@@ -111,7 +101,7 @@ export default defineComponent({
             password: "",
             duration: "day" as SessionDuration,
 
-            code: [{ c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }] as { c: string }[],
+            code: "",
 
             isCode: false,
 
@@ -218,7 +208,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiInvitesLogin(this.code.map((c) => c.c).join("")))
+            makeApiRequest(apiInvitesLogin(this.code))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -275,56 +265,6 @@ export default defineComponent({
         changeToCredentials: function () {
             this.isCode = false;
             this.autoFocus();
-        },
-
-        goNextChar: function (c: { c: string }, i: number) {
-            c.c = c.c.charAt(0).toUpperCase();
-
-            if (!c.c) {
-                // Go back
-                if (i > 0) {
-                    const nextInput = this.$el.querySelector(".code-char-" + (i - 1));
-
-                    if (nextInput) {
-                        nextInput.focus();
-                        if (nextInput.select) {
-                            nextInput.select();
-                        }
-                    }
-                }
-
-                return;
-            }
-
-            if (i < this.code.length - 1) {
-                const nextInput = this.$el.querySelector(".code-char-" + (i + 1));
-
-                if (nextInput) {
-                    nextInput.focus();
-                    if (nextInput.select) {
-                        nextInput.select();
-                    }
-                }
-            }
-        },
-
-        onPaste: function (ev: ClipboardEvent, i: number) {
-            ev.preventDefault();
-
-            const text = ev.clipboardData.getData("text/plain").replace(/[^a-z0-9]+/gi, "");
-
-            let k = 0;
-            for (let j = i; j < this.code.length; j++) {
-                if (k >= text.length) {
-                    break;
-                }
-
-                const c = text.charAt(k).toUpperCase();
-                k++;
-
-                this.code[j].c = c;
-                this.goNextChar(this.code[j], j);
-            }
         },
 
         passwordTabSkip: function (e: KeyboardEvent) {
