@@ -116,7 +116,7 @@
                                             <ToggleSwitch v-model:val="preserveOriginals" @update:val="onChangesMade"></ToggleSwitch>
                                         </td>
                                         <td>
-                                            {{ $t("Preserve original media, before encoding, as an attachment?") }}
+                                            {{ $t("Preserve original media files, before encoding, as attachments?") }}
                                         </td>
                                     </tr>
                                 </tbody>
