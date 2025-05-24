@@ -15,7 +15,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-const VERSION = "1.22.0"
+const VERSION = "2.0.0"
 
 // Program entry point
 func main() {
