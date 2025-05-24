@@ -83,7 +83,7 @@ import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-brow
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiAbout } from "@/api/api-about";
 import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 
 export default defineComponent({
     name: "AboutModal",
@@ -146,7 +146,7 @@ export default defineComponent({
             abortNamedApiRequest(this.requestId);
             clearNamedTimeout(this.requestId);
 
-            if (!this.display) {
+            if (!this.display || AuthController.Locked) {
                 return;
             }
 

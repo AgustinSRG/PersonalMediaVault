@@ -15,7 +15,7 @@
 <script lang="ts">
 import { apiDiskUsage } from "@/api/api-about";
 import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadEntryMin } from "@/control/upload";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
@@ -67,6 +67,10 @@ export default defineComponent({
     },
     methods: {
         load: function () {
+            if (AuthController.Locked) {
+                return;
+            }
+
             this.loading = true;
 
             clearNamedTimeout(this.loadRequestId);
