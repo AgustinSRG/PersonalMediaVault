@@ -89,6 +89,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 	buf := make([]byte, 1024*1024)
 	finished := false
+	fileSize := uint64(0)
 
 	for !finished {
 		n, err := part.Read(buf)
@@ -110,6 +111,8 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		if n == 0 {
 			continue
 		}
+
+		fileSize += uint64(n)
 
 		_, err = f.Write(buf[:n])
 
@@ -217,7 +220,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
-		BackgroundTaskSaveOriginal(session, media_id, tempFile, ext, probe_data, userConfig)
+		BackgroundTaskSaveOriginal(session, media_id, tempFile, ext, probe_data, fileName, fileSize, userConfig)
 
 		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
 		BackgroundTaskExtractAudios(session, media_id, tempFile, probe_data)
@@ -590,15 +593,31 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 	WipeTemporalPath(tmpPath) // Remove temp path for subtitles
 }
 
-func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFile string, ext string, probe_data *FFprobeMediaResult, userConfig *UserConfig) {
+func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFile string, ext string, probe_data *FFprobeMediaResult, originalFileName string, originalFileSize uint64, userConfig *UserConfig) {
 	// Encrypt the original file
 
-	original_encrypted_file, err := EncryptOriginalAssetFile(media_id, tempFile, session.key)
+	preservingOriginal := !probe_data.Encoded && userConfig.PreserveOriginalBeforeEncoding
+
+	original_encrypted_file, err := EncryptOriginalAssetFile(media_id, tempFile, session.key, preservingOriginal, false)
 
 	if err != nil {
 		LogError(err)
-
 		return
+	}
+
+	var original_preserved_encrypted_file string
+
+	if preservingOriginal {
+		// Media will be encoded, but user config
+		// requires the original to be preserved
+
+		original_preserved_encrypted_file, err = EncryptOriginalAssetFile(media_id, tempFile, session.key, true, true)
+
+		if err != nil {
+			LogError(err)
+			os.Remove(original_encrypted_file)
+			return
+		}
 	}
 
 	// Put the original into the media assets
@@ -607,6 +626,9 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 	if media == nil {
 		os.Remove(original_encrypted_file)
+		if original_preserved_encrypted_file != "" {
+			os.Remove(original_preserved_encrypted_file)
+		}
 		return
 	}
 
@@ -617,6 +639,10 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 		os.Remove(original_encrypted_file)
 
+		if original_preserved_encrypted_file != "" {
+			os.Remove(original_preserved_encrypted_file)
+		}
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return
@@ -624,7 +650,13 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 	if meta == nil {
 		media.CancelWrite()
+
 		os.Remove(original_encrypted_file)
+
+		if original_preserved_encrypted_file != "" {
+			os.Remove(original_preserved_encrypted_file)
+		}
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return
@@ -637,7 +669,13 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 	if !success {
 		media.CancelWrite()
+
 		os.Remove(original_encrypted_file)
+
+		if original_preserved_encrypted_file != "" {
+			os.Remove(original_preserved_encrypted_file)
+		}
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return
@@ -657,7 +695,13 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 		LogError(err)
 
 		media.CancelWrite()
+
 		os.Remove(original_encrypted_file)
+
+		if original_preserved_encrypted_file != "" {
+			os.Remove(original_preserved_encrypted_file)
+		}
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		return
@@ -665,6 +709,53 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 
 	// Original
 	meta.OriginalReady = true
+
+	// Add attachment if original must be preserved
+
+	if preservingOriginal {
+		attachment_asset := meta.NextAssetID
+		meta.NextAssetID++
+
+		success, asset_path, asset_lock := media.AcquireAsset(attachment_asset, ASSET_SINGLE_FILE)
+
+		if !success {
+			LogError(err)
+
+			media.CancelWrite()
+
+			os.Remove(original_preserved_encrypted_file)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			return
+		}
+
+		asset_lock.RequestWrite()
+		asset_lock.StartWrite()
+
+		// Move temp file
+		err = RenameAndReplace(original_preserved_encrypted_file, asset_path)
+
+		asset_lock.EndWrite()
+
+		media.ReleaseAsset(attachment_asset)
+
+		if err != nil {
+			LogError(err)
+
+			media.CancelWrite()
+
+			os.Remove(original_preserved_encrypted_file)
+
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			return
+		}
+
+		meta.AddAttachment(originalFileName, attachment_asset, originalFileSize)
+	}
+
+	// Mark as encoded or create task
 
 	if probe_data.Encoded {
 		meta.OriginalEncoded = true

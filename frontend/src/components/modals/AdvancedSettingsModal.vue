@@ -107,6 +107,21 @@
                                 @change="onChangesMade"
                             />
                         </div>
+
+                        <div class="form-group">
+                            <table class="table no-border">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-right td-shrink no-padding">
+                                            <ToggleSwitch v-model:val="preserveOriginals" @update:val="onChangesMade"></ToggleSwitch>
+                                        </td>
+                                        <td>
+                                            {{ $t("Preserve original media, before encoding, as an attachment?") }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div v-else-if="page === 'resolutions'">
@@ -253,6 +268,7 @@ export default defineComponent({
             encodingThreads: 0,
             videoPreviewsInterval: 0,
             inviteLimit: 0,
+            preserveOriginals: false,
             resolutions: [] as VideoResolutionStandardToggleable[],
             imageResolutions: [] as ImageResolutionStandardToggleable[],
 
@@ -399,6 +415,7 @@ export default defineComponent({
                     this.encodingThreads = response.encoding_threads;
                     this.videoPreviewsInterval = response.video_previews_interval;
                     this.inviteLimit = response.invite_limit;
+                    this.preserveOriginals = response.preserve_originals || false;
                     this.updateResolutions(response.resolutions, response.image_resolutions);
                     this.loading = false;
 
@@ -446,6 +463,7 @@ export default defineComponent({
                     image_resolutions: this.getImageResolutions(),
                     video_previews_interval: this.videoPreviewsInterval,
                     invite_limit: this.inviteLimit,
+                    preserve_originals: this.preserveOriginals,
                 }),
             )
                 .onSuccess(() => {

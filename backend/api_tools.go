@@ -184,9 +184,11 @@ func GetClientIP(request *http.Request) string {
 // mid - Media ID
 // file - Unencrypted file path
 // key - Encryption key
+// preserve_original - True if the original is being preserved
+// second_phase - True if it is the second phase (for original preservation)
 // Returns a temporal file with the encrypted contents
 // This method also sets the progress in the media assets manager
-func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, error) {
+func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_original bool, second_phase bool) (string, error) {
 	encrypted_file := GetTemporalFileName("pma", true)
 
 	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
@@ -272,13 +274,22 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 
 		progress_enc := math.Round(bytesEncrypted * 100 / bytesTotal)
 		p := int32(progress_enc)
+		if preserve_original {
+			p = p / 2
+
+			if second_phase {
+				p += 50
+			}
+		}
 		GetVault().media.SetProgress(mid, p)
 	}
 
 	ws.Close()
 	f.Close()
 
-	GetVault().media.EndProgress(mid)
+	if !preserve_original || second_phase {
+		GetVault().media.EndProgress(mid)
+	}
 
 	return encrypted_file, nil
 }

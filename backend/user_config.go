@@ -82,14 +82,15 @@ func (res *UserConfigImageResolution) Rotate() UserConfigImageResolution {
 
 // User vault configuration data
 type UserConfig struct {
-	CustomTitle           string                      `json:"title"`                   // Custom title
-	CustomCSS             string                      `json:"css"`                     // Custom CSS code
-	MaxTasks              int32                       `json:"max_tasks"`               // Max number of tasks in parallel
-	EncodingThreads       int32                       `json:"encoding_threads"`        // Max encoding threads for FFMPEG
-	Resolutions           []UserConfigResolution      `json:"resolutions"`             // Resolutions to encode (for videos)
-	ImageResolutions      []UserConfigImageResolution `json:"image_resolutions"`       // Resolutions to encode (For pictures)
-	VideoPreviewsInterval int32                       `json:"video_previews_interval"` // Video previews interval (seconds)
-	InviteLimitPerUser    int32                       `json:"invite_limit"`            // Max number of invites per user
+	CustomTitle                    string                      `json:"title"`                   // Custom title
+	CustomCSS                      string                      `json:"css"`                     // Custom CSS code
+	MaxTasks                       int32                       `json:"max_tasks"`               // Max number of tasks in parallel
+	EncodingThreads                int32                       `json:"encoding_threads"`        // Max encoding threads for FFMPEG
+	Resolutions                    []UserConfigResolution      `json:"resolutions"`             // Resolutions to encode (for videos)
+	ImageResolutions               []UserConfigImageResolution `json:"image_resolutions"`       // Resolutions to encode (For pictures)
+	VideoPreviewsInterval          int32                       `json:"video_previews_interval"` // Video previews interval (seconds)
+	InviteLimitPerUser             int32                       `json:"invite_limit"`            // Max number of invites per user
+	PreserveOriginalBeforeEncoding bool                        `json:"preserve_originals"`      // Preserver original media before encoding?
 }
 
 // User configuration manager
