@@ -10,9 +10,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/rivo/uniseg"
+	"golang.org/x/term"
 )
 
 func readNextCommand(reader *bufio.Reader, vaultPathAbs string, vc *VaultController) {
@@ -836,6 +838,14 @@ func prepareCommandManualList(manList []string) string {
 	result := ""
 	first := true
 
+	termSize, _, err := term.GetSize(int(syscall.Stdout))
+
+	termSize -= 10 // Padding
+
+	if err != nil || termSize < 80 {
+		termSize = 80 // Min allowed size: 80 chars
+	}
+
 	for i := 0; i < len(manList); i++ {
 		parts := strings.Split(manList[i], " - ")
 
@@ -865,7 +875,7 @@ func prepareCommandManualList(manList []string) string {
 			linePrefixSpaces += " "
 		}
 
-		sizeAvailableForDescription := 80 - uniseg.GraphemeClusterCount(linePrefix)
+		sizeAvailableForDescription := termSize - uniseg.GraphemeClusterCount(linePrefix)
 
 		descLines := make([]string, 0)
 		curDescLine := ""
@@ -895,7 +905,7 @@ func prepareCommandManualList(manList []string) string {
 		result += linePrefix + descLines[0]
 
 		for j := 1; j < len(descLines); j++ {
-			result += "\n" + linePrefixSpaces + descLines[j]
+			result += "\n" + linePrefixSpaces + strings.TrimSpace(descLines[j])
 		}
 	}
 
