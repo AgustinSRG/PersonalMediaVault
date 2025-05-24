@@ -1,7 +1,7 @@
 <template>
     <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }" @drop="onDrop">
-        <div class="upload-parallel-options">
-            <div class="upload-parallel-label">{{ $t("Max number of uploads in parallel") }}:</div>
+        <div class="upload-option-container">
+            <div class="upload-option-label">{{ $t("Max number of uploads in parallel") }}:</div>
             <button
                 v-for="v in parallelOptions"
                 :key="v"
@@ -30,6 +30,10 @@
             <div class="upload-box-hint">
                 {{ $t("Drop file here or click to open the file selection dialog.") }}
             </div>
+        </div>
+
+        <div class="upload-option-container margin-top">
+            <DiskUsage></DiskUsage>
         </div>
 
         <div class="horizontal-filter-menu">
@@ -143,8 +147,9 @@ import { AppStatus } from "@/control/app-status";
 import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadController, UploadEntryMin } from "@/control/upload";
 import { generateURIQuery } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
+import { renderSize } from "@/utils/size";
+import DiskUsage from "../utils/DiskUsage.vue";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
@@ -160,6 +165,7 @@ export default defineComponent({
     name: "PageUpload",
     components: {
         UploadModal,
+        DiskUsage,
     },
     props: {
         display: Boolean,
@@ -315,23 +321,7 @@ export default defineComponent({
             this.dragging = false;
         },
 
-        renderSize: function (bytes: number): string {
-            if (bytes > 1024 * 1024 * 1024) {
-                let gb = bytes / (1024 * 1024 * 1024);
-                gb = Math.floor(gb * 100) / 100;
-                return gb + " GB";
-            } else if (bytes > 1024 * 1024) {
-                let mb = bytes / (1024 * 1024);
-                mb = Math.floor(mb * 100) / 100;
-                return mb + " MB";
-            } else if (bytes > 1024) {
-                let kb = bytes / 1024;
-                kb = Math.floor(kb * 100) / 100;
-                return kb + " KB";
-            } else {
-                return bytes + " Bytes";
-            }
-        },
+        renderSize: renderSize,
 
         addFiles: function (files: File[]) {
             this.files = files;
