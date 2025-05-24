@@ -123,17 +123,11 @@ export default defineComponent({
                 ": " +
                 this.percentUsage(usage) +
                 " (" +
-                renderSize(available) +
-                " " +
-                this.$t("available") +
+                this.$t("10 available").replace("10", renderSize(available)) +
                 ", " +
-                renderSize(free) +
-                " " +
-                this.$t("free") +
+                this.$t("10 free").replace("10", renderSize(free)) +
                 ", " +
-                renderSize(total) +
-                " " +
-                this.$t("total size") +
+                this.$t("10 total size").replace("10", renderSize(total)) +
                 ")"
             );
         },
