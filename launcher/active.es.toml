@@ -78,6 +78,10 @@ other = "Uso: cache-size [tamaño] - Establece el tamaño de la caché"
 hash = "sha1-4407ffe7f09c4d50f4be960bcc7a88dd9ca0251e"
 other = "Error: No se pudo encontrar el binario codificador multimedia (ffmpeg)"
 
+[ErrorFileExplorer]
+hash = "sha1-873ecc24fdf711c83df0a7fb283652288aceab62"
+other = "Error: no se pudo abrir el explorador de archivos: {{.Message}}"
+
 [ErrorFrontMissing]
 hash = "sha1-4eee2930e12911f18c2949f40487432159bf6d63"
 other = "Error: No se pudo encontrar la interfaz de usuario"
@@ -253,6 +257,10 @@ other = "debug [s/n] - Habilita o deshabilita el registro de depuración"
 [ManualCommandLogRequests]
 hash = "sha1-c20354a3352f3e9aa6d5a5a3453d33891ec9cd9d"
 other = "log-requests [s/n] - Habilita o deshabilita el registro de peticiones"
+
+[ManualCommandOpenLogs]
+hash = "sha1-d1fe7889d702cdc4af0656e78ae436d5ca0bc343"
+other = "open-logs - Abre el directorio de logs en el explorador de archivos"
 
 [ManualCommandPort]
 hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"

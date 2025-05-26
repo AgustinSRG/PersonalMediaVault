@@ -73,6 +73,24 @@ func runCommand(cmdText string, vc *VaultController) {
 		}
 	case "browser", "b":
 		openBrowser(vc.launchConfig.HostName, vc.launchConfig.Port, vc.launchConfig.hasSSL())
+	case "open-logs", "logs":
+		logsPath, err := getLogsPath()
+
+		if err != nil {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
+			return
+		}
+
+		openFileExplorer(logsPath)
 	case "host", "hostname":
 		if len(args) == 1 {
 			hostName := vc.launchConfig.HostName
@@ -751,6 +769,14 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSecDel",
 			Other: "sec-del [y/n] - Enables / disables secure deletion of temp files",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandOpenLogs",
+			Other: "open-logs - Opens the logs folder in the file explorer",
 		},
 	})
 	manList = append(manList, msg)
