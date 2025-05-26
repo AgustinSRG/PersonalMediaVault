@@ -49,6 +49,14 @@
                 </button>
             </div>
         </div>
+
+        <ThumbnailCropModal
+            v-if="displayThumbnailModal"
+            v-model:display="displayThumbnailModal"
+            :image-url="thumbnailModalUrl"
+            @done="changeThumbnail"
+            @error="onThumbnailModalError"
+        ></ThumbnailCropModal>
     </ModalDialogContainer>
 </template>
 
@@ -65,11 +73,13 @@ import { getAssetURL } from "@/utils/api";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import ThumbImage from "../utils/ThumbImage.vue";
+import ThumbnailCropModal from "./ThumbnailCropModal.vue";
 
 export default defineComponent({
     name: "AlbumChangeThumbnailModal",
     components: {
         ThumbImage,
+        ThumbnailCropModal,
     },
     props: {
         display: Boolean,
@@ -80,6 +90,7 @@ export default defineComponent({
             displayStatus: useVModel(props, "display"),
             requestIdThumbnail: getUniqueStringId(),
             fetchMediaThumbnailAbortController: null as AbortController | null,
+            tempImage: null as HTMLImageElement,
         };
     },
     data: function () {
@@ -95,6 +106,9 @@ export default defineComponent({
             errorThumbnail: "",
 
             currentMediaThumbnail: "",
+
+            displayThumbnailModal: false,
+            thumbnailModalUrl: "",
         };
     },
     watch: {
@@ -124,6 +138,11 @@ export default defineComponent({
 
         if (this.fetchMediaThumbnailAbortController) {
             this.fetchMediaThumbnailAbortController.abort();
+        }
+
+        if (this.tempImage) {
+            delete this.tempImage.onload;
+            delete this.tempImage.onerror;
         }
     },
     methods: {
@@ -166,7 +185,7 @@ export default defineComponent({
             const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
                 const file = data[0];
-                this.changeThumbnail(file);
+                this.prepareChangeThumbnail(file);
             }
         },
 
@@ -175,8 +194,46 @@ export default defineComponent({
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0];
-                this.changeThumbnail(file);
+                this.prepareChangeThumbnail(file);
             }
+        },
+
+        prepareChangeThumbnail: function (file: File) {
+            if (this.tempImage) {
+                delete this.tempImage.onload;
+                delete this.tempImage.onerror;
+                this.tempImage = null;
+            }
+
+            const url = URL.createObjectURL(file);
+
+            const img = new Image();
+            this.tempImage = img;
+
+            img.onload = () => {
+                this.tempImage = null;
+
+                if (img.width === img.height) {
+                    this.changeThumbnail(file);
+                    return;
+                }
+
+                this.thumbnailModalUrl = url;
+                this.errorThumbnail = "";
+                this.displayThumbnailModal = true;
+            };
+
+            img.onerror = (err) => {
+                this.tempImage = null;
+                console.error(err);
+                this.onThumbnailModalError();
+            };
+
+            img.src = url;
+        },
+
+        onThumbnailModalError: function () {
+            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");
         },
 
         changeThumbnail: function (file: File) {

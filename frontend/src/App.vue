@@ -174,6 +174,7 @@ export default defineComponent({
 @import "@/style/content/batch-operation.css";
 @import "@/style/content/invite-modal.css";
 @import "@/style/content/page-settings.css";
+@import "@/style/content/thumbnail-crop.css";
 
 /* Player styles */
 
