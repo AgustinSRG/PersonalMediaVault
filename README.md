@@ -154,4 +154,5 @@ This project is under the [MIT License](./LICENSE).
 
 ## Contributing
 
-
+ - [Pull requests](https://github.com/AgustinSRG/PersonalMediaVault/pulls)
+ - [Contributing guidelines](./CONTRIBUTING.md)
