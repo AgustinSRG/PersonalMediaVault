@@ -9,7 +9,7 @@
 
 Web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
 
-![Screenshot](./screenshot.jpg)
+![Screenshot](https://agustinsrg.github.io/pmv-site/images/screenshot.png)
 
 ### Quick access links
 
