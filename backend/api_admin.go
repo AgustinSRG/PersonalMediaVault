@@ -88,7 +88,7 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = GetVault().credentials.SetAccountCredentials(p.Username, p.Password, session.key, p.Write)
+	err = GetVault().credentials.InitAccountCredentials(p.Username, p.Password, session.key, p.Write)
 
 	if err != nil {
 		LogError(err)

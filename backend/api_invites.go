@@ -59,7 +59,14 @@ func api_loginWithInviteCode(response http.ResponseWriter, request *http.Request
 
 	LAST_INVALID_PASSWORD_MU.Unlock()
 
-	s, err := GetVault().sessions.CreateSession("", key, false, false, duration, invitedBy)
+	s, err := GetVault().sessions.CreateSession(CreateSessionOptions{
+		user:           "",
+		key:            key,
+		root:           false,
+		write:          false,
+		expirationTime: duration,
+		invitedBy:      invitedBy,
+	})
 
 	if err != nil {
 		LogError(err)

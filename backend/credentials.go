@@ -7,7 +7,6 @@ package main
 import (
 	"bufio"
 	"crypto/rand"
-	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/binary"
 	"encoding/hex"
@@ -26,30 +25,52 @@ import (
 )
 
 const (
-	VAULT_CRED_METHOD_AES_SHA256 string = "aes256/sha256/salt16"
-
 	VAULT_DEFAULT_USER     string = "admin"
 	VAULT_DEFAULT_PASSWORD string = "admin"
+
+	DEFAULT_AUTH_CONFIRMATION_PERIOD = 120
 )
 
 // Vault account
 type VaultCredentialsAccount struct {
-	User         string `json:"user"`   // Username
+	User string `json:"user"` // Username
+
 	PasswordHash []byte `json:"pwhash"` // Password hash
 	Method       string `json:"method"` // Password hashing / encryption method
 	Salt         []byte `json:"salt"`   // Password salt
+
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with password
+
+	TwoFactorAuthEnabled      bool   `json:"tfa"`          // Two factor auth enabled
+	TwoFactorAuthRequired     bool   `json:"tfa_required"` // Two factor auth required for login?
+	TwoFactorAuthMethod       string `json:"tfa_method"`   // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"`   // Encrypted TFA key
+
+	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
+	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
+	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
 
 	Write bool `json:"write"` // Write access
 }
 
 // Vault credentials data structure
 type VaultCredentials struct {
-	User         string `json:"user"`   // Root username
+	User string `json:"user"` // Root username
+
 	PasswordHash []byte `json:"pwhash"` // Root password hash
 	Method       string `json:"method"` // Root password hashing / encryption method
 	Salt         []byte `json:"salt"`   // Root password salt
+
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with root password
+
+	TwoFactorAuthEnabled      bool   `json:"tfa"`          // Two factor auth enabled
+	TwoFactorAuthRequired     bool   `json:"tfa_required"` // Two factor auth required for login?
+	TwoFactorAuthMethod       string `json:"tfa_method"`   // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"`   // Encrypted TFA key
+
+	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
+	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
+	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
 
 	VaultFingerprint string `json:"fingerprint"` // Vault fingerprint, user to distinguish between vaults
 
@@ -74,6 +95,15 @@ func GenerateFingerprint() string {
 	rand.Read(data[8:]) //nolint:errcheck
 
 	return hex.EncodeToString(data)
+}
+
+// Gets confirmation period as duration
+func GetAuthConfirmationPeriod(p *uint32) time.Duration {
+	if p != nil {
+		return time.Duration(*p) * time.Second
+	} else {
+		return DEFAULT_AUTH_CONFIRMATION_PERIOD * time.Second
+	}
 }
 
 // Initializes credentials path
@@ -242,7 +272,7 @@ func (manager *VaultCredentialsManager) Initialize(base_path string) error {
 			initialPassword = VAULT_DEFAULT_PASSWORD
 		}
 
-		err2 = manager.SetRootCredentials(initialUser, initialPassword, key)
+		err2 = manager.InitRootCredentials(initialUser, initialPassword, key)
 
 		if err2 != nil {
 			return err2
@@ -286,7 +316,7 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 		// Set default credentials
 		manager.credentials.VaultFingerprint = GenerateFingerprint()
 		manager.credentials.Accounts = make([]VaultCredentialsAccount, 0)
-		err2 = manager.SetRootCredentials(user, password, key)
+		err2 = manager.InitRootCredentials(user, password, key)
 
 		if err2 != nil {
 			return err2
@@ -304,11 +334,11 @@ func (manager *VaultCredentialsManager) Create(file string, user string, passwor
 	return nil
 }
 
-// Sets root credentials
+// Initializes root credentials
 // user - Root username
 // password - Root password
 // key - Vault encryption key
-func (manager *VaultCredentialsManager) SetRootCredentials(user string, password string, key []byte) error {
+func (manager *VaultCredentialsManager) InitRootCredentials(user string, password string, key []byte) error {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
@@ -326,12 +356,7 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 		return err
 	}
 
-	// Store encrypted key
-	pwBytes := []byte(password)
-	ctBytes := make([]byte, len(pwBytes)+16)
-	copy(ctBytes[:len(pwBytes)], pwBytes)
-	copy(ctBytes[len(pwBytes):], manager.credentials.Salt)
-	pwHash := sha256.Sum256(ctBytes)
+	pwHash, pwDoubleHash := computePasswordHash(VAULT_CRED_METHOD_AES_SHA256, password, manager.credentials.Salt)
 
 	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
 
@@ -339,29 +364,30 @@ func (manager *VaultCredentialsManager) SetRootCredentials(user string, password
 		return err
 	}
 
+	manager.credentials.PasswordHash = pwDoubleHash
+
 	manager.credentials.EncryptedKey = encKey
 
-	// Store password hash
-	pwDoubleHash := sha256.Sum256(pwHash[:])
-
-	manager.credentials.PasswordHash = pwDoubleHash[:]
+	manager.credentials.TwoFactorAuthEnabled = false
+	manager.credentials.TwoFactorAuthRequired = false
+	manager.credentials.TwoFactorAuthEncryptedKey = nil
 
 	return nil
 }
 
-// Sets account credentials (creates a new one if not found)
+// Initializes account credentials (creates a new one if not found)
 // user - Root username
 // password - Root password
 // key - Vault encryption key
 // write - Write access
-func (manager *VaultCredentialsManager) SetAccountCredentials(user string, password string, key []byte, write bool) error {
+func (manager *VaultCredentialsManager) InitAccountCredentials(user string, password string, key []byte, write bool) error {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
 	var accountIndex int = -1
 
-	for i := 0; i < len(manager.credentials.Accounts); i++ {
-		if manager.credentials.Accounts[i].User == user {
+	for i, ac := range manager.credentials.Accounts {
+		if ac.User == user {
 			accountIndex = i
 		}
 	}
@@ -373,39 +399,37 @@ func (manager *VaultCredentialsManager) SetAccountCredentials(user string, passw
 		accountIndex = len(manager.credentials.Accounts) - 1
 	}
 
+	account := &manager.credentials.Accounts[accountIndex]
+
 	// Set method
-	manager.credentials.Accounts[accountIndex].Method = VAULT_CRED_METHOD_AES_SHA256
+	account.Method = VAULT_CRED_METHOD_AES_SHA256
 
 	// Random salt
-	manager.credentials.Accounts[accountIndex].Salt = make([]byte, 16)
-	_, err := rand.Read(manager.credentials.Accounts[accountIndex].Salt)
+	account.Salt = make([]byte, 16)
+	_, err := rand.Read(account.Salt)
 
 	if err != nil {
 		return err
 	}
 
-	// Store encrypted key
-	pwBytes := []byte(password)
-	ctBytes := make([]byte, len(pwBytes)+16)
-	copy(ctBytes[:len(pwBytes)], pwBytes)
-	copy(ctBytes[len(pwBytes):], manager.credentials.Accounts[accountIndex].Salt)
-	pwHash := sha256.Sum256(ctBytes)
+	pwHash, pwDoubleHash := computePasswordHash(VAULT_CRED_METHOD_AES_SHA256, password, account.Salt)
 
-	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
+	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash)
 
 	if err != nil {
 		return err
 	}
 
-	manager.credentials.Accounts[accountIndex].EncryptedKey = encKey
+	account.EncryptedKey = encKey
 
-	// Store password hash
-	pwDoubleHash := sha256.Sum256(pwHash[:])
+	account.PasswordHash = pwDoubleHash
 
-	manager.credentials.Accounts[accountIndex].PasswordHash = pwDoubleHash[:]
+	account.TwoFactorAuthEnabled = false
+	account.TwoFactorAuthRequired = false
+	account.TwoFactorAuthEncryptedKey = nil
 
 	// Set write access
-	manager.credentials.Accounts[accountIndex].Write = write
+	account.Write = write
 
 	return nil
 }
@@ -418,9 +442,9 @@ func (manager *VaultCredentialsManager) RemoveAccount(user string) error {
 
 	newAccounts := make([]VaultCredentialsAccount, 0)
 
-	for i := 0; i < len(manager.credentials.Accounts); i++ {
-		if manager.credentials.Accounts[i].User != user {
-			newAccounts = append(newAccounts, manager.credentials.Accounts[i])
+	for _, account := range manager.credentials.Accounts {
+		if account.User != user {
+			newAccounts = append(newAccounts, account)
 		}
 	}
 
@@ -440,7 +464,7 @@ func (manager *VaultCredentialsManager) ChangeUsername(user string, new_user str
 	if manager.credentials.User == user {
 		manager.credentials.User = new_user
 	} else {
-		for i := 0; i < len(manager.credentials.Accounts); i++ {
+		for i := range manager.credentials.Accounts {
 			if manager.credentials.Accounts[i].User == user {
 				manager.credentials.Accounts[i].User = new_user
 				break
@@ -458,10 +482,255 @@ func (manager *VaultCredentialsManager) UpdateWritePermission(user string, write
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
-	for i := 0; i < len(manager.credentials.Accounts); i++ {
+	for i := range manager.credentials.Accounts {
 		if manager.credentials.Accounts[i].User == user {
 			manager.credentials.Accounts[i].Write = write
 			break
+		}
+	}
+
+	return nil
+}
+
+// Changes password of an account
+// user - Username
+// password - Old account password
+// newPassword - New account password
+func (manager *VaultCredentialsManager) ChangePassword(user string, password string, newPassword string) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	// Set user
+	if manager.credentials.User == user {
+		// Check old password
+
+		pwHashOld, pwDoubleHashOld := computePasswordHash(manager.credentials.Method, password, manager.credentials.Salt)
+
+		checkResult := subtle.ConstantTimeCompare(pwDoubleHashOld, manager.credentials.PasswordHash) == 1
+
+		if !checkResult {
+			return errors.New("invalid password")
+		}
+
+		// Decrypt keys
+
+		key, tfaKey, err := decryptCredentialKeys(manager.credentials.EncryptedKey, manager.credentials.TwoFactorAuthEncryptedKey, pwHashOld)
+
+		if err != nil {
+			return err
+		}
+
+		// Compute new hash
+
+		salt, err := randomSalt()
+
+		if err != nil {
+			return err
+		}
+
+		pwHash, pwDoubleHash := computePasswordHash(VAULT_CRED_METHOD_AES_SHA256, newPassword, salt)
+
+		// Encrypt keys
+
+		encryptedKey, encryptedTfaKey, err := encryptCredentialKeys(key, tfaKey, pwHash)
+
+		if err != nil {
+			return err
+		}
+
+		manager.credentials.Method = VAULT_CRED_METHOD_AES_SHA256
+
+		manager.credentials.Salt = salt
+
+		manager.credentials.PasswordHash = pwDoubleHash
+
+		manager.credentials.EncryptedKey = encryptedKey
+
+		manager.credentials.TwoFactorAuthEncryptedKey = encryptedTfaKey
+	} else {
+		for i := range manager.credentials.Accounts {
+			account := &manager.credentials.Accounts[i]
+
+			if account.User == user {
+				// Check old password
+
+				pwHashOld, pwDoubleHashOld := computePasswordHash(account.Method, password, account.Salt)
+
+				checkResult := subtle.ConstantTimeCompare(pwDoubleHashOld, account.PasswordHash) == 1
+
+				if !checkResult {
+					return errors.New("invalid password")
+				}
+
+				// Decrypt keys
+
+				key, tfaKey, err := decryptCredentialKeys(account.EncryptedKey, account.TwoFactorAuthEncryptedKey, pwHashOld)
+
+				if err != nil {
+					return err
+				}
+
+				// Compute new hash
+
+				salt, err := randomSalt()
+
+				if err != nil {
+					return err
+				}
+
+				pwHash, pwDoubleHash := computePasswordHash(VAULT_CRED_METHOD_AES_SHA256, newPassword, salt)
+
+				// Encrypt keys
+
+				encryptedKey, encryptedTfaKey, err := encryptCredentialKeys(key, tfaKey, pwHash)
+
+				if err != nil {
+					return err
+				}
+
+				account.Method = VAULT_CRED_METHOD_AES_SHA256
+
+				account.Salt = salt
+
+				account.PasswordHash = pwDoubleHash
+
+				account.EncryptedKey = encryptedKey
+
+				account.TwoFactorAuthEncryptedKey = encryptedTfaKey
+
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// Enables two factor authentication for an account
+// user - Username
+// tfaMethod - TFA method
+// tfaKey - TFA key
+// password - Account password
+func (manager *VaultCredentialsManager) EnableTfa(user string, tfaMethod string, tfaKey []byte, password string) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	// Set user
+	if manager.credentials.User == user {
+		pwHash, pwDoubleHash := computePasswordHash(manager.credentials.Method, password, manager.credentials.Salt)
+
+		checkResult := subtle.ConstantTimeCompare(pwDoubleHash[:], manager.credentials.PasswordHash) == 1
+
+		if !checkResult {
+			return errors.New("invalid password")
+		}
+
+		encTfaKey, err := encrypted_storage.EncryptFileContents(tfaKey, encrypted_storage.AES256_FLAT, pwHash[:])
+
+		if err != nil {
+			return err
+		}
+
+		manager.credentials.TwoFactorAuthEnabled = true
+		manager.credentials.TwoFactorAuthRequired = true
+		manager.credentials.TwoFactorAuthMethod = tfaMethod
+
+		manager.credentials.TwoFactorAuthEncryptedKey = encTfaKey
+	} else {
+		for i := range manager.credentials.Accounts {
+			account := &manager.credentials.Accounts[i]
+
+			if account.User == user {
+				pwHash, pwDoubleHash := computePasswordHash(account.Method, password, account.Salt)
+
+				checkResult := subtle.ConstantTimeCompare(pwDoubleHash[:], account.PasswordHash) == 1
+
+				if !checkResult {
+					return errors.New("invalid password")
+				}
+
+				encTfaKey, err := encrypted_storage.EncryptFileContents(tfaKey, encrypted_storage.AES256_FLAT, pwHash[:])
+
+				if err != nil {
+					return err
+				}
+
+				account.TwoFactorAuthEnabled = true
+				account.TwoFactorAuthRequired = true
+				account.TwoFactorAuthMethod = tfaMethod
+
+				account.TwoFactorAuthEncryptedKey = encTfaKey
+
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// Disables two factor authentication for an account
+// user - Username
+// tfaMethod - TFA method
+// tfaKey - TFA key
+// password - Account password
+func (manager *VaultCredentialsManager) DisableTfa(user string) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	// Set user
+	if manager.credentials.User == user {
+		manager.credentials.TwoFactorAuthEnabled = false
+		manager.credentials.TwoFactorAuthRequired = false
+		manager.credentials.TwoFactorAuthMethod = ""
+
+		manager.credentials.TwoFactorAuthEncryptedKey = nil
+	} else {
+		for i := range manager.credentials.Accounts {
+			account := &manager.credentials.Accounts[i]
+
+			if account.User == user {
+				account.TwoFactorAuthEnabled = false
+				account.TwoFactorAuthRequired = false
+				account.TwoFactorAuthMethod = ""
+
+				account.TwoFactorAuthEncryptedKey = nil
+
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// Disables two factor authentication for an account
+// user - Username
+// twoFactorAuthRequired - True if TFA is required for login
+// authConfirmationEnabled - True if auth confirmation is enabled
+// authConfirmationMethod - Auth confirmation method
+func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, twoFactorAuthRequired bool, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) error {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
+
+	// Set user
+	if manager.credentials.User == user {
+		manager.credentials.TwoFactorAuthRequired = twoFactorAuthRequired
+		manager.credentials.AuthConfirmationEnabled = authConfirmationEnabled
+		manager.credentials.AuthConfirmationMethod = authConfirmationMethod
+		manager.credentials.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
+	} else {
+		for i := range manager.credentials.Accounts {
+			account := &manager.credentials.Accounts[i]
+
+			if account.User == user {
+				account.TwoFactorAuthRequired = twoFactorAuthRequired
+				account.AuthConfirmationEnabled = authConfirmationEnabled
+				account.AuthConfirmationMethod = authConfirmationMethod
+				account.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
+
+				break
+			}
 		}
 	}
 
@@ -502,70 +771,104 @@ func (manager *VaultCredentialsManager) SaveCredentials() error {
 type CredentialsCheckResult struct {
 	root  bool // Root account
 	write bool // Write access
+
+	tfa         bool   // TFA enabled?
+	tfaRequired bool   // TFA required?
+	tfaMethod   string // TFS method
+
+	authConfirm       bool          // Auth confirmation enabled?
+	authConfirmMethod string        // Auth confirmation method
+	authConfirmPeriod time.Duration // Auth confirmation period
 }
 
-// Checks credentials
-// user - Username
-// password - Password
-// Returns (success, result)
-// - success is true if the credentials check succeeded
-// - result contains info if the credentials are root credentials and if the have write access
-func (manager *VaultCredentialsManager) CheckCredentials(user string, password string) (bool, *CredentialsCheckResult) {
-	manager.lock.Lock()
-	defer manager.lock.Unlock()
-
-	result := CredentialsCheckResult{
+// Find the account credential details
+func (manager *VaultCredentialsManager) getAccount(user string) (found bool, result *CredentialsCheckResult, pwMethod string, pwSalt []byte, pwExpectedHash []byte, pwEncryptedKey []byte, encTfaKey []byte) {
+	result = &CredentialsCheckResult{
 		root:  false,
 		write: false,
 	}
 
-	var pwMethod string
-	var pwSalt []byte
-	var pwExpectedHash []byte
-
 	if manager.credentials.User == user {
 		result.root = true
 		result.write = true
+
+		result.tfa = manager.credentials.TwoFactorAuthEnabled
+		result.tfaRequired = manager.credentials.TwoFactorAuthRequired
+		result.tfaMethod = manager.credentials.TwoFactorAuthMethod
+
+		result.authConfirm = manager.credentials.AuthConfirmationEnabled
+		result.authConfirmMethod = manager.credentials.AuthConfirmationMethod
+		result.authConfirmPeriod = GetAuthConfirmationPeriod(manager.credentials.AuthConfirmationPeriod)
+
 		pwMethod = manager.credentials.Method
 		pwSalt = manager.credentials.Salt
 		pwExpectedHash = manager.credentials.PasswordHash
+		pwEncryptedKey = manager.credentials.EncryptedKey
+		encTfaKey = manager.credentials.TwoFactorAuthEncryptedKey
 	} else {
 		result.root = false
+
 		var foundAccount bool = false
+
 		for i := 0; i < len(manager.credentials.Accounts); i++ {
-			if manager.credentials.Accounts[i].User == user {
+			account := &manager.credentials.Accounts[i]
+			if account.User == user {
 				foundAccount = true
-				result.write = manager.credentials.Accounts[i].Write
-				pwMethod = manager.credentials.Accounts[i].Method
-				pwSalt = manager.credentials.Accounts[i].Salt
-				pwExpectedHash = manager.credentials.Accounts[i].PasswordHash
+
+				result.tfa = account.TwoFactorAuthEnabled
+				result.tfaRequired = account.TwoFactorAuthRequired
+				result.tfaMethod = account.TwoFactorAuthMethod
+
+				result.authConfirm = account.AuthConfirmationEnabled
+				result.authConfirmMethod = account.AuthConfirmationMethod
+				result.authConfirmPeriod = GetAuthConfirmationPeriod(account.AuthConfirmationPeriod)
+
+				result.write = account.Write
+				pwMethod = account.Method
+				pwSalt = account.Salt
+				pwExpectedHash = account.PasswordHash
+				pwEncryptedKey = account.EncryptedKey
+				encTfaKey = account.TwoFactorAuthEncryptedKey
 				break
 			}
 		}
 
 		if !foundAccount {
-			return false, nil
+			return false, nil, "", nil, nil, nil, nil
 		}
 	}
 
-	if pwMethod == VAULT_CRED_METHOD_AES_SHA256 {
-		// Compute password hash
-		pwBytes := []byte(password)
-		ctBytes := make([]byte, len(pwBytes)+16)
-		copy(ctBytes[:len(pwBytes)], pwBytes)
-		copy(ctBytes[len(pwBytes):], pwSalt)
-		pwHash := sha256.Sum256(ctBytes)
-		pwDoubleHash := sha256.Sum256(pwHash[:])
+	return true, result, pwMethod, pwSalt, pwExpectedHash, pwEncryptedKey, encTfaKey
+}
 
-		checkResult := subtle.ConstantTimeCompare(pwDoubleHash[:], pwExpectedHash) == 1
+// Checks password
+// user - Username
+// password - Password
+// Returns (success, result)
+// - success is true if the credentials check succeeded
+// - result contains info if the credentials are root credentials and if the have write access, also it it has tfa enabled
+func (manager *VaultCredentialsManager) CheckPassword(user string, password string) (bool, *CredentialsCheckResult) {
+	manager.lock.Lock()
+	defer manager.lock.Unlock()
 
-		if checkResult {
-			return true, &result
-		} else {
-			return false, nil
-		}
+	found, result, pwMethod, pwSalt, pwExpectedHash, _, _ := manager.getAccount(user)
+
+	if !found {
+		return false, nil
+	}
+
+	pwHash, pwDoubleHash := computePasswordHash(pwMethod, password, pwSalt)
+
+	if pwHash == nil || pwDoubleHash == nil {
+		return false, nil
+	}
+
+	checkResult := subtle.ConstantTimeCompare(pwDoubleHash[:], pwExpectedHash) == 1
+
+	if checkResult {
+		return true, result
 	} else {
-		return false, nil // Unknown method
+		return false, nil
 	}
 }
 
@@ -574,71 +877,33 @@ func (manager *VaultCredentialsManager) CheckCredentials(user string, password s
 // password - Password
 // Returns the key and the result (root and write info)
 // If fails, it returns an error
-func (manager *VaultCredentialsManager) UnlockVault(user string, password string) ([]byte, *CredentialsCheckResult, error) {
+func (manager *VaultCredentialsManager) UnlockVault(user string, password string) (key []byte, checkRes *CredentialsCheckResult, tfaKey []byte, err error) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
-	result := CredentialsCheckResult{
-		root:  false,
-		write: false,
+	found, result, pwMethod, pwSalt, pwExpectedHash, pwEncryptedKey, encTfaKey := manager.getAccount(user)
+
+	if !found {
+		return nil, nil, nil, errors.New("unknown user")
 	}
 
-	var pwMethod string
-	var pwSalt []byte
-	var pwExpectedHash []byte
-	var pwEncryptedKey []byte
+	pwHash, pwDoubleHash := computePasswordHash(pwMethod, password, pwSalt)
 
-	if manager.credentials.User == user {
-		result.root = true
-		result.write = true
-		pwMethod = manager.credentials.Method
-		pwSalt = manager.credentials.Salt
-		pwExpectedHash = manager.credentials.PasswordHash
-		pwEncryptedKey = manager.credentials.EncryptedKey
-	} else {
-		result.root = false
-		var foundAccount bool = false
-		for i := 0; i < len(manager.credentials.Accounts); i++ {
-			if manager.credentials.Accounts[i].User == user {
-				foundAccount = true
-				result.write = manager.credentials.Accounts[i].Write
-				pwMethod = manager.credentials.Accounts[i].Method
-				pwSalt = manager.credentials.Accounts[i].Salt
-				pwExpectedHash = manager.credentials.Accounts[i].PasswordHash
-				pwEncryptedKey = manager.credentials.Accounts[i].EncryptedKey
-				break
-			}
-		}
-
-		if !foundAccount {
-			return nil, nil, errors.New("unknown user")
-		}
+	if pwHash == nil || pwDoubleHash == nil {
+		return nil, nil, nil, errors.New("unknown credentials method")
 	}
 
-	if pwMethod == VAULT_CRED_METHOD_AES_SHA256 {
-		// Compute password hash
-		pwBytes := []byte(password)
-		ctBytes := make([]byte, len(pwBytes)+16)
-		copy(ctBytes[:len(pwBytes)], pwBytes)
-		copy(ctBytes[len(pwBytes):], pwSalt)
-		pwHash := sha256.Sum256(ctBytes)
-		pwDoubleHash := sha256.Sum256(pwHash[:])
-
-		if subtle.ConstantTimeCompare(pwDoubleHash[:], pwExpectedHash) != 1 {
-			return nil, nil, errors.New("invalid credentials")
-		}
-
-		// Decrypt key
-		key, err := encrypted_storage.DecryptFileContents(pwEncryptedKey, pwHash[:])
-
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return key, &result, nil
-	} else {
-		return nil, nil, errors.New("unknown credentials method")
+	if subtle.ConstantTimeCompare(pwDoubleHash[:], pwExpectedHash) != 1 {
+		return nil, nil, nil, errors.New("invalid credentials")
 	}
+
+	key, tfaKey, err = decryptCredentialKeys(pwEncryptedKey, encTfaKey, pwHash)
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return key, result, tfaKey, nil
 }
 
 // Gets vault fingerprint

@@ -32,6 +32,17 @@ type ActiveSession struct {
 
 	timestamp int64 // Creation timestamp
 	not_after int64 // Expiration
+
+	tfa       bool   // Two factor auth enabled?
+	tfaKey    []byte // Two factor auth key
+	tfaMethod string // Two factor auth method
+
+	authConfirmationEnabled bool          // Auth confirmation enabled?
+	authConfirmationMethod  string        // Auth confirmation method (tfa or pw)
+	authConfirmationPeriod  time.Duration // Auth confirmation period
+
+	authConfirmationLastTime int64       // Last time auth confirmation was successfully
+	authConfirmationMutex    *sync.Mutex // Mutex for authConfirmationLastTime
 }
 
 // Session Manager
@@ -59,6 +70,28 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 	go sm.RunSessionChecker()
 }
 
+// Options to create a session
+type CreateSessionOptions struct {
+	user string // Username
+
+	key []byte // Vault key
+
+	root  bool // Is root user?
+	write bool // Has write access?
+
+	expirationTime int64 // Expiration time (Milliseconds)
+
+	invitedBy string // User who invited
+
+	tfa       bool   // Two factor auth enabled?
+	tfaKey    []byte // Two factor auth key
+	tfaMethod string // Two factor auth method
+
+	authConfirmationEnabled bool          // Auth confirmation enabled?
+	authConfirmationMethod  string        // Auth confirmation method (tfa or pw)
+	authConfirmationPeriod  time.Duration // Auth confirmation period
+}
+
 // Creates a session
 // user - Username
 // key - Vault decryption key
@@ -67,7 +100,7 @@ func (sm *SessionManager) Initialize(vault *Vault) {
 // expirationTime - Expiration time (Milliseconds)
 // invitedBy - User who invited
 // Returns an error if failed, and the session ID if successful
-func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool, expirationTime int64, invitedBy string) (string, error) {
+func (sm *SessionManager) CreateSession(options CreateSessionOptions) (string, error) {
 	sessionBytes := make([]byte, 32)
 	_, err_rand := rand.Read(sessionBytes)
 
@@ -85,15 +118,23 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 	now := time.Now().UnixMilli()
 
 	newSession := ActiveSession{
-		index:     sm.next_index,
-		id:        sessionId,
-		user:      user,
-		invitedBy: invitedBy,
-		key:       key,
-		write:     write,
-		root:      root,
-		timestamp: now,
-		not_after: now + expirationTime,
+		index:                    sm.next_index,
+		id:                       sessionId,
+		user:                     options.user,
+		invitedBy:                options.invitedBy,
+		key:                      options.key,
+		write:                    options.write,
+		root:                     options.root,
+		timestamp:                now,
+		not_after:                now + options.expirationTime,
+		tfa:                      options.tfa,
+		tfaKey:                   options.tfaKey,
+		tfaMethod:                options.tfaMethod,
+		authConfirmationEnabled:  options.authConfirmationEnabled,
+		authConfirmationMethod:   options.authConfirmationMethod,
+		authConfirmationPeriod:   options.authConfirmationPeriod,
+		authConfirmationLastTime: 0,
+		authConfirmationMutex:    &sync.Mutex{},
 	}
 
 	sm.next_index++
@@ -111,8 +152,8 @@ func (sm *SessionManager) CreateSession(user string, key []byte, root bool, writ
 
 	if isFirstSession {
 		// Pre-cache tags and albums
-		go sm.vault.tags.PreCacheTags(key)
-		go sm.vault.albums.PreCacheAlbums(key)
+		go sm.vault.tags.PreCacheTags(options.key)
+		go sm.vault.albums.PreCacheAlbums(options.key)
 	}
 
 	return sessionId, nil

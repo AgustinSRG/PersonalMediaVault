@@ -65,6 +65,10 @@ paths:
                 type: string
                 description: Media vault password (can't be blank, max 255 chars)
                 example: password
+              tfaCode:
+                type: string
+                description: Two factor authentication code
+                example: "123456"
               duration:
                 type: string
                 description: "Duration of the session. Note the session can be closed before this or the vault server can restart, clearing all sessions."
@@ -86,9 +90,13 @@ paths:
                 description: >
                   Error code:
                     * INVALID_CREDENTIALS - Invalid user or password
+                    * TFA_REQUIRED - Two factor authentication is required to login, but not provided (this won't activate cooldown)
+                    * INVALID_TFA_CODE - Invalid TFA code provided
                     * COOLDOWN - When you fail a login request, there is a cooldown of 5 seconds.
                 enum:
                   - INVALID_CREDENTIALS
+                  - TFA_REQUIRED
+                  - INVALID_TFA_CODE
                   - COOLDOWN
               message:
                 type: string

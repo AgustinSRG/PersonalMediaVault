@@ -10,9 +10,10 @@ import (
 )
 
 type LoginAPIBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Duration string `json:"duration"`
+	Username          string `json:"username"`
+	Password          string `json:"password"`
+	TwoFactorAuthCode string `json:"tfaCode"`
+	Duration          string `json:"duration"`
 }
 
 type LoginAPIResponse struct {
@@ -74,8 +75,9 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Check credentials
-	valid, _ := GetVault().credentials.CheckCredentials(p.Username, p.Password)
+	// Check password
+
+	valid, _ := GetVault().credentials.CheckPassword(p.Username, p.Password)
 
 	if !valid {
 		LAST_INVALID_PASSWORD_MAP[clientIP] = now
@@ -87,7 +89,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 
 	LAST_INVALID_PASSWORD_MU.Unlock()
 
-	key, cred_info, err := GetVault().credentials.UnlockVault(p.Username, p.Password)
+	key, cred_info, tfaKey, err := GetVault().credentials.UnlockVault(p.Username, p.Password)
 
 	if err != nil {
 		LogError(err)
@@ -95,7 +97,53 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	s, err := GetVault().sessions.CreateSession(p.Username, key, cred_info.root, cred_info.write, expirationTime, "")
+	// Check two factor auth
+
+	if cred_info.tfa && cred_info.tfaRequired {
+		if p.TwoFactorAuthCode == "" {
+			ReturnAPIError(response, 403, "TFA_REQUIRED", "Two factor authentication code is required")
+			return
+		}
+
+		LAST_INVALID_PASSWORD_MU.Lock()
+
+		now := time.Now().UnixMilli()
+
+		lastFailure := LAST_INVALID_PASSWORD_MAP[clientIP]
+
+		if now-lastFailure < AUTH_FAIL_COOLDOWN {
+			LAST_INVALID_PASSWORD_MU.Unlock()
+			ReturnAPIError(response, 403, "COOLDOWN", "You must wait 5 seconds after your last failed login request.")
+			return
+		}
+
+		if !validateTwoFactorAuthCode(cred_info.tfaMethod, tfaKey, p.TwoFactorAuthCode) {
+			LAST_INVALID_PASSWORD_MAP[clientIP] = now
+			LAST_INVALID_PASSWORD_MU.Unlock()
+			ReturnAPIError(response, 403, "INVALID_TFA_CODE", "Invalid two factor authentication code.")
+			LogSecurity("[LOGIN] [From IP: " + GetClientIP(request) + "] Failed login attempt due to two factor authentication. Username = " + p.Username + ", TFA method: " + cred_info.tfaMethod)
+			return
+		}
+
+		LAST_INVALID_PASSWORD_MU.Unlock()
+	}
+
+	// Create session
+
+	s, err := GetVault().sessions.CreateSession(CreateSessionOptions{
+		user:                    p.Username,
+		key:                     key,
+		root:                    cred_info.root,
+		write:                   cred_info.write,
+		expirationTime:          expirationTime,
+		invitedBy:               "",
+		tfa:                     cred_info.tfa,
+		tfaKey:                  tfaKey,
+		tfaMethod:               cred_info.tfaMethod,
+		authConfirmationEnabled: cred_info.authConfirm,
+		authConfirmationMethod:  cred_info.authConfirmMethod,
+		authConfirmationPeriod:  cred_info.authConfirmPeriod,
+	})
 
 	if err != nil {
 		LogError(err)

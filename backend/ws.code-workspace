@@ -23,8 +23,10 @@
 			"nightlyone",
 			"nolint",
 			"pmvd",
+			"pquerna",
 			"rgba",
 			"subrip",
+			"totp",
 			"vansante"
 		]
 	}
