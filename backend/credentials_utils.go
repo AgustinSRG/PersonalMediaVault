@@ -212,11 +212,6 @@ func validateTimeOtpAuthCode(method string, key []byte, code string) bool {
 		return false
 	}
 
-	if err != nil {
-		LogDebug("Error: " + err.Error())
-		return false
-	}
-
 	valid, err := totp.ValidateCustom(code, string(key), time.Now(), totp.ValidateOpts{
 		Period:    options.Period,
 		Algorithm: options.Algorithm,
