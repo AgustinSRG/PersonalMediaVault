@@ -139,9 +139,19 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// Account API (changing credentials)
 	apiRouter.HandleFunc("/account", api_getAccountContext).Methods("GET")
+
 	apiRouter.HandleFunc("/account/username", api_getAccountContext).Methods("GET")
 	apiRouter.HandleFunc("/account/username", api_changeUsername).Methods("POST")
+
 	apiRouter.HandleFunc("/account/password", api_changePassword).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security", api_getSecurityOptions).Methods("GET")
+	apiRouter.HandleFunc("/account/security", api_setSecurityOptions).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security/tfa/totp", api_getParametersTwoFactorAuthTimeOtp).Methods("GET")
+	apiRouter.HandleFunc("/account/security/tfa/totp", api_enableTwoFactorAuthTimeOtp).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security/tfa/disable", api_disableTwoFactorAuth).Methods("POST")
 
 	// Invite codes API
 	apiRouter.HandleFunc("/invites", api_getInviteCodeStatus).Methods("GET")

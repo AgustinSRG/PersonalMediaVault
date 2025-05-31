@@ -8,12 +8,13 @@ import (
 )
 
 type AccountContextAPIResponse struct {
-	Username string `json:"username"`
-	Root     bool   `json:"root"`
-	Write    bool   `json:"write"`
-	Title    string `json:"title"`
-	Style    string `json:"css"`
-	Version  string `json:"version"`
+	Username         string `json:"username"`
+	Root             bool   `json:"root"`
+	Write            bool   `json:"write"`
+	AuthConfirmation bool   `json:"ac"`
+	Title            string `json:"title"`
+	Style            string `json:"css"`
+	Version          string `json:"version"`
 }
 
 type ChangeUsernameBody struct {
@@ -48,6 +49,7 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 	result.Username = session.user
 	result.Root = session.root
 	result.Write = session.write
+	result.AuthConfirmation = session.authConfirmationEnabled
 	result.Title = config.CustomTitle
 	result.Style = config.CustomCSS
 	result.Version = BACKEND_VERSION

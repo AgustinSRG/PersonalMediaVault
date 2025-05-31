@@ -41,10 +41,9 @@ type VaultCredentialsAccount struct {
 
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with password
 
-	TwoFactorAuthEnabled      bool   `json:"tfa"`          // Two factor auth enabled
-	TwoFactorAuthRequired     bool   `json:"tfa_required"` // Two factor auth required for login?
-	TwoFactorAuthMethod       string `json:"tfa_method"`   // Two factor auth method
-	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"`   // Encrypted TFA key
+	TwoFactorAuthEnabled      bool   `json:"tfa"`        // Two factor auth enabled
+	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
 
 	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
 	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
@@ -63,10 +62,9 @@ type VaultCredentials struct {
 
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with root password
 
-	TwoFactorAuthEnabled      bool   `json:"tfa"`          // Two factor auth enabled
-	TwoFactorAuthRequired     bool   `json:"tfa_required"` // Two factor auth required for login?
-	TwoFactorAuthMethod       string `json:"tfa_method"`   // Two factor auth method
-	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"`   // Encrypted TFA key
+	TwoFactorAuthEnabled      bool   `json:"tfa"`        // Two factor auth enabled
+	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
 
 	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
 	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
@@ -369,7 +367,6 @@ func (manager *VaultCredentialsManager) InitRootCredentials(user string, passwor
 	manager.credentials.EncryptedKey = encKey
 
 	manager.credentials.TwoFactorAuthEnabled = false
-	manager.credentials.TwoFactorAuthRequired = false
 	manager.credentials.TwoFactorAuthEncryptedKey = nil
 
 	return nil
@@ -425,7 +422,6 @@ func (manager *VaultCredentialsManager) InitAccountCredentials(user string, pass
 	account.PasswordHash = pwDoubleHash
 
 	account.TwoFactorAuthEnabled = false
-	account.TwoFactorAuthRequired = false
 	account.TwoFactorAuthEncryptedKey = nil
 
 	// Set write access
@@ -632,7 +628,6 @@ func (manager *VaultCredentialsManager) EnableTfa(user string, tfaMethod string,
 		}
 
 		manager.credentials.TwoFactorAuthEnabled = true
-		manager.credentials.TwoFactorAuthRequired = true
 		manager.credentials.TwoFactorAuthMethod = tfaMethod
 
 		manager.credentials.TwoFactorAuthEncryptedKey = encTfaKey
@@ -656,7 +651,6 @@ func (manager *VaultCredentialsManager) EnableTfa(user string, tfaMethod string,
 				}
 
 				account.TwoFactorAuthEnabled = true
-				account.TwoFactorAuthRequired = true
 				account.TwoFactorAuthMethod = tfaMethod
 
 				account.TwoFactorAuthEncryptedKey = encTfaKey
@@ -681,7 +675,6 @@ func (manager *VaultCredentialsManager) DisableTfa(user string) error {
 	// Set user
 	if manager.credentials.User == user {
 		manager.credentials.TwoFactorAuthEnabled = false
-		manager.credentials.TwoFactorAuthRequired = false
 		manager.credentials.TwoFactorAuthMethod = ""
 
 		manager.credentials.TwoFactorAuthEncryptedKey = nil
@@ -691,7 +684,6 @@ func (manager *VaultCredentialsManager) DisableTfa(user string) error {
 
 			if account.User == user {
 				account.TwoFactorAuthEnabled = false
-				account.TwoFactorAuthRequired = false
 				account.TwoFactorAuthMethod = ""
 
 				account.TwoFactorAuthEncryptedKey = nil
@@ -706,16 +698,15 @@ func (manager *VaultCredentialsManager) DisableTfa(user string) error {
 
 // Disables two factor authentication for an account
 // user - Username
-// twoFactorAuthRequired - True if TFA is required for login
 // authConfirmationEnabled - True if auth confirmation is enabled
 // authConfirmationMethod - Auth confirmation method
-func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, twoFactorAuthRequired bool, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) error {
+// authConfirmationPeriodSeconds - Auth confirmation period (seconds)
+func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) error {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
 	// Set user
 	if manager.credentials.User == user {
-		manager.credentials.TwoFactorAuthRequired = twoFactorAuthRequired
 		manager.credentials.AuthConfirmationEnabled = authConfirmationEnabled
 		manager.credentials.AuthConfirmationMethod = authConfirmationMethod
 		manager.credentials.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
@@ -724,7 +715,6 @@ func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, twoF
 			account := &manager.credentials.Accounts[i]
 
 			if account.User == user {
-				account.TwoFactorAuthRequired = twoFactorAuthRequired
 				account.AuthConfirmationEnabled = authConfirmationEnabled
 				account.AuthConfirmationMethod = authConfirmationMethod
 				account.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
@@ -772,9 +762,8 @@ type CredentialsCheckResult struct {
 	root  bool // Root account
 	write bool // Write access
 
-	tfa         bool   // TFA enabled?
-	tfaRequired bool   // TFA required?
-	tfaMethod   string // TFS method
+	tfa       bool   // TFA enabled?
+	tfaMethod string // TFS method
 
 	authConfirm       bool          // Auth confirmation enabled?
 	authConfirmMethod string        // Auth confirmation method
@@ -793,7 +782,6 @@ func (manager *VaultCredentialsManager) getAccount(user string) (found bool, res
 		result.write = true
 
 		result.tfa = manager.credentials.TwoFactorAuthEnabled
-		result.tfaRequired = manager.credentials.TwoFactorAuthRequired
 		result.tfaMethod = manager.credentials.TwoFactorAuthMethod
 
 		result.authConfirm = manager.credentials.AuthConfirmationEnabled
@@ -816,7 +804,6 @@ func (manager *VaultCredentialsManager) getAccount(user string) (found bool, res
 				foundAccount = true
 
 				result.tfa = account.TwoFactorAuthEnabled
-				result.tfaRequired = account.TwoFactorAuthRequired
 				result.tfaMethod = account.TwoFactorAuthMethod
 
 				result.authConfirm = account.AuthConfirmationEnabled

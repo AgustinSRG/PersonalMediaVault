@@ -99,7 +99,7 @@ func api_handleAuthLogin(response http.ResponseWriter, request *http.Request) {
 
 	// Check two factor auth
 
-	if cred_info.tfa && cred_info.tfaRequired {
+	if cred_info.tfa {
 		if p.TwoFactorAuthCode == "" {
 			ReturnAPIError(response, 403, "TFA_REQUIRED", "Two factor authentication code is required")
 			return

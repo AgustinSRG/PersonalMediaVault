@@ -33,6 +33,8 @@ type ActiveSession struct {
 	timestamp int64 // Creation timestamp
 	not_after int64 // Expiration
 
+	// Below: Auth confirmation properties
+
 	tfa       bool   // Two factor auth enabled?
 	tfaKey    []byte // Two factor auth key
 	tfaMethod string // Two factor auth method
@@ -41,8 +43,10 @@ type ActiveSession struct {
 	authConfirmationMethod  string        // Auth confirmation method (tfa or pw)
 	authConfirmationPeriod  time.Duration // Auth confirmation period
 
-	authConfirmationLastTime int64       // Last time auth confirmation was successfully
-	authConfirmationMutex    *sync.Mutex // Mutex for authConfirmationLastTime
+	authConfirmationLastTime int64 // Last time auth confirmation was successfully (Unix Millis)
+	authConfirmationLastTry  int64 // Last time auth confirmation wsa tried and failed (Unix Millis)
+
+	authConfirmationMutex *sync.Mutex // Mutex for auth confirmation properties
 }
 
 // Session Manager
@@ -134,6 +138,7 @@ func (sm *SessionManager) CreateSession(options CreateSessionOptions) (string, e
 		authConfirmationMethod:   options.authConfirmationMethod,
 		authConfirmationPeriod:   options.authConfirmationPeriod,
 		authConfirmationLastTime: 0,
+		authConfirmationLastTry:  0,
 		authConfirmationMutex:    &sync.Mutex{},
 	}
 
@@ -286,7 +291,7 @@ func (sm *SessionManager) RemoveUserSessions(user string) {
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
 
-	for i := 0; i < len(sm.sessions); i++ {
+	for i := range sm.sessions {
 		sessionsList := sm.sessions[i]
 
 		for j := 0; j < len(sessionsList); j++ {
@@ -301,19 +306,85 @@ func (sm *SessionManager) RemoveUserSessions(user string) {
 	}
 }
 
-// Removes all the sessions for an user
+// Updates write permissions of all sessions of user
 // user - Username
+// write - Write permission
 func (sm *SessionManager) UpdateUserSessions(user string, write bool) {
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
 
-	for i := 0; i < len(sm.sessions); i++ {
+	for i := range sm.sessions {
 		sessionsList := sm.sessions[i]
 
-		for j := 0; j < len(sessionsList); j++ {
+		for j := range sessionsList {
 			if sessionsList[j].user == user {
 				// Update
 				sessionsList[j].write = write
+			}
+		}
+	}
+}
+
+// Updates auth confirmation details of all sessions of user
+// user - Username
+// authConfirmationEnabled - True if auth confirmation is enabled
+// authConfirmationMethod - Auth confirmation method
+// authConfirmationPeriodSeconds - Auth confirmation period (seconds)
+func (sm *SessionManager) UpdateUserSessionsAuthConfirmation(user string, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for i := range sm.sessions {
+		sessionsList := sm.sessions[i]
+
+		for j := range sessionsList {
+			if sessionsList[j].user == user {
+				// Update
+				sessionsList[j].authConfirmationEnabled = authConfirmationEnabled
+				sessionsList[j].authConfirmationMethod = authConfirmationMethod
+				sessionsList[j].authConfirmationPeriod = time.Duration(authConfirmationPeriodSeconds) * time.Second
+			}
+		}
+	}
+}
+
+// Enables two factor authentication of all sessions of user
+// user - Username
+// tfaKey - Two factor auth key
+// tfaMethod - Two factor auth method
+func (sm *SessionManager) UpdateUserSessionsEnableTfa(user string, tfaKey []byte, tfaMethod string) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for i := range sm.sessions {
+		sessionsList := sm.sessions[i]
+
+		for j := range sessionsList {
+			if sessionsList[j].user == user {
+				// Update
+				sessionsList[j].tfa = true
+				sessionsList[j].tfaKey = tfaKey
+				sessionsList[j].tfaMethod = tfaMethod
+			}
+		}
+	}
+}
+
+// Disables two factor authentication of all sessions of user
+// user - Username
+func (sm *SessionManager) UpdateUserSessionsDisableTfa(user string) {
+	sm.lock.Lock()
+	defer sm.lock.Unlock()
+
+	for i := range sm.sessions {
+		sessionsList := sm.sessions[i]
+
+		for j := range sessionsList {
+			if sessionsList[j].user == user {
+				// Update
+				sessionsList[j].tfa = false
+				sessionsList[j].tfaKey = nil
+				sessionsList[j].tfaMethod = ""
 			}
 		}
 	}
@@ -326,10 +397,10 @@ func (sm *SessionManager) RemoveInviteSession(invitedBy string, index uint64) {
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
 
-	for i := 0; i < len(sm.sessions); i++ {
+	for i := range sm.sessions {
 		sessionsList := sm.sessions[i]
 
-		for j := 0; j < len(sessionsList); j++ {
+		for j := range sessionsList {
 			if sessionsList[j].invitedBy == invitedBy && sessionsList[j].index == index {
 				// Delete
 				sessionsList[j] = sessionsList[len(sessionsList)-1]
@@ -350,10 +421,10 @@ func (sm *SessionManager) FindInviteSessions(user string) []InviteCodeSessionIte
 
 	result := make([]InviteCodeSessionItem, 0)
 
-	for i := 0; i < len(sm.sessions); i++ {
+	for i := range sm.sessions {
 		sessionsList := sm.sessions[i]
 
-		for j := 0; j < len(sessionsList); j++ {
+		for j := range sessionsList {
 			session := sessionsList[j]
 
 			if session.user == "" && session.invitedBy == user {
@@ -367,6 +438,64 @@ func (sm *SessionManager) FindInviteSessions(user string) []InviteCodeSessionIte
 	}
 
 	return result
+}
+
+// Gets two factor authentication properties to check codes
+func (s *ActiveSession) GetTwoFactorAuth() (tfaEnabled bool, tfaMethod string, tfaKey []byte) {
+	s.authConfirmationMutex.Lock()
+	defer s.authConfirmationMutex.Unlock()
+
+	return s.tfa, s.tfaMethod, s.tfaKey
+}
+
+// Checks auth confirmation
+func (s *ActiveSession) CheckAuthConfirmation(code string, force bool) (success bool, cooldown bool, requiredMethod string) {
+	now := time.Now().UnixMilli()
+
+	s.authConfirmationMutex.Lock()
+	defer s.authConfirmationMutex.Unlock()
+
+	if !s.authConfirmationEnabled {
+		return true, false, "" // No auth confirmation
+	}
+
+	if now-s.authConfirmationLastTry < AUTH_FAIL_COOLDOWN {
+		return false, true, s.authConfirmationMethod
+	}
+
+	if !force {
+		if time.Duration(now-s.authConfirmationLastTime)*time.Millisecond < s.authConfirmationPeriod {
+			// No need to check, recently confirmed
+			return true, false, s.authConfirmationMethod
+		}
+	}
+
+	if code == "" {
+		return false, false, s.authConfirmationMethod
+	}
+
+	if s.authConfirmationMethod == "pw" {
+		// Password check
+		valid, _ := GetVault().credentials.CheckPassword(s.user, code)
+
+		if !valid {
+			// Set last try
+			s.authConfirmationLastTry = now
+		}
+
+		return valid, false, "pw"
+	} else {
+		// TFA check
+
+		valid := validateTwoFactorAuthCode(s.tfaMethod, s.tfaKey, code)
+
+		if !valid {
+			// Set last try
+			s.authConfirmationLastTry = now
+		}
+
+		return valid, false, "tfa"
+	}
 }
 
 // Computes session hash for the sessions hash table
