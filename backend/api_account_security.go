@@ -22,25 +22,6 @@ type AccountSecurityOptions struct {
 	AuthConfirmationPeriodSeconds uint32 `json:"authConfirmationPeriodSeconds"`
 }
 
-func (s *ActiveSession) GetAccountSecurityOptions() *AccountSecurityOptions {
-	s.authConfirmationMutex.Lock()
-	defer s.authConfirmationMutex.Unlock()
-
-	authConfirmMethod := s.authConfirmationMethod
-
-	if authConfirmMethod == "" {
-		authConfirmMethod = "tfa"
-	}
-
-	return &AccountSecurityOptions{
-		TwoFactorAuthEnabled:          s.tfa,
-		TwoFactorAuthMethod:           s.tfaMethod,
-		AuthConfirmationEnabled:       s.authConfirmationEnabled,
-		AuthConfirmationMethod:        authConfirmMethod,
-		AuthConfirmationPeriodSeconds: uint32(s.authConfirmationPeriod / time.Second),
-	}
-}
-
 func api_getSecurityOptions(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
@@ -49,7 +30,7 @@ func api_getSecurityOptions(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -82,7 +63,7 @@ func api_setSecurityOptions(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -101,8 +82,10 @@ func api_setSecurityOptions(response http.ResponseWriter, request *http.Request)
 		p.AuthConfirmationMethod = "tfa"
 	}
 
-	GetVault().credentials.ChangeSecuritySettings(session.user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
-	GetVault().sessions.UpdateUserSessionsAuthConfirmation(session.user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
+	user := session.GetUser()
+
+	GetVault().credentials.ChangeSecuritySettings(user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
+	GetVault().sessions.UpdateUserSessionsAuthConfirmation(user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
 
 	response.WriteHeader(200)
 }
@@ -124,7 +107,7 @@ func api_getParametersTwoFactorAuthTimeOtp(response http.ResponseWriter, request
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -138,7 +121,7 @@ func api_getParametersTwoFactorAuthTimeOtp(response http.ResponseWriter, request
 	account := request.URL.Query().Get("account")
 
 	if account == "" {
-		account = session.user
+		account = session.GetUser()
 	}
 
 	algoStr := request.URL.Query().Get("algorithm")
@@ -245,7 +228,7 @@ func api_enableTwoFactorAuthTimeOtp(response http.ResponseWriter, request *http.
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -269,7 +252,7 @@ func api_enableTwoFactorAuthTimeOtp(response http.ResponseWriter, request *http.
 
 	// Validate account password
 
-	valid, _ := GetVault().credentials.CheckPassword(session.user, p.Password)
+	valid, _ := GetVault().credentials.CheckPassword(session.GetUser(), p.Password)
 
 	if !valid {
 		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
@@ -300,8 +283,10 @@ func api_enableTwoFactorAuthTimeOtp(response http.ResponseWriter, request *http.
 		return
 	}
 
-	GetVault().credentials.EnableTfa(session.user, tfaMethod, tfaKey, p.Password)
-	GetVault().sessions.UpdateUserSessionsEnableTfa(session.user, tfaKey, tfaMethod)
+	user := session.GetUser()
+
+	GetVault().credentials.EnableTfa(user, tfaMethod, tfaKey, p.Password)
+	GetVault().sessions.UpdateUserSessionsEnableTfa(user, tfaKey, tfaMethod)
 
 	response.WriteHeader(200)
 }
@@ -318,7 +303,7 @@ func api_disableTwoFactorAuth(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -364,8 +349,10 @@ func api_disableTwoFactorAuth(response http.ResponseWriter, request *http.Reques
 
 	LAST_INVALID_PASSWORD_MU.Unlock()
 
-	GetVault().credentials.DisableTfa(session.user)
-	GetVault().sessions.UpdateUserSessionsDisableTfa(session.user)
+	user := session.GetUser()
+
+	GetVault().credentials.DisableTfa(user)
+	GetVault().sessions.UpdateUserSessionsDisableTfa(user)
 
 	response.WriteHeader(200)
 }

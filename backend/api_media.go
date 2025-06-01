@@ -664,7 +664,7 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -752,7 +752,7 @@ func api_editMediaDescription(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -841,7 +841,7 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -922,7 +922,7 @@ func api_editMediaTimelineSplices(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -1011,7 +1011,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -1149,7 +1149,7 @@ func api_mediaAddResolution(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -1295,7 +1295,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -1400,7 +1400,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}

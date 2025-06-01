@@ -171,9 +171,6 @@ paths:
               write:
                 type: boolean
                 description: "True if the user has write access to the vault"
-              ac:
-                type: boolean
-                description: "True if the user has auth confirmation enabled"
   "/api/account/username":
     post:
       summary: Change username

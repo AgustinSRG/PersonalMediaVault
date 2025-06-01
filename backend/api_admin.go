@@ -206,7 +206,7 @@ func api_updateAccount(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	GetVault().sessions.UpdateUserSessions(p.Username, p.Write)
+	GetVault().sessions.UpdateUserSessionsWritePermission(p.Username, p.Write)
 
 	permissionsStr := "Read Only"
 

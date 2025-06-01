@@ -108,13 +108,13 @@ func api_getInviteCodeStatus(response http.ResponseWriter, request *http.Request
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		// Invited users cannot invite
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
-	has_code, code, not_after, duration := GetVault().invites.GetCodeByUser(session.user)
+	has_code, code, not_after, duration := GetVault().invites.GetCodeByUser(session.GetUser())
 
 	now := time.Now().UnixMilli()
 
@@ -159,13 +159,13 @@ func api_getInviteCodeSessions(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		// Invited users cannot invite
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
-	result := GetVault().sessions.FindInviteSessions(session.user)
+	result := GetVault().sessions.FindInviteSessions(session.GetUser())
 
 	jsonResult, err := json.Marshal(result)
 
@@ -193,7 +193,7 @@ func api_generateInviteCode(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		// Invited users cannot invite
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
@@ -214,7 +214,7 @@ func api_generateInviteCode(response http.ResponseWriter, request *http.Request)
 		inviteLimit = DEFAULT_INVITE_LIMIT
 	}
 
-	currentInvites := len(GetVault().sessions.FindInviteSessions(session.user))
+	currentInvites := len(GetVault().sessions.FindInviteSessions(session.GetUser()))
 
 	if currentInvites >= inviteLimit {
 		ReturnAPIError(response, 400, "LIMIT", "You reached the limit of invite codes for your account.")
@@ -240,7 +240,7 @@ func api_generateInviteCode(response http.ResponseWriter, request *http.Request)
 		expirationTime = SESSION_EXPIRATION_TIME_YEAR
 	}
 
-	code, not_after, err := GetVault().invites.GenerateCode(session.user, session.key, expirationTime)
+	code, not_after, err := GetVault().invites.GenerateCode(session.GetUser(), session.key, expirationTime)
 
 	if err != nil {
 		LogError(err)
@@ -286,13 +286,13 @@ func api_clearInviteCode(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		// Invited users cannot invite
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
 
-	GetVault().invites.ClearCode(session.user)
+	GetVault().invites.ClearCode(session.GetUser())
 
 	response.WriteHeader(200)
 }
@@ -305,7 +305,7 @@ func api_closeInviteSession(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		// Invited users cannot invite
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
@@ -320,7 +320,7 @@ func api_closeInviteSession(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	GetVault().sessions.RemoveInviteSession(session.user, index)
+	GetVault().sessions.RemoveInviteSession(session.GetUser(), index)
 
 	response.WriteHeader(200)
 }
