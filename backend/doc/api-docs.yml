@@ -206,7 +206,7 @@ paths:
                 description: >
                   Error code:
                     * USERNAME_INVALID - Invalid username
-                    * USERNAME_IN_USE - There si already another user with the same username
+                    * USERNAME_IN_USE - There is already another user with the same username
                 enum:
                   - USERNAME_INVALID
                   - USERNAME_IN_USE
@@ -255,7 +255,318 @@ paths:
           description: Invalid password.
         200:
           description: Success
+  
+  "/api/account/security":
+    get:
+      summary: Gets security settings
+      description: Gets security settings of the account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success
+          schema:
+            properties:
+              tfa:
+                type: boolean
+                description: "True if two factor authentication is enabled"
+              tfaMethod:
+                type: string
+                description: >
+                  Two factor authentication method.
+                  Has a prefix, sepratated by a colon, and a list of arguments separated by colons
+                  
+                  For TOTP. There are 3 arguments:
+                    - The HMAC algorithm (sha1, sha256, sha512)
+                    - The period (seconds)
+                    - A flag (0, or 1) indicating if clock skew is allowed by 1 period.
+                example: "totp:sha1:60:1"
+              authConfirmation:
+                type: boolean
+                description: "True if auth confirmation is enabled"
+              authConfirmationMethod:
+                type: string
+                description: "Authentication confirmation preferred method. Can be 'tfa' for two factor authentication, or 'pw' for password"
+                enum:
+                  - tfa
+                  - pw
+              authConfirmationPeriodSeconds:
+                type: number
+                format: int32
+                description: "Period to remember the auth confirmation for (in seconds)"
+                example: 120
+    post:
+      summary: Sets security settings
+      description: Sets security settings of the account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              authConfirmation:
+                type: boolean
+                description: "True if auth confirmation is enabled"
+              authConfirmationMethod:
+                type: string
+                description: "Authentication confirmation preferred method. Can be 'tfa' for two factor authentication, or 'pw' for password"
+                enum:
+                  - tfa
+                  - pw
+              authConfirmationPeriodSeconds:
+                type: number
+                format: int32
+                description: "Period to remember the auth confirmation for (in seconds)"
+                example: 120
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request (invalid settings))
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success
+
+
+  "/api/account/security/tfa/totp":
+    get:
+      summary: Gets settings for TOTP
+      description: Gets the settings to configure two factyor authentication with TOTP
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: issuer
+          type: string
+          description: "Issuer to be set for the TOTP URL"
+        - in: query
+          name: account
+          type: string
+          description: "Account to be set for the TOTP URL"
+        - in: query
+          name: algorithm
+          type: string
+          description: "HMAC algorithm"
+          enum:
+            - sha1
+            - sha256
+            - sha512
+        - in: query
+          name: period
+          description: "TOTP period in seconds"
+          type: string
+          enum:
+            - '30'
+            - '60'
+            - '120'
+        - in: query
+          name: skew
+          type: string
+          description: "Allow or disallow clock skew by 1 period"
+          enum:
+            - allow
+            - disallow
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_ALGORITHM - Invalid HMAC algorithm
+                    * INVALID_PERIOD - Invalid TOTP period
+                enum:
+                  - INVALID_ALGORITHM
+                  - INVALID_PERIOD
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success
+          schema:
+            properties:
+              secret:
+                type: string
+                description: "TOTP secret"
+              method:
+                type: string
+                description: "TOTP method"
+                example: "totp:sha1:60:1"
+              url:
+                type: string
+                description: "TOTP URL"
+                example: "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example"
+              qr:
+                type: string
+                description: "QR code as a base-64 image URL"
+                example: "data:image/png;base64,"
+    post:
+      summary: Enables TOTP
+      description: Enables two factor authentication with TOTP
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              secret:
+                type: string
+                description: "TOTP secret"
+              method:
+                type: string
+                description: "TOTP method"
+                example: "totp:sha1:60:1"
+              password:
+                type: string
+                description: "Account password, quiered to confirm the operation"
+              code:
+                type: string
+                description: "TOTP code to confirm the operation"
+                example: "123456"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * TFA_ENABLED - Two factor authentication is already enabled
+                    * INVALID_TOTP_SECRET - Invalid TOTP secret
+                    * INVALID_TOTP_OPTIONS - Invalid TOTP options in the method string
+                    * INVALID_TOTP_CODE - Invalid TOTP confirmation code
+                enum:
+                  - TFA_ENABLED
+                  - INVALID_TOTP_SECRET
+                  - INVALID_TOTP_OPTIONS
+                  - INVALID_TOTP_CODE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * ACCESS_DENIED - Access denied to the API
+                    * INVALID_PASSWORD - Invalid password
+                enum:
+                  - ACCESS_DENIED
+                  - INVALID_PASSWORD
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Success
           
+  "/api/account/security/tfa/disable":
+    post:
+      summary: Disables two factor authentication
+      description: Disables two factor authentication for the current account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              code:
+                type: string
+                description: "Two factor authentication code to confirm the operation"
+                example: "123456"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * TFA_NOT_ENABLED - Two factor authentication is not enabled
+                enum:
+                  - TFA_NOT_ENABLED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * ACCESS_DENIED - Access denied to the API
+                    * COOLDOWN - There is a cooldown. You must wait to try again.
+                    * INVALID_CODE - Invalid code. This causes a 5 second cooldown to prevent brute-force.
+                enum:
+                  - ACCESS_DENIED
+                  - COOLDOWN
+                  - INVALID_CODE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Success
+
   "/api/upload":
     post:
       summary: Upload media
@@ -2680,7 +2991,7 @@ paths:
                   Error code:
                     * USERNAME_INVALID - Invalid username
                     * PASSWORD_INVALID - Invalid password
-                    * USERNAME_IN_USE - There si already another user with the same username
+                    * USERNAME_IN_USE - There is already another user with the same username
                 enum:
                   - USERNAME_INVALID
                   - PASSWORD_INVALID
