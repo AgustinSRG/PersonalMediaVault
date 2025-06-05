@@ -343,3 +343,14 @@ textarea.form-control::-webkit-resizer {
         font-size: 1rem;
     }
 }
+
+.tfa-label {
+    font-size: large;
+    text-align: center;
+    padding-bottom: 0.5rem;
+}
+
+.tfa-cancel-label {
+    text-align: center;
+}
+

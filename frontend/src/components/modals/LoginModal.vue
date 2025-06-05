@@ -7,7 +7,7 @@
                 </div>
             </div>
             <div class="modal-body">
-                <div class="horizontal-filter-menu two-child no-border">
+                <div v-if="!tfaRequired" class="horizontal-filter-menu two-child no-border">
                     <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isCode }" @click="changeToCredentials"
                         ><i class="fas fa-key"></i> {{ $t("Credentials") }}</a
                     >
@@ -15,7 +15,7 @@
                         ><i class="fas fa-user-check"></i> {{ $t("Invite code") }}</a
                     >
                 </div>
-                <div v-if="!isCode" class="div-pt">
+                <div v-if="!tfaRequired && !isCode" class="div-pt">
                     <div class="form-group">
                         <label>{{ $t("Username") }}:</label>
                         <input
@@ -46,9 +46,18 @@
                         </select>
                     </div>
                 </div>
-                <div v-if="isCode" class="div-pt">
+                <div v-else-if="!tfaRequired && isCode" class="div-pt">
                     <div class="invite-code-label">{{ $t("Input your invite code below") }}</div>
                     <SixDigitCodeInput v-model:val="code" :disabled="busy"></SixDigitCodeInput>
+                </div>
+                <div v-else-if="tfaRequired" class="div-pt">
+                    <div class="tfa-label">{{ $t("Input your current one-time code for two factor authentication") }}</div>
+
+                    <div class="tfa-cancel-label">
+                        {{ $t("Don't have the code?") }}
+                        <a href="javascript:;" @click="cancelTfa">{{ $t("Cancel and try with other method") }}</a>
+                    </div>
+                    <SixDigitCodeInput v-model:val="tfaCode" :disabled="busy"></SixDigitCodeInput>
                 </div>
                 <div class="form-error">{{ error }}</div>
             </div>
@@ -101,6 +110,9 @@ export default defineComponent({
             password: "",
             duration: "day" as SessionDuration,
 
+            tfaCode: "",
+            tfaRequired: false,
+
             code: "",
 
             isCode: false,
@@ -114,6 +126,7 @@ export default defineComponent({
     },
     watch: {
         display: function () {
+            this.tfaRequired = false;
             this.error = "";
             this.autoFocus();
         },
@@ -152,6 +165,14 @@ export default defineComponent({
             }
         },
 
+        cancelTfa: function () {
+            if (this.busy) {
+                return;
+            }
+
+            this.tfaRequired = false;
+        },
+
         loginWithCredentials: function () {
             if (this.busy) {
                 return;
@@ -160,7 +181,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAuthLogin(this.username, this.password, this.duration))
+            makeApiRequest(apiAuthLogin(this.username, this.password, this.duration, this.tfaRequired ? this.tfaCode : undefined))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -175,11 +196,24 @@ export default defineComponent({
                     handleErr(err, {
                         invalidCredentials: () => {
                             this.error = this.$t("Invalid username or password");
+                            this.tfaRequired = false;
+                            this.autoFocus();
+                        },
+                        tfaRequired: () => {
+                            this.tfaRequired = true;
+                            this.tfaCode = "";
+                            this.autoFocus();
+                        },
+                        invalidTfaCode: () => {
+                            this.error = this.$t("Invalid one-time code");
+                            this.tfaCode = "";
+                            this.cooldown = Date.now() + 5000;
                             this.autoFocus();
                         },
                         wrongCredentials: () => {
                             this.error = this.$t("Invalid username or password");
                             this.cooldown = Date.now() + 5000;
+                            this.tfaRequired = false;
                             this.autoFocus();
                         },
                         cooldown: () => {

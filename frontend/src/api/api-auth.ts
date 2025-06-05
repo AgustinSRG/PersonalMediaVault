@@ -28,6 +28,8 @@ export interface LoginResult {
 export type LoginErrorHandler = CommonErrorHandler & {
     invalidCredentials: () => void;
     wrongCredentials: () => void;
+    tfaRequired: () => void;
+    invalidTfaCode: () => void;
     cooldown: () => void;
 };
 
@@ -47,6 +49,7 @@ export function apiAuthLogin(
     username: string,
     password: string,
     duration?: SessionDuration,
+    tfaCode?: string,
 ): RequestParams<LoginResult, LoginErrorHandler> {
     return {
         method: "POST",
@@ -55,11 +58,14 @@ export function apiAuthLogin(
             username: username,
             password: password,
             duration: duration,
+            tfaCode: tfaCode,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(400, "*", handler.invalidCredentials)
                 .add(403, "COOLDOWN", handler.cooldown)
+                .add(403, "TFA_REQUIRED", handler.tfaRequired)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
                 .add(403, "*", handler.wrongCredentials)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
                 .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
