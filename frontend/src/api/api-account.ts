@@ -3,7 +3,7 @@
 "use strict";
 
 import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { API_PREFIX, getApiURL } from "@/utils/api";
+import { API_PREFIX, generateURIQuery, getApiURL } from "@/utils/api";
 
 const API_GROUP_PREFIX = "/account";
 
@@ -141,6 +141,343 @@ export function apiAccountChangePassword(password: string, newPassword: string):
                 .add(401, "*", handler.unauthorized)
                 .add(400, "*", handler.invalidNewPassword)
                 .add(403, "*", handler.invalidPassword)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Auth confirmation method
+ */
+export type AuthConfirmationMethod = "tfa" | "pw";
+
+/**
+ * Security settings of an account
+ */
+export interface AccountSecuritySettings {
+    /**
+     * True if two factor authentication is enabled
+     */
+    tfa: boolean;
+
+    /**
+     * Two factor authentication method
+     */
+    tfaMethod?: string;
+
+    /**
+     * True if auth confirmation is enabled
+     */
+    authConfirmation: boolean;
+
+    /**
+     * Preferred method for auth confirmation
+     */
+    authConfirmationMethod: AuthConfirmationMethod;
+
+    /**
+     * Auth confirmation period (seconds)
+     */
+    authConfirmationPeriodSeconds: number;
+}
+
+/**
+ * Error handler for security settings API
+ */
+export type AccountSecurityErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Access denied to the API
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Gets account security settings
+ * @returns The request parameters
+ */
+export function apiAccountGetSecuritySettings(): RequestParams<AccountSecuritySettings, AccountSecurityErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/security`),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Error handler for security settings set API
+ */
+export type AccountSecuritySetSettingsErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Invalid settings
+     */
+    invalidSettings: () => void;
+
+    /**
+     * Access denied to the API
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Sets account security settings
+ * @returns The request parameters
+ */
+export function apiAccountSetSecuritySettings(
+    authConfirmation: boolean,
+    authConfirmationMethod: AuthConfirmationMethod,
+    authConfirmationPeriodSeconds: number,
+): RequestParams<void, AccountSecuritySetSettingsErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/security`),
+        json: {
+            authConfirmation,
+            authConfirmationMethod,
+            authConfirmationPeriodSeconds,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.invalidSettings)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * HMAC algorithm for TOTP
+ */
+export type TimeOtpAlgorithm = "sha1" | "sha256" | "sha512";
+
+/**
+ * TOTP period
+ */
+export type TimeOtpPeriod = "30" | "60" | "120";
+
+/**
+ * TOTP settings
+ */
+export interface TimeOtpSettings {
+    /**
+     * Issuer
+     */
+    issuer: string;
+
+    /**
+     * Account
+     */
+    account: string;
+
+    /**
+     * Algorithm
+     */
+    algorithm: TimeOtpAlgorithm;
+
+    /**
+     * Period (seconds)
+     */
+    period: TimeOtpPeriod;
+
+    /**
+     * Clock skew
+     */
+    skew: "allow" | "disallow";
+}
+
+/**
+ * TOTP result
+ */
+export interface TimeOtpResult {
+    /**
+     * Secret
+     */
+    secret: string;
+
+    /**
+     * Method
+     */
+    method: string;
+
+    /**
+     * URL
+     */
+    url: string;
+
+    /**
+     * QR image
+     */
+    qr: string;
+}
+
+/**
+ * Error handler for TOTP settings API
+ */
+export type TimeOtpSettingsErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Invalid settings
+     */
+    invalidSettings: () => void;
+
+    /**
+     * Access denied to the API
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Gets the necessary parameters to enable TOTP for two factor authentication
+ * @returns The request parameters
+ */
+export function apiAccountTimeOtpSettings(settings: TimeOtpSettings): RequestParams<TimeOtpResult, TimeOtpSettingsErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/security/tfa/totp${generateURIQuery(settings)}`),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.invalidSettings)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Parameters to enable two factor authentication with TOTP
+ */
+export interface TfaEnableTimeOtpBody {
+    /**
+     * Secret
+     */
+    secret: string;
+
+    /**
+     * Method
+     */
+    method: string;
+
+    /**
+     * Account password
+     */
+    password: string;
+
+    /**
+     * One-time code
+     */
+    code: string;
+}
+
+/**
+ * Error handler for TOTP enable API
+ */
+export type TimeOtpEnableErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Two factor authentication already enabled
+     */
+    tfaAlreadyEnabled: () => void;
+
+    /**
+     * Invalid secret or method
+     */
+    invalidSecretOrMethod: () => void;
+
+    /**
+     * Invalid one-time code
+     */
+    invalidCode: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * Access denied to the API
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Enables two factor authentication (TOTP)
+ * @returns The request parameters
+ */
+export function apiAccountTimeOtpEnable(options: TfaEnableTimeOtpBody): RequestParams<void, TimeOtpEnableErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/security/tfa/totp`),
+        json: options,
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "TFA_ENABLED", handler.tfaAlreadyEnabled)
+                .add(400, "INVALID_TOTP_CODE", handler.invalidCode)
+                .add(400, "*", handler.invalidSecretOrMethod)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "*", handler.accessDenied)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Error handler for TFA disable API
+ */
+export type TfaDisableErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Two factor authentication is not enabled
+     */
+    tfaNotEnabled: () => void;
+
+    /**
+     * Invalid one-time code
+     */
+    invalidCode: () => void;
+
+    /**
+     * There is a 5 second cooldown
+     */
+    cooldown: () => void;
+
+    /**
+     * Access denied to the API
+     */
+    accessDenied: () => void;
+};
+
+/**
+ * Disables two factor authentication
+ * @returns The request parameters
+ */
+export function apiAccountTfaDisable(code: string): RequestParams<void, TfaDisableErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/security/tfa/disable`),
+        json: {
+            code,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.tfaNotEnabled)
+                .add(403, "COOLDOWN", handler.cooldown)
+                .add(403, "INVALID_CODE", handler.invalidCode)
+                .add(403, "*", handler.accessDenied)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
                 .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
                 .handle(err);
