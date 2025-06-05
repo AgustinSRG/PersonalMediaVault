@@ -338,7 +338,7 @@ paths:
         - SessionTokenHeader: []
       responses:
         400:
-          description: Bad request (invalid settings))
+          description: Bad request (invalid settings)
         401:
           description: Unauthorized (No valid session)
         403:
