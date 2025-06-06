@@ -45,7 +45,7 @@ type VaultCredentialsAccount struct {
 	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
 	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
 
-	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
+	AuthConfirmationEnabled *bool   `json:"auth_confirmation"`        // Enable auth confirmation?
 	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
 	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
 
@@ -66,7 +66,7 @@ type VaultCredentials struct {
 	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
 	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
 
-	AuthConfirmationEnabled bool    `json:"auth_confirmation"`        // Enable auth confirmation?
+	AuthConfirmationEnabled *bool   `json:"auth_confirmation"`        // Enable auth confirmation?
 	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
 	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
 
@@ -101,6 +101,15 @@ func GetAuthConfirmationPeriod(p *uint32) time.Duration {
 		return time.Duration(*p) * time.Second
 	} else {
 		return DEFAULT_AUTH_CONFIRMATION_PERIOD * time.Second
+	}
+}
+
+// Gets confirmation enabled setting
+func GetAuthConfirmationEnabled(e *bool) bool {
+	if e != nil {
+		return *e
+	} else {
+		return true
 	}
 }
 
@@ -707,7 +716,7 @@ func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, auth
 
 	// Set user
 	if manager.credentials.User == user {
-		manager.credentials.AuthConfirmationEnabled = authConfirmationEnabled
+		manager.credentials.AuthConfirmationEnabled = &authConfirmationEnabled
 		manager.credentials.AuthConfirmationMethod = authConfirmationMethod
 		manager.credentials.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
 	} else {
@@ -715,7 +724,7 @@ func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, auth
 			account := &manager.credentials.Accounts[i]
 
 			if account.User == user {
-				account.AuthConfirmationEnabled = authConfirmationEnabled
+				account.AuthConfirmationEnabled = &authConfirmationEnabled
 				account.AuthConfirmationMethod = authConfirmationMethod
 				account.AuthConfirmationPeriod = &authConfirmationPeriodSeconds
 
@@ -784,7 +793,7 @@ func (manager *VaultCredentialsManager) getAccount(user string) (found bool, res
 		result.tfa = manager.credentials.TwoFactorAuthEnabled
 		result.tfaMethod = manager.credentials.TwoFactorAuthMethod
 
-		result.authConfirm = manager.credentials.AuthConfirmationEnabled
+		result.authConfirm = GetAuthConfirmationEnabled(manager.credentials.AuthConfirmationEnabled)
 		result.authConfirmMethod = manager.credentials.AuthConfirmationMethod
 		result.authConfirmPeriod = GetAuthConfirmationPeriod(manager.credentials.AuthConfirmationPeriod)
 
@@ -806,7 +815,7 @@ func (manager *VaultCredentialsManager) getAccount(user string) (found bool, res
 				result.tfa = account.TwoFactorAuthEnabled
 				result.tfaMethod = account.TwoFactorAuthMethod
 
-				result.authConfirm = account.AuthConfirmationEnabled
+				result.authConfirm = GetAuthConfirmationEnabled(account.AuthConfirmationEnabled)
 				result.authConfirmMethod = account.AuthConfirmationMethod
 				result.authConfirmPeriod = GetAuthConfirmationPeriod(account.AuthConfirmationPeriod)
 
