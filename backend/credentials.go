@@ -41,13 +41,13 @@ type VaultCredentialsAccount struct {
 
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with password
 
-	TwoFactorAuthEnabled      bool   `json:"tfa"`        // Two factor auth enabled
-	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
-	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
+	TwoFactorAuthEnabled      bool   `json:"tfa,omitempty"`        // Two factor auth enabled
+	TwoFactorAuthMethod       string `json:"tfa_method,omitempty"` // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey,omitempty"` // Encrypted TFA key
 
-	AuthConfirmationEnabled *bool   `json:"auth_confirmation"`        // Enable auth confirmation?
-	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
-	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
+	AuthConfirmationEnabled *bool   `json:"auth_confirmation,omitempty"`        // Enable auth confirmation?
+	AuthConfirmationMethod  string  `json:"auth_confirmation_method,omitempty"` // Method for auth confirmation?
+	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period,omitempty"` // Auth confirmation period, in seconds. Default: 120
 
 	Write bool `json:"write"` // Write access
 }
@@ -62,13 +62,13 @@ type VaultCredentials struct {
 
 	EncryptedKey []byte `json:"enckey"` // Vault key encrypted with root password
 
-	TwoFactorAuthEnabled      bool   `json:"tfa"`        // Two factor auth enabled
-	TwoFactorAuthMethod       string `json:"tfa_method"` // Two factor auth method
-	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey"` // Encrypted TFA key
+	TwoFactorAuthEnabled      bool   `json:"tfa,omitempty"`        // Two factor auth enabled
+	TwoFactorAuthMethod       string `json:"tfa_method,omitempty"` // Two factor auth method
+	TwoFactorAuthEncryptedKey []byte `json:"tfa_enckey,omitempty"` // Encrypted TFA key
 
-	AuthConfirmationEnabled *bool   `json:"auth_confirmation"`        // Enable auth confirmation?
-	AuthConfirmationMethod  string  `json:"auth_confirmation_method"` // Method for auth confirmation?
-	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period"` // Auth confirmation period, in seconds. Default: 120
+	AuthConfirmationEnabled *bool   `json:"auth_confirmation,omitempty"`        // Enable auth confirmation?
+	AuthConfirmationMethod  string  `json:"auth_confirmation_method,omitempty"` // Method for auth confirmation?
+	AuthConfirmationPeriod  *uint32 `json:"auth_confirmation_period,omitempty"` // Auth confirmation period, in seconds. Default: 120
 
 	VaultFingerprint string `json:"fingerprint"` // Vault fingerprint, user to distinguish between vaults
 
