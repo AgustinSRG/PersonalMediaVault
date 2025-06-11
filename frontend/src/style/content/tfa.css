@@ -1,0 +1,9 @@
+/* Two factor authentication related styles */
+
+.tfa-status {
+    font-weight: bold;
+}
+
+.tfa-status.enabled {
+    color: var(--success-color);
+}

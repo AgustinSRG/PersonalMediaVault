@@ -259,6 +259,10 @@
     content: "\f0cb";
 }
 
+.fa-lock::before {
+    content: "\f023";
+}
+
 .fa-magnifying-glass::before {
     content: "\f002";
 }
