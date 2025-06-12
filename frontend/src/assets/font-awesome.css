@@ -179,6 +179,10 @@
     content: "\f017";
 }
 
+.fa-clone::before {
+    content: "\f24d";
+}
+
 .fa-closed-captioning::before {
     content: "\f20a";
 }

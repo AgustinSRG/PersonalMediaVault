@@ -1,6 +1,6 @@
 <template>
-    <div class="six-digit-code-input">
-        <div v-for="(c, i) in code" :key="i" class="six-digit-code-char-input">
+    <div class="six-digit-code-input" :class="{ min: min }">
+        <div v-for="(c, i) in code" :key="i" class="six-digit-code-char-input" :class="{ first: i === 0 }">
             <input
                 v-model="c.c"
                 type="text"
@@ -28,6 +28,7 @@ function updateCode(code: { c: string }[], val: string) {
 export default defineComponent({
     name: "SixDigitCodeInput",
     props: {
+        min: Boolean,
         val: String,
         disabled: Boolean,
     },

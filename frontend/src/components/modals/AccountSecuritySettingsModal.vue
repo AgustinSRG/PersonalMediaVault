@@ -17,24 +17,24 @@
             </div>
             <div v-else class="modal-body">
                 <div class="form-group">
-                    <div class="form-group">
-                        <label
-                            >{{ $t("Two factor authentication") }}:
-                            <span class="tfa-status" :class="{ enabled: tfa }">{{
-                                tfa ? $t("Enabled") + " (" + tfaMethod + ")" : $t("Disabled")
-                            }}</span></label
-                        >
-                    </div>
+                    <label
+                        >{{ $t("Two factor authentication") }}:
+                        <span class="tfa-status" :class="{ enabled: tfa }">{{
+                            tfa ? $t("Enabled") + " (" + tfaMethod + ")" : $t("Disabled")
+                        }}</span></label
+                    >
+                </div>
 
-                    <div class="form-group">
-                        <button v-if="tfa" type="button" class="btn btn-danger btn-sm auto-focus">
-                            <i class="fas fa-times"></i> {{ $t("Disable two factor authentication") }}
-                        </button>
-                        <button v-else type="button" class="btn btn-primary btn-sm auto-focus">
-                            <i class="fas fa-plus"></i> {{ $t("Enable two factor authentication") }}
-                        </button>
-                    </div>
+                <div class="form-group">
+                    <button v-if="tfa" type="button" class="btn btn-danger btn-sm auto-focus" @click="disableTfa">
+                        <i class="fas fa-trash-alt"></i> {{ $t("Disable two factor authentication") }}
+                    </button>
+                    <button v-else type="button" class="btn btn-primary btn-sm auto-focus" @click="enableTfa">
+                        <i class="fas fa-check"></i> {{ $t("Enable two factor authentication") }}
+                    </button>
+                </div>
 
+                <div class="form-group">
                     <table class="table no-border">
                         <tbody>
                             <tr>
@@ -87,6 +87,8 @@
                         @change="onChangesMade"
                     />
                 </div>
+
+                <div class="form-error">{{ error }}</div>
             </div>
 
             <div class="modal-footer no-padding">
@@ -95,6 +97,13 @@
                 </button>
             </div>
         </form>
+
+        <AccountTfaEnableModal v-if="displayTfaEnableModal" v-model:display="displayTfaEnableModal" @done="load"></AccountTfaEnableModal>
+        <AccountTfaDisableModal
+            v-if="displayTfaDisableModal"
+            v-model:display="displayTfaDisableModal"
+            @done="load"
+        ></AccountTfaDisableModal>
     </ModalDialogContainer>
 </template>
 
@@ -102,7 +111,7 @@
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -110,12 +119,27 @@ import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { apiAccountGetSecuritySettings, apiAccountSetSecuritySettings } from "@/api/api-account";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
+
+const AccountTfaEnableModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountTfaEnableModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
+const AccountTfaDisableModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountTfaDisableModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
 
 export default defineComponent({
     name: "AccountSecuritySettingsModal",
     components: {
         LoadingIcon,
         ToggleSwitch,
+        AccountTfaEnableModal,
+        AccountTfaDisableModal,
     },
     props: {
         display: Boolean,
@@ -141,10 +165,15 @@ export default defineComponent({
 
             busy: false,
 
+            error: "",
+
             dirty: false,
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayTfaEnableModal: false,
+            displayTfaDisableModal: false,
         };
     },
     watch: {
@@ -180,6 +209,14 @@ export default defineComponent({
             });
         },
 
+        enableTfa: function () {
+            this.displayTfaEnableModal = true;
+        },
+
+        disableTfa: function () {
+            this.displayTfaDisableModal = true;
+        },
+
         onChangesMade: function () {
             this.dirty = true;
         },
@@ -204,6 +241,7 @@ export default defineComponent({
 
                     this.loading = false;
                     this.dirty = false;
+                    this.error = "";
 
                     this.autoFocus();
                 })
@@ -252,35 +290,37 @@ export default defineComponent({
             )
                 .onSuccess(() => {
                     this.busy = false;
+                    this.error = "";
                     this.dirty = false;
                     PagesController.ShowSnackBar(this.$t("Saved security settings"));
                     this.forceCloseSignal++;
                 })
                 .onRequestError((err, handleErr) => {
                     this.busy = false;
+                    this.error = "";
                     handleErr(err, {
                         unauthorized: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidSettings: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid security settings"));
+                            this.error = this.$t("Invalid security settings");
                         },
                         accessDenied: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
+                            this.error = this.$t("Access denied");
                         },
                         serverError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Internal server error"));
+                            this.error = this.$t("Internal server error");
                         },
                         networkError: () => {
-                            PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Could not connect to the server"));
+                            this.error = this.$t("Could not connect to the server");
                         },
                     });
                 })
                 .onUnexpectedError((err) => {
                     this.busy = false;
                     console.error(err);
-                    PagesController.ShowSnackBar(this.$t("Error") + ": " + err.message);
+                    this.error = err.message;
                 });
         },
     },
