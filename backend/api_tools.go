@@ -423,3 +423,41 @@ func LimitStringSize(str string, size int) string {
 		return ""
 	}
 }
+
+// Handles auth confirmation for an API
+// response - The response
+// request - The request
+// session - The session
+// onlyTfa - True in case only two factor authentication confirmation is needed
+// Returns true only in case of success. It this function returns false, the API handler must return
+func HandleAuthConfirmation(response http.ResponseWriter, request *http.Request, session *ActiveSession, onlyTfa bool) bool {
+	password := request.Header.Get("x-auth-confirmation-pw")
+	tfaCode := request.Header.Get("x-auth-confirmation-tfa")
+
+	success, cooldown, requiredMethod := session.CheckAuthConfirmation(password, tfaCode, onlyTfa)
+
+	if success {
+		return true
+	}
+
+	if cooldown {
+		ReturnAPIError(response, 403, "COOLDOWN", "Auth confirmation is in cooldown")
+		return false
+	}
+
+	if requiredMethod == "tfa" {
+		if len(tfaCode) > 0 {
+			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_TFA", "Auth confirmation is required: Include the two factor authentication code")
+		} else {
+			ReturnAPIError(response, 403, "INVALID_TFA_CODE", "Invalid two factor authentication code")
+		}
+	} else {
+		if len(tfaCode) > 0 {
+			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_PW", "Auth confirmation is required: Include the account password")
+		} else {
+			ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid account password")
+		}
+	}
+
+	return false
+}

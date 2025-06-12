@@ -26,6 +26,10 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)

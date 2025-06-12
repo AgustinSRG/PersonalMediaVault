@@ -68,6 +68,10 @@ func api_setSecurityOptions(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
 	var p SetAccountSecurityOptionsBody

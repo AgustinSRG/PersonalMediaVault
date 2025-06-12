@@ -86,7 +86,7 @@ func (s *ActiveSession) GetTwoFactorAuth() (tfaEnabled bool, tfaMethod string, t
 }
 
 // Checks auth confirmation
-func (s *ActiveSession) CheckAuthConfirmation(code string, force bool) (success bool, cooldown bool, requiredMethod string) {
+func (s *ActiveSession) CheckAuthConfirmation(password string, tfaCode string, onlyTfa bool) (success bool, cooldown bool, requiredMethod string) {
 	now := time.Now().UnixMilli()
 
 	s.mu.Lock()
@@ -100,20 +100,22 @@ func (s *ActiveSession) CheckAuthConfirmation(code string, force bool) (success 
 		return false, true, s.authConfirmationMethod
 	}
 
-	if !force {
-		if time.Duration(now-s.authConfirmationLastTime)*time.Millisecond < s.authConfirmationPeriod {
-			// No need to check, recently confirmed
-			return true, false, s.authConfirmationMethod
+	if time.Duration(now-s.authConfirmationLastTime)*time.Millisecond < s.authConfirmationPeriod {
+		// No need to check, recently confirmed
+		return true, false, s.authConfirmationMethod
+	}
+
+	if s.authConfirmationMethod == "pw" || !s.tfa {
+		if onlyTfa {
+			return true, false, "pw"
 		}
-	}
 
-	if code == "" {
-		return false, false, s.authConfirmationMethod
-	}
+		if password == "" {
+			return false, false, "pw"
+		}
 
-	if s.authConfirmationMethod == "pw" {
 		// Password check
-		valid, _ := GetVault().credentials.CheckPassword(s.user, code)
+		valid, _ := GetVault().credentials.CheckPassword(s.user, password)
 
 		if !valid {
 			// Set last try
@@ -122,9 +124,13 @@ func (s *ActiveSession) CheckAuthConfirmation(code string, force bool) (success 
 
 		return valid, false, "pw"
 	} else {
+		if tfaCode == "" {
+			return false, false, "pw"
+		}
+
 		// TFA check
 
-		valid := validateTwoFactorAuthCode(s.tfaMethod, s.tfaKey, code)
+		valid := validateTwoFactorAuthCode(s.tfaMethod, s.tfaKey, tfaCode)
 
 		if !valid {
 			// Set last try

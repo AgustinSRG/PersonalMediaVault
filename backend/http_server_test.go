@@ -20,6 +20,10 @@ func GetTestServer() (*httptest.Server, error) {
 }
 
 func DoTestRequest(server *httptest.Server, method string, path string, body []byte, session string) (statusCode int, bodyResponse []byte, e error) {
+	return DoTestRequestWithConfirmation(server, method, path, body, session, "", "")
+}
+
+func DoTestRequestWithConfirmation(server *httptest.Server, method string, path string, body []byte, session string, pwConfirmation string, tfaConfirmation string) (statusCode int, bodyResponse []byte, e error) {
 	client := server.Client()
 
 	pathSpl := strings.Split(path, "?")
@@ -55,6 +59,14 @@ func DoTestRequest(server *httptest.Server, method string, path string, body []b
 	}
 
 	req.Header.Set("x-session-token", session)
+
+	if len(pwConfirmation) > 0 {
+		req.Header.Set("x-auth-confirmation-pw", pwConfirmation)
+	}
+
+	if len(tfaConfirmation) > 0 {
+		req.Header.Set("x-auth-confirmation-tfa", tfaConfirmation)
+	}
 
 	resp, err := client.Do(req)
 

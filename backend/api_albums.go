@@ -252,6 +252,10 @@ func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	vars := mux.Vars(request)
 
 	album_id, err := strconv.ParseUint(vars["id"], 10, 64)

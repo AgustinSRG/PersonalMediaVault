@@ -80,6 +80,10 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, true) {
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
 	var p ChangeUsernameBody
@@ -153,6 +157,10 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 
 	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, true) {
 		return
 	}
 

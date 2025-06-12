@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -34,6 +35,12 @@ func Config_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Update config
 
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	res.CustomTitle = "Test title"
 	res.MaxTasks = 2
 
@@ -44,7 +51,7 @@ func Config_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/config", body, session)
+	statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/config", body, session, initialPassword, "")
 
 	if err != nil {
 		t.Error(err)

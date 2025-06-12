@@ -60,6 +60,10 @@ func api_createAccount(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
 	var p ApiAdminCreateAccountBody
@@ -132,6 +136,10 @@ func api_updateAccount(response http.ResponseWriter, request *http.Request) {
 
 	if !session.root {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
@@ -233,6 +241,10 @@ func api_deleteAccount(response http.ResponseWriter, request *http.Request) {
 
 	if !session.root {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
