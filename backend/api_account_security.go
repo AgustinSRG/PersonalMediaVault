@@ -87,6 +87,15 @@ func api_setSecurityOptions(response http.ResponseWriter, request *http.Request)
 	GetVault().credentials.ChangeSecuritySettings(user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
 	GetVault().sessions.UpdateUserSessionsAuthConfirmation(user, p.AuthConfirmationEnabled, p.AuthConfirmationMethod, p.AuthConfirmationPeriodSeconds)
 
+	err = GetVault().credentials.SaveCredentials()
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
 	response.WriteHeader(200)
 }
 
@@ -285,8 +294,25 @@ func api_enableTwoFactorAuthTimeOtp(response http.ResponseWriter, request *http.
 
 	user := session.GetUser()
 
-	GetVault().credentials.EnableTfa(user, tfaMethod, tfaKey, p.Password)
+	err = GetVault().credentials.EnableTfa(user, tfaMethod, tfaKey, p.Password)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
 	GetVault().sessions.UpdateUserSessionsEnableTfa(user, tfaKey, tfaMethod)
+
+	err = GetVault().credentials.SaveCredentials()
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
 
 	response.WriteHeader(200)
 }
@@ -353,6 +379,15 @@ func api_disableTwoFactorAuth(response http.ResponseWriter, request *http.Reques
 
 	GetVault().credentials.DisableTfa(user)
 	GetVault().sessions.UpdateUserSessionsDisableTfa(user)
+
+	err = GetVault().credentials.SaveCredentials()
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
 
 	response.WriteHeader(200)
 }

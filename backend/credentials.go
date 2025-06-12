@@ -677,7 +677,7 @@ func (manager *VaultCredentialsManager) EnableTfa(user string, tfaMethod string,
 // tfaMethod - TFA method
 // tfaKey - TFA key
 // password - Account password
-func (manager *VaultCredentialsManager) DisableTfa(user string) error {
+func (manager *VaultCredentialsManager) DisableTfa(user string) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
@@ -701,8 +701,6 @@ func (manager *VaultCredentialsManager) DisableTfa(user string) error {
 			}
 		}
 	}
-
-	return nil
 }
 
 // Disables two factor authentication for an account
@@ -710,7 +708,7 @@ func (manager *VaultCredentialsManager) DisableTfa(user string) error {
 // authConfirmationEnabled - True if auth confirmation is enabled
 // authConfirmationMethod - Auth confirmation method
 // authConfirmationPeriodSeconds - Auth confirmation period (seconds)
-func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) error {
+func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, authConfirmationEnabled bool, authConfirmationMethod string, authConfirmationPeriodSeconds uint32) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
@@ -732,8 +730,6 @@ func (manager *VaultCredentialsManager) ChangeSecuritySettings(user string, auth
 			}
 		}
 	}
-
-	return nil
 }
 
 // Saves credentials data to the vault permanent storage
