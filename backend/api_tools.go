@@ -446,13 +446,13 @@ func HandleAuthConfirmation(response http.ResponseWriter, request *http.Request,
 	}
 
 	if requiredMethod == "tfa" {
-		if len(tfaCode) > 0 {
+		if len(tfaCode) == 0 {
 			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_TFA", "Auth confirmation is required: Include the two factor authentication code")
 		} else {
 			ReturnAPIError(response, 403, "INVALID_TFA_CODE", "Invalid two factor authentication code")
 		}
 	} else {
-		if len(tfaCode) > 0 {
+		if len(password) == 0 {
 			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_PW", "Auth confirmation is required: Include the account password")
 		} else {
 			ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid account password")

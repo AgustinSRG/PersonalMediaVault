@@ -120,12 +120,14 @@ func (s *ActiveSession) CheckAuthConfirmation(password string, tfaCode string, o
 		if !valid {
 			// Set last try
 			s.authConfirmationLastTry = now
+		} else {
+			s.authConfirmationLastTime = now
 		}
 
 		return valid, false, "pw"
 	} else {
 		if tfaCode == "" {
-			return false, false, "pw"
+			return false, false, "tfa"
 		}
 
 		// TFA check
@@ -135,6 +137,8 @@ func (s *ActiveSession) CheckAuthConfirmation(password string, tfaCode string, o
 		if !valid {
 			// Set last try
 			s.authConfirmationLastTry = now
+		} else {
+			s.authConfirmationLastTime = now
 		}
 
 		return valid, false, "tfa"
