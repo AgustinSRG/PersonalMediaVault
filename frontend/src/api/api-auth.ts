@@ -91,3 +91,18 @@ export function apiAuthLogout(): RequestParams<void, CommonAuthenticatedErrorHan
         },
     };
 }
+
+/**
+ * Provided auth confirmation
+ */
+export interface ProvidedAuthConfirmation {
+    /**
+     * Two factor authentication code
+     */
+    tfaCode?: string;
+
+    /**
+     * Account password
+     */
+    password?: string;
+}

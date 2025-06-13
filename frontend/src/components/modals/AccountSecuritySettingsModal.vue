@@ -58,7 +58,7 @@
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
-                                    <ToggleSwitch v-model:val="authConditionPreferTfa" @update:val="onChangesMade"></ToggleSwitch>
+                                    <ToggleSwitch v-model:val="authConfirmationPreferTfa" @update:val="onChangesMade"></ToggleSwitch>
                                 </td>
                                 <td>
                                     {{ $t("Prefer two factor authentication (if enabled) for auth confirmation.") }}
@@ -77,7 +77,7 @@
                         }}:</label
                     >
                     <input
-                        v-model.number="authConditionPeriodSeconds"
+                        v-model.number="authConfirmationPeriodSeconds"
                         type="number"
                         autocomplete="off"
                         :disabled="busy"
@@ -104,6 +104,15 @@
             v-model:display="displayTfaDisableModal"
             @done="load"
         ></AccountTfaDisableModal>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="submitInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -120,6 +129,8 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { apiAccountGetSecuritySettings, apiAccountSetSecuritySettings } from "@/api/api-account";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 
 const AccountTfaEnableModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AccountTfaEnableModal.vue"),
@@ -140,6 +151,7 @@ export default defineComponent({
         ToggleSwitch,
         AccountTfaEnableModal,
         AccountTfaDisableModal,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -160,8 +172,8 @@ export default defineComponent({
             tfaMethod: "TOTP",
 
             authConfirmation: false,
-            authConditionPreferTfa: true,
-            authConditionPeriodSeconds: 120,
+            authConfirmationPreferTfa: true,
+            authConfirmationPeriodSeconds: 120,
 
             busy: false,
 
@@ -174,6 +186,11 @@ export default defineComponent({
 
             displayTfaEnableModal: false,
             displayTfaDisableModal: false,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
@@ -236,8 +253,8 @@ export default defineComponent({
                     this.tfaMethod = ((response.tfaMethod || "").split(":")[0] || "").toUpperCase();
 
                     this.authConfirmation = response.authConfirmation;
-                    this.authConditionPreferTfa = response.authConfirmationMethod !== "pw";
-                    this.authConditionPeriodSeconds = response.authConfirmationPeriodSeconds || 0;
+                    this.authConfirmationPreferTfa = response.authConfirmationMethod !== "pw";
+                    this.authConfirmationPeriodSeconds = response.authConfirmationPeriodSeconds || 0;
 
                     this.loading = false;
                     this.dirty = false;
@@ -275,6 +292,10 @@ export default defineComponent({
                 e.preventDefault();
             }
 
+            this.submitInternal({});
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busy) {
                 return;
             }
@@ -284,8 +305,9 @@ export default defineComponent({
             makeApiRequest(
                 apiAccountSetSecuritySettings(
                     this.authConfirmation,
-                    this.authConditionPreferTfa ? "tfa" : "pw",
-                    this.authConditionPeriodSeconds,
+                    this.authConfirmationPreferTfa ? "tfa" : "pw",
+                    this.authConfirmationPeriodSeconds,
+                    confirmation,
                 ),
             )
                 .onSuccess(() => {
@@ -305,6 +327,32 @@ export default defineComponent({
                         },
                         invalidSettings: () => {
                             this.error = this.$t("Invalid security settings");
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");
