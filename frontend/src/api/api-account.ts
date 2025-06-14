@@ -79,15 +79,35 @@ export type ChangeUsernameErrorHandler = CommonAuthenticatedErrorHandler & {
      * Handler for error: Invalid password
      */
     invalidPassword: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Changes account username
  * @param username New username
  * @param password Account password
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiAccountChangeUsername(username: string, password: string): RequestParams<void, ChangeUsernameErrorHandler> {
+export function apiAccountChangeUsername(
+    username: string,
+    password: string,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, ChangeUsernameErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/username`),
@@ -95,11 +115,18 @@ export function apiAccountChangeUsername(username: string, password: string): Re
             username: username,
             password: password,
         },
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "USERNAME_IN_USE", handler.usernameInUse)
                 .add(400, "*", handler.invalidUsername)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.invalidPassword)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
                 .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
@@ -121,15 +148,35 @@ export type ChangePasswordErrorHandler = CommonAuthenticatedErrorHandler & {
      * Handler for error: Invalid new password
      */
     invalidNewPassword: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Changes account password
  * @param password The old password
  * @param newPassword The new password
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiAccountChangePassword(password: string, newPassword: string): RequestParams<void, ChangePasswordErrorHandler> {
+export function apiAccountChangePassword(
+    password: string,
+    newPassword: string,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, ChangePasswordErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/password`),
@@ -137,10 +184,17 @@ export function apiAccountChangePassword(password: string, newPassword: string):
             old_password: password,
             password: newPassword,
         },
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "*", handler.invalidNewPassword)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.invalidPassword)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
                 .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
@@ -255,6 +309,10 @@ export type AccountSecuritySetSettingsErrorHandler = CommonAuthenticatedErrorHan
 
 /**
  * Sets account security settings
+ * @param authConfirmation True if auth confirmation enabled
+ * @param authConfirmationMethod Auth confirmation method
+ * @param authConfirmationPeriodSeconds Auth confirmation period (seconds)
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
 export function apiAccountSetSecuritySettings(

@@ -6,6 +6,7 @@ import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } f
 import { MediaResolution, MediaSubtitle, MediaAudioTrack, MediaTimeSlice, MediaAttachment } from "./models";
 import { ImageNote } from "@/utils/notes-format";
 import { API_PREFIX, getApiURL } from "@/utils/api";
+import { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/media";
 
@@ -22,6 +23,46 @@ export type MediaEditApiErrorHandler = CommonAuthenticatedErrorHandler & {
      * Error: Not found
      */
     notFound: () => void;
+};
+
+/**
+ * Error handler for all media delete APIs
+ */
+export type MediaDeleteApiErrorHandler = CommonAuthenticatedErrorHandler & {
+    /**
+     * Error: Access denied
+     */
+    accessDenied: () => void;
+
+    /**
+     * Error: Not found
+     */
+    notFound: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
@@ -348,27 +389,62 @@ export type ReplaceMediaErrorHandler = MediaEditApiErrorHandler & {
      * Error: Bad request
      */
     badRequest: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Replaces media
  * @param id Media ID
  * @param file Media file to upload
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaReplaceMedia(id: number, file: File): RequestParams<void, ReplaceMediaErrorHandler> {
+export function apiMediaReplaceMedia(id: number, file: File, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, ReplaceMediaErrorHandler> {
     const form = new FormData();
     form.append("file", file);
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/replace`),
         form: form,
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "INVALID_MEDIA", handler.invalidMedia)
                 .add(400, "INVALID_MEDIA_TYPE", handler.invalidMediaType)
                 .add(400, "*", handler.badRequest)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
@@ -383,13 +459,22 @@ export function apiMediaReplaceMedia(id: number, file: File): RequestParams<void
  * @param id Media ID
  * @returns The request parameters
  */
-export function apiMediaDeleteMedia(id: number): RequestParams<void, MediaEditApiErrorHandler> {
+export function apiMediaDeleteMedia(id: number, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, MediaDeleteApiErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/delete`),
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
@@ -632,24 +717,59 @@ export type RemoveSubtitlesErrorHandler = MediaEditApiErrorHandler & {
      * Error: Bad request
      */
     badRequest: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Removes subtitles file
  * @param mediaId Media ID
  * @param id Subtitles file ID
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveSubtitles(mediaId: number, id: string): RequestParams<void, RemoveSubtitlesErrorHandler> {
+export function apiMediaRemoveSubtitles(mediaId: number, id: string, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveSubtitlesErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(
             `${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/subtitles/remove?id=${encodeURIComponent(id)}`,
         ),
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "*", handler.badRequest)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
@@ -788,22 +908,57 @@ export type RemoveAudioTrackErrorHandler = MediaEditApiErrorHandler & {
      * Error: Bad request
      */
     badRequest: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Removes extra audio track
  * @param mediaId Media ID
  * @param id Audio track ID
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveAudioTrack(mediaId: number, id: string): RequestParams<void, RemoveAudioTrackErrorHandler> {
+export function apiMediaRemoveAudioTrack(mediaId: number, id: string, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveAudioTrackErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/audios/remove?id=${encodeURIComponent(id)}`),
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "*", handler.badRequest)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
@@ -905,24 +1060,59 @@ export type RemoveAttachmentErrorHandler = MediaEditApiErrorHandler & {
      * Error: Bad request
      */
     badRequest: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Removes attachment
  * @param mediaId Media ID
  * @param id Attachment ID
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveAttachment(mediaId: number, id: number): RequestParams<void, RemoveAttachmentErrorHandler> {
+export function apiMediaRemoveAttachment(mediaId: number, id: number, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveAttachmentErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(
             `${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/attachments/remove?id=${encodeURIComponent(id + "")}`,
         ),
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
                 .add(400, "*", handler.badRequest)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
