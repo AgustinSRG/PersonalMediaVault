@@ -53,6 +53,15 @@
                 </button>
             </div>
         </form>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="submitInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -67,6 +76,8 @@ import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "ChangePasswordModal",
@@ -74,6 +85,7 @@ export default defineComponent({
         LoadingIcon,
         PasswordInput,
         PasswordStrengthIndicator,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -94,6 +106,11 @@ export default defineComponent({
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
@@ -132,6 +149,10 @@ export default defineComponent({
         submit: function (e: Event) {
             e.preventDefault();
 
+            this.submitInternal({});
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busy) {
                 return;
             }
@@ -144,7 +165,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAccountChangePassword(this.currentPassword, this.password))
+            makeApiRequest(apiAccountChangePassword(this.currentPassword, this.password, confirmation))
                 .onSuccess(() => {
                     this.busy = false;
                     this.currentPassword = "";
@@ -168,6 +189,21 @@ export default defineComponent({
                         },
                         invalidPassword: () => {
                             this.error = this.$t("Invalid password");
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         serverError: () => {
                             this.error = this.$t("Internal server error");
