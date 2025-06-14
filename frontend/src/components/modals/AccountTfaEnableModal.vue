@@ -86,7 +86,7 @@
             v-model:algorithm="algorithm"
             v-model:period="period"
             v-model:skew="skew"
-            @done="onCloseCustomSettingsModal"
+            @done="loadSettings"
         ></AccountTfaSettingsModal>
     </ModalDialogContainer>
 </template>
@@ -198,12 +198,6 @@ export default defineComponent({
 
         customizeSettings: function () {
             this.displayCustomSettings = true;
-        },
-
-        onCloseCustomSettingsModal: function () {
-            if (!this.displayCustomSettings) {
-                this.loadSettings();
-            }
         },
 
         copyUrl: function () {
