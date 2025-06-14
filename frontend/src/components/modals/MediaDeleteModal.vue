@@ -15,7 +15,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <table class="table no-border">
+                <table class="table no-margin no-border">
                     <tbody>
                         <tr>
                             <td class="text-right td-shrink no-padding">

@@ -306,20 +306,23 @@ export default defineComponent({
                     this.busyReplace = false;
                     this.replacing = false;
                     this.replaceProgress = 0;
-                    this.fileRef = null;
                     handleErr(err, {
                         unauthorized: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidMedia: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Invalid media file provided");
                         },
                         invalidMediaType: () => {
+                            this.fileRef = null;
                             this.errorReplace =
                                 this.$t("Error") + ": " + this.$t("You must upload a file of the same type in order to replace the media");
                         },
                         badRequest: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Bad request");
                         },
                         requiredAuthConfirmationPassword: () => {
@@ -349,15 +352,19 @@ export default defineComponent({
                             this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
                         },
                         notFound: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Not found");
                         },
                         serverError: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Internal server error");
                         },
                         networkError: () => {
+                            this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Could not connect to the server");
                         },
                     });

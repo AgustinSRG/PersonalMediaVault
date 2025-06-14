@@ -129,7 +129,7 @@ export default defineComponent({
         },
 
         focusLost: function () {
-            if (this.display) {
+            if (this.display && !this.closing) {
                 this.$el.focus();
             }
         },
