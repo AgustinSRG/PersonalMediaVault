@@ -54,17 +54,20 @@
                     <label>{{ $t("Do you want to delete $N elements?").replace("$N", "" + actionCount) }}</label>
                 </div>
 
-                <div class="form-group">
-                    <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
-                    <input
-                        v-model="confirmationDelete"
-                        type="text"
-                        name="confirmation"
-                        autocomplete="off"
-                        maxlength="255"
-                        class="form-control form-control-full-width auto-focus"
-                    />
-                </div>
+                <table class="table no-border">
+                    <tbody>
+                        <tr>
+                            <td class="text-right td-shrink no-padding">
+                                <ToggleSwitch v-model:val="confirmationDelete"></ToggleSwitch>
+                            </td>
+                            <td>
+                                {{ $t("Remember. If you delete the media by accident you would have to re-upload it.") }}
+                                <br />
+                                {{ $t("Make sure you actually want to delete it.") }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div v-if="status === 'error'" class="modal-body">
                 <div class="form-group">
@@ -82,12 +85,7 @@
                 </button>
             </div>
             <div v-if="status === 'confirmation-delete'" class="modal-footer no-padding">
-                <button
-                    type="button"
-                    :disabled="confirmationDelete.toLowerCase() !== 'confirm'"
-                    class="modal-footer-btn auto-focus"
-                    @click="confirm"
-                >
+                <button type="button" :disabled="!confirmationDelete" class="modal-footer-btn auto-focus" @click="confirm">
                     <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
                 </button>
             </div>
@@ -108,8 +106,12 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+    components: {
+        ToggleSwitch,
+    },
     name: "BatchOperationProgressModal",
     props: {
         display: Boolean,
@@ -129,7 +131,7 @@ export default defineComponent({
     },
     data: function () {
         return {
-            confirmationDelete: "",
+            confirmationDelete: false,
 
             closeSignal: 0,
             forceCloseSignal: 0,

@@ -197,6 +197,15 @@
             @cancel="cancel"
             @confirm="confirm"
         ></BatchOperationProgressModal>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="actionDeleteInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -219,6 +228,8 @@ import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { apiAdvancedSearch } from "@/api/api-search";
 import AlbumSelect from "../utils/AlbumSelect.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 const PAGE_SIZE = 50;
 
@@ -227,6 +238,7 @@ export default defineComponent({
     components: {
         BatchOperationProgressModal,
         AlbumSelect,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -274,6 +286,14 @@ export default defineComponent({
             actionItems: [] as number[],
             error: "",
             closeSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
+
+            authConfirmationDeleteId: -1,
+            authConfirmationDeleteNext: -1,
         };
     },
     watch: {
@@ -956,10 +976,11 @@ export default defineComponent({
             this.progress = ((i + 1) * 100) / (this.actionItems.length || 1);
         },
 
-        actionDelete: function (mid: number, next: number) {
-            makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(mid))
+        actionDeleteInternal: function (confirmation: ProvidedAuthConfirmation) {
+            this.status = "action";
+            makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(this.authConfirmationDeleteId, confirmation))
                 .onSuccess(() => {
-                    this.actionNext(next);
+                    this.actionNext(this.authConfirmationDeleteNext);
                 })
                 .onRequestError((err, handleErr) => {
                     this.status = "error";
@@ -967,6 +988,37 @@ export default defineComponent({
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.status = "";
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.status = "";
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.status = "";
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.status = "";
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.status = "";
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");
@@ -987,6 +1039,12 @@ export default defineComponent({
                     console.error(err);
                     this.status = "error";
                 });
+        },
+
+        actionDelete: function (mid: number, next: number) {
+            this.authConfirmationDeleteId = mid;
+            this.authConfirmationDeleteNext = next;
+            this.actionDeleteInternal({});
         },
 
         actionAddAlbum: function (mid: number, next: number) {
