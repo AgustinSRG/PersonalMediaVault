@@ -310,6 +310,12 @@ textarea.form-control::-webkit-resizer {
     padding-bottom: 2rem;
 }
 
+.six-digit-code-input.min {
+    padding-top: 0;
+    padding-bottom: 0;
+    justify-content: left;
+}
+
 @media (max-width: 340px) {
     .six-digit-code-input {
         flex-wrap: wrap;
@@ -321,11 +327,22 @@ textarea.form-control::-webkit-resizer {
     padding-left: 0.25rem;
 }
 
+.six-digit-code-char-input.first {
+    padding-left: 0;
+}
+
 .six-digit-code-char-input input {
     width: 4rem;
     height: 4rem;
     text-align: center;
     font-size: x-large;
+}
+
+.six-digit-code-input.min .six-digit-code-char-input input {
+    width: 38px;
+    height: 38px;
+    text-align: center;
+    font-size: medium;
 }
 
 @media (max-width: 500px) {
@@ -342,4 +359,14 @@ textarea.form-control::-webkit-resizer {
         height: 2.5rem;
         font-size: 1rem;
     }
+}
+
+.tfa-label {
+    font-size: large;
+    text-align: center;
+    padding-bottom: 0.5rem;
+}
+
+.tfa-cancel-label {
+    text-align: center;
 }

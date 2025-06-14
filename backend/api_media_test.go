@@ -75,6 +75,12 @@ func _TestFetchMetadata(server *httptest.Server, session string, t *testing.T, m
 }
 
 func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, mediaId uint64, filePath string) {
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	// Get metadata
 
 	meta := MediaAPIMetaResponse{}
@@ -687,7 +693,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		// Delete the subtitles
 
-		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/remove?id=eng", nil, session)
+		statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/remove?id=eng", nil, session, initialPassword, "")
 
 		if err != nil {
 			t.Error(err)
@@ -856,7 +862,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		// Delete the audio
 
-		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/remove?id=eng", nil, session)
+		statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/remove?id=eng", nil, session, initialPassword, "")
 
 		if err != nil {
 			t.Error(err)
@@ -1033,7 +1039,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		// Delete attachment
 
-		statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/remove?id="+fmt.Sprint(meta.Attachments[0].Id), nil, session)
+		statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/remove?id="+fmt.Sprint(meta.Attachments[0].Id), nil, session, initialPassword, "")
 
 		if err != nil {
 			t.Error(err)
@@ -1221,6 +1227,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		}
 
 		req.Header.Set("x-session-token", session)
+		req.Header.Set("x-auth-confirmation-pw", initialPassword)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 
 		resp, err := client.Do(req)
@@ -1475,7 +1482,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 	// Finish: Delete media
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/delete", nil, session)
+	statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/delete", nil, session, initialPassword, "")
 
 	if err != nil {
 		t.Error(err)

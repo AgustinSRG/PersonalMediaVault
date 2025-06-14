@@ -34,6 +34,8 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
+	user, root, write := session.GetContextDetails()
+
 	config, err := GetVault().config.Read(session.key)
 
 	if err != nil {
@@ -45,9 +47,10 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 
 	var result AccountContextAPIResponse
 
-	result.Username = session.user
-	result.Root = session.root
-	result.Write = session.write
+	result.Username = user
+	result.Root = root
+	result.Write = write
+
 	result.Title = config.CustomTitle
 	result.Style = config.CustomCSS
 	result.Version = BACKEND_VERSION
@@ -77,6 +80,10 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, true) {
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, AUTH_API_BODY_MAX_LENGTH)
 
 	var p ChangeUsernameBody
@@ -98,7 +105,7 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Check password
-	valid, _ := GetVault().credentials.CheckCredentials(session.user, p.Password)
+	valid, _ := GetVault().credentials.CheckPassword(session.GetUser(), p.Password)
 
 	if !valid {
 		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
@@ -114,7 +121,9 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Change username
-	err = GetVault().credentials.ChangeUsername(session.user, p.Username)
+	user := session.GetUser()
+
+	err = GetVault().credentials.ChangeUsername(user, p.Username)
 
 	if err != nil {
 		LogError(err)
@@ -132,8 +141,8 @@ func api_changeUsername(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	GetVault().sessions.ChangeUsername(session.user, p.Username)
-	GetVault().invites.ChangeUsername(session.user, p.Username)
+	GetVault().sessions.ChangeUsername(user, p.Username)
+	GetVault().invites.ChangeUsername(user, p.Username)
 
 	response.WriteHeader(200)
 }
@@ -146,8 +155,12 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if session.user == "" {
+	if !session.IsUser() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, true) {
 		return
 	}
 
@@ -172,7 +185,9 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Check password
-	valid, cred_info := GetVault().credentials.CheckCredentials(session.user, p.OldPassword)
+	user := session.GetUser()
+
+	valid, _ := GetVault().credentials.CheckPassword(user, p.OldPassword)
 
 	if !valid {
 		ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid password.")
@@ -180,11 +195,7 @@ func api_changePassword(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Change password
-	if cred_info.root && session.root {
-		err = GetVault().credentials.SetRootCredentials(session.user, p.Password, session.key)
-	} else {
-		err = GetVault().credentials.SetAccountCredentials(session.user, p.Password, session.key, session.write)
-	}
+	err = GetVault().credentials.ChangePassword(user, p.OldPassword, p.Password)
 
 	if err != nil {
 		LogError(err)

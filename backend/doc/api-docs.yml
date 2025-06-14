@@ -65,6 +65,10 @@ paths:
                 type: string
                 description: Media vault password (can't be blank, max 255 chars)
                 example: password
+              tfaCode:
+                type: string
+                description: Two factor authentication code
+                example: "123456"
               duration:
                 type: string
                 description: "Duration of the session. Note the session can be closed before this or the vault server can restart, clearing all sessions."
@@ -86,9 +90,13 @@ paths:
                 description: >
                   Error code:
                     * INVALID_CREDENTIALS - Invalid user or password
+                    * TFA_REQUIRED - Two factor authentication is required to login, but not provided (this won't activate cooldown)
+                    * INVALID_TFA_CODE - Invalid TFA code provided
                     * COOLDOWN - When you fail a login request, there is a cooldown of 5 seconds.
                 enum:
                   - INVALID_CREDENTIALS
+                  - TFA_REQUIRED
+                  - INVALID_TFA_CODE
                   - COOLDOWN
               message:
                 type: string
@@ -186,6 +194,10 @@ paths:
                 type: string
                 description: Media vault password (can't be blank, max 255 chars)
                 example: password
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -198,7 +210,7 @@ paths:
                 description: >
                   Error code:
                     * USERNAME_INVALID - Invalid username
-                    * USERNAME_IN_USE - There si already another user with the same username
+                    * USERNAME_IN_USE - There is already another user with the same username
                 enum:
                   - USERNAME_INVALID
                   - USERNAME_IN_USE
@@ -209,7 +221,28 @@ paths:
         401:
           description: Unauthorized (No valid session)
         403:
-          description: Invalid password or access denied (if not root)
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: Success   
           
@@ -236,6 +269,10 @@ paths:
                 type: string
                 description: Media vault NEW password (can't be blank, max 255 chars)
                 example: password
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -244,10 +281,371 @@ paths:
         401:
           description: Unauthorized (No valid session)
         403:
-          description: Invalid password.
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Success
+  
+  "/api/account/security":
+    get:
+      summary: Gets security settings
+      description: Gets security settings of the account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success
+          schema:
+            properties:
+              tfa:
+                type: boolean
+                description: "True if two factor authentication is enabled"
+              tfaMethod:
+                type: string
+                description: >
+                  Two factor authentication method.
+                  Has a prefix, separated by a colon, and a list of arguments separated by colons
+                  
+                  For TOTP. There are 3 arguments:
+                    - The HMAC algorithm (sha1, sha256, sha512)
+                    - The period (seconds)
+                    - A flag (0, or 1) indicating if clock skew is allowed by 1 period.
+                example: "totp:sha1:60:1"
+              authConfirmation:
+                type: boolean
+                description: "True if auth confirmation is enabled"
+              authConfirmationMethod:
+                type: string
+                description: "Authentication confirmation preferred method. Can be 'tfa' for two factor authentication, or 'pw' for password"
+                enum:
+                  - tfa
+                  - pw
+              authConfirmationPeriodSeconds:
+                type: number
+                format: int32
+                description: "Period to remember the auth confirmation for (in seconds)"
+                example: 120
+    post:
+      summary: Sets security settings
+      description: Sets security settings of the account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              authConfirmation:
+                type: boolean
+                description: "True if auth confirmation is enabled"
+              authConfirmationMethod:
+                type: string
+                description: "Authentication confirmation preferred method. Can be 'tfa' for two factor authentication, or 'pw' for password"
+                enum:
+                  - tfa
+                  - pw
+              authConfirmationPeriodSeconds:
+                type: number
+                format: int32
+                description: "Period to remember the auth confirmation for (in seconds)"
+                example: 120
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request (invalid settings)
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Success
+
+
+  "/api/account/security/tfa/totp":
+    get:
+      summary: Gets settings for TOTP
+      description: Gets the settings to configure two factyor authentication with TOTP
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: issuer
+          type: string
+          description: "Issuer to be set for the TOTP URL"
+        - in: query
+          name: account
+          type: string
+          description: "Account to be set for the TOTP URL"
+        - in: query
+          name: algorithm
+          type: string
+          description: "HMAC algorithm"
+          enum:
+            - sha1
+            - sha256
+            - sha512
+        - in: query
+          name: period
+          description: "TOTP period in seconds"
+          type: string
+          enum:
+            - '30'
+            - '60'
+            - '120'
+        - in: query
+          name: skew
+          type: string
+          description: "Allow or disallow clock skew by 1 period"
+          enum:
+            - allow
+            - disallow
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_ALGORITHM - Invalid HMAC algorithm
+                    * INVALID_PERIOD - Invalid TOTP period
+                enum:
+                  - INVALID_ALGORITHM
+                  - INVALID_PERIOD
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: Success
+          schema:
+            properties:
+              secret:
+                type: string
+                description: "TOTP secret"
+              method:
+                type: string
+                description: "TOTP method"
+                example: "totp:sha1:60:1"
+              url:
+                type: string
+                description: "TOTP URL"
+                example: "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example"
+              qr:
+                type: string
+                description: "QR code as a base-64 image URL"
+                example: "data:image/png;base64,"
+    post:
+      summary: Enables TOTP
+      description: Enables two factor authentication with TOTP
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              secret:
+                type: string
+                description: "TOTP secret"
+              method:
+                type: string
+                description: "TOTP method"
+                example: "totp:sha1:60:1"
+              password:
+                type: string
+                description: "Account password, quiered to confirm the operation"
+              code:
+                type: string
+                description: "TOTP code to confirm the operation"
+                example: "123456"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * TFA_ENABLED - Two factor authentication is already enabled
+                    * INVALID_TOTP_SECRET - Invalid TOTP secret
+                    * INVALID_TOTP_OPTIONS - Invalid TOTP options in the method string
+                    * INVALID_TOTP_CODE - Invalid TOTP confirmation code
+                enum:
+                  - TFA_ENABLED
+                  - INVALID_TOTP_SECRET
+                  - INVALID_TOTP_OPTIONS
+                  - INVALID_TOTP_CODE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * ACCESS_DENIED - Access denied to the API
+                    * INVALID_PASSWORD - Invalid password
+                enum:
+                  - ACCESS_DENIED
+                  - INVALID_PASSWORD
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: Success
           
+  "/api/account/security/tfa/disable":
+    post:
+      summary: Disables two factor authentication
+      description: Disables two factor authentication for the current account
+      tags:
+        - account
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: settings
+          schema:
+            properties:
+              code:
+                type: string
+                description: "Two factor authentication code to confirm the operation"
+                example: "123456"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * TFA_NOT_ENABLED - Two factor authentication is not enabled
+                enum:
+                  - TFA_NOT_ENABLED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * ACCESS_DENIED - Access denied to the API
+                    * COOLDOWN - There is a cooldown. You must wait to try again.
+                    * INVALID_CODE - Invalid code. This causes a 5 second cooldown to prevent brute-force.
+                enum:
+                  - ACCESS_DENIED
+                  - COOLDOWN
+                  - INVALID_CODE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Success
+
   "/api/upload":
     post:
       summary: Upload media
@@ -1014,6 +1412,14 @@ paths:
           name: file
           type: file
           description: The file to upload.
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -1038,6 +1444,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: Not found
         200:
@@ -1060,6 +1489,14 @@ paths:
           type: number
           format: int64
           description: Media ID
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -1067,6 +1504,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: Not found
         200:
@@ -1307,6 +1767,14 @@ paths:
           type: string
           required: true
           description: "ID for the subtitles. Example: es"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -1316,6 +1784,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: Not found
         200:
@@ -1482,6 +1973,14 @@ paths:
           type: string
           required: true
           description: "ID of the audio track. Example: es"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -1491,6 +1990,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: Not found
         200:
@@ -1705,6 +2227,14 @@ paths:
           format: int64
           required: true
           description: "ID of the attachment"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -1714,6 +2244,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: Not found
         200:
@@ -2240,6 +2793,14 @@ paths:
           format: int64
           name: id
           description: Album ID
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -2249,6 +2810,29 @@ paths:
           description: Not found
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: Success
   
@@ -2539,6 +3123,14 @@ paths:
           name: User config
           schema:
             $ref: '#/definitions/UserConfig'
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -2548,6 +3140,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: Success
   
@@ -2659,6 +3274,14 @@ paths:
               write:
                 type: boolean
                 description: "True to give the user write access to the vault, false for read-only accounts"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -2672,7 +3295,7 @@ paths:
                   Error code:
                     * USERNAME_INVALID - Invalid username
                     * PASSWORD_INVALID - Invalid password
-                    * USERNAME_IN_USE - There si already another user with the same username
+                    * USERNAME_IN_USE - There is already another user with the same username
                 enum:
                   - USERNAME_INVALID
                   - PASSWORD_INVALID
@@ -2685,6 +3308,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: Success
           
@@ -2714,6 +3360,14 @@ paths:
               write:
                 type: boolean
                 description: "True to give the user write access to the vault, false for read-only accounts"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -2721,6 +3375,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: User not found
         200:
@@ -2745,6 +3422,14 @@ paths:
                 type: string
                 description: Account username (can't be blank, max 255 chars)
                 example: admin
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -2752,6 +3437,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         404:
           description: User not found
         200:

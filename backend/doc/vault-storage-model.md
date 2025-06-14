@@ -303,26 +303,38 @@ The credentials file, named `credentials.json` is an [unencrypted JSON file](#un
 
 The JSON file contains the following fields:
 
-| Field name    | Type                 | Description                                  |
-| ------------- | -------------------- | -------------------------------------------- |
-| `user`        | String               | Username of the root account                 |
-| `pwhash`      | String               | Password hash. Base 64 encoded               |
-| `salt`        | String               | Hashing salt. Base 64 encoded                |
-| `enckey`      | String               | Encrypted key. Base 64 encoded               |
-| `method`      | String               | Name of the hashing + encryption method used |
-| `fingerprint` | String               | Vault fingerprint                            |
-| `accounts`    | Array&lt;Account&gt; | Array of additional accounts                 |
+| Field name                 | Type                             | Description                                                                                    |
+| -------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `user`                     | String                           | Username of the root account                                                                   |
+| `pwhash`                   | String                           | Password hash. Base 64 encoded                                                                 |
+| `salt`                     | String                           | Hashing salt. Base 64 encoded                                                                  |
+| `enckey`                   | String                           | Encrypted key. Base 64 encoded                                                                 |
+| `method`                   | String                           | Name of the hashing + encryption method used                                                   |
+| `tfa`                      | Boolean                          | True if two factor authentication is enabled                                                   |
+| `tfa_method`               | String                           | If two factor authentication is enabled, the method (eg: `totp:sha1:60:1`)                     |
+| `tfa_enckey`               | String                           | Encrypted two factor authentication key. Base 64 encoded                                       |
+| `auth_confirmation`        | Boolean                          | True if the authentication confirmation is enabled                                             |
+| `auth_confirmation_method` | String                           | Authentication confirmation method (`tfa` or `pw`)                                             |
+| `auth_confirmation_period` | Number (32 bit unsigned integer) | Period (seconds) to prevent asking for authentication confirmation multiple consecutive times. |
+| `fingerprint`              | String                           | Vault fingerprint                                                                              |
+| `accounts`                 | Array&lt;Account&gt;             | Array of additional accounts                                                                   |
 
 Each `Account` is an object with the following fields:
 
-| Field name | Type    | Description                                            |
-| ---------- | ------- | ------------------------------------------------------ |
-| `user`     | String  | Account username                                       |
-| `pwhash`   | String  | Password hash. Base 64 encoded                         |
-| `salt`     | String  | Hashing salt. Base 64 encoded                          |
-| `enckey`   | String  | Encrypted key. Base 64 encoded                         |
-| `method`   | String  | Name of the hashing + encryption method used           |
-| `write`    | Boolean | True if the account has permission to modify the vault |
+| Field name                 | Type                             | Description                                                                                    |
+| -------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `user`                     | String                           | Account username                                                                               |
+| `pwhash`                   | String                           | Password hash. Base 64 encoded                                                                 |
+| `salt`                     | String                           | Hashing salt. Base 64 encoded                                                                  |
+| `enckey`                   | String                           | Encrypted key. Base 64 encoded                                                                 |
+| `method`                   | String                           | Name of the hashing + encryption method used                                                   |
+| `write`                    | Boolean                          | True if the account has permission to modify the vault                                         |
+| `tfa`                      | Boolean                          | True if two factor authentication is enabled                                                   |
+| `tfa_method`               | String                           | If two factor authentication is enabled, the method (eg: `totp:sha1:60:1`)                     |
+| `tfa_enckey`               | String                           | Encrypted two factor authentication key. Base 64 encoded                                       |
+| `auth_confirmation`        | Boolean                          | True if the authentication confirmation is enabled                                             |
+| `auth_confirmation_method` | String                           | Authentication confirmation method (`tfa` or `pw`)                                             |
+| `auth_confirmation_period` | Number (32 bit unsigned integer) | Period (seconds) to prevent asking for authentication confirmation multiple consecutive times. |
 
 Currently, the following methods are implemented:
 

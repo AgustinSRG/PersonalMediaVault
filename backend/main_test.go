@@ -102,7 +102,7 @@ func InitializeTestVault() error {
 		initialPassword = VAULT_DEFAULT_PASSWORD
 	}
 
-	key, _, err := vault.credentials.UnlockVault(initialUser, initialPassword)
+	key, _, _, err := vault.credentials.UnlockVault(initialUser, initialPassword)
 
 	if err != nil {
 		return err

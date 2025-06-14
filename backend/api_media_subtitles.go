@@ -31,7 +31,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -310,8 +310,12 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
@@ -401,7 +405,7 @@ func api_renameMediaSubtitles(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}

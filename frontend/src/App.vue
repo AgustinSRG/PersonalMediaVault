@@ -175,6 +175,7 @@ export default defineComponent({
 @import "@/style/content/invite-modal.css";
 @import "@/style/content/page-settings.css";
 @import "@/style/content/thumbnail-crop.css";
+@import "@/style/content/tfa.css";
 
 /* Player styles */
 

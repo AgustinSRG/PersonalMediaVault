@@ -132,6 +132,15 @@
             :track-to-delete="trackToDelete"
             @confirm="removeAudioConfirm"
         ></AudioTrackDeleteModal>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+            @confirm="removeAudioConfirmInternal"
+        ></AuthConfirmationModal>
     </div>
 </template>
 
@@ -150,12 +159,15 @@ import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
+import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorAudios",
     components: {
         LoadingIcon,
         AudioTrackDeleteModal,
+        AuthConfirmationModal,
     },
     emits: ["changed"],
     setup() {
@@ -191,6 +203,11 @@ export default defineComponent({
 
             displayAudioTrackDelete: false,
             trackToDelete: null as MediaAudioTrack,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
 
@@ -346,6 +363,10 @@ export default defineComponent({
         },
 
         removeAudioConfirm: function () {
+            this.removeAudioConfirmInternal({});
+        },
+
+        removeAudioConfirmInternal: function (confirmation: ProvidedAuthConfirmation) {
             const aud = this.trackToDelete;
 
             if (this.busyDeleting || !aud) {
@@ -358,7 +379,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = aud.id;
 
-            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id))
+            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveAudioTrack(mediaId, id, confirmation))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed audio track") + ": " + aud.name);
                     this.busyDeleting = false;
@@ -385,6 +406,32 @@ export default defineComponent({
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));

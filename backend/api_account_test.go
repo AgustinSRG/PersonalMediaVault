@@ -159,4 +159,89 @@ func Account_API_Test(server *httptest.Server, session string, t *testing.T) {
 	if statusCode != 200 {
 		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
 	}
+
+	// Change password back to the initial
+
+	body, err = json.Marshal(ChangePasswordBody{
+		Password:    initialPassword,
+		OldPassword: "test_password",
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/account/password", body, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	// Set security settings
+
+	body, err = json.Marshal(SetAccountSecurityOptionsBody{
+		AuthConfirmationEnabled:       true,
+		AuthConfirmationMethod:        "pw",
+		AuthConfirmationPeriodSeconds: 60,
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/account/security", body, session, initialPassword, "")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	// Get security settings
+
+	statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", "/api/account/security", nil, session)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if statusCode != 200 {
+		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
+	}
+
+	res2 := AccountSecurityOptions{}
+
+	err = json.Unmarshal(bodyResponseBytes, &res2)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	res2.AuthConfirmationEnabled = true
+	res2.AuthConfirmationPeriodSeconds = 1
+	res2.AuthConfirmationMethod = "pw"
+
+	if !res2.AuthConfirmationEnabled {
+		t.Error(ErrorMismatch("AuthConfirmationEnabled", fmt.Sprint(res2.AuthConfirmationEnabled), "true"))
+	}
+
+	if res2.AuthConfirmationPeriodSeconds != 1 {
+		t.Error(ErrorMismatch("AuthConfirmationPeriodSeconds", fmt.Sprint(res2.AuthConfirmationPeriodSeconds), "1"))
+	}
+
+	if res2.AuthConfirmationMethod != "pw" {
+		t.Error(ErrorMismatch("AuthConfirmationMethod", fmt.Sprint(res2.AuthConfirmationMethod), "pw"))
+	}
 }

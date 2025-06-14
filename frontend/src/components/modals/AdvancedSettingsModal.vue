@@ -209,6 +209,15 @@
             </div>
         </form>
 
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+            @confirm="submitInternal"
+        ></AuthConfirmationModal>
+
         <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>
     </ModalDialogContainer>
 </template>
@@ -234,6 +243,8 @@ import {
     VideoResolutionStandardToggleable,
 } from "@/utils/resolutions";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "AdvancedSettingsModal",
@@ -242,6 +253,7 @@ export default defineComponent({
         LoadingIcon,
         SaveChangesAskModal,
         LoadingOverlay,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -278,6 +290,11 @@ export default defineComponent({
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
@@ -446,6 +463,10 @@ export default defineComponent({
                 e.preventDefault();
             }
 
+            this.submitInternal({});
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busy) {
                 return;
             }
@@ -454,17 +475,20 @@ export default defineComponent({
             this.error = "";
 
             makeApiRequest(
-                apiConfigSetConfig({
-                    title: this.title,
-                    css: this.css,
-                    max_tasks: this.maxTasks,
-                    encoding_threads: this.encodingThreads,
-                    resolutions: this.getResolutions(),
-                    image_resolutions: this.getImageResolutions(),
-                    video_previews_interval: this.videoPreviewsInterval,
-                    invite_limit: this.inviteLimit,
-                    preserve_originals: this.preserveOriginals,
-                }),
+                apiConfigSetConfig(
+                    {
+                        title: this.title,
+                        css: this.css,
+                        max_tasks: this.maxTasks,
+                        encoding_threads: this.encodingThreads,
+                        resolutions: this.getResolutions(),
+                        image_resolutions: this.getImageResolutions(),
+                        video_previews_interval: this.videoPreviewsInterval,
+                        invite_limit: this.inviteLimit,
+                        preserve_originals: this.preserveOriginals,
+                    },
+                    confirmation,
+                ),
             )
                 .onSuccess(() => {
                     this.busy = false;
@@ -485,6 +509,32 @@ export default defineComponent({
                         },
                         badRequest: () => {
                             this.error = this.$t("Invalid configuration provided");
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");

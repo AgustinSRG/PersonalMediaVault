@@ -3,9 +3,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/subtle"
-	"encoding/hex"
 	"sync"
 	"time"
 )
@@ -21,328 +18,149 @@ type ActiveSession struct {
 
 	id string // Session token
 
+	mu *sync.Mutex // Mutex for the struct
+
 	user string // User
 
 	invitedBy string // Invited by
 
-	write bool // Write permissions
 	root  bool // Root permission
+	write bool // Write permissions
 
 	key []byte // Decryption key
 
 	timestamp int64 // Creation timestamp
 	not_after int64 // Expiration
+
+	tfa       bool   // Two factor auth enabled?
+	tfaKey    []byte // Two factor auth key
+	tfaMethod string // Two factor auth method
+
+	authConfirmationEnabled bool          // Auth confirmation enabled?
+	authConfirmationMethod  string        // Auth confirmation method (tfa or pw)
+	authConfirmationPeriod  time.Duration // Auth confirmation period
+
+	authConfirmationLastTime int64 // Last time auth confirmation was successfully (Unix Millis)
+	authConfirmationLastTry  int64 // Last time auth confirmation wsa tried and failed (Unix Millis)
 }
 
-// Session Manager
-type SessionManager struct {
-	vault *Vault // Reference to vault
+// Gets the user for this session
+func (s *ActiveSession) GetUser() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	lock *sync.Mutex // Mutex to access the data
-
-	next_index uint64 // Counter to make unique session indexes
-
-	sessions []([]*ActiveSession) // Sessions
+	return s.user
 }
 
-// Initialization
-func (sm *SessionManager) Initialize(vault *Vault) {
-	sm.vault = vault
-	sm.lock = &sync.Mutex{}
-	sm.next_index = 0
-	sm.sessions = make([]([]*ActiveSession), 256)
+// Checks if the session is an user
+// Returns true if is an user, false if invited
+func (s *ActiveSession) IsUser() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	for i := 0; i < 256; i++ {
-		sm.sessions[i] = make([]*ActiveSession, 0)
-	}
-
-	go sm.RunSessionChecker()
+	return len(s.user) > 0
 }
 
-// Creates a session
-// user - Username
-// key - Vault decryption key
-// root - Root access
-// write - Write access
-// expirationTime - Expiration time (Milliseconds)
-// invitedBy - User who invited
-// Returns an error if failed, and the session ID if successful
-func (sm *SessionManager) CreateSession(user string, key []byte, root bool, write bool, expirationTime int64, invitedBy string) (string, error) {
-	sessionBytes := make([]byte, 32)
-	_, err_rand := rand.Read(sessionBytes)
+// Checks if the session has write permissions
+func (s *ActiveSession) CanWrite() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if err_rand != nil {
-		return "", err_rand
-	}
+	return s.write
+}
 
-	sessionHash := uint8(sessionBytes[0])
-	sessionId := hex.EncodeToString(sessionBytes)
+// Gets details for auth context API
+func (s *ActiveSession) GetContextDetails() (username string, root bool, write bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	sm.lock.Lock()
+	return s.user, s.root, s.write
+}
 
-	isFirstSession := len(sm.sessions) == 0
+// Gets two factor authentication properties to check codes
+func (s *ActiveSession) GetTwoFactorAuth() (tfaEnabled bool, tfaMethod string, tfaKey []byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
+	return s.tfa, s.tfaMethod, s.tfaKey
+}
+
+// Checks auth confirmation
+func (s *ActiveSession) CheckAuthConfirmation(password string, tfaCode string, onlyTfa bool) (success bool, cooldown bool, requiredMethod string) {
 	now := time.Now().UnixMilli()
 
-	newSession := ActiveSession{
-		index:     sm.next_index,
-		id:        sessionId,
-		user:      user,
-		invitedBy: invitedBy,
-		key:       key,
-		write:     write,
-		root:      root,
-		timestamp: now,
-		not_after: now + expirationTime,
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.authConfirmationEnabled {
+		return true, false, "" // No auth confirmation
 	}
 
-	sm.next_index++
-
-	sm.sessions[sessionHash] = append(sm.sessions[sessionHash], &newSession)
-
-	sm.lock.Unlock()
-
-	// Call task manager to start pending tasks
-	err := sm.vault.tasks.OnNewSession(&newSession)
-
-	if err != nil {
-		LogError(err)
+	if now-s.authConfirmationLastTry < AUTH_FAIL_COOLDOWN {
+		return false, true, s.authConfirmationMethod
 	}
 
-	if isFirstSession {
-		// Pre-cache tags and albums
-		go sm.vault.tags.PreCacheTags(key)
-		go sm.vault.albums.PreCacheAlbums(key)
+	if time.Duration(now-s.authConfirmationLastTime)*time.Millisecond < s.authConfirmationPeriod {
+		// No need to check, recently confirmed
+		return true, false, s.authConfirmationMethod
 	}
 
-	return sessionId, nil
-}
-
-// Closes a session
-// session_id - Session token
-// Returns true only if the session existed
-func (sm *SessionManager) CloseSession(session_id string) bool {
-	sessionHash := getSessionIdHash(session_id)
-
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	sessionsList := sm.sessions[sessionHash]
-
-	for i := 0; i < len(sessionsList); i++ {
-		if sessionsList[i].id == session_id {
-			sessionsList[i] = sessionsList[len(sessionsList)-1]
-			sm.sessions[sessionHash] = sessionsList[:len(sessionsList)-1]
-			return true
-		}
-	}
-
-	return false
-}
-
-// Clear expired sessions, check once each 5 minutes
-func (sm *SessionManager) RunSessionChecker() {
-	for {
-		time.Sleep(5 * time.Minute)
-
-		sm.ClearExpiredSessions()
-	}
-}
-
-// Clears expired sessions
-func (sm *SessionManager) ClearExpiredSessions() {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	now := time.Now().UnixMilli()
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		for j := 0; j < len(sessionsList); j++ {
-			if sessionsList[j].not_after < now {
-				// Delete
-				sessionsList[j] = sessionsList[len(sessionsList)-1]
-				sessionsList = sessionsList[:len(sessionsList)-1]
-				sm.sessions[i] = sessionsList
-				j--
-			}
-		}
-	}
-}
-
-// Finds a session
-// session_id - Session token
-// Returns the session or nil if not found
-func (sm *SessionManager) FindSession(session_id string) *ActiveSession {
-	sessionHash := getSessionIdHash(session_id)
-
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	sessionsList := sm.sessions[sessionHash]
-	now := time.Now().UnixMilli()
-
-	for i := 0; i < len(sessionsList); i++ {
-		session := sessionsList[i]
-
-		if session.not_after < now {
-			continue // Expired session
+	if s.authConfirmationMethod == "pw" || !s.tfa {
+		if onlyTfa {
+			return true, false, "pw"
 		}
 
-		if subtle.ConstantTimeCompare([]byte(session.id), []byte(session_id)) == 1 {
-			return session
+		if password == "" {
+			return false, false, "pw"
 		}
-	}
 
-	return nil
-}
+		// Password check
+		valid, _ := GetVault().credentials.CheckPassword(s.user, password)
 
-// Finds any session
-// Returns a session, or nil if the vault is locked
-func (sm *SessionManager) FindAnySession() *ActiveSession {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		if len(sessionsList) > 0 {
-			return sessionsList[0]
+		if !valid {
+			// Set last try
+			s.authConfirmationLastTry = now
+		} else {
+			s.authConfirmationLastTime = now
 		}
-	}
 
-	return nil
-}
-
-// Changes session username
-// user - Old username
-// new_user - New username
-func (sm *SessionManager) ChangeUsername(user string, new_user string) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		for j := 0; j < len(sessionsList); j++ {
-			session := sessionsList[j]
-
-			if session.user == user {
-				session.user = new_user
-			}
-
-			if session.invitedBy == user {
-				session.invitedBy = new_user
-			}
+		return valid, false, "pw"
+	} else {
+		if tfaCode == "" {
+			return false, false, "tfa"
 		}
+
+		// TFA check
+
+		valid := validateTwoFactorAuthCode(s.tfaMethod, s.tfaKey, tfaCode)
+
+		if !valid {
+			// Set last try
+			s.authConfirmationLastTry = now
+		} else {
+			s.authConfirmationLastTime = now
+		}
+
+		return valid, false, "tfa"
 	}
 }
 
-// Removes all the sessions for an user
-// user - Username
-func (sm *SessionManager) RemoveUserSessions(user string) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
+// Gets account security options for the API
+func (s *ActiveSession) GetAccountSecurityOptions() *AccountSecurityOptions {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
+	authConfirmMethod := s.authConfirmationMethod
 
-		for j := 0; j < len(sessionsList); j++ {
-			if sessionsList[j].user == user || sessionsList[j].invitedBy == user {
-				// Delete
-				sessionsList[j] = sessionsList[len(sessionsList)-1]
-				sessionsList = sessionsList[:len(sessionsList)-1]
-				sm.sessions[i] = sessionsList
-				j--
-			}
-		}
-	}
-}
-
-// Removes all the sessions for an user
-// user - Username
-func (sm *SessionManager) UpdateUserSessions(user string, write bool) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		for j := 0; j < len(sessionsList); j++ {
-			if sessionsList[j].user == user {
-				// Update
-				sessionsList[j].write = write
-			}
-		}
-	}
-}
-
-// Removes an invite session
-// invitedBy - User who invited
-// index - Session unique index
-func (sm *SessionManager) RemoveInviteSession(invitedBy string, index uint64) {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		for j := 0; j < len(sessionsList); j++ {
-			if sessionsList[j].invitedBy == invitedBy && sessionsList[j].index == index {
-				// Delete
-				sessionsList[j] = sessionsList[len(sessionsList)-1]
-				sessionsList = sessionsList[:len(sessionsList)-1]
-				sm.sessions[i] = sessionsList
-				return
-			}
-		}
-	}
-}
-
-// Finds sessions invited by an user
-// user - The user
-// Returns the list of sessions
-func (sm *SessionManager) FindInviteSessions(user string) []InviteCodeSessionItem {
-	sm.lock.Lock()
-	defer sm.lock.Unlock()
-
-	result := make([]InviteCodeSessionItem, 0)
-
-	for i := 0; i < len(sm.sessions); i++ {
-		sessionsList := sm.sessions[i]
-
-		for j := 0; j < len(sessionsList); j++ {
-			session := sessionsList[j]
-
-			if session.user == "" && session.invitedBy == user {
-				result = append(result, InviteCodeSessionItem{
-					Index:      session.index,
-					Timestamp:  session.timestamp,
-					Expiration: session.not_after,
-				})
-			}
-		}
+	if authConfirmMethod == "" {
+		authConfirmMethod = "tfa"
 	}
 
-	return result
-}
-
-// Computes session hash for the sessions hash table
-// sessionId - The session id
-// Returns a number from 0 to 255
-func getSessionIdHash(sessionId string) uint8 {
-	if len(sessionId) < 2 {
-		return 0
+	return &AccountSecurityOptions{
+		TwoFactorAuthEnabled:          s.tfa,
+		TwoFactorAuthMethod:           s.tfaMethod,
+		AuthConfirmationEnabled:       s.authConfirmationEnabled,
+		AuthConfirmationMethod:        authConfirmMethod,
+		AuthConfirmationPeriodSeconds: uint32(s.authConfirmationPeriod / time.Second),
 	}
-
-	prefix := sessionId[0:2]
-
-	dec, err := hex.DecodeString(prefix)
-
-	if err != nil || len(dec) < 1 {
-		return 0
-	}
-
-	return dec[0]
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -70,6 +71,12 @@ func Albums_API_Test_Create_Album(server *httptest.Server, session string, t *te
 }
 
 func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	// Create albums
 
 	album1Name := "Album 1"
@@ -586,7 +593,7 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 
 	// Delete album
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/delete", nil, session)
+	statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/albums/"+fmt.Sprint(album2)+"/delete", nil, session, initialPassword, "")
 
 	if err != nil {
 		t.Error(err)

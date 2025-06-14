@@ -24,7 +24,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
