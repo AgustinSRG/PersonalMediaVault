@@ -132,7 +132,7 @@ export default defineComponent({
 
             algorithm: "sha1" as TimeOtpAlgorithm,
 
-            period: "60" as TimeOtpPeriod,
+            period: "30" as TimeOtpPeriod,
 
             skew: true,
 
