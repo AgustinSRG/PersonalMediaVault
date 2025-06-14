@@ -133,6 +133,15 @@
             :subtitle-to-delete="subtitleToDelete"
             @confirm="removeSubtitlesConfirm"
         ></SubtitlesDeleteModal>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+            @confirm="removeSubtitlesConfirmInternal"
+        ></AuthConfirmationModal>
     </div>
 </template>
 
@@ -151,12 +160,15 @@ import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
+import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorSubtitles",
     components: {
         LoadingIcon,
         SubtitlesDeleteModal,
+        AuthConfirmationModal,
     },
     emits: ["changed"],
     setup() {
@@ -194,6 +206,11 @@ export default defineComponent({
 
             displaySubtitlesDelete: false,
             subtitleToDelete: null as MediaSubtitle,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
 
@@ -354,6 +371,10 @@ export default defineComponent({
         },
 
         removeSubtitlesConfirm: function () {
+            this.removeSubtitlesConfirmInternal({});
+        },
+
+        removeSubtitlesConfirmInternal: function (confirmation: ProvidedAuthConfirmation) {
             const sub = this.subtitleToDelete;
 
             if (this.busyDeleting || !sub) {
@@ -366,7 +387,7 @@ export default defineComponent({
             const mediaId = AppStatus.CurrentMedia;
             const id = sub.id;
 
-            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveSubtitles(mediaId, id))
+            makeNamedApiRequest(this.requestIdDelete, apiMediaRemoveSubtitles(mediaId, id, confirmation))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Removed subtitles") + ": " + sub.name);
                     this.busyDeleting = false;
@@ -393,6 +414,32 @@ export default defineComponent({
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));

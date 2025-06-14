@@ -177,7 +177,10 @@ export type DeleteAlbumErrorHandler = CommonAuthenticatedErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiAlbumsDeleteAlbum(id: number, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, DeleteAlbumErrorHandler> {
+export function apiAlbumsDeleteAlbum(
+    id: number,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, DeleteAlbumErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/delete`),

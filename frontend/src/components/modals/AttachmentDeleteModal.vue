@@ -34,7 +34,9 @@
                 </table>
             </div>
             <div class="modal-footer no-padding">
-                <button type="submit" :disabled="!confirmation" class="modal-footer-btn auto-focus"><i class="fas fa-trash-alt"></i> {{ $t("Delete") }}</button>
+                <button type="submit" :disabled="!confirmation" class="modal-footer-btn auto-focus">
+                    <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                </button>
             </div>
         </form>
     </ModalDialogContainer>
@@ -47,10 +49,10 @@ import { MediaAttachment } from "@/api/models";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+    name: "AttachmentDeleteModal",
     components: {
         ToggleSwitch,
     },
-    name: "AttachmentDeleteModal",
     props: {
         attachmentToDelete: Object as PropType<MediaAttachment>,
         display: Boolean,

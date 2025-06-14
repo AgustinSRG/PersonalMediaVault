@@ -212,10 +212,10 @@
         <AuthConfirmationModal
             v-if="displayAuthConfirmation"
             v-model:display="displayAuthConfirmation"
-            @confirm="submitInternal"
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
+            @confirm="submitInternal"
         ></AuthConfirmationModal>
 
         <SaveChangesAskModal v-model:display="displayAskSave" @yes="submit" @no="closeForced"></SaveChangesAskModal>

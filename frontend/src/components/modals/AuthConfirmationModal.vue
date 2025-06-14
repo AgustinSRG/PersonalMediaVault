@@ -17,7 +17,7 @@
                     <PasswordInput v-model:val="password" :name="'password'" :auto-focus="true" @tab-skip="passwordTabSkip"></PasswordInput>
                 </div>
 
-                <div class="form-error" v-if="error">{{ error }}</div>
+                <div v-if="error" class="form-error">{{ error }}</div>
             </div>
 
             <div class="modal-footer no-padding">

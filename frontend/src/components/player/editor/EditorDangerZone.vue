@@ -68,6 +68,15 @@
             :file-size="replaceFileSize"
             @confirm="doReplaceMedia"
         ></ReplaceMediaConfirmationModal>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+            @confirm="doReplaceMediaInternal"
+        ></AuthConfirmationModal>
     </div>
 </template>
 
@@ -85,6 +94,8 @@ import ReplaceMediaConfirmationModal from "@/components/modals/ReplaceMediaConfi
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
+import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorDangerZone",
@@ -93,6 +104,7 @@ export default defineComponent({
         ReEncodeConfirmationModal,
         ReplaceMediaConfirmationModal,
         LoadingIcon,
+        AuthConfirmationModal,
     },
     emits: ["changed"],
     setup() {
@@ -124,6 +136,11 @@ export default defineComponent({
 
             errorReplace: "",
             errorReEncode: "",
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
 
@@ -243,6 +260,10 @@ export default defineComponent({
         },
 
         doReplaceMedia: function () {
+            this.doReplaceMediaInternal({});
+        },
+
+        doReplaceMediaInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busyReplace) {
                 return;
             }
@@ -260,7 +281,7 @@ export default defineComponent({
 
             const mediaId = AppStatus.CurrentMedia;
 
-            makeNamedApiRequest(this.requestId, apiMediaReplaceMedia(mediaId, file))
+            makeNamedApiRequest(this.requestId, apiMediaReplaceMedia(mediaId, file, confirmation))
                 .onSuccess(() => {
                     PagesController.ShowSnackBarRight(this.$t("Successfully uploaded") + ": " + file.name);
                     this.busyReplace = false;
@@ -300,6 +321,32 @@ export default defineComponent({
                         },
                         badRequest: () => {
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Bad request");
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");

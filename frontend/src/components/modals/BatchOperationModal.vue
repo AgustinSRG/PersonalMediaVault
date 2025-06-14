@@ -201,10 +201,10 @@
         <AuthConfirmationModal
             v-if="displayAuthConfirmation"
             v-model:display="displayAuthConfirmation"
-            @confirm="actionDeleteInternal"
             :tfa="authConfirmationTfa"
             :cooldown="authConfirmationCooldown"
             :error="authConfirmationError"
+            @confirm="actionDeleteInternal"
         ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
@@ -978,6 +978,7 @@ export default defineComponent({
 
         actionDeleteInternal: function (confirmation: ProvidedAuthConfirmation) {
             this.status = "action";
+            this.displayProgress = true;
             makeNamedApiRequest(this.batchRequestId, apiMediaDeleteMedia(this.authConfirmationDeleteId, confirmation))
                 .onSuccess(() => {
                     this.actionNext(this.authConfirmationDeleteNext);
@@ -991,12 +992,14 @@ export default defineComponent({
                         },
                         requiredAuthConfirmationPassword: () => {
                             this.status = "";
+                            this.displayProgress = false;
                             this.displayAuthConfirmation = true;
                             this.authConfirmationError = "";
                             this.authConfirmationTfa = false;
                         },
                         invalidPassword: () => {
                             this.status = "";
+                            this.displayProgress = false;
                             this.displayAuthConfirmation = true;
                             this.authConfirmationError = this.$t("Invalid password");
                             this.authConfirmationTfa = false;
@@ -1004,12 +1007,14 @@ export default defineComponent({
                         },
                         requiredAuthConfirmationTfa: () => {
                             this.status = "";
+                            this.displayProgress = false;
                             this.displayAuthConfirmation = true;
                             this.authConfirmationError = "";
                             this.authConfirmationTfa = true;
                         },
                         invalidTfaCode: () => {
                             this.status = "";
+                            this.displayProgress = false;
                             this.displayAuthConfirmation = true;
                             this.authConfirmationError = this.$t("Invalid one-time code");
                             this.authConfirmationTfa = true;
@@ -1017,6 +1022,7 @@ export default defineComponent({
                         },
                         cooldown: () => {
                             this.status = "";
+                            this.displayProgress = false;
                             this.displayAuthConfirmation = true;
                             this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },

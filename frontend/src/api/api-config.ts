@@ -73,7 +73,10 @@ export type SetConfigErrorHandler = CommonAuthenticatedErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiConfigSetConfig(config: VaultUserConfig, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, SetConfigErrorHandler> {
+export function apiConfigSetConfig(
+    config: VaultUserConfig,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, SetConfigErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}`),

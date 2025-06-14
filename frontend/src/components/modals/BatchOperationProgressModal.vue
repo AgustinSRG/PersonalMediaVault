@@ -109,10 +109,10 @@ import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+    name: "BatchOperationProgressModal",
     components: {
         ToggleSwitch,
     },
-    name: "BatchOperationProgressModal",
     props: {
         display: Boolean,
 

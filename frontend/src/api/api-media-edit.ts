@@ -423,7 +423,11 @@ export type ReplaceMediaErrorHandler = MediaEditApiErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaReplaceMedia(id: number, file: File, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, ReplaceMediaErrorHandler> {
+export function apiMediaReplaceMedia(
+    id: number,
+    file: File,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, ReplaceMediaErrorHandler> {
     const form = new FormData();
     form.append("file", file);
     return {
@@ -459,7 +463,10 @@ export function apiMediaReplaceMedia(id: number, file: File, providedAuthConfirm
  * @param id Media ID
  * @returns The request parameters
  */
-export function apiMediaDeleteMedia(id: number, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, MediaDeleteApiErrorHandler> {
+export function apiMediaDeleteMedia(
+    id: number,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, MediaDeleteApiErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/delete`),
@@ -751,7 +758,11 @@ export type RemoveSubtitlesErrorHandler = MediaEditApiErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveSubtitles(mediaId: number, id: string, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveSubtitlesErrorHandler> {
+export function apiMediaRemoveSubtitles(
+    mediaId: number,
+    id: string,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, RemoveSubtitlesErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(
@@ -942,7 +953,11 @@ export type RemoveAudioTrackErrorHandler = MediaEditApiErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveAudioTrack(mediaId: number, id: string, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveAudioTrackErrorHandler> {
+export function apiMediaRemoveAudioTrack(
+    mediaId: number,
+    id: string,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, RemoveAudioTrackErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(mediaId + "")}/audios/remove?id=${encodeURIComponent(id)}`),
@@ -1094,7 +1109,11 @@ export type RemoveAttachmentErrorHandler = MediaEditApiErrorHandler & {
  * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiMediaRemoveAttachment(mediaId: number, id: number, providedAuthConfirmation: ProvidedAuthConfirmation): RequestParams<void, RemoveAttachmentErrorHandler> {
+export function apiMediaRemoveAttachment(
+    mediaId: number,
+    id: number,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, RemoveAttachmentErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(
