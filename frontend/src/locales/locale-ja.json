@@ -49,7 +49,7 @@
     "Album shuffle enabled": "アルバムシャッフル有効",
     "Albums": "アルバム",
     "Albums list": "アルバムリスト",
-    "Allow clock skew if one period": "1つの期間の場合、クロックスキューを許可する",
+    "Allow clock skew of one period": "1周期分のクロックスキューを許容する",
     "Allow colors": "色を許可",
     "Allow line breaks": "改行を許可",
     "Animation style": "アニメーションスタイル",

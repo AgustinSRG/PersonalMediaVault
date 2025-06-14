@@ -86,7 +86,7 @@
             v-model:algorithm="algorithm"
             v-model:period="period"
             v-model:skew="skew"
-            @update:display="onCloseCustomSettingsModal"
+            @done="onCloseCustomSettingsModal"
         ></AccountTfaSettingsModal>
     </ModalDialogContainer>
 </template>

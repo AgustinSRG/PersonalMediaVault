@@ -37,14 +37,14 @@
                 </div>
 
                 <div class="form-group">
-                    <table class="table no-border">
+                    <table class="table no-margin no-border">
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
                                     <ToggleSwitch v-model:val="skewStatus"></ToggleSwitch>
                                 </td>
                                 <td>
-                                    {{ $t("Allow clock skew if one period") }}
+                                    {{ $t("Allow clock skew of one period") }}
                                 </td>
                             </tr>
                         </tbody>
@@ -79,7 +79,7 @@ export default defineComponent({
         period: String as PropType<TimeOtpPeriod>,
         skew: Boolean,
     },
-    emits: ["update:display", "update:issuer", "update:account", "update:algorithm", "update:period", "update:skew"],
+    emits: ["update:display", "update:issuer", "update:account", "update:algorithm", "update:period", "update:skew", "done"],
     setup(props) {
         return {
             displayStatus: useVModel(props, "display"),
@@ -129,6 +129,8 @@ export default defineComponent({
             if (e) {
                 e.preventDefault();
             }
+
+            this.$emit("done");
 
             this.close();
         },
