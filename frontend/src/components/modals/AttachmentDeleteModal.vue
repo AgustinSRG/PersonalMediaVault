@@ -17,9 +17,24 @@
                 <div class="form-group">
                     <label>{{ attachmentToDelete ? attachmentToDelete.name : "" }}</label>
                 </div>
+
+                <table class="table no-border">
+                    <tbody>
+                        <tr>
+                            <td class="text-right td-shrink no-padding">
+                                <ToggleSwitch v-model:val="confirmation"></ToggleSwitch>
+                            </td>
+                            <td>
+                                {{ $t("Remember. If you delete the attachment by accident you would have to re-upload it.") }}
+                                <br />
+                                {{ $t("Make sure you actually want to delete it.") }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="modal-footer no-padding">
-                <button type="submit" class="modal-footer-btn auto-focus"><i class="fas fa-trash-alt"></i> {{ $t("Delete") }}</button>
+                <button type="submit" :disabled="!confirmation" class="modal-footer-btn auto-focus"><i class="fas fa-trash-alt"></i> {{ $t("Delete") }}</button>
             </div>
         </form>
     </ModalDialogContainer>
@@ -29,8 +44,12 @@
 import { PropType, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { MediaAttachment } from "@/api/models";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({
+    components: {
+        ToggleSwitch,
+    },
     name: "AttachmentDeleteModal",
     props: {
         attachmentToDelete: Object as PropType<MediaAttachment>,
@@ -45,6 +64,8 @@ export default defineComponent({
     data: function () {
         return {
             name: "",
+
+            confirmation: false,
 
             closeSignal: 0,
         };

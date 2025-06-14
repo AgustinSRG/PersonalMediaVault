@@ -65,6 +65,15 @@
                 </button>
             </div>
         </form>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="submitInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -79,6 +88,8 @@ import { apiAdminCreateAccount } from "@/api/api-admin";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "AccountCreateModal",
@@ -86,6 +97,7 @@ export default defineComponent({
         LoadingIcon,
         PasswordInput,
         PasswordStrengthIndicator,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -105,6 +117,11 @@ export default defineComponent({
 
             busy: false,
             error: "",
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
 
             closeSignal: 0,
         };
@@ -138,71 +155,7 @@ export default defineComponent({
         submit: function (e: Event) {
             e.preventDefault();
 
-            if (this.busy) {
-                return;
-            }
-
-            if (this.accountPassword !== this.accountPassword2) {
-                this.error = this.$t("The passwords do not match");
-                return;
-            }
-
-            const username = this.accountUsername;
-            const password = this.accountPassword;
-            const write = this.accountWrite;
-
-            this.busy = true;
-            this.error = "";
-
-            makeApiRequest(apiAdminCreateAccount(username, password, write))
-                .onSuccess(() => {
-                    this.busy = false;
-                    PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);
-                    this.accountUsername = "";
-                    this.accountPassword = "";
-                    this.accountPassword2 = "";
-                    this.accountWrite = false;
-                    this.$emit("account-created");
-                    this.close();
-                })
-                .onCancel(() => {
-                    this.busy = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busy = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidUsername: () => {
-                            this.error = this.$t("Invalid username provided");
-                        },
-                        usernameInUse: () => {
-                            this.error = this.$t("The username is already in use");
-                        },
-                        invalidPassword: () => {
-                            this.error = this.$t("Invalid password provided");
-                        },
-                        badRequest: () => {
-                            this.error = this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.error = this.$t("Access denied");
-                        },
-                        serverError: () => {
-                            this.error = this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.error = this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.error = err.message;
-                    console.error(err);
-                    this.busy = false;
-                });
+            this.submitInternal({});
         },
 
         close: function () {
@@ -229,6 +182,100 @@ export default defineComponent({
                 e.preventDefault();
                 nextElement.focus();
             }
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
+            if (this.busy) {
+                return;
+            }
+
+            if (this.accountPassword !== this.accountPassword2) {
+                this.error = this.$t("The passwords do not match");
+                return;
+            }
+
+            const username = this.accountUsername;
+            const password = this.accountPassword;
+            const write = this.accountWrite;
+
+            this.busy = true;
+            this.error = "";
+
+            makeApiRequest(apiAdminCreateAccount(username, password, write, confirmation))
+                .onSuccess(() => {
+                    this.busy = false;
+                    PagesController.ShowSnackBar(this.$t("Account created") + ": " + username);
+                    this.accountUsername = "";
+                    this.accountPassword = "";
+                    this.accountPassword2 = "";
+                    this.accountWrite = false;
+                    this.$emit("account-created");
+                    this.close();
+                })
+                .onCancel(() => {
+                    this.busy = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busy = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            this.error = this.$t("Access denied");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        invalidUsername: () => {
+                            this.error = this.$t("Invalid username provided");
+                        },
+                        usernameInUse: () => {
+                            this.error = this.$t("The username is already in use");
+                        },
+                        invalidUserPassword: () => {
+                            this.error = this.$t("Invalid password provided");
+                        },
+                        badRequest: () => {
+                            this.error = this.$t("Bad request");
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
+                        },
+                        accessDenied: () => {
+                            this.error = this.$t("Access denied");
+                        },
+                        serverError: () => {
+                            this.error = this.$t("Internal server error");
+                        },
+                        networkError: () => {
+                            this.error = this.$t("Could not connect to the server");
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    this.error = err.message;
+                    console.error(err);
+                    this.busy = false;
+                });
         },
     },
 });

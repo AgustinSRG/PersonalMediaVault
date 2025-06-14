@@ -42,6 +42,15 @@
                 </button>
             </div>
         </form>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="submitInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -54,11 +63,14 @@ import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { apiAdminUpdateAccount } from "@/api/api-admin";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "AccountModifyModal",
     components: {
         LoadingIcon,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -83,6 +95,11 @@ export default defineComponent({
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
@@ -125,6 +142,10 @@ export default defineComponent({
         submit: function (e: Event) {
             e.preventDefault();
 
+            this.submitInternal({});
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busy) {
                 return;
             }
@@ -132,7 +153,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAdminUpdateAccount(this.username, this.accountUsername, this.accountWrite))
+            makeApiRequest(apiAdminUpdateAccount(this.username, this.accountUsername, this.accountWrite, confirmation))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Account updated") + ": " + this.accountUsername);
@@ -157,6 +178,32 @@ export default defineComponent({
                         },
                         badRequest: () => {
                             this.error = this.$t("Bad request");
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");

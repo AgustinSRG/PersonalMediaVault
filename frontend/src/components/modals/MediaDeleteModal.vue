@@ -15,32 +15,37 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>
-                        {{ $t("Remember. If you delete the media by accident you would have to re-upload it.") }}
-                        {{ $t("Make sure you actually want to delete it.") }}
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>{{ $t("Type 'confirm' for confirmation") }}:</label>
-                    <input
-                        v-model="confirmation"
-                        type="text"
-                        name="confirmation"
-                        autocomplete="off"
-                        :disabled="busy"
-                        maxlength="255"
-                        class="form-control form-control-full-width auto-focus"
-                    />
-                </div>
+                <table class="table no-border">
+                    <tbody>
+                        <tr>
+                            <td class="text-right td-shrink no-padding">
+                                <ToggleSwitch v-model:val="confirmation"></ToggleSwitch>
+                            </td>
+                            <td>
+                                {{ $t("Remember. If you delete the media by accident you would have to re-upload it.") }}
+                                <br />
+                                {{ $t("Make sure you actually want to delete it.") }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="form-error">{{ error }}</div>
             </div>
             <div class="modal-footer no-padding">
-                <button :disabled="busy" type="submit" class="modal-footer-btn">
+                <button :disabled="busy || !confirmation" type="submit" class="modal-footer-btn">
                     <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Delete media") }}
                 </button>
             </div>
         </form>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            @confirm="submitInternal"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -56,11 +61,16 @@ import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "MediaDeleteModal",
     components: {
         LoadingIcon,
+        ToggleSwitch,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -76,20 +86,25 @@ export default defineComponent({
             currentMedia: -1,
             oldName: "",
 
-            confirmation: "",
+            confirmation: false,
 
             busy: false,
             error: "",
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
         display: function () {
             if (this.display) {
                 this.error = "";
-                this.confirmation = "";
+                this.confirmation = false;
                 this.autoFocus();
             }
         },
@@ -102,7 +117,7 @@ export default defineComponent({
 
         if (this.display) {
             this.error = "";
-            this.confirmation = "";
+            this.confirmation = false;
             this.autoFocus();
         }
     },
@@ -133,12 +148,11 @@ export default defineComponent({
         submit: function (e: Event) {
             e.preventDefault();
 
-            if (this.busy) {
-                return;
-            }
+            this.submitInternal({});
+        },
 
-            if (this.confirmation.toLowerCase() !== "confirm") {
-                this.error = this.$t("You must type 'confirm' in order to confirm the deletion of the media");
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
+            if (this.busy) {
                 return;
             }
 
@@ -147,11 +161,11 @@ export default defineComponent({
 
             const mediaId = this.currentMedia;
 
-            makeApiRequest(apiMediaDeleteMedia(mediaId))
+            makeApiRequest(apiMediaDeleteMedia(mediaId, confirmation))
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Media deleted") + ": " + this.oldName);
                     this.busy = false;
-                    this.confirmation = "";
+                    this.confirmation = false;
                     this.forceCloseSignal++;
                     AlbumsController.LoadCurrentAlbum();
                     AppStatus.OnDeleteMedia();
@@ -165,6 +179,32 @@ export default defineComponent({
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
                             AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        requiredAuthConfirmationPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = false;
+                        },
+                        invalidPassword: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid password");
+                            this.authConfirmationTfa = false;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");
