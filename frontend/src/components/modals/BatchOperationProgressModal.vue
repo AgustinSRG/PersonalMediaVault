@@ -54,7 +54,7 @@
                     <label>{{ $t("Do you want to delete $N elements?").replace("$N", "" + actionCount) }}</label>
                 </div>
 
-                <table class="table no-border">
+                <table class="table no-margin no-border">
                     <tbody>
                         <tr>
                             <td class="text-right td-shrink no-padding">
