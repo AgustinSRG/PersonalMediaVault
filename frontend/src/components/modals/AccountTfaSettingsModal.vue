@@ -1,5 +1,5 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
+    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal" @close="onClose">
         <form v-if="display" class="modal-dialog modal-lg" role="document" @submit="submit">
             <div class="modal-header">
                 <div class="modal-title">{{ $t("Account security settings") }}</div>
@@ -10,17 +10,29 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>{{ $t("Issuer") }}:</label>
-                    <input v-model="issuerStatus" type="text" maxlength="100" class="form-control form-control-full-width auto-focus" />
+                    <input
+                        v-model="issuerStatus"
+                        type="text"
+                        maxlength="100"
+                        class="form-control form-control-full-width auto-focus"
+                        @input="markDirty"
+                    />
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Account name") }}:</label>
-                    <input v-model="accountStatus" type="text" maxlength="100" class="form-control form-control-full-width" />
+                    <input
+                        v-model="accountStatus"
+                        type="text"
+                        maxlength="100"
+                        class="form-control form-control-full-width"
+                        @input="markDirty"
+                    />
                 </div>
 
                 <div class="form-group">
                     <label>{{ $t("Hashing algorithm") }}:</label>
-                    <select v-model="algorithmStatus" class="form-control form-control-full-width form-select">
+                    <select v-model="algorithmStatus" class="form-control form-control-full-width form-select" @change="markDirty">
                         <option :value="'sha1'">SHA-1</option>
                         <option :value="'sha256'">SHA-256</option>
                         <option :value="'sha512'">SHA-512</option>
@@ -29,7 +41,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("One-time password period") }}:</label>
-                    <select v-model="periodStatus" class="form-control form-control-full-width form-select">
+                    <select v-model="periodStatus" class="form-control form-control-full-width form-select" @change="markDirty">
                         <option :value="'30'">{{ $t("30 seconds") }}</option>
                         <option :value="'60'">{{ $t("60 seconds") }}</option>
                         <option :value="'120'">{{ $t("120 seconds") }}</option>
@@ -41,7 +53,7 @@
                         <tbody>
                             <tr>
                                 <td class="text-right td-shrink no-padding">
-                                    <ToggleSwitch v-model:val="skewStatus"></ToggleSwitch>
+                                    <ToggleSwitch v-model:val="skewStatus" @update:val="markDirty"></ToggleSwitch>
                                 </td>
                                 <td>
                                     {{ $t("Allow clock skew of one period") }}
@@ -53,7 +65,7 @@
             </div>
 
             <div class="modal-footer no-padding">
-                <button type="submit" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Done") }}</button>
+                <button type="submit" :disabled="!dirty" class="modal-footer-btn"><i class="fas fa-check"></i> {{ $t("Done") }}</button>
             </div>
         </form>
     </ModalDialogContainer>
@@ -93,6 +105,7 @@ export default defineComponent({
     },
     data: function () {
         return {
+            dirty: false,
             closeSignal: 0,
         };
     },
@@ -121,6 +134,17 @@ export default defineComponent({
             });
         },
 
+        onClose: function () {
+            if (this.dirty) {
+                this.dirty = false;
+                this.$emit("done");
+            }
+        },
+
+        markDirty: function () {
+            this.dirty = true;
+        },
+
         close: function () {
             this.closeSignal++;
         },
@@ -129,6 +153,8 @@ export default defineComponent({
             if (e) {
                 e.preventDefault();
             }
+
+            this.dirty = false;
 
             this.$emit("done");
 
