@@ -15,6 +15,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>{{ $t("Current password") }}:</label>
+                    <input type="text" class="hidden-input" name="username" :value="username" />
                     <PasswordInput
                         v-model:val="currentPassword"
                         :name="'password'"
@@ -71,7 +72,7 @@ import { AppEvents } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
@@ -98,6 +99,8 @@ export default defineComponent({
     },
     data: function () {
         return {
+            username: AuthController.Username,
+
             currentPassword: "",
             password: "",
             password2: "",
@@ -125,6 +128,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
+            this.username = AuthController.Username;
+        });
+
         if (this.display) {
             this.error = "";
             this.currentPassword = "";

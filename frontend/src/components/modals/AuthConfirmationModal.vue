@@ -14,6 +14,7 @@
 
                 <div v-if="!tfa" class="form-group">
                     <label>{{ $t("To confirm the operation, type your account password") }}:</label>
+                    <input type="text" class="hidden-input" name="username" :value="username" />
                     <PasswordInput v-model:val="password" :name="'password'" :auto-focus="true" @tab-skip="passwordTabSkip"></PasswordInput>
                 </div>
 
@@ -43,6 +44,7 @@ import { useVModel } from "../../utils/v-model";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 
 export default defineComponent({
     name: "AuthConfirmationModal",
@@ -71,6 +73,8 @@ export default defineComponent({
             mustWait: 0,
             now: Date.now(),
 
+            username: AuthController.Username,
+
             closeSignal: 0,
         };
     },
@@ -82,6 +86,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
+            this.username = AuthController.Username;
+        });
+
         this.timer = setInterval(this.updateNow.bind(this), 200);
 
         if (this.display) {

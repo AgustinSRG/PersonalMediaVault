@@ -32,7 +32,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("Two factor authentication URL (back it up in case you lose access to your mobile device)") }}:</label>
-                    <input type="text" readonly :value="url" class="form-control form-control-full-width" />
+                    <input type="text" readonly name="totp-url" :value="url" class="form-control form-control-full-width" />
                 </div>
 
                 <div class="form-group">
@@ -46,6 +46,7 @@
 
                 <div class="form-group">
                     <label>{{ $t("To confirm the operation, type your account password") }}:</label>
+                    <input type="text" class="hidden-input" name="username" :value="originalAccount" />
                     <PasswordInput
                         v-model:val="password"
                         :name="'password'"
@@ -129,6 +130,7 @@ export default defineComponent({
         return {
             issuer: "PMV",
             account: AuthController.Username,
+            originalAccount: AuthController.Username,
 
             algorithm: "sha1" as TimeOtpAlgorithm,
 
@@ -170,6 +172,7 @@ export default defineComponent({
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
             this.account = AuthController.Username;
+            this.originalAccount = AuthController.Username;
             this.loadSettings();
         });
 

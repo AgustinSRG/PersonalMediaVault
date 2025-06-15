@@ -1,5 +1,15 @@
 /* Two factor authentication related styles */
 
+.tfa-label {
+    font-size: large;
+    text-align: center;
+    padding-bottom: 0.5rem;
+}
+
+.tfa-cancel-label {
+    text-align: center;
+}
+
 .tfa-status {
     font-weight: bold;
 }
