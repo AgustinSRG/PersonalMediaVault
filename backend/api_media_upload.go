@@ -98,7 +98,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -120,7 +120,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -136,7 +136,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_MEDIA", "Invalid media file provided")
 		return
@@ -149,7 +149,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -158,7 +158,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -171,7 +171,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -186,7 +186,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -205,7 +205,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				LogError(err)
 
-				WipeTemporalFile(tempFile)
+				DeleteTemporalFile(tempFile)
 
 				ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 				return
@@ -225,7 +225,7 @@ func api_uploadMedia(response http.ResponseWriter, request *http.Request) {
 		BackgroundTaskExtractSubtitles(session, media_id, tempFile, probe_data)
 		BackgroundTaskExtractAudios(session, media_id, tempFile, probe_data)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 	}()
 
 	// Return the new ID to the client
@@ -263,7 +263,7 @@ func BackgroundTaskGenerateThumbnail(session *ActiveSession, media_id uint64, te
 
 	thumb_encrypted_file, err := EncryptAssetFile(thumbnail, session.key)
 
-	WipeTemporalFile(thumbnail)
+	DeleteTemporalFile(thumbnail)
 
 	if err != nil {
 		LogError(err)
@@ -372,7 +372,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 		if err != nil {
 			LogError(err)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -383,7 +383,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 
 		if media == nil {
 			os.Remove(srt_encrypted_file)
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 			return
 		}
 
@@ -396,7 +396,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -406,7 +406,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 			os.Remove(srt_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -421,7 +421,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 			os.Remove(srt_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -443,7 +443,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 			os.Remove(srt_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -461,7 +461,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -469,7 +469,7 @@ func BackgroundTaskExtractSubtitles(session *ActiveSession, media_id uint64, tem
 		GetVault().media.ReleaseMediaResource(media_id)
 	}
 
-	WipeTemporalPath(tmpPath) // Remove temp path for subtitles
+	DeleteTemporalPath(tmpPath) // Remove temp path for subtitles
 }
 
 func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFile string, probe_data *FFprobeMediaResult) {
@@ -493,7 +493,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 		if err != nil {
 			LogError(err)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -504,7 +504,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 
 		if media == nil {
 			os.Remove(mp3_encrypted_file)
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 			return
 		}
 
@@ -517,7 +517,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -527,7 +527,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 			os.Remove(mp3_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -542,7 +542,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 			os.Remove(mp3_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -564,7 +564,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 			os.Remove(mp3_encrypted_file)
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -582,7 +582,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 
 			GetVault().media.ReleaseMediaResource(media_id)
 
-			WipeTemporalPath(tmpPath)
+			DeleteTemporalPath(tmpPath)
 
 			return
 		}
@@ -590,7 +590,7 @@ func BackgroundTaskExtractAudios(session *ActiveSession, media_id uint64, tempFi
 		GetVault().media.ReleaseMediaResource(media_id)
 	}
 
-	WipeTemporalPath(tmpPath) // Remove temp path for subtitles
+	DeleteTemporalPath(tmpPath) // Remove temp path for subtitles
 }
 
 func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFile string, ext string, probe_data *FFprobeMediaResult, originalFileName string, originalFileSize uint64, userConfig *UserConfig) {

@@ -17,8 +17,6 @@ var (
 	temp_files_prefix  = "pmv_tmp_"
 	temp_files_lock    = &sync.Mutex{}
 	temp_files_counter = 0
-
-	secure_temp_file_delete = os.Getenv("TEMP_FILE_DELETE_MODE") == "SECURE"
 )
 
 // Set vault temp files path
@@ -83,9 +81,9 @@ func ClearUnencryptedTempFilesPath() {
 
 	for i := 0; i < len(entries); i++ {
 		if entries[i].Type().IsRegular() {
-			WipeTemporalFile(path.Join(unencrypted_temp_files_path, entries[i].Name()))
+			DeleteTemporalFile(path.Join(unencrypted_temp_files_path, entries[i].Name()))
 		} else if entries[i].Type().IsDir() {
-			WipeTemporalPath(path.Join(unencrypted_temp_files_path, entries[i].Name()))
+			DeleteTemporalPath(path.Join(unencrypted_temp_files_path, entries[i].Name()))
 		}
 	}
 }
@@ -147,66 +145,15 @@ func GetTemporalFolder(encrypted bool) (string, error) {
 	return folderPath, nil
 }
 
-// Wipes file to prevent recovery (secure delete)
+// Deletes temporal file
 // file - File path
-func WipeTemporalFile(file string) {
-	if !secure_temp_file_delete {
-		os.Remove(file)
-		return
-	}
-
-	f, err := os.OpenFile(file, os.O_WRONLY, FILE_PERMISSION)
-
-	if err != nil {
-		LogError(err)
-		os.Remove(file)
-		return
-	}
-
-	defer func() {
-		f.Close()
-		os.Remove(file)
-	}()
-
-	fileInfo, err := f.Stat()
-	if err != nil {
-		LogError(err)
-		return
-	}
-
-	fileSize := fileInfo.Size()
-	fileChunk := make([]byte, 1024*1024)
-
-	// Fill chunk with 0
-	for i := 0; i < len(fileChunk); i++ {
-		fileChunk[i] = 0
-	}
-
-	// Overwrite
-
-	bytesWritten := int64(0)
-
-	for bytesWritten < fileSize {
-		bytesToWrite := int64(len(fileChunk))
-
-		if bytesToWrite > (fileSize - bytesWritten) {
-			bytesToWrite = fileSize - bytesWritten
-		}
-
-		_, err = f.Write(fileChunk[:bytesToWrite])
-
-		if err != nil {
-			LogError(err)
-			return
-		}
-
-		bytesWritten += bytesToWrite
-	}
+func DeleteTemporalFile(file string) {
+	os.Remove(file)
 }
 
-// Wipes unencrypted temp path (secure delete)
+// Deletes temporal path
 // p - Path
-func WipeTemporalPath(p string) {
+func DeleteTemporalPath(p string) {
 	entries, err := os.ReadDir(p)
 
 	if err != nil {
@@ -214,9 +161,9 @@ func WipeTemporalPath(p string) {
 		return
 	}
 
-	for i := 0; i < len(entries); i++ {
-		if entries[i].Type().IsRegular() {
-			WipeTemporalFile(path.Join(p, entries[i].Name()))
+	for _, entry := range entries {
+		if entry.Type().IsRegular() {
+			DeleteTemporalFile(path.Join(p, entry.Name()))
 		}
 	}
 

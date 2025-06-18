@@ -512,10 +512,6 @@ func (vc *VaultController) Start() bool {
 		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
 	}
 
-	if vc.launchConfig.SecureTempDelete {
-		cmd.Env = append(cmd.Env, "TEMP_FILE_DELETE_MODE=SECURE")
-	}
-
 	cmd.Stderr = logFile
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
@@ -1282,53 +1278,6 @@ func (vc *VaultController) disableSSL() bool {
 		return false
 	} else {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "ConfigChangesSaved",
-				Other: "Changes in configuration successfully saved.",
-			},
-		})
-		fmt.Println(msg)
-		return true
-	}
-}
-
-func (vc *VaultController) SetSecureTempDelete(d bool) bool {
-	vc.launchConfig.SecureTempDelete = d
-
-	if d {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "SecureDeleteEnabled",
-				Other: "Secure deletion of temp files is now ENABLED.",
-			},
-		})
-		fmt.Println(msg)
-	} else {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "SecureDeleteDisabled",
-				Other: "Secure deletion of temp files is now DISABLED.",
-			},
-		})
-		fmt.Println(msg)
-	}
-
-	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
-
-	if err != nil {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "Error",
-				Other: "Error: {{.Message}}",
-			},
-			TemplateData: map[string]interface{}{
-				"Message": err.Error(),
-			},
-		})
-		fmt.Println(msg)
-		return false
-	} else {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "ConfigChangesSaved",
 				Other: "Changes in configuration successfully saved.",

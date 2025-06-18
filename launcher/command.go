@@ -445,38 +445,6 @@ func runCommand(cmdText string, vc *VaultController) {
 		if vc.disableSSL() {
 			askRestart(vc)
 		}
-	case "sec-del", "secdel", "secure-delete":
-		if len(args) == 2 {
-			if checkYesNoAnswer(args[1]) {
-				args[1] = "y"
-			}
-			switch args[1] {
-			case "y", "on", "yes", "1", "true":
-				if vc.SetSecureTempDelete(true) {
-					askRestart(vc)
-				}
-			case "n", "off", "no", "0", "false":
-				if vc.SetSecureTempDelete(false) {
-					askRestart(vc)
-				}
-			default:
-				msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-					DefaultMessage: &i18n.Message{
-						ID:    "ErrorSecDelUsage",
-						Other: "Usage: sec-del [y/n]",
-					},
-				})
-				fmt.Println(msg)
-			}
-		} else {
-			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-				DefaultMessage: &i18n.Message{
-					ID:    "ErrorSecDelUsage",
-					Other: "Usage: sec-del [y/n]",
-				},
-			})
-			fmt.Println(msg)
-		}
 	case "log-requests", "requests-log":
 		if len(args) == 2 {
 			if checkYesNoAnswer(args[1]) {
@@ -761,14 +729,6 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSSLDisable",
 			Other: "ssl-disable - Disables SSL (use regular HTTP)",
-		},
-	})
-	manList = append(manList, msg)
-
-	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-		DefaultMessage: &i18n.Message{
-			ID:    "ManualCommandSecDel",
-			Other: "sec-del [y/n] - Enables / disables secure deletion of temp files",
 		},
 	})
 	manList = append(manList, msg)

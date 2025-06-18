@@ -101,7 +101,7 @@ func api_addMediaAttachment(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -123,7 +123,7 @@ func api_addMediaAttachment(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -136,7 +136,7 @@ func api_addMediaAttachment(response http.ResponseWriter, request *http.Request)
 
 	attachment_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)

@@ -106,7 +106,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -126,7 +126,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -135,7 +135,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		remaining -= int64(n)
 		if remaining < 0 {
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			response.WriteHeader(413) // Payload too large
 			return
@@ -149,7 +149,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	valid := ValidateSubtitlesFile(tempFile)
 
 	if !valid {
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_SRT", "Invalid srt file provided")
 		return
@@ -159,7 +159,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 
 	srt_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)

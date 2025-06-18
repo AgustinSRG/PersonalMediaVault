@@ -134,7 +134,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -154,7 +154,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -179,7 +179,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -206,7 +206,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -224,7 +224,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -245,7 +245,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -257,7 +257,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -282,7 +282,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		cmd = MakeFFMpegEncodeToPNGCommand(originalTemp, probe_data.Format, tempFolder, &resolution, probe_data.Width, probe_data.Height, userConfig)
 	} else {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -293,7 +293,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -310,7 +310,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		}
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -321,7 +321,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -332,7 +332,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -344,7 +344,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		f.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -358,7 +358,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		f.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -372,7 +372,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		ws.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -390,7 +390,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -412,7 +412,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -425,7 +425,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -441,7 +441,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 
 		return
@@ -453,7 +453,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -477,7 +477,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		media.CancelWrite()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -493,7 +493,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		media.CancelWrite()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -514,7 +514,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		media.CancelWrite()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -531,7 +531,7 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -539,5 +539,5 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 	// Finish task
 	GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-	WipeTemporalPath(tempFolder)
+	DeleteTemporalPath(tempFolder)
 }

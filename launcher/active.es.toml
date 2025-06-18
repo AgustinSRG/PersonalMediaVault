@@ -138,10 +138,6 @@ other = "Error: No se pudo encontrar el binario de análisis multimedia (ffprobe
 hash = "sha1-4f754e00694106c002970e3f55d1eb233bc9c218"
 other = "Uso del comando: re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
 
-[ErrorSecDelUsage]
-hash = "sha1-906676a0ee2327e4ba99fd0fce44c060fed5bc96"
-other = "Uso: sec-del [s/n]"
-
 [ErrorUsernameBlank]
 hash = "sha1-f8972d2e27e924acd24bb202834eba57fb6842d3"
 other = "El nombre de usuario no puede dejarse vacío."
@@ -290,10 +286,6 @@ other = "ssl-disable - Deshabilita SSL (usar HTTP)"
 hash = "sha1-9b81ce72cf1612a31d57f7f3e2f11f5951d9de73"
 other = "ssl-setup - Establece la configuración SSL para usar HTTPS para acceder a la galería"
 
-[ManualCommandSecDel]
-hash = "sha1-e850c5fc4d039a0aa3510a7565eef8822e1415af"
-other = "sec-del [s/n] - Habilita o deshabilita el modo seguro de eliminación de ficheros temporales"
-
 [ManualCommandStart]
 hash = "sha1-a4e6deed79b44503bb9eda2584b5f535b36e81b1"
 other = "start - Inicia la galería"
@@ -365,14 +357,6 @@ other = "La galería no tiene SSL habilitado."
 [SSLkeyFile]
 hash = "sha1-c90259e834f5f2b6f7d090ff91d27b29693ecbe3"
 other = "Clave privada SSL: {{.File}}"
-
-[SecureDeleteDisabled]
-hash = "sha1-943ff12ec1921bc1fef74ae1f522202c3e403fea"
-other = "El modo seguro de eliminación de ficheros temporales se encuentra DESHABILITADO."
-
-[SecureDeleteEnabled]
-hash = "sha1-d4af8a592ae5d10b69a7c7a9dba9d4bce04fa60c"
-other = "El modo seguro de eliminación de ficheros temporales se encuentra HABILITADO."
 
 [SetupSSLAsk]
 hash = "sha1-6e571b8dfbbb06d36e5de07edee2dc533b159ce5"

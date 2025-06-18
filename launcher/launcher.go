@@ -21,16 +21,15 @@ var (
 )
 
 type LauncherConfig struct {
-	Path             string `json:"path"`
-	HostName         string `json:"hostname"`
-	Port             int    `json:"port"`
-	Local            bool   `json:"local"`
-	SSL_Cert         string `json:"ssl_cert"`
-	SSL_Key          string `json:"ssl_key"`
-	SecureTempDelete bool   `json:"secure_tmp_delete"`
-	CacheSize        *int   `json:"cache_size"`
-	LogRequests      bool   `json:"log_requests"`
-	Debug            bool   `json:"debug"`
+	Path        string `json:"path"`
+	HostName    string `json:"hostname"`
+	Port        int    `json:"port"`
+	Local       bool   `json:"local"`
+	SSL_Cert    string `json:"ssl_cert"`
+	SSL_Key     string `json:"ssl_key"`
+	CacheSize   *int   `json:"cache_size"`
+	LogRequests bool   `json:"log_requests"`
+	Debug       bool   `json:"debug"`
 }
 
 func (c *LauncherConfig) hasSSL() bool {

@@ -85,7 +85,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -105,7 +105,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -121,7 +121,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_MEDIA", "Invalid media file provided")
 		return
@@ -131,7 +131,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	media_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)
