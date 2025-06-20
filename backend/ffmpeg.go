@@ -145,7 +145,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			encoded := validateFormatNameVideo(format)
 			canCopyVideo := true
 
-			if videoStream.CodecName != "h264" {
+			if videoStream.CodecName != "h264" || videoStream.PixFmt != "yuv420p" {
 				encoded = false
 				canCopyVideo = false
 			}
