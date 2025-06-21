@@ -429,7 +429,7 @@ paths:
   "/api/account/security/tfa/totp":
     get:
       summary: Gets settings for TOTP
-      description: Gets the settings to configure two factyor authentication with TOTP
+      description: Gets the settings to configure two factor authentication with TOTP
       tags:
         - account
       consumes:
@@ -534,7 +534,7 @@ paths:
                 example: "totp:sha1:60:1"
               password:
                 type: string
-                description: "Account password, quiered to confirm the operation"
+                description: "Account password, required to confirm the operation"
               code:
                 type: string
                 description: "TOTP code to confirm the operation"
