@@ -2,6 +2,8 @@
 // This file contains the functions to call ffmpeg processes
 // to encode media or do any other required tasks
 
+// cSpell:ignore vcodec, acodec, libx, vframes
+
 package main
 
 import (
@@ -143,7 +145,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			encoded := validateFormatNameVideo(format)
 			canCopyVideo := true
 
-			if videoStream.CodecName != "h264" {
+			if videoStream.CodecName != "h264" || videoStream.PixFmt != "yuv420p" {
 				encoded = false
 				canCopyVideo = false
 			}
@@ -491,10 +493,10 @@ const (
 
 // Generates a thumbnail from a video or image file
 // originalFilePath - Original media file
-// probedata - Media file properties
+// probeData - Media file properties
 // Returns the path to a temp file containing the thumbnail
-func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMediaResult) (string, error) {
-	if probedata.Type == MediaTypeVideo {
+func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMediaResult) (string, error) {
+	if probeData.Type == MediaTypeVideo {
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -504,20 +506,20 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
-		args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+		args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
 
 		// Setting for image
 		args = append(args, "-vframes", "1", "-an")
 
 		// Thumbnail time
-		midPoint := math.Floor(probedata.Duration / 2)
+		midPoint := math.Floor(probeData.Duration / 2)
 		args = append(args, "-ss", fmt.Sprint(midPoint))
 
 		// Crop image
 		x := int32(0)
 		y := int32(0)
-		w := probedata.Width
-		h := probedata.Height
+		w := probeData.Width
+		h := probeData.Height
 
 		if w > h {
 			x = int32(math.Floor(float64(w-h) / 2))
@@ -534,7 +536,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 			":(ow-iw)/2:(oh-ih)/2:color=#00000000"
 		args = append(args, "-vf", videoFilter)
 
-		// Outout
+		// Output
 		args = append(args, tmpFile)
 
 		cmd.Args = args
@@ -546,7 +548,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 		}
 
 		return tmpFile, nil
-	} else if probedata.Type == MediaTypeImage {
+	} else if probeData.Type == MediaTypeImage {
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -556,7 +558,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 
 		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
-		args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+		args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
 
 		// Setting for image
 		args = append(args, "-vframes", "1", "-an")
@@ -564,8 +566,8 @@ func GenerateThumbnailFromMedia(originalFilePath string, probedata *FFprobeMedia
 		// Crop image
 		x := int32(0)
 		y := int32(0)
-		w := probedata.Width
-		h := probedata.Height
+		w := probeData.Width
+		h := probeData.Height
 
 		if w > h {
 			x = int32(math.Floor(float64(w-h) / 2))
@@ -813,13 +815,13 @@ type ExtractedSubtitlesFile struct {
 
 // Extracts subtitles files from media file (usually .mkv)
 // originalFilePath - Original media path
-// probedata - Media properties
+// probeData - Media properties
 // Returns:
 //
 //		1 - Temporal path created, where the files where stored
 //		2 - List of files
 //	 3  - error
-func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResult) (string, []ExtractedSubtitlesFile, error) {
+func ExtractSubtitlesFiles(originalFilePath string, probeData *FFprobeMediaResult) (string, []ExtractedSubtitlesFile, error) {
 	result := make([]ExtractedSubtitlesFile, 0)
 	addedMap := make(map[string]bool)
 
@@ -867,7 +869,7 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 
 		LogDebug("Extracting subtitles file for lang: " + lang)
 
-		err = ExtractSubtitlesFromMedia(originalFilePath, probedata, srtPath, i)
+		err = ExtractSubtitlesFromMedia(originalFilePath, probeData, srtPath, i)
 
 		if err != nil {
 			LogError(err)
@@ -889,10 +891,10 @@ func ExtractSubtitlesFiles(originalFilePath string, probedata *FFprobeMediaResul
 
 // Extracts a subtitles file from a media file (usually .mkv)
 // originalFilePath - Original media path
-// probedata - Media properties
+// probeData - Media properties
 // dest - Destination for the subtitles file
 // streamIndex - Subtitles stream index
-func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
+func ExtractSubtitlesFromMedia(originalFilePath string, probeData *FFprobeMediaResult, dest string, streamIndex int) error {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -901,7 +903,7 @@ func ExtractSubtitlesFromMedia(originalFilePath string, probedata *FFprobeMediaR
 
 	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
-	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+	args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
 
 	// Setting the stream map
 	args = append(args, "-map", "0:s:"+fmt.Sprint(streamIndex))
@@ -929,13 +931,13 @@ type ExtractedAudioFile struct {
 
 // Extracts audio tracks from media file (usually .mkv)
 // originalFilePath - Original media path
-// probedata - Media properties
+// probeData - Media properties
 // Returns:
 //
 //	1 - Temporal path created, where the files where stored
 //	2 - List of files
 //	3 - error
-func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) (string, []ExtractedAudioFile, error) {
+func ExtractAudioTracks(originalFilePath string, probeData *FFprobeMediaResult) (string, []ExtractedAudioFile, error) {
 	result := make([]ExtractedAudioFile, 0)
 	addedMap := make(map[string]bool)
 
@@ -988,7 +990,7 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 
 			LogDebug("Extracting audio track file for lang: " + lang)
 
-			err = ExtractAudioFromMedia(originalFilePath, probedata, srtPath, i)
+			err = ExtractAudioFromMedia(originalFilePath, probeData, srtPath, i)
 
 			if err != nil {
 				LogError(err)
@@ -1011,10 +1013,10 @@ func ExtractAudioTracks(originalFilePath string, probedata *FFprobeMediaResult) 
 
 // Extracts audio track from a media file (usually .mkv)
 // originalFilePath - Original media path
-// probedata - Media properties
+// probeData - Media properties
 // dest - Destination for the audio file
 // streamIndex - Audio stream index
-func ExtractAudioFromMedia(originalFilePath string, probedata *FFprobeMediaResult, dest string, streamIndex int) error {
+func ExtractAudioFromMedia(originalFilePath string, probeData *FFprobeMediaResult, dest string, streamIndex int) error {
 	cmd := exec.Command(FFMPEG_BINARY_PATH)
 
 	args := make([]string, 1)
@@ -1023,7 +1025,7 @@ func ExtractAudioFromMedia(originalFilePath string, probedata *FFprobeMediaResul
 
 	args = append(args, "-y", "-progress", "pipe:1") // Overwrite
 
-	args = append(args, "-f", probedata.Format, "-i", originalFilePath) // Input file
+	args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
 
 	// Setting the stream map
 	args = append(args, "-vn", "-map", "0:a:"+fmt.Sprint(streamIndex))

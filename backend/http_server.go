@@ -1,5 +1,7 @@
 // HTTP Server
 
+// cSpell:ignore Subrouter, msapplication, mstile
+
 package main
 
 import (
@@ -137,9 +139,19 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// Account API (changing credentials)
 	apiRouter.HandleFunc("/account", api_getAccountContext).Methods("GET")
+
 	apiRouter.HandleFunc("/account/username", api_getAccountContext).Methods("GET")
 	apiRouter.HandleFunc("/account/username", api_changeUsername).Methods("POST")
+
 	apiRouter.HandleFunc("/account/password", api_changePassword).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security", api_getSecurityOptions).Methods("GET")
+	apiRouter.HandleFunc("/account/security", api_setSecurityOptions).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security/tfa/totp", api_getParametersTwoFactorAuthTimeOtp).Methods("GET")
+	apiRouter.HandleFunc("/account/security/tfa/totp", api_enableTwoFactorAuthTimeOtp).Methods("POST")
+
+	apiRouter.HandleFunc("/account/security/tfa/disable", api_disableTwoFactorAuth).Methods("POST")
 
 	// Invite codes API
 	apiRouter.HandleFunc("/invites", api_getInviteCodeStatus).Methods("GET")
@@ -231,6 +243,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 
 	// About API
 	apiRouter.HandleFunc("/about", api_about).Methods("GET")
+	apiRouter.HandleFunc("/about/disk_usage", api_getDiskUsage).Methods("GET")
 
 	// Is Test?
 	if isTest {
@@ -285,13 +298,13 @@ func runHTTPSecureServer(portOption string, bindAddr string, certFile string, ke
 	ssl_port = 443
 	customSSLPort := portOption
 	if customSSLPort != "" {
-		sslp, e := strconv.Atoi(customSSLPort)
+		p, e := strconv.Atoi(customSSLPort)
 		if e == nil {
-			ssl_port = sslp
+			ssl_port = p
 		}
 	}
 
-	// Check keypair
+	// Check key pair
 	_, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -321,9 +334,9 @@ func runHTTPServer(portOption string, bindAddr string, router *mux.Router) {
 	tcp_port = 80
 	customTCPPort := portOption
 	if customTCPPort != "" {
-		tcpp, e := strconv.Atoi(customTCPPort)
+		p, e := strconv.Atoi(customTCPPort)
 		if e == nil {
-			tcp_port = tcpp
+			tcp_port = p
 		}
 	}
 

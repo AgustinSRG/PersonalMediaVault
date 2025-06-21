@@ -77,18 +77,17 @@
     border: solid 1px var(--theme-border-color);
     padding: 0.1rem;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .upload-list-item-status-bar-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     padding: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 10;
 }
 
 .upload-list-item-status-bar-current {
@@ -116,14 +115,18 @@
     align-items: center;
 }
 
-.upload-parallel-options {
+.upload-option-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
 }
 
-.upload-parallel-label {
+.upload-option-container.margin-top {
+    margin-top: 0.75rem;
+}
+
+.upload-option-label {
     font-size: large;
     margin-left: 0.5rem;
     margin-bottom: 0.5rem;

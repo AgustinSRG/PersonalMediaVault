@@ -512,10 +512,6 @@ func (vc *VaultController) Start() bool {
 		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
 	}
 
-	if vc.launchConfig.SecureTempDelete {
-		cmd.Env = append(cmd.Env, "TEMP_FILE_DELETE_MODE=SECURE")
-	}
-
 	cmd.Stderr = logFile
 	cmd.Stdout = logFile
 	cmd.Stdin = nil
@@ -876,9 +872,9 @@ func (vc *VaultController) Backup(p string, re_encrypt bool) {
 	var cmd *exec.Cmd
 
 	if re_encrypt {
-		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p, "--re-encrypt")
+		cmd = exec.Command(BACKUP_BIN, "re-encrypt", vc.vaultPath, p)
 	} else {
-		cmd = exec.Command(BACKUP_BIN, vc.vaultPath, p)
+		cmd = exec.Command(BACKUP_BIN, "backup", vc.vaultPath, p)
 	}
 
 	cmd.Env = os.Environ()
@@ -889,6 +885,58 @@ func (vc *VaultController) Backup(p string, re_encrypt bool) {
 	cmd.Stdin = os.Stdin
 
 	err = cmd.Run()
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+	}
+}
+
+func (vc *VaultController) KeyExport() {
+	cmd := exec.Command(BACKUP_BIN, "key-export", vc.vaultPath)
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+	}
+}
+
+func (vc *VaultController) KeyRecover() {
+	cmd := exec.Command(BACKUP_BIN, "key-recover", vc.vaultPath)
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "PMV_LANGUAGE="+Language)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
 
 	if err != nil {
 		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
@@ -1230,53 +1278,6 @@ func (vc *VaultController) disableSSL() bool {
 		return false
 	} else {
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "ConfigChangesSaved",
-				Other: "Changes in configuration successfully saved.",
-			},
-		})
-		fmt.Println(msg)
-		return true
-	}
-}
-
-func (vc *VaultController) SetSecureTempDelete(d bool) bool {
-	vc.launchConfig.SecureTempDelete = d
-
-	if d {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "SecureDeleteEnabled",
-				Other: "Secure deletion of temp files is now ENABLED.",
-			},
-		})
-		fmt.Println(msg)
-	} else {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "SecureDeleteDisabled",
-				Other: "Secure deletion of temp files is now DISABLED.",
-			},
-		})
-		fmt.Println(msg)
-	}
-
-	err := writeLauncherConfig(getLauncherConfigFile(vc.vaultPath), vc.launchConfig)
-
-	if err != nil {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
-			DefaultMessage: &i18n.Message{
-				ID:    "Error",
-				Other: "Error: {{.Message}}",
-			},
-			TemplateData: map[string]interface{}{
-				"Message": err.Error(),
-			},
-		})
-		fmt.Println(msg)
-		return false
-	} else {
-		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
 				ID:    "ConfigChangesSaved",
 				Other: "Changes in configuration successfully saved.",

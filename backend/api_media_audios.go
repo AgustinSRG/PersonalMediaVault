@@ -29,7 +29,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -103,7 +103,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -123,7 +123,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -138,14 +138,14 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 
 	if err != nil {
 		LogError(err)
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_AUDIO", "Invalid audio file provided")
 		return
 	}
 
 	if probeRes.Type != MediaTypeAudio || !probeRes.Encoded {
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_AUDIO", "Invalid audio file provided")
 		return
@@ -155,7 +155,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 
 	audio_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)
@@ -306,8 +306,12 @@ func api_removeMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
@@ -350,7 +354,7 @@ func api_removeMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 	audioIndex := meta.FindAudioTrack(audioId)
 
 	if audioIndex != -1 {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.AudioTracks[audioIndex].Asset
 		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
@@ -397,7 +401,7 @@ func api_renameMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}

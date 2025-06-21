@@ -6,10 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
 func Admin_API_Test(server *httptest.Server, session string, t *testing.T) {
+	initialPassword := os.Getenv("VAULT_INITIAL_PASSWORD")
+
+	if initialPassword == "" {
+		initialPassword = VAULT_DEFAULT_PASSWORD
+	}
+
 	// Create account
 
 	body, err := json.Marshal(ApiAdminCreateAccountBody{
@@ -23,7 +30,7 @@ func Admin_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	statusCode, _, err := DoTestRequest(server, "POST", "/api/admin/accounts", body, session)
+	statusCode, _, err := DoTestRequestWithConfirmation(server, "POST", "/api/admin/accounts", body, session, initialPassword, "")
 
 	if err != nil {
 		t.Error(err)
@@ -129,7 +136,7 @@ func Admin_API_Test(server *httptest.Server, session string, t *testing.T) {
 		return
 	}
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/admin/accounts/delete", body, session)
+	statusCode, _, err = DoTestRequestWithConfirmation(server, "POST", "/api/admin/accounts/delete", body, session, initialPassword, "")
 
 	if err != nil {
 		t.Error(err)

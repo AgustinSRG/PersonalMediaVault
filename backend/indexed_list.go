@@ -462,7 +462,7 @@ func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, er
 		return make([]uint64, 0), nil
 	}
 
-	prng := rand.New(rand.NewSource(seed))
+	pseudoRandom := rand.New(rand.NewSource(seed))
 
 	result := make([]uint64, limit)
 
@@ -475,7 +475,7 @@ func (file *IndexedListFile) RandomValues(seed int64, limit int64) ([]uint64, er
 			break
 		}
 
-		index := prng.Int63()
+		index := pseudoRandom.Int63()
 
 		if index < 0 {
 			index = 0

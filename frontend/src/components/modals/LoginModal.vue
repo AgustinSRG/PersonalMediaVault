@@ -7,7 +7,7 @@
                 </div>
             </div>
             <div class="modal-body">
-                <div class="horizontal-filter-menu two-child no-border">
+                <div v-if="!tfaRequired" class="horizontal-filter-menu two-child no-border">
                     <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isCode }" @click="changeToCredentials"
                         ><i class="fas fa-key"></i> {{ $t("Credentials") }}</a
                     >
@@ -15,7 +15,7 @@
                         ><i class="fas fa-user-check"></i> {{ $t("Invite code") }}</a
                     >
                 </div>
-                <div v-if="!isCode" class="div-pt">
+                <div v-if="!tfaRequired && !isCode" class="div-pt">
                     <div class="form-group">
                         <label>{{ $t("Username") }}:</label>
                         <input
@@ -46,21 +46,18 @@
                         </select>
                     </div>
                 </div>
-                <div v-if="isCode" class="div-pt">
+                <div v-else-if="!tfaRequired && isCode" class="div-pt">
                     <div class="invite-code-label">{{ $t("Input your invite code below") }}</div>
-                    <div class="invite-code-multi-input">
-                        <div v-for="(c, i) in code" :key="i" class="invite-code-char-input">
-                            <input
-                                v-model="c.c"
-                                type="text"
-                                :disabled="busy"
-                                :class="'form-control auto-focus code-char-' + i"
-                                maxlength="1"
-                                @input="goNextChar(c, i)"
-                                @paste="onPaste($event, i)"
-                            />
-                        </div>
+                    <SixDigitCodeInput v-model:val="code" :disabled="busy"></SixDigitCodeInput>
+                </div>
+                <div v-else-if="tfaRequired" class="div-pt">
+                    <div class="tfa-label">{{ $t("Input your current one-time code for two factor authentication") }}</div>
+
+                    <div class="tfa-cancel-label">
+                        {{ $t("Don't have the code?") }}
+                        <a href="javascript:;" @click="cancelTfa">{{ $t("Cancel and try with other method") }}</a>
                     </div>
+                    <SixDigitCodeInput v-model:val="tfaCode" :disabled="busy"></SixDigitCodeInput>
                 </div>
                 <div class="form-error">{{ error }}</div>
             </div>
@@ -91,11 +88,13 @@ import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
+import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 
 export default defineComponent({
     name: "LoginModal",
     components: {
         PasswordInput,
+        SixDigitCodeInput,
     },
     props: {
         display: Boolean,
@@ -111,7 +110,10 @@ export default defineComponent({
             password: "",
             duration: "day" as SessionDuration,
 
-            code: [{ c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }] as { c: string }[],
+            tfaCode: "",
+            tfaRequired: false,
+
+            code: "",
 
             isCode: false,
 
@@ -124,6 +126,7 @@ export default defineComponent({
     },
     watch: {
         display: function () {
+            this.tfaRequired = false;
             this.error = "";
             this.autoFocus();
         },
@@ -162,6 +165,14 @@ export default defineComponent({
             }
         },
 
+        cancelTfa: function () {
+            if (this.busy) {
+                return;
+            }
+
+            this.tfaRequired = false;
+        },
+
         loginWithCredentials: function () {
             if (this.busy) {
                 return;
@@ -170,7 +181,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAuthLogin(this.username, this.password, this.duration))
+            makeApiRequest(apiAuthLogin(this.username, this.password, this.duration, this.tfaRequired ? this.tfaCode : undefined))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -185,11 +196,24 @@ export default defineComponent({
                     handleErr(err, {
                         invalidCredentials: () => {
                             this.error = this.$t("Invalid username or password");
+                            this.tfaRequired = false;
+                            this.autoFocus();
+                        },
+                        tfaRequired: () => {
+                            this.tfaRequired = true;
+                            this.tfaCode = "";
+                            this.autoFocus();
+                        },
+                        invalidTfaCode: () => {
+                            this.error = this.$t("Invalid one-time code");
+                            this.tfaCode = "";
+                            this.cooldown = Date.now() + 5000;
                             this.autoFocus();
                         },
                         wrongCredentials: () => {
                             this.error = this.$t("Invalid username or password");
                             this.cooldown = Date.now() + 5000;
+                            this.tfaRequired = false;
                             this.autoFocus();
                         },
                         cooldown: () => {
@@ -218,7 +242,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiInvitesLogin(this.code.map((c) => c.c).join("")))
+            makeApiRequest(apiInvitesLogin(this.code))
                 .onSuccess((response) => {
                     this.busy = false;
                     this.username = "";
@@ -275,56 +299,6 @@ export default defineComponent({
         changeToCredentials: function () {
             this.isCode = false;
             this.autoFocus();
-        },
-
-        goNextChar: function (c: { c: string }, i: number) {
-            c.c = c.c.charAt(0).toUpperCase();
-
-            if (!c.c) {
-                // Go back
-                if (i > 0) {
-                    const nextInput = this.$el.querySelector(".code-char-" + (i - 1));
-
-                    if (nextInput) {
-                        nextInput.focus();
-                        if (nextInput.select) {
-                            nextInput.select();
-                        }
-                    }
-                }
-
-                return;
-            }
-
-            if (i < this.code.length - 1) {
-                const nextInput = this.$el.querySelector(".code-char-" + (i + 1));
-
-                if (nextInput) {
-                    nextInput.focus();
-                    if (nextInput.select) {
-                        nextInput.select();
-                    }
-                }
-            }
-        },
-
-        onPaste: function (ev: ClipboardEvent, i: number) {
-            ev.preventDefault();
-
-            const text = ev.clipboardData.getData("text/plain").replace(/[^a-z0-9]+/gi, "");
-
-            let k = 0;
-            for (let j = i; j < this.code.length; j++) {
-                if (k >= text.length) {
-                    break;
-                }
-
-                const c = text.charAt(k).toUpperCase();
-                k++;
-
-                this.code[j].c = c;
-                this.goNextChar(this.code[j], j);
-            }
         },
 
         passwordTabSkip: function (e: KeyboardEvent) {

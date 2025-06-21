@@ -49,6 +49,10 @@ func api_setConfig(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
 
 	var p UserConfig

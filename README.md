@@ -1,3 +1,4 @@
+
 # ![PersonalMediaVault](./favicon.readme.png) Personal Media Vault
 
 [![Backend (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml)
@@ -8,13 +9,16 @@
 
 Web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
 
-## Project motivation
+![Screenshot](https://agustinsrg.github.io/pmv-site/images/screenshot.png)
 
-This is a personal project developed with the goal of making a media management tool that has a similar web interface to YouTube, while keeping the media files encrypted in disk.
+### Quick access links
 
-**Why encryption?:** When storing your personal pictures, videos or audio recordings, if you store them unencrypted in your computer, any malware that is able to infect your device will be able to easily get them from the file system. By encrypting them, it makes harder for those media files to be stolen. Also, by being encrypted, you can easily make backups of them in cloud storage services like Google Drive, without giving Google the ability to peek into your personal media files.
-
-**Why a web application?:** By making it a web application, its usage becomes very flexible. You can run the backend in a computer in your LAN or a remote server and you are able to use the app from all the devices connected to the Internet without any extra installation. Also, web interfaces are easier to develop to work in multiple devices and they offer standard features already implemented that are required for the app, like the video player.
+ - 🌐 [PersonalMediaVault product website](https://agustinsrg.github.io/pmv-site/)
+ - 📣 [Announcements](https://github.com/AgustinSRG/PersonalMediaVault/discussions/categories/announcements)
+ - 🐛 [Report a bug](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=bug_report.md)
+ - ☣️ [Report a vulnerability](https://github.com/AgustinSRG/PersonalMediaVault/security/advisories/new)
+ - 💡 [Suggest a new feature](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=feature_request.md)
+ - 🙏 [Need help? Ask a question](https://github.com/AgustinSRG/PersonalMediaVault/discussions/new?category=q-a)
 
 ## Features
 
@@ -24,12 +28,13 @@ This is a personal project developed with the goal of making a media management 
  - Indexed tags: Each media asset can be tagged, so the user can search for it with a tag based search system.
  - Albums: Media files can be sorted using albums.
  - Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
- - Automated thumbnail generation.
- - Subtitles support for videos and audios.
- - Multiple audio track support for videos
- - Video timeline previews.
- - Video timeline slices.
- - Image annotations.
+ - Automated thumbnail generation: When videos or images are uploaded, a default thumbnail is generated. You can change the default thumbnail at any moment after the upload.
+ - Subtitles support: SubRip subtitles can be added to your videos and audios.
+ - Multiple audio track support: Videos can have multiple audio tracks, usually for multi-language audio.
+ - Video timeline previews: Get previews while hovering the video timeline.
+ - Video timeline slices: Divide long videos in sections to quickly navigate through them.
+ - Image annotations: Add comments to images.
+ - Attachments: Upload any file attached to your media to preserve them in the encrypted vault. This can be used to preserve a copy of the raw media file, before the encoding.
 
 ## Installation
 
@@ -41,18 +46,18 @@ For apt-compatible Linux distributions, we provide a DEB package:
 
 | Version | Arch | Download | Hash | Hash alg.  |
 |---|---|---|---|---|
-| 1.22.0 | amd64 | [GitHub](https://github.com/AgustinSRG/PersonalMediaVault/releases/download/v1.22.0/personalmediavault_1.22.0_amd64.deb) <br /> [Mega](https://mega.nz/file/pfsEUBKK#AhFsQG5km1JixqU0Z7P4i9wqbhKLkeUU01OUo_QU2hM) | `68183e4782328e259aff230aea8ec7000b1087ad1fd66322ebcef7f2a81bf217` | SHA256 |
+| 2.0.0 | amd64 | [GitHub](https://github.com/AgustinSRG/PersonalMediaVault/releases/download/v2.0.0/personalmediavault_2.0.0_amd64.deb) <br /> [Mega](https://mega.nz/file/IPUHGKYR#tkop_U-Uop6nFMP2QHQiyfItVMmoepHTnpDXS5ShoQ0) | `533556d2f5f17711f2296d920779aea8e142ce2fb1eeac7848d0fb6a17dcbfb8` | SHA256 |
 
 Download it, and check its integrity using:
 
 ```sh
-sha256sum ./personalmediavault_1.22.0_amd64.deb
+sha256sum ./personalmediavault_2.0.0_amd64.deb
 ```
 
 Then, install it using `apt`:
 
 ```sh
-sudo apt install ./personalmediavault_1.22.0_amd64.deb
+sudo apt install ./personalmediavault_2.0.0_amd64.deb
 ```
 
 You can also install it directly from the PPA repository (built automatically with GitHub actions):
@@ -85,16 +90,16 @@ For Windows, we provide a MSI installer:
 
 | Version | Arch | Language | Download | Hash |
 |---|---|---|---|---|
-| 1.22.0 | x64 | English | [Mega](https://mega.nz/file/9TlnhTbS#ziJVVtw5dKTrdpHDFcC0WcEZzYGiFrTelrSdYJOAJ_8) | SHA256: `844EAB454BC074BF3F0E7B057423AD61DC20A5FED6004515077AB8778E237217` |
-| 1.22.0 | x64 | Spanish | [Mega](https://mega.nz/file/9SETzKrL#3KUsXX7Bn2qyJm7L8R_JrQp6aZIbCvYfpne5llRhCcg) | SHA256: `F7808325FA21D98A73D17373F732A3B422F956087EFE279C05D7A04EAB11DE30` |
+| 2.0.0 | x64 | English | [Mega](https://mega.nz/file/cPsX3Q5I#Xn04w3IrB2Nkwb7euLi7wTND08Jc2ZAQzrBM66kAxBQ) | SHA256: `ACD68951B9797ED8118A68408640B933AC652DB0F8BCBBA2EB25B602096E9C75` |
+| 2.0.0 | x64 | Spanish | [Mega](https://mega.nz/file/cCtRxYBT#1nkTRgJ0J7N6NfeCexnc77KwuTJ0E-tvDIt2-qZG2Z0) | SHA256: `8B13CEB9E64872282D023E139A6EC917BDF91F46C6C00049FA963B0F0DE96BA4` |
 
 In order to install Personal Media Vault in Windows, run the installer and everything will be set up for the application to work.
 
 When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
 
 ```ps1
-Get-FileHash -Path "PersonalMediaVault-1.22.0-x64.msi" -Algorithm SHA256
-Get-FileHash -Path "PersonalMediaVault-1.22.0-x64-es.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-2.0.0-x64.msi" -Algorithm SHA256
+Get-FileHash -Path "PersonalMediaVault-2.0.0-x64-es.msi" -Algorithm SHA256
 ```
 
 After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
@@ -135,6 +140,19 @@ docker run asanrom/pmv --help
  - [Launcher](./launcher): CLI program to launch the web app. This component is made in order to make it easier to use in local, when you do not have the backend configured as a system service.
  - [Installation Packages](./packages): Collection of installation packages for multiple operating systems.
 
+## Project motivation
+
+This is a personal project developed with the goal of making a media management tool that has a similar web interface to YouTube, while keeping the media files encrypted in disk.
+
+**Why encryption?:** When storing your personal pictures, videos or audio recordings, if you store them unencrypted in your computer, any malware that is able to infect your device will be able to easily get them from the file system. By encrypting them, it makes harder for those media files to be stolen. Also, by being encrypted, you can easily make backups of them in cloud storage services like Google Drive, without giving Google the ability to peek into your personal media files.
+
+**Why a web application?:** By making it a web application, its usage becomes very flexible. You can run the backend in a computer in your LAN or a remote server and you are able to use the app from all the devices connected to the Internet without any extra installation. Also, web interfaces are easier to develop to work in multiple devices and they offer standard features already implemented that are required for the app, like the video player.
+
 ## License
 
 This project is under the [MIT License](./LICENSE).
+
+## Contributing
+
+ - [Pull requests](https://github.com/AgustinSRG/PersonalMediaVault/pulls)
+ - [Contributing guidelines](./CONTRIBUTING.md)

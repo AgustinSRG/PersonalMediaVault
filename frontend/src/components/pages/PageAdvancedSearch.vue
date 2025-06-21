@@ -88,6 +88,7 @@
                 <div class="form-group">
                     <label>{{ $t("Order") }}:</label>
                     <select v-model="order" class="form-control form-select form-control-full-width" @change="markDirty">
+                        <option :value="''">{{ $t("Default order") }}</option>
                         <option :value="'desc'">{{ $t("Show most recent") }}</option>
                         <option :value="'asc'">{{ $t("Show oldest") }}</option>
                     </select>
@@ -260,7 +261,7 @@ export default defineComponent({
         return {
             loading: false,
 
-            order: "desc" as "desc" | "asc",
+            order: "" as "" | "desc" | "asc",
             textSearch: "",
             type: 0,
 
@@ -484,7 +485,7 @@ export default defineComponent({
 
             makeNamedApiRequest(
                 this.loadRequestId,
-                apiAdvancedSearch(this.getTagMode(), this.getTagList(), this.order, this.continueRef, pageSize),
+                apiAdvancedSearch(this.getTagMode(), this.getTagList(), this.order || "desc", this.continueRef, pageSize),
             )
                 .onSuccess((result) => {
                     const completePageList = this.listScroller.list;
@@ -699,7 +700,7 @@ export default defineComponent({
                                 }
                             }),
                         );
-                    } else {
+                    } else if (this.order === "desc") {
                         this.filterElements(
                             result.list.sort((a, b) => {
                                 if (a.id > b.id) {
@@ -709,6 +710,8 @@ export default defineComponent({
                                 }
                             }),
                         );
+                    } else {
+                        this.filterElements(result.list);
                     }
 
                     this.page = 1;

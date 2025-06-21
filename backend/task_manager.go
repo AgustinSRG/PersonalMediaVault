@@ -45,7 +45,7 @@ type TaskStatus struct {
 	StageStart int64   `json:"stage_start"`    // Timestamp (Unix milliseconds) of stage start
 	Progress   float64 `json:"stage_progress"` // Stage progress (0-100)
 
-	lock *sync.Mutex // Lock to control acess to status data
+	lock *sync.Mutex // Lock to control access to status data
 }
 
 // Get task status

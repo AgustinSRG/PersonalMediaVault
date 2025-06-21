@@ -23,6 +23,8 @@
     --modal-bg-color: white;
     --bar-bg-color: white;
 
+    --success-color: green;
+
     --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%), 0 8px 10px -5px rgb(0 0 0 / 40%);
 
     --hover-color: rgba(0, 0, 0, 0.1);
@@ -53,7 +55,7 @@
 
     --volume-bar-bg: rgba(0, 0, 0, 0.25);
     --placeholder-no-thumbnail-color: rgba(0, 0, 0, 0.5);
-    --progress-bar-bg: rgba(0, 0, 0, 0.3);
+    --progress-bar-bg: rgba(0, 0, 0, 0.2);
     --progress-bar-bg-success: rgba(0, 255, 0, 0.3);
     --progress-bar-bg-error: rgba(255, 0, 0, 0.3);
 
@@ -101,6 +103,8 @@
     --modal-bg-color: #212121;
     --bar-bg-color: #212121;
 
+    --success-color: green;
+
     --modal-shadow: 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%), 0 8px 10px -5px rgb(0 0 0 / 40%);
 
     --hover-color: rgba(255, 255, 255, 0.1);
@@ -131,9 +135,9 @@
 
     --volume-bar-bg: rgba(255, 255, 255, 0.25);
     --placeholder-no-thumbnail-color: rgba(255, 255, 255, 0.5);
-    --progress-bar-bg: rgba(255, 255, 255, 0.3);
-    --progress-bar-bg-success: rgba(0, 255, 0, 0.3);
-    --progress-bar-bg-error: rgba(255, 0, 0, 0.3);
+    --progress-bar-bg: rgba(255, 255, 255, 0.2);
+    --progress-bar-bg-success: rgba(0, 255, 0, 0.1);
+    --progress-bar-bg-error: rgba(255, 0, 0, 0.1);
 
     --bg-opaque-25: rgba(0, 0, 0, 0.25);
     --bg-opaque-50: rgba(0, 0, 0, 0.5);

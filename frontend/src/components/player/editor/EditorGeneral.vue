@@ -155,6 +155,14 @@
                 <div v-if="errorThumbnail" class="form-error form-error-pt text-center">{{ errorThumbnail }}</div>
             </div>
         </div>
+
+        <ThumbnailCropModal
+            v-if="displayThumbnailModal"
+            v-model:display="displayThumbnailModal"
+            :image-url="thumbnailModalUrl"
+            @done="changeThumbnail"
+            @error="onThumbnailModalError"
+        ></ThumbnailCropModal>
     </div>
 </template>
 
@@ -178,6 +186,7 @@ import {
     apiMediaChangeMediaTitle,
 } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
+import ThumbnailCropModal from "@/components/modals/ThumbnailCropModal.vue";
 
 export default defineComponent({
     name: "EditorGeneral",
@@ -185,6 +194,7 @@ export default defineComponent({
         ToggleSwitch,
         LoadingIcon,
         ThumbImage,
+        ThumbnailCropModal,
     },
     emits: ["changed"],
     setup() {
@@ -195,6 +205,8 @@ export default defineComponent({
             requestIdExtra: getUniqueStringId(),
 
             mediaElementCheckTimer: null as ReturnType<typeof setInterval> | null,
+
+            tempImage: null as HTMLImageElement,
         };
     },
     data: function () {
@@ -232,6 +244,9 @@ export default defineComponent({
             errorThumbnail: "",
 
             mediaElementReady: false,
+
+            displayThumbnailModal: false,
+            thumbnailModalUrl: "",
         };
     },
 
@@ -254,6 +269,11 @@ export default defineComponent({
 
         if (this.mediaElementCheckTimer) {
             clearTimeout(this.mediaElementCheckTimer);
+        }
+
+        if (this.tempImage) {
+            delete this.tempImage.onload;
+            delete this.tempImage.onerror;
         }
     },
 
@@ -305,7 +325,7 @@ export default defineComponent({
             const data = (e.target as HTMLInputElement).files;
             if (data && data.length > 0) {
                 const file = data[0];
-                this.changeThumbnail(file);
+                this.prepareChangeThumbnail(file);
             }
         },
 
@@ -314,8 +334,46 @@ export default defineComponent({
             const data = e.dataTransfer.files;
             if (data && data.length > 0) {
                 const file = data[0];
-                this.changeThumbnail(file);
+                this.prepareChangeThumbnail(file);
             }
+        },
+
+        prepareChangeThumbnail: function (file: File) {
+            if (this.tempImage) {
+                delete this.tempImage.onload;
+                delete this.tempImage.onerror;
+                this.tempImage = null;
+            }
+
+            const url = URL.createObjectURL(file);
+
+            const img = new Image();
+            this.tempImage = img;
+
+            img.onload = () => {
+                this.tempImage = null;
+
+                if (img.width === img.height) {
+                    this.changeThumbnail(file);
+                    return;
+                }
+
+                this.thumbnailModalUrl = url;
+                this.errorThumbnail = "";
+                this.displayThumbnailModal = true;
+            };
+
+            img.onerror = (err) => {
+                this.tempImage = null;
+                console.error(err);
+                this.onThumbnailModalError();
+            };
+
+            img.src = url;
+        },
+
+        onThumbnailModalError: function () {
+            this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");
         },
 
         changeThumbnail: function (file: File) {
@@ -431,7 +489,7 @@ export default defineComponent({
                     const file = new File([blob], "thumbnail.png");
 
                     // Change thumbnail
-                    this.changeThumbnail(file);
+                    this.prepareChangeThumbnail(file);
                 }, "image/png");
             } catch (ex) {
                 console.error(ex);
@@ -477,7 +535,7 @@ export default defineComponent({
                     const file = new File([blob], "thumbnail.png");
 
                     // Change thumbnail
-                    this.changeThumbnail(file);
+                    this.prepareChangeThumbnail(file);
                 }, "image/png");
             } catch (ex) {
                 console.error(ex);

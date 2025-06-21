@@ -166,7 +166,7 @@ func DecryptKey(password string, method string, passwordHash []byte, salt []byte
 		pwDoubleHash := sha256.Sum256(pwHash[:])
 
 		if subtle.ConstantTimeCompare(pwDoubleHash[:], passwordHash) != 1 {
-			return nil, errors.New("Invalid credentials")
+			return nil, errors.New("invalid credentials")
 		}
 
 		// Decrypt key
@@ -178,7 +178,7 @@ func DecryptKey(password string, method string, passwordHash []byte, salt []byte
 
 		return key, nil
 	} else {
-		return nil, errors.New("Unknown credentials method")
+		return nil, errors.New("unknown credentials method")
 	}
 }
 
@@ -222,6 +222,45 @@ func (vc *VaultCredentials) WriteToFile(file string, tmpFile string) error {
 		os.Remove(tmpFile)
 		return err
 	}
+
+	return nil
+}
+
+// Changes the encryption key of the root account
+// Clears any other account
+func (vc *VaultCredentials) RecoverKey(key []byte, password string) error {
+	// Generate random salt
+	randomSalt := make([]byte, 16)
+	_, err := rand.Read(randomSalt)
+
+	if err != nil {
+		return err
+	}
+
+	// Generate encrypted key
+	pwBytes := []byte(password)
+	ctBytes := make([]byte, len(pwBytes)+16)
+	copy(ctBytes[:len(pwBytes)], pwBytes)
+	copy(ctBytes[len(pwBytes):], randomSalt)
+	pwHash := sha256.Sum256(ctBytes)
+
+	encKey, err := encrypted_storage.EncryptFileContents(key, encrypted_storage.AES256_FLAT, pwHash[:])
+
+	if err != nil {
+		return err
+	}
+
+	// Password hash
+
+	pwDoubleHash := sha256.Sum256(pwHash[:])
+
+	// Return
+
+	vc.Method = VAULT_CRED_METHOD_AES_SHA256
+	vc.PasswordHash = pwDoubleHash[:]
+	vc.Salt = randomSalt
+	vc.Accounts = make([]VaultCredentialsAccount, 0)
+	vc.EncryptedKey = encKey
 
 	return nil
 }

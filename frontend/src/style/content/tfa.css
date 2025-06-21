@@ -1,0 +1,54 @@
+/* Two factor authentication related styles */
+
+.tfa-label {
+    font-size: large;
+    text-align: center;
+    padding-bottom: 0.5rem;
+}
+
+.tfa-cancel-label {
+    text-align: center;
+}
+
+.tfa-status {
+    font-weight: bold;
+}
+
+.tfa-status.enabled {
+    color: var(--success-color);
+}
+
+.tfa-qr-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-bottom: 1rem;
+}
+
+.tfa-qr {
+    width: 240px;
+    max-width: 100%;
+    aspect-ratio: 1/1;
+    position: relative;
+}
+
+.tfa-qr-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.tfa-qr-loader,
+.tfa-qr-invalid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -5,6 +5,7 @@
 import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
 import { AlbumListItem, AlbumListItemMin, Album } from "./models";
 import { API_PREFIX, getApiURL } from "@/utils/api";
+import { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/albums";
 
@@ -143,20 +144,58 @@ export type DeleteAlbumErrorHandler = CommonAuthenticatedErrorHandler & {
      * Error: Album not found
      */
     notFound: () => void;
+
+    /**
+     * Required auth confirmation (two factor authentication)
+     */
+    requiredAuthConfirmationTfa: () => void;
+
+    /**
+     * Invalid two factor authentication code
+     */
+    invalidTfaCode: () => void;
+
+    /**
+     * Required auth confirmation (password)
+     */
+    requiredAuthConfirmationPassword: () => void;
+
+    /**
+     * Invalid password
+     */
+    invalidPassword: () => void;
+
+    /**
+     * When you fail a confirmation, there is a cooldown of 5 seconds.
+     */
+    cooldown: () => void;
 };
 
 /**
  * Deletes album
  * @param id Album ID
+ * @param providedAuthConfirmation Auth confirmation
  * @returns The request parameters
  */
-export function apiAlbumsDeleteAlbum(id: number): RequestParams<void, DeleteAlbumErrorHandler> {
+export function apiAlbumsDeleteAlbum(
+    id: number,
+    providedAuthConfirmation: ProvidedAuthConfirmation,
+): RequestParams<void, DeleteAlbumErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/delete`),
+        headers: {
+            "x-auth-confirmation-pw": providedAuthConfirmation.password || "",
+            "x-auth-confirmation-tfa": providedAuthConfirmation.tfaCode || "",
+        },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(401, "*", handler.unauthorized)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_TFA", handler.requiredAuthConfirmationTfa)
+                .add(403, "INVALID_TFA_CODE", handler.invalidTfaCode)
+                .add(403, "AUTH_CONFIRMATION_REQUIRED_PW", handler.requiredAuthConfirmationPassword)
+                .add(403, "INVALID_PASSWORD", handler.invalidPassword)
+                .add(403, "COOLDOWN", handler.cooldown)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
                 .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)

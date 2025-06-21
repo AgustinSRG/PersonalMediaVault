@@ -42,3 +42,46 @@ export function apiAbout(): RequestParams<AboutResponse, CommonAuthenticatedErro
         },
     };
 }
+
+/**
+ * Response of the disk usage API
+ */
+export interface DiskUsageResponse {
+    /**
+     * Usage (percent)
+     */
+    usage: number;
+
+    /**
+     * Available bytes
+     */
+    available: number;
+
+    /**
+     * Free bytes
+     */
+    free: number;
+
+    /**
+     * Total bytes
+     */
+    total: number;
+}
+
+/**
+ * Gets disk usage of the server
+ * @returns The request parameters
+ */
+export function apiDiskUsage(): RequestParams<DiskUsageResponse, CommonAuthenticatedErrorHandler> {
+    return {
+        method: "GET",
+        url: getApiURL(`${API_PREFIX}/about/disk_usage`),
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}

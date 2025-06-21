@@ -1,0 +1,21 @@
+/* Styles for thumbnail crop modal */
+
+.thumbnail-crop-container {
+    width: 100%;
+    position: relative;
+}
+
+.thumbnail-crop-image {
+    position: absolute;
+}
+
+.thumbnail-crop-section {
+    position: absolute;
+    border: dotted 2px var(--theme-fg-color);
+    cursor: move;
+}
+
+.thumbnail-crop-background {
+    position: absolute;
+    background-color: var(--bg-opaque-75);
+}

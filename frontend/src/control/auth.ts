@@ -106,7 +106,7 @@ export class AuthController {
             return authHeaders;
         });
 
-        AppEvents.AddEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.ClearSession);
+        AppEvents.AddEventListener(EVENT_NAME_UNAUTHORIZED, AuthController.OnUnauthorized);
 
         AuthController.LoadAuthStatus();
         AuthController.SetAssetsCookie();
@@ -280,6 +280,16 @@ export class AuthController {
                     AuthController.ClearSession();
                 }
             });
+    }
+
+    /**
+     * Clears current session to after logging out
+     */
+    public static OnUnauthorized() {
+        if (AuthController.Locked) {
+            return;
+        }
+        AuthController.ClearSession();
     }
 
     /**

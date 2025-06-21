@@ -54,6 +54,11 @@
 
         <InviteModal v-if="displayInvite" v-model:display="displayInvite"></InviteModal>
 
+        <AccountSecuritySettingsModal
+            v-if="displaySecuritySettings"
+            v-model:display="displaySecuritySettings"
+        ></AccountSecuritySettingsModal>
+
         <AccountsAdminModal v-if="displayAccountAdmin" v-model:display="displayAccountAdmin"></AccountsAdminModal>
 
         <TaskListModal v-if="displayTaskList" v-model:display="displayTaskList"></TaskListModal>
@@ -233,6 +238,12 @@ const InviteModal = defineAsyncComponent({
     delay: 1000,
 });
 
+const AccountSecuritySettingsModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AccountSecuritySettingsModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 1000,
+});
+
 export default defineComponent({
     name: "MainLayout",
     components: {
@@ -260,6 +271,7 @@ export default defineComponent({
         KeyboardGuideModal,
         BatchOperationModal,
         InviteModal,
+        AccountSecuritySettingsModal,
         SnackBar,
     },
     data: function () {
@@ -283,6 +295,7 @@ export default defineComponent({
             displayAdvancedSettings: false,
             displayBatchOperation: false,
             displayInvite: false,
+            displaySecuritySettings: false,
 
             displayAccountAdmin: false,
 
@@ -377,6 +390,9 @@ export default defineComponent({
                 case "invite":
                     this.displayInvite = true;
                     break;
+                case "security":
+                    this.displaySecuritySettings = true;
+                    break;
                 case "logout":
                     AuthController.Logout();
                     break;
@@ -470,6 +486,7 @@ export default defineComponent({
                 this.displayAdvancedSettings = false;
                 this.displayBatchOperation = false;
                 this.displayInvite = false;
+                this.displaySecuritySettings = false;
 
                 this.displayAccountAdmin = false;
             }

@@ -127,7 +127,17 @@
 }
 
 .modal-height-100-wf > .modal-body {
-    min-height: calc(100vh - 60px - 85px - 1rem);
+    height: calc(100vh - 60px - 85px - 1rem);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-height-100-wf > .modal-body > .modal-body-content {
+    flex: 1;
+    padding: 1rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    overflow: auto;
 }
 
 .modal-header {

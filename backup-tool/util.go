@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const (
@@ -79,4 +82,20 @@ func printLineOverWrite(line string) {
 
 func resetLineOverWrite() {
 	PreviousLine = ""
+}
+
+func checkYesNoAnswer(answer string) bool {
+	answer = strings.ToLower(answer)
+	if answer == "y" {
+		return true
+	}
+
+	yesPrefix, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesPrefix",
+			Other: "y",
+		},
+	})
+
+	return strings.HasPrefix(answer, strings.ToLower(yesPrefix))
 }

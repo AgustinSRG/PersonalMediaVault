@@ -179,6 +179,10 @@
     content: "\f017";
 }
 
+.fa-clone::before {
+    content: "\f24d";
+}
+
 .fa-closed-captioning::before {
     content: "\f20a";
 }
@@ -257,6 +261,10 @@
 
 .fa-list-ol::before {
     content: "\f0cb";
+}
+
+.fa-lock::before {
+    content: "\f023";
 }
 
 .fa-magnifying-glass::before {

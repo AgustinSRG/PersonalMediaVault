@@ -194,7 +194,7 @@ func api_createAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -247,8 +247,12 @@ func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
@@ -285,7 +289,7 @@ func api_renameAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -343,7 +347,7 @@ func api_setAlbumList(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -406,7 +410,7 @@ func api_albumAddMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -460,7 +464,7 @@ func api_albumRemoveMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -512,7 +516,7 @@ func api_albumMoveMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}

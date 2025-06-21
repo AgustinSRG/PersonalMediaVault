@@ -48,6 +48,15 @@
                 </button>
             </div>
         </form>
+
+        <AuthConfirmationModal
+            v-if="displayAuthConfirmation"
+            v-model:display="displayAuthConfirmation"
+            :tfa="authConfirmationTfa"
+            :cooldown="authConfirmationCooldown"
+            :error="authConfirmationError"
+            @confirm="submitInternal"
+        ></AuthConfirmationModal>
     </ModalDialogContainer>
 </template>
 
@@ -61,12 +70,15 @@ import { useVModel } from "../../utils/v-model";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
+import AuthConfirmationModal from "./AuthConfirmationModal.vue";
+import { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "ChangeUsernameModal",
     components: {
         LoadingIcon,
         PasswordInput,
+        AuthConfirmationModal,
     },
     props: {
         display: Boolean,
@@ -87,6 +99,11 @@ export default defineComponent({
 
             closeSignal: 0,
             forceCloseSignal: 0,
+
+            displayAuthConfirmation: false,
+            authConfirmationCooldown: 0,
+            authConfirmationTfa: false,
+            authConfirmationError: "",
         };
     },
     watch: {
@@ -123,6 +140,10 @@ export default defineComponent({
         submit: function (e: Event) {
             e.preventDefault();
 
+            this.submitInternal({});
+        },
+
+        submitInternal: function (confirmation: ProvidedAuthConfirmation) {
             if (this.busy) {
                 return;
             }
@@ -130,7 +151,7 @@ export default defineComponent({
             this.busy = true;
             this.error = "";
 
-            makeApiRequest(apiAccountChangeUsername(this.username, this.password))
+            makeApiRequest(apiAccountChangeUsername(this.username, this.password, confirmation))
                 .onSuccess(() => {
                     this.busy = false;
                     AuthController.UpdateUsername(this.username);
@@ -158,6 +179,21 @@ export default defineComponent({
                         },
                         invalidPassword: () => {
                             this.error = this.$t("Invalid password");
+                        },
+                        requiredAuthConfirmationTfa: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = "";
+                            this.authConfirmationTfa = true;
+                        },
+                        invalidTfaCode: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("Invalid one-time code");
+                            this.authConfirmationTfa = true;
+                            this.authConfirmationCooldown = Date.now() + 5000;
+                        },
+                        cooldown: () => {
+                            this.displayAuthConfirmation = true;
+                            this.authConfirmationError = this.$t("You must wait 5 seconds to try again");
                         },
                         serverError: () => {
                             this.error = this.$t("Internal server error");

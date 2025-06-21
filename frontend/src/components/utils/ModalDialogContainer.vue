@@ -9,6 +9,9 @@
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
         @click="stopPropagationEvent"
+        @mouseup="onMouseUp"
+        @touchend.passive="onTouchEnd"
+        @mouseleave="onMouseLeave"
     >
         <div class="modal-out-close-area" @mousedown="onMouseDown" @touchstart="onTouchOutside"></div>
         <slot @mousedown="stopPropagationEvent" @touchstart="stopPropagationEvent" @click="stopPropagationEvent"></slot>
@@ -30,7 +33,7 @@ export default defineComponent({
         forceCloseSignal: Number,
         closeCallback: Function,
     },
-    emits: ["update:display", "key", "close"],
+    emits: ["update:display", "key", "close", "mouseup", "touchend", "mouseleave"],
     setup(props) {
         return {
             focusTrap: null as FocusTrap,
@@ -126,9 +129,21 @@ export default defineComponent({
         },
 
         focusLost: function () {
-            if (this.display) {
+            if (this.display && !this.closing) {
                 this.$el.focus();
             }
+        },
+
+        onMouseUp: function (e: MouseEvent) {
+            this.$emit("mouseup", e);
+        },
+
+        onTouchEnd: function (e: TouchEvent) {
+            this.$emit("touchend", e);
+        },
+
+        onMouseLeave: function () {
+            this.$emit("mouseleave");
         },
     },
 });

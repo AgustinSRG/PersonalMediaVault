@@ -31,7 +31,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -106,7 +106,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -126,7 +126,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -135,7 +135,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 		remaining -= int64(n)
 		if remaining < 0 {
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			response.WriteHeader(413) // Payload too large
 			return
@@ -149,7 +149,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	valid := ValidateSubtitlesFile(tempFile)
 
 	if !valid {
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_SRT", "Invalid srt file provided")
 		return
@@ -159,7 +159,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 
 	srt_encrypted_file, err := EncryptAssetFile(tempFile, session.key)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)
@@ -248,7 +248,7 @@ func api_addMediaSubtitles(response http.ResponseWriter, request *http.Request) 
 	if subtitlesIndex == -1 {
 		meta.AddSubtitle(subtitlesId, subtitlesName, srt_asset)
 	} else {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.Subtitles[subtitlesIndex].Asset
 		success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
@@ -310,8 +310,12 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
 		return
 	}
 
@@ -354,7 +358,7 @@ func api_removeMediaSubtitles(response http.ResponseWriter, request *http.Reques
 	subtitlesIndex := meta.FindSubtitle(subtitlesId)
 
 	if subtitlesIndex != -1 {
-		// Remove old assset
+		// Remove old asset
 		oldAsset := meta.Subtitles[subtitlesIndex].Asset
 		success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
@@ -401,7 +405,7 @@ func api_renameMediaSubtitles(response http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}

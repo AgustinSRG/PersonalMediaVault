@@ -63,8 +63,8 @@ hash = "sha1-8b9e0d563e76ea1308549eb89510c77e063dabcf"
 other = "Error: No se pudo encontrar el binario de copias de seguridad (pmv-backup)"
 
 [ErrorBackupUsage]
-hash = "sha1-826be9387c350f25b90a9adb3950556b0aef1f19"
-other = "Uso: backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-d1b976aaeb974ef95196c148b25dbc586aa94ee8"
+other = "Uso del comando: backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ErrorBrowser]
 hash = "sha1-da7c1fd0c0d54733790f8123554431eadd886b76"
@@ -77,6 +77,10 @@ other = "Uso: cache-size [tamaño] - Establece el tamaño de la caché"
 [ErrorCodecBin]
 hash = "sha1-4407ffe7f09c4d50f4be960bcc7a88dd9ca0251e"
 other = "Error: No se pudo encontrar el binario codificador multimedia (ffmpeg)"
+
+[ErrorFileExplorer]
+hash = "sha1-873ecc24fdf711c83df0a7fb283652288aceab62"
+other = "Error: no se pudo abrir el explorador de archivos: {{.Message}}"
 
 [ErrorFrontMissing]
 hash = "sha1-4eee2930e12911f18c2949f40487432159bf6d63"
@@ -130,9 +134,9 @@ other = "Uso: port [p] - Establece el puerto de escucha del servidor"
 hash = "sha1-46902e3d2b6426a50b3b4819a1b622f473617c77"
 other = "Error: No se pudo encontrar el binario de análisis multimedia (ffprobe)"
 
-[ErrorSecDelUsage]
-hash = "sha1-906676a0ee2327e4ba99fd0fce44c060fed5bc96"
-other = "Uso: sec-del [s/n]"
+[ErrorReEncryptUsage]
+hash = "sha1-4f754e00694106c002970e3f55d1eb233bc9c218"
+other = "Uso del comando: re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
 
 [ErrorUsernameBlank]
 hash = "sha1-f8972d2e27e924acd24bb202834eba57fb6842d3"
@@ -207,8 +211,8 @@ hash = "sha1-bf1920bebbd1af1f72b82ee502e2843f211bab9a"
 other = "cache-size [tamaño] - Establece el tamaño de la caché"
 
 [ManualCommandBackup]
-hash = "sha1-01d28d9e4f273bf2123d46736efe820a143922d0"
-other = "backup [directorio] [--re-encrypt] - Crea una copia de seguridad de la galería en el directorio especificado"
+hash = "sha1-95d4e25c102b2241378287acb639ca244140dd49"
+other = "backup [directorio] - Crea una copia de seguridad de la galería en el directorio especificado"
 
 [ManualCommandBrowser]
 hash = "sha1-e9d23a48574b81db3810d616f47d3ab437c7c72c"
@@ -230,6 +234,14 @@ other = "help - Imprime la lista de comandos"
 hash = "sha1-584a1dedac5917a28b35fbadffe508e1992eab22"
 other = "host [nombre de host] - Establece un host para acceder a la galería"
 
+[ManualCommandKeyExport]
+hash = "sha1-bccdcf3b23713108dc49edaf865754a6c6ad75c5"
+other = "key-export - Exporta la clave de cifrado de la galería, para poder guardar una copia de seguridad"
+
+[ManualCommandKeyRecover]
+hash = "sha1-27bcc6ecdf861679a39e95c9fe44cb187b3b1433"
+other = "key-recover - Recupera el acceso a la galería, usando una copia de seguridad de la clave de cifrado"
+
 [ManualCommandLocal]
 hash = "sha1-89599b85d32b375bf7d0dc7c444bbbed73e7db72"
 other = "local [s/n] - Establece el modo de escucha (local o todas las interfaces)"
@@ -242,9 +254,17 @@ other = "debug [s/n] - Habilita o deshabilita el registro de depuración"
 hash = "sha1-c20354a3352f3e9aa6d5a5a3453d33891ec9cd9d"
 other = "log-requests [s/n] - Habilita o deshabilita el registro de peticiones"
 
+[ManualCommandOpenLogs]
+hash = "sha1-d1fe7889d702cdc4af0656e78ae436d5ca0bc343"
+other = "open-logs - Abre el directorio de logs en el explorador de archivos"
+
 [ManualCommandPort]
 hash = "sha1-a5c34b68ab1f5379bf058b6d6c507f777ccb757e"
 other = "port [p] - Establece el puerto de escucha"
+
+[ManualCommandReEncrypt]
+hash = "sha1-cb18c1e9366b4938096fce4fc83753ceee69bb0d"
+other = "re-encrypt [directorio] - Crea una copia de seguridad de la galería en el directorio especificado, con una clave de cifrado diferente"
 
 [ManualCommandRecover]
 hash = "sha1-cb9cf3d26523ade83b07571d60cf9a84bf9e1033"
@@ -265,10 +285,6 @@ other = "ssl-disable - Deshabilita SSL (usar HTTP)"
 [ManualCommandSSLSetup]
 hash = "sha1-9b81ce72cf1612a31d57f7f3e2f11f5951d9de73"
 other = "ssl-setup - Establece la configuración SSL para usar HTTPS para acceder a la galería"
-
-[ManualCommandSecDel]
-hash = "sha1-e850c5fc4d039a0aa3510a7565eef8822e1415af"
-other = "sec-del [s/n] - Habilita o deshabilita el modo seguro de eliminación de ficheros temporales"
 
 [ManualCommandStart]
 hash = "sha1-a4e6deed79b44503bb9eda2584b5f535b36e81b1"
@@ -341,14 +357,6 @@ other = "La galería no tiene SSL habilitado."
 [SSLkeyFile]
 hash = "sha1-c90259e834f5f2b6f7d090ff91d27b29693ecbe3"
 other = "Clave privada SSL: {{.File}}"
-
-[SecureDeleteDisabled]
-hash = "sha1-943ff12ec1921bc1fef74ae1f522202c3e403fea"
-other = "El modo seguro de eliminación de ficheros temporales se encuentra DESHABILITADO."
-
-[SecureDeleteEnabled]
-hash = "sha1-d4af8a592ae5d10b69a7c7a9dba9d4bce04fa60c"
-other = "El modo seguro de eliminación de ficheros temporales se encuentra HABILITADO."
 
 [SetupSSLAsk]
 hash = "sha1-6e571b8dfbbb06d36e5de07edee2dc533b159ce5"

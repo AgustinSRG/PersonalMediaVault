@@ -27,7 +27,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	if !session.write {
+	if !session.CanWrite() {
 		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
 		return
 	}
@@ -84,7 +84,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -104,7 +104,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 			LogError(err)
 
 			f.Close()
-			WipeTemporalFile(tempFile)
+			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 			return
@@ -120,7 +120,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		WipeTemporalFile(tempFile)
+		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_THUMBNAIL", "Invalid thumbnail provided")
 		return
@@ -130,7 +130,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	thumbnail, err := GenerateThumbnailFromMedia(tempFile, probe_data)
 
-	WipeTemporalFile(tempFile)
+	DeleteTemporalFile(tempFile)
 
 	if err != nil {
 		LogError(err)
@@ -148,7 +148,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 
 	thumb_encrypted_file, err := EncryptAssetFile(thumbnail, session.key)
 
-	WipeTemporalFile(thumbnail)
+	DeleteTemporalFile(thumbnail)
 
 	if err != nil {
 		LogError(err)

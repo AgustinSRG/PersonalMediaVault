@@ -184,9 +184,11 @@ func GetClientIP(request *http.Request) string {
 // mid - Media ID
 // file - Unencrypted file path
 // key - Encryption key
+// preserve_original - True if the original is being preserved
+// second_phase - True if it is the second phase (for original preservation)
 // Returns a temporal file with the encrypted contents
 // This method also sets the progress in the media assets manager
-func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, error) {
+func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_original bool, second_phase bool) (string, error) {
 	encrypted_file := GetTemporalFileName("pma", true)
 
 	f, err := os.OpenFile(file, os.O_RDONLY, FILE_PERMISSION)
@@ -272,13 +274,22 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte) (string, erro
 
 		progress_enc := math.Round(bytesEncrypted * 100 / bytesTotal)
 		p := int32(progress_enc)
+		if preserve_original {
+			p = p / 2
+
+			if second_phase {
+				p += 50
+			}
+		}
 		GetVault().media.SetProgress(mid, p)
 	}
 
 	ws.Close()
 	f.Close()
 
-	GetVault().media.EndProgress(mid)
+	if !preserve_original || second_phase {
+		GetVault().media.EndProgress(mid)
+	}
 
 	return encrypted_file, nil
 }
@@ -411,4 +422,42 @@ func LimitStringSize(str string, size int) string {
 	} else {
 		return ""
 	}
+}
+
+// Handles auth confirmation for an API
+// response - The response
+// request - The request
+// session - The session
+// onlyTfa - True in case only two factor authentication confirmation is needed
+// Returns true only in case of success. It this function returns false, the API handler must return
+func HandleAuthConfirmation(response http.ResponseWriter, request *http.Request, session *ActiveSession, onlyTfa bool) bool {
+	password := request.Header.Get("x-auth-confirmation-pw")
+	tfaCode := request.Header.Get("x-auth-confirmation-tfa")
+
+	success, cooldown, requiredMethod := session.CheckAuthConfirmation(password, tfaCode, onlyTfa)
+
+	if success {
+		return true
+	}
+
+	if cooldown {
+		ReturnAPIError(response, 403, "COOLDOWN", "Auth confirmation is in cooldown")
+		return false
+	}
+
+	if requiredMethod == "tfa" {
+		if len(tfaCode) == 0 {
+			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_TFA", "Auth confirmation is required: Include the two factor authentication code")
+		} else {
+			ReturnAPIError(response, 403, "INVALID_TFA_CODE", "Invalid two factor authentication code")
+		}
+	} else {
+		if len(password) == 0 {
+			ReturnAPIError(response, 403, "AUTH_CONFIRMATION_REQUIRED_PW", "Auth confirmation is required: Include the account password")
+		} else {
+			ReturnAPIError(response, 403, "INVALID_PASSWORD", "Invalid account password")
+		}
+	}
+
+	return false
 }

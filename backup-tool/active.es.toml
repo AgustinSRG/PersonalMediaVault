@@ -19,8 +19,8 @@ hash = "sha1-c3b3202e87a0ab426adcac54587bb902c6a929c1"
 other = "Copiando archivos... ({{.Percent}}%) ({{.Current}} / {{.Total}})"
 
 [EnterRootPassword]
-hash = "sha1-25b10556ea7f6ec979ed8249adf04d55a78a7fdd"
-other = "Escriba la contraseña del usuario principal ({{.Account}})"
+hash = "sha1-86a2687be3369394dd9a5764ac25789cb93ffbd5"
+other = "Escriba la nueva contraseña para la cuenta principal ({{.Account}})"
 
 [Error]
 hash = "sha1-90033c2be026e065e5abb31b0da67cf8004ca01e"
@@ -38,6 +38,18 @@ other = "Error obteniendo información del archivo {{.File}} | Error: {{.Message
 hash = "sha1-d7badd343243c5bb77627e2e71254cb365bd7a2b"
 other = "{{.File}} no es un archivo"
 
+[ErrorPasswordBlank]
+hash = "sha1-f70cc9bdd80a4c433918161f3079e1595e09de70"
+other = "La contraseña no puede dejarse vacía."
+
+[ErrorPasswordNotMatching]
+hash = "sha1-f7c3cd475924dc45e184f50dd91e9e4da76c740b"
+other = "Las contraseñas no coinciden."
+
+[ErrorPasswordTooLong]
+hash = "sha1-9fa42c60acaf63ccb213d8976d36e6c7b8dfc570"
+other = "Las contraseña no puede superar los 255 caracteres."
+
 [ErrorReEncryptFile]
 hash = "sha1-eecad21894f6f2f54e702fb1ed535a6692e7d128"
 other = "Error re-encriptando el archivo {{.File}} | Error: {{.Message}}"
@@ -45,6 +57,18 @@ other = "Error re-encriptando el archivo {{.File}} | Error: {{.Message}}"
 [ErrorReadPath]
 hash = "sha1-655a5ae5ba4b1ddfc3dfff44e2f8841ce1e71807"
 other = "Error accediendo al directorio {{.Path}} | Error: {{.Message}}"
+
+[ExportKeyTitle1]
+hash = "sha1-be7999fe467b786435f6519dbe9a99cfc21df23c"
+other = "Debajo se muestra la clave de cifrado de la galería, en formato hexadecimal."
+
+[ExportKeyTitle2]
+hash = "sha1-9f1b03b6db62fd78ccf4b7691280351416698385"
+other = "Asegúrese de guardarla en un lugar seguro. ¡Nunca revele la clave de cifrado!"
+
+[ExportKeyTitle3]
+hash = "sha1-d9e7ebefc80c0a24e780736476e1f9055496c8d9"
+other = "Una vez la haya guardado, presione Enter para ocultarla de la vista."
 
 [FetchNotice]
 hash = "sha1-3bf220d0de646037641bfabf6795cdab3c29775e"
@@ -74,6 +98,14 @@ other = "La ruta tiene un fichero de bloqueo. Cierre la galería o elimine el ar
 hash = "sha1-aca99d7d39a3215a1e0a3868fd8a9d10989f257d"
 other = "Creando copia de seguridad..."
 
+[ModeKeyExport]
+hash = "sha1-78ddaa3abe27de19c0f517dfd216b4ac639c047f"
+other = "Modo: Exportar clave de cifrado"
+
+[ModeKeyRecover]
+hash = "sha1-d77d5e2d1b338854ab5756ea6043333a4f107867"
+other = "Modo: Recuperar clave de cifrado"
+
 [ModeReEncryptedBackup]
 hash = "sha1-9fe9c83b949adcfce18bd78a2beb74da82b8ccd2"
 other = "Modo: Copia de seguridad re-encriptada"
@@ -87,16 +119,108 @@ hash = "sha1-9e7a2817625214ec7fc1b0bdd26c5e5b41863a85"
 other = "La ruta no existe: {{.Path}}"
 
 [ProgramUsage]
-hash = "sha1-ef02242cc444d6f973e8493dcf56bad4e5457589"
-other = "Uso del comando: pmv-backup </ruta/de/galería> </ruta/copia/de/seguridad> [--re-encrypt]"
+hash = "sha1-9010e71e9c4295fe3e93c4a3021ab047a7f8eb62"
+other = "Uso del comando: pmv-backup <comando> [argumentos]"
+
+[ProgramUsageBackup]
+hash = "sha1-71b4a5c1a914eeb0db19fafa3864e25183102d1d"
+other = "Uso del comando: pmv-backup backup </ruta/de/galería> </ruta/copia/de/seguridad>"
+
+[ProgramUsageBackupTitle]
+hash = "sha1-0efece546f4823ca587f1e58de978473dac54a9e"
+other = "Si desea crear o sincronizar una copia de seguridad, use el comando 'backup'."
+
+[ProgramUsageKeyExport]
+hash = "sha1-4d8ab1304d4a296af5b5e280469a9a1adcd27e59"
+other = "Uso del comando: pmv-backup key-export </ruta/de/galería>"
+
+[ProgramUsageKeyExportTitle]
+hash = "sha1-5a9a63fb1e57292f336b6ed0cdef5a43306b7199"
+other = "Si desea exportar la clave de cifrado de la galería, para guardar una copia de seguridad, use el comando 'key-export'."
+
+[ProgramUsageKeyRecover]
+hash = "sha1-b7570351e0e1b07f57f7e82463da4cf588ded88a"
+other = "Uso del comando: pmv-backup key-recover </ruta/de/galería>"
+
+[ProgramUsageKeyRecoverTitle]
+hash = "sha1-5d4bc4ff2449fbefb28fcf9a2f7aae213de7c7e0"
+other = "Si ha perdido acceso a la galería, y tiene una copia de la clave de cifrado, puede restaurar el acceso haciendo uso del comando 'key-recover'."
+
+[ProgramUsageReEncrypt]
+hash = "sha1-ccc617cd729f52ca0737ba5eeae42db1006462f5"
+other = "Uso del comando: pmv-backup re-encrypt </ruta/de/galería> </ruta/copia/de/seguridad>"
+
+[ProgramUsageReEncryptTitle]
+hash = "sha1-b8ceaaa11f6bb98d4f2223b24cb8d35e3f93217c"
+other = "Si desea volver a cifrar la galería con una clave de cifrado diferente, use el comando 're-encrypt'."
 
 [ProgramWelcome]
 hash = "sha1-df69330ffb2a276629bbd93feae80825a052907d"
 other = "Herramienta de creación de copias de seguridad de su galería multimedia."
 
+[RecoverKeyDone]
+hash = "sha1-ccaf79b0b1d8423607518e6da027b82590beccc3"
+other = "¡Listo! Ahora puede iniciar sesión en su galería usando la nueva contraseña."
+
+[RecoverKeyFinalWarning]
+hash = "sha1-2966fe6f2a2edb8512163ad437623dbd363f8054"
+other = "ADVERTENCIA: Esta acción borrará todas las cuentas de la galería, excepto la principal"
+
+[RecoverKeyFinalWarningProceed]
+hash = "sha1-a3b27097ad0be4ac2ed7b8d282aedd93ab395964"
+other = "¿Proceder con la recuperación de la clave?"
+
+[Redacted]
+hash = "sha1-1b27feaf7714f2fc332ac544c7d45f8c174bfd19"
+other = "[OCULTO]"
+
+[RepeatPassword]
+hash = "sha1-bab9bc458f38d4d574e5baa63c72341db6ddaa30"
+other = "Repita la contraseña"
+
+[VaultCheckingKey]
+hash = "sha1-5b9f039f50d5b595e15acdbbd9fcf68ed9b5af7d"
+other = "Comprobando la clave de cifrado especificada..."
+
+[VaultKeyAsk1]
+hash = "sha1-ec9ca18ae559e84d3ac43a5de9d270026d7e14b7"
+other = "Introduzca la clave de cifrado, en formato hexadecimal, y presione Enter:"
+
+[VaultKeyInvalid]
+hash = "sha1-187524acdc7cf712dcf82e5c99574a21509f792b"
+other = "Error: Clave de cifrado no válida. Debe ser una cadena hexadecimal de 32 bytes."
+
+[VaultMediaSample]
+hash = "sha1-bf1c7eb2112f02bd34c349c0597e5691faa4383d"
+other = "Muestra de archivo multimedia: [{{.MediaId}}] {{.MediaTitle}}"
+
+[VaultNoAlbums]
+hash = "sha1-d5e303433c58f0b001aa0b76bfcd7cff387e12b8"
+other = "Esta galería no tiene ningún álbum."
+
+[VaultNoMedia]
+hash = "sha1-8796f9edad105dea4865203b7c6c2dcf575dd000"
+other = "Esta galería no tiene ningún archivo multimedia."
+
+[VaultNoTags]
+hash = "sha1-08620619f2319fb2267f02cc187a209e2b824cd2"
+other = "Esta galería no tiene ninguna etiqueta."
+
 [VaultNotFoundError]
 hash = "sha1-f4697133f6137e4d9320d98671bc9eaf8e2a3e91"
 other = "No se encontró ninguna galería en la ruta seleccionada"
+
+[VaultPrintAlbums]
+hash = "sha1-bd6f19dff1733fa11540ec4e068370675162739e"
+other = "Albums (Total: {{.AlbumCount}}):"
+
+[VaultPrintTags]
+hash = "sha1-06b1c272ce8aca851a9efb2b7c6bd3de8c567118"
+other = "Etiquetas (Total: {{.TagCount}}):"
+
+[VaultRecoverKeyProbablyInvalid]
+hash = "sha1-e81e4183b711d763791faf2d3c34635bcd4aaabd"
+other = "Este error significa que la clave especificada no es correcta, o la galería sufre de corrupción de datos"
 
 [WrongPasswordDestError]
 hash = "sha1-53294cdf4560bb8ed07e2f4311e383fcfbd36782"
@@ -105,3 +229,11 @@ other = "Error: Existe un fichero de credenciales en el directorio de destino, p
 [WrongPasswordError]
 hash = "sha1-00415e7e538b0c5e9a97063df1e855cb61ff72fc"
 other = "Error: Contraseña incorrecta"
+
+[YesNo]
+hash = "sha1-4564b7be7e4aa13e727e17280870edc63e87f8ce"
+other = "s/n"
+
+[YesPrefix]
+hash = "sha1-95cb0bfd2977c761298d9624e4b4d4c72a39974a"
+other = "s"

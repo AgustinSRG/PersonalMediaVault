@@ -191,6 +191,11 @@ export interface VaultUserConfig {
      * Custom stylesheet
      */
     css: string;
+
+    /**
+     * Preserve original assets
+     */
+    preserve_originals: boolean;
 }
 
 // Media

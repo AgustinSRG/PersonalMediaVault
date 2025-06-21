@@ -1,5 +1,7 @@
 // Media assets API
 
+// cSpell:ignore webp, weba, msvideo, matroska, nosniff
+
 package main
 
 import (

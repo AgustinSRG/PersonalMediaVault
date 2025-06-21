@@ -137,7 +137,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -157,7 +157,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -182,7 +182,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -209,7 +209,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -227,7 +227,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 
 			return
 		}
@@ -248,7 +248,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -260,7 +260,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -272,7 +272,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		cmd, intervalSeconds = MakeFFMpegEncodeToPreviewsCommand(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, userConfig)
 	} else {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -283,7 +283,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -300,7 +300,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		}
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -311,7 +311,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 
 		return
 	}
@@ -322,7 +322,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -358,7 +358,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: No preview images found")
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -370,7 +370,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -382,7 +382,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		ws.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -397,7 +397,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -412,7 +412,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -427,7 +427,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -438,7 +438,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 			ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-			WipeTemporalPath(tempFolder)
+			DeleteTemporalPath(tempFolder)
 			os.Remove(encrypted_temp)
 			return
 		}
@@ -453,7 +453,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 	if task.killed {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 
 		return
@@ -465,7 +465,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -481,7 +481,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		media.CancelWrite()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -502,7 +502,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		media.CancelWrite()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		os.Remove(encrypted_temp)
 		return
 	}
@@ -519,7 +519,7 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-		WipeTemporalPath(tempFolder)
+		DeleteTemporalPath(tempFolder)
 		return
 	}
 
@@ -527,5 +527,5 @@ func (task *ActiveTask) RunGeneratePreviews(vault *Vault) {
 
 	// Finish task
 	GetVault().media.ReleaseMediaResource(task.definition.MediaId)
-	WipeTemporalPath(tempFolder)
+	DeleteTemporalPath(tempFolder)
 }

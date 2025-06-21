@@ -13,7 +13,7 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const BACKEND_VERSION = "1.22.0"
+const BACKEND_VERSION = "2.0.0"
 
 type BackendOptions struct {
 	debug       bool // Debug mode
@@ -239,7 +239,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		LogInfo("Openned vault: " + absolutePath)
+		LogInfo("Loaded vault: " + absolutePath)
 
 		GLOBAL_VAULT = &vault
 
@@ -333,7 +333,6 @@ func printHelp() {
 	fmt.Println("        SSL_CERT                   HTTPS certificate (.pem) path.")
 	fmt.Println("        SSL_KEY                    HTTPS private key (.pem) path.")
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
-	fmt.Println("        TEMP_FILE_DELETE_MODE      Set it to 'SECURE' to clear all the bytes of temporal files (secure delete).")
 	fmt.Println("        VAULT_INITIAL_USER         The initial vault username to set if the vault folder is empty.")
 	fmt.Println("        VAULT_INITIAL_PASSWORD     The initial vault password to set if the vault folder is empty.")
 }

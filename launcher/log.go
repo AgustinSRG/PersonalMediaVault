@@ -11,6 +11,18 @@ import (
 
 const LIMIT_LOG_FILES = 100
 
+func getLogsPath() (string, error) {
+	userCacheDir, err := os.UserCacheDir()
+
+	if err != nil {
+		return "", err
+	}
+
+	logsFolder := path.Join(userCacheDir, "PersonalMediaVault", "logs")
+
+	return logsFolder, nil
+}
+
 func getLogFileName() (string, error) {
 	userCacheDir, err := os.UserCacheDir()
 

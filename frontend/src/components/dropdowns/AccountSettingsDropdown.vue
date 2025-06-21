@@ -36,6 +36,13 @@
                             </td>
                         </tr>
 
+                        <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('security')">
+                            <td class="modal-menu-item-icon"><i class="fas fa-lock"></i></td>
+                            <td class="modal-menu-item-title">
+                                {{ $t("Account security") }}
+                            </td>
+                        </tr>
+
                         <tr v-if="username" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('invite')">
                             <td class="modal-menu-item-icon"><i class="fas fa-user-check"></i></td>
                             <td class="modal-menu-item-title">

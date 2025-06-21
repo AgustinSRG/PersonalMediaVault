@@ -19,7 +19,7 @@ type VaultIndexWriteResource struct {
 	path string           // Path to a temp file where changes are pre-made
 }
 
-// Initailizes the index file manager
+// Initializes the index file manager
 // file - Path to the index file to manage
 func (vmi *VaultMainIndex) Initialize(file string) error {
 	vmi.file = file
