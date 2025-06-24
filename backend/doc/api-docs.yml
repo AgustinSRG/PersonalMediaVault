@@ -159,6 +159,9 @@ paths:
               title:
                 type: string
                 description: "Custom title for the vault"
+              logo:
+                type: string
+                description: "Custom logotype text for the vault"
               css:
                 type: string
                 description: "Custom style for the vault"
@@ -3811,6 +3814,9 @@ definitions:
         title:
           type: string
           description: Custom vault title
+        logo:
+          type: string
+          description: Custom logotype text
         max_tasks:
           type: number
           format: int32

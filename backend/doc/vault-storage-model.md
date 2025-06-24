@@ -451,12 +451,15 @@ The file has the following fields:
 | Field name                | Type                         | Description                                                 |
 | ------------------------- | ---------------------------- | ----------------------------------------------------------- |
 | `title`                   | String                       | Vault custom title                                          |
+| `logo`                    | String                       | Vault custom logo text                                      |
 | `css`                     | String                       | Custom CSS for the frontend                                 |
 | `max_tasks`               | Number (32 bit integer)      | Max number of tasks to run in parallel                      |
 | `encoding_threads`        | Number (32 bit integer)      | Max number of threads to use for a single encoding task     |
 | `video_previews_interval` | Number (32 bit integer)      | Video previews interval (seconds)                           |
 | `resolutions`             | Array&lt;VideoResolution&gt; | Resolutions to automatically encode when uploading a video  |
 | `image_resolutions`       | Array&lt;ImageResolution&gt; | Resolutions to automatically encode when uploading an image |
+| `invite_limit`            | Number (32 bit integer)      | Max number of invites per user                              |
+| `preserve_originals`      | Boolean                      | Preserve original media before encoding?                    |
 
 The `VideoResolution` object has the following fields:
 

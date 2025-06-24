@@ -12,6 +12,7 @@ type AccountContextAPIResponse struct {
 	Root     bool   `json:"root"`
 	Write    bool   `json:"write"`
 	Title    string `json:"title"`
+	Logo     string `json:"logo"`
 	Style    string `json:"css"`
 	Version  string `json:"version"`
 }
@@ -52,6 +53,7 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 	result.Write = write
 
 	result.Title = config.CustomTitle
+	result.Logo = config.CustomLogo
 	result.Style = config.CustomCSS
 	result.Version = BACKEND_VERSION
 
