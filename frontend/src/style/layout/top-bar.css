@@ -49,6 +49,8 @@
     padding-top: 3px;
     overflow: hidden;
     flex: 1;
+    min-width: 1px;
+    text-overflow: ellipsis;
 }
 
 .top-bar-button {

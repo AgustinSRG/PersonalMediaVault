@@ -12,8 +12,8 @@
                 <button type="button" class="top-bar-button" :title="$t('Main menu')" @click="close">
                     <i class="fas fa-bars"></i>
                 </button>
-                <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
-                <span :title="getAppTitle()" class="top-bar-title">PMV</span>
+                <img class="top-bar-logo-img" src="/img/icons/favicon.png" :alt="getAppLogoText(customLogo)" />
+                <span :title="getAppTitle(customTitle)" class="top-bar-title">{{ getAppLogoText(customLogo) }}</span>
             </div>
         </div>
         <div class="side-bar-body" tabindex="-1">
@@ -178,6 +178,9 @@ export default defineComponent({
             albumsRest: [] as AlbumListItemMinExt[],
 
             cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
+
+            customTitle: AuthController.Title,
+            customLogo: AuthController.Logo,
         };
     },
     watch: {
@@ -221,8 +224,12 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        getAppTitle: function () {
-            return AuthController.Title || this.$t("Personal Media Vault");
+        getAppTitle: function (customTitle: string) {
+            return customTitle || this.$t("Personal Media Vault");
+        },
+
+        getAppLogoText: function (customLogo: string) {
+            return customLogo || "PMV";
         },
 
         updateStatus: function () {
@@ -328,6 +335,8 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+            this.customTitle = AuthController.Title;
+            this.customLogo = AuthController.Logo;
         },
 
         putAlbumFirst: function (albumId: number) {

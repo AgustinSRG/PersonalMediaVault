@@ -50,7 +50,22 @@
                                 type="text"
                                 autocomplete="off"
                                 :disabled="busy"
+                                maxlength="100"
                                 :placeholder="$t('Personal Media Vault')"
+                                class="form-control form-control-full-width"
+                                @change="onChangesMade"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label>{{ $t("Logo text") }}:</label>
+                            <input
+                                v-model="logo"
+                                type="text"
+                                autocomplete="off"
+                                :disabled="busy"
+                                maxlength="20"
+                                placeholder="PMV"
                                 class="form-control form-control-full-width"
                                 @change="onChangesMade"
                             />
@@ -275,6 +290,7 @@ export default defineComponent({
             displayAskSave: false,
 
             title: "",
+            logo: "",
             css: "",
             maxTasks: 0,
             encodingThreads: 0,
@@ -426,8 +442,9 @@ export default defineComponent({
 
             makeNamedApiRequest(this.loadRequestId, apiConfigGetConfig())
                 .onSuccess((response: VaultUserConfig) => {
-                    this.title = response.title;
-                    this.css = response.css;
+                    this.title = response.title || "";
+                    this.logo = response.logo || "";
+                    this.css = response.css || "";
                     this.maxTasks = response.max_tasks;
                     this.encodingThreads = response.encoding_threads;
                     this.videoPreviewsInterval = response.video_previews_interval;
@@ -478,6 +495,7 @@ export default defineComponent({
                 apiConfigSetConfig(
                     {
                         title: this.title,
+                        logo: this.logo,
                         css: this.css,
                         max_tasks: this.maxTasks,
                         encoding_threads: this.encodingThreads,

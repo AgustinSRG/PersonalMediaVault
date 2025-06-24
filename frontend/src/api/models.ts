@@ -158,6 +158,11 @@ export interface VaultUserConfig {
     title: string;
 
     /**
+     * Custom vault logo text
+     */
+    logo: string;
+
+    /**
      * Max number of task allowed in parallel
      */
     max_tasks: number;

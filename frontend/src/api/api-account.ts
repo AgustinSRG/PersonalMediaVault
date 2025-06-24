@@ -33,6 +33,11 @@ export interface AccountContext {
     title: string;
 
     /**
+     * Custom logotype text
+     */
+    logo: string;
+
+    /**
      * Custom stylesheet
      */
     css: string;
