@@ -61,6 +61,11 @@ export class AppStatus {
     public static SearchParams = "";
 
     /**
+     * Random seed
+     */
+    public static RandomSeed = 0;
+
+    /**
      * True for split mode, false for single mode
      */
     public static ListSplitMode = true;
@@ -133,6 +138,10 @@ export class AppStatus {
             AppStatus.CurrentSearch = search;
         } else {
             AppStatus.CurrentSearch = "";
+        }
+
+        if (page === "random") {
+            AppStatus.RandomSeed = Math.floor(parseInt(getParameterByName("seed") || "0", 10)) || Date.now();
         }
 
         const searchParams = getParameterByName("sp");
@@ -232,6 +241,10 @@ export class AppStatus {
             params["sp"] = AppStatus.SearchParams;
         }
 
+        if (AppStatus.RandomSeed && AppStatus.CurrentPage === "random") {
+            params["seed"] = AppStatus.RandomSeed + "";
+        }
+
         if (AppStatus.ListSplitMode) {
             params["split"] = "yes";
         }
@@ -289,6 +302,10 @@ export class AppStatus {
     public static GoToPage(page: AppStatusPage) {
         AppStatus.CurrentPage = page;
 
+        if (AppStatus.CurrentPage === "random") {
+            AppStatus.RandomSeed = Date.now();
+        }
+
         AppStatus.CurrentAlbum = -1;
 
         if (AppStatus.CurrentMedia >= 0) {
@@ -314,6 +331,10 @@ export class AppStatus {
         const changedPage = AppStatus.CurrentPage !== page;
 
         AppStatus.CurrentPage = page;
+
+        if (AppStatus.CurrentPage === "random") {
+            AppStatus.RandomSeed = Date.now();
+        }
 
         if (AppStatus.CurrentMedia !== -1 && AppStatus.CurrentAlbum === -1 && (!AppStatus.ListSplitMode || changedPage)) {
             AppStatus.ListSplitMode = true;
@@ -364,12 +385,24 @@ export class AppStatus {
     }
 
     /**
+     * Generates a random new seed
+     */
+    public static RefreshSeed() {
+        AppStatus.RandomSeed = Date.now();
+        AppStatus.OnStatusUpdate();
+    }
+
+    /**
      * Changes the search query
      * @param search The search query
      * @param forced True to force the page change to the search results
      */
     public static GoToSearch(search: string, forced?: boolean) {
         AppStatus.CurrentSearch = search;
+
+        if (AppStatus.CurrentPage === "random") {
+            AppStatus.RandomSeed = Date.now();
+        }
 
         if (AppStatus.CurrentSearch) {
             if (forced || AppStatus.CurrentPage !== "random") {
