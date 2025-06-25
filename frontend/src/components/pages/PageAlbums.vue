@@ -136,7 +136,7 @@ import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import { AlbumListItem } from "@/api/models";
+import type { AlbumListItem } from "@/api/models";
 import { EVENT_NAME_RANDOM_PAGE_REFRESH, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";

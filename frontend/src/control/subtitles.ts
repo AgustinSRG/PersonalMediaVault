@@ -3,7 +3,8 @@
 "use strict";
 
 import { RequestErrorHandler, abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { findSubtitlesEntry, parseSRT, SubtitlesEntry } from "@/utils/srt";
+import type { SubtitlesEntry } from "@/utils/srt";
+import { findSubtitlesEntry, parseSRT } from "@/utils/srt";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";

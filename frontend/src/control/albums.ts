@@ -9,7 +9,7 @@ import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
-import { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
+import type { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin, apiAlbumsMoveMediaInAlbum } from "@/api/api-albums";
 import { PagesController } from "./pages";
 import { apiMediaGetMedia } from "@/api/api-media";

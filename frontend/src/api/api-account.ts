@@ -2,9 +2,10 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
 import { API_PREFIX, generateURIQuery, getApiURL } from "@/utils/api";
-import { ProvidedAuthConfirmation } from "./api-auth";
+import type { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/account";
 

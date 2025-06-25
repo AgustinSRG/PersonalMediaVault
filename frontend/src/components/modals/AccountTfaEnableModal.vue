@@ -104,7 +104,8 @@ import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
-import { apiAccountTimeOtpEnable, apiAccountTimeOtpSettings, TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
+import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
+import { apiAccountTimeOtpEnable, apiAccountTimeOtpSettings } from "@/api/api-account";
 import AccountTfaSettingsModal from "./AccountTfaSettingsModal.vue";
 
 export default defineComponent({

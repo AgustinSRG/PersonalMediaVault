@@ -28,6 +28,7 @@ export default typescriptEslint.config(
                 "error",
                 { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
             ],
+            "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
             indent: "off",
             "vue/require-default-prop": "off",
             "vue/no-v-html": "off",

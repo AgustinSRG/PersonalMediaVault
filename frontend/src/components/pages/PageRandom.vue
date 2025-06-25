@@ -84,7 +84,7 @@
 </template>
 
 <script lang="ts">
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";

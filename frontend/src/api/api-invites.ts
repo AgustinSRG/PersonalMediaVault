@@ -2,9 +2,10 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, CommonErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
+import type { CommonAuthenticatedErrorHandler, CommonErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
 import { getApiURL, API_PREFIX } from "@/utils/api";
-import { LoginResult, SessionDuration } from "./api-auth";
+import type { LoginResult, SessionDuration } from "./api-auth";
 
 const API_GROUP_PREFIX = "/invites";
 

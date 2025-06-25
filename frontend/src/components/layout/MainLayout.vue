@@ -114,7 +114,8 @@ import {
     EVENT_NAME_AUTH_ERROR,
     EVENT_NAME_AUTH_LOADING,
 } from "../../control/auth";
-import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
+import type { ColorThemeName } from "@/control/app-preferences";
+import { EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { isTouchDevice } from "@/utils/touch";
 

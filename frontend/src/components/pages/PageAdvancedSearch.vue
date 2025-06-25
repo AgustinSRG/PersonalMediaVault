@@ -191,12 +191,14 @@
 </template>
 
 <script lang="ts">
-import { MediaListItem } from "@/api/models";
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { MediaListItem } from "@/api/models";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
+import type { MatchingTag } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";

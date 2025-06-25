@@ -42,7 +42,8 @@
 </template>
 
 <script lang="ts">
-import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme, setTheme } from "@/control/app-preferences";
+import type { ColorThemeName } from "@/control/app-preferences";
+import { EVENT_NAME_THEME_CHANGED, getTheme, setTheme } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";

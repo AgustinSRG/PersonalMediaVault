@@ -135,14 +135,16 @@
 </template>
 
 <script lang="ts">
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
     getAlbumFavoriteList,
     getAlbumsOrderMap,
 } from "@/control/app-preferences";
-import { AppStatus, AppStatusPage, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import type { AppStatusPage } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { generateURIQuery } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";

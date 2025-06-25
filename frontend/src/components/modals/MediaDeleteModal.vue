@@ -63,7 +63,7 @@ import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "MediaDeleteModal",

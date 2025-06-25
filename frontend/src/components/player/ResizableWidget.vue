@@ -87,7 +87,8 @@
 <script lang="ts">
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
 import { useVModel } from "@/utils/v-model";
-import { PropType, nextTick } from "vue";
+import type { PropType } from "vue";
+import { nextTick } from "vue";
 import { defineComponent } from "vue";
 
 const INITIAL_WIDTH = 480;

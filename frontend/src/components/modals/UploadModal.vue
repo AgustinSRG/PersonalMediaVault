@@ -79,11 +79,14 @@
 </template>
 
 <script lang="ts">
-import { defineAsyncComponent, defineComponent, nextTick, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { parseTagName } from "@/utils/tags";
-import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { MatchingTag } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { getLastUsedTags } from "@/control/app-preferences";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 

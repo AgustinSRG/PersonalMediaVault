@@ -97,7 +97,8 @@
 
 <script lang="ts">
 import { generateURIQuery } from "@/utils/api";
-import { generateMenuForPages, PageNode } from "@/utils/menu-make";
+import type { PageNode } from "@/utils/menu-make";
+import { generateMenuForPages } from "@/utils/menu-make";
 import { packSearchParams } from "@/utils/search-params";
 import { defineComponent } from "vue";
 

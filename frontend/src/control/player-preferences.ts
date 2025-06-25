@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { MediaData } from "@/api/models";
+import type { MediaData } from "@/api/models";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 
 /**

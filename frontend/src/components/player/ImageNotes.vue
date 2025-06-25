@@ -141,9 +141,10 @@ import {
     ImageNotesController,
 } from "@/control/img-notes";
 import { escapeHTML } from "@/utils/html";
-import { ImageNote } from "@/utils/notes-format";
+import type { ImageNote } from "@/utils/notes-format";
 import { PagesController } from "@/control/pages";
-import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "ImageNotes",

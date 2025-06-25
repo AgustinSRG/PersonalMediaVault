@@ -122,7 +122,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineComponent } from "vue";
 
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
@@ -132,7 +133,7 @@ import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { isTouchDevice } from "@/utils/touch";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 
 export default defineComponent({
     name: "EmptyPlayer",

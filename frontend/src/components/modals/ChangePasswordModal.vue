@@ -78,7 +78,7 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import PasswordStrengthIndicator from "@/components/utils/PasswordStrengthIndicator.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "ChangePasswordModal",

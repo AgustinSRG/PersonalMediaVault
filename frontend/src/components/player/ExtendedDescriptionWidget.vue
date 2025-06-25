@@ -35,7 +35,8 @@
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
 
-import ResizableWidget, { ActionButton } from "@/components/player/ResizableWidget.vue";
+import type { ActionButton } from "@/components/player/ResizableWidget.vue";
+import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";

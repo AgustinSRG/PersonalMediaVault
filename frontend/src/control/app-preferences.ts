@@ -5,7 +5,7 @@
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./albums";
 import { AppEvents } from "./app-events";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
-import { AlbumListItemMin } from "@/api/models";
+import type { AlbumListItemMin } from "@/api/models";
 
 export type ColorThemeName = "light" | "dark";
 

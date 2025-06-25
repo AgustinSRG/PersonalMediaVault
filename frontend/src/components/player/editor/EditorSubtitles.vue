@@ -146,7 +146,7 @@
 </template>
 
 <script lang="ts">
-import { MediaSubtitle } from "@/api/models";
+import type { MediaSubtitle } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -161,7 +161,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
 import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorSubtitles",

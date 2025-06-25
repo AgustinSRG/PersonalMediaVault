@@ -79,7 +79,7 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiTasksGetTasks } from "@/api/api-tasks";
-import { TaskStatus } from "@/api/models";
+import type { TaskStatus } from "@/api/models";
 
 export default defineComponent({
     name: "TaskListModal",

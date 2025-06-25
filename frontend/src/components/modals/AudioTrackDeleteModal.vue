@@ -28,8 +28,8 @@
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { PropType } from "vue";
-import { MediaAudioTrack } from "@/api/models";
+import type { PropType } from "vue";
+import type { MediaAudioTrack } from "@/api/models";
 
 export default defineComponent({
     name: "AudioTrackDeleteModal",

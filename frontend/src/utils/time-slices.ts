@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { MediaTimeSlice } from "@/api/models";
+import type { MediaTimeSlice } from "@/api/models";
 import { renderTimeSeconds } from "./time";
 
 export function parseTimeSeconds(str: string): number {

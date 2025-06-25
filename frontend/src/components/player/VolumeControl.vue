@@ -32,7 +32,8 @@
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
-import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "VolumeControl",

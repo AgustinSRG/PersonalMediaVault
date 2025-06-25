@@ -145,7 +145,7 @@
 </template>
 
 <script lang="ts">
-import { MediaAudioTrack } from "@/api/models";
+import type { MediaAudioTrack } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -160,7 +160,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaRemoveAudioTrack, apiMediaRenameAudioTrack, apiMediaSetAudioTrack } from "@/api/api-media-edit";
 import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorAudios",

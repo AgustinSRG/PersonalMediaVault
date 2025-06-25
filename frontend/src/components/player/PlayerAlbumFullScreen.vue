@@ -79,7 +79,7 @@ import { getAssetURL } from "@/utils/api";
 import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 import ThumbImage from "../utils/ThumbImage.vue";
-import { MediaListItem, PositionedMediaListItem } from "@/api/models";
+import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
 
 const INITIAL_WINDOW_SIZE = 100;
 

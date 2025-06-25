@@ -427,12 +427,13 @@ import {
     setTogglePlayDelay,
 } from "@/control/player-preferences";
 import { SubtitlesController } from "@/control/subtitles";
-import { defineComponent, nextTick, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { FocusTrap } from "../../utils/focus-trap";
 import PlayerSubtitlesConfig from "./PlayerSubtitlesConfig.vue";
-import { MediaData, MediaResolution } from "@/api/models";
+import type { MediaData, MediaResolution } from "@/api/models";
 
 export default defineComponent({
     name: "VideoPlayerConfig",

@@ -2,11 +2,12 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { MediaResolution, MediaSubtitle, MediaAudioTrack, MediaTimeSlice, MediaAttachment } from "./models";
-import { ImageNote } from "@/utils/notes-format";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { MediaResolution, MediaSubtitle, MediaAudioTrack, MediaTimeSlice, MediaAttachment } from "./models";
+import type { ImageNote } from "@/utils/notes-format";
 import { API_PREFIX, getApiURL } from "@/utils/api";
-import { ProvidedAuthConfirmation } from "./api-auth";
+import type { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/media";
 

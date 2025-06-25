@@ -238,7 +238,7 @@
 </template>
 
 <script lang="ts">
-import { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
+import type { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -251,15 +251,11 @@ import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiConfigGetConfig, apiConfigSetConfig } from "@/api/api-config";
-import {
-    ImageResolutionStandardToggleable,
-    STANDARD_IMAGE_RESOLUTIONS,
-    STANDARD_VIDEO_RESOLUTIONS,
-    VideoResolutionStandardToggleable,
-} from "@/utils/resolutions";
+import type { ImageResolutionStandardToggleable, VideoResolutionStandardToggleable } from "@/utils/resolutions";
+import { STANDARD_IMAGE_RESOLUTIONS, STANDARD_VIDEO_RESOLUTIONS } from "@/utils/resolutions";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "AdvancedSettingsModal",

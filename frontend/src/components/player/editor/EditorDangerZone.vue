@@ -95,7 +95,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaEncodeMedia, apiMediaReplaceMedia } from "@/api/api-media-edit";
 import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "EditorDangerZone",

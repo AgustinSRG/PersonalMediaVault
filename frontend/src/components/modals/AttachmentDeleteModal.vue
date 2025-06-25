@@ -43,9 +43,10 @@
 </template>
 
 <script lang="ts">
-import { PropType, defineComponent, nextTick } from "vue";
+import type { PropType } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { MediaAttachment } from "@/api/models";
+import type { MediaAttachment } from "@/api/models";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 
 export default defineComponent({

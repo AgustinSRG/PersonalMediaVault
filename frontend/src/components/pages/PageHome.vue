@@ -86,7 +86,7 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {

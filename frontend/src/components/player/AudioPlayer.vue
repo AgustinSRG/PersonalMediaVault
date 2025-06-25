@@ -465,13 +465,15 @@ import {
     setShowAudioThumbnail,
     setShowAudioTitle,
 } from "@/control/player-preferences";
-import { PropType, defineAsyncComponent, defineComponent, nextTick } from "vue";
+import type { PropType } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import VolumeControl from "./VolumeControl.vue";
 import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
-import { findTimeSlice, NormalizedTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
+import type { NormalizedTimeSlice } from "../../utils/time-slices";
+import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import AudioPlayerConfig from "./AudioPlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
@@ -483,8 +485,9 @@ import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from 
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { ColorThemeName, EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
-import { MediaData, MediaListItem } from "@/api/models";
+import type { ColorThemeName } from "@/control/app-preferences";
+import { EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
+import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";

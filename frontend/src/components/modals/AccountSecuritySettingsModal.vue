@@ -129,7 +129,7 @@ import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { apiAccountGetSecuritySettings, apiAccountSetSecuritySettings } from "@/api/api-account";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
 
 const AccountTfaEnableModal = defineAsyncComponent({

@@ -136,7 +136,7 @@ import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
-import { MediaTimeSlice } from "@/api/models";
+import type { MediaTimeSlice } from "@/api/models";
 
 interface SaveRequestState {
     saving: boolean;

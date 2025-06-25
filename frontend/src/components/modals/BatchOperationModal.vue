@@ -214,14 +214,16 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
-import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
+import type { MatchingTag } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { AppEvents } from "@/control/app-events";
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
@@ -229,7 +231,7 @@ import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
 import { apiAdvancedSearch } from "@/api/api-search";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 const PAGE_SIZE = 50;
 

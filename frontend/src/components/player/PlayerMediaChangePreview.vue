@@ -21,8 +21,9 @@
 
 <script lang="ts">
 import { getAssetURL } from "@/utils/api";
-import { defineComponent, PropType } from "vue";
-import { MediaListItem } from "@/api/models";
+import type { PropType } from "vue";
+import { defineComponent } from "vue";
+import type { MediaListItem } from "@/api/models";
 import DurationIndicator from "../utils/DurationIndicator.vue";
 
 export default defineComponent({

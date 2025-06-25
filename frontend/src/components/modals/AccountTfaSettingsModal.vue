@@ -72,10 +72,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
+import type { TimeOtpAlgorithm, TimeOtpPeriod } from "@/api/api-account";
 
 export default defineComponent({
     name: "AccountTfaSettingsModal",
