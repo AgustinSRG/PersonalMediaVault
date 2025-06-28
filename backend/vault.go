@@ -20,6 +20,8 @@ type Vault struct {
 	tags   *VaultTagManager    // Tags (unsorted lists)
 	albums *VaultAlbumsManager // Albums (sorted lists)
 
+	homePage *HomePageConfigManager // Home page config
+
 	config *UserConfigManager // User config
 }
 
@@ -71,6 +73,9 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 
 	vault.config = &UserConfigManager{}
 	vault.config.Initialize(base_path)
+
+	vault.homePage = &HomePageConfigManager{}
+	vault.homePage.Initialize(base_path)
 
 	return nil
 }
