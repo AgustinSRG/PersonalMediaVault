@@ -105,6 +105,16 @@ func (uc *HomePageConfigManager) Initialize(base_path string) {
 // key - Vault decryption key
 // Returns home page config data
 func (hpc *HomePageConfigManager) Read(key []byte) (*HomePageConfiguration, error) {
+	hpc.lock.StartRead()
+	defer hpc.lock.EndRead()
+
+	return hpc.readInternal(key)
+}
+
+// Reads home page config
+// key - Vault decryption key
+// Returns home page config data
+func (hpc *HomePageConfigManager) readInternal(key []byte) (*HomePageConfiguration, error) {
 	if hpc.cache != nil {
 		return hpc.cache, nil
 	}
@@ -148,13 +158,190 @@ func (hpc *HomePageConfigManager) Read(key []byte) (*HomePageConfiguration, erro
 	}
 }
 
+// Creates a new group in home page
+// key - The vault encryption key
+// name - Name for the group
+// groupType - Type of group
+func (hpc *HomePageConfigManager) CreateGroup(key []byte, name string, groupType uint8) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	groupId := config.NextId
+	config.NextId++
+
+	if config.Groups == nil {
+		config.Groups = make([]HomePageGroup, 0)
+	}
+
+	config.Groups = append(config.Groups, HomePageGroup{
+		Id:       groupId,
+		Type:     groupType,
+		Name:     name,
+		Elements: make([]HomePageElement, 0),
+	})
+
+	return hpc.finishWrite(config, key)
+}
+
+// Moves a group in home page
+// key - The vault encryption key
+// id - Id of the group
+// position - Position for the group to be moved
+func (hpc *HomePageConfigManager) MoveGroup(key []byte, id uint64, position int) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 || groupPos == position {
+		return nil
+	}
+
+	group := config.Groups[groupPos]
+
+	if position < 0 {
+		position = 0
+	}
+
+	oldList := config.Groups
+
+	if position > len(oldList) {
+		position = len(oldList)
+	}
+
+	newList := make([]HomePageGroup, 0)
+
+	j := 0 // Position in the new list
+
+	for i := 0; i < len(oldList); i++ {
+		if j == position {
+			newList = append(newList, group)
+			j++
+		}
+		if oldList[i].Id != id {
+			newList = append(newList, oldList[i])
+			j++
+		}
+	}
+
+	if position >= len(newList) {
+		newList = append(newList, group)
+	}
+
+	config.Groups = newList
+
+	return hpc.finishWrite(config, key)
+}
+
+// Renames a group in home page
+// key - The vault encryption key
+// id - Id of the group
+// name - New name for the group
+func (hpc *HomePageConfigManager) RenameGroup(key []byte, id uint64, name string) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 {
+		return nil
+	}
+
+	config.Groups[groupPos].Name = name
+
+	return hpc.finishWrite(config, key)
+}
+
+// Sets the element list of a group in the home page
+// key - The vault encryption key
+// id - Id of the group
+// elements - List of elements
+func (hpc *HomePageConfigManager) SetGroupElementList(key []byte, id uint64, elements []HomePageElement) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 {
+		return nil
+	}
+
+	config.Groups[groupPos].Elements = elements
+
+	return hpc.finishWrite(config, key)
+}
+
+// Removes a group from the home page
+// key - The vault encryption key
+// id - Id of the group
+// name - New name for the group
+func (hpc *HomePageConfigManager) DeleteGroup(key []byte, id uint64) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil // Nothing to move
+	}
+
+	newList := make([]HomePageGroup, 0)
+
+	for _, g := range config.Groups {
+		if g.Id != id {
+			newList = append(newList, g)
+		}
+	}
+
+	config.Groups = newList
+
+	return hpc.finishWrite(config, key)
+}
+
 // Writes home page configuration
 // data - Data to write
 // key - Vault encryption key
-func (hpc *HomePageConfigManager) Write(data *HomePageConfiguration, key []byte) error {
-	hpc.lock.RequestWrite() // Request write
-	defer hpc.lock.EndWrite()
-
+func (hpc *HomePageConfigManager) finishWrite(data *HomePageConfiguration, key []byte) error {
 	jsonData, err := json.Marshal(data)
 
 	if err != nil {

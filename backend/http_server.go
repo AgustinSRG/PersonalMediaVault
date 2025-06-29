@@ -237,6 +237,15 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/config", api_getConfig).Methods("GET")
 	apiRouter.HandleFunc("/config", api_setConfig).Methods("POST")
 
+	// Home page API
+	apiRouter.HandleFunc("/home", api_listHomePageGroups).Methods("GET")
+	apiRouter.HandleFunc("/home", api_createHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/elements", api_getHomePageGroupElements).Methods("GET")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/name", api_renameHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/move", api_moveHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/elements", api_setElementsHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}", api_deleteHomePageGroup).Methods("DELETE")
+
 	// Tasks API
 	apiRouter.HandleFunc("/tasks", api_getTasks).Methods("GET")
 	apiRouter.HandleFunc("/tasks/{id:[0-9]+}", api_getTask).Methods("GET")

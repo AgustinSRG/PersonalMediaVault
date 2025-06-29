@@ -113,6 +113,9 @@ func (uc *UserConfigManager) Initialize(base_path string) {
 // key - Vault decryption key
 // Returns user config data
 func (uc *UserConfigManager) Read(key []byte) (*UserConfig, error) {
+	uc.lock.StartRead()
+	defer uc.lock.EndRead()
+
 	if uc.cache != nil {
 		return uc.cache, nil
 	}
