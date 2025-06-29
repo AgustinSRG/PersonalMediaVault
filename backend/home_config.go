@@ -20,7 +20,7 @@ const HOME_PAGE_ELEMENT_TYPE_ALBUM = 1
 // Home page element
 type HomePageElement struct {
 	// The element type (media, album)
-	ElementType int `json:"t,omitempty"`
+	ElementType uint8 `json:"t,omitempty"`
 
 	// The ID of the media or the album
 	Id uint64 `json:"i"`
@@ -41,7 +41,7 @@ type HomePageGroup struct {
 	Id uint64 `json:"id"`
 
 	// Type of group
-	Type int `json:"type,omitempty"`
+	Type uint8 `json:"type,omitempty"`
 
 	// Name of the group, in order to display it
 	Name string `json:"name,omitempty"`
