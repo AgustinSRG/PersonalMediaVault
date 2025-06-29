@@ -476,6 +476,33 @@ The `ImageResolution` object has the following fields:
 | `width`    | Number (32 bit unsigned integer) | Width in pixels  |
 | `height`   | Number (32 bit unsigned integer) | Height in pixels |
 
+### Home page configuration file
+
+The user configuration file, named `home_page.pmv` is an [encrypted JSON file](#encrypted-json-files) used to store the home page configuration for the vault.
+
+The file has the following fields:
+
+| Field name | Type                             | Description                                         |
+| ---------- | -------------------------------- | --------------------------------------------------- |
+| `groups`   | Array&lt;HomePageGroup&gt;       | Groups of elements to display in the home page.     |
+| `next_id`  | Number (64 bit unsigned integer) | ID to assign to the next group created by the user. |
+
+The `HomePageGroup` object has the following fields:
+
+| Field name | Type                             | Description                                                                   |
+| ---------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| `id`       | Number (64 bit unsigned integer) | ID of the group to uniquely identity it.                                      |
+| `type`     | Number (8 bit unsigned integer)  | Type of group (`0` = custom/default, `1` = recent media, `2` = recent albums) |
+| `name`     | String                           | Name for the group, in order to display it to the user.                       |
+| `elements` | Array&lt;HomePageElement&gt;     | List of ordered elements to display for the group. Only for `type` = `0`      |
+
+The `HomePageElement` object has the following fields:
+
+| Field name | Type                             | Description                                        |
+| ---------- | -------------------------------- | -------------------------------------------------- |
+| `t`        | Number (8 bit unsigned integer)  | Type of element (`0` = media/default, `1` = album) |
+| `i`        | Number (64 bit unsigned integer) | Identifier of the media or the album               |
+
 ### Main index file
 
 The main index file, named `main.index` is an [index file](#index-files) containing every single media asset identifier existing in the vault.
