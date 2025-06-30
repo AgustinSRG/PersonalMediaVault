@@ -35,6 +35,11 @@ const HOME_PAGE_GROUP_RECENT_MEDIA = 1
 // Special group: Recent uploaded albums
 const HOME_PAGE_GROUP_RECENT_ALBUMS = 2
 
+// Checks if the group type is valid
+func validateGroupType(groupType uint8) bool {
+	return groupType <= HOME_PAGE_GROUP_RECENT_ALBUMS
+}
+
 // Group of elements for the home page
 type HomePageGroup struct {
 	// Group unique ID
@@ -162,14 +167,15 @@ func (hpc *HomePageConfigManager) readInternal(key []byte) (*HomePageConfigurati
 // key - The vault encryption key
 // name - Name for the group
 // groupType - Type of group
-func (hpc *HomePageConfigManager) CreateGroup(key []byte, name string, groupType uint8) error {
+// prepend - True to insert at the beginning
+func (hpc *HomePageConfigManager) CreateGroup(key []byte, name string, groupType uint8, prepend bool) (uint64, error) {
 	hpc.lock.RequestWrite()
 	defer hpc.lock.EndWrite()
 
 	config, err := hpc.readInternal(key)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	groupId := config.NextId
@@ -179,14 +185,20 @@ func (hpc *HomePageConfigManager) CreateGroup(key []byte, name string, groupType
 		config.Groups = make([]HomePageGroup, 0)
 	}
 
-	config.Groups = append(config.Groups, HomePageGroup{
+	group := HomePageGroup{
 		Id:       groupId,
 		Type:     groupType,
 		Name:     name,
 		Elements: make([]HomePageElement, 0),
-	})
+	}
 
-	return hpc.finishWrite(config, key)
+	if prepend {
+		config.Groups = append([]HomePageGroup{group}, config.Groups...)
+	} else {
+		config.Groups = append(config.Groups, group)
+	}
+
+	return groupId, hpc.finishWrite(config, key)
 }
 
 // Moves a group in home page
