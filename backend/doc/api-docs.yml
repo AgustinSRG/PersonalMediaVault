@@ -39,6 +39,8 @@ tags:
     description: Requests information about the server
   - name: invites
     description: Invite codes API. Manages codes to temporally invite users or devices.
+  - name: home
+    description: Home page API. Manages home page customization.
   
 
 paths:
@@ -2607,26 +2609,7 @@ paths:
           schema:
             type: array
             items:
-              properties:
-                id:
-                  type: number
-                  format: int64
-                  description: Album ID
-                name:
-                  type: string
-                  description: "Album name"
-                  example: "Album name"
-                size:
-                  type: number
-                  format: int32
-                  description: Number of items in the album
-                thumbnail:
-                  type: string
-                  description: Thumbnail for the album (of the first media)
-                lm:
-                  type: number
-                  format: int64
-                  description: Last modified timestamp (Unix milliseconds)
+              $ref: '#/definitions/AlbumListItem'
                     
     post:
       summary: Create album
@@ -3762,7 +3745,296 @@ paths:
                 type: string
                 description: "Vault fingerprint"
           
-           
+  "/api/home":
+    get:
+      summary: Get home page
+      description: Gets the list of groups in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/HomePageGroup'
+    post:
+      summary: Adds a group to the home page
+      description: Adds a group to the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              name:
+                type: string
+                description: "Group name (max 255 bytes)"
+              type:
+                type: number
+                format: int32
+                enum:
+                  - 0
+                  - 1
+                  - 2
+                description: >
+                  Type of group:
+                    - 0 (Custom group, elements are defined by the user)
+                    - 1 (recent media, client should call the search API)
+                    - 2 (recent albums, client should call the ambums API)
+              prepend:
+                type: boolean
+                description: "True to add the group at the top, false to add it to the bottom"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid group name
+                    * INVALID_GROUP_TYPE - Invalid group type provided
+                    * TOO_MANY_GROUPS - Max number of groups exceeded (1024)
+                enum:
+                  - INVALID_NAME
+                  - INVALID_GROUP_TYPE
+                  - TOO_MANY_GROUPS
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/HomePageGroup'
+              
+  "/api/home/{id}/elements":
+    get:
+      summary: Gets the elements of a home group
+      description: Gets the list of custom elements in a home page custom group
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Group not found
+        200:
+          description: List of elements in the group
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/HomePageGroupElement'
+    post:
+      summary: Sets the elements of a home group
+      description: Sets the list of elements ina custom home group
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              elements:
+                type: array
+                description: "List of elements in the group"
+                items:
+                  properties:
+                    t:
+                      type: number
+                      format: int32
+                      enum:
+                        - 0
+                        - 1
+                      description: "Type of element. 0 for Media and 1 for Album."
+                    i:
+                      type: number
+                      format: int64
+                      description: "ID of the media or album the element references"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * NOT_CUSTOM_GROUP - The group is not a custom group
+                    * TOO_MANY_ELEMENTS - Max number of elements exceeded (256)
+                enum:
+                  - NOT_CUSTOM_GROUP
+                  - TOO_MANY_ELEMENTS
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+  
+  "/api/home/{id}/name":
+    post:
+      summary: Renames a home group
+      description: Renames a group in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              name:
+                type: string
+                description: "Group name (max 255 bytes)"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid name provided
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+  
+  "/api/home/{id}/move":
+    post:
+      summary: Moves a home group
+      description: Moves a group in the home page to a different position in the list
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              position:
+                type: number
+                format: int32
+                description: "New position for the group in the list"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+          
+  "/api/home/{id}":
+    delete:
+      summary: Deletes a home group
+      description: Deletes a group in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: OK
+  
 definitions:
     MediaListItem:
       description: Media asset info to show in lists
@@ -3807,6 +4079,29 @@ definitions:
           type: number
           format: double
           description: Duration of the media in seconds (videos and audios)
+    
+    AlbumListItem:
+      description: "Album matadata to show in lists"
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Album ID
+        name:
+          type: string
+          description: "Album name"
+          example: "Album name"
+        size:
+          type: number
+          format: int32
+          description: Number of items in the album
+        thumbnail:
+          type: string
+          description: Thumbnail for the album (of the first media)
+        lm:
+          type: number
+          format: int64
+          description: Last modified timestamp (Unix milliseconds)
     
     UserConfig:
       description: User configuration
@@ -3942,3 +4237,41 @@ definitions:
           type: number
           format: double
           description: "Stage progress: A number from 0 to 100"
+  
+    HomePageGroup:
+      description: "A group of elements for the home page"
+      properties:
+        id:
+          type: number
+          format: int64
+          description: "ID of the group"
+        type:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+            - 2
+          description: >
+            Type of group:
+              - 0 (Custom group, elements are defined by the user)
+              - 1 (recent media, client should call the search API)
+              - 2 (recent albums, client should call the ambums API)
+        name:
+            type: string
+            description: "Name of the group, in order to display it"
+        elementsCount:
+            type: number
+            format: in32
+            description: "Number of elements (only relevant for custom groups)"
+      required:
+        - id
+        - type
+    
+    HomePageGroupElement:
+      description: "Element of a custom group in the home page. Can be a media or an album."
+      properties:
+        media:
+          $ref: '#/definitions/MediaListItem'
+        album:
+          $ref: '#/definitions/AlbumListItem'
