@@ -78,8 +78,8 @@ func api_listHomePageGroups(response http.ResponseWriter, request *http.Request)
 }
 
 type HomeElementApiResult struct {
-	media *MediaListAPIItem
-	album *AlbumAPIItem
+	Media *MediaListAPIItem `json:"media,omitempty"`
+	Album *AlbumAPIItem     `json:"album,omitempty"`
 }
 
 // Gets media minified info (preview) for a single item in a list
@@ -87,7 +87,7 @@ type HomeElementApiResult struct {
 func GetMediaMinInfoListTaskHome(mediaId uint64, session *ActiveSession, result []*HomeElementApiResult, index int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	result[index] = &HomeElementApiResult{
-		media: GetMediaMinInfo(mediaId, session),
+		Media: GetMediaMinInfo(mediaId, session),
 	}
 }
 
@@ -110,7 +110,7 @@ func GetHomeElementsMinInfoList(list []HomePageElement, albums *VaultAlbumsData,
 
 			if album != nil {
 				result[i] = &HomeElementApiResult{
-					album: &AlbumAPIItem{
+					Album: &AlbumAPIItem{
 						Id:           e.Id,
 						Name:         album.Name,
 						Size:         len(album.List),
