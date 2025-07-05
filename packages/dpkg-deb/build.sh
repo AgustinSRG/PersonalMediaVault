@@ -25,7 +25,7 @@ cd ../packages/dpkg-deb
 
 # Build package
 
-PMV_VERSION_MAJOR=2
+PMV_VERSION_MAJOR=3
 PMV_VERSION_MINOR=0
 PMV_VERSION_REVISION=0
 
