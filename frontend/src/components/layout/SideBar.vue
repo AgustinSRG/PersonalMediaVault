@@ -31,6 +31,19 @@
             </a>
 
             <a
+                class="side-bar-option"
+                :class="{ selected: album < 0 && page === 'media' }"
+                :title="$t('Media')"
+                :href="getPageURL('media')"
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="goToPage('media', $event)"
+            >
+                <div class="side-bar-option-icon"><i class="fas fa-photo-film"></i></div>
+                <div class="side-bar-option-text">{{ $t("Media") }}</div>
+            </a>
+
+            <a
                 v-if="!!search"
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'search' }"

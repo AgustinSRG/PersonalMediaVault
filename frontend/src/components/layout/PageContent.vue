@@ -18,6 +18,24 @@
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button
+                v-if="page === 'home' && !homeEditMode && canWrite"
+                type="button"
+                :title="$t('Edit home page')"
+                class="page-header-btn"
+                @click="homeStartEdit"
+            >
+                <i class="fas fa-pencil-alt"></i>
+            </button>
+            <button
+                v-if="page === 'home' && homeEditMode && canWrite"
+                type="button"
+                :title="$t('Finalize home page modifications')"
+                class="page-header-btn"
+                @click="homeFinishEdit"
+            >
+                <i class="fas fa-check"></i>
+            </button>
+            <button
                 v-if="page === 'random' || (hasOrderAlbums(page) && order === 'rand')"
                 type="button"
                 :title="$t('Refresh')"
@@ -98,7 +116,19 @@
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
+            :editing="homeEditMode"
         ></PageHome>
+        <PageMedia
+            v-if="isDisplayed && page === 'media'"
+            :display="isDisplayed && page === 'media'"
+            :min="min"
+            :page-size="pageSize"
+            :display-titles="displayTitles"
+            :row-size="rowSize"
+            :row-size-min="rowSizeMin"
+            :min-items-size="minItemSize"
+            :max-items-size="maxItemSize"
+        ></PageMedia>
         <PageSearch
             v-if="isDisplayed && page === 'search'"
             :display="isDisplayed && page === 'search'"
@@ -157,7 +187,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
@@ -166,6 +196,12 @@ import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/contr
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const PageMedia = defineAsyncComponent({
+    loader: () => import("@/components/pages/PageMedia.vue"),
     loadingComponent: LoadingOverlay,
     delay: 200,
 });
@@ -210,6 +246,7 @@ export default defineComponent({
     name: "PageContent",
     components: {
         PageHome,
+        PageMedia,
         PageSearch,
         PageAlbums,
         PageUpload,
@@ -223,6 +260,8 @@ export default defineComponent({
     data: function () {
         const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {
+            canWrite: AuthController.CanWrite,
+
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
             search: AppStatus.CurrentSearch,
@@ -247,6 +286,8 @@ export default defineComponent({
             roundedCorners: pagePreferences.roundedCorners,
 
             pageScroll: 0,
+
+            homeEditMode: false,
         };
     },
     mounted: function () {
@@ -254,12 +295,17 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthChanged.bind(this));
+
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
 
         this.updateSearchParams();
     },
     methods: {
         updatePage: function () {
+            if (this.page !== AppStatus.CurrentPage && AppStatus.CurrentPage === "home") {
+                this.homeEditMode = false;
+            }
             this.page = AppStatus.CurrentPage;
             this.search = AppStatus.CurrentSearch;
             this.isDisplayed = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
@@ -267,6 +313,14 @@ export default defineComponent({
             this.searchParams = AppStatus.SearchParams;
             this.updateSearchParams();
             this.updatePagePreferences();
+        },
+
+        onAuthChanged: function () {
+            this.canWrite = AuthController.CanWrite;
+
+            if (!this.canWrite) {
+                this.homeEditMode = false;
+            }
         },
 
         expandPage: function () {
@@ -284,6 +338,7 @@ export default defineComponent({
         hasConfigOptions: function (p: string): boolean {
             switch (p) {
                 case "home":
+                case "media":
                 case "search":
                 case "adv-search":
                 case "albums":
@@ -296,7 +351,7 @@ export default defineComponent({
 
         hasOrderDate: function (p: string): boolean {
             switch (p) {
-                case "home":
+                case "media":
                 case "search":
                     return true;
                 default:
@@ -317,6 +372,8 @@ export default defineComponent({
             switch (p) {
                 case "home":
                     return this.$t("Home");
+                case "media":
+                    return this.$t("Media");
                 case "search":
                     return this.$t("Search results") + ": " + s;
                 case "adv-search":
@@ -336,6 +393,8 @@ export default defineComponent({
             switch (p) {
                 case "home":
                     return "fas fa-home";
+                case "media":
+                    return "fas fa-photo-film";
                 case "search":
                 case "adv-search":
                     return "fas fa-search";
@@ -387,6 +446,14 @@ export default defineComponent({
                     elementToFocus.focus();
                 }
             });
+        },
+
+        homeStartEdit: function () {
+            this.homeEditMode = true;
+        },
+
+        homeFinishEdit: function () {
+            this.homeEditMode = false;
         },
 
         openConfig: function () {

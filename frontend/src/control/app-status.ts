@@ -29,7 +29,7 @@ export type AppStatusFocus = "right" | "left";
 /**
  * Page
  */
-export type AppStatusPage = "home" | "random" | "search" | "random" | "albums" | "upload" | "adv-search";
+export type AppStatusPage = "home" | "media" | "random" | "search" | "random" | "albums" | "upload" | "adv-search";
 
 /**
  * App status manager object
@@ -126,7 +126,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && ["home", "search", "random", "albums", "upload", "adv-search"].includes(page)) {
+        if (page && ["home", "media", "search", "random", "albums", "upload", "adv-search"].includes(page)) {
             AppStatus.CurrentPage = page as AppStatusPage;
         } else {
             AppStatus.CurrentPage = "home";
@@ -163,7 +163,7 @@ export class AppStatus {
      */
     public static UpdateLayout() {
         if (AppStatus.CurrentPage === "search" && !AppStatus.CurrentSearch) {
-            AppStatus.CurrentPage = "home";
+            AppStatus.CurrentPage = "media";
         }
 
         if (AppStatus.CurrentMedia >= 0) {

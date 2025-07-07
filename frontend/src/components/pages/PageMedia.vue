@@ -1,6 +1,16 @@
 <template>
     <div class="page-inner" :class="{ hidden: !display }">
         <div class="search-results auto-focus" tabindex="-1">
+            <PageMenu
+                v-if="total > 0"
+                :page-name="'media'"
+                :order="order"
+                :page="page"
+                :pages="totalPages"
+                :min="min"
+                @goto="changePage"
+            ></PageMenu>
+
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item">
                     <div class="search-result-thumb">
@@ -14,9 +24,55 @@
                 </div>
             </div>
 
-            <div v-else>
-                <!--- TODO -->
+            <div v-if="!loading && total <= 0 && firstLoaded" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("The vault is empty") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
             </div>
+
+            <div v-if="!loading && total > 0" class="search-results-final-display">
+                <div v-for="(item, i) in pageItems" :key="i" class="search-result-item" :class="{ current: currentMedia == item.id }">
+                    <a
+                        class="clickable"
+                        :href="getMediaURL(item.id)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @click="goToMedia(item.id, $event)"
+                    >
+                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
+                            <div class="search-result-thumb-inner">
+                                <div v-if="!item.thumbnail" class="no-thumb">
+                                    <i v-if="item.type === 1" class="fas fa-image"></i>
+                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                                    <i v-else class="fas fa-ban"></i>
+                                </div>
+                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
+                                <DurationIndicator
+                                    v-if="item.type === 2 || item.type === 3"
+                                    :type="item.type"
+                                    :duration="item.duration"
+                                ></DurationIndicator>
+                            </div>
+                        </div>
+                        <div v-if="displayTitles" class="search-result-title">
+                            {{ item.title || $t("Untitled") }}
+                        </div>
+                    </a>
+                </div>
+
+                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
+            </div>
+
+            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+
+            <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
         </div>
     </div>
 </template>
@@ -25,12 +81,14 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { getAssetURL } from "@/utils/api";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
+import PageMenu from "@/components/utils/PageMenu.vue";
 import type { MediaListItem } from "@/api/models";
-import { TagsController } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -40,10 +98,16 @@ import {
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearch } from "@/api/api-search";
+import ThumbImage from "../utils/ThumbImage.vue";
+import DurationIndicator from "../utils/DurationIndicator.vue";
 
 export default defineComponent({
-    name: "PageHome",
-    components: {},
+    name: "PageMedia",
+    components: {
+        PageMenu,
+        ThumbImage,
+        DurationIndicator,
+    },
     props: {
         display: Boolean,
         min: Boolean,
@@ -54,8 +118,6 @@ export default defineComponent({
         rowSizeMin: Number,
         minItemsSize: Number,
         maxItemsSize: Number,
-
-        editing: Boolean,
     },
     setup() {
         return {
@@ -69,6 +131,9 @@ export default defineComponent({
 
             loading: false,
             firstLoaded: false,
+
+            order: "desc" as "asc" | "desc",
+            searchParams: AppStatus.SearchParams,
 
             currentMedia: AppStatus.CurrentMedia,
 
@@ -84,10 +149,6 @@ export default defineComponent({
             tagVersion: TagsController.TagsVersion,
 
             windowWidth: 0,
-
-            nameFilter: "",
-
-            canWrite: AuthController.CanWrite,
         };
     },
     computed: {
@@ -122,10 +183,7 @@ export default defineComponent({
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
-            this.canWrite = AuthController.CanWrite;
-            this.load();
-        });
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
@@ -135,6 +193,10 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.updateSearchParams();
+        this.updateTagData();
         this.load();
 
         if (this.display) {
@@ -187,7 +249,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch("", "asc", this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch("", this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     TagsController.OnMediaListReceived(result.page_items);
                     this.pageItems = result.page_items;
@@ -249,6 +311,11 @@ export default defineComponent({
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
+            if (AppStatus.SearchParams !== this.searchParams) {
+                this.searchParams = AppStatus.SearchParams;
+                this.updateSearchParams();
+                this.load();
+            }
             if (changed) {
                 this.scrollToCurrentMedia();
             }
@@ -269,8 +336,14 @@ export default defineComponent({
             PagesController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
         },
 
+        onSearchParamsChanged: function () {
+            this.searchParams = packSearchParams(this.page, this.order);
+            AppStatus.ChangeSearchParams(this.searchParams);
+        },
+
         changePage: function (p) {
             this.page = p;
+            this.onSearchParamsChanged();
             this.load();
         },
 
@@ -279,6 +352,25 @@ export default defineComponent({
                 e.preventDefault();
             }
             AppStatus.ClickOnMedia(mid, true);
+        },
+
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                generateURIQuery({
+                    media: mid + "",
+                })
+            );
+        },
+
+        updateSearchParams: function () {
+            const params = unPackSearchParams(this.searchParams);
+            this.page = params.page;
+            this.order = orderSimple(params.order);
+            this.updateLoadingFiller();
         },
 
         updateLoadingFiller: function () {
@@ -378,13 +470,29 @@ export default defineComponent({
             return false;
         },
 
+        renderHintTitle(item: MediaListItem, tagVersion: number): string {
+            const parts = [item.title || this.$t("Untitled")];
+
+            if (item.tags.length > 0) {
+                const tagNames = [];
+
+                for (const tag of item.tags) {
+                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
+                }
+
+                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
+            }
+
+            return parts.join("\n");
+        },
+
+        updateTagData: function () {
+            this.tagVersion = TagsController.TagsVersion;
+        },
+
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
         },
-
-        changeNameFilter: function () {},
-
-        editHomePage: function () {},
     },
 });
 </script>
