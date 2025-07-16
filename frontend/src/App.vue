@@ -171,6 +171,7 @@ export default defineComponent({
 @import "@/style/content/page.css";
 @import "@/style/content/paginated-menu.css";
 @import "@/style/content/tasks.css";
+@import "@/style/content/home.css";
 @import "@/style/content/upload.css";
 @import "@/style/content/batch-operation.css";
 @import "@/style/content/invite-modal.css";

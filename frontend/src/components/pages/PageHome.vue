@@ -1,21 +1,41 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display }">
+    <div class="page-inner" :class="{ hidden: !display, 'page-editing': editing }">
         <div class="search-results auto-focus" tabindex="-1">
-            <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
-                    <div class="search-result-thumb">
-                        <div class="search-result-thumb-inner">
-                            <div class="search-result-loader">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
+            <LoadingOverlay v-if="loading"></LoadingOverlay>
+
+            <div v-else-if="!loading && groups.length == 0 && firstLoaded" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("The home page is empty") }}
+                </div>
+                <div v-if="!editing" class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
+                <div v-else class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i> {{ $t("Add first row") }}</button>
                 </div>
             </div>
 
             <div v-else>
-                <!--- TODO -->
+                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                    <button type="button" class="btn btn-primary btn-mr"><i class="fas fa-plus"></i> {{ $t("Add new row") }}</button>
+                </div>
+
+                <HomePageRow
+                    v-for="g in groups"
+                    :key="g.id"
+                    :group="g"
+                    :row-size="actualRowSize"
+                    :page-size="pageSize"
+                    :display-titles="displayTitles"
+                    :editing="editing"
+                ></HomePageRow>
+
+                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                    <button type="button" class="btn btn-primary btn-mr"><i class="fas fa-plus"></i> {{ $t("Add new row") }}</button>
+                </div>
             </div>
         </div>
     </div>
@@ -23,27 +43,24 @@
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
-import type { MediaListItem } from "@/api/models";
-import { TagsController } from "@/control/tags";
-import {
-    EVENT_NAME_MEDIA_DELETE,
-    EVENT_NAME_MEDIA_METADATA_CHANGE,
-    EVENT_NAME_PAGE_NAV_NEXT,
-    EVENT_NAME_PAGE_NAV_PREV,
-    PagesController,
-} from "@/control/pages";
+import { EVENT_NAME_MEDIA_DELETE, EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { apiSearch } from "@/api/api-search";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
+import type { HomePageGroup } from "@/api/api-home";
+import { apiHomeGetGroups } from "@/api/api-home";
+import HomePageRow from "../utils/HomePageRow.vue";
 
 export default defineComponent({
     name: "PageHome",
-    components: {},
+    components: {
+        LoadingOverlay,
+        HomePageRow,
+    },
     props: {
         display: Boolean,
         min: Boolean,
@@ -59,58 +76,31 @@ export default defineComponent({
     },
     setup() {
         return {
+            maxGroupsCount: 1024,
+
             loadRequestId: getUniqueStringId(),
             windowResizeObserver: null as ResizeObserver,
         };
     },
     data: function () {
         return {
-            search: AppStatus.CurrentSearch,
+            groups: [] as HomePageGroup[],
 
             loading: false,
             firstLoaded: false,
 
-            currentMedia: AppStatus.CurrentMedia,
-
-            page: 0,
-            total: 0,
-            totalPages: 0,
-            pageItems: [] as MediaListItem[],
-
-            loadingFiller: [] as number[],
-
-            switchMediaOnLoad: "",
-
-            tagVersion: TagsController.TagsVersion,
+            loadTick: 0,
 
             windowWidth: 0,
 
-            nameFilter: "",
-
             canWrite: AuthController.CanWrite,
+
+            actualRowSize: this.rowSize || 1,
         };
-    },
-    computed: {
-        lastRowPadding() {
-            const containerWidth = this.windowWidth;
-
-            const itemWidth = Math.max(
-                this.minItemsSize,
-                Math.min(
-                    this.maxItemsSize,
-                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
-                ),
-            );
-
-            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
-
-            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
-        },
     },
     watch: {
         display: function () {
             this.load();
-            this.switchMediaOnLoad = "";
             if (this.display) {
                 this.autoFocus();
             }
@@ -118,10 +108,20 @@ export default defineComponent({
         pageSize: function () {
             this.updatePageSize();
         },
+        rowSize: function () {
+            this.updateActualRowSize();
+        },
+        rowSizeMin: function () {
+            this.updateActualRowSize();
+        },
+        minItemsSize: function () {
+            this.updateActualRowSize();
+        },
+        maxItemsSize: function () {
+            this.updateActualRowSize();
+        },
     },
     mounted: function () {
-        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
-
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
             this.canWrite = AuthController.CanWrite;
             this.load();
@@ -129,11 +129,7 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
-
-        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
 
         this.load();
 
@@ -141,7 +137,7 @@ export default defineComponent({
             this.autoFocus();
         }
 
-        this.windowWidth = this.$el.getBoundingClientRect().width;
+        this.updateWindowWidth();
 
         this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
         this.windowResizeObserver.observe(this.$el);
@@ -187,38 +183,13 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch("", "asc", this.page, this.pageSize))
-                .onSuccess((result) => {
-                    TagsController.OnMediaListReceived(result.page_items);
-                    this.pageItems = result.page_items;
-                    this.page = result.page_index;
-                    this.totalPages = result.page_count;
-                    this.total = result.total_count;
+            makeNamedApiRequest(this.loadRequestId, apiHomeGetGroups())
+                .onSuccess((groups) => {
                     clearNamedTimeout(this.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
-                    if (this.switchMediaOnLoad === "next") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[0].id);
-                        }
-                    } else if (this.switchMediaOnLoad === "prev") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                        }
-                    }
-                    if (this.page < 0) {
-                        this.page = 0;
-                        this.load();
-                        return;
-                    } else if (this.page >= this.totalPages && this.totalPages > 0) {
-                        this.page = this.totalPages - 1;
-                        this.load();
-                        return;
-                    }
-                    this.scrollToCurrentMedia();
-                    this.onCurrentMediaChanged();
+                    this.loadTick++;
+                    this.groups = groups;
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
@@ -241,145 +212,24 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.updateLoadingFiller();
-            this.page = 0;
             this.load();
-        },
-
-        onAppStatusChanged: function () {
-            const changed = this.currentMedia !== AppStatus.CurrentMedia;
-            this.currentMedia = AppStatus.CurrentMedia;
-            if (changed) {
-                this.scrollToCurrentMedia();
-            }
-            this.onCurrentMediaChanged();
-        },
-
-        scrollToCurrentMedia: function () {
-            nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
-                }
-            });
-        },
-
-        onCurrentMediaChanged: function () {
-            const i = this.findCurrentMediaIndex();
-            PagesController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
-        },
-
-        changePage: function (p) {
-            this.page = p;
-            this.load();
-        },
-
-        goToMedia: function (mid: number, e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-            AppStatus.ClickOnMedia(mid, true);
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        findCurrentMediaIndex: function (): number {
-            for (let i = 0; i < this.pageItems.length; i++) {
-                if (this.pageItems[i].id === this.currentMedia) {
-                    return i;
-                }
-            }
-            return -1;
-        },
-
-        nextMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i < this.pageItems.length - 1) {
-                this.goToMedia(this.pageItems[i + 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === this.pageItems.length - 1) {
-                if (this.page < this.totalPages - 1) {
-                    this.switchMediaOnLoad = "next";
-                    this.changePage(this.page + 1);
-                }
-            }
-        },
-
-        prevMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i > 0) {
-                this.goToMedia(this.pageItems[i - 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === 0) {
-                if (this.page > 0) {
-                    this.switchMediaOnLoad = "prev";
-                    this.changePage(this.page - 1);
-                }
-            }
-        },
-
-        handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
-                return false;
-            }
-
-            if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
-                if (this.page > 0) {
-                    this.changePage(this.page - 1);
-                }
-                return true;
-            }
-
-            if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
-                if (this.page < this.totalPages - 1) {
-                    this.changePage(this.page + 1);
-                }
-                return true;
-            }
-
-            if (event.key === "Home") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[0].id);
-                }
-                return true;
-            }
-
-            if (event.key === "End") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                }
-                return true;
-            }
-
-            if (event.key === "ArrowLeft") {
-                this.prevMedia();
-                return true;
-            }
-
-            if (event.key === "ArrowRight") {
-                this.nextMedia();
-                return true;
-            }
-
-            return false;
         },
 
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
+            this.updateActualRowSize();
+        },
+
+        updateActualRowSize: function () {
+            const preferRowSize = (this.min ? this.rowSizeMin : this.rowSize) || 1;
+
+            let itemsWidth = this.windowWidth / preferRowSize;
+
+            itemsWidth = Math.min(itemsWidth, Math.min(this.windowWidth, this.maxItemsSize || 0));
+
+            itemsWidth = Math.max(1, Math.max(itemsWidth, this.minItemsSize || 0));
+
+            this.actualRowSize = Math.ceil(this.windowWidth / itemsWidth);
         },
 
         changeNameFilter: function () {},
