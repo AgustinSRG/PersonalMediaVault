@@ -251,7 +251,12 @@ export type HomeApiGroupSetElementsErrorHandler = HomeApiGroupWriteErrorHandler 
      * Error: Not a custom group
      */
     notCustomGroup: () => void;
+};
 
+/**
+ * Error handler for the API that changes the elements of a group in the home page
+ */
+export type HomeApiGroupAddElementsErrorHandler = HomeApiGroupSetElementsErrorHandler & {
     /**
      * Error: Too many elements
      */
@@ -259,25 +264,86 @@ export type HomeApiGroupSetElementsErrorHandler = HomeApiGroupWriteErrorHandler 
 };
 
 /**
- * Sets the elements of a group in the home page
+ * Add element to a group in the home page
  * @param id The home group ID
- * @param elementReferences List of element references
+ * @param element Element to add
  * @returns The request parameters
  */
-export function apiHomeGroupSetElements(
-    id: number,
-    elementReferences: HomePageElementRef[],
-): RequestParams<void, HomeApiGroupSetElementsErrorHandler> {
+export function apiHomeGroupAddElement(id: number, element: HomePageElementRef): RequestParams<void, HomeApiGroupAddElementsErrorHandler> {
     return {
         method: "POST",
         url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/elements`),
         json: {
-            elements: elementReferences,
+            add: element,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()
                 .add(400, "NOT_CUSTOM_GROUP", handler.notCustomGroup)
                 .add(400, "TOO_MANY_ELEMENTS", handler.tooManyElements)
+                .add(401, "*", handler.unauthorized)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Deletes element from a group in the home page
+ * @param id The home group ID
+ * @param element Element to delete
+ * @returns The request parameters
+ */
+export function apiHomeGroupDeleteElement(
+    id: number,
+    element: HomePageElementRef,
+): RequestParams<void, HomeApiGroupSetElementsErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/elements`),
+        json: {
+            delete: element,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(400, "NOT_CUSTOM_GROUP", handler.notCustomGroup)
+                .add(401, "*", handler.unauthorized)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Moves element from a group in the home page
+ * @param id The home group ID
+ * @param element Element to move
+ * @param position The position to move the element
+ * @returns The request parameters
+ */
+export function apiHomeGroupMoveElement(
+    id: number,
+    element: HomePageElementRef,
+    position: number,
+): RequestParams<void, HomeApiGroupSetElementsErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/elements`),
+        json: {
+            move: {
+                t: element.t,
+                i: element.i,
+                position,
+            },
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(400, "NOT_CUSTOM_GROUP", handler.notCustomGroup)
                 .add(401, "*", handler.unauthorized)
                 .add(403, "*", handler.accessDenied)
                 .add(404, "*", handler.notFound)
