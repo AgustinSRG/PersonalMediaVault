@@ -330,7 +330,7 @@ export function setPagePreferences(page: string, preferences: PagePreferences) {
  * @param page Page name
  */
 export function resetPagePreferences(page: string) {
-    clearLocalStorage(LS_KEY_PAGE_SETTINGS + page);
+    clearLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page);
     clearLocalStorage(LS_KEY_PAGE_SETTINGS);
     AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
