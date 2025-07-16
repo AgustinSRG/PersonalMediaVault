@@ -5,6 +5,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 
@@ -53,6 +54,17 @@ type HomePageGroup struct {
 
 	// List of elements of the group
 	Elements []HomePageElement `json:"elements,omitempty"`
+}
+
+// Finds an element is a custom home group
+func (g *HomePageGroup) FindElement(element *HomePageElement) int {
+	for i, e := range g.Elements {
+		if element.Id == e.Id && element.ElementType == e.ElementType {
+			return i
+		}
+	}
+
+	return -1
 }
 
 // Configuration for the home page
@@ -144,6 +156,15 @@ func (hpc *HomePageConfigManager) readInternal(key []byte) (*HomePageConfigurati
 
 		if err != nil {
 			return nil, err
+		}
+
+		// Cleanup elements to prevent issues
+		for i, _ := range mp.Groups {
+			for j, _ := range mp.Groups[i].Elements {
+				if mp.Groups[i].Elements[j].ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
+					mp.Groups[i].Elements[j].ElementType = HOME_PAGE_ELEMENT_TYPE_MEDIA
+				}
+			}
 		}
 
 		hpc.cache = &mp
@@ -295,6 +316,26 @@ func (hpc *HomePageConfigManager) RenameGroup(key []byte, id uint64, name string
 // id - Id of the group
 // elements - List of elements
 func (hpc *HomePageConfigManager) SetGroupElementList(key []byte, id uint64, elements []HomePageElement) error {
+	cleanedElementsList := make([]HomePageElement, 0)
+
+	alreadyAddedElements := make(map[string]bool)
+
+	for _, e := range elements {
+		if e.ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
+			continue
+		}
+
+		eId := fmt.Sprint(e.ElementType) + "-" + fmt.Sprint(e.Id)
+
+		if alreadyAddedElements[eId] {
+			continue
+		}
+
+		cleanedElementsList = append(cleanedElementsList, e)
+
+		alreadyAddedElements[eId] = true
+	}
+
 	hpc.lock.RequestWrite()
 	defer hpc.lock.EndWrite()
 
@@ -315,6 +356,139 @@ func (hpc *HomePageConfigManager) SetGroupElementList(key []byte, id uint64, ele
 	}
 
 	config.Groups[groupPos].Elements = elements
+
+	return hpc.finishWrite(config, key)
+}
+
+// Adds a new element to a home page group
+// key - The vault encryption key
+// id - Id of the group
+// element - The element
+func (hpc *HomePageConfigManager) AddGroupElement(key []byte, id uint64, element HomePageElement) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 {
+		return nil
+	}
+
+	elementPos := config.Groups[groupPos].FindElement(&element)
+
+	if elementPos != -1 {
+		return nil // Element is already in the list
+	}
+
+	config.Groups[groupPos].Elements = append(config.Groups[groupPos].Elements, element)
+
+	return hpc.finishWrite(config, key)
+}
+
+// Deletes element from a home page group
+// key - The vault encryption key
+// id - Id of the group
+// element - The element
+func (hpc *HomePageConfigManager) DeleteGroupElement(key []byte, id uint64, element HomePageElement) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 {
+		return nil
+	}
+
+	newList := make([]HomePageElement, 0)
+
+	for _, e := range config.Groups[groupPos].Elements {
+		if e.Id != element.Id || e.ElementType != element.ElementType {
+			newList = append(newList, e)
+		}
+	}
+
+	config.Groups[groupPos].Elements = newList
+
+	return hpc.finishWrite(config, key)
+}
+
+// Moves element in a home page group
+// key - The vault encryption key
+// id - Id of the group
+// element - The element
+// position - New position
+func (hpc *HomePageConfigManager) MoveGroupElement(key []byte, id uint64, element HomePageElement, position int) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil
+	}
+
+	groupPos := config.FindGroup(id)
+
+	if groupPos == -1 {
+		return nil
+	}
+
+	elementPosition := config.Groups[groupPos].FindElement(&element)
+
+	if elementPosition == -1 {
+		return nil
+	}
+
+	oldList := config.Groups[groupPos].Elements
+
+	if position > len(oldList) {
+		position = len(oldList)
+	}
+
+	newList := make([]HomePageElement, 0)
+
+	j := 0 // Position in the new list
+
+	for i := 0; i < len(oldList); i++ {
+		if j == position {
+			newList = append(newList, element)
+			j++
+		}
+		if i != elementPosition {
+			newList = append(newList, oldList[i])
+			j++
+		}
+	}
+
+	if position >= len(newList) {
+		newList = append(newList, element)
+	}
+
+	config.Groups[groupPos].Elements = newList
 
 	return hpc.finishWrite(config, key)
 }

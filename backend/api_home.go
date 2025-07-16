@@ -119,7 +119,15 @@ func GetHomeElementsMinInfoList(list []HomePageElement, albums *VaultAlbumsData,
 					},
 				}
 			} else {
-				result[i] = &HomeElementApiResult{}
+				result[i] = &HomeElementApiResult{
+					Album: &AlbumAPIItem{
+						Id:           e.Id,
+						Name:         "",
+						Size:         0,
+						Thumbnail:    "",
+						LastModified: 0,
+					},
+				}
 			}
 		} else {
 			go GetMediaMinInfoListTaskHome(e.Id, session, result, i, wg)
@@ -427,8 +435,22 @@ func api_moveHomePageGroup(response http.ResponseWriter, request *http.Request) 
 	response.WriteHeader(200)
 }
 
+type HomePageElementMove struct {
+	// The element type (media, album)
+	ElementType uint8 `json:"t,omitempty"`
+
+	// The ID of the media or the album
+	Id uint64 `json:"i"`
+
+	// Position to move the element
+	Position int `json:"position,omitempty"`
+}
+
 type SetElementsHomePageGroupBody struct {
-	Elements []HomePageElement `json:"elements,omitempty"`
+	Elements      []HomePageElement    `json:"elements,omitempty"`
+	AddElement    *HomePageElement     `json:"add,omitempty"`
+	DeleteElement *HomePageElement     `json:"delete,omitempty"`
+	MoveElement   *HomePageElementMove `json:"move,omitempty"`
 }
 
 func api_setElementsHomePageGroup(response http.ResponseWriter, request *http.Request) {
@@ -465,22 +487,6 @@ func api_setElementsHomePageGroup(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if p.Elements == nil {
-		p.Elements = make([]HomePageElement, 0)
-	}
-
-	if len(p.Elements) > GROUP_ELEMENTS_LIMIT {
-		ReturnAPIError(response, 400, "TOO_MANY_ELEMENTS", "Too many elements.")
-		return
-	}
-
-	for i := range p.Elements {
-		// Ensure the element types are valid
-		if p.Elements[i].ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
-			p.Elements[i].ElementType = HOME_PAGE_ELEMENT_TYPE_MEDIA
-		}
-	}
-
 	// Checks
 
 	config, err := GetVault().homePage.Read(session.key)
@@ -504,15 +510,63 @@ func api_setElementsHomePageGroup(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	// Update
+	if p.AddElement != nil {
+		if p.AddElement.ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
+			p.AddElement.ElementType = HOME_PAGE_ELEMENT_TYPE_MEDIA
+		}
 
-	err = GetVault().homePage.SetGroupElementList(session.key, groupId, p.Elements)
+		if len(config.Groups[groupPos].Elements) >= GROUP_ELEMENTS_LIMIT {
+			ReturnAPIError(response, 400, "TOO_MANY_ELEMENTS", "Too many elements.")
+			return
+		}
 
-	if err != nil {
-		LogError(err)
+		err = GetVault().homePage.AddGroupElement(session.key, groupId, *p.AddElement)
 
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
-		return
+		if err != nil {
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
+	} else if p.DeleteElement != nil {
+		err = GetVault().homePage.DeleteGroupElement(session.key, groupId, *p.DeleteElement)
+
+		if err != nil {
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
+	} else if p.MoveElement != nil {
+		err = GetVault().homePage.MoveGroupElement(session.key, groupId, HomePageElement{ElementType: p.MoveElement.ElementType, Id: p.MoveElement.Id}, p.MoveElement.Position)
+
+		if err != nil {
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
+	} else if p.Elements != nil {
+		if len(p.Elements) > GROUP_ELEMENTS_LIMIT {
+			ReturnAPIError(response, 400, "TOO_MANY_ELEMENTS", "Too many elements.")
+			return
+		}
+
+		for i := range p.Elements {
+			// Ensure the element types are valid
+			if p.Elements[i].ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
+				p.Elements[i].ElementType = HOME_PAGE_ELEMENT_TYPE_MEDIA
+			}
+		}
+
+		err = GetVault().homePage.SetGroupElementList(session.key, groupId, p.Elements)
+
+		if err != nil {
+			LogError(err)
+
+			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+			return
+		}
 	}
 
 	// Result
