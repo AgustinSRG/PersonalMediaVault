@@ -3795,7 +3795,7 @@ paths:
                   Type of group:
                     - 0 (Custom group, elements are defined by the user)
                     - 1 (recent media, client should call the search API)
-                    - 2 (recent albums, client should call the ambums API)
+                    - 2 (recent albums, client should call the albums API)
               prepend:
                 type: boolean
                 description: "True to add the group at the top, false to add it to the bottom"
@@ -3880,20 +3880,18 @@ paths:
             properties:
               elements:
                 type: array
-                description: "List of elements in the group"
+                description: "Include this property to set the list of elements"
                 items:
-                  properties:
-                    t:
-                      type: number
-                      format: int32
-                      enum:
-                        - 0
-                        - 1
-                      description: "Type of element. 0 for Media and 1 for Album."
-                    i:
-                      type: number
-                      format: int64
-                      description: "ID of the media or album the element references"
+                  $ref: '#/definitions/HomePageGroupElementRef'
+              add:
+                description: "Include this property to add an element"
+                $ref: '#/definitions/HomePageGroupElementRef'
+              delete:
+                description: "Include this property to delete an element"
+                $ref: '#/definitions/HomePageGroupElementRef'
+              move:
+                description: "Include this property to move an element"
+                $ref: '#/definitions/HomePageGroupElementRefMove'
       security:
         - SessionTokenHeader: []
       responses:
@@ -4081,7 +4079,7 @@ definitions:
           description: Duration of the media in seconds (videos and audios)
     
     AlbumListItem:
-      description: "Album matadata to show in lists"
+      description: "Album metadata to show in lists"
       properties:
         id:
           type: number
@@ -4256,7 +4254,7 @@ definitions:
             Type of group:
               - 0 (Custom group, elements are defined by the user)
               - 1 (recent media, client should call the search API)
-              - 2 (recent albums, client should call the ambums API)
+              - 2 (recent albums, client should call the albums API)
         name:
             type: string
             description: "Name of the group, in order to display it"
@@ -4275,3 +4273,37 @@ definitions:
           $ref: '#/definitions/MediaListItem'
         album:
           $ref: '#/definitions/AlbumListItem'
+    
+    HomePageGroupElementRef:
+      description: "Reference to a home page element"
+      properties:
+        t:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+          description: "Type of element. 0 for Media and 1 for Album."
+        i:
+          type: number
+          format: int64
+          description: "ID of the media or album the element references"
+    
+    HomePageGroupElementRefMove:
+      description: "Reference to a home page element to move it"
+      properties:
+        t:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+          description: "Type of element. 0 for Media and 1 for Album."
+        i:
+          type: number
+          format: int64
+          description: "ID of the media or album the element references"
+        position:
+          type: number
+          format: int32
+          description: "Position to move the element"
