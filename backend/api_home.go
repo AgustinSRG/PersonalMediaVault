@@ -587,6 +587,10 @@ func api_deleteHomePageGroup(response http.ResponseWriter, request *http.Request
 		return
 	}
 
+	if !HandleAuthConfirmation(response, request, session, false) {
+		return
+	}
+
 	// Params
 
 	vars := mux.Vars(request)

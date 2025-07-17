@@ -4023,6 +4023,14 @@ paths:
           required: true
           type: string
           description: "ID of the group"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
       security:
         - SessionTokenHeader: []
       responses:
@@ -4030,6 +4038,29 @@ paths:
           description: Unauthorized (No valid session)
         403:
           description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
         200:
           description: OK
   
