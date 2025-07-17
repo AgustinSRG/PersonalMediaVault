@@ -1,5 +1,12 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display, 'page-editing': editing }">
+    <div
+        class="page-inner"
+        :class="{ hidden: !display, 'page-editing': editing }"
+        :style="{
+            '--moving-group-width': movingGroupData.width + 'px',
+            '--moving-group-height': movingGroupData.height + 'px',
+        }"
+    >
         <div class="search-results auto-focus" tabindex="-1">
             <LoadingOverlay v-if="loading"></LoadingOverlay>
 
@@ -20,46 +27,141 @@
 
             <div v-else>
                 <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
-                    <button type="button" class="btn btn-primary btn-mr"><i class="fas fa-plus"></i> {{ $t("Add new row") }}</button>
+                    <button type="button" class="btn btn-primary btn-mr" @click="showAddRowPrepend">
+                        <i class="fas fa-plus"></i> {{ $t("Add new row") }}
+                    </button>
                 </div>
 
                 <HomePageRow
-                    v-for="g in groups"
+                    v-for="(g, i) in groups"
                     :key="g.id"
                     :group="g"
                     :row-size="actualRowSize"
                     :page-size="pageSize"
                     :display-titles="displayTitles"
                     :editing="editing"
+                    :moving-over="movingGroup && movingGroupData.movingOver === i + 1"
+                    :moving-self="movingGroup && movingGroupData.startPosition === i"
+                    @request-rename="showRenameRow"
+                    @request-move="showMoveRow"
+                    @request-delete="showDeleteRow"
+                    @start-moving="onStartMoving"
+                ></HomePageRow>
+
+                <div
+                    v-if="movingGroup && groups.length > 0 && movingGroupData.movingOver > groups.length"
+                    class="home-page-moving-groups-extra-padding"
+                ></div>
+
+                <HomePageRow
+                    v-if="movingGroup && movingGroupData.group"
+                    :moving-left="movingGroupData.x + 'px'"
+                    :moving-top="movingGroupData.y + 'px'"
+                    :group="movingGroupData.group"
+                    :row-size="actualRowSize"
+                    :page-size="pageSize"
+                    :display-titles="displayTitles"
+                    :editing="editing"
+                    :moving="true"
                 ></HomePageRow>
 
                 <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
-                    <button type="button" class="btn btn-primary btn-mr"><i class="fas fa-plus"></i> {{ $t("Add new row") }}</button>
+                    <button type="button" class="btn btn-primary btn-mr" @click="showAddRow">
+                        <i class="fas fa-plus"></i> {{ $t("Add new row") }}
+                    </button>
                 </div>
             </div>
         </div>
+
+        <HomePageCreateRowModal
+            v-if="displayRowAdd"
+            v-model:display="displayRowAdd"
+            :prepend="displayRowAddPrepend"
+            @new-row="onRowAdded"
+        ></HomePageCreateRowModal>
+
+        <HomePageRenameRowModal
+            v-if="displayRowRename"
+            v-model:display="displayRowRename"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            @renamed="onRowRenamed"
+            @must-reload="load"
+        ></HomePageRenameRowModal>
+
+        <HomePageMoveRowModal
+            v-if="displayRowMove"
+            v-model:display="displayRowMove"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            :selected-row-position="selectedRowPosition"
+            :max-position="groups.length"
+            @moved="onRowMoved"
+            @must-reload="load"
+        ></HomePageMoveRowModal>
+
+        <HomePageDeleteRowModal
+            v-if="displayRowDelete"
+            v-model:display="displayRowDelete"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            @row-deleted="onRowDeleted"
+            @must-reload="load"
+        ></HomePageDeleteRowModal>
     </div>
 </template>
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { EVENT_NAME_MEDIA_DELETE, EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import type { HomePageGroup } from "@/api/api-home";
-import { apiHomeGetGroups } from "@/api/api-home";
+import { apiHomeGetGroups, apiHomeGroupMove, HomePageGroupTypes } from "@/api/api-home";
 import HomePageRow from "../utils/HomePageRow.vue";
+import type { HomePageGroupStartMovingData } from "@/utils/home";
+
+const HomePageCreateRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageRenameRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageRenameRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageMoveRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageMoveRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageDeleteRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageDeleteRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
 
 export default defineComponent({
     name: "PageHome",
     components: {
         LoadingOverlay,
         HomePageRow,
+        HomePageCreateRowModal,
+        HomePageRenameRowModal,
+        HomePageMoveRowModal,
+        HomePageDeleteRowModal,
     },
     props: {
         display: Boolean,
@@ -80,6 +182,8 @@ export default defineComponent({
 
             loadRequestId: getUniqueStringId(),
             windowResizeObserver: null as ResizeObserver,
+
+            dragCheckInterval: null as ReturnType<typeof setInterval> | null,
         };
     },
     data: function () {
@@ -96,6 +200,42 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             actualRowSize: this.rowSize || 1,
+
+            displayRowAdd: false,
+            displayRowAddPrepend: false,
+
+            selectedRow: -1,
+            selectedRowType: HomePageGroupTypes.Custom,
+            selectedRowName: "",
+            selectedRowPosition: 0,
+
+            displayRowRename: false,
+            displayRowMove: false,
+            displayRowDelete: false,
+
+            movingGroup: false,
+
+            mouseX: 0,
+            mouseY: 0,
+
+            movingGroupData: {
+                group: null as HomePageGroup,
+
+                startX: 0,
+                startY: 0,
+
+                offsetX: 0,
+                offsetY: 0,
+
+                width: 0,
+                height: 0,
+
+                x: 0,
+                y: 0,
+
+                startPosition: -1,
+                movingOver: -1,
+            },
         };
     },
     watch: {
@@ -104,6 +244,10 @@ export default defineComponent({
             if (this.display) {
                 this.autoFocus();
             }
+        },
+        editing: function () {
+            this.movingGroup = false;
+            this.load();
         },
         pageSize: function () {
             this.updatePageSize();
@@ -141,12 +285,20 @@ export default defineComponent({
 
         this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
         this.windowResizeObserver.observe(this.$el);
+
+        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
+
+        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
         this.windowResizeObserver.disconnect();
+        if (this.dragCheckInterval) {
+            clearInterval(this.dragCheckInterval);
+            this.dragCheckInterval = null;
+        }
     },
     methods: {
         scrollToTop: function () {
@@ -232,9 +384,245 @@ export default defineComponent({
             this.actualRowSize = Math.ceil(this.windowWidth / itemsWidth);
         },
 
-        changeNameFilter: function () {},
+        showAddRow: function () {
+            this.displayRowAdd = true;
+            this.displayRowAddPrepend = false;
+        },
 
-        editHomePage: function () {},
+        showAddRowPrepend: function () {
+            this.displayRowAdd = true;
+            this.displayRowAddPrepend = true;
+        },
+
+        onRowAdded: function (row: HomePageGroup, prepend: boolean) {
+            if (prepend) {
+                this.groups.unshift(row);
+            } else {
+                this.groups.push(row);
+            }
+        },
+
+        showRenameRow: function (group: HomePageGroup) {
+            this.displayRowRename = true;
+            this.selectedRow = group.id;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowRenamed: function (id: number, newName: string) {
+            for (const g of this.groups) {
+                if (g.id === id) {
+                    g.name = newName;
+                    break;
+                }
+            }
+        },
+
+        showMoveRow: function (group: HomePageGroup) {
+            let startPosition = 0;
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === group.id) {
+                    startPosition = i;
+                    break;
+                }
+            }
+
+            this.displayRowMove = true;
+            this.selectedRow = group.id;
+            this.selectedRowPosition = startPosition;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowMoved: function (id: number, position: number) {
+            position = Math.max(0, Math.min(position, this.groups.length));
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === id) {
+                    this.groups.splice(position, 0, this.groups.splice(i, 1)[0]);
+                    return;
+                }
+            }
+        },
+
+        showDeleteRow: function (group: HomePageGroup) {
+            this.displayRowDelete = true;
+            this.selectedRow = group.id;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowDeleted: function (id: number) {
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === id) {
+                    this.groups.splice(i, 1);
+                    return;
+                }
+            }
+        },
+
+        onStartMoving: function (group: HomePageGroup, moveData: HomePageGroupStartMovingData) {
+            let startPosition = -1;
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === group.id) {
+                    startPosition = i;
+                    break;
+                }
+            }
+
+            this.mouseX = moveData.startX;
+            this.mouseY = moveData.startY;
+
+            this.movingGroup = true;
+            this.movingGroupData.group = group;
+            this.movingGroupData.startPosition = startPosition;
+
+            this.movingGroupData.startX = moveData.startX;
+            this.movingGroupData.startY = moveData.startY;
+
+            this.movingGroupData.offsetX = moveData.offsetX;
+            this.movingGroupData.offsetY = moveData.offsetY;
+
+            this.movingGroupData.width = moveData.width;
+            this.movingGroupData.height = moveData.height;
+
+            this.movingGroupData.x = moveData.startX - moveData.offsetX;
+            this.movingGroupData.y = moveData.startY - moveData.offsetY;
+
+            this.updateMovingOver();
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+            this.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+        },
+
+        updateMovingOver: function () {
+            const topAddButtonForm = this.$el.querySelector(".home-add-row-form");
+            const container = this.$el;
+
+            if (!container || !topAddButtonForm) {
+                this.movingGroupData.movingOver = -1;
+                return;
+            }
+
+            const offsetTop = container.getBoundingClientRect().top + topAddButtonForm.getBoundingClientRect().height;
+            const scrollTop = container.scrollTop || 0;
+
+            const y = this.mouseY;
+
+            const height = this.movingGroupData.height;
+            const expectedIndex = Math.round((y - offsetTop + scrollTop) / height);
+
+            this.movingGroupData.movingOver = Math.min(this.groups.length + 1, Math.max(1, 1 + expectedIndex));
+        },
+
+        onDragCheck: function () {
+            const con = this.$el;
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.mouseX >= conBounds.left - this.movingGroupData.height) {
+                // Auto scroll
+
+                const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
+                const scrollStep = Math.floor(conBounds.height / 20);
+
+                if (relTop <= 0.1) {
+                    con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+                } else if (relTop >= 0.9) {
+                    con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+                }
+            }
+
+            this.updateMovingOver();
+        },
+
+        onDocumentMouseMove: function (event: MouseEvent) {
+            if (!this.movingGroup) {
+                return;
+            }
+
+            if (typeof event.pageX !== "number" || typeof event.pageY !== "number") {
+                return;
+            }
+
+            if (isNaN(event.pageX) || isNaN(event.pageY)) {
+                return;
+            }
+
+            this.mouseX = event.pageX;
+            this.mouseY = event.pageY;
+
+            this.movingGroupData.x = event.pageX - this.movingGroupData.offsetX;
+            this.movingGroupData.y = event.pageY - this.movingGroupData.offsetY;
+        },
+
+        onDocumentMouseUp: function (event: MouseEvent) {
+            if (!this.movingGroup) {
+                return;
+            }
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+
+            event.stopPropagation();
+
+            this.movingGroup = false;
+
+            if (!this.movingGroupData.group) {
+                return;
+            }
+
+            const groupId = this.movingGroupData.group.id;
+
+            let position =
+                this.movingGroupData.movingOver > this.movingGroupData.startPosition + 1
+                    ? this.movingGroupData.movingOver - 1
+                    : this.movingGroupData.movingOver;
+
+            position = Math.max(0, Math.min(this.groups.length, position - 1));
+
+            const startPosition = this.movingGroupData.startPosition;
+
+            if (startPosition === -1 || position === startPosition) {
+                return;
+            }
+
+            this.doSilentMove(groupId, position);
+            this.groups.splice(position, 0, this.groups.splice(startPosition, 1)[0]);
+        },
+
+        doSilentMove: function (rowId: number, position: number) {
+            makeApiRequest(apiHomeGroupMove(rowId, position))
+                .onSuccess(() => {})
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        accessDenied: () => {
+                            AuthController.CheckAuthStatus();
+                        },
+                        notFound: () => {
+                            this.load();
+                        },
+                        temporalError: () => {
+                            this.load();
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    this.load();
+                });
+        },
     },
 });
 </script>
