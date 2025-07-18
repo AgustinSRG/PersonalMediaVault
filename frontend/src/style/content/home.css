@@ -80,7 +80,11 @@
     position: relative;
 }
 
-.page-editing .home-page-row-content:not(.home-page-row-loading) {
+.page-editing .home-page-row-content {
+    scrollbar-gutter: stable;
+}
+
+.page-editing .customizable .home-page-row-content:not(.home-page-row-loading) {
     overflow-x: auto;
 }
 
@@ -134,8 +138,19 @@
     justify-content: center;
 
     user-select: none;
+
+    background-color: var(--modal-overlay-bg-color);
+}
+
+.home-page-row-message span {
+    padding: 0.5rem;
+    background: var(--modal-bg-color);
 }
 
 .home-page-row-message i {
     margin-right: 1rem;
+}
+
+.add-home-element-btn {
+    cursor: pointer;
 }

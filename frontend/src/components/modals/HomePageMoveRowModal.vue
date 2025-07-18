@@ -37,7 +37,7 @@
             </div>
             <div class="modal-footer no-padding">
                 <button :disabled="busy" type="submit" class="modal-footer-btn">
-                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busy"></LoadingIcon> {{ $t("Move row") }}
+                    <LoadingIcon icon="fas fa-arrows-up-down-left-right" :loading="busy"></LoadingIcon> {{ $t("Move row") }}
                 </button>
             </div>
         </form>

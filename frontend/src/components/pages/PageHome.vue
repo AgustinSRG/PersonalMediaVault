@@ -6,6 +6,7 @@
             '--moving-group-width': movingGroupData.width + 'px',
             '--moving-group-height': movingGroupData.height + 'px',
         }"
+        @scroll.passive="onScroll"
     >
         <div class="search-results auto-focus" tabindex="-1">
             <LoadingOverlay v-if="loading"></LoadingOverlay>
@@ -42,10 +43,16 @@
                     :editing="editing"
                     :moving-over="movingGroup && movingGroupData.movingOver === i + 1"
                     :moving-self="movingGroup && movingGroupData.startPosition === i"
+                    :current-media="currentMedia"
+                    :tag-version="tagVersion"
+                    :is-current-group="currentGroup == g.id"
+                    :load-tick="loadTick"
                     @request-rename="showRenameRow"
                     @request-move="showMoveRow"
                     @request-delete="showDeleteRow"
                     @start-moving="onStartMoving"
+                    @loaded-current="scrollToCurrentMedia"
+                    @must-reload="load"
                 ></HomePageRow>
 
                 <div
@@ -63,6 +70,8 @@
                     :display-titles="displayTitles"
                     :editing="editing"
                     :moving="true"
+                    :current-media="currentMedia"
+                    :tag-version="tagVersion"
                 ></HomePageRow>
 
                 <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
@@ -127,7 +136,9 @@ import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import type { HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove, HomePageGroupTypes } from "@/api/api-home";
 import HomePageRow from "../utils/HomePageRow.vue";
-import type { HomePageGroupStartMovingData } from "@/utils/home";
+import { EVENT_NAME_HOME_SCROLL_CHANGED, type HomePageGroupStartMovingData } from "@/utils/home";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -236,6 +247,11 @@ export default defineComponent({
                 startPosition: -1,
                 movingOver: -1,
             },
+
+            currentMedia: AppStatus.CurrentMedia,
+            currentGroup: AppStatus.CurrentHomePageGroup,
+
+            tagVersion: TagsController.TagsVersion,
         };
     },
     watch: {
@@ -274,6 +290,12 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
+
+        this.updateTagData();
 
         this.load();
 
@@ -342,6 +364,7 @@ export default defineComponent({
                     this.firstLoaded = true;
                     this.loadTick++;
                     this.groups = groups;
+                    this.scrollToCurrentRow();
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
@@ -509,7 +532,7 @@ export default defineComponent({
             const offsetTop = container.getBoundingClientRect().top + topAddButtonForm.getBoundingClientRect().height;
             const scrollTop = container.scrollTop || 0;
 
-            const y = this.mouseY;
+            const y = this.movingGroupData.y + Math.round(this.movingGroupData.height / 2);
 
             const height = this.movingGroupData.height;
             const expectedIndex = Math.round((y - offsetTop + scrollTop) / height);
@@ -622,6 +645,41 @@ export default defineComponent({
                     console.error(err);
                     this.load();
                 });
+        },
+
+        onAppStatusChanged: function () {
+            const changed = this.currentMedia !== AppStatus.CurrentMedia || this.currentGroup !== AppStatus.CurrentHomePageGroup;
+            this.currentMedia = AppStatus.CurrentMedia;
+            this.currentGroup = AppStatus.CurrentHomePageGroup;
+            if (changed) {
+                this.scrollToCurrentMedia();
+            }
+        },
+
+        scrollToCurrentRow: function () {
+            nextTick(() => {
+                const currentElem = this.$el.querySelector(".home-page-row.current");
+                if (currentElem) {
+                    currentElem.scrollIntoView();
+                }
+            });
+        },
+
+        updateTagData: function () {
+            this.tagVersion = TagsController.TagsVersion;
+        },
+
+        onScroll: function () {
+            AppEvents.Emit(EVENT_NAME_HOME_SCROLL_CHANGED);
+        },
+
+        scrollToCurrentMedia: function () {
+            nextTick(() => {
+                const currentElem = this.$el.querySelector(".search-result-item.current");
+                if (currentElem) {
+                    currentElem.scrollIntoView();
+                }
+            });
         },
     },
 });

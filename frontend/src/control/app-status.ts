@@ -81,6 +81,11 @@ export class AppStatus {
     public static CurrentAlbum = -1;
 
     /**
+     * Current home page group ID
+     */
+    public static CurrentHomePageGroup = -1;
+
+    /**
      * Initialization logic
      * Loads at the app startup
      */
@@ -140,8 +145,21 @@ export class AppStatus {
             AppStatus.CurrentSearch = "";
         }
 
+        AppStatus.CurrentHomePageGroup = -1;
+
         if (page === "random") {
             AppStatus.RandomSeed = Math.floor(parseInt(getParameterByName("seed") || "0", 10)) || Date.now();
+        } else if (page === "home") {
+            const group = getParameterByName("g");
+            if (group) {
+                const groupId = parseInt(group);
+
+                if (!isNaN(groupId) && groupId >= 0) {
+                    AppStatus.CurrentHomePageGroup = groupId;
+                } else {
+                    AppStatus.CurrentHomePageGroup = -1;
+                }
+            }
         }
 
         const searchParams = getParameterByName("sp");
@@ -233,6 +251,12 @@ export class AppStatus {
             params["page"] = AppStatus.CurrentPage;
         }
 
+        if (AppStatus.CurrentPage === "home") {
+            if (AppStatus.CurrentHomePageGroup >= 0) {
+                params["g"] = AppStatus.CurrentHomePageGroup + "";
+            }
+        }
+
         if (AppStatus.CurrentSearch) {
             params["search"] = AppStatus.CurrentSearch;
         }
@@ -308,6 +332,8 @@ export class AppStatus {
 
         AppStatus.CurrentAlbum = -1;
 
+        AppStatus.CurrentHomePageGroup = -1;
+
         if (AppStatus.CurrentMedia >= 0) {
             AppStatus.ListSplitMode = true;
         }
@@ -360,6 +386,7 @@ export class AppStatus {
     public static ExpandPage() {
         AppStatus.CurrentAlbum = -1;
         AppStatus.CurrentMedia = -1;
+        AppStatus.CurrentHomePageGroup = -1;
         AppStatus.ListSplitMode = false;
 
         AppStatus.UpdateLayout();
@@ -374,6 +401,7 @@ export class AppStatus {
      */
     public static OnDeleteMedia() {
         AppStatus.CurrentMedia = -1;
+        AppStatus.CurrentHomePageGroup = -1;
 
         AppStatus.UpdateLayout();
 
@@ -442,12 +470,17 @@ export class AppStatus {
      * Navigates to a media asset
      * @param mediaId The media ID
      * @param split True to use split mode
+     * @param group ID of the home group
      */
-    public static ClickOnMedia(mediaId: number, split: boolean) {
+    public static ClickOnMedia(mediaId: number, split: boolean, group?: number) {
         AppStatus.CurrentMedia = mediaId;
 
         if (split) {
             AppStatus.ListSplitMode = true;
+
+            if (typeof group === "number" && group >= 0) {
+                AppStatus.CurrentHomePageGroup = group;
+            }
         }
 
         AppStatus.UpdateLayout();
@@ -464,6 +497,7 @@ export class AppStatus {
     public static ClickOnAlbum(albumId: number) {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = -1;
+        AppStatus.CurrentHomePageGroup = -1;
         AppStatus.CurrentSearch = "";
 
         AppStatus.ListSplitMode = false;
