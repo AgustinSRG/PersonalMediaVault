@@ -29,12 +29,12 @@
                             </td>
                         </tr>
 
-                        <a class="tr-link modal-menu-item" :href="docsURL" target="_blank" rel="noopener noreferrer" @click="close">
+                        <tr class="tr-link modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="openDocs">
                             <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
                             <td class="modal-menu-item-title">
                                 {{ $t("Documentation") }}
                             </td>
-                        </a>
+                        </tr>
 
                         <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
                             <td class="modal-menu-item-icon">
@@ -112,6 +112,11 @@ export default defineComponent({
             if (e.key === "Escape") {
                 this.close();
             }
+        },
+
+        openDocs: function () {
+            window.open(this.docsURL);
+            this.close();
         },
     },
 });
