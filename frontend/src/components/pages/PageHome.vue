@@ -135,7 +135,7 @@ import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import type { HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove, HomePageGroupTypes } from "@/api/api-home";
-import HomePageRow from "../utils/HomePageRow.vue";
+import HomePageRow from "../layout/HomePageRow.vue";
 import { EVENT_NAME_HOME_SCROLL_CHANGED, type HomePageGroupStartMovingData } from "@/utils/home";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
