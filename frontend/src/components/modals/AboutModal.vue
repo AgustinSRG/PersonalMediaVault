@@ -14,7 +14,7 @@
                 <table class="table table-text-overflow">
                     <tbody>
                         <tr>
-                            <td>{{ $t("Version") }}</td>
+                            <td>{{ $t("Client version") }}</td>
                             <td>{{ version }}</td>
                         </tr>
 
@@ -22,6 +22,12 @@
                             <td>{{ $t("Server version") }}</td>
                             <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
                             <td v-else>{{ serverVersion }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>{{ $t("FFmpeg version") }}</td>
+                            <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
+                            <td v-else>{{ ffmpegVersion }}</td>
                         </tr>
 
                         <tr>
@@ -35,12 +41,6 @@
                                     ></span
                                 >
                             </td>
-                        </tr>
-
-                        <tr>
-                            <td>{{ $t("FFmpeg version") }}</td>
-                            <td v-if="loading"><i class="fa fa-spinner fa-spin"></i> {{ $t("Loading") }}...</td>
-                            <td v-else>{{ ffmpegVersion }}</td>
                         </tr>
 
                         <tr>
