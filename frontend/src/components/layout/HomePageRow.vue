@@ -173,9 +173,9 @@ import { isTouchDevice } from "@/utils/touch";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import type { PropType } from "vue";
-import { defineComponent } from "vue";
-import DurationIndicator from "./DurationIndicator.vue";
-import ThumbImage from "./ThumbImage.vue";
+import { defineComponent, nextTick } from "vue";
+import DurationIndicator from "@/components/utils/DurationIndicator.vue";
+import ThumbImage from "@/components/utils/ThumbImage.vue";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { apiSearch } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
@@ -197,6 +197,9 @@ export default defineComponent({
         editing: Boolean,
 
         moving: Boolean,
+        movingInitialElements: Array as PropType<HomePageElement[]>,
+        movingInitialScroll: Number,
+
         movingOver: Boolean,
         movingSelf: Boolean,
         movingLeft: String,
@@ -281,6 +284,15 @@ export default defineComponent({
 
         load: function () {
             this.loading = true;
+
+            if (this.moving && this.movingInitialElements) {
+                this.onElementsLoaded(this.movingInitialElements);
+
+                if (this.movingInitialScroll) {
+                    this.applyInitialMovingScroll();
+                }
+                return;
+            }
 
             switch (this.group.type) {
                 case HomePageGroupTypes.Custom:
@@ -490,6 +502,9 @@ export default defineComponent({
 
             const bounds = (this.$el as HTMLElement).getBoundingClientRect();
 
+            const scrollContainer = this.$el.querySelector(".home-page-row-content") as HTMLElement;
+            const initialScroll = scrollContainer ? scrollContainer.scrollLeft || 0 : 0;
+
             const data: HomePageGroupStartMovingData = {
                 startX,
                 startY,
@@ -497,6 +512,8 @@ export default defineComponent({
                 offsetY: startY - bounds.top,
                 width: bounds.width,
                 height: bounds.height,
+                initialElements: this.loading ? null : this.elements.slice(),
+                initialScroll,
             };
 
             this.$emit("start-moving", this.group, data);
@@ -589,6 +606,15 @@ export default defineComponent({
 
         addElements: function () {
             this.$emit("add-elements", this.group);
+        },
+
+        applyInitialMovingScroll: function () {
+            nextTick(() => {
+                const scrollContainer = this.$el.querySelector(".home-page-row-content") as HTMLElement;
+                if (scrollContainer) {
+                    scrollContainer.scrollLeft = this.movingInitialScroll || 0;
+                }
+            });
         },
     },
 });

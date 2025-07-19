@@ -2,6 +2,7 @@
 
 "use strict";
 
+import type { HomePageElement} from "@/api/api-home";
 import { HomePageGroupTypes } from "@/api/api-home";
 
 /**
@@ -36,4 +37,7 @@ export type HomePageGroupStartMovingData = {
 
     width: number; // The width
     height: number; // The height
+
+    initialElements: HomePageElement[] | null;
+    initialScroll: number;
 };

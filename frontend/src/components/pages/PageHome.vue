@@ -72,6 +72,8 @@
                     :moving="true"
                     :current-media="currentMedia"
                     :tag-version="tagVersion"
+                    :moving-initial-elements="initialMovingElements"
+                    :moving-initial-scroll="initialMovingScroll"
                 ></HomePageRow>
 
                 <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
@@ -133,7 +135,7 @@ import { EVENT_NAME_MEDIA_DELETE, EVENT_NAME_MEDIA_METADATA_CHANGE, PagesControl
 import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
-import type { HomePageGroup } from "@/api/api-home";
+import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove, HomePageGroupTypes } from "@/api/api-home";
 import HomePageRow from "../layout/HomePageRow.vue";
 import { EVENT_NAME_HOME_SCROLL_CHANGED, type HomePageGroupStartMovingData } from "@/utils/home";
@@ -195,6 +197,9 @@ export default defineComponent({
             windowResizeObserver: null as ResizeObserver,
 
             dragCheckInterval: null as ReturnType<typeof setInterval> | null,
+
+            initialMovingElements: null as HomePageElement[] | null,
+            initialMovingScroll: 0,
         };
     },
     data: function () {
@@ -510,6 +515,9 @@ export default defineComponent({
 
             this.movingGroupData.x = moveData.startX - moveData.offsetX;
             this.movingGroupData.y = moveData.startY - moveData.offsetY;
+
+            this.initialMovingElements = moveData.initialElements;
+            this.initialMovingScroll = moveData.initialScroll;
 
             this.updateMovingOver();
 
