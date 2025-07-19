@@ -129,6 +129,8 @@ func GetHomeElementsMinInfoList(list []HomePageElement, albums *VaultAlbumsData,
 					},
 				}
 			}
+
+			wg.Done()
 		} else {
 			go GetMediaMinInfoListTaskHome(e.Id, session, result, i, wg)
 		}

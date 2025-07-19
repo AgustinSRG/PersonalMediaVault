@@ -355,7 +355,7 @@ func (hpc *HomePageConfigManager) SetGroupElementList(key []byte, id uint64, ele
 		return nil
 	}
 
-	config.Groups[groupPos].Elements = elements
+	config.Groups[groupPos].Elements = cleanedElementsList
 
 	return hpc.finishWrite(config, key)
 }
