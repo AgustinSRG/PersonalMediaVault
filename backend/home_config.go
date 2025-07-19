@@ -524,6 +524,40 @@ func (hpc *HomePageConfigManager) DeleteGroup(key []byte, id uint64) error {
 	return hpc.finishWrite(config, key)
 }
 
+// Call when a media or album gets deleted
+// key - The vault encryption key
+// element - The element delete from the vault
+func (hpc *HomePageConfigManager) OnElementDelete(key []byte, element HomePageElement) error {
+	hpc.lock.RequestWrite()
+	defer hpc.lock.EndWrite()
+
+	config, err := hpc.readInternal(key)
+
+	if err != nil {
+		return err
+	}
+
+	if len(config.Groups) == 0 {
+		return nil // Nothing to delete
+	}
+
+	for i, _ := range config.Groups {
+		if config.Groups[i].FindElement(&element) != -1 {
+			newList := make([]HomePageElement, 0)
+
+			for _, e := range config.Groups[i].Elements {
+				if e.Id != element.Id || e.ElementType != element.ElementType {
+					newList = append(newList, e)
+				}
+			}
+
+			config.Groups[i].Elements = newList
+		}
+	}
+
+	return hpc.finishWrite(config, key)
+}
+
 // Writes home page configuration
 // data - Data to write
 // key - Vault encryption key
