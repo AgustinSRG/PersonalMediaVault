@@ -18,7 +18,7 @@
                 <div class="home-page-row-title" :title="getGroupName(group)">{{ getGroupName(group) }}</div>
                 <div v-if="editing" class="home-page-row-head-buttons">
                     <button
-                        v-if="group.type == groupTypeCustom"
+                        v-if="!loading && group.type == groupTypeCustom"
                         type="button"
                         class="page-header-btn"
                         :title="$t('Add elements')"
@@ -42,7 +42,7 @@
                 v-if="(!editing || group.type !== groupTypeCustom) && !loadDisplay && firstLoaded && elements.length === 0"
                 class="home-page-row-content home-page-row-loading"
             >
-                <div v-for="f in loadingFiller.slice(1)" :key="f" class="search-result-item hidden">
+                <div v-for="f in loadingFiller.slice(0, 1)" :key="f" class="search-result-item hidden">
                     <div class="search-result-thumb">
                         <div class="search-result-thumb-inner">
                             <div class="search-result-loader">
@@ -169,6 +169,15 @@
                 </div>
             </div>
         </div>
+
+        <HomePageRowAddElementModal
+            v-if="displayAddElement"
+            v-model:display="displayAddElement"
+            :group-id="group.id"
+            :group-elements="elements"
+            @must-reload="load"
+            @added-element="load"
+        ></HomePageRowAddElementModal>
     </div>
 </template>
 
@@ -186,7 +195,7 @@ import { isTouchDevice } from "@/utils/touch";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import type { PropType } from "vue";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import DurationIndicator from "@/components/utils/DurationIndicator.vue";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -194,11 +203,16 @@ import { apiSearch } from "@/api/api-search";
 import { AppEvents } from "@/control/app-events";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 
+const HomePageRowAddElementModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
+});
+
 export default defineComponent({
     name: "HomePageRow",
     components: {
         DurationIndicator,
         ThumbImage,
+        HomePageRowAddElementModal,
     },
     props: {
         rowSize: Number,
@@ -227,16 +241,7 @@ export default defineComponent({
 
         isCurrentGroup: Boolean,
     },
-    emits: [
-        "request-rename",
-        "request-move",
-        "request-delete",
-        "start-moving",
-        "loaded-current",
-        "must-reload",
-        "add-elements",
-        "updated-prev-next",
-    ],
+    emits: ["request-rename", "request-move", "request-delete", "start-moving", "loaded-current", "must-reload", "updated-prev-next"],
     setup() {
         return {
             limitCustomGroupElements: 256,
@@ -258,6 +263,8 @@ export default defineComponent({
             firstLoaded: false,
 
             loadDisplay: false,
+
+            displayAddElement: false,
 
             elements: [] as HomePageElement[],
 
@@ -704,7 +711,7 @@ export default defineComponent({
         },
 
         addElements: function () {
-            this.$emit("add-elements", this.group);
+            this.displayAddElement = true;
         },
 
         applyInitialMovingScroll: function () {

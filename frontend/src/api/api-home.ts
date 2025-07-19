@@ -194,6 +194,9 @@ export function apiHomeGetGroupElements(id: number): RequestParams<HomePageEleme
     };
 }
 
+export const HOME_PAGE_ELEMENT_TYPE_MEDIA = 0;
+export const HOME_PAGE_ELEMENT_TYPE_ALBUM = 1;
+
 /**
  * Reference to an element
  */

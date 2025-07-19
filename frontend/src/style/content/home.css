@@ -234,3 +234,15 @@
 .home-page-row-go-button:hover {
     color: var(--theme-btn-hover-color);
 }
+
+.page-editing .search-result-item .clickable {
+    cursor: move;
+}
+
+.add-home-element-btn {
+    border: dashed 1px var(--theme-fg-color);
+}
+
+.add-home-element-btn .search-result-thumb-inner {
+    background: transparent;
+}

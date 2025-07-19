@@ -203,6 +203,7 @@ import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/norma
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
+import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -235,6 +236,7 @@ export default defineComponent({
         display: Boolean,
         min: Boolean,
         inModal: Boolean,
+        removeMediaFromList: Object as PropType<Set<number>>,
         noAlbum: Number,
         pageScroll: Number,
         pageSize: Number,
@@ -556,20 +558,22 @@ export default defineComponent({
             const filterTags = this.tags.slice();
             const filterTagMode = this.tagMode;
 
-            let backlistAlbum = new Set();
+            let blacklist = new Set();
 
             if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
-                backlistAlbum = new Set(
+                blacklist = new Set(
                     AlbumsController.CurrentAlbumData.list.map((a) => {
                         return a.id;
                     }),
                 );
+            } else if (this.removeMediaFromList) {
+                blacklist = this.removeMediaFromList;
             }
 
             const resultsToAdd = [];
 
             for (const e of results) {
-                if (backlistAlbum.has(e.id)) {
+                if (blacklist.has(e.id)) {
                     continue;
                 }
 
