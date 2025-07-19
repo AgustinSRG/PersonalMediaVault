@@ -113,6 +113,19 @@
 }
 
 .page-editing .home-page-row-content .search-result-item:first-child {
+    transition: none;
+    margin-left: 0;
+}
+
+.is-min .home-page-row-content .search-result-item:first-child {
+    transition: margin 0.2s ease-in-out;
+}
+
+.is-min.page-editing .home-page-row-content .search-result-item:first-child {
+    transition: none;
+}
+
+.page-editing .home-page-row-content .search-result-item:first-child {
     margin-left: 0;
 }
 
@@ -154,3 +167,67 @@
 .add-home-element-btn {
     cursor: pointer;
 }
+
+.home-page-row-go-left {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    padding-top: var(--cell-padding);
+    padding-bottom: var(--cell-padding);
+
+    padding-left: 0.25rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    width: calc(100% / var(--actual-row-size));
+    aspect-ratio: 1/1;
+
+    align-items:flex-start;
+    pointer-events: none;
+}
+
+.home-page-row-go-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    padding-top: var(--cell-padding);
+    padding-bottom: var(--cell-padding);
+
+    padding-right: 0.25rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: calc(100% / var(--actual-row-size));
+    aspect-ratio: 1/1;
+
+    align-items: flex-end;
+    pointer-events: none;
+}
+
+.home-page-row-go-button {
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+
+    font-size: 24px;
+
+    background-color: var(--floating-btn-bg-color);
+
+    color: var(--theme-btn-color);
+
+    pointer-events: all;
+}
+
+.home-page-row-go-button:hover {
+    color: var(--theme-btn-hover-color);
+}
+

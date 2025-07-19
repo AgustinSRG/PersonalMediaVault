@@ -147,9 +147,9 @@ export class AppStatus {
 
         AppStatus.CurrentHomePageGroup = -1;
 
-        if (page === "random") {
+        if (AppStatus.CurrentPage === "random") {
             AppStatus.RandomSeed = Math.floor(parseInt(getParameterByName("seed") || "0", 10)) || Date.now();
-        } else if (page === "home") {
+        } else if (AppStatus.CurrentPage === "home") {
             const group = getParameterByName("g");
             if (group) {
                 const groupId = parseInt(group);

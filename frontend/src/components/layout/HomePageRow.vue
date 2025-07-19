@@ -73,12 +73,12 @@
                 </div>
             </div>
 
-            <div v-else class="home-page-row-content">
+            <div v-else class="home-page-row-content" @scroll.passive="onContentScroll">
                 <div
                     v-for="(item, i) in elements"
                     :key="i"
                     class="search-result-item"
-                    :class="{ current: isCurrent(item, currentMedia, isCurrentGroup) }"
+                    :class="{ current: !editing && isCurrent(item, currentMedia, isCurrentGroup) }"
                 >
                     <a
                         class="clickable"
@@ -154,6 +154,18 @@
                 <div v-else-if="editing && group.type !== groupTypeCustom" class="home-page-row-message">
                     <span>{{ $t("This row cannot be customized") }}</span>
                 </div>
+
+                <div v-if="!editing && rowIndex > 0" class="home-page-row-go-left">
+                    <button type="button" class="home-page-row-go-button" @click="goLeft" :title="$t('Scroll to the left')">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <div v-if="!editing && rowIndex < rowSplitCount - 1" class="home-page-row-go-right">
+                    <button type="button" class="home-page-row-go-button" @click="goRight" :title="$t('Scroll to the right')">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -214,7 +226,7 @@ export default defineComponent({
 
         isCurrentGroup: Boolean,
     },
-    emits: ["request-rename", "request-move", "request-delete", "start-moving", "loaded-current", "must-reload", "add-elements"],
+    emits: ["request-rename", "request-move", "request-delete", "start-moving", "loaded-current", "must-reload", "add-elements", "updated-prev-next"],
     setup() {
         return {
             limitCustomGroupElements: 256,
@@ -253,6 +265,10 @@ export default defineComponent({
         },
         loadTick: function () {
             this.checkLoad(true);
+        },
+        rowSize: function () {
+            this.updateRowSplits();
+            this.updateCurrentMedia();
         },
     },
     mounted: function () {
@@ -315,8 +331,56 @@ export default defineComponent({
             this.loading = false;
             this.loadDisplay = false;
 
+            this.rowIndex = 0;
+
+            this.updateRowSplits();
+            this.updateCurrentMedia();
+
             if (this.isCurrentGroup) {
                 this.$emit("loaded-current");
+            }
+        },
+
+        updateRowSplits() {
+            this.rowSplitCount = Math.ceil(this.elements.length / (this.rowSize || 1)) || 1;
+
+            this.rowIndex = Math.min(this.rowIndex, this.rowSplitCount - 1);
+
+            if (!this.editing) {
+                nextTick(() => {
+                    const scrollContainer = this.$el.querySelector(".home-page-row-content") as HTMLElement;
+                    if (scrollContainer) {
+                        scrollContainer.scrollLeft = 0;
+                    }
+                });
+            }
+        },
+
+        onContentScroll: function () {
+            if (!this.editing) {
+                const scrollContainer = this.$el.querySelector(".home-page-row-content") as HTMLElement;
+                if (scrollContainer) {
+                    scrollContainer.scrollLeft = 0;
+                }
+            }
+        },
+
+        updateCurrentMedia() {
+            if (!this.isCurrentGroup || this.currentMedia === -1) {
+                return;
+            }
+
+            let currentMediaPos = -1;
+
+            for (let i = 0; i < this.elements.length; i++) {
+                if (this.elements[i].media && this.elements[i].media.id === this.currentMedia) {
+                    currentMediaPos = i;
+                    break;
+                }
+            }
+
+            if (currentMediaPos >= 0) {
+                this.rowIndex = Math.floor(currentMediaPos / (this.rowSize || 1));
             }
         },
 
@@ -615,6 +679,14 @@ export default defineComponent({
                     scrollContainer.scrollLeft = this.movingInitialScroll || 0;
                 }
             });
+        },
+
+        goLeft: function () {
+            this.rowIndex = Math.max(0, this.rowIndex - 1);
+        },
+
+        goRight: function () {
+            this.rowIndex = Math.min(this.rowIndex + 1, this.rowSplitCount - 1);
         },
     },
 });

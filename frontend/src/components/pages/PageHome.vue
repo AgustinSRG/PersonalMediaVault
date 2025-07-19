@@ -1,7 +1,7 @@
 <template>
     <div
         class="page-inner"
-        :class="{ hidden: !display, 'page-editing': editing }"
+        :class="{ hidden: !display, 'page-editing': editing, 'is-min': min }"
         :style="{
             '--moving-group-width': movingGroupData.width + 'px',
             '--moving-group-height': movingGroupData.height + 'px',
