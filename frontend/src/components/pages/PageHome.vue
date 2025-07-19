@@ -53,6 +53,7 @@
                     @start-moving="onStartMoving"
                     @loaded-current="scrollToCurrentMedia"
                     @must-reload="load"
+                    @updated-prev-next="onPrevNextUpdated"
                 ></HomePageRow>
 
                 <div
@@ -131,7 +132,13 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-import { EVENT_NAME_MEDIA_DELETE, EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
+import {
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    PagesController,
+} from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
@@ -257,6 +264,12 @@ export default defineComponent({
             currentGroup: AppStatus.CurrentHomePageGroup,
 
             tagVersion: TagsController.TagsVersion,
+
+            currentGroupNext: -1,
+            currentGroupPrev: -1,
+
+            currentGroupFirst: -1,
+            currentGroupLast: -1,
         };
     },
     watch: {
@@ -287,6 +300,8 @@ export default defineComponent({
         },
     },
     mounted: function () {
+        this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
+
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
             this.canWrite = AuthController.CanWrite;
             this.load();
@@ -295,6 +310,10 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
 
@@ -657,9 +676,17 @@ export default defineComponent({
 
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia || this.currentGroup !== AppStatus.CurrentHomePageGroup;
+
             this.currentMedia = AppStatus.CurrentMedia;
             this.currentGroup = AppStatus.CurrentHomePageGroup;
+
             if (changed) {
+                this.currentGroupPrev = -1;
+                this.currentGroupNext = -1;
+                this.currentGroupFirst = -1;
+                this.currentGroupLast = -1;
+                PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
+
                 this.scrollToCurrentMedia();
             }
         },
@@ -688,6 +715,116 @@ export default defineComponent({
                     currentElem.scrollIntoView();
                 }
             });
+        },
+
+        onPrevNextUpdated: function (
+            currentGroupPrev: number,
+            currentGroupNext: number,
+            currentGroupFirst: number,
+            currentGroupLast: number,
+        ) {
+            this.currentGroupPrev = currentGroupPrev;
+            this.currentGroupNext = currentGroupNext;
+            this.currentGroupFirst = currentGroupFirst;
+            this.currentGroupLast = currentGroupLast;
+
+            PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
+        },
+
+        goToMedia: function (id: number) {
+            AppStatus.ClickOnMedia(id, true, this.currentGroup);
+        },
+
+        nextMedia: function () {
+            if (this.currentGroupNext >= 0) {
+                this.goToMedia(this.currentGroupNext);
+            }
+        },
+
+        prevMedia: function () {
+            if (this.currentGroupPrev >= 0) {
+                this.goToMedia(this.currentGroupPrev);
+            }
+        },
+
+        handleGlobalKey: function (event: KeyboardEvent): boolean {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey || this.editing) {
+                return false;
+            }
+
+            if (event.shiftKey && event.key === "PageUp") {
+                const activeElement = document.activeElement as HTMLElement;
+
+                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.previousElementSibling) {
+                    const sibling = activeElement.previousElementSibling as HTMLElement;
+                    sibling.focus();
+                } else if (
+                    activeElement &&
+                    activeElement.parentElement &&
+                    activeElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement.parentElement
+                ) {
+                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+                    if (rowElement.classList.contains("home-page-row") && rowElement.previousElementSibling) {
+                        const sibling = rowElement.previousElementSibling as HTMLElement;
+                        sibling.focus();
+                    }
+                }
+
+                return true;
+            }
+
+            if (event.shiftKey && event.key === "PageDown") {
+                const activeElement = document.activeElement as HTMLElement;
+
+                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.nextElementSibling) {
+                    const sibling = activeElement.nextElementSibling as HTMLElement;
+                    sibling.focus();
+                } else if (
+                    activeElement &&
+                    activeElement.parentElement &&
+                    activeElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement.parentElement
+                ) {
+                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+                    if (rowElement.classList.contains("home-page-row") && rowElement.nextElementSibling) {
+                        const sibling = rowElement.nextElementSibling as HTMLElement;
+                        sibling.focus();
+                    }
+                }
+
+                return true;
+            }
+
+            if (event.key === "Home") {
+                if (this.currentGroupFirst > 0) {
+                    this.goToMedia(this.currentGroupFirst);
+                }
+                return true;
+            }
+
+            if (event.key === "End") {
+                if (this.currentGroupLast > 0) {
+                    this.goToMedia(this.currentGroupLast);
+                }
+                return true;
+            }
+
+            if (event.key === "PageUp" || event.key === "ArrowLeft") {
+                this.prevMedia();
+                return true;
+            }
+
+            if (event.key === "PageDown" || event.key === "ArrowRight") {
+                this.nextMedia();
+                return true;
+            }
+
+            return false;
         },
     },
 });

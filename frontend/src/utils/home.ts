@@ -2,7 +2,7 @@
 
 "use strict";
 
-import type { HomePageElement} from "@/api/api-home";
+import type { HomePageElement } from "@/api/api-home";
 import { HomePageGroupTypes } from "@/api/api-home";
 
 /**

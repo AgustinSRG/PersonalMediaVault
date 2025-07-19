@@ -94,6 +94,17 @@ export class PagesController {
     }
 
     /**
+     * Call when a home group is loaded
+     * @param hasPrev True if the group has a previous
+     * @param hasNext True if the group has a next element
+     */
+    public static OnHomeGroupLoad(hasPrev: boolean, hasNext: boolean) {
+        PagesController.HasPagePrev = hasPrev;
+        PagesController.HasPageNext = hasNext;
+        AppEvents.Emit(EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, PagesController.HasPagePrev, PagesController.HasPageNext);
+    }
+
+    /**
      * Call when a page unloads
      */
     public static OnPageUnload() {

@@ -86,6 +86,7 @@
                         target="_blank"
                         rel="noopener noreferrer"
                         @click="goToElement(item, $event)"
+                        @focus="focusElementIndex(i)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div v-if="item.media" class="search-result-thumb-inner">
@@ -156,13 +157,13 @@
                 </div>
 
                 <div v-if="!editing && rowIndex > 0" class="home-page-row-go-left">
-                    <button type="button" class="home-page-row-go-button" @click="goLeft" :title="$t('Scroll to the left')">
+                    <button type="button" class="home-page-row-go-button" :title="$t('Scroll to the left')" @click="goLeft">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                 </div>
 
                 <div v-if="!editing && rowIndex < rowSplitCount - 1" class="home-page-row-go-right">
-                    <button type="button" class="home-page-row-go-button" @click="goRight" :title="$t('Scroll to the right')">
+                    <button type="button" class="home-page-row-go-button" :title="$t('Scroll to the right')" @click="goRight">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -226,7 +227,16 @@ export default defineComponent({
 
         isCurrentGroup: Boolean,
     },
-    emits: ["request-rename", "request-move", "request-delete", "start-moving", "loaded-current", "must-reload", "add-elements", "updated-prev-next"],
+    emits: [
+        "request-rename",
+        "request-move",
+        "request-delete",
+        "start-moving",
+        "loaded-current",
+        "must-reload",
+        "add-elements",
+        "updated-prev-next",
+    ],
     setup() {
         return {
             limitCustomGroupElements: 256,
@@ -268,6 +278,9 @@ export default defineComponent({
         },
         rowSize: function () {
             this.updateRowSplits();
+            this.updateCurrentMedia();
+        },
+        currentMedia: function () {
             this.updateCurrentMedia();
         },
     },
@@ -379,9 +392,33 @@ export default defineComponent({
                 }
             }
 
+            let firstElement = -1;
+            let lastElement = -1;
+
+            let prevElement = -1;
+            let nextElement = -1;
+
             if (currentMediaPos >= 0) {
                 this.rowIndex = Math.floor(currentMediaPos / (this.rowSize || 1));
+
+                for (let i = 0; i < this.elements.length; i++) {
+                    if (firstElement === -1 && this.elements[i].media) {
+                        firstElement = this.elements[i].media.id;
+                    }
+
+                    if (this.elements[i].media) {
+                        lastElement = this.elements[i].media.id;
+                    }
+
+                    if (i < currentMediaPos && this.elements[i].media) {
+                        prevElement = this.elements[i].media.id;
+                    } else if (nextElement === -1 && i > currentMediaPos && this.elements[i].media) {
+                        nextElement = this.elements[i].media.id;
+                    }
+                }
             }
+
+            this.$emit("updated-prev-next", prevElement, nextElement, firstElement, lastElement);
         },
 
         loadCustomElements: function () {
@@ -486,8 +523,6 @@ export default defineComponent({
             makeNamedApiRequest(this.loadRequestId, apiAlbumsGetAlbums())
                 .onSuccess((result) => {
                     clearNamedTimeout(this.loadRequestId);
-
-                    console.log("Page size: " + this.pageSize);
 
                     this.onElementsLoaded(
                         result
@@ -687,6 +722,10 @@ export default defineComponent({
 
         goRight: function () {
             this.rowIndex = Math.min(this.rowIndex + 1, this.rowSplitCount - 1);
+        },
+
+        focusElementIndex: function (i: number) {
+            this.rowIndex = Math.floor(i / (this.rowSize || 1));
         },
     },
 });

@@ -8,6 +8,10 @@
     padding-bottom: 0.25rem;
 }
 
+.home-page-row:focus-visible {
+    outline: none;
+}
+
 .home-page-row-inner {
     width: 100%;
     display: flex;
@@ -185,7 +189,7 @@
     width: calc(100% / var(--actual-row-size));
     aspect-ratio: 1/1;
 
-    align-items:flex-start;
+    align-items: flex-start;
     pointer-events: none;
 }
 
@@ -230,4 +234,3 @@
 .home-page-row-go-button:hover {
     color: var(--theme-btn-hover-color);
 }
-
