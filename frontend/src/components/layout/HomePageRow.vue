@@ -97,7 +97,7 @@
                 >
                     <a
                         class="clickable"
-                        :class="{ ['home-page-row-element-' + i]: true }"
+                        :class="{ moveable: editing, ['home-page-row-element-' + i]: true }"
                         :href="getElementURL(item)"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1193,7 +1193,7 @@ export default defineComponent({
                 // Auto scroll
 
                 const relTop = (this.mouseX - conBounds.left) / (conBounds.width || 1);
-                const scrollStep = Math.floor(conBounds.width / 20);
+                const scrollStep = Math.ceil(conBounds.width / 25);
 
                 if (relTop <= 0.1) {
                     con.scrollLeft = Math.max(0, con.scrollLeft - scrollStep);

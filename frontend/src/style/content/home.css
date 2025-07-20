@@ -240,7 +240,7 @@
     color: var(--theme-btn-hover-color);
 }
 
-.page-editing .search-result-item .clickable {
+.clickable.moveable {
     cursor: move;
 }
 
@@ -287,7 +287,7 @@
 }
 
 .search-result-item.dragging-over:not(.dragging) {
-    margin-left: var(--moving-element-width);
+    margin-left: var(--moving-element-width) !important;
 }
 
 .search-result-item.dragging:not(.dragging-over) {
