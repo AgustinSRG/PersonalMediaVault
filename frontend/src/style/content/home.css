@@ -274,3 +274,38 @@
 .home-page-row-context-btn:not(:disabled):hover {
     color: var(--theme-btn-hover-color);
 }
+
+.search-result-item.home-element-dragging {
+    position: fixed;
+    z-index: 9999;
+    background: var(--theme-bg-color);
+}
+
+.home-element-dragging {
+    opacity: 0.95;
+    cursor: move;
+}
+
+.search-result-item.dragging-over:not(.dragging) {
+    margin-left: var(--moving-element-width);
+}
+
+.search-result-item.dragging:not(.dragging-over) {
+    display: none;
+}
+
+.search-result-item.dragging.dragging-over {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.home-page-moving-elements-extra-padding {
+    height: 1px;
+    width: var(--moving-element-width);
+    min-width: var(--moving-element-width);
+}
+
+.page-editing .search-result-item .clickable,
+.page-editing .search-result-item .clickable:hover {
+    opacity: 1;
+}

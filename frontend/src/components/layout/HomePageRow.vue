@@ -10,13 +10,15 @@
             'fast-transition': fastTransition,
         }"
         :style="{ '--actual-row-size': rowSize + '', '--row-scroll-index': rowIndex + '', top: movingTop, left: movingLeft }"
-        :draggable="!isTouchDevice && !movePositionModalDisplay && !displayAddElement && !contextMenuShown"
         tabindex="-1"
-        @dragstart="onDrag"
         @keydown="onKeyDown"
     >
         <div class="home-page-row-inner">
-            <div class="home-page-row-head">
+            <div
+                class="home-page-row-head"
+                :draggable="!isTouchDevice && !movePositionModalDisplay && !displayAddElement && !contextMenuShown"
+                @dragstart="onDrag"
+            >
                 <div class="home-page-row-title" :title="getGroupName(group)">{{ getGroupName(group) }}</div>
                 <div v-if="editing" class="home-page-row-head-buttons">
                     <button
@@ -75,12 +77,23 @@
                 </div>
             </div>
 
-            <div v-else class="home-page-row-content" @scroll.passive="onContentScroll">
+            <div
+                v-else
+                class="home-page-row-content"
+                :style="{
+                    '--moving-element-width': draggingData.width + 'px',
+                }"
+                @scroll.passive="onContentScroll"
+            >
                 <div
                     v-for="(item, i) in elements"
                     :key="i"
                     class="search-result-item"
-                    :class="{ current: !editing && isCurrent(item, currentMedia, isCurrentGroup) }"
+                    :class="{
+                        current: !editing && isCurrent(item, currentMedia, isCurrentGroup),
+                        dragging: dragging && draggingData.startPosition === i,
+                        'dragging-over': dragging && draggingData.movingOver === i + 1,
+                    }"
                 >
                     <a
                         class="clickable"
@@ -91,6 +104,7 @@
                         @click="goToElement(item, $event)"
                         @focus="focusElementIndex(i)"
                         @contextmenu="showContextMenu(i, $event)"
+                        @dragstart="onDragStart(i, $event)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div v-if="item.media" class="search-result-thumb-inner">
@@ -153,6 +167,11 @@
                 </div>
 
                 <div
+                    v-if="dragging && elements.length > 0 && draggingData.movingOver > elements.length"
+                    class="home-page-moving-elements-extra-padding"
+                ></div>
+
+                <div
                     v-if="editing && group.type === groupTypeCustom && elements.length < limitCustomGroupElements"
                     class="search-result-item add-home-element"
                 >
@@ -182,6 +201,83 @@
                     </button>
                 </div>
             </div>
+        </div>
+
+        <div
+            v-if="dragging && draggingElement"
+            class="search-result-item home-element-dragging"
+            :class="{ current: !editing && isCurrent(draggingElement, currentMedia, isCurrentGroup) }"
+            :style="{
+                left: draggingData.x + 'px',
+                top: draggingData.y + 'px',
+                width: draggingData.width + 'px',
+                height: draggingData.height + 'px',
+                'min-width': draggingData.width + 'px',
+                'min-height': draggingData.height + 'px',
+            }"
+        >
+            <a class="clickable" :href="getElementURL(draggingElement)" target="_blank" rel="noopener noreferrer">
+                <div class="search-result-thumb" :title="renderHintTitle(draggingElement, tagVersion)">
+                    <div v-if="draggingElement.media" class="search-result-thumb-inner">
+                        <div v-if="!draggingElement.media.thumbnail" class="no-thumb">
+                            <i v-if="draggingElement.media.type === 1" class="fas fa-image"></i>
+                            <i v-else-if="draggingElement.media.type === 2" class="fas fa-video"></i>
+                            <i v-else-if="draggingElement.media.type === 3" class="fas fa-headphones"></i>
+                            <i v-else class="fas fa-ban"></i>
+                        </div>
+                        <ThumbImage
+                            v-if="draggingElement.media.thumbnail"
+                            :src="getThumbnail(draggingElement.media.thumbnail)"
+                        ></ThumbImage>
+                        <DurationIndicator
+                            v-if="draggingElement.media.type === 2 || draggingElement.media.type === 3"
+                            :type="draggingElement.media.type"
+                            :duration="draggingElement.media.duration"
+                        ></DurationIndicator>
+                    </div>
+                    <div v-else-if="draggingElement.album" class="search-result-thumb-inner">
+                        <div v-if="!draggingElement.album.thumbnail" class="no-thumb">
+                            <i class="fas fa-list-ol"></i>
+                        </div>
+                        <ThumbImage
+                            v-if="draggingElement.album.thumbnail"
+                            :src="getThumbnail(draggingElement.album.thumbnail)"
+                        ></ThumbImage>
+                        <div
+                            v-if="draggingElement.album.size == 0"
+                            class="thumb-bottom-right-tag"
+                            :title="$t('Album') + ' - ' + $t('Empty')"
+                        >
+                            <i class="fas fa-list-ol"></i> {{ $t("Empty") }}
+                        </div>
+                        <div
+                            v-else-if="draggingElement.album.size == 1"
+                            class="thumb-bottom-right-tag"
+                            :title="$t('Album') + ' - 1 ' + $t('item')"
+                        >
+                            <i class="fas fa-list-ol"></i> 1 {{ $t("item") }}
+                        </div>
+                        <div
+                            v-else-if="draggingElement.album.size > 1"
+                            class="thumb-bottom-right-tag"
+                            :title="$t('Album') + ' - ' + draggingElement.album.size + ' ' + $t('items')"
+                        >
+                            <i class="fas fa-list-ol"></i> {{ draggingElement.album.size }} {{ $t("items") }}
+                        </div>
+                    </div>
+                    <div v-else class="search-result-thumb-inner">
+                        <div class="no-thumb">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                    </div>
+                    <button v-if="editing" type="button" class="home-page-row-context-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                <div v-if="displayTitles" class="search-result-title">
+                    {{ getTitle(draggingElement) }}
+                </div>
+            </a>
         </div>
 
         <HomePageElementContextMenu
@@ -298,6 +394,10 @@ export default defineComponent({
             loadRequestId: getUniqueStringId(),
 
             isTouchDevice: isTouchDevice(),
+
+            dragCheckInterval: null as ReturnType<typeof setInterval> | null,
+            mouseMoveHandler: null,
+            mouseUpHandler: null,
         };
     },
     data: function () {
@@ -329,6 +429,28 @@ export default defineComponent({
             loadingFiller: Array(this.pageSize)
                 .fill(0)
                 .map((_v, i) => i),
+
+            dragging: false,
+            draggingElement: null as HomePageElement,
+            draggingData: {
+                startX: 0,
+                startY: 0,
+
+                offsetX: 0,
+                offsetY: 0,
+
+                width: 0,
+                height: 0,
+
+                x: 0,
+                y: 0,
+
+                startPosition: -1,
+                movingOver: -1,
+            },
+
+            mouseX: 0,
+            mouseY: 0,
         };
     },
     watch: {
@@ -364,6 +486,21 @@ export default defineComponent({
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
+
+        if (this.dragCheckInterval) {
+            clearInterval(this.dragCheckInterval);
+            this.dragCheckInterval = null;
+        }
+
+        if (this.mouseMoveHandler) {
+            document.removeEventListener("mousemove", this.mouseMoveHandler);
+            this.mouseMoveHandler = null;
+        }
+
+        if (this.mouseUpHandler) {
+            document.removeEventListener("mouseup", this.mouseUpHandler);
+            this.mouseUpHandler = null;
+        }
     },
     methods: {
         checkLoad: function (forced?: boolean) {
@@ -931,6 +1068,208 @@ export default defineComponent({
                     console.error(err);
                     this.load();
                 });
+        },
+
+        onDragStart: function (i: number, event: DragEvent) {
+            if (!this.editing) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const element = this.elements[i];
+
+            if (!element) {
+                return;
+            }
+
+            this.mouseX = event.pageX;
+            this.mouseY = event.pageY;
+
+            const elClickable = this.$el.querySelector(".home-page-row-element-" + i) as HTMLElement;
+
+            if (!elClickable) {
+                return;
+            }
+
+            const target = elClickable.parentElement as HTMLElement;
+
+            if (!target) {
+                return;
+            }
+
+            const targetBounds = target.getBoundingClientRect();
+
+            const startX = event.pageX;
+            const startY = event.pageY;
+
+            const offsetX = startX - targetBounds.left;
+            const offsetY = startY - targetBounds.top;
+
+            this.dragging = true;
+            this.draggingElement = element;
+
+            this.draggingData.startX = startX;
+            this.draggingData.startY = startY;
+
+            this.draggingData.offsetX = offsetX;
+            this.draggingData.offsetY = offsetY;
+
+            this.draggingData.width = targetBounds.width;
+            this.draggingData.height = targetBounds.height;
+
+            this.draggingData.x = startX - offsetX;
+            this.draggingData.y = startY - offsetY;
+
+            this.draggingData.startPosition = i;
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+
+            if (this.mouseMoveHandler) {
+                document.removeEventListener("mousemove", this.mouseMoveHandler);
+                this.mouseMoveHandler = null;
+            }
+
+            if (this.mouseUpHandler) {
+                document.removeEventListener("mouseup", this.mouseUpHandler);
+                this.mouseUpHandler = null;
+            }
+
+            this.mouseMoveHandler = this.onDocumentMouseMove.bind(this);
+            document.addEventListener("mousemove", this.mouseMoveHandler);
+
+            this.mouseUpHandler = this.onDocumentMouseUp.bind(this);
+            document.addEventListener("mouseup", this.mouseUpHandler);
+
+            this.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+
+            this.updateMovingOver();
+        },
+
+        updateMovingOver: function () {
+            const container = this.$el.querySelector(".home-page-row-content") as HTMLElement;
+
+            if (!container) {
+                this.draggingData.movingOver = -1;
+                return;
+            }
+
+            const containerBounds = container.getBoundingClientRect();
+
+            const offsetLeft = containerBounds.left;
+            const scrollLeft = container.scrollLeft || 0;
+
+            const x = this.draggingData.x + Math.round(this.draggingData.width / 2);
+            const y = this.draggingData.y + Math.round(this.draggingData.height / 2);
+
+            if (
+                y + Math.round(this.draggingData.height / 2) < containerBounds.top ||
+                y - Math.round(this.draggingData.height / 2) > containerBounds.top + containerBounds.height
+            ) {
+                this.draggingData.movingOver = -1;
+                return;
+            }
+
+            const width = this.draggingData.width;
+            const expectedIndex = Math.round((x - offsetLeft + scrollLeft) / width);
+
+            this.draggingData.movingOver = Math.min(this.elements.length + 1, Math.max(1, 1 + expectedIndex));
+        },
+
+        onDragCheck: function () {
+            const con = this.$el.querySelector(".home-page-row-content");
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.mouseX >= conBounds.left - this.draggingData.width) {
+                // Auto scroll
+
+                const relTop = (this.mouseX - conBounds.left) / (conBounds.width || 1);
+                const scrollStep = Math.floor(conBounds.width / 20);
+
+                if (relTop <= 0.1) {
+                    con.scrollLeft = Math.max(0, con.scrollLeft - scrollStep);
+                } else if (relTop >= 0.9) {
+                    con.scrollLeft = Math.min(con.scrollWidth - conBounds.width, con.scrollLeft + scrollStep);
+                }
+            }
+
+            this.updateMovingOver();
+        },
+
+        onDocumentMouseMove: function (event: MouseEvent) {
+            if (!this.dragging) {
+                return;
+            }
+
+            if (typeof event.pageX !== "number" || typeof event.pageY !== "number") {
+                return;
+            }
+
+            if (isNaN(event.pageX) || isNaN(event.pageY)) {
+                return;
+            }
+
+            this.mouseX = event.pageX;
+            this.mouseY = event.pageY;
+
+            this.draggingData.x = event.pageX - this.draggingData.offsetX;
+            this.draggingData.y = event.pageY - this.draggingData.offsetY;
+        },
+
+        onDocumentMouseUp: function (event: MouseEvent) {
+            if (!this.dragging) {
+                return;
+            }
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+
+            if (this.mouseMoveHandler) {
+                document.removeEventListener("mousemove", this.mouseMoveHandler);
+                this.mouseMoveHandler = null;
+            }
+
+            if (this.mouseUpHandler) {
+                document.removeEventListener("mouseup", this.mouseUpHandler);
+                this.mouseUpHandler = null;
+            }
+
+            event.stopPropagation();
+
+            this.dragging = false;
+
+            if (!this.draggingElement) {
+                return;
+            }
+
+            const draggingElement = this.draggingElement;
+
+            let position =
+                this.draggingData.movingOver > this.draggingData.startPosition + 1
+                    ? this.draggingData.movingOver - 1
+                    : this.draggingData.movingOver;
+
+            position = Math.max(0, Math.min(this.elements.length, position - 1));
+
+            const startPosition = this.draggingData.startPosition;
+
+            if (startPosition === -1 || position === startPosition) {
+                return;
+            }
+
+            this.doSilentMove(draggingElement, position);
+            this.elements.splice(position, 0, this.elements.splice(startPosition, 1)[0]);
         },
     },
 });
