@@ -246,6 +246,9 @@ func backupFile(entry BackupEntryExtended, tmpFile string, generalProgress int64
 			return false, err
 		}
 
+		// Update the ModTime of the backup file so it matches the original file
+		_ = os.Chtimes(entry.backupFile, fileInfo.ModTime(), fileInfo.ModTime())
+
 		return true, nil
 	} else {
 		return false, nil
