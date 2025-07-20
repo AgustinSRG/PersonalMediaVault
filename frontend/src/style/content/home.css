@@ -251,3 +251,26 @@
 .add-home-element-btn .search-result-thumb-inner {
     background: transparent;
 }
+
+.home-page-row-context-btn {
+    position: absolute;
+    background: var(--bg-opaque-75);
+    color: var(--theme-fg-color);
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    box-shadow: none;
+    border: none;
+    cursor: pointer;
+}
+
+.home-page-row-context-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.home-page-row-context-btn:not(:disabled):hover {
+    color: var(--theme-btn-hover-color);
+}

@@ -213,28 +213,24 @@ export interface HomePageElementRef {
 }
 
 /**
- * Gets references from a list of elements of the home page
- * @param elements The elements
- * @returns The references
+ * Gets reference from an elements of the home page
+ * @param element The element
+ * @returns The reference
  */
-export function getHomePageElementReferences(elements: HomePageElement[]): HomePageElementRef[] {
-    return elements
-        .map((e) => {
-            if (e.media) {
-                return {
-                    t: 0,
-                    i: e.media.id,
-                } as HomePageElementRef;
-            } else if (e.album) {
-                return {
-                    t: 1,
-                    i: e.album.id,
-                } as HomePageElementRef;
-            } else {
-                return null;
-            }
-        })
-        .filter((e) => e !== null);
+export function getHomePageElementReference(element: HomePageElement): HomePageElementRef {
+    if (element.media) {
+        return {
+            t: 0,
+            i: element.media.id,
+        } as HomePageElementRef;
+    } else if (element.album) {
+        return {
+            t: 1,
+            i: element.album.id,
+        } as HomePageElementRef;
+    } else {
+        return null;
+    }
 }
 
 /**

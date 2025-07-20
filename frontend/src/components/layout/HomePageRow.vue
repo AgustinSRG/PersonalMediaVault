@@ -10,7 +10,7 @@
             'fast-transition': fastTransition,
         }"
         :style="{ '--actual-row-size': rowSize + '', '--row-scroll-index': rowIndex + '', top: movingTop, left: movingLeft }"
-        :draggable="!isTouchDevice"
+        :draggable="!isTouchDevice && !movePositionModalDisplay && !displayAddElement && !contextMenuShown"
         tabindex="-1"
         @dragstart="onDrag"
         @keydown="onKeyDown"
@@ -90,6 +90,7 @@
                         rel="noopener noreferrer"
                         @click="goToElement(item, $event)"
                         @focus="focusElementIndex(i)"
+                        @contextmenu="showContextMenu(i, $event)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div v-if="item.media" class="search-result-thumb-inner">
@@ -134,6 +135,16 @@
                                     <i class="fas fa-ban"></i>
                                 </div>
                             </div>
+
+                            <button
+                                v-if="editing"
+                                type="button"
+                                class="home-page-row-context-btn"
+                                :title="$t('Options to modify element')"
+                                @click="showContextMenu(i, $event)"
+                            >
+                                <i class="fas fa-bars"></i>
+                            </button>
                         </div>
                         <div v-if="displayTitles" class="search-result-title">
                             {{ getTitle(item) }}
@@ -173,6 +184,16 @@
             </div>
         </div>
 
+        <HomePageElementContextMenu
+            v-if="contextMenuShown"
+            v-model:shown="contextMenuShown"
+            :element-index="contextMenuSelectedIndex"
+            :x="contextMenuX"
+            :y="contextMenuY"
+            @element-remove="onElementRemove"
+            @change-pos="onChangePositionRequest"
+        ></HomePageElementContextMenu>
+
         <HomePageRowAddElementModal
             v-if="displayAddElement"
             v-model:display="displayAddElement"
@@ -181,12 +202,26 @@
             @must-reload="load"
             @added-element="load"
         ></HomePageRowAddElementModal>
+
+        <HomePageMoveElementModal
+            v-if="movePositionModalDisplay"
+            v-model:display="movePositionModalDisplay"
+            :selected-position="movePositionModalSelectedIndex"
+            :max-position="elements.length - 1"
+            @move-element="onMoveElement"
+        ></HomePageMoveElementModal>
     </div>
 </template>
 
 <script lang="ts">
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
-import { apiHomeGetGroupElements, HomePageGroupTypes } from "@/api/api-home";
+import {
+    apiHomeGetGroupElements,
+    apiHomeGroupDeleteElement,
+    apiHomeGroupMoveElement,
+    getHomePageElementReference,
+    HomePageGroupTypes,
+} from "@/api/api-home";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
@@ -196,7 +231,7 @@ import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
+import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import DurationIndicator from "@/components/utils/DurationIndicator.vue";
@@ -210,12 +245,22 @@ const HomePageRowAddElementModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageRowAddElementModal.vue"),
 });
 
+const HomePageElementContextMenu = defineAsyncComponent({
+    loader: () => import("@/components/layout/HomePageElementContextMenu.vue"),
+});
+
+const HomePageMoveElementModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageMoveElementModal.vue"),
+});
+
 export default defineComponent({
     name: "HomePageRow",
     components: {
         DurationIndicator,
         ThumbImage,
         HomePageRowAddElementModal,
+        HomePageElementContextMenu,
+        HomePageMoveElementModal,
     },
     props: {
         rowSize: Number,
@@ -271,6 +316,14 @@ export default defineComponent({
 
             fastTransition: false,
 
+            contextMenuShown: false,
+            contextMenuSelectedIndex: -1,
+            contextMenuX: 0,
+            contextMenuY: 0,
+
+            movePositionModalDisplay: false,
+            movePositionModalSelectedIndex: -1,
+
             elements: [] as HomePageElement[],
 
             loadingFiller: Array(this.pageSize)
@@ -302,7 +355,10 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_HOME_SCROLL_CHANGED, this.checkLoad.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_HOME_SCROLL_CHANGED, () => {
+            this.contextMenuShown = false;
+            this.checkLoad();
+        });
         this.checkLoad(true);
     },
     beforeUnmount: function () {
@@ -387,6 +443,9 @@ export default defineComponent({
         },
 
         onContentScroll: function () {
+            if (this.contextMenuShown) {
+                this.contextMenuShown = false;
+            }
             if (!this.editing) {
                 const scrollContainer = this.$el.querySelector(".home-page-row-content") as HTMLElement;
                 if (scrollContainer) {
@@ -774,6 +833,104 @@ export default defineComponent({
                     firstRowElement.focus();
                 }
             }
+        },
+
+        showContextMenu: function (i: number, event: MouseEvent) {
+            if (!this.editing) {
+                return;
+            }
+
+            event.preventDefault();
+
+            this.contextMenuSelectedIndex = i;
+            this.contextMenuX = event.pageX;
+            this.contextMenuY = event.pageY;
+            this.contextMenuShown = true;
+        },
+
+        onElementRemove: function (i: number) {
+            const element = this.elements[i];
+
+            if (!element) {
+                return;
+            }
+
+            this.elements.splice(i, 1);
+
+            this.doSilentDelete(element);
+        },
+
+        doSilentDelete: function (element: HomePageElement) {
+            makeApiRequest(apiHomeGroupDeleteElement(this.group.id, getHomePageElementReference(element)))
+                .onSuccess(() => {})
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        accessDenied: () => {
+                            AuthController.CheckAuthStatus();
+                        },
+                        notCustomGroup: () => {
+                            this.$emit("must-reload");
+                        },
+                        notFound: () => {
+                            this.load();
+                        },
+                        temporalError: () => {
+                            this.load();
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    this.load();
+                });
+        },
+
+        onChangePositionRequest: function (i: number) {
+            this.movePositionModalSelectedIndex = i;
+            this.movePositionModalDisplay = true;
+        },
+
+        onMoveElement: function (oldPos: number, newPos: number) {
+            const element = this.elements[oldPos];
+
+            if (!element) {
+                return;
+            }
+
+            this.elements.splice(newPos, 0, this.elements.splice(oldPos, 1)[0]);
+
+            this.doSilentMove(element, newPos);
+        },
+
+        doSilentMove: function (element: HomePageElement, position: number) {
+            makeApiRequest(apiHomeGroupMoveElement(this.group.id, getHomePageElementReference(element), position))
+                .onSuccess(() => {})
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        accessDenied: () => {
+                            AuthController.CheckAuthStatus();
+                        },
+                        notCustomGroup: () => {
+                            this.$emit("must-reload");
+                        },
+                        notFound: () => {
+                            this.load();
+                        },
+                        temporalError: () => {
+                            this.load();
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    this.load();
+                });
         },
     },
 });

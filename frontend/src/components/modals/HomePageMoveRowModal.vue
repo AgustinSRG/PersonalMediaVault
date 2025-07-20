@@ -129,7 +129,9 @@ export default defineComponent({
                 return;
             }
 
-            if (this.currentPos === this.selectedRowPosition) {
+            const position = this.currentPos - 1;
+
+            if (position === this.selectedRowPosition) {
                 this.forceCloseSignal++;
                 return;
             }
@@ -138,7 +140,6 @@ export default defineComponent({
             this.error = "";
 
             const rowId = this.selectedRow;
-            const position = this.currentPos - 1;
 
             makeApiRequest(apiHomeGroupMove(rowId, position))
                 .onSuccess(() => {
