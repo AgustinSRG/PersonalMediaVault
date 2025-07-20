@@ -129,6 +129,11 @@
     transition: none;
 }
 
+.fast-transition .home-page-row-content .search-result-item:first-child,
+.is-min .fast-transition .home-page-row-content .search-result-item:first-child {
+    transition: none;
+}
+
 .page-editing .home-page-row-content .search-result-item:first-child {
     margin-left: 0;
 }

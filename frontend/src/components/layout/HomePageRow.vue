@@ -7,11 +7,13 @@
             'moving-self': movingSelf,
             current: isCurrentGroup,
             customizable: group.type == groupTypeCustom,
+            'fast-transition': fastTransition,
         }"
         :style="{ '--actual-row-size': rowSize + '', '--row-scroll-index': rowIndex + '', top: movingTop, left: movingLeft }"
         :draggable="!isTouchDevice"
         tabindex="-1"
         @dragstart="onDrag"
+        @keydown="onKeyDown"
     >
         <div class="home-page-row-inner">
             <div class="home-page-row-head">
@@ -82,6 +84,7 @@
                 >
                     <a
                         class="clickable"
+                        :class="{ ['home-page-row-element-' + i]: true }"
                         :href="getElementURL(item)"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -266,6 +269,8 @@ export default defineComponent({
 
             displayAddElement: false,
 
+            fastTransition: false,
+
             elements: [] as HomePageElement[],
 
             loadingFiller: Array(this.pageSize)
@@ -284,6 +289,11 @@ export default defineComponent({
             this.checkLoad(true);
         },
         rowSize: function () {
+            this.rowIndex = 0;
+            this.fastTransition = true;
+            nextTick(() => {
+                this.fastTransition = false;
+            });
             this.updateRowSplits();
             this.updateCurrentMedia();
         },
@@ -733,6 +743,37 @@ export default defineComponent({
 
         focusElementIndex: function (i: number) {
             this.rowIndex = Math.floor(i / (this.rowSize || 1));
+        },
+
+        moveFocusToFirstRowElement: function () {
+            const firstRowElementIndex = this.rowIndex * (this.rowSize || 1);
+            const firstRowElement = this.$el.querySelector(".home-page-row-element-" + firstRowElementIndex);
+            if (firstRowElement) {
+                firstRowElement.focus();
+            }
+        },
+
+        onKeyDown: function (event: KeyboardEvent) {
+            if (event.key === "ArrowLeft" || event.key === "PageUp") {
+                event.preventDefault();
+                this.goLeft();
+                this.moveFocusToFirstRowElement();
+            } else if (event.key === "ArrowRight" || event.key === "PageDown") {
+                event.preventDefault();
+                this.goRight();
+                this.moveFocusToFirstRowElement();
+            } else if (event.key === "Home") {
+                event.preventDefault();
+                this.rowIndex = 0;
+                this.moveFocusToFirstRowElement();
+            } else if (event.key === "End") {
+                event.preventDefault();
+                this.rowIndex = this.rowSplitCount - 1;
+                const firstRowElement = this.$el.querySelector(".home-page-row-element-" + (this.elements.length - 1));
+                if (firstRowElement) {
+                    firstRowElement.focus();
+                }
+            }
         },
     },
 });
