@@ -51,7 +51,7 @@
                     @request-move="showMoveRow"
                     @request-delete="showDeleteRow"
                     @start-moving="onStartMoving"
-                    @loaded-current="scrollToCurrentMedia"
+                    @loaded-current="scrollToCurrentRow"
                     @must-reload="load"
                     @updated-prev-next="onPrevNextUpdated"
                 ></HomePageRow>
@@ -687,7 +687,7 @@ export default defineComponent({
                 this.currentGroupLast = -1;
                 PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
 
-                this.scrollToCurrentMedia();
+                this.scrollToCurrentRow();
             }
         },
 
@@ -706,15 +706,6 @@ export default defineComponent({
 
         onScroll: function () {
             AppEvents.Emit(EVENT_NAME_HOME_SCROLL_CHANGED);
-        },
-
-        scrollToCurrentMedia: function () {
-            nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.current");
-                if (currentElem) {
-                    currentElem.scrollIntoView();
-                }
-            });
         },
 
         onPrevNextUpdated: function (
