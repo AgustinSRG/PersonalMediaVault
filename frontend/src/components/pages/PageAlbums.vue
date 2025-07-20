@@ -180,7 +180,7 @@ export default defineComponent({
 
             albumsList: [] as AlbumListItem[],
 
-            filter: this.inModal ? PagesController.AlbumsPageSearch : "",
+            filter: this.inModal ? "" : PagesController.AlbumsPageSearch,
 
             order: "desc",
             searchParams: this.inModal ? "" : AppStatus.SearchParams,
