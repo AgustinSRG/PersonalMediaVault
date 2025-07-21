@@ -143,9 +143,14 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
 import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
-import { apiHomeGetGroups, apiHomeGroupMove, HomePageGroupTypes } from "@/api/api-home";
+import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
 import HomePageRow from "../layout/HomePageRow.vue";
-import { EVENT_NAME_HOME_SCROLL_CHANGED, type HomePageGroupStartMovingData } from "@/utils/home";
+import {
+    doHomePageSilentSaveAction,
+    EVENT_NAME_HOME_SCROLL_CHANGED,
+    HomePageGroupTypes,
+    type HomePageGroupStartMovingData,
+} from "@/utils/home";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 
@@ -207,6 +212,8 @@ export default defineComponent({
 
             initialMovingElements: null as HomePageElement[] | null,
             initialMovingScroll: 0,
+
+            scrollingToCurrent: false,
         };
     },
     data: function () {
@@ -296,6 +303,9 @@ export default defineComponent({
             this.updateActualRowSize();
         },
         maxItemsSize: function () {
+            this.updateActualRowSize();
+        },
+        min: function () {
             this.updateActualRowSize();
         },
     },
@@ -429,6 +439,10 @@ export default defineComponent({
             itemsWidth = Math.max(1, Math.max(itemsWidth, this.minItemsSize || 0));
 
             this.actualRowSize = Math.ceil(this.windowWidth / itemsWidth);
+
+            if (this.currentMedia) {
+                this.scrollToCurrentRow();
+            }
         },
 
         showAddRow: function () {
@@ -650,28 +664,37 @@ export default defineComponent({
         },
 
         doSilentMove: function (rowId: number, position: number) {
-            makeApiRequest(apiHomeGroupMove(rowId, position))
-                .onSuccess(() => {})
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            AuthController.CheckAuthStatus();
-                        },
-                        notFound: () => {
-                            this.load();
-                        },
-                        temporalError: () => {
-                            this.load();
-                        },
+            doHomePageSilentSaveAction((callback) => {
+                makeApiRequest(apiHomeGroupMove(rowId, position))
+                    .onSuccess(() => {
+                        callback();
+                    })
+                    .onCancel(() => {
+                        callback();
+                    })
+                    .onRequestError((err, handleErr) => {
+                        callback();
+                        handleErr(err, {
+                            unauthorized: () => {
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            },
+                            accessDenied: () => {
+                                AuthController.CheckAuthStatus();
+                            },
+                            notFound: () => {
+                                this.load();
+                            },
+                            temporalError: () => {
+                                this.load();
+                            },
+                        });
+                    })
+                    .onUnexpectedError((err) => {
+                        callback();
+                        console.error(err);
+                        this.load();
                     });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    this.load();
-                });
+            });
         },
 
         onAppStatusChanged: function () {
@@ -692,7 +715,12 @@ export default defineComponent({
         },
 
         scrollToCurrentRow: function () {
+            if (this.scrollingToCurrent) {
+                return;
+            }
+            this.scrollingToCurrent = true;
             nextTick(() => {
+                this.scrollingToCurrent = false;
                 const currentElem = this.$el.querySelector(".home-page-row.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();

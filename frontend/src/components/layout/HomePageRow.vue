@@ -65,7 +65,7 @@
             </div>
 
             <div v-else-if="loadDisplay || !firstLoaded" class="home-page-row-content home-page-row-loading">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
+                <div v-for="f in loadingFiller" :key="f" class="search-result-item" :class="{ hidden: !loadDisplay }">
                     <div class="search-result-thumb">
                         <div class="search-result-thumb-inner">
                             <div class="search-result-loader">
@@ -311,18 +311,12 @@
 
 <script lang="ts">
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
-import {
-    apiHomeGetGroupElements,
-    apiHomeGroupDeleteElement,
-    apiHomeGroupMoveElement,
-    getHomePageElementReference,
-    HomePageGroupTypes,
-} from "@/api/api-home";
+import { apiHomeGetGroupElements, apiHomeGroupDeleteElement, apiHomeGroupMoveElement, getHomePageElementReference } from "@/api/api-home";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
-import { EVENT_NAME_HOME_SCROLL_CHANGED, getDefaultGroupName } from "@/utils/home";
+import { doHomePageSilentSaveAction, EVENT_NAME_HOME_SCROLL_CHANGED, getDefaultGroupName, HomePageGroupTypes } from "@/utils/home";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
@@ -513,9 +507,10 @@ export default defineComponent({
 
             const rect = (this.$el as HTMLElement).getBoundingClientRect();
 
-            const visible = rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight);
+            const visibleTop = rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight);
+            const visibleBottom = rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
 
-            if (visible) {
+            if (visibleTop || visibleBottom) {
                 this.loadTriggered = true;
                 this.load();
             }
@@ -998,31 +993,40 @@ export default defineComponent({
         },
 
         doSilentDelete: function (element: HomePageElement) {
-            makeApiRequest(apiHomeGroupDeleteElement(this.group.id, getHomePageElementReference(element)))
-                .onSuccess(() => {})
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            AuthController.CheckAuthStatus();
-                        },
-                        notCustomGroup: () => {
-                            this.$emit("must-reload");
-                        },
-                        notFound: () => {
-                            this.load();
-                        },
-                        temporalError: () => {
-                            this.load();
-                        },
+            doHomePageSilentSaveAction((callback) => {
+                makeApiRequest(apiHomeGroupDeleteElement(this.group.id, getHomePageElementReference(element)))
+                    .onSuccess(() => {
+                        callback();
+                    })
+                    .onCancel(() => {
+                        callback();
+                    })
+                    .onRequestError((err, handleErr) => {
+                        callback();
+                        handleErr(err, {
+                            unauthorized: () => {
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            },
+                            accessDenied: () => {
+                                AuthController.CheckAuthStatus();
+                            },
+                            notCustomGroup: () => {
+                                this.$emit("must-reload");
+                            },
+                            notFound: () => {
+                                this.load();
+                            },
+                            temporalError: () => {
+                                this.load();
+                            },
+                        });
+                    })
+                    .onUnexpectedError((err) => {
+                        callback();
+                        console.error(err);
+                        this.load();
                     });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    this.load();
-                });
+            });
         },
 
         onChangePositionRequest: function (i: number) {
@@ -1043,31 +1047,40 @@ export default defineComponent({
         },
 
         doSilentMove: function (element: HomePageElement, position: number) {
-            makeApiRequest(apiHomeGroupMoveElement(this.group.id, getHomePageElementReference(element), position))
-                .onSuccess(() => {})
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        accessDenied: () => {
-                            AuthController.CheckAuthStatus();
-                        },
-                        notCustomGroup: () => {
-                            this.$emit("must-reload");
-                        },
-                        notFound: () => {
-                            this.load();
-                        },
-                        temporalError: () => {
-                            this.load();
-                        },
+            doHomePageSilentSaveAction((callback) => {
+                makeApiRequest(apiHomeGroupMoveElement(this.group.id, getHomePageElementReference(element), position))
+                    .onSuccess(() => {
+                        callback();
+                    })
+                    .onCancel(() => {
+                        callback();
+                    })
+                    .onRequestError((err, handleErr) => {
+                        callback();
+                        handleErr(err, {
+                            unauthorized: () => {
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            },
+                            accessDenied: () => {
+                                AuthController.CheckAuthStatus();
+                            },
+                            notCustomGroup: () => {
+                                this.$emit("must-reload");
+                            },
+                            notFound: () => {
+                                this.load();
+                            },
+                            temporalError: () => {
+                                this.load();
+                            },
+                        });
+                    })
+                    .onUnexpectedError((err) => {
+                        callback();
+                        console.error(err);
+                        this.load();
                     });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    this.load();
-                });
+            });
         },
 
         onDragStart: function (i: number, event: DragEvent) {

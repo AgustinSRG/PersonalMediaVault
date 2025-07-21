@@ -46,10 +46,13 @@
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
-                <div class="search-results-msg-text">
+                <div v-if="inModal" class="search-results-msg-text">
+                    {{ $t("Could not find any album") }}
+                </div>
+                <div v-else class="search-results-msg-text">
                     {{ $t("This vault does not have any albums yet") }}
                 </div>
-                <div class="search-results-msg-btn">
+                <div v-if="!inModal" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="refreshAlbums">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>

@@ -55,8 +55,8 @@ import { useVModel } from "../../utils/v-model";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { apiHomeAddGroup, HomePageGroupTypes } from "@/api/api-home";
-import { getDefaultGroupName } from "@/utils/home";
+import { apiHomeAddGroup } from "@/api/api-home";
+import { getDefaultGroupName, HomePageGroupTypes } from "@/utils/home";
 
 export default defineComponent({
     name: "HomePageCreateRowModal",

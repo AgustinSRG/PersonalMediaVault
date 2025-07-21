@@ -278,7 +278,6 @@
 .search-result-item.home-element-dragging {
     position: fixed;
     z-index: 9999;
-    background: var(--theme-bg-color);
 }
 
 .home-element-dragging {

@@ -18,7 +18,7 @@
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button
-                v-if="page === 'home' && !homeEditMode && canWrite"
+                v-if="page === 'home' && !homeEditMode && canWrite && !min"
                 type="button"
                 :title="$t('Edit home page')"
                 class="page-header-btn"
@@ -33,7 +33,7 @@
                 class="page-header-btn"
                 @click="homeFinishEdit"
             >
-                <i class="fas fa-check"></i>
+                <LoadingIcon icon="fas fa-check" :loading="savingHome"></LoadingIcon>
             </button>
             <button
                 v-if="page === 'random' || (hasOrderAlbums(page) && order === 'rand')"
@@ -190,9 +190,11 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
+import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_RANDOM_PAGE_REFRESH } from "@/control/pages";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import { waitForHomePageSilentSaveActions } from "@/utils/home";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -245,6 +247,7 @@ const PageSettingsDropdown = defineAsyncComponent({
 export default defineComponent({
     name: "PageContent",
     components: {
+        LoadingIcon,
         PageHome,
         PageMedia,
         PageSearch,
@@ -288,6 +291,7 @@ export default defineComponent({
             pageScroll: 0,
 
             homeEditMode: false,
+            savingHome: false,
         };
     },
     mounted: function () {
@@ -453,7 +457,12 @@ export default defineComponent({
         },
 
         homeFinishEdit: function () {
-            this.homeEditMode = false;
+            this.savingHome = true;
+
+            waitForHomePageSilentSaveActions(() => {
+                this.savingHome = false;
+                this.homeEditMode = false;
+            });
         },
 
         openConfig: function () {

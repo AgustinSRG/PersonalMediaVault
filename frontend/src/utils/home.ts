@@ -3,7 +3,27 @@
 "use strict";
 
 import type { HomePageElement } from "@/api/api-home";
-import { HomePageGroupTypes } from "@/api/api-home";
+import { getUniqueStringId } from "./unique-id";
+
+/**
+ * Types of groups in the home page
+ */
+export const HomePageGroupTypes = {
+    /**
+     * Custom group with custom elements
+     */
+    Custom: 0,
+
+    /**
+     * Recently uploaded media
+     */
+    RecentMedia: 1,
+
+    /**
+     * Recently modified albums
+     */
+    RecentAlbums: 2,
+};
 
 /**
  * Gets the default group name
@@ -41,3 +61,52 @@ export type HomePageGroupStartMovingData = {
     initialElements: HomePageElement[] | null;
     initialScroll: number;
 };
+
+const HomePageSilentSaveActionsStatus = {
+    actions: new Set<string>(),
+    waitCallbacks: [] as (() => void)[],
+};
+
+/**
+ * Waits for all silent save actions to finish in the home page
+ * @param callback The callback
+ */
+export function waitForHomePageSilentSaveActions(callback: () => void) {
+    if (HomePageSilentSaveActionsStatus.actions.size === 0) {
+        callback();
+    } else {
+        HomePageSilentSaveActionsStatus.waitCallbacks.push(callback);
+    }
+}
+
+/**
+ * Performs a silent save action
+ * @param fn The function, it receives a parameter (callback). It must be called after the request is done.
+ */
+export function doHomePageSilentSaveAction(fn: (callback: () => void) => void) {
+    const id = getUniqueStringId();
+
+    HomePageSilentSaveActionsStatus.actions.add(id);
+
+    const callback = () => {
+        HomePageSilentSaveActionsStatus.actions.delete(id);
+
+        if (HomePageSilentSaveActionsStatus.actions.size === 0) {
+            for (const cb of HomePageSilentSaveActionsStatus.waitCallbacks) {
+                try {
+                    cb();
+                } catch (ex) {
+                    console.error(ex);
+                }
+            }
+            HomePageSilentSaveActionsStatus.waitCallbacks = [];
+        }
+    };
+
+    try {
+        fn(callback);
+    } catch (ex) {
+        console.error(ex);
+        callback();
+    }
+}

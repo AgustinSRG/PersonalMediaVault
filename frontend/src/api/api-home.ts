@@ -11,26 +11,6 @@ import type { ProvidedAuthConfirmation } from "./api-auth";
 const API_GROUP_PREFIX = "/home";
 
 /**
- * Types of groups in the home page
- */
-export const HomePageGroupTypes = {
-    /**
-     * Custom group with custom elements
-     */
-    Custom: 0,
-
-    /**
-     * Recently uploaded media
-     */
-    RecentMedia: 1,
-
-    /**
-     * Recently modified albums
-     */
-    RecentAlbums: 2,
-};
-
-/**
  * A group in the home page
  */
 export interface HomePageGroup {

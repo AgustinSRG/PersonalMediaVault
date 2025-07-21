@@ -149,15 +149,13 @@ export class AppStatus {
 
         if (AppStatus.CurrentPage === "random") {
             AppStatus.RandomSeed = Math.floor(parseInt(getParameterByName("seed") || "0", 10)) || Date.now();
-        } else if (AppStatus.CurrentPage === "home") {
+        } else if (AppStatus.CurrentPage === "home" && AppStatus.CurrentMedia >= 0) {
             const group = getParameterByName("g");
             if (group) {
                 const groupId = parseInt(group);
 
                 if (!isNaN(groupId) && groupId >= 0) {
                     AppStatus.CurrentHomePageGroup = groupId;
-                } else {
-                    AppStatus.CurrentHomePageGroup = -1;
                 }
             }
         }
@@ -252,7 +250,7 @@ export class AppStatus {
         }
 
         if (AppStatus.CurrentPage === "home") {
-            if (AppStatus.CurrentHomePageGroup >= 0) {
+            if (AppStatus.CurrentHomePageGroup >= 0 && AppStatus.CurrentMedia >= 0) {
                 params["g"] = AppStatus.CurrentHomePageGroup + "";
             }
         }
