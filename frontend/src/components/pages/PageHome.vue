@@ -427,6 +427,7 @@ export default defineComponent({
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
             this.updateActualRowSize();
+            this.onScroll();
         },
 
         updateActualRowSize: function () {
