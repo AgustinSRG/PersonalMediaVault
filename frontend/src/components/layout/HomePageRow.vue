@@ -64,6 +64,19 @@
                 </div>
             </div>
 
+            <div v-else-if="!visible" class="home-page-row-content home-page-row-loading">
+                <div v-for="f in loadingFiller.slice(0, 1)" :key="f" class="search-result-item hidden">
+                    <div class="search-result-thumb">
+                        <div class="search-result-thumb-inner">
+                            <div class="search-result-loader">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
+                </div>
+            </div>
+
             <div v-else-if="loadDisplay || !firstLoaded" class="home-page-row-content home-page-row-loading">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item" :class="{ hidden: !loadDisplay }">
                     <div class="search-result-thumb">
@@ -396,6 +409,8 @@ export default defineComponent({
     },
     data: function () {
         return {
+            visible: false,
+
             loadTriggered: false,
 
             rowIndex: 0,
@@ -497,20 +512,52 @@ export default defineComponent({
         }
     },
     methods: {
+        unload: function () {
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
+            this.loadTriggered = false;
+            this.loading = true;
+            this.firstLoaded = false;
+            this.elements = [];
+        },
+
         checkLoad: function (forced?: boolean) {
+            const container = this.$el.parentElement?.parentElement?.parentElement as HTMLElement;
+
+            if (!container) {
+                return;
+            }
+
+            const containerBounds = container.getBoundingClientRect();
+            const rowBounds = (this.$el as HTMLElement).getBoundingClientRect();
+
+            const graceSize = rowBounds.height / 2;
+
+            const visibleTop = rowBounds.top >= containerBounds.top - graceSize && rowBounds.top <= containerBounds.bottom + graceSize;
+            const visibleBottom =
+                rowBounds.bottom >= containerBounds.top - graceSize && rowBounds.bottom <= containerBounds.bottom + graceSize;
+
+            const visible = visibleTop || visibleBottom;
+
+            this.visible = visible;
+
             if (this.loadTriggered) {
                 if (forced) {
                     this.load();
+                } else {
+                    const outOfReach =
+                        !visible &&
+                        Math.abs(containerBounds.top + containerBounds.height / 2 - (rowBounds.top + rowBounds.height / 2)) >
+                            containerBounds.height * 2;
+
+                    if (outOfReach) {
+                        this.unload();
+                    }
                 }
                 return;
             }
 
-            const rect = (this.$el as HTMLElement).getBoundingClientRect();
-
-            const visibleTop = rect.top >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight);
-            const visibleBottom = rect.bottom >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
-
-            if (visibleTop || visibleBottom) {
+            if (visible) {
                 this.loadTriggered = true;
                 this.load();
             }
