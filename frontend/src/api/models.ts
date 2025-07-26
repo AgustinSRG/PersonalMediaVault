@@ -422,6 +422,11 @@ export interface MediaData {
      * List of time slices
      */
     time_slices: MediaTimeSlice[];
+
+    /**
+     * List of related media
+     */
+    related?: MediaListItem[];
 }
 
 /**

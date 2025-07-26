@@ -193,6 +193,32 @@ export function apiMediaChangeExtraParams(
 }
 
 /**
+ * Changes related media list
+ * @param id Media ID
+ * @param related Related media list
+ * @returns The request parameters
+ */
+export function apiMediaChangeRelatedMedia(id: number, related: number[]): RequestParams<void, ChangeExtraParamsErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/related`),
+        json: {
+            related,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
  * Error handler for edit time slices API
  */
 export type ChangeTimeSlicesErrorHandler = MediaEditApiErrorHandler & {
