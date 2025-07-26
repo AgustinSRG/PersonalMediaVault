@@ -54,7 +54,7 @@ func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPII
 
 	wg.Add(len(list))
 
-	for i := 0; i < len(list); i++ {
+	for i := range list {
 		go GetMediaMinInfoListTask(list, session, result, i, wg)
 	}
 
@@ -138,6 +138,8 @@ type MediaAPIMetaResponse struct {
 	ImageNotesURL string `json:"img_notes_url"`
 
 	ExtendedDescriptionURL string `json:"ext_desc_url"`
+
+	Related []*MediaListAPIItem `json:"related"`
 }
 
 func api_getMedia(response http.ResponseWriter, request *http.Request) {
@@ -371,6 +373,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 
 	result.ForceStartBeginning = meta.ForceStartBeginning
 	result.IsAnimation = meta.IsAnimation
+
+	// Related media
+
+	if len(meta.Related) > 0 {
+		result.Related = GetMediaMinInfoList(meta.Related, session)
+	}
 
 	// Time slices
 
@@ -897,6 +905,102 @@ func api_editMediaExtraParams(response http.ResponseWriter, request *http.Reques
 	if p.IsAnimation != nil {
 		meta.IsAnimation = *p.IsAnimation
 	}
+
+	err = media.EndWrite(meta, session.key, false)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	response.WriteHeader(200)
+}
+
+type MediaAPIEditRelated struct {
+	Related []uint64 `json:"related"`
+}
+
+func api_editMediaRelated(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	if !session.CanWrite() {
+		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
+		return
+	}
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p MediaAPIEditRelated
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	newRelatedList := make([]uint64, 0)
+	relatedSet := make(map[uint64]bool)
+
+	for _, m := range p.Related {
+		if relatedSet[m] {
+			continue
+		}
+
+		newRelatedList = append(newRelatedList, m)
+
+		relatedSet[m] = true
+	}
+
+	if len(newRelatedList) == 0 {
+		newRelatedList = nil
+	}
+
+	vars := mux.Vars(request)
+
+	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta, err := media.StartWrite(session.key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+		GetVault().media.ReleaseMediaResource(media_id)
+		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
+		return
+	}
+
+	meta.Related = newRelatedList
 
 	err = media.EndWrite(meta, session.key, false)
 

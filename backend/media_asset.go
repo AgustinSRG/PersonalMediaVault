@@ -140,6 +140,8 @@ type MediaMetadata struct {
 
 	HasExtendedDescription   bool   `json:"ext_desc,omitempty"`       // True to indicate the asset has extended description
 	ExtendedDescriptionAsset uint64 `json:"ext_desc_asset,omitempty"` // Asset where the extended description is stored
+
+	Related []uint64 `json:"related,omitempty"` // List of IDs of related media assets
 }
 
 // Creates a new media asset. Creates the folder and stores the initial metadata.

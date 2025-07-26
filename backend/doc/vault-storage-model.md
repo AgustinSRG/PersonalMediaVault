@@ -224,6 +224,7 @@ The file contains the following fields:
 | `time_splits`           | Array&lt;TimeSplit&gt;                        | List of time splits for videos or audios                                                                                      |
 | `audio_tracks`          | Array&lt;AudioTrack&gt;                       | List of extra audio tracks for videos                                                                                         |
 | `attachments`           | Array&lt;Attachment&gt;                       | List of attachments stored with the media asset                                                                               |
+| `related`               | Array&lt;Number (64 bit unsigned integer)&gt; | List of IDs of related media assets                                                                                           |
 
 The `Resolution` object has the following fields:
 

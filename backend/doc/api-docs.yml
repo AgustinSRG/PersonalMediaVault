@@ -926,6 +926,11 @@ paths:
                     name:
                       type: string
                       description: "Name of the time slice"
+              related:
+                type: array
+                items:
+                  $ref: '#/definitions/MediaListItem'
+
                 
   "/api/media/{id}/albums":
     get:
@@ -1068,7 +1073,6 @@ paths:
         200:
           description: Success
           
-          
   "/api/media/{id}/edit/description":
     post:
       summary: Changes media description.
@@ -1153,6 +1157,48 @@ paths:
       responses:
         400:
           description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/media/{id}/edit/related":
+    post:
+      summary: Changes related media.
+      description: Changes the related media list for a media asset.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: title
+          schema:
+            properties:
+              related:
+                type: array
+                description: List of related media IDs
+                items:
+                  type: number
+                  format: int64
+                  description: "Related media ID"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request (Invalid related media list).
         401:
           description: Unauthorized (No valid session)
         403:

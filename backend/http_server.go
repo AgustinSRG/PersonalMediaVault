@@ -182,6 +182,7 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/notes", api_setImageNotes).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/ext_desc", api_setExtendedDescription).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/time_slices", api_editMediaTimelineSplices).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/related", api_editMediaRelated).Methods("POST")
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
 
