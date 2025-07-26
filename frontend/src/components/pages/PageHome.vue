@@ -149,6 +149,7 @@ import HomePageRow from "../layout/HomePageRow.vue";
 import {
     doHomePageSilentSaveAction,
     EVENT_NAME_HOME_SCROLL_CHANGED,
+    getHomePageBackStatePage,
     HomePageGroupTypes,
     type HomePageGroupStartMovingData,
 } from "@/utils/home";
@@ -726,6 +727,20 @@ export default defineComponent({
                 return;
             }
             this.scrollingToCurrent = true;
+
+            const backState = getHomePageBackStatePage();
+
+            if (backState !== null && this.currentGroup === -1) {
+                nextTick(() => {
+                    this.scrollingToCurrent = false;
+                    const currentElem = this.$el.querySelector(".home-page-row-" + backState);
+                    if (currentElem) {
+                        currentElem.scrollIntoView();
+                    }
+                });
+                return;
+            }
+
             nextTick(() => {
                 this.scrollingToCurrent = false;
                 const currentElem = this.$el.querySelector(".home-page-row.current");

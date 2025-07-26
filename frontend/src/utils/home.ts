@@ -110,3 +110,61 @@ export function doHomePageSilentSaveAction(fn: (callback: () => void) => void) {
         callback();
     }
 }
+
+const HomePageBackState = {
+    hasState: false,
+    group: -1,
+    elementIndex: -1,
+
+    receivedPage: false,
+    receivedRow: false,
+};
+
+/**
+ * Sets home page back state
+ * @param group
+ * @param elementIndex
+ */
+export function setHomePageBackState(group: number, elementIndex: number) {
+    HomePageBackState.hasState = true;
+    HomePageBackState.group = group;
+    HomePageBackState.elementIndex = elementIndex;
+    HomePageBackState.receivedPage = false;
+    HomePageBackState.receivedRow = false;
+}
+
+/**
+ * Gets back state for the page
+ * @returns The group ID
+ */
+export function getHomePageBackStatePage(): number | null {
+    if (!HomePageBackState.hasState) {
+        return null;
+    }
+
+    HomePageBackState.receivedPage = true;
+
+    if (HomePageBackState.receivedRow) {
+        HomePageBackState.hasState = false;
+    }
+
+    return HomePageBackState.group;
+}
+
+/**
+ * Gets the back state for the row
+ * @returns The element index
+ */
+export function getHomePageBackStateRow(groupId: number): number | null {
+    if (!HomePageBackState.hasState || HomePageBackState.group !== groupId) {
+        return null;
+    }
+
+    HomePageBackState.receivedRow = true;
+
+    if (HomePageBackState.receivedPage) {
+        HomePageBackState.hasState = false;
+    }
+
+    return HomePageBackState.elementIndex;
+}

@@ -10,6 +10,7 @@
             current: isCurrentGroup,
             customizable: group.type == groupTypeCustom,
             'fast-transition': fastTransition,
+            ['home-page-row-' + group.id]: true,
         }"
         :style="{ '--actual-row-size': rowSize + '', '--row-scroll-index': rowIndex + '', top: movingTop, left: movingLeft }"
         tabindex="-1"
@@ -116,7 +117,7 @@
                         :href="getElementURL(item)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        @click="goToElement(item, $event)"
+                        @click="goToElement(item, i, $event)"
                         @focus="focusElementIndex(i)"
                         @contextmenu="showContextMenu(i, $event)"
                         @dragstart="onDragStart(i, $event)"
@@ -337,7 +338,14 @@ import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
-import { doHomePageSilentSaveAction, EVENT_NAME_HOME_SCROLL_CHANGED, getDefaultGroupName, HomePageGroupTypes } from "@/utils/home";
+import {
+    doHomePageSilentSaveAction,
+    EVENT_NAME_HOME_SCROLL_CHANGED,
+    getDefaultGroupName,
+    getHomePageBackStateRow,
+    HomePageGroupTypes,
+    setHomePageBackState,
+} from "@/utils/home";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime } from "@/utils/time";
 import { isTouchDevice } from "@/utils/touch";
@@ -610,6 +618,12 @@ export default defineComponent({
             this.loadDisplay = false;
 
             this.rowIndex = 0;
+
+            const backState = getHomePageBackStateRow(this.group.id);
+
+            if (backState !== null) {
+                this.rowIndex = Math.floor(backState / (this.rowSize || 1));
+            }
 
             this.updateRowSplits();
             this.updateCurrentMedia();
@@ -886,7 +900,7 @@ export default defineComponent({
             this.$emit("start-moving", this.group, data);
         },
 
-        goToElement: function (element: HomePageElement, e?: Event) {
+        goToElement: function (element: HomePageElement, i: number, e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -898,6 +912,7 @@ export default defineComponent({
             if (element.media) {
                 AppStatus.ClickOnMedia(element.media.id, true, this.group.id);
             } else if (element.album) {
+                setHomePageBackState(this.group.id, i);
                 AppStatus.ClickOnAlbum(element.album.id);
             }
         },
