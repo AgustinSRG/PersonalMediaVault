@@ -330,3 +330,13 @@
     transition: none;
     margin-left: 0;
 }
+
+.home-page-element-thumb-pos {
+    position: absolute;
+    background: var(--bg-opaque-75);
+    color: var(--theme-fg-color);
+    top: 0.25rem;
+    left: 0.25rem;
+    font-size: small;
+    padding: 0.25rem;
+}

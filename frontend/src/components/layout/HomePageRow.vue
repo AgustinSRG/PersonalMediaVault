@@ -166,6 +166,10 @@
                                 </div>
                             </div>
 
+                            <div v-if="editing" class="home-page-element-thumb-pos">
+                                {{ i + 1 }}
+                            </div>
+
                             <button
                                 v-if="editing"
                                 type="button"
@@ -291,6 +295,9 @@
                         <div class="no-thumb">
                             <i class="fas fa-ban"></i>
                         </div>
+                    </div>
+                    <div v-if="editing" class="home-page-element-thumb-pos">
+                        {{ draggingData.startPosition + 1 }}
                     </div>
                     <button v-if="editing" type="button" class="home-page-row-context-btn">
                         <i class="fas fa-bars"></i>
