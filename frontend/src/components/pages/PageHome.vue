@@ -47,6 +47,7 @@
                     :tag-version="tagVersion"
                     :is-current-group="currentGroup == g.id"
                     :load-tick="loadTick"
+                    :is-mobile-size="isMobileSize"
                     @request-rename="showRenameRow"
                     @request-move="showMoveRow"
                     @request-delete="showDeleteRow"
@@ -178,6 +179,8 @@ const HomePageDeleteRowModal = defineAsyncComponent({
     delay: 200,
 });
 
+const WINDOW_MOBILE_SIZE = 600;
+
 export default defineComponent({
     name: "PageHome",
     components: {
@@ -226,6 +229,8 @@ export default defineComponent({
             loadTick: 0,
 
             windowWidth: 0,
+
+            isMobileSize: document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE,
 
             canWrite: AuthController.CanWrite,
 
@@ -426,6 +431,7 @@ export default defineComponent({
 
         updateWindowWidth: function () {
             this.windowWidth = this.$el.getBoundingClientRect().width;
+            this.isMobileSize = document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE;
             this.updateActualRowSize();
             this.onScroll();
         },

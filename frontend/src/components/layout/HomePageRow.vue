@@ -3,6 +3,8 @@
         class="home-page-row"
         :class="{
             moving: moving,
+            expanded: expanded,
+            mobile: isMobileSize,
             'moving-over': movingOver,
             'moving-self': movingSelf,
             current: isCurrentGroup,
@@ -16,7 +18,7 @@
         <div class="home-page-row-inner">
             <div
                 class="home-page-row-head"
-                :draggable="!isTouchDevice && !movePositionModalDisplay && !displayAddElement && !contextMenuShown"
+                :draggable="!isTouchDevice && !isMobileSize && !movePositionModalDisplay && !displayAddElement && !contextMenuShown"
                 @dragstart="onDrag"
             >
                 <div class="home-page-row-title" :title="getGroupName(group)">{{ getGroupName(group) }}</div>
@@ -214,6 +216,12 @@
                     </button>
                 </div>
             </div>
+
+            <div v-if="!editing && isMobileSize && !expanded" class="home-page-row-go-bottom">
+                <button type="button" class="home-page-row-go-button home-page-row-expand-button" :title="$t('Expand')" @click="expandRow">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
         </div>
 
         <div
@@ -366,6 +374,8 @@ export default defineComponent({
         HomePageMoveElementModal,
     },
     props: {
+        isMobileSize: Boolean,
+
         rowSize: Number,
 
         pageSize: Number,
@@ -460,6 +470,8 @@ export default defineComponent({
 
             mouseX: 0,
             mouseY: 0,
+
+            expanded: false,
         };
     },
     watch: {
@@ -470,6 +482,7 @@ export default defineComponent({
             this.checkLoad(true);
         },
         loadTick: function () {
+            this.expanded = false;
             this.checkLoad(true);
         },
         rowSize: function () {
@@ -847,7 +860,7 @@ export default defineComponent({
                 return;
             }
 
-            if (isTouchDevice()) {
+            if (isTouchDevice() || this.isMobileSize) {
                 return;
             }
 
@@ -1330,6 +1343,10 @@ export default defineComponent({
 
             this.doSilentMove(draggingElement, position);
             this.elements.splice(position, 0, this.elements.splice(startPosition, 1)[0]);
+        },
+
+        expandRow: function () {
+            this.expanded = true;
         },
     },
 });
