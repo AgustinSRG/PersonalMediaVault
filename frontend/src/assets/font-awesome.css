@@ -458,8 +458,8 @@
     font-display: block;
     font-weight: 400;
     src:
-        url("../webfonts/fa-brands-400.woff2") format("woff2"),
-        url("../webfonts/fa-brands-400.ttf") format("truetype");
+        url("./fa-brands-400.woff2") format("woff2"),
+        url("./fa-brands-400.ttf") format("truetype");
 }
 
 @font-face {

@@ -121,9 +121,15 @@ function main() {
     for (const file of filesToCheck) {
         const fileContents = FS.readFileSync(file).toString();
 
-        const matches = fileContents.match(/(\s|\n|\t|\"|\')?((fas)|(far)|(fab)|(fa\-[a-z0-9\-]+))(\s|\n|\t|\"|\')/g) || [];
+        const matchesBase = fileContents.match(/(\s|\n|\t|"|')((fas)|(far)|(fab))(\s|\n|\t|\"|\')/g) || [];
 
-        for (let match of matches) {
+        for (let match of matchesBase) {
+            usages.add(match.replace(/[^a-z0-9\-]+/g, ""));
+        }
+
+        const matchesIcons = fileContents.match(/(\s|\n|\t|"|')((fa\-[a-z0-9\-]+))(\s|\n|\t|\"|\')/g) || [];
+
+        for (let match of matchesIcons) {
             usages.add(match.replace(/[^a-z0-9\-]+/g, ""));
         }
     }
@@ -180,7 +186,7 @@ function main() {
         } else if (!entry.isMedia && !entry.isKeyFrames) {
             const cssLines = entry.css.split("\n");
 
-            if (cssLines[0].trim().endsWith("::before {")) {
+            if ((cssLines[1] || "").trim().startsWith("--fa:")) {
                 const hexCode = ((cssLines[1] + "").split(":").pop().split('"')[1] + "").substring(1);
                 const n = parseInt(hexCode, 16);
                 if (!isNaN(n)) {
