@@ -390,5 +390,5 @@ export function clearPagePreferences() {
     clearLocalStorage(LS_KEY_THEME);
     AppEvents.Emit(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
 
-    ["home", "media", "random", "search", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
+    ["home", "media", "random", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
 }

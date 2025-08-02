@@ -325,15 +325,22 @@ export default defineComponent({
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
+
+            let mustLoad = false;
+
             if (AppStatus.CurrentSearch !== this.search) {
                 this.search = AppStatus.CurrentSearch;
-                this.load();
+                mustLoad = true;
             }
 
             if (AppStatus.SearchParams !== this.searchParams || AppStatus.RandomSeed !== this.seed) {
                 this.seed = AppStatus.RandomSeed;
                 this.searchParams = AppStatus.SearchParams;
                 this.updateSearchParams();
+                mustLoad = true;
+            }
+
+            if (mustLoad) {
                 this.load();
             }
 

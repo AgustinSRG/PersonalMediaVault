@@ -32,33 +32,6 @@
 
             <a
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'media' }"
-                :title="$t('Media')"
-                :href="getPageURL('media')"
-                target="_blank"
-                rel="noopener noreferrer"
-                @click="goToPage('media', $event)"
-            >
-                <div class="side-bar-option-icon"><i class="fas fa-photo-film"></i></div>
-                <div class="side-bar-option-text">{{ $t("Media") }}</div>
-            </a>
-
-            <a
-                v-if="!!search"
-                class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'search' }"
-                :title="$t('Search results')"
-                :href="getPageURL('search')"
-                target="_blank"
-                rel="noopener noreferrer"
-                @click="goToPage('search', $event)"
-            >
-                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
-                <div class="side-bar-option-text">{{ $t("Search results") }}</div>
-            </a>
-
-            <a
-                class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'albums' }"
                 :title="$t('Albums')"
                 :href="getPageURL('albums', cachedAlbumsSearchParams)"
@@ -71,17 +44,29 @@
             </a>
 
             <a
-                v-if="canWrite"
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'upload' }"
-                :title="$t('Upload')"
-                :href="getPageURL('upload')"
+                :class="{ selected: album < 0 && page === 'media' }"
+                :title="$t('Media')"
+                :href="getPageURL('media')"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToPage('upload', $event)"
+                @click="goToPage('media', $event)"
             >
-                <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
-                <div class="side-bar-option-text">{{ $t("Upload") }}</div>
+                <div class="side-bar-option-icon"><i class="fas fa-photo-film"></i></div>
+                <div class="side-bar-option-text">{{ $t("Media") }}</div>
+            </a>
+
+            <a
+                class="side-bar-option"
+                :class="{ selected: album < 0 && page === 'adv-search' }"
+                :title="$t('Find media')"
+                :href="getPageURL('adv-search')"
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="goToPage('adv-search', $event)"
+            >
+                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
+                <div class="side-bar-option-text">{{ $t("Find media") }}</div>
             </a>
 
             <a
@@ -98,16 +83,17 @@
             </a>
 
             <a
+                v-if="canWrite"
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'adv-search' }"
-                :title="$t('Advanced search')"
-                :href="getPageURL('adv-search')"
+                :class="{ selected: album < 0 && page === 'upload' }"
+                :title="$t('Upload')"
+                :href="getPageURL('upload')"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToPage('adv-search', $event)"
+                @click="goToPage('upload', $event)"
             >
-                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
-                <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
+                <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
+                <div class="side-bar-option-text">{{ $t("Upload") }}</div>
             </a>
 
             <div v-if="albumsFavorite.length > 0" class="side-bar-separator"></div>

@@ -24,7 +24,7 @@
                 </div>
             </div>
 
-            <div v-if="!loading && total <= 0 && firstLoaded" class="search-results-msg-display">
+            <div v-if="!loading && total <= 0 && !search && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
@@ -33,6 +33,26 @@
                 </div>
                 <div class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
+            </div>
+
+            <div v-if="!loading && total <= 0 && search && firstLoaded" class="search-results-msg-display">
+                <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
+                <div class="search-results-msg-text">
+                    {{ $t("Could not find any result") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="clearSearch">
+                        <i class="fas fa-times"></i> {{ $t("Clear search") }}
+                    </button>
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="goAdvancedSearch">
+                        <i class="fas fa-search"></i> {{ $t("Advanced search") }}
+                    </button>
                 </div>
             </div>
 
@@ -249,7 +269,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch("", this.order, this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch(this.search || "", this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
                     TagsController.OnMediaListReceived(result.page_items);
                     this.pageItems = result.page_items;
@@ -311,14 +331,28 @@ export default defineComponent({
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
+
+            let mustLoad = false;
+
+            if (AppStatus.CurrentSearch !== this.search) {
+                this.search = AppStatus.CurrentSearch;
+                mustLoad = true;
+            }
+
             if (AppStatus.SearchParams !== this.searchParams) {
                 this.searchParams = AppStatus.SearchParams;
                 this.updateSearchParams();
                 this.load();
             }
+
+            if (mustLoad) {
+                this.load();
+            }
+
             if (changed) {
                 this.scrollToCurrentMedia();
             }
+
             this.onCurrentMediaChanged();
         },
 
@@ -385,6 +419,14 @@ export default defineComponent({
 
         getThumbnail(thumb: string) {
             return getAssetURL(thumb);
+        },
+
+        clearSearch: function () {
+            AppStatus.ClearSearch();
+        },
+
+        goAdvancedSearch: function () {
+            AppStatus.GoToPage("adv-search");
         },
 
         findCurrentMediaIndex: function (): number {

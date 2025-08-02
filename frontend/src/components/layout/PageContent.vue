@@ -18,6 +18,15 @@
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button
+                v-if="(page === 'home' || (page === 'media' && !search)) && canWrite"
+                type="button"
+                :title="$t('Upload')"
+                class="page-header-btn"
+                @click="uploadMedia"
+            >
+                <i class="fas fa-upload"></i>
+            </button>
+            <button
                 v-if="page === 'home' && !homeEditMode && canWrite && !min"
                 type="button"
                 :title="$t('Edit home page')"
@@ -129,17 +138,6 @@
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
         ></PageMedia>
-        <PageSearch
-            v-if="isDisplayed && page === 'search'"
-            :display="isDisplayed && page === 'search'"
-            :min="min"
-            :page-size="pageSize"
-            :display-titles="displayTitles"
-            :row-size="rowSize"
-            :row-size-min="rowSizeMin"
-            :min-items-size="minItemSize"
-            :max-items-size="maxItemSize"
-        ></PageSearch>
         <PageUpload v-if="isDisplayed && page === 'upload'" :display="isDisplayed && page === 'upload'"></PageUpload>
         <PageRandom
             v-if="isDisplayed && page === 'random'"
@@ -208,12 +206,6 @@ const PageMedia = defineAsyncComponent({
     delay: 200,
 });
 
-const PageSearch = defineAsyncComponent({
-    loader: () => import("@/components/pages/PageSearch.vue"),
-    loadingComponent: LoadingOverlay,
-    delay: 200,
-});
-
 const PageUpload = defineAsyncComponent({
     loader: () => import("@/components/pages/PageUpload.vue"),
     loadingComponent: LoadingOverlay,
@@ -250,7 +242,6 @@ export default defineComponent({
         LoadingIcon,
         PageHome,
         PageMedia,
-        PageSearch,
         PageAlbums,
         PageUpload,
         PageRandom,
@@ -343,7 +334,6 @@ export default defineComponent({
             switch (p) {
                 case "home":
                 case "media":
-                case "search":
                 case "adv-search":
                 case "albums":
                 case "random":
@@ -356,7 +346,6 @@ export default defineComponent({
         hasOrderDate: function (p: string): boolean {
             switch (p) {
                 case "media":
-                case "search":
                     return true;
                 default:
                     return false;
@@ -372,22 +361,20 @@ export default defineComponent({
             }
         },
 
-        renderTitle: function (p, s) {
+        renderTitle: function (p: string, s: string): string {
             switch (p) {
                 case "home":
                     return this.$t("Home");
                 case "media":
-                    return this.$t("Media");
-                case "search":
-                    return this.$t("Search results") + ": " + s;
+                    return this.$t("Media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
                 case "adv-search":
-                    return this.$t("Advanced search");
+                    return this.$t("Find media");
                 case "upload":
                     return this.$t("Upload media");
                 case "albums":
                     return this.$t("Albums list");
                 case "random":
-                    return this.$t("Random results");
+                    return this.$t("Random media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
                 default:
                     return "";
             }
@@ -399,7 +386,6 @@ export default defineComponent({
                     return "fas fa-home";
                 case "media":
                     return "fas fa-photo-film";
-                case "search":
                 case "adv-search":
                     return "fas fa-search";
                 case "upload":
@@ -505,6 +491,10 @@ export default defineComponent({
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.stopPropagation();
             }
+        },
+
+        uploadMedia: function () {
+            AppStatus.GoToPageConditionalSplit("upload");
         },
     },
 });

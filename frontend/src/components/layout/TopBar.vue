@@ -557,7 +557,7 @@ export default defineComponent({
                         window.location.host +
                         window.location.pathname +
                         generateURIQuery({
-                            page: "search",
+                            page: "media",
                             search: s.name,
                         })
                     );
