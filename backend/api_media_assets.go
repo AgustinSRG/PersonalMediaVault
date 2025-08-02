@@ -122,6 +122,8 @@ func api_handleAssetGet(response http.ResponseWriter, request *http.Request) {
 	s, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, session.key, FILE_PERMISSION)
 
 	if err != nil {
+		LogDebug("Error reading asset file (" + asset_path + "): " + err.Error())
+
 		asset_lock.EndRead()
 		media.ReleaseAsset(asset_id)
 		GetVault().media.ReleaseMediaResource(media_id)
