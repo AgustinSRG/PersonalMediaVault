@@ -3,19 +3,13 @@
     font-weight: var(--fa-style, 900);
 }
 
-.fa,
 .fas,
-.fa-solid,
 .far,
-.fa-regular,
-.fal,
-.fa-light,
-.fat,
-.fa-thin,
-.fad,
-.fa-duotone,
 .fab,
-.fa-brands {
+.fa-solid,
+.fa-regular,
+.fa-brands,
+.fa {
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     display: var(--fa-display, inline-block);
@@ -25,18 +19,30 @@
     text-rendering: auto;
 }
 
+.fas::before,
+.far::before,
+.fab::before,
+.fa-solid::before,
+.fa-regular::before,
+.fa-brands::before,
+.fa::before {
+    content: var(--fa);
+}
+
+.fa-classic,
+.fas,
+.fa-solid,
+.far,
+.fa-regular {
+    font-family: "Font Awesome 6 Free";
+}
+
 .fa-spin {
-    -webkit-animation-name: fa-spin;
     animation-name: fa-spin;
-    -webkit-animation-delay: var(--fa-animation-delay, 0);
-    animation-delay: var(--fa-animation-delay, 0);
-    -webkit-animation-direction: var(--fa-animation-direction, normal);
+    animation-delay: var(--fa-animation-delay, 0s);
     animation-direction: var(--fa-animation-direction, normal);
-    -webkit-animation-duration: var(--fa-animation-duration, 2s);
     animation-duration: var(--fa-animation-duration, 2s);
-    -webkit-animation-iteration-count: var(--fa-animation-iteration-count, infinite);
     animation-iteration-count: var(--fa-animation-iteration-count, infinite);
-    -webkit-animation-timing-function: var(--fa-animation-timing, linear);
     animation-timing-function: var(--fa-animation-timing, linear);
 }
 
@@ -50,369 +56,357 @@
     .fa-shake,
     .fa-spin,
     .fa-spin-pulse {
-        -webkit-animation-delay: -1ms;
         animation-delay: -1ms;
-        -webkit-animation-duration: 1ms;
         animation-duration: 1ms;
-        -webkit-animation-iteration-count: 1;
         animation-iteration-count: 1;
         transition-delay: 0s;
         transition-duration: 0s;
     }
 }
 
-@-webkit-keyframes fa-spin {
-    0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-    }
-}
-
 @keyframes fa-spin {
     0% {
-        -webkit-transform: rotate(0deg);
         transform: rotate(0deg);
     }
     100% {
-        -webkit-transform: rotate(360deg);
         transform: rotate(360deg);
     }
 }
 
-.fa-angles-left::before {
-    content: "\f100";
+.fa-trash-alt {
+    --fa: "\f2ed";
 }
 
-.fa-angles-right::before {
-    content: "\f101";
+.fa-file-lines {
+    --fa: "\f15c";
 }
 
-.fa-angles-up::before {
-    content: "\f102";
+.fa-sign-out-alt {
+    --fa: "\f2f5";
 }
 
-.fa-arrow-down::before {
-    content: "\f063";
+.fa-forward-step {
+    --fa: "\f051";
 }
 
-.fa-arrow-down-a-z::before {
-    content: "\f15d";
+.fa-pencil-alt {
+    --fa: "\f303";
 }
 
-.fa-arrow-down-short-wide::before {
-    content: "\f884";
+.fa-user-check {
+    --fa: "\f4fc";
 }
 
-.fa-arrow-up::before {
-    content: "\f062";
+.fa-bars {
+    --fa: "\f0c9";
 }
 
-.fa-arrow-up-short-wide::before {
-    content: "\f885";
+.fa-volume-down {
+    --fa: "\f027";
 }
 
-.fa-arrows-up-down-left-right::before {
-    content: "\f047";
+.fa-compress {
+    --fa: "\f066";
 }
 
-.fa-backward-step::before {
-    content: "\f048";
+.fa-square-check {
+    --fa: "\f14a";
 }
 
-.fa-ban::before {
-    content: "\f05e";
+.fa-list {
+    --fa: "\f03a";
 }
 
-.fa-bars::before {
-    content: "\f0c9";
+.fa-lock {
+    --fa: "\f023";
 }
 
-.fa-bars-progress::before {
-    content: "\f828";
+.fa-users {
+    --fa: "\f0c0";
 }
 
-.fa-book::before {
-    content: "\f02d";
+.fa-eye-slash {
+    --fa: "\f070";
 }
 
-.fa-box-open::before {
-    content: "\f49e";
+.fa-chevron-up {
+    --fa: "\f077";
 }
 
-.fa-broom::before {
-    content: "\f51a";
+.fa-gauge {
+    --fa: "\f624";
 }
 
-.fa-chart-column::before {
-    content: "\e0e3";
+.fa-key {
+    --fa: "\f084";
 }
 
-.fa-check::before {
-    content: "\f00c";
+.fa-ban {
+    --fa: "\f05e";
 }
 
-.fa-chevron-down::before {
-    content: "\f078";
+.fa-star {
+    --fa: "\f005";
 }
 
-.fa-chevron-left::before {
-    content: "\f053";
+.fa-repeat {
+    --fa: "\f363";
 }
 
-.fa-chevron-right::before {
-    content: "\f054";
+.fa-shuffle {
+    --fa: "\f074";
 }
 
-.fa-chevron-up::before {
-    content: "\f077";
+.fa-unlock {
+    --fa: "\f09c";
 }
 
-.fa-circle::before {
-    content: "\f111";
+.fa-image {
+    --fa: "\f03e";
 }
 
-.fa-clock::before {
-    content: "\f017";
+.fa-angles-right {
+    --fa: "\f101";
 }
 
-.fa-clone::before {
-    content: "\f24d";
+.fa-box-open {
+    --fa: "\f49e";
 }
 
-.fa-closed-captioning::before {
-    content: "\f20a";
+.fa-pause {
+    --fa: "\f04c";
 }
 
-.fa-compress::before {
-    content: "\f066";
+.fa-palette {
+    --fa: "\f53f";
 }
 
-.fa-download::before {
-    content: "\f019";
+.fa-square {
+    --fa: "\f0c8";
 }
 
-.fa-expand::before {
-    content: "\f065";
+.fa-list-ol {
+    --fa: "\f0cb";
 }
 
-.fa-eye::before {
-    content: "\f06e";
+.fa-language {
+    --fa: "\f1ab";
 }
 
-.fa-eye-slash::before {
-    content: "\f070";
+.fa-question {
+    --fa: "\3f";
 }
 
-.fa-file-lines::before {
-    content: "\f15c";
+.fa-circle {
+    --fa: "\f111";
 }
 
-.fa-forward::before {
-    content: "\f04e";
+.fa-volume-up {
+    --fa: "\f028";
 }
 
-.fa-forward-step::before {
-    content: "\f051";
+.fa-bars-progress {
+    --fa: "\f828";
 }
 
-.fa-gauge::before {
-    content: "\f624";
+.fa-eye {
+    --fa: "\f06e";
 }
 
-.fa-cog::before {
-    content: "\f013";
+.fa-user-cog {
+    --fa: "\f4fe";
 }
 
-.fa-headphones::before {
-    content: "\f025";
+.fa-headphones {
+    --fa: "\f025";
 }
 
-.fa-hourglass::before {
-    content: "\f254";
+.fa-tag {
+    --fa: "\f02b";
 }
 
-.fa-home::before {
-    content: "\f015";
+.fa-angles-up {
+    --fa: "\f102";
 }
 
-.fa-image::before {
-    content: "\f03e";
+.fa-paperclip {
+    --fa: "\f0c6";
 }
 
-.fa-key::before {
-    content: "\f084";
+.fa-hourglass {
+    --fa: "\f254";
 }
 
-.fa-keyboard::before {
-    content: "\f11c";
+.fa-arrow-down-a-z {
+    --fa: "\f15d";
 }
 
-.fa-language::before {
-    content: "\f1ab";
+.fa-volume-off {
+    --fa: "\f026";
 }
 
-.fa-list::before {
-    content: "\f03a";
+.fa-cog {
+    --fa: "\f013";
 }
 
-.fa-list-ol::before {
-    content: "\f0cb";
+.fa-clock {
+    --fa: "\f017";
 }
 
-.fa-lock::before {
-    content: "\f023";
+.fa-backward-step {
+    --fa: "\f048";
 }
 
-.fa-magnifying-glass::before {
-    content: "\f002";
+.fa-keyboard {
+    --fa: "\f11c";
 }
 
-.fa-search::before {
-    content: "\f002";
+.fa-sliders {
+    --fa: "\f1de";
 }
 
-.fa-magnifying-glass-minus::before {
-    content: "\f010";
+.fa-closed-captioning {
+    --fa: "\f20a";
 }
 
-.fa-magnifying-glass-plus::before {
-    content: "\f00e";
+.fa-download {
+    --fa: "\f019";
 }
 
-.fa-moon::before {
-    content: "\f186";
+.fa-forward {
+    --fa: "\f04e";
 }
 
-.fa-palette::before {
-    content: "\f53f";
+.fa-home {
+    --fa: "\f015";
 }
 
-.fa-paperclip::before {
-    content: "\f0c6";
+.fa-upload {
+    --fa: "\f093";
 }
 
-.fa-pause::before {
-    content: "\f04c";
+.fa-arrow-down-short-wide {
+    --fa: "\f884";
 }
 
-.fa-pencil-alt::before {
-    content: "\f303";
+.fa-arrow-down {
+    --fa: "\f063";
 }
 
-.fa-photo-film::before {
-    content: "\f87c";
+.fa-play {
+    --fa: "\f04b";
 }
 
-.fa-play::before {
-    content: "\f04b";
+.fa-magnifying-glass {
+    --fa: "\f002";
 }
 
-.fa-plus::before {
-    content: "\2b";
+.fa-search {
+    --fa: "\f002";
 }
 
-.fa-question::before {
-    content: "\3f";
+.fa-chevron-down {
+    --fa: "\f078";
 }
 
-.fa-repeat::before {
-    content: "\f363";
+.fa-arrow-up {
+    --fa: "\f062";
 }
 
-.fa-sign-out-alt::before {
-    content: "\f2f5";
+.fa-volume-mute {
+    --fa: "\f6a9";
 }
 
-.fa-rotate::before {
-    content: "\f2f1";
+.fa-plus {
+    --fa: "\2b";
 }
 
-.fa-sync-alt::before {
-    content: "\f2f1";
+.fa-expand {
+    --fa: "\f065";
 }
 
-.fa-shuffle::before {
-    content: "\f074";
+.fa-times {
+    --fa: "\f00d";
 }
 
-.fa-sliders::before {
-    content: "\f1de";
+.fa-arrows-up-down-left-right {
+    --fa: "\f047";
 }
 
-.fa-spinner::before {
-    content: "\f110";
+.fa-photo-film {
+    --fa: "\f87c";
 }
 
-.fa-square::before {
-    content: "\f0c8";
+.fa-chevron-left {
+    --fa: "\f053";
 }
 
-.fa-square-check::before {
-    content: "\f14a";
+.fa-chevron-right {
+    --fa: "\f054";
 }
 
-.fa-star::before {
-    content: "\f005";
+.fa-rotate {
+    --fa: "\f2f1";
 }
 
-.fa-tag::before {
-    content: "\f02b";
+.fa-sync-alt {
+    --fa: "\f2f1";
 }
 
-.fa-trash-alt::before {
-    content: "\f2ed";
+.fa-spinner {
+    --fa: "\f110";
 }
 
-.fa-unlock::before {
-    content: "\f09c";
+.fa-angles-left {
+    --fa: "\f100";
 }
 
-.fa-upload::before {
-    content: "\f093";
+.fa-arrow-up-short-wide {
+    --fa: "\f885";
 }
 
-.fa-user-check::before {
-    content: "\f4fc";
+.fa-moon {
+    --fa: "\f186";
 }
 
-.fa-user-cog::before {
-    content: "\f4fe";
+.fa-broom {
+    --fa: "\f51a";
 }
 
-.fa-user-tag::before {
-    content: "\f507";
+.fa-chart-column {
+    --fa: "\e0e3";
 }
 
-.fa-users::before {
-    content: "\f0c0";
+.fa-clone {
+    --fa: "\f24d";
 }
 
-.fa-video::before {
-    content: "\f03d";
+.fa-file-circle-plus {
+    --fa: "\e494";
 }
 
-.fa-volume-up::before {
-    content: "\f028";
+.fa-book {
+    --fa: "\f02d";
 }
 
-.fa-volume-down::before {
-    content: "\f027";
+.fa-check {
+    --fa: "\f00c";
 }
 
-.fa-volume-off::before {
-    content: "\f026";
+.fa-user-tag {
+    --fa: "\f507";
 }
 
-.fa-volume-mute::before {
-    content: "\f6a9";
+.fa-magnifying-glass-plus {
+    --fa: "\f00e";
 }
 
-.fa-times::before {
-    content: "\f00d";
+.fa-magnifying-glass-minus {
+    --fa: "\f010";
+}
+
+.fa-video {
+    --fa: "\f03d";
 }
 
 @font-face {
@@ -437,8 +431,12 @@
 
 .far,
 .fa-regular {
-    font-family: "Font Awesome 6 Free";
     font-weight: 400;
+}
+:root,
+:host {
+    --fa-style-family-classic: "Font Awesome 6 Free";
+    --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
 }
 
 @font-face {
@@ -453,17 +451,15 @@
 
 .fas,
 .fa-solid {
-    font-family: "Font Awesome 6 Free";
     font-weight: 900;
 }
-
 @font-face {
     font-family: "Font Awesome 5 Brands";
     font-display: block;
     font-weight: 400;
     src:
-        url("./fa-brands-400.woff2") format("woff2"),
-        url("./fa-brands-400.ttf") format("truetype");
+        url("../webfonts/fa-brands-400.woff2") format("woff2"),
+        url("../webfonts/fa-brands-400.ttf") format("truetype");
 }
 
 @font-face {
@@ -483,7 +479,6 @@
         url("./fa-regular-400.woff2") format("woff2"),
         url("./fa-regular-400.ttf") format("truetype");
 }
-
 @font-face {
     font-family: "FontAwesome";
     font-display: block;
@@ -521,5 +516,5 @@
         url("./fa-v4compatibility.ttf") format("truetype");
     unicode-range: U+F041, U+F047, U+F065-F066, U+F07D-F07E, U+F080, U+F08B, U+F08E, U+F090, U+F09A, U+F0AC, U+F0AE, U+F0B2, U+F0D0, U+F0D6,
         U+F0E4, U+F0EC, U+F10A-F10B, U+F123, U+F13E, U+F148-F149, U+F14C, U+F156, U+F15E, U+F160-F161, U+F163, U+F175-F178, U+F195, U+F1F8,
-        U+F219, U+F250, U+F252, U+F27A;
+        U+F219, U+F27A;
 }

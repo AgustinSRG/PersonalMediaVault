@@ -1,11 +1,16 @@
 /* Media description widget style */
 
 .media-description-body {
-    padding: 1rem;
+    padding: 0 1rem;
 }
 
 .media-description-body:focus {
     outline: none;
+}
+
+.media-description-edit {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .media-description-edit textarea {

@@ -135,22 +135,23 @@
 
             <div class="player-controls-right">
                 <button
-                    v-if="hasDescription"
+                    v-if="hasDescription || canWrite"
                     type="button"
                     :title="$t('Description')"
-                    class="player-btn"
+                    class="player-btn player-btn-hide-mobile"
                     @click="openDescription"
                     @mouseenter="enterTooltip('desc')"
                     @mouseleave="leaveTooltip('desc')"
                 >
-                    <i class="fas fa-file-lines"></i>
+                    <i v-if="hasDescription" class="fas fa-file-lines"></i>
+                    <i v-else class="fas fa-file-circle-plus"></i>
                 </button>
 
                 <button
                     v-if="hasAttachments"
                     type="button"
                     :title="$t('Attachments')"
-                    class="player-btn player-settings-no-trap"
+                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
                     @click="showAttachments"
                     @mouseenter="enterTooltip('attachments')"
                     @mouseleave="leaveTooltip('attachments')"
@@ -162,7 +163,7 @@
                     v-if="hasRelatedMedia"
                     type="button"
                     :title="$t('Related media')"
-                    class="player-btn player-settings-no-trap"
+                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
                     @click="showRelatedMedia"
                     @mouseenter="enterTooltip('related-media')"
                     @mouseleave="leaveTooltip('related-media')"
