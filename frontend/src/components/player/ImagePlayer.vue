@@ -159,6 +159,18 @@
                 </button>
 
                 <button
+                    v-if="hasRelatedMedia"
+                    type="button"
+                    :title="$t('Related media')"
+                    class="player-btn player-settings-no-trap"
+                    @click="showRelatedMedia"
+                    @mouseenter="enterTooltip('related-media')"
+                    @mouseleave="leaveTooltip('related-media')"
+                >
+                    <i class="fas fa-photo-film"></i>
+                </button>
+
+                <button
                     type="button"
                     :title="$t('Manage albums')"
                     class="player-btn"
@@ -225,34 +237,50 @@
             {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
         </div>
 
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'ext-desc'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Extended description") }}
         </div>
 
         <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'attachments'"
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'attachments'"
             class="player-tooltip player-help-tip-right"
         >
             {{ $t("Attachments") }}
         </div>
 
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'related-media'"
+            class="player-tooltip player-help-tip-right"
+        >
+            {{ $t("Related media") }}
+        </div>
+
+        <div
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'config'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Player Configuration") }}
         </div>
 
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
+        <div
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'albums'"
+            class="player-tooltip player-help-tip-right"
+        >
             {{ $t("Manage albums") }}
         </div>
 
         <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen'"
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen'"
             class="player-tooltip player-help-tip-right"
         >
             {{ $t("Full screen") }}
         </div>
 
         <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen-exit'"
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen-exit'"
             class="player-tooltip player-help-tip-right"
         >
             {{ $t("Exit full screen") }}
@@ -280,6 +308,15 @@
             @leave="leaveControls"
         >
         </PlayerAttachmentsList>
+
+        <PlayerRelatedMediaList
+            v-if="metadata && metadata.related"
+            v-model:shown="displayRelatedMedia"
+            :related-media="metadata.related"
+            @enter="enterControls"
+            @leave="leaveControls"
+        >
+        </PlayerRelatedMediaList>
 
         <PlayerTopBar
             v-if="metadata"
@@ -336,7 +373,6 @@ import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { isTouchDevice } from "@/utils/touch";
 import ImagePlayerConfig from "./ImagePlayerConfig.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
-import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
 import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
@@ -360,6 +396,14 @@ const ExtendedDescriptionWidget = defineAsyncComponent({
     loader: () => import("@/components/player/ExtendedDescriptionWidget.vue"),
 });
 
+const PlayerRelatedMediaList = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerRelatedMediaList.vue"),
+});
+
+const PlayerAttachmentsList = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerAttachmentsList.vue"),
+});
+
 const SCALE_RANGE = 2;
 const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
 const SCALE_STEP = 0.1 / SCALE_RANGE;
@@ -378,6 +422,7 @@ export default defineComponent({
         TagsEditHelper,
         ExtendedDescriptionWidget,
         PlayerAttachmentsList,
+        PlayerRelatedMediaList,
     },
     props: {
         mid: Number,
@@ -483,6 +528,9 @@ export default defineComponent({
             hasAttachments: false,
             displayAttachments: false,
 
+            hasRelatedMedia: false,
+            displayRelatedMedia: false,
+
             mediaError: false,
         };
     },
@@ -579,7 +627,19 @@ export default defineComponent({
             if (e) {
                 e.stopPropagation();
             }
+
             this.displayAttachments = !this.displayAttachments;
+            this.displayRelatedMedia = false;
+            this.displayConfig = false;
+        },
+
+        showRelatedMedia: function (e?: Event) {
+            if (e) {
+                e.stopPropagation();
+            }
+
+            this.displayRelatedMedia = !this.displayRelatedMedia;
+            this.displayAttachments = false;
             this.displayConfig = false;
         },
 
@@ -588,10 +648,11 @@ export default defineComponent({
                 return;
             }
 
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
                 this.displayAttachments = false;
+                this.displayRelatedMedia = false;
                 e.stopPropagation();
                 return;
             }
@@ -765,6 +826,7 @@ export default defineComponent({
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -774,6 +836,7 @@ export default defineComponent({
             this.displayConfig = false;
             this.contextMenuShown = false;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -866,6 +929,9 @@ export default defineComponent({
             }
             if (this.displayAttachments) {
                 this.displayAttachments = false;
+            }
+            if (this.displayRelatedMedia) {
+                this.displayRelatedMedia = false;
             }
             this.interactWithControls();
         },
@@ -1103,6 +1169,7 @@ export default defineComponent({
             }
             this.hasExtendedDescription = !!this.metadata.ext_desc_url;
             this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
+            this.hasRelatedMedia = this.metadata.related && this.metadata.related.length > 0;
             this.loading = true;
             this.currentResolution = getUserSelectedResolutionImage(this.metadata);
             this.setImageURL();
@@ -1192,7 +1259,7 @@ export default defineComponent({
 
             this.autoNextTimer = setTimeout(() => {
                 this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle || this.displayAttachments) {
+                if (this.displayConfig || this.expandedTitle || this.displayAttachments || this.displayRelatedMedia) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();

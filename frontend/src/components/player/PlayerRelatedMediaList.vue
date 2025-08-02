@@ -1,6 +1,6 @@
 <template>
     <div
-        class="player-attachments-list"
+        class="related-media-list"
         :class="{ hidden: !shown }"
         tabindex="-1"
         role="dialog"
@@ -14,22 +14,33 @@
         @keydown="keyDownHandle"
     >
         <a
-            v-for="att in attachments || []"
-            :key="att.id"
-            class="player-attachment-link"
+            v-for="media in relatedMedia || []"
+            :key="media.id"
+            class="related-media-item"
             tabindex="0"
-            :href="getAttachmentUrl(att)"
+            :href="getMediaURL(media.id)"
+            :title="media.title || $t('Untitled')"
             target="_blank"
             rel="noopener noreferrer"
-            @click="clickAttachmentLink"
+            @click="clickOnMedia(media.id, $event)"
             @keydown="clickOnEnter"
         >
-            <div class="attachment-icon-link">
-                <i class="fas fa-paperclip"></i>
+            <div class="album-body-item-thumbnail" :title="media.title || $t('Untitled')">
+                <div v-if="!media.thumbnail" class="no-thumb">
+                    <i v-if="media.type === 1" class="fas fa-image"></i>
+                    <i v-else-if="media.type === 2" class="fas fa-video"></i>
+                    <i v-else-if="media.type === 3" class="fas fa-headphones"></i>
+                    <i v-else class="fas fa-ban"></i>
+                </div>
+                <ThumbImage v-if="media.thumbnail" :src="getThumbnail(media.thumbnail)"></ThumbImage>
+                <DurationIndicator
+                    v-if="media.type === 2 || media.type === 3"
+                    :type="media.type"
+                    :duration="media.duration"
+                    :small="true"
+                ></DurationIndicator>
             </div>
-            <div class="attachment-name">
-                {{ att.name }}
-            </div>
+            <div class="related-media-item-title">{{ media.title || $t("Untitled") }}</div>
         </a>
     </div>
 </template>
@@ -39,14 +50,21 @@ import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
-import type { MediaAttachment } from "@/api/models";
-import { getAssetURL } from "@/utils/api";
+import type { MediaListItem } from "@/api/models";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { AppStatus } from "@/control/app-status";
+import ThumbImage from "../utils/ThumbImage.vue";
+import DurationIndicator from "../utils/DurationIndicator.vue";
 
 export default defineComponent({
-    name: "PlayerAttachmentsList",
+    name: "PlayerRelatedMediaList",
+    components: {
+        ThumbImage,
+        DurationIndicator,
+    },
     props: {
         shown: Boolean,
-        attachments: Array as PropType<MediaAttachment[]>,
+        relatedMedia: Array as PropType<MediaListItem[]>,
     },
     emits: ["update:shown", "enter", "leave"],
     setup(props) {
@@ -88,13 +106,11 @@ export default defineComponent({
             });
         },
 
-        clickAttachmentLink: function (event: Event) {
+        clickOnMedia: function (mid: number, event: Event) {
+            event.preventDefault();
             event.stopPropagation();
             this.close();
-        },
-
-        getAttachmentUrl: function (att: MediaAttachment): string {
-            return getAssetURL(att.url);
+            AppStatus.ClickOnMedia(mid, false);
         },
 
         close: function () {
@@ -109,6 +125,22 @@ export default defineComponent({
                 this.close();
                 e.stopPropagation();
             }
+        },
+
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                generateURIQuery({
+                    media: mid + "",
+                })
+            );
+        },
+
+        getThumbnail(thumb: string) {
+            return getAssetURL(thumb);
         },
     },
 });

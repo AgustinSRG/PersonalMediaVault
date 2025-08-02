@@ -90,17 +90,6 @@
     margin-bottom: 0.5rem;
 }
 
-.editor-related-media-thumbnail {
-    position: relative;
-    width: 114px;
-    height: 114px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
 .editor-related-media-right {
     min-width: 1px;
     flex: 1;
