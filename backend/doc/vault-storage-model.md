@@ -197,7 +197,6 @@ The file contains the following fields:
 | `id`                    | Number (64 bit unsigned integer)              | Media asset identifier                                                                                                        |
 | `type`                  | Number (8 bit unsigned integer)               | Media type. Can be: `1` (Image), `2` (Video / Animation) or `3` (Audio / Sound)                                               |
 | `title`                 | String                                        | Title                                                                                                                         |
-| `description`           | String                                        | Description                                                                                                                   |
 | `tags`                  | Array&lt;Number (64 bit unsigned integer)&gt; | List of tags for the media. Only identifiers are stored                                                                       |
 | `duration`              | Number (Floating point)                       | Duration of the media in seconds                                                                                              |
 | `width`                 | Number (32 bit unsigned integer)              | Width in pixels                                                                                                               |
@@ -224,6 +223,8 @@ The file contains the following fields:
 | `time_splits`           | Array&lt;TimeSplit&gt;                        | List of time splits for videos or audios                                                                                      |
 | `audio_tracks`          | Array&lt;AudioTrack&gt;                       | List of extra audio tracks for videos                                                                                         |
 | `attachments`           | Array&lt;Attachment&gt;                       | List of attachments stored with the media asset                                                                               |
+| `ext_desc`              | Boolean                                       | True only if the media has a description.                                                                                     |
+| `ext_desc_asset`        | Number (64 bit unsigned integer)              | Id of the asset containing the description.                                                                                   |
 | `related`               | Array&lt;Number (64 bit unsigned integer)&gt; | List of IDs of related media assets                                                                                           |
 
 The `Resolution` object has the following fields:
