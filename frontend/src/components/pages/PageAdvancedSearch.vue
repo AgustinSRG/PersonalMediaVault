@@ -155,7 +155,7 @@
                         :href="getMediaURL(item.id)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        @click="goToMedia(item.id, $event)"
+                        @click="goToMedia(item, $event)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div class="search-result-thumb-inner">
@@ -784,20 +784,20 @@ export default defineComponent({
             this.resetSearch();
         },
 
-        goToMedia: function (mid: number, e?: Event) {
+        goToMedia: function (m: MediaListItem, e?: Event) {
             if (e) {
                 e.preventDefault();
             }
             if (this.inModal) {
-                this.$emit("select-media", mid, () => {
+                this.$emit("select-media", m, () => {
                     const fullList = this.listScroller.list;
                     const centerPosition = this.listScroller.getCenterPosition();
 
-                    const mediaIndex = this.mediaIndexMap.get(mid);
+                    const mediaIndex = this.mediaIndexMap.get(m.id);
 
                     if (mediaIndex !== undefined) {
                         fullList.splice(mediaIndex, 1);
-                        this.mediaIndexMap.delete(mid);
+                        this.mediaIndexMap.delete(m.id);
 
                         this.listScroller.moveWindowToElement(centerPosition);
 
@@ -807,7 +807,7 @@ export default defineComponent({
                     }
                 });
             } else {
-                AppStatus.ClickOnMedia(mid, true);
+                AppStatus.ClickOnMedia(m.id, true);
             }
         },
 

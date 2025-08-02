@@ -87,6 +87,7 @@ import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, P
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
 import type { HomePageElement } from "@/api/api-home";
 import { apiHomeGroupAddElement, HOME_PAGE_ELEMENT_TYPE_ALBUM, HOME_PAGE_ELEMENT_TYPE_MEDIA } from "@/api/api-home";
+import type { MediaListItem } from "@/api/models";
 
 export default defineComponent({
     name: "HomePageRowAddElementModal",
@@ -170,7 +171,7 @@ export default defineComponent({
             this.updatePagePreferences();
         },
 
-        selectMedia: function (mid: number, callback: () => void) {
+        selectMedia: function (m: MediaListItem, callback: () => void) {
             if (this.busy) {
                 return;
             }
@@ -180,13 +181,13 @@ export default defineComponent({
             makeApiRequest(
                 apiHomeGroupAddElement(groupId, {
                     t: HOME_PAGE_ELEMENT_TYPE_MEDIA,
-                    i: mid,
+                    i: m.id,
                 }),
             )
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully added media to row"));
-                    this.mediaElements.add(mid);
+                    this.mediaElements.add(m.id);
                     this.$emit("added-element");
                     callback();
                 })

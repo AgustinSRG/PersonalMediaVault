@@ -101,6 +101,82 @@
                 <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
             </div>
             <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
+
+            <!--- Related media -->
+
+            <div class="form-group">
+                <label>{{ $t("Related media") }}:</label>
+            </div>
+            <div class="editor-related-media-list">
+                <div v-for="(item, i) in relatedMedia" :key="item.id" class="editor-related-media-item">
+                    <div class="album-body-item-thumbnail" :title="item.title || $t('Untitled')">
+                        <div v-if="!item.thumbnail" class="no-thumb">
+                            <i v-if="item.type === 1" class="fas fa-image"></i>
+                            <i v-else-if="item.type === 2" class="fas fa-video"></i>
+                            <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
+                            <i v-else class="fas fa-ban"></i>
+                        </div>
+                        <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
+                        <DurationIndicator
+                            v-if="item.type === 2 || item.type === 3"
+                            :type="item.type"
+                            :duration="item.duration"
+                            :small="true"
+                        ></DurationIndicator>
+                    </div>
+                    <div class="editor-related-media-right">
+                        <div class="editor-related-media-title">
+                            <a :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">{{ item.title || $t("Untitled") }}</a>
+                        </div>
+                        <div v-id="canWrite" class="editor-related-media-buttons">
+                            <button
+                                type="button"
+                                :disabled="busyRelated || i === 0"
+                                class="btn btn-xs btn-mr btn-primary"
+                                @click="moveRelatedMediaUp(i)"
+                            >
+                                <i class="fas fa-arrow-up"></i> {{ $t("Move up") }}
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="busyRelated || i >= relatedMedia.length - 1"
+                                class="btn btn-xs btn-mr btn-primary"
+                                @click="moveRelatedMediaDown(i)"
+                            >
+                                <i class="fas fa-arrow-down"></i> {{ $t("Move down") }}
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="busyRelated"
+                                class="btn btn-xs btn-mr btn-danger"
+                                @click="removeRelatedMedia(i)"
+                            >
+                                <i class="fas fa-trash-alt"></i> {{ $t("Delete") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-if="canWrite && relatedMedia.length < maxRelatedMediaCount" class="form-group">
+                <button type="button" :disabled="busyRelated" class="btn btn-xs btn-primary" @click="addRelatedMedia">
+                    <i class="fas fa-plus"></i> {{ $t("Add related media") }}
+                </button>
+            </div>
+            <div v-if="canWrite" class="form-group">
+                <button
+                    v-if="!compareMediaArrays(originalRelatedMedia, relatedMedia) || busyRelated || !savedRelated"
+                    type="button"
+                    class="btn btn-primary"
+                    :disabled="busyRelated || compareMediaArrays(originalRelatedMedia, relatedMedia)"
+                    @click="changeRelatedMedia"
+                >
+                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busyRelated"></LoadingIcon> {{ $t("Change related media") }}
+                </button>
+                <button v-else type="button" disabled class="btn btn-primary">
+                    <i class="fas fa-check"></i> {{ $t("Saved related media") }}
+                </button>
+                <div v-if="errorRelated" class="form-error form-error-pt">{{ errorRelated }}</div>
+            </div>
         </div>
 
         <div class="row-general-right">
@@ -163,6 +239,14 @@
             @done="changeThumbnail"
             @error="onThumbnailModalError"
         ></ThumbnailCropModal>
+
+        <AddRelatedMediaModal
+            v-if="displayAddRelatedMediaModal"
+            v-model:display="displayAddRelatedMediaModal"
+            :mid="mid"
+            :related-media="relatedMedia"
+            @add-media="onAddRelatedMedia"
+        ></AddRelatedMediaModal>
     </div>
 </template>
 
@@ -172,9 +256,9 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { getAssetURL } from "@/utils/api";
+import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent, nextTick } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
@@ -184,9 +268,18 @@ import {
     apiMediaChangeMediaDescription,
     apiMediaChangeMediaThumbnail,
     apiMediaChangeMediaTitle,
+    apiMediaChangeRelatedMedia,
 } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
+import DurationIndicator from "@/components/utils/DurationIndicator.vue";
+
 import ThumbnailCropModal from "@/components/modals/ThumbnailCropModal.vue";
+
+import type { MediaListItem } from "@/api/models";
+
+const AddRelatedMediaModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/AddRelatedMediaModal.vue"),
+});
 
 export default defineComponent({
     name: "EditorGeneral",
@@ -194,15 +287,20 @@ export default defineComponent({
         ToggleSwitch,
         LoadingIcon,
         ThumbImage,
+        DurationIndicator,
         ThumbnailCropModal,
+        AddRelatedMediaModal,
     },
     emits: ["changed"],
     setup() {
         return {
+            maxRelatedMediaCount: 16,
+
             requestIdTitle: getUniqueStringId(),
             requestIdDescription: getUniqueStringId(),
             requestIdThumbnail: getUniqueStringId(),
             requestIdExtra: getUniqueStringId(),
+            requestIdRelated: getUniqueStringId(),
 
             mediaElementCheckTimer: null as ReturnType<typeof setInterval> | null,
 
@@ -211,6 +309,8 @@ export default defineComponent({
     },
     data: function () {
         return {
+            mid: AppStatus.CurrentMedia,
+
             type: 0,
 
             title: "",
@@ -225,10 +325,12 @@ export default defineComponent({
             busyDescription: false,
             busyThumbnail: false,
             busyExtra: false,
+            busyRelated: false,
 
             savedTitle: false,
             savedDescription: false,
             savedExtra: false,
+            savedRelated: false,
 
             canWrite: AuthController.CanWrite,
 
@@ -238,15 +340,21 @@ export default defineComponent({
             originalIsAnimation: false,
             isAnimation: false,
 
+            originalRelatedMedia: [] as MediaListItem[],
+            relatedMedia: [] as MediaListItem[],
+
             errorTitle: "",
             errorDescription: "",
             errorExtraConfig: "",
             errorThumbnail: "",
+            errorRelated: "",
 
             mediaElementReady: false,
 
             displayThumbnailModal: false,
             thumbnailModalUrl: "",
+
+            displayAddRelatedMediaModal: false,
         };
     },
 
@@ -266,6 +374,7 @@ export default defineComponent({
         abortNamedApiRequest(this.requestIdDescription);
         abortNamedApiRequest(this.requestIdThumbnail);
         abortNamedApiRequest(this.requestIdExtra);
+        abortNamedApiRequest(this.requestIdRelated);
 
         if (this.mediaElementCheckTimer) {
             clearTimeout(this.mediaElementCheckTimer);
@@ -292,6 +401,8 @@ export default defineComponent({
                 return;
             }
 
+            this.mid = MediaController.MediaData.id;
+
             this.type = MediaController.MediaData.type;
 
             this.originalTitle = MediaController.MediaData.title;
@@ -307,6 +418,9 @@ export default defineComponent({
             this.isAnimation = this.originalIsAnimation;
 
             this.thumbnail = MediaController.MediaData.thumbnail;
+
+            this.originalRelatedMedia = (MediaController.MediaData.related || []).slice();
+            this.relatedMedia = this.originalRelatedMedia.slice();
         },
 
         getThumbnail(thumb: string) {
@@ -726,8 +840,117 @@ export default defineComponent({
                 });
         },
 
+        addRelatedMedia: function () {
+            this.displayAddRelatedMediaModal = true;
+        },
+
+        moveRelatedMediaUp: function (i: number) {
+            this.relatedMedia.splice(i - 1, 0, this.relatedMedia.splice(i, 1)[0]);
+        },
+
+        moveRelatedMediaDown: function (i: number) {
+            this.relatedMedia.splice(i + 1, 0, this.relatedMedia.splice(i, 1)[0]);
+        },
+
+        removeRelatedMedia: function (i: number) {
+            this.relatedMedia.splice(i, 1);
+        },
+
+        onAddRelatedMedia: function (m: MediaListItem, callback: () => void) {
+            this.relatedMedia.push(m);
+
+            if (this.relatedMedia.length >= this.maxRelatedMediaCount) {
+                this.displayAddRelatedMediaModal = false;
+            }
+
+            callback();
+        },
+
+        changeRelatedMedia: function (e: Event) {
+            if (e) {
+                e.preventDefault();
+            }
+
+            if (this.busyRelated) {
+                return;
+            }
+
+            this.busyRelated = true;
+            this.errorRelated = "";
+
+            const mediaId = AppStatus.CurrentMedia;
+
+            makeNamedApiRequest(
+                this.requestIdRelated,
+                apiMediaChangeRelatedMedia(
+                    mediaId,
+                    this.relatedMedia.map((m) => m.id),
+                ),
+            )
+                .onSuccess(() => {
+                    PagesController.ShowSnackBarRight(this.$t("Successfully changed related media"));
+                    this.busyRelated = false;
+                    this.savedRelated = true;
+                    this.originalRelatedMedia = this.relatedMedia.slice();
+                    if (MediaController.MediaData) {
+                        MediaController.MediaData.related = this.relatedMedia.slice();
+                    }
+                    this.$emit("changed");
+                    AlbumsController.LoadCurrentAlbum();
+                    AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+                })
+                .onCancel(() => {
+                    this.busyRelated = false;
+                })
+                .onRequestError((err, handleErr) => {
+                    this.busyRelated = false;
+                    handleErr(err, {
+                        unauthorized: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Access denied");
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        badRequest: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Bad request");
+                        },
+                        accessDenied: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Access denied");
+                        },
+                        notFound: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Not found");
+                        },
+                        serverError: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Internal server error");
+                        },
+                        networkError: () => {
+                            this.errorRelated = this.$t("Error") + ": " + this.$t("Could not connect to the server");
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    this.errorRelated = this.$t("Error") + ": " + err.message;
+                    console.error(err);
+                    this.busyRelated = false;
+                });
+        },
+
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        compareMediaArrays: function (m1: MediaListItem[], m2: MediaListItem[]): boolean {
+            return m1.map((m) => m.id).join(",") === m2.map((m) => m.id).join(",");
+        },
+
+        getMediaURL: function (mid: number): string {
+            return (
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname +
+                generateURIQuery({
+                    media: mid + "",
+                })
+            );
         },
     },
 });
