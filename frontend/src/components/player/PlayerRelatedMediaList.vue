@@ -22,7 +22,7 @@
             :title="media.title || $t('Untitled')"
             target="_blank"
             rel="noopener noreferrer"
-            @click="clickOnMedia(media.id, $event)"
+            @click="clickOnRelatedMedia"
             @keydown="clickOnEnter"
         >
             <div class="album-body-item-thumbnail" :title="media.title || $t('Untitled')">
@@ -52,7 +52,6 @@ import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import type { MediaListItem } from "@/api/models";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { AppStatus } from "@/control/app-status";
 import ThumbImage from "../utils/ThumbImage.vue";
 import DurationIndicator from "../utils/DurationIndicator.vue";
 
@@ -106,11 +105,9 @@ export default defineComponent({
             });
         },
 
-        clickOnMedia: function (mid: number, event: Event) {
-            event.preventDefault();
+        clickOnRelatedMedia: function (event: Event) {
             event.stopPropagation();
             this.close();
-            AppStatus.ClickOnMedia(mid, false);
         },
 
         close: function () {
