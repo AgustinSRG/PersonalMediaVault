@@ -674,22 +674,22 @@ export function setTogglePlayDelay(delay: number) {
     saveIntoLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY, delay);
 }
 
-const LS_KEY_EXTENDED_DESCRIPTION_SIZE = "player-pref-ext-desc-font-size";
+const LS_KEY_DESCRIPTION_SIZE = "player-pref-desc-font-size";
 
 /**
- * Gets extended description size
- * @returns The extended description font size
+ * Gets description size
+ * @returns The description font size
  */
-export function getExtendedDescriptionSize(): number {
-    return Number(fetchFromLocalStorageCache(LS_KEY_EXTENDED_DESCRIPTION_SIZE, 18)) || 18;
+export function getDescriptionSize(): number {
+    return Number(fetchFromLocalStorageCache(LS_KEY_DESCRIPTION_SIZE, 18)) || 18;
 }
 
 /**
- * Sets extended description size
- * @param size The extended description font size
+ * Sets description size
+ * @param size The description font size
  */
-export function setExtendedDescriptionSize(size: number) {
-    saveIntoLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE, size);
+export function setDescriptionSize(size: number) {
+    saveIntoLocalStorage(LS_KEY_DESCRIPTION_SIZE, size);
 }
 
 const LS_KEY_SHOW_AUDIO_TITLE = "player-pref-audio-title";
@@ -758,7 +758,7 @@ export function clearPlayerPreferences() {
 
     clearLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY);
 
-    clearLocalStorage(LS_KEY_EXTENDED_DESCRIPTION_SIZE);
+    clearLocalStorage(LS_KEY_DESCRIPTION_SIZE);
 
     clearLocalStorage(LS_KEY_SHOW_AUDIO_TITLE);
     clearLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL);

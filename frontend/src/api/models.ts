@@ -249,11 +249,6 @@ export interface MediaListItem {
     title: string;
 
     /**
-     * Description
-     */
-    description: string;
-
-    /**
      * List of tags
      */
     tags: number[];
@@ -297,11 +292,6 @@ export interface MediaData {
      * Title
      */
     title: string;
-
-    /**
-     * Description
-     */
-    description: string;
 
     /**
      * List of tags
@@ -414,9 +404,9 @@ export interface MediaData {
     img_notes_url: string;
 
     /**
-     * Path to the extended description file
+     * Path to the description file
      */
-    ext_desc_url: string;
+    description_url: string;
 
     /**
      * List of time slices

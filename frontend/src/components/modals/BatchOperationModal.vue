@@ -10,7 +10,7 @@
             <div class="modal-body">
                 <div class="batch-op-group-search">
                     <div class="form-group">
-                        <label>{{ $t("Title or description must contain") }}:</label>
+                        <label>{{ $t("Title must contain") }}:</label>
                         <input
                             v-model="textSearch"
                             type="text"
@@ -866,10 +866,7 @@ export default defineComponent({
 
             for (const e of results) {
                 if (filterText) {
-                    if (
-                        matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
-                        matchSearchFilter(e.description, filterText, filterTextWords) < 0
-                    ) {
+                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0) {
                         continue;
                     }
                 }

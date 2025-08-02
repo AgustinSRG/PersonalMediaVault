@@ -215,5 +215,5 @@ export default defineComponent({
 
 @import "@/style/player/tags-edit.css";
 
-@import "@/style/player/extended-description.css";
+@import "@/style/player/description.css";
 </style>

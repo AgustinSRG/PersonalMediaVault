@@ -2,7 +2,7 @@
     <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" tabindex="-1" @scroll.passive="onPageScroll">
         <form class="adv-search-form" @submit="onSubmit">
             <div class="form-group">
-                <label>{{ $t("Title or description must contain") }}:</label>
+                <label>{{ $t("Title must contain") }}:</label>
                 <input
                     v-model="textSearch"
                     type="text"
@@ -582,10 +582,7 @@ export default defineComponent({
                 }
 
                 if (filterText) {
-                    if (
-                        matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
-                        matchSearchFilter(e.description, filterText, filterTextWords) < 0
-                    ) {
+                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0) {
                         continue;
                     }
                 }

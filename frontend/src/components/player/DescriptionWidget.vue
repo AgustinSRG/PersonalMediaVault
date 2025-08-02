@@ -2,17 +2,17 @@
     <div class="resizable-widget-container">
         <ResizableWidget
             v-model:display="displayStatus"
-            :title="$t('Extended description')"
+            :title="$t('Description')"
             :context-open="contextOpen"
-            :position-key="'ext-desc-widget-pos'"
+            :position-key="'desc-widget-pos'"
             :busy="busy"
             :action-buttons="actionButtons"
             @clicked="propagateClick"
             @action-btn="clickActionButton"
         >
-            <div class="extended-description-body" tabindex="-1">
+            <div class="media-description-body" tabindex="-1">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
-                <div v-if="!loading && editing" class="extended-description-edit">
+                <div v-if="!loading && editing" class="media-description-edit">
                     <textarea
                         v-model="contentToChange"
                         :disabled="busy || !canWrite"
@@ -22,7 +22,7 @@
                 </div>
                 <div
                     v-if="!loading && !editing"
-                    class="extended-description-view"
+                    class="media-description-view"
                     :style="{ '--base-font-size': baseFontSize + 'px' }"
                     v-html="renderContent(content)"
                 ></div>
@@ -51,10 +51,10 @@ import { apiMediaSetDescription } from "@/api/api-media-edit";
 import { escapeHTML } from "@/utils/html";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
-import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
+import { getDescriptionSize, setDescriptionSize } from "@/control/player-preferences";
 
 export default defineComponent({
-    name: "ExtendedDescriptionWidget",
+    name: "DescriptionWidget",
     components: {
         ResizableWidget,
         LoadingOverlay,
@@ -64,7 +64,7 @@ export default defineComponent({
         contextOpen: Boolean,
         currentTime: Number,
     },
-    emits: ["update:display", "clicked", "update-ext-desc"],
+    emits: ["update:display", "clicked", "update-desc"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -91,7 +91,7 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
 
-            baseFontSize: getExtendedDescriptionSize(),
+            baseFontSize: getDescriptionSize(),
         };
     },
     computed: {
@@ -186,7 +186,7 @@ export default defineComponent({
                 return;
             }
 
-            const descFilePath = MediaController.MediaData.ext_desc_url;
+            const descFilePath = MediaController.MediaData.description_url;
 
             if (!descFilePath) {
                 this.content = "";
@@ -211,9 +211,9 @@ export default defineComponent({
                 method: "GET",
                 url: getAssetURL(descFilePath),
             })
-                .onSuccess((extendedDescText) => {
-                    this.content = extendedDescText;
-                    this.contentToChange = extendedDescText;
+                .onSuccess((descriptionText) => {
+                    this.content = descriptionText;
+                    this.contentToChange = descriptionText;
                     this.loading = false;
                     this.editing = this.canWrite && !this.content;
 
@@ -283,7 +283,7 @@ export default defineComponent({
         },
 
         saveBaseFontSize: function () {
-            setExtendedDescriptionSize(this.baseFontSize);
+            setDescriptionSize(this.baseFontSize);
         },
 
         propagateClick: function () {
@@ -303,7 +303,7 @@ export default defineComponent({
                 if (elem) {
                     elem.focus();
                 } else {
-                    elem = this.$el.querySelector(".extended-description-body");
+                    elem = this.$el.querySelector(".media-description-body");
                     if (elem) {
                         elem.focus();
                     }
@@ -379,15 +379,15 @@ export default defineComponent({
                     this.busy = false;
                     this.clearBusyTimeout();
 
-                    PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
+                    PagesController.ShowSnackBar(this.$t("Successfully saved description"));
                     this.content = this.contentToChange;
                     this.editing = false;
 
                     if (MediaController.MediaData && MediaController.MediaData.id === mid) {
-                        MediaController.MediaData.ext_desc_url = res.url || "";
+                        MediaController.MediaData.description_url = res.url || "";
                     }
 
-                    this.$emit("update-ext-desc");
+                    this.$emit("update-desc");
 
                     this.autoFocus();
                 })

@@ -1,20 +1,20 @@
-/* Extended description widget style */
+/* Media description widget style */
 
-.extended-description-body {
+.media-description-body {
     padding: 1rem;
 }
 
-.extended-description-body:focus {
+.media-description-body:focus {
     outline: none;
 }
 
-.extended-description-edit textarea {
+.media-description-edit textarea {
     resize: vertical;
     width: 100%;
     min-height: 340px;
 }
 
-.extended-description-view {
+.media-description-view {
     font-size: var(--base-font-size);
     line-height: calc(var(--base-font-size) * 1.5);
     font-family: Verdana, Geneva, Tahoma, sans-serif;

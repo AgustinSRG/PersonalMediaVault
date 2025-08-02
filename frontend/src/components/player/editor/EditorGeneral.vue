@@ -32,35 +32,6 @@
                 </div>
             </form>
 
-            <!--- Description -->
-
-            <div class="form-group">
-                <label>{{ $t("Description") }}:</label>
-                <textarea
-                    v-model="desc"
-                    :readonly="!canWrite"
-                    maxlength="1024"
-                    class="form-control form-control-full-width form-textarea"
-                    rows="3"
-                    :disabled="busyDescription"
-                ></textarea>
-            </div>
-            <div v-if="canWrite" class="form-group">
-                <button
-                    v-if="originalDesc !== desc || busyDescription || !savedDescription"
-                    type="button"
-                    class="btn btn-primary"
-                    :disabled="busyDescription || originalDesc === desc"
-                    @click="changeDescription"
-                >
-                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busyDescription"></LoadingIcon> {{ $t("Change description") }}
-                </button>
-                <button v-else type="button" disabled class="btn btn-primary">
-                    <i class="fas fa-check"></i> {{ $t("Saved description") }}
-                </button>
-                <div v-if="errorDescription" class="form-error form-error-pt">{{ errorDescription }}</div>
-            </div>
-
             <!--- Extra config -->
 
             <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
@@ -265,7 +236,6 @@ import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pag
 import { getUniqueStringId } from "@/utils/unique-id";
 import {
     apiMediaChangeExtraParams,
-    apiMediaChangeMediaDescription,
     apiMediaChangeMediaThumbnail,
     apiMediaChangeMediaTitle,
     apiMediaChangeRelatedMedia,
@@ -297,7 +267,6 @@ export default defineComponent({
             maxRelatedMediaCount: 16,
 
             requestIdTitle: getUniqueStringId(),
-            requestIdDescription: getUniqueStringId(),
             requestIdThumbnail: getUniqueStringId(),
             requestIdExtra: getUniqueStringId(),
             requestIdRelated: getUniqueStringId(),
@@ -316,23 +285,7 @@ export default defineComponent({
             title: "",
             originalTitle: "",
 
-            desc: "",
-            originalDesc: "",
-
             thumbnail: "",
-
-            busyTitle: false,
-            busyDescription: false,
-            busyThumbnail: false,
-            busyExtra: false,
-            busyRelated: false,
-
-            savedTitle: false,
-            savedDescription: false,
-            savedExtra: false,
-            savedRelated: false,
-
-            canWrite: AuthController.CanWrite,
 
             originalStartBeginning: false,
             startBeginning: false,
@@ -343,11 +296,21 @@ export default defineComponent({
             originalRelatedMedia: [] as MediaListItem[],
             relatedMedia: [] as MediaListItem[],
 
+            busyTitle: false,
+            busyThumbnail: false,
+            busyExtra: false,
+            busyRelated: false,
+
+            savedTitle: false,
+            savedExtra: false,
+            savedRelated: false,
+
             errorTitle: "",
-            errorDescription: "",
             errorExtraConfig: "",
             errorThumbnail: "",
             errorRelated: "",
+
+            canWrite: AuthController.CanWrite,
 
             mediaElementReady: false,
 
@@ -371,7 +334,6 @@ export default defineComponent({
 
     beforeUnmount: function () {
         abortNamedApiRequest(this.requestIdTitle);
-        abortNamedApiRequest(this.requestIdDescription);
         abortNamedApiRequest(this.requestIdThumbnail);
         abortNamedApiRequest(this.requestIdExtra);
         abortNamedApiRequest(this.requestIdRelated);
@@ -407,9 +369,6 @@ export default defineComponent({
 
             this.originalTitle = MediaController.MediaData.title;
             this.title = this.originalTitle;
-
-            this.originalDesc = MediaController.MediaData.description;
-            this.desc = this.originalDesc;
 
             this.originalStartBeginning = MediaController.MediaData.force_start_beginning;
             this.startBeginning = this.originalStartBeginning;
@@ -723,64 +682,6 @@ export default defineComponent({
                     this.errorTitle = this.$t("Error") + ": " + err.message;
                     console.error(err);
                     this.busyTitle = false;
-                });
-        },
-
-        changeDescription: function () {
-            if (this.busyDescription) {
-                return;
-            }
-
-            this.busyDescription = true;
-            this.errorDescription = "";
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestIdDescription, apiMediaChangeMediaDescription(mediaId, this.desc))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed description"));
-                    this.busyDescription = false;
-                    this.savedDescription = true;
-                    this.originalDesc = this.desc;
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.description = this.desc;
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busyDescription = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyDescription = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidDescription: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Invalid description provided");
-                        },
-                        badRequest: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorDescription = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyDescription = false;
                 });
         },
 

@@ -72,13 +72,13 @@
             @clicked="clickControls"
         ></TagsEditHelper>
 
-        <ExtendedDescriptionWidget
-            v-if="displayExtendedDescription"
-            v-model:display="displayExtendedDescriptionStatus"
+        <DescriptionWidget
+            v-if="displayDescription"
+            v-model:display="displayDescriptionStatus"
             :context-open="contextMenuShown"
             @clicked="clickControls"
-            @update-ext-desc="refreshExtendedDescription"
-        ></ExtendedDescriptionWidget>
+            @update-desc="refreshDescription"
+        ></DescriptionWidget>
 
         <div
             class="player-controls"
@@ -135,13 +135,13 @@
 
             <div class="player-controls-right">
                 <button
-                    v-if="hasExtendedDescription"
+                    v-if="hasDescription"
                     type="button"
-                    :title="$t('Extended description')"
+                    :title="$t('Description')"
                     class="player-btn"
-                    @click="openExtendedDescription"
-                    @mouseenter="enterTooltip('ext-desc')"
-                    @mouseleave="leaveTooltip('ext-desc')"
+                    @click="openDescription"
+                    @mouseenter="enterTooltip('desc')"
+                    @mouseleave="leaveTooltip('desc')"
                 >
                     <i class="fas fa-file-lines"></i>
                 </button>
@@ -238,10 +238,10 @@
         </div>
 
         <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'ext-desc'"
+            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'desc'"
             class="player-tooltip player-help-tip-right"
         >
-            {{ $t("Extended description") }}
+            {{ $t("Description") }}
         </div>
 
         <div
@@ -341,11 +341,11 @@
             :url="imageURL"
             :title="title"
             :can-write="canWrite"
-            :has-extended-description="hasExtendedDescription"
+            :has-description="hasDescription"
             @update:fit="onUserFitUpdated"
             @stats="openStats"
             @open-tags="openTags"
-            @open-ext-desc="openExtendedDescription"
+            @open-desc="openDescription"
         ></PlayerContextMenu>
     </div>
 </template>
@@ -392,8 +392,8 @@ const TagsEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TagsEditHelper.vue"),
 });
 
-const ExtendedDescriptionWidget = defineAsyncComponent({
-    loader: () => import("@/components/player/ExtendedDescriptionWidget.vue"),
+const DescriptionWidget = defineAsyncComponent({
+    loader: () => import("@/components/player/DescriptionWidget.vue"),
 });
 
 const PlayerRelatedMediaList = defineAsyncComponent({
@@ -420,7 +420,7 @@ export default defineComponent({
         PlayerEncodingPending,
         ImageNotes,
         TagsEditHelper,
-        ExtendedDescriptionWidget,
+        DescriptionWidget,
         PlayerAttachmentsList,
         PlayerRelatedMediaList,
     },
@@ -445,7 +445,7 @@ export default defineComponent({
         min: Boolean,
 
         displayTagList: Boolean,
-        displayExtendedDescription: Boolean,
+        displayDescription: Boolean,
     },
     emits: [
         "go-next",
@@ -456,7 +456,7 @@ export default defineComponent({
         "stats-open",
         "delete",
         "update:displayTagList",
-        "update:displayExtendedDescription",
+        "update:displayDescription",
     ],
     setup(props) {
         return {
@@ -466,7 +466,7 @@ export default defineComponent({
             fullScreenState: useVModel(props, "fullscreen"),
             showControlsState: useVModel(props, "showControls"),
             displayTagListStatus: useVModel(props, "displayTagList"),
-            displayExtendedDescriptionStatus: useVModel(props, "displayExtendedDescription"),
+            displayDescriptionStatus: useVModel(props, "displayDescription"),
         };
     },
     data: function () {
@@ -523,7 +523,7 @@ export default defineComponent({
             notesEditMode: false,
             notesVisible: getImageNotesVisible(),
 
-            hasExtendedDescription: false,
+            hasDescription: false,
 
             hasAttachments: false,
             displayAttachments: false,
@@ -616,11 +616,11 @@ export default defineComponent({
             this.displayTagListStatus = true;
         },
 
-        openExtendedDescription: function () {
-            if (!this.hasExtendedDescription && !this.canWrite) {
+        openDescription: function () {
+            if (!this.hasDescription && !this.canWrite) {
                 return;
             }
-            this.displayExtendedDescriptionStatus = true;
+            this.displayDescriptionStatus = true;
         },
 
         showAttachments: function (e?: Event) {
@@ -1031,7 +1031,7 @@ export default defineComponent({
                     break;
                 case "i":
                 case "I":
-                    this.openExtendedDescription();
+                    this.openDescription();
                     break;
                 case "t":
                 case "T":
@@ -1167,7 +1167,7 @@ export default defineComponent({
             if (!this.metadata) {
                 return;
             }
-            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+            this.hasDescription = !!this.metadata.description_url;
             this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
             this.hasRelatedMedia = this.metadata.related && this.metadata.related.length > 0;
             this.loading = true;
@@ -1332,8 +1332,8 @@ export default defineComponent({
             this.notesVisible = v;
         },
 
-        refreshExtendedDescription: function () {
-            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+        refreshDescription: function () {
+            this.hasDescription = !!this.metadata.description_url;
         },
     },
 });

@@ -288,7 +288,7 @@
                         </tr>
 
                         <tr>
-                            <td>{{ $t("Show media extended description") }}</td>
+                            <td>{{ $t("Show media description") }}</td>
                             <td>
                                 <span class="key-shortcut">I</span>
                             </td>
