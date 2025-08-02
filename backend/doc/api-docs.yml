@@ -753,10 +753,6 @@ paths:
                 type: string
                 description: "Media title"
                 example: "Media title"
-              description:
-                type: string
-                description: "Media description"
-                example: "Media description"
               tags:
                 type: array
                 description: Associated tags
@@ -910,10 +906,10 @@ paths:
                 type: string
                 description: "URL to fetch the image notes from"
                 example: "/assets/b/0/0/notes.json"
-              ext_desc_url:
+              description_url:
                 type: string
-                description: "URL to fetch the extended description from. Empty if no extended description."
-                example: "/assets/b/0/0/ext_desc.txt"
+                description: "URL to fetch the description from. Empty if no description."
+                example: "/assets/b/0/0/description.txt"
               time_slices:
                 type: array
                 description: "Timeline splits, for videos and audios"
@@ -1072,11 +1068,11 @@ paths:
           description: Not found
         200:
           description: Success
-          
+  
   "/api/media/{id}/edit/description":
     post:
-      summary: Changes media description.
-      description: Changes the description for a media asset.
+      summary: Sets the description.
+      description: Updates the description file for a media asset.
       tags:
         - media
       consumes:
@@ -1091,31 +1087,17 @@ paths:
           format: int64
           description: Media ID
         - in: body
-          name: description
+          name: array of notes
           schema:
             properties:
               description:
                 type: string
-                description: Media description (max 5 MB)
-                example: New Media description
+                description: "Description to store"
       security:
         - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
-          schema:
-            properties:
-              code:
-                type: string
-                description: >
-                  Error code:
-                    * INVALID_DESCRIPTION - Invalid media description provided
-                enum:
-                  - INVALID_DESCRIPTION
-              message:
-                type: string
-                description: "Error message"
-                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         403:
@@ -1124,6 +1106,12 @@ paths:
           description: Not found
         200:
           description: Success
+          schema:
+            properties:
+              url:
+                type: string
+                description: "New description URL"
+                example: "/assets/b/0/0/description.txt"
           
   "/api/media/{id}/edit/extra":
     post:
@@ -1314,50 +1302,6 @@ paths:
                 type: string
                 description: "New notes URL"
                 example: "/assets/b/0/0/notes.json"
-
-  "/api/media/{id}/edit/ext_desc":
-    post:
-      summary: Sets the extended description.
-      description: Updates the extended description file for a media asset.
-      tags:
-        - media
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: number
-          format: int64
-          description: Media ID
-        - in: body
-          name: array of notes
-          schema:
-            properties:
-              ext_desc:
-                type: string
-                description: "Extended description to store"
-      security:
-        - SessionTokenHeader: []
-      responses:
-        400:
-          description: Bad request.
-        401:
-          description: Unauthorized (No valid session)
-        403:
-          description: Access denied
-        404:
-          description: Not found
-        200:
-          description: Success
-          schema:
-            properties:
-              url:
-                type: string
-                description: "New extended description URL"
-                example: "/assets/b/0/0/ext_desc.txt"
           
   "/api/media/{id}/edit/thumbnail":
     post:
@@ -4136,10 +4080,6 @@ definitions:
           type: string
           description: "Media title"
           example: "Media title"
-        description:
-          type: string
-          description: "Media description"
-          example: "Media description"
         tags:
           type: array
           description: List of tags

@@ -20,13 +20,12 @@ const MEDIA_TITLE_MAX_LENGTH = 255
 const MEDIA_DESCRIPTION_MAX_LENGTH = 1024
 
 type MediaListAPIItem struct {
-	Id          uint64    `json:"id"`
-	Type        MediaType `json:"type"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Tags        []uint64  `json:"tags"`
-	Thumbnail   string    `json:"thumbnail"`
-	Duration    float64   `json:"duration"`
+	Id        uint64    `json:"id"`
+	Type      MediaType `json:"type"`
+	Title     string    `json:"title"`
+	Tags      []uint64  `json:"tags"`
+	Thumbnail string    `json:"thumbnail"`
+	Duration  float64   `json:"duration"`
 }
 
 // Gets media minified info (preview)
@@ -101,7 +100,6 @@ type MediaAPIMetaResponse struct {
 	Type MediaType `json:"type"`
 
 	Title           string   `json:"title"`
-	Description     string   `json:"description"`
 	Tags            []uint64 `json:"tags"`
 	UploadTimestamp int64    `json:"upload_time"`
 
@@ -137,7 +135,7 @@ type MediaAPIMetaResponse struct {
 	HasImageNotes bool   `json:"img_notes"`
 	ImageNotesURL string `json:"img_notes_url"`
 
-	ExtendedDescriptionURL string `json:"ext_desc_url"`
+	DescriptionURL string `json:"description_url"`
 
 	Related []*MediaListAPIItem `json:"related"`
 }
@@ -190,7 +188,6 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	result.Type = meta.Type
 
 	result.Title = meta.Title
-	result.Description = meta.Description
 	result.Tags = meta.Tags
 	result.UploadTimestamp = meta.UploadTimestamp
 
@@ -247,12 +244,12 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.ImageNotesURL = ""
 	}
 
-	// Extended description
+	// Description
 
-	if meta.HasExtendedDescription {
-		result.ExtendedDescriptionURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ExtendedDescriptionAsset) + "/ext_desc.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
+	if meta.HasDescription {
+		result.DescriptionURL = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.DescriptionAsset) + "/description.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
-		result.ExtendedDescriptionURL = ""
+		result.DescriptionURL = ""
 	}
 
 	// Resolutions
@@ -564,11 +561,11 @@ func api_getMediaSizeStats(response http.ResponseWriter, request *http.Request) 
 		})
 	}
 
-	if meta.HasExtendedDescription {
+	if meta.HasDescription {
 		result.AssetSize = append(result.AssetSize, AssetSizeAPIResponse{
-			Id:   meta.ExtendedDescriptionAsset,
+			Id:   meta.DescriptionAsset,
 			Type: ASSET_SINGLE_FILE,
-			Name: "EXT_DESC",
+			Name: "DESCRIPTION",
 			Size: 0,
 		})
 	}
@@ -727,94 +724,6 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 	}
 
 	meta.Title = p.Title
-
-	err = media.EndWrite(meta, session.key, false)
-
-	if err != nil {
-		LogError(err)
-
-		GetVault().media.ReleaseMediaResource(media_id)
-
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
-		return
-	}
-
-	GetVault().media.ReleaseMediaResource(media_id)
-
-	// Clear cache
-
-	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
-
-	response.WriteHeader(200)
-}
-
-type MediaAPIEditDescriptionBody struct {
-	Description string `json:"description"`
-}
-
-func api_editMediaDescription(response http.ResponseWriter, request *http.Request) {
-	session := GetSessionFromRequest(request)
-
-	if session == nil {
-		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
-		return
-	}
-
-	if !session.CanWrite() {
-		ReturnAPIError(response, 403, "ACCESS_DENIED", "Your current session does not have permission to make use of this API.")
-		return
-	}
-
-	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
-
-	var p MediaAPIEditDescriptionBody
-
-	err := json.NewDecoder(request.Body).Decode(&p)
-	if err != nil {
-		response.WriteHeader(400)
-		return
-	}
-
-	if len(p.Description) > MEDIA_DESCRIPTION_MAX_LENGTH {
-		ReturnAPIError(response, 400, "INVALID_DESCRIPTION", "Invalid description provided")
-		return
-	}
-
-	vars := mux.Vars(request)
-
-	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
-
-	if err != nil {
-		response.WriteHeader(400)
-		return
-	}
-
-	media := GetVault().media.AcquireMediaResource(media_id)
-
-	if media == nil {
-		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
-		return
-	}
-
-	meta, err := media.StartWrite(session.key)
-
-	if err != nil {
-		LogError(err)
-
-		GetVault().media.ReleaseMediaResource(media_id)
-
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
-		return
-	}
-
-	if meta == nil {
-		media.CancelWrite()
-		GetVault().media.ReleaseMediaResource(media_id)
-		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
-		return
-	}
-
-	meta.Description = p.Description
 
 	err = media.EndWrite(meta, session.key, false)
 

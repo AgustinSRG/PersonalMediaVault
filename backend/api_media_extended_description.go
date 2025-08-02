@@ -12,15 +12,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ExtendedDescriptionSetBody struct {
-	ExtendedDescription string `json:"ext_desc"`
+type MediaAPIEditDescriptionBody struct {
+	Description string `json:"description"`
 }
 
-type ExtendedDescriptionSetResponse struct {
+type DescriptionSetResponse struct {
 	Url string `json:"url"`
 }
 
-func api_setExtendedDescription(response http.ResponseWriter, request *http.Request) {
+func api_setDescription(response http.ResponseWriter, request *http.Request) {
 	session := GetSessionFromRequest(request)
 
 	if session == nil {
@@ -42,7 +42,7 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	var p ExtendedDescriptionSetBody
+	var p MediaAPIEditDescriptionBody
 
 	err = json.NewDecoder(request.Body).Decode(&p)
 	if err != nil {
@@ -50,9 +50,9 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	assetData := []byte(p.ExtendedDescription)
+	assetData := []byte(p.Description)
 
-	result := ThumbnailAPIResponse{
+	result := DescriptionSetResponse{
 		Url: "",
 	}
 
@@ -136,9 +136,9 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 
 		// Change metadata
 
-		if meta.HasExtendedDescription {
+		if meta.HasDescription {
 			// Remove old asset
-			oldAsset := meta.ExtendedDescriptionAsset
+			oldAsset := meta.DescriptionAsset
 			success, asset_path, asset_lock = media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
 			if success {
@@ -153,9 +153,9 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 			}
 		}
 
-		meta.HasExtendedDescription = true
-		meta.ExtendedDescriptionAsset = desc_asset
-		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(desc_asset) + "/ext_desc.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
+		meta.HasDescription = true
+		meta.DescriptionAsset = desc_asset
+		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(desc_asset) + "/description.txt" + "?fp=" + GetVault().credentials.GetFingerprint()
 
 		// Save
 		err = media.EndWrite(meta, session.key, false)
@@ -200,9 +200,9 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 
 		// Change metadata
 
-		if meta.HasExtendedDescription {
+		if meta.HasDescription {
 			// Remove old asset
-			oldAsset := meta.ExtendedDescriptionAsset
+			oldAsset := meta.DescriptionAsset
 			success, asset_path, asset_lock := media.AcquireAsset(oldAsset, ASSET_SINGLE_FILE)
 
 			if success {
@@ -217,7 +217,7 @@ func api_setExtendedDescription(response http.ResponseWriter, request *http.Requ
 			}
 		}
 
-		meta.HasExtendedDescription = false
+		meta.HasDescription = false
 
 		// Save
 		err = media.EndWrite(meta, session.key, false)

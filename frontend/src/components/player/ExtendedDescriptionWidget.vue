@@ -47,7 +47,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
-import { apiMediaSetExtendedDescription } from "@/api/api-media-edit";
+import { apiMediaSetDescription } from "@/api/api-media-edit";
 import { escapeHTML } from "@/utils/html";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -374,7 +374,7 @@ export default defineComponent({
 
             const mid = this.mid;
 
-            makeApiRequest(apiMediaSetExtendedDescription(mid, this.contentToChange))
+            makeApiRequest(apiMediaSetDescription(mid, this.contentToChange))
                 .onSuccess((res) => {
                     this.busy = false;
                     this.clearBusyTimeout();

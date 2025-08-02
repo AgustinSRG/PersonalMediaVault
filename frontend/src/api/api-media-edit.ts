@@ -302,13 +302,13 @@ export type SetExtendedDescriptionErrorHandler = MediaEditApiErrorHandler & {
  * @param extendedDesc Extended description
  * @returns The request parameters
  */
-export function apiMediaSetExtendedDescription(
+export function apiMediaSetDescription(
     id: number,
     extendedDesc: string,
 ): RequestParams<ChangeAssetResponse, SetExtendedDescriptionErrorHandler> {
     return {
         method: "POST",
-        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/ext_desc`),
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/description`),
         json: {
             ext_desc: extendedDesc,
         },
