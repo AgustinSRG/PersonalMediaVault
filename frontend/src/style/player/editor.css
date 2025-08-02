@@ -41,6 +41,11 @@
     border: solid 1px var(--theme-border-color);
 }
 
+.form-group-thumbnail-buttons {
+    max-width: 100%;
+    width: 252px;
+}
+
 .player-editor-sub-content {
     padding-top: 1rem;
 }

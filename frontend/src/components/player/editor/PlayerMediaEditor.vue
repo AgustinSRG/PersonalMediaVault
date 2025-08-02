@@ -15,9 +15,7 @@
                 @click="changePage('general')"
                 >{{ $t("General") }}</a
             >
-            <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: page === 'tags' }" @click="changePage('tags')">{{
-                $t("Tags")
-            }}</a>
+
             <a
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
@@ -53,6 +51,13 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'related' }"
+                @click="changePage('related')"
+                >{{ $t("Related media") }}</a
+            >
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'attachments' }"
                 @click="changePage('attachments')"
                 >{{ $t("Attachments") }}</a
@@ -76,7 +81,7 @@
         </div>
 
         <EditorGeneral v-if="page === 'general'" @changed="onChanged"></EditorGeneral>
-        <EditorTags v-else-if="page === 'tags'" @changed="onChanged"></EditorTags>
+        <EditorRelatedMedia v-else-if="page === 'related'" @changed="onChanged"></EditorRelatedMedia>
         <EditorSubtitles v-else-if="page === 'subtitles'" @changed="onChanged"></EditorSubtitles>
         <EditorAudios v-else-if="page === 'audios'" @changed="onChanged"></EditorAudios>
         <EditorAttachments v-else-if="page === 'attachments'" @changed="onChanged"></EditorAttachments>
@@ -96,8 +101,8 @@ const EditorGeneral = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorGeneral.vue"),
 });
 
-const EditorTags = defineAsyncComponent({
-    loader: () => import("@/components/player/editor/EditorTags.vue"),
+const EditorRelatedMedia = defineAsyncComponent({
+    loader: () => import("@/components/player/editor/EditorRelatedMedia.vue"),
 });
 
 const EditorSubtitles = defineAsyncComponent({
@@ -132,7 +137,7 @@ export default defineComponent({
     name: "PlayerMediaEditor",
     components: {
         EditorGeneral,
-        EditorTags,
+        EditorRelatedMedia,
         EditorSubtitles,
         EditorAudios,
         EditorAttachments,
