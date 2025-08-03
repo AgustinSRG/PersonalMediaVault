@@ -87,6 +87,7 @@
             @dblclick="stopPropagationEvent"
             @mouseenter="enterControls"
             @mouseleave="leaveControls"
+            @contextmenu="stopPropagationEvent"
         >
             <div class="player-controls-left">
                 <button

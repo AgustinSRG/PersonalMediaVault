@@ -27,7 +27,7 @@
             <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
         </div>
 
-        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls">
+        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls" @contextmenu="stopPropagationEvent">
             <div class="player-controls-left">
                 <button
                     v-if="!!next || !!prev || pagePrev || pageNext"
