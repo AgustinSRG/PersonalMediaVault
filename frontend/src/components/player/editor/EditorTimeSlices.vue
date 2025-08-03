@@ -159,6 +159,13 @@ export default defineComponent({
                     }
 
                     this.$emit("changed");
+
+                    if (this.exitOnSave) {
+                        this.exitOnSave = false;
+                        if (this.exitCallback) {
+                            this.exitCallback();
+                        }
+                    }
                 })
                 .onCancel(() => {
                     this.busy = false;

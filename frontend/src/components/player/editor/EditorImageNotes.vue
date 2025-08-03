@@ -158,6 +158,13 @@ export default defineComponent({
                     AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
 
                     this.$emit("changed");
+
+                    if (this.exitOnSave) {
+                        this.exitOnSave = false;
+                        if (this.exitCallback) {
+                            this.exitCallback();
+                        }
+                    }
                 })
                 .onCancel(() => {
                     this.busy = false;
