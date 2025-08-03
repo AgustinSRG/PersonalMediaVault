@@ -24,4 +24,5 @@
     line-height: calc(var(--base-font-size) * 1.5);
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     word-wrap: break-word;
+    white-space: pre-wrap;
 }
