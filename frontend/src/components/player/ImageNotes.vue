@@ -290,7 +290,7 @@ export default defineComponent({
                 return;
             }
 
-            e.stopPropagation();
+            e.e.stopPropagation();
 
             const bounds = this.$el.getBoundingClientRect();
             const x = e.x;

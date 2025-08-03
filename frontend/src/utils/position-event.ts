@@ -12,9 +12,9 @@ export interface PositionEvent {
     target: HTMLElement;
 
     /**
-     * Function to call to stop the propagation of the event
+     * Original event
      */
-    stopPropagation: () => void;
+    e: Event;
 
     /**
      * X position
@@ -35,7 +35,7 @@ export interface PositionEvent {
 export function positionEventFromMouseEvent(e: MouseEvent): PositionEvent {
     return {
         target: e.target as HTMLElement,
-        stopPropagation: e.stopPropagation,
+        e,
         x: e.pageX,
         y: e.pageY,
     };
@@ -49,7 +49,7 @@ export function positionEventFromMouseEvent(e: MouseEvent): PositionEvent {
 export function positionEventFromTouchEvent(e: TouchEvent): PositionEvent {
     return {
         target: e.target as HTMLElement,
-        stopPropagation: e.stopPropagation,
+        e,
         x: e.touches.length > 0 ? e.touches[0].pageX : 0,
         y: e.touches.length > 0 ? e.touches[0].pageY : 0,
     };
