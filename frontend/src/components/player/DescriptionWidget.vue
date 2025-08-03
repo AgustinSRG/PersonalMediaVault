@@ -48,7 +48,7 @@ import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiMediaSetDescription } from "@/api/api-media-edit";
-import { escapeHTML } from "@/utils/html";
+import { escapeHTML, replaceLinks } from "@/utils/html";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { getDescriptionSize, setDescriptionSize } from "@/control/player-preferences";
@@ -351,7 +351,7 @@ export default defineComponent({
                     } else if (paragraph.startsWith("#")) {
                         return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
                     } else {
-                        return "<p>" + escapeHTML(paragraph).replace(/\n/g, "<br>") + "</p>";
+                        return "<p>" + replaceLinks(escapeHTML(paragraph)).replace(/\n/g, "<br>") + "</p>";
                     }
                 })
                 .join("");
