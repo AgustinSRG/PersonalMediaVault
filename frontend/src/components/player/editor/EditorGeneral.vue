@@ -142,6 +142,13 @@
             @done="changeThumbnail"
             @error="onThumbnailModalError"
         ></ThumbnailCropModal>
+
+        <SaveChangesAskModal
+            v-if="displayExitConfirmation"
+            v-model:display="displayExitConfirmation"
+            @yes="onExitSaveChanges"
+            @no="onExitDiscardChanges"
+        ></SaveChangesAskModal>
     </div>
 </template>
 
@@ -162,6 +169,8 @@ import { apiMediaChangeExtraParams, apiMediaChangeMediaThumbnail, apiMediaChange
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import ThumbnailCropModal from "@/components/modals/ThumbnailCropModal.vue";
 import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
+import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
+import { ExitPreventer } from "@/control/exit-prevent";
 
 export default defineComponent({
     name: "EditorGeneral",
@@ -171,6 +180,7 @@ export default defineComponent({
         ThumbImage,
         ThumbnailCropModal,
         MediaTagsEditor,
+        SaveChangesAskModal,
     },
     emits: ["changed"],
     setup() {
@@ -182,6 +192,8 @@ export default defineComponent({
             mediaElementCheckTimer: null as ReturnType<typeof setInterval> | null,
 
             tempImage: null as HTMLImageElement,
+
+            exitCallback: null as () => void,
         };
     },
     data: function () {
@@ -216,6 +228,9 @@ export default defineComponent({
 
             displayThumbnailModal: false,
             thumbnailModalUrl: "",
+
+            displayExitConfirmation: false,
+            exitOnSave: false,
         };
     },
 
@@ -228,6 +243,8 @@ export default defineComponent({
         this.checkMediaElement();
 
         this.autoFocus();
+
+        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
     },
 
     beforeUnmount: function () {
@@ -243,6 +260,8 @@ export default defineComponent({
             delete this.tempImage.onload;
             delete this.tempImage.onerror;
         }
+
+        ExitPreventer.RemoveExitPrevent();
     },
 
     methods: {
@@ -513,7 +532,7 @@ export default defineComponent({
             }
         },
 
-        changeTitle: function (e: Event) {
+        changeTitle: function (e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -539,6 +558,13 @@ export default defineComponent({
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
                     AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+
+                    if (this.exitOnSave) {
+                        this.exitOnSave = false;
+                        if (this.exitCallback) {
+                            this.exitCallback();
+                        }
+                    }
                 })
                 .onCancel(() => {
                     this.busyTitle = false;
@@ -639,6 +665,32 @@ export default defineComponent({
 
         onTagUpdate: function () {
             this.$emit("changed");
+        },
+
+        checkExitPrevent: function (): boolean {
+            return this.originalTitle !== this.title;
+        },
+
+        onExit: function (callback: () => void) {
+            this.exitCallback = callback;
+            this.displayExitConfirmation = true;
+        },
+
+        onExitSaveChanges: function () {
+            if (this.originalTitle !== this.title) {
+                this.exitOnSave = true;
+                this.changeTitle();
+            } else {
+                if (this.exitCallback) {
+                    this.exitCallback();
+                }
+            }
+        },
+
+        onExitDiscardChanges: function () {
+            if (this.exitCallback) {
+                this.exitCallback();
+            }
         },
     },
 });
