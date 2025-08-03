@@ -80,6 +80,13 @@
             :related-media="relatedMedia"
             @add-media="onAddRelatedMedia"
         ></AddRelatedMediaModal>
+
+        <SaveChangesAskModal
+            v-if="displayExitConfirmation"
+            v-model:display="displayExitConfirmation"
+            @yes="onExitSaveChanges"
+            @no="onExitDiscardChanges"
+        ></SaveChangesAskModal>
     </div>
 </template>
 
@@ -98,8 +105,10 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import DurationIndicator from "@/components/utils/DurationIndicator.vue";
+import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 
 import type { MediaListItem } from "@/api/models";
+import { ExitPreventer } from "@/control/exit-prevent";
 
 const AddRelatedMediaModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AddRelatedMediaModal.vue"),
@@ -112,6 +121,7 @@ export default defineComponent({
         ThumbImage,
         DurationIndicator,
         AddRelatedMediaModal,
+        SaveChangesAskModal,
     },
     emits: ["changed"],
     setup() {
@@ -119,6 +129,8 @@ export default defineComponent({
             maxRelatedMediaCount: 16,
 
             requestIdRelated: getUniqueStringId(),
+
+            exitCallback: null as () => void,
         };
     },
     data: function () {
@@ -137,6 +149,9 @@ export default defineComponent({
             canWrite: AuthController.CanWrite,
 
             displayAddRelatedMediaModal: false,
+
+            displayExitConfirmation: false,
+            exitOnSave: false,
         };
     },
 
@@ -147,10 +162,14 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.autoFocus();
+
+        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
     },
 
     beforeUnmount: function () {
         abortNamedApiRequest(this.requestIdRelated);
+
+        ExitPreventer.RemoveExitPrevent();
     },
 
     methods: {
@@ -204,7 +223,7 @@ export default defineComponent({
             callback();
         },
 
-        changeRelatedMedia: function (e: Event) {
+        changeRelatedMedia: function (e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -236,6 +255,13 @@ export default defineComponent({
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
                     AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+
+                    if (this.exitOnSave) {
+                        this.exitOnSave = false;
+                        if (this.exitCallback) {
+                            this.exitCallback();
+                        }
+                    }
                 })
                 .onCancel(() => {
                     this.busyRelated = false;
@@ -289,6 +315,32 @@ export default defineComponent({
                     media: mid + "",
                 })
             );
+        },
+
+        checkExitPrevent: function (): boolean {
+            return !this.compareMediaArrays(this.relatedMedia, this.originalRelatedMedia);
+        },
+
+        onExit: function (callback: () => void) {
+            this.exitCallback = callback;
+            this.displayExitConfirmation = true;
+        },
+
+        onExitSaveChanges: function () {
+            if (!this.compareMediaArrays(this.relatedMedia, this.originalRelatedMedia)) {
+                this.exitOnSave = true;
+                this.changeRelatedMedia();
+            } else {
+                if (this.exitCallback) {
+                    this.exitCallback();
+                }
+            }
+        },
+
+        onExitDiscardChanges: function () {
+            if (this.exitCallback) {
+                this.exitCallback();
+            }
         },
     },
 });

@@ -32,6 +32,13 @@
                 <i class="fas fa-check"></i> {{ $t("Saved time slices") }}
             </button>
         </div>
+
+        <SaveChangesAskModal
+            v-if="displayExitConfirmation"
+            v-model:display="displayExitConfirmation"
+            @yes="onExitSaveChanges"
+            @no="onExitDiscardChanges"
+        ></SaveChangesAskModal>
     </div>
 </template>
 
@@ -47,17 +54,22 @@ import { clone } from "@/utils/objects";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaChangeTimeSlices } from "@/api/api-media-edit";
+import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
+import { ExitPreventer } from "@/control/exit-prevent";
 
 export default defineComponent({
     name: "EditorTimeSlices",
     components: {
+        SaveChangesAskModal,
         LoadingIcon,
     },
     emits: ["changed"],
     setup() {
         return {
             requestId: getUniqueStringId(),
+
+            exitCallback: null as () => void,
         };
     },
     data: function () {
@@ -73,6 +85,9 @@ export default defineComponent({
             dirty: false,
 
             canWrite: AuthController.CanWrite,
+
+            displayExitConfirmation: false,
+            exitOnSave: false,
         };
     },
 
@@ -83,10 +98,14 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
 
         this.autoFocus();
+
+        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
     },
 
     beforeUnmount: function () {
         abortNamedApiRequest(this.requestId);
+
+        ExitPreventer.RemoveExitPrevent();
     },
 
     methods: {
@@ -177,6 +196,32 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        checkExitPrevent: function (): boolean {
+            return this.dirty;
+        },
+
+        onExit: function (callback: () => void) {
+            this.exitCallback = callback;
+            this.displayExitConfirmation = true;
+        },
+
+        onExitSaveChanges: function () {
+            if (this.dirty) {
+                this.exitOnSave = true;
+                this.changeTimeSlices();
+            } else {
+                if (this.exitCallback) {
+                    this.exitCallback();
+                }
+            }
+        },
+
+        onExitDiscardChanges: function () {
+            if (this.exitCallback) {
+                this.exitCallback();
+            }
         },
     },
 });
