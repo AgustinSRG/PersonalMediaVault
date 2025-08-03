@@ -219,74 +219,18 @@
             </div>
         </div>
 
-        <div v-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            {{ $t("Previous") }}
-        </div>
-
-        <div v-else-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            {{ $t("Next") }}
-        </div>
-
-        <div v-else-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="helpTooltip === 'scale'" class="player-tooltip player-help-tip-left">
-            {{ $t("Scale") }} ({{ fit ? $t("Fit") : renderScale(scale) }})
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'desc'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Description") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'attachments'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Attachments") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'related-media'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Related media") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'config'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Player Configuration") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'albums'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Manage albums") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Full screen") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen-exit'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Exit full screen") }}
-        </div>
+        <PlayerTooltip
+            v-if="helpTooltip"
+            :help-tooltip="helpTooltip"
+            :hide-right-tooltip="displayConfig || displayAttachments || displayRelatedMedia"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :has-description="hasDescription"
+            :fit="fit"
+            :scale="scale"
+        ></PlayerTooltip>
 
         <ImagePlayerConfig
             v-model:shown="displayConfig"
@@ -368,7 +312,6 @@ import {
 import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import ScaleControl from "./ScaleControl.vue";
-import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 import ImageNotes from "./ImageNotes.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
@@ -385,6 +328,7 @@ import { MEDIA_TYPE_IMAGE } from "@/api/models";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
+import PlayerTooltip from "./PlayerTooltip.vue";
 
 const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),
@@ -407,7 +351,6 @@ const PlayerAttachmentsList = defineAsyncComponent({
 });
 
 const SCALE_RANGE = 2;
-const SCALE_RANGE_PERCENT = SCALE_RANGE * 100;
 const SCALE_STEP = 0.1 / SCALE_RANGE;
 const SCALE_STEP_MIN = 0.01 / SCALE_RANGE;
 
@@ -416,7 +359,6 @@ export default defineComponent({
     components: {
         ScaleControl,
         ImagePlayerConfig,
-        PlayerMediaChangePreview,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,
@@ -425,6 +367,7 @@ export default defineComponent({
         DescriptionWidget,
         PlayerAttachmentsList,
         PlayerRelatedMediaList,
+        PlayerTooltip,
     },
     props: {
         mid: Number,
@@ -462,6 +405,7 @@ export default defineComponent({
     ],
     setup(props) {
         return {
+            scaleRangePercent: SCALE_RANGE * 100,
             timer: null as ReturnType<typeof setInterval> | null,
             autoNextTimer: null as ReturnType<typeof setInterval> | null,
             mediaSessionId: getUniqueStringId(),
@@ -808,9 +752,6 @@ export default defineComponent({
             }
         },
 
-        renderScale: function (v: number): string {
-            return Math.round(50 + v * SCALE_RANGE_PERCENT) + "%";
-        },
         enterTooltip: function (t: string) {
             if (isTouchDevice()) {
                 this.helpTooltip = "";

@@ -312,82 +312,18 @@
             </div>
         </div>
 
-        <div v-if="helpTooltip === 'play'" class="player-tooltip player-help-tip-left">
-            {{ $t("Play") }}
-        </div>
-
-        <div v-else-if="helpTooltip === 'pause'" class="player-tooltip player-help-tip-left">
-            {{ $t("Pause") }}
-        </div>
-
-        <div v-else-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            {{ $t("Previous") }}
-        </div>
-
-        <div v-else-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            {{ $t("Next") }}
-        </div>
-
-        <div v-else-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="helpTooltip === 'volume'" class="player-tooltip player-help-tip-left">
-            {{ $t("Volume") }} ({{ muted ? $t("Muted") : renderVolume(volume) }})
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'desc'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Description") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'attachments'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Attachments") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'related-media'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Related media") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'config'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Player Configuration") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'albums'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Manage albums") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Full screen") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && !displayRelatedMedia && helpTooltip === 'full-screen-exit'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Exit full screen") }}
-        </div>
+        <PlayerTooltip
+            v-if="helpTooltip"
+            :help-tooltip="helpTooltip"
+            :hide-right-tooltip="displayConfig || displayAttachments || displayRelatedMedia"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :has-description="hasDescription"
+            :muted="muted"
+            :volume="volume"
+        ></PlayerTooltip>
 
         <div
             class="player-timeline"
@@ -534,7 +470,6 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
-import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
 import type { NormalizedTimeSlice } from "../../utils/time-slices";
@@ -554,6 +489,7 @@ import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
+import PlayerTooltip from "./PlayerTooltip.vue";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -584,7 +520,6 @@ export default defineComponent({
     components: {
         VolumeControl,
         VideoPlayerConfig,
-        PlayerMediaChangePreview,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,
@@ -594,6 +529,7 @@ export default defineComponent({
         PlayerAttachmentsList,
         PlayerSubtitles,
         PlayerRelatedMediaList,
+        PlayerTooltip,
     },
     props: {
         mid: Number,
@@ -951,10 +887,6 @@ export default defineComponent({
                 this.togglePlay();
             }
             this.interactWithControls();
-        },
-
-        renderVolume: function (v: number): string {
-            return Math.round(v * 100) + "%";
         },
 
         enterTooltip: function (t: string) {
