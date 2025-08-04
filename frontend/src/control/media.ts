@@ -34,6 +34,11 @@ export const EVENT_NAME_MEDIA_LOADING = "current-media-loading";
 export const EVENT_NAME_MEDIA_UPDATE = "current-media-update";
 
 /**
+ * Event triggered when the current media description is updated
+ */
+export const EVENT_NAME_MEDIA_DESCRIPTION_UPDATE = "current-media-description-update";
+
+/**
  * Management object to fetch media metadata
  */
 export class MediaController {

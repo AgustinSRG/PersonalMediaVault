@@ -2,7 +2,7 @@
     <div class="resizable-widget-container">
         <ResizableWidget
             v-model:display="displayStatus"
-            :title="$t('Description')"
+            :title="$t('Description') + ' | ' + (title || $t('Untitled'))"
             :context-open="contextOpen"
             :position-key="'desc-widget-pos'"
             :busy="busy"
@@ -42,7 +42,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import { AppStatus } from "@/control/app-status";
 import { AppEvents } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
@@ -62,7 +62,7 @@ export default defineComponent({
     props: {
         display: Boolean,
         contextOpen: Boolean,
-        currentTime: Number,
+        title: String,
     },
     emits: ["update:display", "clicked", "update-desc"],
     setup(props) {
@@ -386,6 +386,8 @@ export default defineComponent({
                     if (MediaController.MediaData && MediaController.MediaData.id === mid) {
                         MediaController.MediaData.description_url = res.url || "";
                     }
+
+                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE);
 
                     this.$emit("update-desc");
 

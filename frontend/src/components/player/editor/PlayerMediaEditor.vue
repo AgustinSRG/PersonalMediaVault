@@ -80,7 +80,7 @@
             >
         </div>
 
-        <EditorGeneral v-if="page === 'general'" @changed="onChanged"></EditorGeneral>
+        <EditorGeneral v-if="page === 'general'" @changed="onChanged" @open-description="openDescription"></EditorGeneral>
         <EditorRelatedMedia v-else-if="page === 'related'" @changed="onChanged"></EditorRelatedMedia>
         <EditorSubtitles v-else-if="page === 'subtitles'" @changed="onChanged"></EditorSubtitles>
         <EditorAudios v-else-if="page === 'audios'" @changed="onChanged"></EditorAudios>
@@ -147,7 +147,7 @@ export default defineComponent({
         EditorResolutions,
         EditorDangerZone,
     },
-    emits: ["changed"],
+    emits: ["changed", "open-description"],
     data: function () {
         return {
             page: "general",
@@ -191,6 +191,10 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        openDescription: function () {
+            this.$emit("open-description");
         },
     },
 });

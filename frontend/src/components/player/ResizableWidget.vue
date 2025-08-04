@@ -16,7 +16,7 @@
         @contextmenu="stopPropagationEvent"
     >
         <div class="resizable-widget-header" @mousedown="startMoving($event, true)" @touchstart.passive="startMoving($event, false)">
-            <div class="resizable-widget-title">{{ title }}</div>
+            <div class="resizable-widget-title" :title="title">{{ title }}</div>
             <div v-if="actionButtons && actionButtons.length > 0" class="resizable-widget-action-buttons">
                 <button
                     v-for="btn in actionButtons"

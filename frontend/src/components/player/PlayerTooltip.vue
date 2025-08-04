@@ -37,8 +37,6 @@ export default defineComponent({
 
         helpTooltip: String,
 
-        hasDescription: Boolean,
-
         muted: Boolean,
         volume: Number,
 
@@ -78,7 +76,7 @@ export default defineComponent({
                 case "scale":
                     return this.$t("Scale") + " (" + (this.fit ? this.$t("Fit") : this.renderScale(this.scale)) + ")";
                 case "desc":
-                    return this.hasDescription ? this.$t("Description") : this.$t("Add description");
+                    return this.$t("Description");
                 case "attachments":
                     return this.$t("Attachments");
                 case "related-media":

@@ -130,6 +130,7 @@
             v-if="displayDescription"
             v-model:display="displayDescriptionStatus"
             :context-open="contextMenuShown"
+            :title="title"
             @clicked="clickControls"
             @update-desc="refreshDescription"
         ></DescriptionWidget>
@@ -216,7 +217,7 @@
 
             <div class="player-controls-right">
                 <button
-                    v-if="hasDescription || canWrite"
+                    v-if="hasDescription"
                     type="button"
                     :title="$t('Description')"
                     class="player-btn player-btn-hide-mobile"
@@ -224,8 +225,7 @@
                     @mouseenter="enterTooltip('desc')"
                     @mouseleave="leaveTooltip('desc')"
                 >
-                    <i v-if="hasDescription" class="fas fa-file-lines"></i>
-                    <i v-else class="fas fa-file-circle-plus"></i>
+                    <i class="fas fa-file-lines"></i>
                 </button>
 
                 <button
@@ -307,7 +307,6 @@
             :prev="prev"
             :page-next="pageNext"
             :page-prev="pagePrev"
-            :has-description="hasDescription"
             :muted="muted"
             :volume="volume"
         ></PlayerTooltip>
@@ -396,6 +395,7 @@
             :in-album="inAlbum"
             @update:expanded="onTopBarExpand"
             @click-player="clickControls"
+            @open-description="openDescription"
         ></PlayerTopBar>
 
         <PlayerContextMenu
