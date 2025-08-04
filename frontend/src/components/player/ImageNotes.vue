@@ -134,15 +134,9 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import {
-    EVENT_NAME_IMAGE_NOTES_CHANGE,
-    EVENT_NAME_IMAGE_NOTES_SAVED,
-    EVENT_NAME_IMAGE_NOTES_UPDATE,
-    ImageNotesController,
-} from "@/control/img-notes";
+import { EVENT_NAME_IMAGE_NOTES_CHANGE, EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
 import { escapeHTML } from "@/utils/html";
 import type { ImageNote } from "@/utils/notes-format";
-import { PagesController } from "@/control/pages";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
@@ -251,8 +245,6 @@ export default defineComponent({
         this.$listenOnDocumentEvent("touchmove", this.touchMove.bind(this));
 
         this.onNotesUpdate();
-
-        this.$listenOnAppEvent(EVENT_NAME_IMAGE_NOTES_SAVED, this.onNotesSaved.bind(this));
     },
 
     methods: {
@@ -648,10 +640,6 @@ export default defineComponent({
                 this.realWidth = bounds.width;
                 this.realHeight = bounds.height;
             });
-        },
-
-        onNotesSaved: function () {
-            PagesController.ShowSnackBar(this.$t("Image notes have been saved"));
         },
     },
 });
