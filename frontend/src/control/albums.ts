@@ -394,6 +394,9 @@ export class AlbumsController {
      */
     public static ToggleLoop() {
         AlbumsController.AlbumLoop = !AlbumsController.AlbumLoop;
+        if (AlbumsController.AlbumLoop) {
+            AlbumsController.AlbumRandom = false;
+        }
         this.UpdateAlbumCurrentPos();
     }
 
@@ -402,6 +405,9 @@ export class AlbumsController {
      */
     public static ToggleRandom() {
         AlbumsController.AlbumRandom = !AlbumsController.AlbumRandom;
+        if (AlbumsController.AlbumRandom) {
+            AlbumsController.AlbumLoop = false;
+        }
         this.UpdateAlbumCurrentPos();
     }
 
