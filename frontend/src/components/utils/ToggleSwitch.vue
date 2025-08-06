@@ -1,7 +1,7 @@
 <template>
-    <div class="switch-button-container" tabindex="0" disabled="disabled" @keydown="keyToggle">
+    <div class="switch-button-container" tabindex="0" @keydown="keyToggle">
         <div class="switch-button-control">
-            <div class="switch-button" :class="{ enabled: val }" @click="toggle">
+            <div class="switch-button" :class="{ enabled: val, disabled: disabled }" @click="toggle">
                 <div class="button"></div>
             </div>
         </div>

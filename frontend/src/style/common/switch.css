@@ -26,6 +26,10 @@
     background: var(--switch-disabled-color);
 }
 
+.switch-button-control .switch-button.disabled {
+    cursor: default;
+}
+
 .switch-button-control .switch-button .button {
     height: 26px;
     width: 26px;
