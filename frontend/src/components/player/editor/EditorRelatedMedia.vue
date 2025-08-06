@@ -28,7 +28,7 @@
                     <div class="editor-related-media-title">
                         <a :href="getMediaURL(item.id)" target="_blank" rel="noopener noreferrer">{{ item.title || $t("Untitled") }}</a>
                     </div>
-                    <div v-id="canWrite" class="editor-related-media-buttons">
+                    <div v-if="canWrite" class="editor-related-media-buttons">
                         <button
                             type="button"
                             :disabled="busyRelated || i === 0"
