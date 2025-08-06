@@ -273,7 +273,6 @@
             :fullscreen="fullscreen"
             :in-album="inAlbum"
             @click-player="clickControls"
-            @open-description="openDescription"
         ></PlayerTopBar>
 
         <PlayerContextMenu

@@ -133,21 +133,6 @@
                 </div>
                 <div v-if="errorThumbnail" class="form-error form-error-pt text-center">{{ errorThumbnail }}</div>
             </div>
-
-            <!--- Description -->
-
-            <div v-if="canWrite || hasDescription" class="form-group">
-                <label>{{ $t("Description") }}:</label>
-            </div>
-
-            <div v-if="canWrite || hasDescription" class="form-group">
-                <button v-if="hasDescription" type="button" class="btn btn-primary" @click="openDescription">
-                    <i class="fas fa-file-lines"></i> {{ $t("Show media description") }}
-                </button>
-                <button v-else type="button" class="btn btn-primary" @click="openDescription">
-                    <i class="fas fa-plus"></i> {{ $t("Add description") }}
-                </button>
-            </div>
         </div>
 
         <ThumbnailCropModal
@@ -172,7 +157,7 @@ import { AlbumsController } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
@@ -197,7 +182,7 @@ export default defineComponent({
         MediaTagsEditor,
         SaveChangesAskModal,
     },
-    emits: ["changed", "open-description"],
+    emits: ["changed"],
     setup() {
         return {
             requestIdTitle: getUniqueStringId(),
@@ -237,8 +222,6 @@ export default defineComponent({
             errorExtraConfig: "",
             errorThumbnail: "",
 
-            hasDescription: false,
-
             canWrite: AuthController.CanWrite,
 
             mediaElementReady: false,
@@ -256,7 +239,6 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, this.updateDescription.bind(this));
 
         this.checkMediaElement();
 
@@ -309,12 +291,6 @@ export default defineComponent({
             this.isAnimation = this.originalIsAnimation;
 
             this.thumbnail = MediaController.MediaData.thumbnail;
-
-            this.hasDescription = !!MediaController.MediaData.description_url;
-        },
-
-        updateDescription: function () {
-            this.hasDescription = !!MediaController.MediaData.description_url;
         },
 
         getThumbnail(thumb: string) {
@@ -715,10 +691,6 @@ export default defineComponent({
             if (this.exitCallback) {
                 this.exitCallback();
             }
-        },
-
-        openDescription: function () {
-            this.$emit("open-description");
         },
     },
 });

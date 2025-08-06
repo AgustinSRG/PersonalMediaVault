@@ -2,7 +2,7 @@
     <div class="player-editor-sub-content">
         <!--- Resolutions -->
 
-        <div v-if="canWrite && (type === 2 || type === 1)" class="form-group">
+        <div class="form-group">
             <label v-if="type === 2"
                 >{{ $t("Extra resolutions for videos. These resolutions can be used for slow connections or small screens") }}.</label
             >
@@ -11,12 +11,12 @@
             >
         </div>
 
-        <div v-if="canWrite && (type === 2 || type === 1)" class="form-group">
+        <div class="form-group">
             <label v-if="type === 1">{{ $t("Original resolution") }}: {{ width }}x{{ height }}</label>
             <label v-if="type === 2"> {{ $t("Original resolution") }}: {{ width }}x{{ height }}, {{ fps }} fps </label>
         </div>
 
-        <div v-if="canWrite && (type === 2 || type === 1) && resolutions.length > 0" class="table-responsive">
+        <div v-if="(type === 2 || type === 1) && resolutions.length > 0" class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -32,7 +32,7 @@
                             {{ renderResolutionProperties(res.width, res.height, width, height) }}
                         </td>
                         <td v-if="type === 2">{{ res.width }}x{{ res.height }}, {{ res.fps }} fps</td>
-                        <td class="text-right">
+                        <td v-if="canWrite" class="text-right">
                             <button
                                 v-if="!res.enabled"
                                 type="button"
@@ -52,6 +52,11 @@
                                 <LoadingIcon icon="fas fa-trash-alt" :loading="busy && busyTarget === res.name"></LoadingIcon>
                                 {{ $t("Delete") }}
                             </button>
+                        </td>
+                        <td v-else class="text-right">
+                            <i v-if="res.enabled" class="fas fa-check"></i>
+                            <i v-else class="fas fa-times"></i>
+                            <span>&nbsp;{{ res.enabled ? $t("Available") : $t("Not available") }}</span>
                         </td>
                     </tr>
                 </tbody>

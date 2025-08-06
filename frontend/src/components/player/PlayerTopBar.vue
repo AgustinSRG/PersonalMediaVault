@@ -40,7 +40,7 @@
         </div>
 
         <PlayerAlbumFullScreen v-if="albumExpanded" @close="closeAlbum"></PlayerAlbumFullScreen>
-        <PlayerMediaEditor v-if="expanded" @changed="onEditDone" @open-description="openDescription"></PlayerMediaEditor>
+        <PlayerMediaEditor v-if="expanded" @changed="onEditDone"></PlayerMediaEditor>
     </div>
 </template>
 
@@ -75,7 +75,7 @@ export default defineComponent({
         expanded: Boolean,
         albumExpanded: Boolean,
     },
-    emits: ["update:expanded", "update:albumExpanded", "click-player", "open-description"],
+    emits: ["update:expanded", "update:albumExpanded", "click-player"],
     setup(props) {
         return {
             expandedState: useVModel(props, "expanded"),
@@ -201,10 +201,6 @@ export default defineComponent({
                     autoFocus.focus();
                 }
             }
-        },
-
-        openDescription: function () {
-            this.$emit("open-description");
         },
     },
 });

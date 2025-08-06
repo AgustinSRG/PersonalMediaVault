@@ -3,9 +3,10 @@
         <div
             class="horizontal-filter-menu"
             :class="{
-                'three-child': (!canWrite && type === 2) || (!canWrite && type === 3) || (type === 1 && canWrite),
-                'four-child': (type === 2 && canWrite) || (type === 1 && !canWrite),
-                'five-child': type == 3 && !canWrite,
+                'can-write': canWrite,
+                'image-opts-menu': type === 1,
+                'video-opts-menu': type === 2,
+                'audio-opts-menu': type == 3,
             }"
         >
             <a
@@ -14,6 +15,30 @@
                 :class="{ selected: page === 'general' }"
                 @click="changePage('general')"
                 >{{ $t("General") }}</a
+            >
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'description' }"
+                @click="changePage('description')"
+                >{{ $t("Description") }}</a
+            >
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'attachments' }"
+                @click="changePage('attachments')"
+                >{{ $t("Attachments") }}</a
+            >
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'related' }"
+                @click="changePage('related')"
+                >{{ $t("Related media") }}</a
             >
 
             <a
@@ -48,22 +73,9 @@
                 @click="changePage('image-notes')"
                 >{{ $t("Image notes") }}</a
             >
+
             <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :class="{ selected: page === 'related' }"
-                @click="changePage('related')"
-                >{{ $t("Related media") }}</a
-            >
-            <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :class="{ selected: page === 'attachments' }"
-                @click="changePage('attachments')"
-                >{{ $t("Attachments") }}</a
-            >
-            <a
-                v-if="(type === 1 || type === 2) && canWrite"
+                v-if="type === 1 || type === 2"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'resolutions' }"
@@ -80,7 +92,8 @@
             >
         </div>
 
-        <EditorGeneral v-if="page === 'general'" @changed="onChanged" @open-description="openDescription"></EditorGeneral>
+        <EditorGeneral v-if="page === 'general'" @changed="onChanged"></EditorGeneral>
+        <EditorDescription v-if="page === 'description'" @changed="onChanged"></EditorDescription>
         <EditorRelatedMedia v-else-if="page === 'related'" @changed="onChanged"></EditorRelatedMedia>
         <EditorSubtitles v-else-if="page === 'subtitles'" @changed="onChanged"></EditorSubtitles>
         <EditorAudios v-else-if="page === 'audios'" @changed="onChanged"></EditorAudios>
@@ -100,6 +113,10 @@ import { defineAsyncComponent, defineComponent } from "vue";
 
 const EditorGeneral = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorGeneral.vue"),
+});
+
+const EditorDescription = defineAsyncComponent({
+    loader: () => import("@/components/player/editor/EditorDescription.vue"),
 });
 
 const EditorRelatedMedia = defineAsyncComponent({
@@ -138,6 +155,7 @@ export default defineComponent({
     name: "PlayerMediaEditor",
     components: {
         EditorGeneral,
+        EditorDescription,
         EditorRelatedMedia,
         EditorSubtitles,
         EditorAudios,
@@ -147,7 +165,7 @@ export default defineComponent({
         EditorResolutions,
         EditorDangerZone,
     },
-    emits: ["changed", "open-description"],
+    emits: ["changed"],
     data: function () {
         return {
             page: "general",
@@ -191,10 +209,6 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
-        },
-
-        openDescription: function () {
-            this.$emit("open-description");
         },
     },
 });

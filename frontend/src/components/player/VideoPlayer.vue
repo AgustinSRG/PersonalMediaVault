@@ -421,7 +421,6 @@
             :in-album="inAlbum"
             @update:expanded="onTopBarExpand"
             @click-player="clickControls"
-            @open-description="openDescription"
         ></PlayerTopBar>
 
         <PlayerContextMenu

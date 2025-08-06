@@ -160,6 +160,8 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, this.updateDescription.bind(this));
+
         if (this.display) {
             this.load();
         }
@@ -323,6 +325,14 @@ export default defineComponent({
             this.load();
         },
 
+        updateDescription: function (source: string) {
+            if (source === "widget") {
+                return;
+            }
+
+            this.updateMediaData();
+        },
+
         startEdit: function () {
             if (this.editing) {
                 return;
@@ -345,11 +355,11 @@ export default defineComponent({
                 .split("\n\n")
                 .map((paragraph) => {
                     if (paragraph.startsWith("###")) {
-                        return "<h3>" + escapeHTML(paragraph.substring(3)).replace(/\n/g, "<br>") + "</h3>";
+                        return "<h3>" + escapeHTML(paragraph.substring(3).trim()).replace(/\n/g, "<br>") + "</h3>";
                     } else if (paragraph.startsWith("##")) {
-                        return "<h2>" + escapeHTML(paragraph.substring(2)).replace(/\n/g, "<br>") + "</h2>";
+                        return "<h2>" + escapeHTML(paragraph.substring(2).trim()).replace(/\n/g, "<br>") + "</h2>";
                     } else if (paragraph.startsWith("#")) {
-                        return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
+                        return "<h1>" + escapeHTML(paragraph.substring(1).trim()).replace(/\n/g, "<br>") + "</h1>";
                     } else {
                         return "<p>" + replaceLinks(escapeHTML(paragraph)).replace(/\n/g, "<br>") + "</p>";
                     }
@@ -387,7 +397,7 @@ export default defineComponent({
                         MediaController.MediaData.description_url = res.url || "";
                     }
 
-                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE);
+                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
 
                     this.$emit("update-desc");
 
