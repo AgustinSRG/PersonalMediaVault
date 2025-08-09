@@ -3,7 +3,7 @@
         <div class="search-results auto-focus" tabindex="-1">
             <PageMenu
                 v-if="total > 0"
-                :page-name="'search'"
+                :page-name="'media'"
                 :order="order"
                 :page="page"
                 :pages="totalPages"
@@ -24,7 +24,19 @@
                 </div>
             </div>
 
-            <div v-if="!loading && total <= 0 && firstLoaded" class="search-results-msg-display">
+            <div v-if="!loading && total <= 0 && !search && firstLoaded" class="search-results-msg-display">
+                <div class="search-results-msg-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="search-results-msg-text">
+                    {{ $t("The vault is empty") }}
+                </div>
+                <div class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
+                </div>
+            </div>
+
+            <div v-if="!loading && total <= 0 && search && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
                     {{ $t("Could not find any result") }}
@@ -94,7 +106,7 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import {
@@ -110,7 +122,7 @@ import ThumbImage from "../utils/ThumbImage.vue";
 import DurationIndicator from "../utils/DurationIndicator.vue";
 
 export default defineComponent({
-    name: "PageSearch",
+    name: "PageMedia",
     components: {
         PageMenu,
         ThumbImage,
@@ -257,10 +269,10 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch(this.search, this.order, this.page, this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearch(this.search || "", this.order, this.page, this.pageSize))
                 .onSuccess((result) => {
+                    TagsController.OnMediaListReceived(result.page_items);
                     this.pageItems = result.page_items;
-                    TagsController.OnMediaListReceived(this.pageItems);
                     this.page = result.page_index;
                     this.totalPages = result.page_count;
                     this.total = result.total_count;
@@ -320,12 +332,11 @@ export default defineComponent({
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
 
+            let mustLoad = false;
+
             if (AppStatus.CurrentSearch !== this.search) {
                 this.search = AppStatus.CurrentSearch;
-                this.page = 0;
-                this.order = "desc";
-                this.load();
-                this.onSearchParamsChanged();
+                mustLoad = true;
             }
 
             if (AppStatus.SearchParams !== this.searchParams) {
@@ -334,9 +345,14 @@ export default defineComponent({
                 this.load();
             }
 
+            if (mustLoad) {
+                this.load();
+            }
+
             if (changed) {
                 this.scrollToCurrentMedia();
             }
+
             this.onCurrentMediaChanged();
         },
 
@@ -406,7 +422,7 @@ export default defineComponent({
         },
 
         clearSearch: function () {
-            AppStatus.GoToSearch("");
+            AppStatus.ClearSearch();
         },
 
         goAdvancedSearch: function () {

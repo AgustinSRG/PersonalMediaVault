@@ -55,9 +55,9 @@
                             <td class="text-right">{{ renderSize(imageNotesSize) }}</td>
                         </tr>
 
-                        <tr v-if="extendedDescriptionSize > 0">
-                            <td>{{ $t("Extended description") }}</td>
-                            <td class="text-right">{{ renderSize(extendedDescriptionSize) }}</td>
+                        <tr v-if="descriptionSize > 0">
+                            <td>{{ $t("Description") }}</td>
+                            <td class="text-right">{{ renderSize(descriptionSize) }}</td>
                         </tr>
 
                         <tr v-if="attachmentsSize > 0">
@@ -120,7 +120,7 @@ export default defineComponent({
             subtitlesSize: 0,
             audioTracksSize: 0,
             imageNotesSize: 0,
-            extendedDescriptionSize: 0,
+            descriptionSize: 0,
 
             attachmentsSize: 0,
 
@@ -187,7 +187,7 @@ export default defineComponent({
                     this.audioTracksSize = 0;
                     this.imageNotesSize = 0;
 
-                    this.extendedDescriptionSize = 0;
+                    this.descriptionSize = 0;
 
                     this.attachmentsSize = 0;
 
@@ -210,8 +210,8 @@ export default defineComponent({
                             this.videoPreviewsSize += asset.size;
                         } else if (assetName === "IMG_NOTES") {
                             this.imageNotesSize += asset.size;
-                        } else if (assetName === "EXT_DESC") {
-                            this.extendedDescriptionSize += asset.size;
+                        } else if (assetName === "DESCRIPTION") {
+                            this.descriptionSize += asset.size;
                         } else if (assetName.startsWith("RESIZED_")) {
                             this.resizedSize += asset.size;
                         } else if (assetName.startsWith("SUBTITLES_")) {

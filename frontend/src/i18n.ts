@@ -2,9 +2,11 @@
 
 "use strict";
 
-import { App, Ref, nextTick, ref } from "vue";
+import type { App, Ref } from "vue";
+import { nextTick, ref } from "vue";
 import { AppEvents } from "./control/app-events";
 import { clearLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
+
 declare module "vue" {
     interface ComponentCustomProperties {
         /**

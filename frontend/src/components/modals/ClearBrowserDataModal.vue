@@ -213,7 +213,7 @@ export default defineComponent({
             }
 
             if (this.clearResizableWidgets) {
-                ["ext-desc-widget-pos", "tags-edit-helper-pos", "time-slices-helper-pos"].forEach(clearLocalStorage);
+                ["desc-widget-pos", "tags-edit-helper-pos", "time-slices-helper-pos"].forEach(clearLocalStorage);
             }
 
             this.close();

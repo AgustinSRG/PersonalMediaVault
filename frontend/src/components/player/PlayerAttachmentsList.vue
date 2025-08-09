@@ -35,11 +35,11 @@
 </template>
 
 <script lang="ts">
-import { getAutoNextTime, getImageNotesVisible } from "@/control/player-preferences";
-import { defineComponent, nextTick, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
-import { MediaAttachment } from "@/api/models";
+import type { MediaAttachment } from "@/api/models";
 import { getAssetURL } from "@/utils/api";
 
 export default defineComponent({
@@ -53,13 +53,6 @@ export default defineComponent({
         return {
             focusTrap: null as FocusTrap,
             shownState: useVModel(props, "shown"),
-        };
-    },
-    data: function () {
-        return {
-            autoNext: getAutoNextTime(),
-            autoNextOptions: [0, 3, 5, 10, 15, 20, 25, 30],
-            hideNotes: !getImageNotesVisible(),
         };
     },
     watch: {

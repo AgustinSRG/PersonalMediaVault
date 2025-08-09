@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
     <!-- Use * to generate product ID on every build -->
-    <Product Id="*" Name="PersonalMediaVault" Version="2.0.0.0" Language="!(loc.LanguageID)" Manufacturer="AgustinSRG" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
+    <Product Id="*" Name="PersonalMediaVault" Version="3.0.0.0" Language="!(loc.LanguageID)" Manufacturer="AgustinSRG" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
 
         <Package Compressed="yes" InstallScope="perMachine" Manufacturer="AgustinSRG" Description="!(loc.ProgramPackageDescription)" Platform="x64" />
 

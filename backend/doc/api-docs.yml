@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 2.0.0
+  version: 3.0.0
 
 # cSpell:ignore allof, anyof, noneof, gyan
 
@@ -39,6 +39,8 @@ tags:
     description: Requests information about the server
   - name: invites
     description: Invite codes API. Manages codes to temporally invite users or devices.
+  - name: home
+    description: Home page API. Manages home page customization.
   
 
 paths:
@@ -159,6 +161,9 @@ paths:
               title:
                 type: string
                 description: "Custom title for the vault"
+              logo:
+                type: string
+                description: "Custom logotype text for the vault"
               css:
                 type: string
                 description: "Custom style for the vault"
@@ -748,10 +753,6 @@ paths:
                 type: string
                 description: "Media title"
                 example: "Media title"
-              description:
-                type: string
-                description: "Media description"
-                example: "Media description"
               tags:
                 type: array
                 description: Associated tags
@@ -905,10 +906,10 @@ paths:
                 type: string
                 description: "URL to fetch the image notes from"
                 example: "/assets/b/0/0/notes.json"
-              ext_desc_url:
+              description_url:
                 type: string
-                description: "URL to fetch the extended description from. Empty if no extended description."
-                example: "/assets/b/0/0/ext_desc.txt"
+                description: "URL to fetch the description from. Empty if no description."
+                example: "/assets/b/0/0/description.txt"
               time_slices:
                 type: array
                 description: "Timeline splits, for videos and audios"
@@ -921,6 +922,11 @@ paths:
                     name:
                       type: string
                       description: "Name of the time slice"
+              related:
+                type: array
+                items:
+                  $ref: '#/definitions/MediaListItem'
+
                 
   "/api/media/{id}/albums":
     get:
@@ -1062,12 +1068,11 @@ paths:
           description: Not found
         200:
           description: Success
-          
-          
+  
   "/api/media/{id}/edit/description":
     post:
-      summary: Changes media description.
-      description: Changes the description for a media asset.
+      summary: Sets the description.
+      description: Updates the description file for a media asset.
       tags:
         - media
       consumes:
@@ -1082,31 +1087,17 @@ paths:
           format: int64
           description: Media ID
         - in: body
-          name: description
+          name: array of notes
           schema:
             properties:
               description:
                 type: string
-                description: Media description (max 5 MB)
-                example: New Media description
+                description: "Description to store"
       security:
         - SessionTokenHeader: []
       responses:
         400:
           description: Bad request.
-          schema:
-            properties:
-              code:
-                type: string
-                description: >
-                  Error code:
-                    * INVALID_DESCRIPTION - Invalid media description provided
-                enum:
-                  - INVALID_DESCRIPTION
-              message:
-                type: string
-                description: "Error message"
-                example: "Error message"
         401:
           description: Unauthorized (No valid session)
         403:
@@ -1115,6 +1106,12 @@ paths:
           description: Not found
         200:
           description: Success
+          schema:
+            properties:
+              url:
+                type: string
+                description: "New description URL"
+                example: "/assets/b/0/0/description.txt"
           
   "/api/media/{id}/edit/extra":
     post:
@@ -1148,6 +1145,48 @@ paths:
       responses:
         400:
           description: Bad request.
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Not found
+        200:
+          description: Success
+  
+  "/api/media/{id}/edit/related":
+    post:
+      summary: Changes related media.
+      description: Changes the related media list for a media asset.
+      tags:
+        - media
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: number
+          format: int64
+          description: Media ID
+        - in: body
+          name: title
+          schema:
+            properties:
+              related:
+                type: array
+                description: List of related media IDs
+                items:
+                  type: number
+                  format: int64
+                  description: "Related media ID"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request (Invalid related media list).
         401:
           description: Unauthorized (No valid session)
         403:
@@ -1263,50 +1302,6 @@ paths:
                 type: string
                 description: "New notes URL"
                 example: "/assets/b/0/0/notes.json"
-
-  "/api/media/{id}/edit/ext_desc":
-    post:
-      summary: Sets the extended description.
-      description: Updates the extended description file for a media asset.
-      tags:
-        - media
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: number
-          format: int64
-          description: Media ID
-        - in: body
-          name: array of notes
-          schema:
-            properties:
-              ext_desc:
-                type: string
-                description: "Extended description to store"
-      security:
-        - SessionTokenHeader: []
-      responses:
-        400:
-          description: Bad request.
-        401:
-          description: Unauthorized (No valid session)
-        403:
-          description: Access denied
-        404:
-          description: Not found
-        200:
-          description: Success
-          schema:
-            properties:
-              url:
-                type: string
-                description: "New extended description URL"
-                example: "/assets/b/0/0/ext_desc.txt"
           
   "/api/media/{id}/edit/thumbnail":
     post:
@@ -2604,26 +2599,7 @@ paths:
           schema:
             type: array
             items:
-              properties:
-                id:
-                  type: number
-                  format: int64
-                  description: Album ID
-                name:
-                  type: string
-                  description: "Album name"
-                  example: "Album name"
-                size:
-                  type: number
-                  format: int32
-                  description: Number of items in the album
-                thumbnail:
-                  type: string
-                  description: Thumbnail for the album (of the first media)
-                lm:
-                  type: number
-                  format: int64
-                  description: Last modified timestamp (Unix milliseconds)
+              $ref: '#/definitions/AlbumListItem'
                     
     post:
       summary: Create album
@@ -3759,7 +3735,325 @@ paths:
                 type: string
                 description: "Vault fingerprint"
           
-           
+  "/api/home":
+    get:
+      summary: Get home page
+      description: Gets the list of groups in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/HomePageGroup'
+    post:
+      summary: Adds a group to the home page
+      description: Adds a group to the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              name:
+                type: string
+                description: "Group name (max 255 bytes)"
+              type:
+                type: number
+                format: int32
+                enum:
+                  - 0
+                  - 1
+                  - 2
+                description: >
+                  Type of group:
+                    - 0 (Custom group, elements are defined by the user)
+                    - 1 (recent media, client should call the search API)
+                    - 2 (recent albums, client should call the albums API)
+              prepend:
+                type: boolean
+                description: "True to add the group at the top, false to add it to the bottom"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid group name
+                    * INVALID_GROUP_TYPE - Invalid group type provided
+                    * TOO_MANY_GROUPS - Max number of groups exceeded (1024)
+                enum:
+                  - INVALID_NAME
+                  - INVALID_GROUP_TYPE
+                  - TOO_MANY_GROUPS
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/HomePageGroup'
+              
+  "/api/home/{id}/elements":
+    get:
+      summary: Gets the elements of a home group
+      description: Gets the list of custom elements in a home page custom group
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        404:
+          description: Group not found
+        200:
+          description: List of elements in the group
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/HomePageGroupElement'
+    post:
+      summary: Sets the elements of a home group
+      description: Sets the list of elements ina custom home group
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              elements:
+                type: array
+                description: "Include this property to set the list of elements"
+                items:
+                  $ref: '#/definitions/HomePageGroupElementRef'
+              add:
+                description: "Include this property to add an element"
+                $ref: '#/definitions/HomePageGroupElementRef'
+              delete:
+                description: "Include this property to delete an element"
+                $ref: '#/definitions/HomePageGroupElementRef'
+              move:
+                description: "Include this property to move an element"
+                $ref: '#/definitions/HomePageGroupElementRefMove'
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * NOT_CUSTOM_GROUP - The group is not a custom group
+                    * TOO_MANY_ELEMENTS - Max number of elements exceeded (256)
+                enum:
+                  - NOT_CUSTOM_GROUP
+                  - TOO_MANY_ELEMENTS
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+  
+  "/api/home/{id}/name":
+    post:
+      summary: Renames a home group
+      description: Renames a group in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              name:
+                type: string
+                description: "Group name (max 255 bytes)"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        400:
+          description: Bad request.
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_NAME - Invalid name provided
+                enum:
+                  - INVALID_NAME
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+  
+  "/api/home/{id}/move":
+    post:
+      summary: Moves a home group
+      description: Moves a group in the home page to a different position in the list
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: body
+          name: Group options
+          schema:
+            properties:
+              position:
+                type: number
+                format: int32
+                description: "New position for the group in the list"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+        404:
+          description: Group not found
+        200:
+          description: OK
+          
+  "/api/home/{id}":
+    delete:
+      summary: Deletes a home group
+      description: Deletes a group in the home page
+      tags:
+        - home
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+          description: "ID of the group"
+        - in: header
+          name: "x-auth-confirmation-tfa"
+          type: string
+          description: "Two factor authentication code (if applicable) to confirm the operation"
+        - in: header
+          name: "x-auth-confirmation-pw"
+          type: string
+          description: "Account password (if applicable) to confirm the operation"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        403:
+          description: Access denied
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * AUTH_CONFIRMATION_REQUIRED_TFA - Required auth confirmation (two factor authentication)
+                    * INVALID_TFA_CODE - Invalid two factor authentication code
+                    * AUTH_CONFIRMATION_REQUIRED_PW - Required auth confirmation (password)
+                    * INVALID_PASSWORD - Invalid password
+                    * COOLDOWN - When you fail a confirmation, there is a cooldown of 5 seconds.
+                    * ACCESS_DENIED - Access denied to the API
+                enum:
+                  - AUTH_CONFIRMATION_REQUIRED_TFA
+                  - INVALID_TFA_CODE
+                  - AUTH_CONFIRMATION_REQUIRED_PW
+                  - INVALID_PASSWORD
+                  - COOLDOWN
+                  - ACCESS_DENIED
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: OK
+  
 definitions:
     MediaListItem:
       description: Media asset info to show in lists
@@ -3786,10 +4080,6 @@ definitions:
           type: string
           description: "Media title"
           example: "Media title"
-        description:
-          type: string
-          description: "Media description"
-          example: "Media description"
         tags:
           type: array
           description: List of tags
@@ -3805,12 +4095,38 @@ definitions:
           format: double
           description: Duration of the media in seconds (videos and audios)
     
+    AlbumListItem:
+      description: "Album metadata to show in lists"
+      properties:
+        id:
+          type: number
+          format: int64
+          description: Album ID
+        name:
+          type: string
+          description: "Album name"
+          example: "Album name"
+        size:
+          type: number
+          format: int32
+          description: Number of items in the album
+        thumbnail:
+          type: string
+          description: Thumbnail for the album (of the first media)
+        lm:
+          type: number
+          format: int64
+          description: Last modified timestamp (Unix milliseconds)
+    
     UserConfig:
       description: User configuration
       properties:
         title:
           type: string
           description: Custom vault title
+        logo:
+          type: string
+          description: Custom logotype text
         max_tasks:
           type: number
           format: int32
@@ -3936,3 +4252,75 @@ definitions:
           type: number
           format: double
           description: "Stage progress: A number from 0 to 100"
+  
+    HomePageGroup:
+      description: "A group of elements for the home page"
+      properties:
+        id:
+          type: number
+          format: int64
+          description: "ID of the group"
+        type:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+            - 2
+          description: >
+            Type of group:
+              - 0 (Custom group, elements are defined by the user)
+              - 1 (recent media, client should call the search API)
+              - 2 (recent albums, client should call the albums API)
+        name:
+            type: string
+            description: "Name of the group, in order to display it"
+        elementsCount:
+            type: number
+            format: in32
+            description: "Number of elements (only relevant for custom groups)"
+      required:
+        - id
+        - type
+    
+    HomePageGroupElement:
+      description: "Element of a custom group in the home page. Can be a media or an album."
+      properties:
+        media:
+          $ref: '#/definitions/MediaListItem'
+        album:
+          $ref: '#/definitions/AlbumListItem'
+    
+    HomePageGroupElementRef:
+      description: "Reference to a home page element"
+      properties:
+        t:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+          description: "Type of element. 0 for Media and 1 for Album."
+        i:
+          type: number
+          format: int64
+          description: "ID of the media or album the element references"
+    
+    HomePageGroupElementRefMove:
+      description: "Reference to a home page element to move it"
+      properties:
+        t:
+          type: number
+          format: int32
+          enum:
+            - 0
+            - 1
+          description: "Type of element. 0 for Media and 1 for Album."
+        i:
+          type: number
+          format: int64
+          description: "ID of the media or album the element references"
+        position:
+          type: number
+          format: int32
+          description: "Position to move the element"

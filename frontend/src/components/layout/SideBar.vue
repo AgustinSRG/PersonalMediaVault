@@ -12,8 +12,8 @@
                 <button type="button" class="top-bar-button" :title="$t('Main menu')" @click="close">
                     <i class="fas fa-bars"></i>
                 </button>
-                <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
-                <span :title="getAppTitle()" class="top-bar-title">PMV</span>
+                <img class="top-bar-logo-img" src="/img/icons/favicon.png" :alt="getAppLogoText(customLogo)" />
+                <span :title="getAppTitle(customTitle)" class="top-bar-title">{{ getAppLogoText(customLogo) }}</span>
             </div>
         </div>
         <div class="side-bar-body" tabindex="-1">
@@ -31,20 +31,6 @@
             </a>
 
             <a
-                v-if="!!search"
-                class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'search' }"
-                :title="$t('Search results')"
-                :href="getPageURL('search')"
-                target="_blank"
-                rel="noopener noreferrer"
-                @click="goToPage('search', $event)"
-            >
-                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
-                <div class="side-bar-option-text">{{ $t("Search results") }}</div>
-            </a>
-
-            <a
                 class="side-bar-option"
                 :class="{ selected: album < 0 && page === 'albums' }"
                 :title="$t('Albums')"
@@ -58,17 +44,29 @@
             </a>
 
             <a
-                v-if="canWrite"
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'upload' }"
-                :title="$t('Upload')"
-                :href="getPageURL('upload')"
+                :class="{ selected: album < 0 && page === 'media' }"
+                :title="$t('Media')"
+                :href="getPageURL('media')"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToPage('upload', $event)"
+                @click="goToPage('media', $event)"
             >
-                <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
-                <div class="side-bar-option-text">{{ $t("Upload") }}</div>
+                <div class="side-bar-option-icon"><i class="fas fa-photo-film"></i></div>
+                <div class="side-bar-option-text">{{ $t("Media") }}</div>
+            </a>
+
+            <a
+                class="side-bar-option"
+                :class="{ selected: album < 0 && page === 'adv-search' }"
+                :title="$t('Find media')"
+                :href="getPageURL('adv-search')"
+                target="_blank"
+                rel="noopener noreferrer"
+                @click="goToPage('adv-search', $event)"
+            >
+                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
+                <div class="side-bar-option-text">{{ $t("Find media") }}</div>
             </a>
 
             <a
@@ -85,16 +83,17 @@
             </a>
 
             <a
+                v-if="canWrite"
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'adv-search' }"
-                :title="$t('Advanced search')"
-                :href="getPageURL('adv-search')"
+                :class="{ selected: album < 0 && page === 'upload' }"
+                :title="$t('Upload')"
+                :href="getPageURL('upload')"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToPage('adv-search', $event)"
+                @click="goToPage('upload', $event)"
             >
-                <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
-                <div class="side-bar-option-text">{{ $t("Advanced search") }}</div>
+                <div class="side-bar-option-icon"><i class="fas fa-upload"></i></div>
+                <div class="side-bar-option-text">{{ $t("Upload") }}</div>
             </a>
 
             <div v-if="albumsFavorite.length > 0" class="side-bar-separator"></div>
@@ -135,14 +134,16 @@
 </template>
 
 <script lang="ts">
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import {
     EVENT_NAME_ALBUM_SIDEBAR_TOP,
     EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
     getAlbumFavoriteList,
     getAlbumsOrderMap,
 } from "@/control/app-preferences";
-import { AppStatus, AppStatusPage, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import type { AppStatusPage } from "@/control/app-status";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { generateURIQuery } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
@@ -178,6 +179,9 @@ export default defineComponent({
             albumsRest: [] as AlbumListItemMinExt[],
 
             cachedAlbumsSearchParams: AppStatus.CurrentPage === "albums" ? AppStatus.SearchParams : "",
+
+            customTitle: AuthController.Title,
+            customLogo: AuthController.Logo,
         };
     },
     watch: {
@@ -221,8 +225,12 @@ export default defineComponent({
             this.displayStatus = false;
         },
 
-        getAppTitle: function () {
-            return AuthController.Title || this.$t("Personal Media Vault");
+        getAppTitle: function (customTitle: string) {
+            return customTitle || this.$t("Personal Media Vault");
+        },
+
+        getAppLogoText: function (customLogo: string) {
+            return customLogo || "PMV";
         },
 
         updateStatus: function () {
@@ -328,6 +336,8 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+            this.customTitle = AuthController.Title;
+            this.customLogo = AuthController.Logo;
         },
 
         putAlbumFirst: function (albumId: number) {

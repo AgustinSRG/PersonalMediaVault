@@ -82,7 +82,8 @@
 </template>
 
 <script lang="ts">
-import { SessionDuration, apiAuthLogin } from "@/api/api-auth";
+import type { SessionDuration } from "@/api/api-auth";
+import { apiAuthLogin } from "@/api/api-auth";
 import { apiInvitesLogin } from "@/api/api-invites";
 import { AuthController } from "@/control/auth";
 import { makeApiRequest } from "@asanrom/request-browser";

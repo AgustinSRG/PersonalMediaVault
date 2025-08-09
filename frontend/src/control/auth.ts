@@ -88,6 +88,11 @@ export class AuthController {
     public static Title = "";
 
     /**
+     * Custom logo text of the vault
+     */
+    public static Logo = "";
+
+    /**
      * Custom CSS of the vault
      */
     public static CSS = "";
@@ -160,6 +165,7 @@ export class AuthController {
                 AuthController.CanWrite = response.write;
                 AuthController.Username = response.username;
                 AuthController.Title = response.title;
+                AuthController.Logo = response.logo;
                 AuthController.CSS = response.css;
                 if (import.meta.env.VITE__VERSION !== response.version) {
                     AppEvents.Emit(EVENT_NAME_APP_NEW_VERSION);

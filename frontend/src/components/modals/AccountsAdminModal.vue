@@ -93,7 +93,8 @@ import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { apiAdminListAccounts, VaultAccount } from "@/api/api-admin";
+import type { VaultAccount } from "@/api/api-admin";
+import { apiAdminListAccounts } from "@/api/api-admin";
 
 export default defineComponent({
     name: "AccountsAdminModal",

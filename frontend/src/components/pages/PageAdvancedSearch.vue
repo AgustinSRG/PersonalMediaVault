@@ -2,7 +2,7 @@
     <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" tabindex="-1" @scroll.passive="onPageScroll">
         <form class="adv-search-form" @submit="onSubmit">
             <div class="form-group">
-                <label>{{ $t("Title or description must contain") }}:</label>
+                <label>{{ $t("Title must contain") }}:</label>
                 <input
                     v-model="textSearch"
                     type="text"
@@ -155,7 +155,7 @@
                         :href="getMediaURL(item.id)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        @click="goToMedia(item.id, $event)"
+                        @click="goToMedia(item, $event)"
                     >
                         <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
                             <div class="search-result-thumb-inner">
@@ -191,16 +191,19 @@
 </template>
 
 <script lang="ts">
-import { MediaListItem } from "@/api/models";
-import { AlbumListItemMinExt, AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import type { MediaListItem } from "@/api/models";
+import type { AlbumListItemMinExt } from "@/control/albums";
+import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_TAGS_UPDATE, MatchingTag, TagsController } from "@/control/tags";
+import type { MatchingTag } from "@/control/tags";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
+import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
@@ -233,6 +236,7 @@ export default defineComponent({
         display: Boolean,
         min: Boolean,
         inModal: Boolean,
+        removeMediaFromList: Object as PropType<Set<number>>,
         noAlbum: Number,
         pageScroll: Number,
         pageSize: Number,
@@ -554,20 +558,22 @@ export default defineComponent({
             const filterTags = this.tags.slice();
             const filterTagMode = this.tagMode;
 
-            let backlistAlbum = new Set();
+            let blacklist = new Set();
 
             if (this.noAlbum >= 0 && AlbumsController.CurrentAlbumData) {
-                backlistAlbum = new Set(
+                blacklist = new Set(
                     AlbumsController.CurrentAlbumData.list.map((a) => {
                         return a.id;
                     }),
                 );
+            } else if (this.removeMediaFromList) {
+                blacklist = this.removeMediaFromList;
             }
 
             const resultsToAdd = [];
 
             for (const e of results) {
-                if (backlistAlbum.has(e.id)) {
+                if (blacklist.has(e.id)) {
                     continue;
                 }
 
@@ -576,10 +582,7 @@ export default defineComponent({
                 }
 
                 if (filterText) {
-                    if (
-                        matchSearchFilter(e.title, filterText, filterTextWords) < 0 &&
-                        matchSearchFilter(e.description, filterText, filterTextWords) < 0
-                    ) {
+                    if (matchSearchFilter(e.title, filterText, filterTextWords) < 0) {
                         continue;
                     }
                 }
@@ -778,20 +781,20 @@ export default defineComponent({
             this.resetSearch();
         },
 
-        goToMedia: function (mid: number, e?: Event) {
+        goToMedia: function (m: MediaListItem, e?: Event) {
             if (e) {
                 e.preventDefault();
             }
             if (this.inModal) {
-                this.$emit("select-media", mid, () => {
+                this.$emit("select-media", m, () => {
                     const fullList = this.listScroller.list;
                     const centerPosition = this.listScroller.getCenterPosition();
 
-                    const mediaIndex = this.mediaIndexMap.get(mid);
+                    const mediaIndex = this.mediaIndexMap.get(m.id);
 
                     if (mediaIndex !== undefined) {
                         fullList.splice(mediaIndex, 1);
-                        this.mediaIndexMap.delete(mid);
+                        this.mediaIndexMap.delete(m.id);
 
                         this.listScroller.moveWindowToElement(centerPosition);
 
@@ -801,7 +804,7 @@ export default defineComponent({
                     }
                 });
             } else {
-                AppStatus.ClickOnMedia(mid, true);
+                AppStatus.ClickOnMedia(m.id, true);
             }
         },
 

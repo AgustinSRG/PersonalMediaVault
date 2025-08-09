@@ -81,13 +81,12 @@ func (c *MediaPreviewCache) getEntryOrMarkAsPending(media_id uint64) (result_ent
 			next:               nil,
 			media_id:           media_id,
 			data: &MediaListAPIItem{
-				Id:          media_id,
-				Type:        MediaTypeDeleted,
-				Title:       "",
-				Description: "",
-				Thumbnail:   "",
-				Duration:    0,
-				Tags:        make([]uint64, 0),
+				Id:        media_id,
+				Type:      MediaTypeDeleted,
+				Title:     "",
+				Thumbnail: "",
+				Duration:  0,
+				Tags:      make([]uint64, 0),
 			},
 		}
 
@@ -235,13 +234,12 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 	defer wg.Done()
 
 	result := MediaListAPIItem{
-		Id:          media_id,
-		Type:        MediaTypeDeleted,
-		Title:       "",
-		Description: "",
-		Thumbnail:   "",
-		Duration:    0,
-		Tags:        make([]uint64, 0),
+		Id:        media_id,
+		Type:      MediaTypeDeleted,
+		Title:     "",
+		Thumbnail: "",
+		Duration:  0,
+		Tags:      make([]uint64, 0),
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
@@ -260,7 +258,6 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 	result.Type = meta.Type
 
 	result.Title = meta.Title
-	result.Description = meta.Description
 
 	if meta.ThumbnailReady {
 		result.Thumbnail = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.ThumbnailAsset) + "/thumbnail.jpg" + "?fp=" + GetVault().credentials.GetFingerprint()

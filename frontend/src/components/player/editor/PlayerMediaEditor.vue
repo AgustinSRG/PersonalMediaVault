@@ -3,9 +3,10 @@
         <div
             class="horizontal-filter-menu"
             :class="{
-                'three-child': (!canWrite && type === 2) || (!canWrite && type === 3) || (type === 1 && canWrite),
-                'four-child': (type === 2 && canWrite) || (type === 1 && !canWrite),
-                'five-child': type == 3 && !canWrite,
+                'can-write': canWrite,
+                'image-opts-menu': type === 1,
+                'video-opts-menu': type === 2,
+                'audio-opts-menu': type == 3,
             }"
         >
             <a
@@ -15,9 +16,31 @@
                 @click="changePage('general')"
                 >{{ $t("General") }}</a
             >
-            <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: page === 'tags' }" @click="changePage('tags')">{{
-                $t("Tags")
-            }}</a>
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'description' }"
+                @click="changePage('description')"
+                >{{ $t("Description") }}</a
+            >
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'attachments' }"
+                @click="changePage('attachments')"
+                >{{ $t("Attachments") }}</a
+            >
+
+            <a
+                href="javascript:;"
+                class="horizontal-filter-menu-item"
+                :class="{ selected: page === 'related' }"
+                @click="changePage('related')"
+                >{{ $t("Related media") }}</a
+            >
+
             <a
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
@@ -50,15 +73,9 @@
                 @click="changePage('image-notes')"
                 >{{ $t("Image notes") }}</a
             >
+
             <a
-                href="javascript:;"
-                class="horizontal-filter-menu-item"
-                :class="{ selected: page === 'attachments' }"
-                @click="changePage('attachments')"
-                >{{ $t("Attachments") }}</a
-            >
-            <a
-                v-if="(type === 1 || type === 2) && canWrite"
+                v-if="type === 1 || type === 2"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
                 :class="{ selected: page === 'resolutions' }"
@@ -76,7 +93,8 @@
         </div>
 
         <EditorGeneral v-if="page === 'general'" @changed="onChanged"></EditorGeneral>
-        <EditorTags v-else-if="page === 'tags'" @changed="onChanged"></EditorTags>
+        <EditorDescription v-if="page === 'description'" @changed="onChanged"></EditorDescription>
+        <EditorRelatedMedia v-else-if="page === 'related'" @changed="onChanged"></EditorRelatedMedia>
         <EditorSubtitles v-else-if="page === 'subtitles'" @changed="onChanged"></EditorSubtitles>
         <EditorAudios v-else-if="page === 'audios'" @changed="onChanged"></EditorAudios>
         <EditorAttachments v-else-if="page === 'attachments'" @changed="onChanged"></EditorAttachments>
@@ -89,6 +107,7 @@
 
 <script lang="ts">
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { ExitPreventer } from "@/control/exit-prevent";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { defineAsyncComponent, defineComponent } from "vue";
 
@@ -96,8 +115,12 @@ const EditorGeneral = defineAsyncComponent({
     loader: () => import("@/components/player/editor/EditorGeneral.vue"),
 });
 
-const EditorTags = defineAsyncComponent({
-    loader: () => import("@/components/player/editor/EditorTags.vue"),
+const EditorDescription = defineAsyncComponent({
+    loader: () => import("@/components/player/editor/EditorDescription.vue"),
+});
+
+const EditorRelatedMedia = defineAsyncComponent({
+    loader: () => import("@/components/player/editor/EditorRelatedMedia.vue"),
 });
 
 const EditorSubtitles = defineAsyncComponent({
@@ -132,7 +155,8 @@ export default defineComponent({
     name: "PlayerMediaEditor",
     components: {
         EditorGeneral,
-        EditorTags,
+        EditorDescription,
+        EditorRelatedMedia,
         EditorSubtitles,
         EditorAudios,
         EditorAttachments,
@@ -163,7 +187,12 @@ export default defineComponent({
 
     methods: {
         changePage: function (page: string) {
-            this.page = page;
+            if (page === this.page) {
+                return;
+            }
+            ExitPreventer.TryExit(() => {
+                this.page = page;
+            });
         },
 
         onChanged: function () {

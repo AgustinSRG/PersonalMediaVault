@@ -1,94 +1,138 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display }">
+    <div
+        class="page-inner"
+        :class="{ hidden: !display, 'page-editing': editing, 'is-min': min }"
+        :style="{
+            '--moving-group-width': movingGroupData.width + 'px',
+            '--moving-group-height': movingGroupData.height + 'px',
+        }"
+        @scroll.passive="onScroll"
+    >
         <div class="search-results auto-focus" tabindex="-1">
-            <PageMenu
-                v-if="total > 0"
-                :page-name="'home'"
-                :order="order"
-                :page="page"
-                :pages="totalPages"
-                :min="min"
-                @goto="changePage"
-            ></PageMenu>
+            <LoadingOverlay v-if="loading"></LoadingOverlay>
 
-            <div v-if="loading" class="search-results-loading-display">
-                <div v-for="f in loadingFiller" :key="f" class="search-result-item">
-                    <div class="search-result-thumb">
-                        <div class="search-result-thumb-inner">
-                            <div class="search-result-loader">
-                                <i class="fa fa-spinner fa-spin"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
-                </div>
-            </div>
-
-            <div v-if="!loading && total <= 0 && firstLoaded" class="search-results-msg-display">
+            <div v-else-if="!loading && groups.length == 0 && firstLoaded" class="search-results-msg-display">
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
                 <div class="search-results-msg-text">
-                    {{ $t("The vault is empty") }}
+                    {{ $t("The home page is empty") }}
                 </div>
-                <div class="search-results-msg-btn">
+                <div v-if="!editing" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="load"><i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}</button>
                 </div>
+                <div v-else class="search-results-msg-btn">
+                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i> {{ $t("Add first row") }}</button>
+                </div>
             </div>
 
-            <div v-if="!loading && total > 0" class="search-results-final-display">
-                <div v-for="(item, i) in pageItems" :key="i" class="search-result-item" :class="{ current: currentMedia == item.id }">
-                    <a
-                        class="clickable"
-                        :href="getMediaURL(item.id)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        @click="goToMedia(item.id, $event)"
-                    >
-                        <div class="search-result-thumb" :title="renderHintTitle(item, tagVersion)">
-                            <div class="search-result-thumb-inner">
-                                <div v-if="!item.thumbnail" class="no-thumb">
-                                    <i v-if="item.type === 1" class="fas fa-image"></i>
-                                    <i v-else-if="item.type === 2" class="fas fa-video"></i>
-                                    <i v-else-if="item.type === 3" class="fas fa-headphones"></i>
-                                    <i v-else class="fas fa-ban"></i>
-                                </div>
-                                <ThumbImage v-if="item.thumbnail" :src="getThumbnail(item.thumbnail)"></ThumbImage>
-                                <DurationIndicator
-                                    v-if="item.type === 2 || item.type === 3"
-                                    :type="item.type"
-                                    :duration="item.duration"
-                                ></DurationIndicator>
-                            </div>
-                        </div>
-                        <div v-if="displayTitles" class="search-result-title">
-                            {{ item.title || $t("Untitled") }}
-                        </div>
-                    </a>
+            <div v-else>
+                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                    <button type="button" class="btn btn-primary btn-mr" @click="showAddRowPrepend">
+                        <i class="fas fa-plus"></i> {{ $t("Add new row") }}
+                    </button>
                 </div>
 
-                <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
+                <HomePageRow
+                    v-for="(g, i) in groups"
+                    :key="g.id"
+                    :group="g"
+                    :row-size="actualRowSize"
+                    :page-size="pageSize"
+                    :display-titles="displayTitles"
+                    :editing="editing"
+                    :moving-over="movingGroup && movingGroupData.movingOver === i + 1"
+                    :moving-self="movingGroup && movingGroupData.startPosition === i"
+                    :current-media="currentMedia"
+                    :tag-version="tagVersion"
+                    :is-current-group="currentGroup == g.id"
+                    :load-tick="loadTick"
+                    :is-mobile-size="isMobileSize"
+                    @request-rename="showRenameRow"
+                    @request-move="showMoveRow"
+                    @request-delete="showDeleteRow"
+                    @start-moving="onStartMoving"
+                    @loaded-current="scrollToCurrentRow"
+                    @must-reload="load"
+                    @updated-prev-next="onPrevNextUpdated"
+                ></HomePageRow>
+
+                <div
+                    v-if="movingGroup && groups.length > 0 && movingGroupData.movingOver > groups.length"
+                    class="home-page-moving-groups-extra-padding"
+                ></div>
+
+                <HomePageRow
+                    v-if="movingGroup && movingGroupData.group"
+                    :moving-left="movingGroupData.x + 'px'"
+                    :moving-top="movingGroupData.y + 'px'"
+                    :group="movingGroupData.group"
+                    :row-size="actualRowSize"
+                    :page-size="pageSize"
+                    :display-titles="displayTitles"
+                    :editing="editing"
+                    :moving="true"
+                    :current-media="currentMedia"
+                    :tag-version="tagVersion"
+                    :moving-initial-elements="initialMovingElements"
+                    :moving-initial-scroll="initialMovingScroll"
+                ></HomePageRow>
+
+                <div v-if="editing && groups.length < maxGroupsCount" class="home-add-row-form">
+                    <button type="button" class="btn btn-primary btn-mr" @click="showAddRow">
+                        <i class="fas fa-plus"></i> {{ $t("Add new row") }}
+                    </button>
+                </div>
             </div>
-
-            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
-
-            <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
         </div>
+
+        <HomePageCreateRowModal
+            v-if="displayRowAdd"
+            v-model:display="displayRowAdd"
+            :prepend="displayRowAddPrepend"
+            @new-row="onRowAdded"
+        ></HomePageCreateRowModal>
+
+        <HomePageRenameRowModal
+            v-if="displayRowRename"
+            v-model:display="displayRowRename"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            @renamed="onRowRenamed"
+            @must-reload="load"
+        ></HomePageRenameRowModal>
+
+        <HomePageMoveRowModal
+            v-if="displayRowMove"
+            v-model:display="displayRowMove"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            :selected-row-position="selectedRowPosition"
+            :max-position="groups.length"
+            @moved="onRowMoved"
+            @must-reload="load"
+        ></HomePageMoveRowModal>
+
+        <HomePageDeleteRowModal
+            v-if="displayRowDelete"
+            v-model:display="displayRowDelete"
+            :selected-row="selectedRow"
+            :selected-row-type="selectedRowType"
+            :selected-row-name="selectedRowName"
+            @row-deleted="onRowDeleted"
+            @must-reload="load"
+        ></HomePageDeleteRowModal>
     </div>
 </template>
 
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
-import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineComponent, nextTick } from "vue";
-import PageMenu from "@/components/utils/PageMenu.vue";
-import { MediaListItem } from "@/api/models";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
-import { orderSimple, packSearchParams, unPackSearchParams } from "@/utils/search-params";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import {
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
@@ -97,16 +141,56 @@ import {
     PagesController,
 } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { apiSearch } from "@/api/api-search";
-import ThumbImage from "../utils/ThumbImage.vue";
-import DurationIndicator from "../utils/DurationIndicator.vue";
+import LoadingOverlay from "../layout/LoadingOverlay.vue";
+import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
+import type { HomePageElement, HomePageGroup } from "@/api/api-home";
+import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
+import HomePageRow from "../layout/HomePageRow.vue";
+import {
+    doHomePageSilentSaveAction,
+    EVENT_NAME_HOME_SCROLL_CHANGED,
+    getHomePageBackStatePage,
+    HomePageGroupTypes,
+    type HomePageGroupStartMovingData,
+} from "@/utils/home";
+import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+
+const HomePageCreateRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageRenameRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageRenameRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageMoveRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageMoveRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const HomePageDeleteRowModal = defineAsyncComponent({
+    loader: () => import("@/components/modals/HomePageDeleteRowModal.vue"),
+    loadingComponent: LoadingOverlay,
+    delay: 200,
+});
+
+const WINDOW_MOBILE_SIZE = 600;
 
 export default defineComponent({
     name: "PageHome",
     components: {
-        PageMenu,
-        ThumbImage,
-        DurationIndicator,
+        LoadingOverlay,
+        HomePageRow,
+        HomePageCreateRowModal,
+        HomePageRenameRowModal,
+        HomePageMoveRowModal,
+        HomePageDeleteRowModal,
     },
     props: {
         display: Boolean,
@@ -118,101 +202,165 @@ export default defineComponent({
         rowSizeMin: Number,
         minItemsSize: Number,
         maxItemsSize: Number,
+
+        editing: Boolean,
     },
     setup() {
         return {
+            maxGroupsCount: 1024,
+
             loadRequestId: getUniqueStringId(),
             windowResizeObserver: null as ResizeObserver,
+
+            dragCheckInterval: null as ReturnType<typeof setInterval> | null,
+
+            initialMovingElements: null as HomePageElement[] | null,
+            initialMovingScroll: 0,
+
+            scrollingToCurrent: false,
         };
     },
     data: function () {
         return {
-            search: AppStatus.CurrentSearch,
+            groups: [] as HomePageGroup[],
 
             loading: false,
             firstLoaded: false,
 
-            order: "desc" as "asc" | "desc",
-            searchParams: AppStatus.SearchParams,
+            loadTick: 0,
+
+            windowWidth: 0,
+
+            isMobileSize: document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE,
+
+            canWrite: AuthController.CanWrite,
+
+            actualRowSize: this.rowSize || 1,
+
+            displayRowAdd: false,
+            displayRowAddPrepend: false,
+
+            selectedRow: -1,
+            selectedRowType: HomePageGroupTypes.Custom,
+            selectedRowName: "",
+            selectedRowPosition: 0,
+
+            displayRowRename: false,
+            displayRowMove: false,
+            displayRowDelete: false,
+
+            movingGroup: false,
+
+            mouseX: 0,
+            mouseY: 0,
+
+            movingGroupData: {
+                group: null as HomePageGroup,
+
+                startX: 0,
+                startY: 0,
+
+                offsetX: 0,
+                offsetY: 0,
+
+                width: 0,
+                height: 0,
+
+                x: 0,
+                y: 0,
+
+                startPosition: -1,
+                movingOver: -1,
+            },
 
             currentMedia: AppStatus.CurrentMedia,
-
-            page: 0,
-            total: 0,
-            totalPages: 0,
-            pageItems: [] as MediaListItem[],
-
-            loadingFiller: [] as number[],
-
-            switchMediaOnLoad: "",
+            currentGroup: AppStatus.CurrentHomePageGroup,
 
             tagVersion: TagsController.TagsVersion,
 
-            windowWidth: 0,
+            currentGroupNext: -1,
+            currentGroupPrev: -1,
+
+            currentGroupFirst: -1,
+            currentGroupLast: -1,
         };
-    },
-    computed: {
-        lastRowPadding() {
-            const containerWidth = this.windowWidth;
-
-            const itemWidth = Math.max(
-                this.minItemsSize,
-                Math.min(
-                    this.maxItemsSize,
-                    this.min ? containerWidth / Math.max(1, this.rowSizeMin) : containerWidth / Math.max(1, this.rowSize),
-                ),
-            );
-
-            const elementsFitInRow = Math.max(1, Math.floor(containerWidth / Math.max(1, itemWidth)));
-
-            return Math.max(0, elementsFitInRow - (this.pageItems.length % elementsFitInRow));
-        },
     },
     watch: {
         display: function () {
             this.load();
-            this.switchMediaOnLoad = "";
             if (this.display) {
                 this.autoFocus();
             }
         },
+        editing: function () {
+            this.movingGroup = false;
+            this.load();
+        },
         pageSize: function () {
             this.updatePageSize();
+        },
+        rowSize: function () {
+            this.updateActualRowSize();
+        },
+        rowSizeMin: function () {
+            this.updateActualRowSize();
+        },
+        minItemsSize: function () {
+            this.updateActualRowSize();
+        },
+        maxItemsSize: function () {
+            this.updateActualRowSize();
+        },
+        min: function () {
+            this.updateActualRowSize();
         },
     },
     mounted: function () {
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
+            this.canWrite = AuthController.CanWrite;
+            this.load();
+        });
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE, this.load.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_DELETE, this.load.bind(this));
-        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_ALBUMS_CHANGED, this.load.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_NEXT, this.nextMedia.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_NAV_PREV, this.prevMedia.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onAppStatusChanged.bind(this));
+
         this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this.updateSearchParams();
         this.updateTagData();
+
         this.load();
 
         if (this.display) {
             this.autoFocus();
         }
 
-        this.windowWidth = this.$el.getBoundingClientRect().width;
+        this.updateWindowWidth();
 
         this.windowResizeObserver = new ResizeObserver(this.updateWindowWidth.bind(this));
         this.windowResizeObserver.observe(this.$el);
+
+        this.$listenOnDocumentEvent("mousemove", this.onDocumentMouseMove.bind(this));
+
+        this.$listenOnDocumentEvent("mouseup", this.onDocumentMouseUp.bind(this));
     },
     beforeUnmount: function () {
         clearNamedTimeout(this.loadRequestId);
         abortNamedApiRequest(this.loadRequestId);
         PagesController.OnPageUnload();
         this.windowResizeObserver.disconnect();
+        if (this.dragCheckInterval) {
+            clearInterval(this.dragCheckInterval);
+            this.dragCheckInterval = null;
+        }
     },
     methods: {
         scrollToTop: function () {
@@ -249,38 +397,14 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearch("", this.order, this.page, this.pageSize))
-                .onSuccess((result) => {
-                    TagsController.OnMediaListReceived(result.page_items);
-                    this.pageItems = result.page_items;
-                    this.page = result.page_index;
-                    this.totalPages = result.page_count;
-                    this.total = result.total_count;
+            makeNamedApiRequest(this.loadRequestId, apiHomeGetGroups())
+                .onSuccess((groups) => {
                     clearNamedTimeout(this.loadRequestId);
                     this.loading = false;
                     this.firstLoaded = true;
-                    if (this.switchMediaOnLoad === "next") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[0].id);
-                        }
-                    } else if (this.switchMediaOnLoad === "prev") {
-                        this.switchMediaOnLoad = "";
-                        if (this.pageItems.length > 0) {
-                            this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
-                        }
-                    }
-                    if (this.page < 0) {
-                        this.page = 0;
-                        this.load();
-                        return;
-                    } else if (this.page >= this.totalPages && this.totalPages > 0) {
-                        this.page = this.totalPages - 1;
-                        this.load();
-                        return;
-                    }
-                    this.scrollToCurrentMedia();
-                    this.onCurrentMediaChanged();
+                    this.loadTick++;
+                    this.groups = groups;
+                    this.scrollToCurrentRow();
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
@@ -303,195 +427,445 @@ export default defineComponent({
         },
 
         updatePageSize: function () {
-            this.updateLoadingFiller();
-            this.page = 0;
             this.load();
         },
 
-        onAppStatusChanged: function () {
-            const changed = this.currentMedia !== AppStatus.CurrentMedia;
-            this.currentMedia = AppStatus.CurrentMedia;
-            if (AppStatus.SearchParams !== this.searchParams) {
-                this.searchParams = AppStatus.SearchParams;
-                this.updateSearchParams();
-                this.load();
-            }
-            if (changed) {
-                this.scrollToCurrentMedia();
-            }
-            this.onCurrentMediaChanged();
+        updateWindowWidth: function () {
+            this.windowWidth = this.$el.getBoundingClientRect().width;
+            this.isMobileSize = document.documentElement.clientWidth <= WINDOW_MOBILE_SIZE;
+            this.updateActualRowSize();
+            this.onScroll();
         },
 
-        scrollToCurrentMedia: function () {
+        updateActualRowSize: function () {
+            const preferRowSize = (this.min ? this.rowSizeMin : this.rowSize) || 1;
+
+            let itemsWidth = this.windowWidth / preferRowSize;
+
+            itemsWidth = Math.min(itemsWidth, Math.min(this.windowWidth, this.maxItemsSize || 0));
+
+            itemsWidth = Math.max(1, Math.max(itemsWidth, this.minItemsSize || 0));
+
+            this.actualRowSize = Math.ceil(this.windowWidth / itemsWidth);
+
+            if (this.currentMedia) {
+                this.scrollToCurrentRow();
+            }
+        },
+
+        showAddRow: function () {
+            this.displayRowAdd = true;
+            this.displayRowAddPrepend = false;
+        },
+
+        showAddRowPrepend: function () {
+            this.displayRowAdd = true;
+            this.displayRowAddPrepend = true;
+        },
+
+        onRowAdded: function (row: HomePageGroup, prepend: boolean) {
+            if (prepend) {
+                this.groups.unshift(row);
+            } else {
+                this.groups.push(row);
+            }
+        },
+
+        showRenameRow: function (group: HomePageGroup) {
+            this.displayRowRename = true;
+            this.selectedRow = group.id;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowRenamed: function (id: number, newName: string) {
+            for (const g of this.groups) {
+                if (g.id === id) {
+                    g.name = newName;
+                    break;
+                }
+            }
+        },
+
+        showMoveRow: function (group: HomePageGroup) {
+            let startPosition = 0;
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === group.id) {
+                    startPosition = i;
+                    break;
+                }
+            }
+
+            this.displayRowMove = true;
+            this.selectedRow = group.id;
+            this.selectedRowPosition = startPosition;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowMoved: function (id: number, position: number) {
+            position = Math.max(0, Math.min(position, this.groups.length));
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === id) {
+                    this.groups.splice(position, 0, this.groups.splice(i, 1)[0]);
+                    return;
+                }
+            }
+        },
+
+        showDeleteRow: function (group: HomePageGroup) {
+            this.displayRowDelete = true;
+            this.selectedRow = group.id;
+            this.selectedRowName = group.name;
+            this.selectedRowType = group.type;
+        },
+
+        onRowDeleted: function (id: number) {
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === id) {
+                    this.groups.splice(i, 1);
+                    return;
+                }
+            }
+        },
+
+        onStartMoving: function (group: HomePageGroup, moveData: HomePageGroupStartMovingData) {
+            let startPosition = -1;
+            for (let i = 0; i < this.groups.length; i++) {
+                if (this.groups[i].id === group.id) {
+                    startPosition = i;
+                    break;
+                }
+            }
+
+            this.mouseX = moveData.startX;
+            this.mouseY = moveData.startY;
+
+            this.movingGroup = true;
+            this.movingGroupData.group = group;
+            this.movingGroupData.startPosition = startPosition;
+
+            this.movingGroupData.startX = moveData.startX;
+            this.movingGroupData.startY = moveData.startY;
+
+            this.movingGroupData.offsetX = moveData.offsetX;
+            this.movingGroupData.offsetY = moveData.offsetY;
+
+            this.movingGroupData.width = moveData.width;
+            this.movingGroupData.height = moveData.height;
+
+            this.movingGroupData.x = moveData.startX - moveData.offsetX;
+            this.movingGroupData.y = moveData.startY - moveData.offsetY;
+
+            this.initialMovingElements = moveData.initialElements;
+            this.initialMovingScroll = moveData.initialScroll;
+
+            this.updateMovingOver();
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+            this.dragCheckInterval = setInterval(this.onDragCheck.bind(this), 40);
+        },
+
+        updateMovingOver: function () {
+            const topAddButtonForm = this.$el.querySelector(".home-add-row-form");
+            const container = this.$el;
+
+            if (!container || !topAddButtonForm) {
+                this.movingGroupData.movingOver = -1;
+                return;
+            }
+
+            const offsetTop = container.getBoundingClientRect().top + topAddButtonForm.getBoundingClientRect().height;
+            const scrollTop = container.scrollTop || 0;
+
+            const y = this.movingGroupData.y + Math.round(this.movingGroupData.height / 2);
+
+            const height = this.movingGroupData.height;
+            const expectedIndex = Math.round((y - offsetTop + scrollTop) / height);
+
+            this.movingGroupData.movingOver = Math.min(this.groups.length + 1, Math.max(1, 1 + expectedIndex));
+        },
+
+        onDragCheck: function () {
+            const con = this.$el;
+
+            if (!con) {
+                return;
+            }
+
+            const conBounds = con.getBoundingClientRect();
+
+            if (this.mouseX >= conBounds.left - this.movingGroupData.height) {
+                // Auto scroll
+
+                const relTop = (this.mouseY - conBounds.top) / (conBounds.height || 1);
+                const scrollStep = Math.floor(conBounds.height / 20);
+
+                if (relTop <= 0.1) {
+                    con.scrollTop = Math.max(0, con.scrollTop - scrollStep);
+                } else if (relTop >= 0.9) {
+                    con.scrollTop = Math.min(con.scrollHeight - conBounds.height, con.scrollTop + scrollStep);
+                }
+            }
+
+            this.updateMovingOver();
+        },
+
+        onDocumentMouseMove: function (event: MouseEvent) {
+            if (!this.movingGroup) {
+                return;
+            }
+
+            if (typeof event.pageX !== "number" || typeof event.pageY !== "number") {
+                return;
+            }
+
+            if (isNaN(event.pageX) || isNaN(event.pageY)) {
+                return;
+            }
+
+            this.mouseX = event.pageX;
+            this.mouseY = event.pageY;
+
+            this.movingGroupData.x = event.pageX - this.movingGroupData.offsetX;
+            this.movingGroupData.y = event.pageY - this.movingGroupData.offsetY;
+        },
+
+        onDocumentMouseUp: function (event: MouseEvent) {
+            if (!this.movingGroup) {
+                return;
+            }
+
+            if (this.dragCheckInterval) {
+                clearInterval(this.dragCheckInterval);
+                this.dragCheckInterval = null;
+            }
+
+            event.stopPropagation();
+
+            this.movingGroup = false;
+
+            if (!this.movingGroupData.group) {
+                return;
+            }
+
+            const groupId = this.movingGroupData.group.id;
+
+            let position =
+                this.movingGroupData.movingOver > this.movingGroupData.startPosition + 1
+                    ? this.movingGroupData.movingOver - 1
+                    : this.movingGroupData.movingOver;
+
+            position = Math.max(0, Math.min(this.groups.length, position - 1));
+
+            const startPosition = this.movingGroupData.startPosition;
+
+            if (startPosition === -1 || position === startPosition) {
+                return;
+            }
+
+            this.doSilentMove(groupId, position);
+            this.groups.splice(position, 0, this.groups.splice(startPosition, 1)[0]);
+        },
+
+        doSilentMove: function (rowId: number, position: number) {
+            doHomePageSilentSaveAction((callback) => {
+                makeApiRequest(apiHomeGroupMove(rowId, position))
+                    .onSuccess(() => {
+                        callback();
+                    })
+                    .onCancel(() => {
+                        callback();
+                    })
+                    .onRequestError((err, handleErr) => {
+                        callback();
+                        handleErr(err, {
+                            unauthorized: () => {
+                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            },
+                            accessDenied: () => {
+                                AuthController.CheckAuthStatus();
+                            },
+                            notFound: () => {
+                                this.load();
+                            },
+                            temporalError: () => {
+                                this.load();
+                            },
+                        });
+                    })
+                    .onUnexpectedError((err) => {
+                        callback();
+                        console.error(err);
+                        this.load();
+                    });
+            });
+        },
+
+        onAppStatusChanged: function () {
+            const changed = this.currentMedia !== AppStatus.CurrentMedia || this.currentGroup !== AppStatus.CurrentHomePageGroup;
+
+            this.currentMedia = AppStatus.CurrentMedia;
+            this.currentGroup = AppStatus.CurrentHomePageGroup;
+
+            if (changed) {
+                this.currentGroupPrev = -1;
+                this.currentGroupNext = -1;
+                this.currentGroupFirst = -1;
+                this.currentGroupLast = -1;
+                PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
+
+                this.scrollToCurrentRow();
+            }
+        },
+
+        scrollToCurrentRow: function () {
+            if (this.scrollingToCurrent) {
+                return;
+            }
+            this.scrollingToCurrent = true;
+
+            const backState = getHomePageBackStatePage();
+
+            if (backState !== null && this.currentGroup === -1) {
+                nextTick(() => {
+                    this.scrollingToCurrent = false;
+                    const currentElem = this.$el.querySelector(".home-page-row-" + backState);
+                    if (currentElem) {
+                        currentElem.scrollIntoView();
+                    }
+                });
+                return;
+            }
+
             nextTick(() => {
-                const currentElem = this.$el.querySelector(".search-result-item.current");
+                this.scrollingToCurrent = false;
+                const currentElem = this.$el.querySelector(".home-page-row.current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
             });
         },
 
-        onCurrentMediaChanged: function () {
-            const i = this.findCurrentMediaIndex();
-            PagesController.OnPageLoad(i, this.pageItems.length, this.page, this.totalPages);
+        updateTagData: function () {
+            this.tagVersion = TagsController.TagsVersion;
         },
 
-        onSearchParamsChanged: function () {
-            this.searchParams = packSearchParams(this.page, this.order);
-            AppStatus.ChangeSearchParams(this.searchParams);
+        onScroll: function () {
+            AppEvents.Emit(EVENT_NAME_HOME_SCROLL_CHANGED);
         },
 
-        changePage: function (p) {
-            this.page = p;
-            this.onSearchParamsChanged();
-            this.load();
+        onPrevNextUpdated: function (
+            currentGroupPrev: number,
+            currentGroupNext: number,
+            currentGroupFirst: number,
+            currentGroupLast: number,
+        ) {
+            this.currentGroupPrev = currentGroupPrev;
+            this.currentGroupNext = currentGroupNext;
+            this.currentGroupFirst = currentGroupFirst;
+            this.currentGroupLast = currentGroupLast;
+
+            PagesController.OnHomeGroupLoad(this.currentGroupPrev >= 0, this.currentGroupNext >= 0);
         },
 
-        goToMedia: function (mid: number, e?: Event) {
-            if (e) {
-                e.preventDefault();
-            }
-            AppStatus.ClickOnMedia(mid, true);
-        },
-
-        getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
-        },
-
-        updateSearchParams: function () {
-            const params = unPackSearchParams(this.searchParams);
-            this.page = params.page;
-            this.order = orderSimple(params.order);
-            this.updateLoadingFiller();
-        },
-
-        updateLoadingFiller: function () {
-            const filler = [];
-
-            for (let i = 0; i < this.pageSize; i++) {
-                filler.push(i);
-            }
-
-            this.loadingFiller = filler;
-        },
-
-        getThumbnail(thumb: string) {
-            return getAssetURL(thumb);
-        },
-
-        findCurrentMediaIndex: function (): number {
-            for (let i = 0; i < this.pageItems.length; i++) {
-                if (this.pageItems[i].id === this.currentMedia) {
-                    return i;
-                }
-            }
-            return -1;
+        goToMedia: function (id: number) {
+            AppStatus.ClickOnMedia(id, true, this.currentGroup);
         },
 
         nextMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i < this.pageItems.length - 1) {
-                this.goToMedia(this.pageItems[i + 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === this.pageItems.length - 1) {
-                if (this.page < this.totalPages - 1) {
-                    this.switchMediaOnLoad = "next";
-                    this.changePage(this.page + 1);
-                }
+            if (this.currentGroupNext >= 0) {
+                this.goToMedia(this.currentGroupNext);
             }
         },
 
         prevMedia: function () {
-            const i = this.findCurrentMediaIndex();
-            if (i !== -1 && i > 0) {
-                this.goToMedia(this.pageItems[i - 1].id);
-            } else if (i === -1 && this.pageItems.length > 0) {
-                this.goToMedia(this.pageItems[0].id);
-            } else if (i === 0) {
-                if (this.page > 0) {
-                    this.switchMediaOnLoad = "prev";
-                    this.changePage(this.page - 1);
-                }
+            if (this.currentGroupPrev >= 0) {
+                this.goToMedia(this.currentGroupPrev);
             }
         },
 
         handleGlobalKey: function (event: KeyboardEvent): boolean {
-            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey) {
+            if (AuthController.Locked || !AppStatus.IsPageVisible() || !this.display || !event.key || event.ctrlKey || this.editing) {
                 return false;
             }
 
-            if (event.key === "PageUp" || (event.key === "ArrowLeft" && AppStatus.CurrentMedia < 0)) {
-                if (this.page > 0) {
-                    this.changePage(this.page - 1);
+            if (event.shiftKey && event.key === "PageUp") {
+                const activeElement = document.activeElement as HTMLElement;
+
+                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.previousElementSibling) {
+                    const sibling = activeElement.previousElementSibling as HTMLElement;
+                    sibling.focus();
+                } else if (
+                    activeElement &&
+                    activeElement.parentElement &&
+                    activeElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement.parentElement
+                ) {
+                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+                    if (rowElement.classList.contains("home-page-row") && rowElement.previousElementSibling) {
+                        const sibling = rowElement.previousElementSibling as HTMLElement;
+                        sibling.focus();
+                    }
                 }
+
                 return true;
             }
 
-            if (event.key === "PageDown" || (event.key === "ArrowRight" && AppStatus.CurrentMedia < 0)) {
-                if (this.page < this.totalPages - 1) {
-                    this.changePage(this.page + 1);
+            if (event.shiftKey && event.key === "PageDown") {
+                const activeElement = document.activeElement as HTMLElement;
+
+                if (activeElement && activeElement.classList.contains("home-page-row") && activeElement.nextElementSibling) {
+                    const sibling = activeElement.nextElementSibling as HTMLElement;
+                    sibling.focus();
+                } else if (
+                    activeElement &&
+                    activeElement.parentElement &&
+                    activeElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement &&
+                    activeElement.parentElement.parentElement.parentElement.parentElement
+                ) {
+                    const rowElement = activeElement.parentElement.parentElement.parentElement.parentElement;
+
+                    if (rowElement.classList.contains("home-page-row") && rowElement.nextElementSibling) {
+                        const sibling = rowElement.nextElementSibling as HTMLElement;
+                        sibling.focus();
+                    }
                 }
+
                 return true;
             }
 
             if (event.key === "Home") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[0].id);
+                if (this.currentGroupFirst > 0) {
+                    this.goToMedia(this.currentGroupFirst);
                 }
                 return true;
             }
 
             if (event.key === "End") {
-                if (this.pageItems.length > 0) {
-                    this.goToMedia(this.pageItems[this.pageItems.length - 1].id);
+                if (this.currentGroupLast > 0) {
+                    this.goToMedia(this.currentGroupLast);
                 }
                 return true;
             }
 
-            if (event.key === "ArrowLeft") {
+            if (event.key === "PageUp" || event.key === "ArrowLeft") {
                 this.prevMedia();
                 return true;
             }
 
-            if (event.key === "ArrowRight") {
+            if (event.key === "PageDown" || event.key === "ArrowRight") {
                 this.nextMedia();
                 return true;
             }
 
             return false;
-        },
-
-        renderHintTitle(item: MediaListItem, tagVersion: number): string {
-            const parts = [item.title || this.$t("Untitled")];
-
-            if (item.tags.length > 0) {
-                const tagNames = [];
-
-                for (const tag of item.tags) {
-                    tagNames.push(TagsController.GetTagName(tag, tagVersion));
-                }
-
-                parts.push(this.$t("Tags") + ": " + tagNames.join(", "));
-            }
-
-            return parts.join("\n");
-        },
-
-        updateTagData: function () {
-            this.tagVersion = TagsController.TagsVersion;
-        },
-
-        updateWindowWidth: function () {
-            this.windowWidth = this.$el.getBoundingClientRect().width;
         },
     },
 });

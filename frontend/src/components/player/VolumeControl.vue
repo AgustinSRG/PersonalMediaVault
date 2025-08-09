@@ -17,7 +17,7 @@
             :class="{ hidden: !expanded }"
             :style="{ width: computeBarContainerWidth(width) }"
             @mousedown="grabVolumeMouse"
-            @touchstart="grabVolumeTouch"
+            @touchstart.passive="grabVolumeTouch"
         >
             <div class="player-volume-bar-container" :style="{ width: computeBarContainerInnerWidth(width) }">
                 <div class="player-volume-bar" :style="{ width: getVolumeBarWidth(width) }"></div>
@@ -32,7 +32,8 @@
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
-import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "VolumeControl",
@@ -59,13 +60,12 @@ export default defineComponent({
     mounted: function () {
         if (isTouchDevice()) {
             this.expandedState = true;
+            this.$listenOnDocumentEvent("touchend", this.dropVolumeTouch.bind(this));
+            this.$listenOnDocumentEvent("touchmove", this.moveVolumeTouch.bind(this));
+        } else {
+            this.$listenOnDocumentEvent("mousemove", this.moveVolumeMouse.bind(this));
+            this.$listenOnDocumentEvent("mouseup", this.dropVolumeMouse.bind(this));
         }
-
-        this.$listenOnDocumentEvent("mouseup", this.dropVolumeMouse.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropVolumeTouch.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveVolumeMouse.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveVolumeTouch.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -125,6 +125,10 @@ export default defineComponent({
         },
 
         grabVolumeMouse: function (e: MouseEvent) {
+            e.stopPropagation();
+            if (isTouchDevice()) {
+                return;
+            }
             this.grabVolume(positionEventFromMouseEvent(e));
         },
 
@@ -142,15 +146,18 @@ export default defineComponent({
         },
 
         dropVolumeTouch: function (e: TouchEvent) {
-            this.dropVolume(positionEventFromTouchEvent(e));
+            e.stopPropagation();
+            this.dropVolume(null);
         },
 
-        dropVolume: function (e: PositionEvent) {
+        dropVolume: function (e?: PositionEvent) {
             if (!this.volumeGrabbed) {
                 return;
             }
             this.volumeGrabbed = false;
-            this.modifyVolumeByMouse(e.x, e.y);
+            if (e) {
+                this.modifyVolumeByMouse(e.x, e.y);
+            }
         },
 
         moveVolumeMouse: function (e: MouseEvent) {
@@ -174,7 +181,7 @@ export default defineComponent({
             }
             const offset = this.$el.getBoundingClientRect();
 
-            const offsetX = offset.left + 8 + (this.min ? 24 : 40);
+            const offsetX = offset.left + 8 + 40;
 
             if (x < offsetX) {
                 this.changeVolume(0);

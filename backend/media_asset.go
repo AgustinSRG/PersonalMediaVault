@@ -99,9 +99,8 @@ type MediaMetadata struct {
 
 	Type MediaType `json:"type"` // Type of media (image, video, audio)
 
-	Title       string   `json:"title"`                 // Title
-	Description string   `json:"description,omitempty"` // Description
-	Tags        []uint64 `json:"tags"`                  // List of tag IDs
+	Title string   `json:"title"` // Title
+	Tags  []uint64 `json:"tags"`  // List of tag IDs
 
 	MediaDuration float64 `json:"duration,omitempty"` // Duration (seconds)
 	Width         int32   `json:"width,omitempty"`    // Width (px)
@@ -138,8 +137,10 @@ type MediaMetadata struct {
 	HasImageNotes   bool   `json:"img_notes,omitempty"`       // True to indicate the asset has image notes
 	ImageNotesAsset uint64 `json:"img_notes_asset,omitempty"` // Asset where the image notes are stored
 
-	HasExtendedDescription   bool   `json:"ext_desc,omitempty"`       // True to indicate the asset has extended description
-	ExtendedDescriptionAsset uint64 `json:"ext_desc_asset,omitempty"` // Asset where the extended description is stored
+	HasDescription   bool   `json:"ext_desc,omitempty"`       // True to indicate the asset has description
+	DescriptionAsset uint64 `json:"ext_desc_asset,omitempty"` // Asset where the description is stored
+
+	Related []uint64 `json:"related,omitempty"` // List of IDs of related media assets
 }
 
 // Creates a new media asset. Creates the folder and stores the initial metadata.
@@ -147,12 +148,11 @@ type MediaMetadata struct {
 // key - Vault encryption key
 // media_type - Type of media
 // title - Title
-// desc - Description
 // duration - Duration in seconds
 // width - Width (px)
 // height - Height (px)
 // fps - Frames per second
-func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, desc string, duration float64, width int32, height int32, fps int32) error {
+func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, title string, duration float64, width int32, height int32, fps int32) error {
 	// Create the folder
 	err := os.MkdirAll(media.path, FOLDER_PERMISSION)
 
@@ -165,38 +165,37 @@ func (media *MediaAsset) CreateNewMediaAsset(key []byte, media_type MediaType, t
 	isShortAnimation := media_type == MediaTypeVideo && duration < 10
 
 	meta := MediaMetadata{
-		Id:                       media.id,
-		Type:                     media_type,
-		MediaDuration:            duration,
-		Width:                    width,
-		Height:                   height,
-		Fps:                      fps,
-		Title:                    title,
-		Description:              desc,
-		Tags:                     make([]uint64, 0),
-		UploadTimestamp:          now,
-		NextAssetID:              0,
-		OriginalReady:            false,
-		OriginalAsset:            0,
-		OriginalTask:             0,
-		OriginalEncoded:          false,
-		OriginalExtension:        "",
-		ThumbnailReady:           false,
-		ThumbnailAsset:           0,
-		Resolutions:              make([]MediaResolution, 0),
-		Subtitles:                make([]MediaSubtitle, 0),
-		AudioTracks:              make([]MediaAudioTrack, 0),
-		Splits:                   make([]MediaSplit, 0),
-		Attachments:              make([]MediaAttachment, 0),
-		PreviewsReady:            false,
-		PreviewsInterval:         0,
-		PreviewsAsset:            0,
-		HasImageNotes:            false,
-		ImageNotesAsset:          0,
-		HasExtendedDescription:   false,
-		ExtendedDescriptionAsset: 0,
-		IsAnimation:              isShortAnimation,
-		ForceStartBeginning:      isShortAnimation,
+		Id:                  media.id,
+		Type:                media_type,
+		MediaDuration:       duration,
+		Width:               width,
+		Height:              height,
+		Fps:                 fps,
+		Title:               title,
+		Tags:                make([]uint64, 0),
+		UploadTimestamp:     now,
+		NextAssetID:         0,
+		OriginalReady:       false,
+		OriginalAsset:       0,
+		OriginalTask:        0,
+		OriginalEncoded:     false,
+		OriginalExtension:   "",
+		ThumbnailReady:      false,
+		ThumbnailAsset:      0,
+		Resolutions:         make([]MediaResolution, 0),
+		Subtitles:           make([]MediaSubtitle, 0),
+		AudioTracks:         make([]MediaAudioTrack, 0),
+		Splits:              make([]MediaSplit, 0),
+		Attachments:         make([]MediaAttachment, 0),
+		PreviewsReady:       false,
+		PreviewsInterval:    0,
+		PreviewsAsset:       0,
+		HasImageNotes:       false,
+		ImageNotesAsset:     0,
+		HasDescription:      false,
+		DescriptionAsset:    0,
+		IsAnimation:         isShortAnimation,
+		ForceStartBeginning: isShortAnimation,
 	}
 
 	media.lock.RequestWrite() // Request write

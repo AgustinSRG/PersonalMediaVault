@@ -24,7 +24,7 @@
             v-model:fullscreen="fullScreen"
             v-model:show-controls="showControls"
             v-model:display-tag-list="displayTagList"
-            v-model:display-extended-description="displayExtendedDescription"
+            v-model:display-description="displayDescription"
             :mid="mid"
             :metadata="mediaData"
             :r-tick="tick"
@@ -47,7 +47,7 @@
             v-model:fullscreen="fullScreen"
             v-model:user-controls="showControls"
             v-model:display-tag-list="displayTagList"
-            v-model:display-extended-description="displayExtendedDescription"
+            v-model:display-description="displayDescription"
             :mid="mid"
             :metadata="mediaData"
             :r-tick="tick"
@@ -73,7 +73,7 @@
             v-if="mediaData && mediaData.type === 3"
             v-model:fullscreen="fullScreen"
             v-model:display-tag-list="displayTagList"
-            v-model:display-extended-description="displayExtendedDescription"
+            v-model:display-description="displayDescription"
             :mid="mid"
             :metadata="mediaData"
             :r-tick="tick"
@@ -209,7 +209,7 @@ export default defineComponent({
             displayAlbumList: false,
             displaySizeStats: false,
             displayTagList: false,
-            displayExtendedDescription: false,
+            displayDescription: false,
             displayDelete: false,
 
             hasPagePrev: PagesController.HasPagePrev,

@@ -196,41 +196,6 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		t.Error(ErrorMismatch("Title", meta.Title, newTitle))
 	}
 
-	// Change description
-
-	newDescription := "New test media description - " + fmt.Sprint(mediaId)
-
-	body, err = json.Marshal(MediaAPIEditDescriptionBody{
-		Description: newDescription,
-	})
-
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/description", body, session)
-
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if statusCode != 200 {
-		t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
-	}
-
-	err = _TestFetchMetadata(server, session, t, mediaId, &meta)
-
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	if meta.Description != newDescription {
-		t.Error(ErrorMismatch("Description", meta.Title, newTitle))
-	}
-
 	// Change extra data
 
 	fsb := true
@@ -388,10 +353,10 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		}
 	}
 
-	// Extended description
+	// Description
 
-	newExtDesc := ExtendedDescriptionSetBody{
-		ExtendedDescription: "Test extended description",
+	newExtDesc := MediaAPIEditDescriptionBody{
+		Description: "Test description",
 	}
 
 	body, err = json.Marshal(newExtDesc)
@@ -401,7 +366,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		return
 	}
 
-	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/ext_desc", body, session)
+	statusCode, _, err = DoTestRequest(server, "POST", "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/description", body, session)
 
 	if err != nil {
 		t.Error(err)
@@ -419,8 +384,8 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 		return
 	}
 
-	if meta.ExtendedDescriptionURL != "" {
-		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.ExtendedDescriptionURL, nil, session)
+	if meta.DescriptionURL != "" {
+		statusCode, bodyResponseBytes, err = DoTestRequest(server, "GET", meta.DescriptionURL, nil, session)
 
 		if err != nil {
 			t.Error(err)
@@ -433,11 +398,11 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 
 		bodyResponseString := string(bodyResponseBytes)
 
-		if bodyResponseString != newExtDesc.ExtendedDescription {
-			t.Error(ErrorMismatch("ExtendedDescription", bodyResponseString, newExtDesc.ExtendedDescription))
+		if bodyResponseString != newExtDesc.Description {
+			t.Error(ErrorMismatch("Description", bodyResponseString, newExtDesc.Description))
 		}
 	} else {
-		t.Errorf("ExtendedDescriptionURL is empty")
+		t.Errorf("DescriptionURL is empty")
 	}
 
 	// Change thumbnail

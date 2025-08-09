@@ -10,6 +10,7 @@ import { AppEvents } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
 import { EVENT_NAME_MEDIA_DELETE } from "./pages";
 import { generateURIQuery } from "@/utils/api";
+import { ExitPreventer } from "./exit-prevent";
 
 /**
  * Event triggered when the app status changes
@@ -29,7 +30,7 @@ export type AppStatusFocus = "right" | "left";
 /**
  * Page
  */
-export type AppStatusPage = "home" | "random" | "search" | "random" | "albums" | "upload" | "adv-search";
+export type AppStatusPage = "home" | "media" | "random" | "random" | "albums" | "upload" | "adv-search";
 
 /**
  * App status manager object
@@ -61,6 +62,11 @@ export class AppStatus {
     public static SearchParams = "";
 
     /**
+     * Random seed
+     */
+    public static RandomSeed = 0;
+
+    /**
      * True for split mode, false for single mode
      */
     public static ListSplitMode = true;
@@ -74,6 +80,11 @@ export class AppStatus {
      * Current album ID
      */
     public static CurrentAlbum = -1;
+
+    /**
+     * Current home page group ID
+     */
+    public static CurrentHomePageGroup = -1;
 
     /**
      * Initialization logic
@@ -121,7 +132,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && ["home", "search", "random", "albums", "upload", "adv-search"].includes(page)) {
+        if (page && ["home", "media", "random", "albums", "upload", "adv-search"].includes(page)) {
             AppStatus.CurrentPage = page as AppStatusPage;
         } else {
             AppStatus.CurrentPage = "home";
@@ -133,6 +144,21 @@ export class AppStatus {
             AppStatus.CurrentSearch = search;
         } else {
             AppStatus.CurrentSearch = "";
+        }
+
+        AppStatus.CurrentHomePageGroup = -1;
+
+        if (AppStatus.CurrentPage === "random") {
+            AppStatus.RandomSeed = Math.floor(parseInt(getParameterByName("seed") || "0", 10)) || Date.now();
+        } else if (AppStatus.CurrentPage === "home" && AppStatus.CurrentMedia >= 0) {
+            const group = getParameterByName("g");
+            if (group) {
+                const groupId = parseInt(group);
+
+                if (!isNaN(groupId) && groupId >= 0) {
+                    AppStatus.CurrentHomePageGroup = groupId;
+                }
+            }
         }
 
         const searchParams = getParameterByName("sp");
@@ -153,10 +179,6 @@ export class AppStatus {
      * like: page, media, album, split mode
      */
     public static UpdateLayout() {
-        if (AppStatus.CurrentPage === "search" && !AppStatus.CurrentSearch) {
-            AppStatus.CurrentPage = "home";
-        }
-
         if (AppStatus.CurrentMedia >= 0) {
             if (AppStatus.CurrentAlbum >= 0) {
                 // Media with album list
@@ -224,12 +246,22 @@ export class AppStatus {
             params["page"] = AppStatus.CurrentPage;
         }
 
+        if (AppStatus.CurrentPage === "home") {
+            if (AppStatus.CurrentHomePageGroup >= 0 && AppStatus.CurrentMedia >= 0) {
+                params["g"] = AppStatus.CurrentHomePageGroup + "";
+            }
+        }
+
         if (AppStatus.CurrentSearch) {
             params["search"] = AppStatus.CurrentSearch;
         }
 
         if (AppStatus.SearchParams) {
             params["sp"] = AppStatus.SearchParams;
+        }
+
+        if (AppStatus.RandomSeed && AppStatus.CurrentPage === "random") {
+            params["seed"] = AppStatus.RandomSeed + "";
         }
 
         if (AppStatus.ListSplitMode) {
@@ -287,21 +319,29 @@ export class AppStatus {
      * @param page The page to navigate to
      */
     public static GoToPage(page: AppStatusPage) {
-        AppStatus.CurrentPage = page;
+        ExitPreventer.TryExit(() => {
+            AppStatus.CurrentPage = page;
 
-        AppStatus.CurrentAlbum = -1;
+            if (AppStatus.CurrentPage === "random") {
+                AppStatus.RandomSeed = Date.now();
+            }
 
-        if (AppStatus.CurrentMedia >= 0) {
-            AppStatus.ListSplitMode = true;
-        }
+            AppStatus.CurrentAlbum = -1;
 
-        AppStatus.SearchParams = "";
+            AppStatus.CurrentHomePageGroup = -1;
 
-        AppStatus.UpdateLayout();
+            if (AppStatus.CurrentMedia >= 0) {
+                AppStatus.ListSplitMode = true;
+            }
 
-        AppStatus.CurrentFocus = "right";
+            AppStatus.SearchParams = "";
 
-        AppStatus.OnStatusUpdate();
+            AppStatus.UpdateLayout();
+
+            AppStatus.CurrentFocus = "right";
+
+            AppStatus.OnStatusUpdate();
+        });
     }
 
     /**
@@ -311,41 +351,50 @@ export class AppStatus {
      * @param searchParams Search parameters
      */
     public static GoToPageConditionalSplit(page: AppStatusPage, searchParams?: string) {
-        const changedPage = AppStatus.CurrentPage !== page;
+        ExitPreventer.TryExit(() => {
+            const changedPage = AppStatus.CurrentPage !== page;
 
-        AppStatus.CurrentPage = page;
+            AppStatus.CurrentPage = page;
 
-        if (AppStatus.CurrentMedia !== -1 && AppStatus.CurrentAlbum === -1 && (!AppStatus.ListSplitMode || changedPage)) {
-            AppStatus.ListSplitMode = true;
-        } else {
-            AppStatus.CurrentMedia = -1;
-            AppStatus.ListSplitMode = false;
-        }
+            if (AppStatus.CurrentPage === "random") {
+                AppStatus.RandomSeed = Date.now();
+            }
 
-        AppStatus.CurrentAlbum = -1;
+            if (AppStatus.CurrentMedia !== -1 && AppStatus.CurrentAlbum === -1 && (!AppStatus.ListSplitMode || changedPage)) {
+                AppStatus.ListSplitMode = true;
+            } else {
+                AppStatus.CurrentMedia = -1;
+                AppStatus.ListSplitMode = false;
+            }
 
-        AppStatus.SearchParams = searchParams || "";
+            AppStatus.CurrentAlbum = -1;
 
-        AppStatus.UpdateLayout();
+            AppStatus.SearchParams = searchParams || "";
 
-        AppStatus.CurrentFocus = "right";
+            AppStatus.UpdateLayout();
 
-        AppStatus.OnStatusUpdate();
+            AppStatus.CurrentFocus = "right";
+
+            AppStatus.OnStatusUpdate();
+        });
     }
 
     /**
      * Expands the page, closing the player
      */
     public static ExpandPage() {
-        AppStatus.CurrentAlbum = -1;
-        AppStatus.CurrentMedia = -1;
-        AppStatus.ListSplitMode = false;
+        ExitPreventer.TryExit(() => {
+            AppStatus.CurrentAlbum = -1;
+            AppStatus.CurrentMedia = -1;
+            AppStatus.CurrentHomePageGroup = -1;
+            AppStatus.ListSplitMode = false;
 
-        AppStatus.UpdateLayout();
+            AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "right";
+            AppStatus.CurrentFocus = "right";
 
-        AppStatus.OnStatusUpdate();
+            AppStatus.OnStatusUpdate();
+        });
     }
 
     /**
@@ -353,6 +402,7 @@ export class AppStatus {
      */
     public static OnDeleteMedia() {
         AppStatus.CurrentMedia = -1;
+        AppStatus.CurrentHomePageGroup = -1;
 
         AppStatus.UpdateLayout();
 
@@ -364,6 +414,14 @@ export class AppStatus {
     }
 
     /**
+     * Generates a random new seed
+     */
+    public static RefreshSeed() {
+        AppStatus.RandomSeed = Date.now();
+        AppStatus.OnStatusUpdate();
+    }
+
+    /**
      * Changes the search query
      * @param search The search query
      * @param forced True to force the page change to the search results
@@ -371,9 +429,13 @@ export class AppStatus {
     public static GoToSearch(search: string, forced?: boolean) {
         AppStatus.CurrentSearch = search;
 
+        if (AppStatus.CurrentPage === "random") {
+            AppStatus.RandomSeed = Date.now();
+        }
+
         if (AppStatus.CurrentSearch) {
             if (forced || AppStatus.CurrentPage !== "random") {
-                AppStatus.CurrentPage = "search";
+                AppStatus.CurrentPage = "media";
             }
 
             if (AppStatus.CurrentMedia >= 0) {
@@ -409,19 +471,26 @@ export class AppStatus {
      * Navigates to a media asset
      * @param mediaId The media ID
      * @param split True to use split mode
+     * @param group ID of the home group
      */
-    public static ClickOnMedia(mediaId: number, split: boolean) {
-        AppStatus.CurrentMedia = mediaId;
+    public static ClickOnMedia(mediaId: number, split: boolean, group?: number) {
+        ExitPreventer.TryExit(() => {
+            AppStatus.CurrentMedia = mediaId;
 
-        if (split) {
-            AppStatus.ListSplitMode = true;
-        }
+            if (split) {
+                AppStatus.ListSplitMode = true;
 
-        AppStatus.UpdateLayout();
+                if (typeof group === "number" && group >= 0) {
+                    AppStatus.CurrentHomePageGroup = group;
+                }
+            }
 
-        AppStatus.CurrentFocus = "left";
+            AppStatus.UpdateLayout();
 
-        AppStatus.OnStatusUpdate();
+            AppStatus.CurrentFocus = "left";
+
+            AppStatus.OnStatusUpdate();
+        });
     }
 
     /**
@@ -429,21 +498,24 @@ export class AppStatus {
      * @param albumId The album ID
      */
     public static ClickOnAlbum(albumId: number) {
-        AppStatus.CurrentAlbum = albumId;
-        AppStatus.CurrentMedia = -1;
-        AppStatus.CurrentSearch = "";
+        ExitPreventer.TryExit(() => {
+            AppStatus.CurrentAlbum = albumId;
+            AppStatus.CurrentMedia = -1;
+            AppStatus.CurrentHomePageGroup = -1;
+            AppStatus.CurrentSearch = "";
 
-        AppStatus.ListSplitMode = false;
+            AppStatus.ListSplitMode = false;
 
-        AppStatus.UpdateLayout();
+            AppStatus.UpdateLayout();
 
-        AppStatus.CurrentFocus = "left";
+            AppStatus.CurrentFocus = "left";
 
-        AppStatus.OnStatusUpdate();
+            AppStatus.OnStatusUpdate();
+        });
     }
 
     /**
-     * navigates to an album, while keeping the current media
+     * Navigates to an album, while keeping the current media
      * @param albumId The album ID
      * @param mediaId The media ID
      */

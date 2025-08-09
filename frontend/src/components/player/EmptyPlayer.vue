@@ -27,7 +27,7 @@
             <div class="player-info">{{ $t("Browse the vault in order to add media to it") }}</div>
         </div>
 
-        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls">
+        <div class="player-controls" @dblclick="stopPropagationEvent" @mouseleave="leaveControls" @contextmenu="stopPropagationEvent">
             <div class="player-controls-left">
                 <button
                     v-if="!!next || !!prev || pagePrev || pageNext"
@@ -86,28 +86,16 @@
             </div>
         </div>
 
-        <div v-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            {{ $t("Previous") }}
-        </div>
-
-        <div v-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            {{ $t("Next") }}
-        </div>
-
-        <div v-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-if="helpTooltip === 'full-screen'" class="player-tooltip player-help-tip-right">
-            {{ $t("Full screen") }}
-        </div>
-        <div v-if="helpTooltip === 'full-screen-exit'" class="player-tooltip player-help-tip-right">
-            {{ $t("Exit full screen") }}
-        </div>
+        <PlayerTooltip
+            v-if="helpTooltip"
+            :help-tooltip="helpTooltip"
+            :hide-right-tooltip="false"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :has-description="false"
+        ></PlayerTooltip>
 
         <PlayerTopBar
             v-model:expanded="expandedTitle"
@@ -122,9 +110,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue";
-
-import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
+import type { PropType } from "vue";
+import { defineComponent } from "vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
 
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
@@ -132,13 +119,14 @@ import { useVModel } from "../../utils/v-model";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import { isTouchDevice } from "@/utils/touch";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
+import PlayerTooltip from "./PlayerTooltip.vue";
 
 export default defineComponent({
     name: "EmptyPlayer",
     components: {
-        PlayerMediaChangePreview,
         PlayerTopBar,
+        PlayerTooltip,
     },
     props: {
         mid: Number,

@@ -13,7 +13,7 @@
                     />
                 </div>
                 <div class="search-results-option text-right">
-                    <button v-if="canWrite" type="button" class="btn btn-primary" @click="createAlbum">
+                    <button v-if="canWrite && !inModal" type="button" class="btn btn-primary" @click="createAlbum">
                         <i class="fas fa-plus"></i> {{ $t("Create album") }}
                     </button>
                 </div>
@@ -46,10 +46,13 @@
                 <div class="search-results-msg-icon">
                     <i class="fas fa-box-open"></i>
                 </div>
-                <div class="search-results-msg-text">
+                <div v-if="inModal" class="search-results-msg-text">
+                    {{ $t("Could not find any album") }}
+                </div>
+                <div v-else class="search-results-msg-text">
                     {{ $t("This vault does not have any albums yet") }}
                 </div>
-                <div class="search-results-msg-btn">
+                <div v-if="!inModal" class="search-results-msg-btn">
                     <button type="button" class="btn btn-primary" @click="refreshAlbums">
                         <i class="fas fa-sync-alt"></i> {{ $t("Refresh") }}
                     </button>
@@ -129,6 +132,7 @@ import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { generateURIQuery, getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
+import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -136,7 +140,7 @@ import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import { AlbumListItem } from "@/api/models";
+import type { AlbumListItem } from "@/api/models";
 import { EVENT_NAME_RANDOM_PAGE_REFRESH, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
@@ -157,11 +161,15 @@ export default defineComponent({
         pageSize: Number,
         displayTitles: Boolean,
 
+        inModal: Boolean,
+        removeAlbumsFromList: Object as PropType<Set<number>>,
+
         rowSize: Number,
         rowSizeMin: Number,
         minItemsSize: Number,
         maxItemsSize: Number,
     },
+    emits: ["select-album"],
     setup() {
         return {
             loadRequestId: getUniqueStringId(),
@@ -175,10 +183,10 @@ export default defineComponent({
 
             albumsList: [] as AlbumListItem[],
 
-            filter: PagesController.AlbumsPageSearch,
+            filter: this.inModal ? "" : PagesController.AlbumsPageSearch,
 
             order: "desc",
-            searchParams: AppStatus.SearchParams,
+            searchParams: this.inModal ? "" : AppStatus.SearchParams,
 
             page: 0,
             total: 0,
@@ -285,7 +293,9 @@ export default defineComponent({
         },
 
         changeFilter: function () {
-            PagesController.AlbumsPageSearch = this.filter;
+            if (!this.inModal) {
+                PagesController.AlbumsPageSearch = this.filter;
+            }
             this.page = 0;
             this.updateList();
         },
@@ -363,6 +373,13 @@ export default defineComponent({
                 });
             }
 
+            if (this.removeAlbumsFromList) {
+                const blacklist = this.removeAlbumsFromList;
+                albumsList = albumsList.filter((a) => {
+                    return !blacklist.has(a.id);
+                });
+            }
+
             if (this.order === "asc") {
                 albumsList = albumsList.sort((a, b) => {
                     if (a.nameLowerCase < b.nameLowerCase) {
@@ -411,6 +428,9 @@ export default defineComponent({
         },
 
         onAppStatusChanged: function () {
+            if (this.inModal) {
+                return;
+            }
             if (AppStatus.SearchParams !== this.searchParams) {
                 this.searchParams = AppStatus.SearchParams;
                 this.updateSearchParams();
@@ -419,6 +439,9 @@ export default defineComponent({
         },
 
         onSearchParamsChanged: function () {
+            if (this.inModal) {
+                return;
+            }
             this.searchParams = packSearchParams(this.page, this.order);
             AppStatus.ChangeSearchParams(this.searchParams);
         },
@@ -430,6 +453,9 @@ export default defineComponent({
         },
 
         updateSearchParams: function () {
+            if (this.inModal) {
+                return;
+            }
             const params = unPackSearchParams(this.searchParams);
             this.page = params.page;
             this.order = params.order;
@@ -439,10 +465,18 @@ export default defineComponent({
             return getAssetURL(thumb);
         },
 
-        goToAlbum: function (album, e: Event) {
+        goToAlbum: function (album: AlbumListItem, e: Event) {
             if (e) {
                 e.preventDefault();
             }
+
+            if (this.inModal) {
+                this.$emit("select-album", album.id, () => {
+                    this.updateList();
+                });
+                return;
+            }
+
             AppStatus.ClickOnAlbum(album.id);
         },
 

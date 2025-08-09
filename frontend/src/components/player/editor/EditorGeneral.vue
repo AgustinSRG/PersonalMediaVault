@@ -32,35 +32,6 @@
                 </div>
             </form>
 
-            <!--- Description -->
-
-            <div class="form-group">
-                <label>{{ $t("Description") }}:</label>
-                <textarea
-                    v-model="desc"
-                    :readonly="!canWrite"
-                    maxlength="1024"
-                    class="form-control form-control-full-width form-textarea"
-                    rows="3"
-                    :disabled="busyDescription"
-                ></textarea>
-            </div>
-            <div v-if="canWrite" class="form-group">
-                <button
-                    v-if="originalDesc !== desc || busyDescription || !savedDescription"
-                    type="button"
-                    class="btn btn-primary"
-                    :disabled="busyDescription || originalDesc === desc"
-                    @click="changeDescription"
-                >
-                    <LoadingIcon icon="fas fa-pencil-alt" :loading="busyDescription"></LoadingIcon> {{ $t("Change description") }}
-                </button>
-                <button v-else type="button" disabled class="btn btn-primary">
-                    <i class="fas fa-check"></i> {{ $t("Saved description") }}
-                </button>
-                <div v-if="errorDescription" class="form-error form-error-pt">{{ errorDescription }}</div>
-            </div>
-
             <!--- Extra config -->
 
             <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
@@ -101,6 +72,14 @@
                 <label><i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</label>
             </div>
             <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
+
+            <!--- Tags -->
+
+            <div class="form-group">
+                <label>{{ $t("Tags") }}:</label>
+            </div>
+
+            <MediaTagsEditor @tags-update="onTagUpdate"></MediaTagsEditor>
         </div>
 
         <div class="row-general-right">
@@ -115,7 +94,7 @@
             </div>
             <div v-if="canWrite" class="form-group">
                 <input type="file" class="file-hidden" name="thumbnail-upload" @change="inputFileChanged" />
-                <div class="text-center">
+                <div class="text-center form-group-thumbnail-buttons">
                     <button
                         v-if="!busyThumbnail"
                         type="button"
@@ -130,7 +109,7 @@
                     </button>
                 </div>
 
-                <div v-if="mediaElementReady" class="form-group-pt text-center">
+                <div v-if="mediaElementReady" class="form-group-pt text-center form-group-thumbnail-buttons">
                     <button
                         v-if="type === 1"
                         type="button"
@@ -163,6 +142,13 @@
             @done="changeThumbnail"
             @error="onThumbnailModalError"
         ></ThumbnailCropModal>
+
+        <SaveChangesAskModal
+            v-if="displayExitConfirmation"
+            v-model:display="displayExitConfirmation"
+            @yes="onExitSaveChanges"
+            @no="onExitDiscardChanges"
+        ></SaveChangesAskModal>
     </div>
 </template>
 
@@ -179,14 +165,12 @@ import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
-import {
-    apiMediaChangeExtraParams,
-    apiMediaChangeMediaDescription,
-    apiMediaChangeMediaThumbnail,
-    apiMediaChangeMediaTitle,
-} from "@/api/api-media-edit";
+import { apiMediaChangeExtraParams, apiMediaChangeMediaThumbnail, apiMediaChangeMediaTitle } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
 import ThumbnailCropModal from "@/components/modals/ThumbnailCropModal.vue";
+import MediaTagsEditor from "@/components/utils/MediaTagsEditor.vue";
+import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
+import { ExitPreventer } from "@/control/exit-prevent";
 
 export default defineComponent({
     name: "EditorGeneral",
@@ -195,18 +179,21 @@ export default defineComponent({
         LoadingIcon,
         ThumbImage,
         ThumbnailCropModal,
+        MediaTagsEditor,
+        SaveChangesAskModal,
     },
     emits: ["changed"],
     setup() {
         return {
             requestIdTitle: getUniqueStringId(),
-            requestIdDescription: getUniqueStringId(),
             requestIdThumbnail: getUniqueStringId(),
             requestIdExtra: getUniqueStringId(),
 
             mediaElementCheckTimer: null as ReturnType<typeof setInterval> | null,
 
             tempImage: null as HTMLImageElement,
+
+            exitCallback: null as () => void,
         };
     },
     data: function () {
@@ -216,21 +203,7 @@ export default defineComponent({
             title: "",
             originalTitle: "",
 
-            desc: "",
-            originalDesc: "",
-
             thumbnail: "",
-
-            busyTitle: false,
-            busyDescription: false,
-            busyThumbnail: false,
-            busyExtra: false,
-
-            savedTitle: false,
-            savedDescription: false,
-            savedExtra: false,
-
-            canWrite: AuthController.CanWrite,
 
             originalStartBeginning: false,
             startBeginning: false,
@@ -238,15 +211,26 @@ export default defineComponent({
             originalIsAnimation: false,
             isAnimation: false,
 
+            busyTitle: false,
+            busyThumbnail: false,
+            busyExtra: false,
+
+            savedTitle: false,
+            savedExtra: false,
+
             errorTitle: "",
-            errorDescription: "",
             errorExtraConfig: "",
             errorThumbnail: "",
+
+            canWrite: AuthController.CanWrite,
 
             mediaElementReady: false,
 
             displayThumbnailModal: false,
             thumbnailModalUrl: "",
+
+            displayExitConfirmation: false,
+            exitOnSave: false,
         };
     },
 
@@ -259,11 +243,12 @@ export default defineComponent({
         this.checkMediaElement();
 
         this.autoFocus();
+
+        ExitPreventer.SetupExitPrevent(this.checkExitPrevent.bind(this), this.onExit.bind(this));
     },
 
     beforeUnmount: function () {
         abortNamedApiRequest(this.requestIdTitle);
-        abortNamedApiRequest(this.requestIdDescription);
         abortNamedApiRequest(this.requestIdThumbnail);
         abortNamedApiRequest(this.requestIdExtra);
 
@@ -275,6 +260,8 @@ export default defineComponent({
             delete this.tempImage.onload;
             delete this.tempImage.onerror;
         }
+
+        ExitPreventer.RemoveExitPrevent();
     },
 
     methods: {
@@ -296,9 +283,6 @@ export default defineComponent({
 
             this.originalTitle = MediaController.MediaData.title;
             this.title = this.originalTitle;
-
-            this.originalDesc = MediaController.MediaData.description;
-            this.desc = this.originalDesc;
 
             this.originalStartBeginning = MediaController.MediaData.force_start_beginning;
             this.startBeginning = this.originalStartBeginning;
@@ -548,7 +532,7 @@ export default defineComponent({
             }
         },
 
-        changeTitle: function (e: Event) {
+        changeTitle: function (e?: Event) {
             if (e) {
                 e.preventDefault();
             }
@@ -574,6 +558,13 @@ export default defineComponent({
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
                     AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+
+                    if (this.exitOnSave) {
+                        this.exitOnSave = false;
+                        if (this.exitCallback) {
+                            this.exitCallback();
+                        }
+                    }
                 })
                 .onCancel(() => {
                     this.busyTitle = false;
@@ -609,64 +600,6 @@ export default defineComponent({
                     this.errorTitle = this.$t("Error") + ": " + err.message;
                     console.error(err);
                     this.busyTitle = false;
-                });
-        },
-
-        changeDescription: function () {
-            if (this.busyDescription) {
-                return;
-            }
-
-            this.busyDescription = true;
-            this.errorDescription = "";
-
-            const mediaId = AppStatus.CurrentMedia;
-
-            makeNamedApiRequest(this.requestIdDescription, apiMediaChangeMediaDescription(mediaId, this.desc))
-                .onSuccess(() => {
-                    PagesController.ShowSnackBarRight(this.$t("Successfully changed description"));
-                    this.busyDescription = false;
-                    this.savedDescription = true;
-                    this.originalDesc = this.desc;
-                    if (MediaController.MediaData) {
-                        MediaController.MediaData.description = this.desc;
-                    }
-                    this.$emit("changed");
-                })
-                .onCancel(() => {
-                    this.busyDescription = false;
-                })
-                .onRequestError((err, handleErr) => {
-                    this.busyDescription = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        invalidDescription: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Invalid description provided");
-                        },
-                        badRequest: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Bad request");
-                        },
-                        accessDenied: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Access denied");
-                        },
-                        notFound: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Not found");
-                        },
-                        serverError: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Internal server error");
-                        },
-                        networkError: () => {
-                            this.errorDescription = this.$t("Error") + ": " + this.$t("Could not connect to the server");
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.errorDescription = this.$t("Error") + ": " + err.message;
-                    console.error(err);
-                    this.busyDescription = false;
                 });
         },
 
@@ -728,6 +661,36 @@ export default defineComponent({
 
         updateAuthInfo: function () {
             this.canWrite = AuthController.CanWrite;
+        },
+
+        onTagUpdate: function () {
+            this.$emit("changed");
+        },
+
+        checkExitPrevent: function (): boolean {
+            return this.originalTitle !== this.title;
+        },
+
+        onExit: function (callback: () => void) {
+            this.exitCallback = callback;
+            this.displayExitConfirmation = true;
+        },
+
+        onExitSaveChanges: function () {
+            if (this.originalTitle !== this.title) {
+                this.exitOnSave = true;
+                this.changeTitle();
+            } else {
+                if (this.exitCallback) {
+                    this.exitCallback();
+                }
+            }
+        },
+
+        onExitDiscardChanges: function () {
+            if (this.exitCallback) {
+                this.exitCallback();
+            }
         },
     },
 });

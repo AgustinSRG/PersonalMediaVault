@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts">
-import { MediaData, TaskStatus } from "@/api/models";
+import type { MediaData, TaskStatus } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { MediaController } from "@/control/media";

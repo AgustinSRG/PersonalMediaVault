@@ -72,6 +72,7 @@ import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import type { MediaListItem } from "@/api/models";
 
 export default defineComponent({
     name: "AlbumAddMediaModal",
@@ -145,14 +146,14 @@ export default defineComponent({
             this.isUpload = false;
         },
 
-        selectMedia: function (mid: number, callback: () => void) {
+        selectMedia: function (m: MediaListItem, callback: () => void) {
             if (this.busy) {
                 return;
             }
             const albumId = this.aid;
             this.busy = true;
             // Add
-            makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, mid))
+            makeApiRequest(apiAlbumsAddMediaToAlbum(albumId, m.id))
                 .onSuccess(() => {
                     this.busy = false;
                     PagesController.ShowSnackBar(this.$t("Successfully added to album"));

@@ -2,11 +2,12 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { MediaResolution, MediaSubtitle, MediaAudioTrack, MediaTimeSlice, MediaAttachment } from "./models";
-import { ImageNote } from "@/utils/notes-format";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { MediaResolution, MediaSubtitle, MediaAudioTrack, MediaTimeSlice, MediaAttachment } from "./models";
+import type { ImageNote } from "@/utils/notes-format";
 import { API_PREFIX, getApiURL } from "@/utils/api";
-import { ProvidedAuthConfirmation } from "./api-auth";
+import type { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/media";
 
@@ -108,48 +109,6 @@ export function apiMediaChangeMediaTitle(id: number, title: string): RequestPara
 }
 
 /**
- * Error handler for edit description API
- */
-export type ChangeDescriptionErrorHandler = MediaEditApiErrorHandler & {
-    /**
-     * Error: Invalid description
-     */
-    invalidDescription: () => void;
-
-    /**
-     * Error: Bad request
-     */
-    badRequest: () => void;
-};
-
-/**
- * Changes media description
- * @param id Media ID
- * @param description New description
- * @returns The request parameters
- */
-export function apiMediaChangeMediaDescription(id: number, description: string): RequestParams<void, ChangeDescriptionErrorHandler> {
-    return {
-        method: "POST",
-        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/description`),
-        json: {
-            description: description,
-        },
-        handleError: (err, handler) => {
-            new RequestErrorHandler()
-                .add(401, "*", handler.unauthorized)
-                .add(400, "INVALID_DESCRIPTION", handler.invalidDescription)
-                .add(400, "*", handler.badRequest)
-                .add(403, "*", handler.accessDenied)
-                .add(404, "*", handler.notFound)
-                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
-                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
-                .handle(err);
-        },
-    };
-}
-
-/**
  * Error handler for edit extra parameters API
  */
 export type ChangeExtraParamsErrorHandler = MediaEditApiErrorHandler & {
@@ -177,6 +136,32 @@ export function apiMediaChangeExtraParams(
         json: {
             force_start_beginning: forceStartBeginning,
             is_anim: isAnimation,
+        },
+        handleError: (err, handler) => {
+            new RequestErrorHandler()
+                .add(401, "*", handler.unauthorized)
+                .add(400, "*", handler.badRequest)
+                .add(403, "*", handler.accessDenied)
+                .add(404, "*", handler.notFound)
+                .add(500, "*", "serverError" in handler ? handler.serverError : handler.temporalError)
+                .add("*", "*", "networkError" in handler ? handler.networkError : handler.temporalError)
+                .handle(err);
+        },
+    };
+}
+
+/**
+ * Changes related media list
+ * @param id Media ID
+ * @param related Related media list
+ * @returns The request parameters
+ */
+export function apiMediaChangeRelatedMedia(id: number, related: number[]): RequestParams<void, ChangeExtraParamsErrorHandler> {
+    return {
+        method: "POST",
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/related`),
+        json: {
+            related,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()
@@ -260,9 +245,9 @@ export function apiMediaSetNotes(id: number, notes: ImageNote[]): RequestParams<
 }
 
 /**
- * Error handler for set extended description API
+ * Error handler for set description API
  */
-export type SetExtendedDescriptionErrorHandler = MediaEditApiErrorHandler & {
+export type SetDescriptionErrorHandler = MediaEditApiErrorHandler & {
     /**
      * Error: Bad request
      */
@@ -270,20 +255,17 @@ export type SetExtendedDescriptionErrorHandler = MediaEditApiErrorHandler & {
 };
 
 /**
- * Sets extended description
+ * Sets description
  * @param id Media ID
- * @param extendedDesc Extended description
+ * @param description Description
  * @returns The request parameters
  */
-export function apiMediaSetExtendedDescription(
-    id: number,
-    extendedDesc: string,
-): RequestParams<ChangeAssetResponse, SetExtendedDescriptionErrorHandler> {
+export function apiMediaSetDescription(id: number, description: string): RequestParams<ChangeAssetResponse, SetDescriptionErrorHandler> {
     return {
         method: "POST",
-        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/ext_desc`),
+        url: getApiURL(`${API_PREFIX}${API_GROUP_PREFIX}/${encodeURIComponent(id + "")}/edit/description`),
         json: {
-            ext_desc: extendedDesc,
+            description,
         },
         handleError: (err, handler) => {
             new RequestErrorHandler()
@@ -372,7 +354,7 @@ export function apiMediaEncodeMedia(id: number): RequestParams<void, MediaEditAp
 }
 
 /**
- * Error handler for set extended description API
+ * Error handler for media replace API
  */
 export type ReplaceMediaErrorHandler = MediaEditApiErrorHandler & {
     /**

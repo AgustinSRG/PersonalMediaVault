@@ -6,7 +6,7 @@ import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AppEvents } from "./app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { apiTagsGetTags } from "@/api/api-tags";
 
 /**

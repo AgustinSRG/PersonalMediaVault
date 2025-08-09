@@ -49,6 +49,30 @@
     width: calc(20% - 0.5rem);
 }
 
+.horizontal-filter-menu.image-opts-menu .horizontal-filter-menu-item {
+    width: calc(33.33% - 0.5rem);
+}
+
+.horizontal-filter-menu.image-opts-menu.can-write .horizontal-filter-menu-item:nth-last-child(-n + 4) {
+    width: calc(25% - 0.5rem);
+}
+
+.horizontal-filter-menu.video-opts-menu .horizontal-filter-menu-item {
+    width: calc(25% - 0.5rem);
+}
+
+.horizontal-filter-menu.video-opts-menu.can-write .horizontal-filter-menu-item:nth-last-child(-n + 5) {
+    width: calc(20% - 0.5rem);
+}
+
+.horizontal-filter-menu.audio-opts-menu .horizontal-filter-menu-item {
+    width: calc(33.33% - 0.5rem);
+}
+
+.horizontal-filter-menu.audio-opts-menu.can-write .horizontal-filter-menu-item:nth-last-child(-n + 4) {
+    width: calc(25% - 0.5rem);
+}
+
 .horizontal-filter-menu-item:hover {
     background: var(--theme-option-hover-color);
 }

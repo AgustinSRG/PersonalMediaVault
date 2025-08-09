@@ -2,17 +2,17 @@
     <div class="resizable-widget-container">
         <ResizableWidget
             v-model:display="displayStatus"
-            :title="$t('Extended description')"
+            :title="$t('Description') + ' | ' + (title || $t('Untitled'))"
             :context-open="contextOpen"
-            :position-key="'ext-desc-widget-pos'"
+            :position-key="'desc-widget-pos'"
             :busy="busy"
             :action-buttons="actionButtons"
             @clicked="propagateClick"
             @action-btn="clickActionButton"
         >
-            <div class="extended-description-body" tabindex="-1">
+            <div class="media-description-body" tabindex="-1">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
-                <div v-if="!loading && editing" class="extended-description-edit">
+                <div v-if="!loading && editing" class="media-description-edit">
                     <textarea
                         v-model="contentToChange"
                         :disabled="busy || !canWrite"
@@ -22,7 +22,7 @@
                 </div>
                 <div
                     v-if="!loading && !editing"
-                    class="extended-description-view"
+                    class="media-description-view"
                     :style="{ '--base-font-size': baseFontSize + 'px' }"
                     v-html="renderContent(content)"
                 ></div>
@@ -35,25 +35,26 @@
 import { useVModel } from "@/utils/v-model";
 import { defineComponent } from "vue";
 
-import ResizableWidget, { ActionButton } from "@/components/player/ResizableWidget.vue";
+import type { ActionButton } from "@/components/player/ResizableWidget.vue";
+import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
 import { AppEvents } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
-import { apiMediaSetExtendedDescription } from "@/api/api-media-edit";
-import { escapeHTML } from "@/utils/html";
+import { apiMediaSetDescription } from "@/api/api-media-edit";
+import { escapeHTML, replaceLinks } from "@/utils/html";
 
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
-import { getExtendedDescriptionSize, setExtendedDescriptionSize } from "@/control/player-preferences";
+import { getDescriptionSize, setDescriptionSize } from "@/control/player-preferences";
 
 export default defineComponent({
-    name: "ExtendedDescriptionWidget",
+    name: "DescriptionWidget",
     components: {
         ResizableWidget,
         LoadingOverlay,
@@ -61,9 +62,9 @@ export default defineComponent({
     props: {
         display: Boolean,
         contextOpen: Boolean,
-        currentTime: Number,
+        title: String,
     },
-    emits: ["update:display", "clicked", "update-ext-desc"],
+    emits: ["update:display", "clicked", "update-desc"],
     setup(props) {
         return {
             loadRequestId: getUniqueStringId(),
@@ -90,7 +91,7 @@ export default defineComponent({
 
             canWrite: AuthController.CanWrite,
 
-            baseFontSize: getExtendedDescriptionSize(),
+            baseFontSize: getDescriptionSize(),
         };
     },
     computed: {
@@ -159,6 +160,8 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateMediaData.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, this.updateDescription.bind(this));
+
         if (this.display) {
             this.load();
         }
@@ -185,7 +188,7 @@ export default defineComponent({
                 return;
             }
 
-            const descFilePath = MediaController.MediaData.ext_desc_url;
+            const descFilePath = MediaController.MediaData.description_url;
 
             if (!descFilePath) {
                 this.content = "";
@@ -210,9 +213,9 @@ export default defineComponent({
                 method: "GET",
                 url: getAssetURL(descFilePath),
             })
-                .onSuccess((extendedDescText) => {
-                    this.content = extendedDescText;
-                    this.contentToChange = extendedDescText;
+                .onSuccess((descriptionText) => {
+                    this.content = descriptionText;
+                    this.contentToChange = descriptionText;
                     this.loading = false;
                     this.editing = this.canWrite && !this.content;
 
@@ -282,7 +285,7 @@ export default defineComponent({
         },
 
         saveBaseFontSize: function () {
-            setExtendedDescriptionSize(this.baseFontSize);
+            setDescriptionSize(this.baseFontSize);
         },
 
         propagateClick: function () {
@@ -302,7 +305,7 @@ export default defineComponent({
                 if (elem) {
                     elem.focus();
                 } else {
-                    elem = this.$el.querySelector(".extended-description-body");
+                    elem = this.$el.querySelector(".media-description-body");
                     if (elem) {
                         elem.focus();
                     }
@@ -320,6 +323,14 @@ export default defineComponent({
         updateMediaData: function () {
             this.mid = AppStatus.CurrentMedia;
             this.load();
+        },
+
+        updateDescription: function (source: string) {
+            if (source === "widget") {
+                return;
+            }
+
+            this.updateMediaData();
         },
 
         startEdit: function () {
@@ -344,13 +355,13 @@ export default defineComponent({
                 .split("\n\n")
                 .map((paragraph) => {
                     if (paragraph.startsWith("###")) {
-                        return "<h3>" + escapeHTML(paragraph.substring(3)).replace(/\n/g, "<br>") + "</h3>";
+                        return "<h3>" + escapeHTML(paragraph.substring(3).trim()).replace(/\n/g, "<br>") + "</h3>";
                     } else if (paragraph.startsWith("##")) {
-                        return "<h2>" + escapeHTML(paragraph.substring(2)).replace(/\n/g, "<br>") + "</h2>";
+                        return "<h2>" + escapeHTML(paragraph.substring(2).trim()).replace(/\n/g, "<br>") + "</h2>";
                     } else if (paragraph.startsWith("#")) {
-                        return "<h1>" + escapeHTML(paragraph.substring(1)).replace(/\n/g, "<br>") + "</h1>";
+                        return "<h1>" + escapeHTML(paragraph.substring(1).trim()).replace(/\n/g, "<br>") + "</h1>";
                     } else {
-                        return "<p>" + escapeHTML(paragraph).replace(/\n/g, "<br>") + "</p>";
+                        return "<p>" + replaceLinks(escapeHTML(paragraph)).replace(/\n/g, "<br>") + "</p>";
                     }
                 })
                 .join("");
@@ -373,20 +384,22 @@ export default defineComponent({
 
             const mid = this.mid;
 
-            makeApiRequest(apiMediaSetExtendedDescription(mid, this.contentToChange))
+            makeApiRequest(apiMediaSetDescription(mid, this.contentToChange))
                 .onSuccess((res) => {
                     this.busy = false;
                     this.clearBusyTimeout();
 
-                    PagesController.ShowSnackBar(this.$t("Successfully saved extended description"));
+                    PagesController.ShowSnackBar(this.$t("Successfully saved description"));
                     this.content = this.contentToChange;
                     this.editing = false;
 
                     if (MediaController.MediaData && MediaController.MediaData.id === mid) {
-                        MediaController.MediaData.ext_desc_url = res.url || "";
+                        MediaController.MediaData.description_url = res.url || "";
                     }
 
-                    this.$emit("update-ext-desc");
+                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
+
+                    this.$emit("update-desc");
 
                     this.autoFocus();
                 })

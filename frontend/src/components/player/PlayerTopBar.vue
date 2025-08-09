@@ -46,11 +46,13 @@
 
 <script lang="ts">
 import { MediaController } from "@/control/media";
-import { defineAsyncComponent, defineComponent, nextTick, PropType } from "vue";
+import type { PropType } from "vue";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import PlayerAlbumFullScreen from "./PlayerAlbumFullScreen.vue";
 import { AuthController } from "@/control/auth";
-import { MediaData } from "@/api/models";
+import type { MediaData } from "@/api/models";
+import { ExitPreventer } from "@/control/exit-prevent";
 
 const PlayerMediaEditor = defineAsyncComponent({
     loader: () => import("@/components/player/editor/PlayerMediaEditor.vue"),
@@ -142,7 +144,9 @@ export default defineComponent({
         },
 
         closeTitle: function () {
-            this.expandedState = false;
+            ExitPreventer.TryExit(() => {
+                this.expandedState = false;
+            });
         },
 
         expandAlbum: function () {
@@ -159,7 +163,7 @@ export default defineComponent({
             this.closeAlbum();
         },
 
-        onKeyDown: function (e) {
+        onKeyDown: function (e: KeyboardEvent) {
             if (!this.expanded && !this.albumExpanded) {
                 return;
             }

@@ -139,13 +139,14 @@
             @clicked="clickControls"
         ></TagsEditHelper>
 
-        <ExtendedDescriptionWidget
-            v-if="displayExtendedDescription"
-            v-model:display="displayExtendedDescriptionStatus"
+        <DescriptionWidget
+            v-if="displayDescription"
+            v-model:display="displayDescriptionStatus"
             :context-open="contextMenuShown"
+            :title="title"
             @clicked="clickControls"
-            @update-ext-desc="refreshExtendedDescription"
-        ></ExtendedDescriptionWidget>
+            @update-desc="refreshDescription"
+        ></DescriptionWidget>
 
         <div
             class="player-controls"
@@ -156,6 +157,7 @@
             @touchstart="stopPropagationEvent"
             @mouseenter="enterControls"
             @mouseleave="leaveControls"
+            @contextmenu="stopPropagationEvent"
         >
             <div class="player-controls-left">
                 <button
@@ -228,13 +230,13 @@
 
             <div class="player-controls-right">
                 <button
-                    v-if="hasExtendedDescription"
+                    v-if="hasDescription"
                     type="button"
-                    :title="$t('Extended description')"
-                    class="player-btn"
-                    @click="openExtendedDescription"
-                    @mouseenter="enterTooltip('ext-desc')"
-                    @mouseleave="leaveTooltip('ext-desc')"
+                    :title="$t('Description')"
+                    class="player-btn player-btn-hide-mobile"
+                    @click="openDescription"
+                    @mouseenter="enterTooltip('desc')"
+                    @mouseleave="leaveTooltip('desc')"
                 >
                     <i class="fas fa-file-lines"></i>
                 </button>
@@ -243,12 +245,24 @@
                     v-if="hasAttachments"
                     type="button"
                     :title="$t('Attachments')"
-                    class="player-btn player-settings-no-trap"
+                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
                     @click="showAttachments"
                     @mouseenter="enterTooltip('attachments')"
                     @mouseleave="leaveTooltip('attachments')"
                 >
                     <i class="fas fa-paperclip"></i>
+                </button>
+
+                <button
+                    v-if="hasRelatedMedia"
+                    type="button"
+                    :title="$t('Related media')"
+                    class="player-btn player-btn-hide-mobile player-settings-no-trap"
+                    @click="showRelatedMedia"
+                    @mouseenter="enterTooltip('related-media')"
+                    @mouseleave="leaveTooltip('related-media')"
+                >
+                    <i class="fas fa-photo-film"></i>
                 </button>
 
                 <button
@@ -298,66 +312,17 @@
             </div>
         </div>
 
-        <div v-if="helpTooltip === 'play'" class="player-tooltip player-help-tip-left">
-            {{ $t("Play") }}
-        </div>
-
-        <div v-else-if="helpTooltip === 'pause'" class="player-tooltip player-help-tip-left">
-            {{ $t("Pause") }}
-        </div>
-
-        <div v-else-if="!prev && pagePrev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            {{ $t("Previous") }}
-        </div>
-
-        <div v-else-if="!next && pageNext && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            {{ $t("Next") }}
-        </div>
-
-        <div v-else-if="prev && helpTooltip === 'prev'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="prev" :next="false"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="next && helpTooltip === 'next'" class="player-tooltip player-help-tip-left">
-            <PlayerMediaChangePreview :media="next" :next="true"></PlayerMediaChangePreview>
-        </div>
-
-        <div v-else-if="helpTooltip === 'volume'" class="player-tooltip player-help-tip-left">
-            {{ $t("Volume") }} ({{ muted ? $t("Muted") : renderVolume(volume) }})
-        </div>
-
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'ext-desc'" class="player-tooltip player-help-tip-right">
-            {{ $t("Extended description") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'attachments'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Attachments") }}
-        </div>
-
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'config'" class="player-tooltip player-help-tip-right">
-            {{ $t("Player Configuration") }}
-        </div>
-
-        <div v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'albums'" class="player-tooltip player-help-tip-right">
-            {{ $t("Manage albums") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Full screen") }}
-        </div>
-
-        <div
-            v-else-if="!displayConfig && !displayAttachments && helpTooltip === 'full-screen-exit'"
-            class="player-tooltip player-help-tip-right"
-        >
-            {{ $t("Exit full screen") }}
-        </div>
+        <PlayerTooltip
+            v-if="helpTooltip"
+            :help-tooltip="helpTooltip"
+            :hide-right-tooltip="displayConfig || displayAttachments || displayRelatedMedia"
+            :next="next"
+            :prev="prev"
+            :page-next="pageNext"
+            :page-prev="pagePrev"
+            :muted="muted"
+            :volume="volume"
+        ></PlayerTooltip>
 
         <div
             class="player-timeline"
@@ -436,6 +401,15 @@
         >
         </PlayerAttachmentsList>
 
+        <PlayerRelatedMediaList
+            v-if="metadata && metadata.related"
+            v-model:shown="displayRelatedMedia"
+            :related-media="metadata.related"
+            @enter="enterControls"
+            @leave="leaveControls"
+        >
+        </PlayerRelatedMediaList>
+
         <PlayerTopBar
             v-if="metadata"
             v-model:expanded="expandedTitle"
@@ -461,13 +435,13 @@
             :url="videoURL"
             :title="title"
             :can-write="canWrite"
-            :has-extended-description="hasExtendedDescription"
+            :has-description="hasDescription"
             :has-slices="timeSlices && timeSlices.length > 0"
             :is-short="isShort"
             @update:loop="() => $emit('force-loop', loop)"
             @stats="openStats"
             @open-tags="openTags"
-            @open-ext-desc="openExtendedDescription"
+            @open-desc="openDescription"
         ></PlayerContextMenu>
     </div>
 </template>
@@ -495,13 +469,12 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
 import VolumeControl from "./VolumeControl.vue";
 import PlayerTopBar from "./PlayerTopBar.vue";
-import PlayerMediaChangePreview from "./PlayerMediaChangePreview.vue";
 import { openFullscreen, closeFullscreen } from "../../utils/full-screen";
 import { renderTimeSeconds } from "../../utils/time";
-import { findTimeSlice, NormalizedTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
+import type { NormalizedTimeSlice } from "../../utils/time-slices";
+import { findTimeSlice, normalizeTimeSlices } from "../../utils/time-slices";
 import { isTouchDevice } from "@/utils/touch";
 import VideoPlayerConfig from "./VideoPlayerConfig.vue";
-import PlayerAttachmentsList from "./PlayerAttachmentsList.vue";
 import PlayerContextMenu from "./PlayerContextMenu.vue";
 import PlayerSubtitles from "./PlayerSubtitles.vue";
 import { getAssetURL } from "@/utils/api";
@@ -510,11 +483,12 @@ import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from 
 import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
-import { PropType } from "vue";
-import { MediaData, MediaListItem } from "@/api/models";
+import type { PropType } from "vue";
+import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
+import PlayerTooltip from "./PlayerTooltip.vue";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),
@@ -528,8 +502,16 @@ const TagsEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TagsEditHelper.vue"),
 });
 
-const ExtendedDescriptionWidget = defineAsyncComponent({
-    loader: () => import("@/components/player/ExtendedDescriptionWidget.vue"),
+const DescriptionWidget = defineAsyncComponent({
+    loader: () => import("@/components/player/DescriptionWidget.vue"),
+});
+
+const PlayerAttachmentsList = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerAttachmentsList.vue"),
+});
+
+const PlayerRelatedMediaList = defineAsyncComponent({
+    loader: () => import("@/components/player/PlayerRelatedMediaList.vue"),
 });
 
 export default defineComponent({
@@ -537,15 +519,16 @@ export default defineComponent({
     components: {
         VolumeControl,
         VideoPlayerConfig,
-        PlayerMediaChangePreview,
         PlayerTopBar,
         PlayerContextMenu,
         PlayerEncodingPending,
         TimeSlicesEditHelper,
         TagsEditHelper,
-        ExtendedDescriptionWidget,
+        DescriptionWidget,
         PlayerAttachmentsList,
         PlayerSubtitles,
+        PlayerRelatedMediaList,
+        PlayerTooltip,
     },
     props: {
         mid: Number,
@@ -573,7 +556,7 @@ export default defineComponent({
         autoPlay: Boolean,
 
         displayTagList: Boolean,
-        displayExtendedDescription: Boolean,
+        displayDescription: Boolean,
     },
     emits: [
         "go-next",
@@ -585,7 +568,7 @@ export default defineComponent({
         "force-loop",
         "delete",
         "update:displayTagList",
-        "update:displayExtendedDescription",
+        "update:displayDescription",
     ],
     setup(props) {
         return {
@@ -598,7 +581,7 @@ export default defineComponent({
             fullScreenState: useVModel(props, "fullscreen"),
             userControlsState: useVModel(props, "userControls"),
             displayTagListStatus: useVModel(props, "displayTagList"),
-            displayExtendedDescriptionStatus: useVModel(props, "displayExtendedDescription"),
+            displayDescriptionStatus: useVModel(props, "displayDescription"),
         };
     },
     data: function () {
@@ -690,10 +673,13 @@ export default defineComponent({
             mediaError: false,
             mediaErrorMessage: "",
 
-            hasExtendedDescription: false,
+            hasDescription: false,
 
             hasAttachments: false,
             displayAttachments: false,
+
+            hasRelatedMedia: false,
+            displayRelatedMedia: false,
 
             pendingNextEnd: false,
             pendingNextEndSeconds: 0,
@@ -818,11 +804,11 @@ export default defineComponent({
             this.displayTagListStatus = true;
         },
 
-        openExtendedDescription: function () {
-            if (!this.hasExtendedDescription && !this.canWrite) {
+        openDescription: function () {
+            if (!this.hasDescription && !this.canWrite) {
                 return;
             }
-            this.displayExtendedDescriptionStatus = true;
+            this.displayDescriptionStatus = true;
         },
 
         showAttachments: function (e?: Event) {
@@ -830,6 +816,17 @@ export default defineComponent({
                 e.stopPropagation();
             }
             this.displayAttachments = !this.displayAttachments;
+            this.displayRelatedMedia = false;
+            this.displayConfig = false;
+        },
+
+        showRelatedMedia: function (e?: Event) {
+            if (e) {
+                e.stopPropagation();
+            }
+
+            this.displayRelatedMedia = !this.displayRelatedMedia;
+            this.displayAttachments = false;
             this.displayConfig = false;
         },
 
@@ -851,10 +848,11 @@ export default defineComponent({
                 e.stopPropagation();
             }
             this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
                 this.displayAttachments = false;
+                this.displayRelatedMedia = false;
             } else {
                 this.timeStartTap = Date.now();
             }
@@ -879,18 +877,15 @@ export default defineComponent({
 
         clickPlayer: function () {
             this.leaveControls();
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
                 this.displayAttachments = false;
+                this.displayRelatedMedia = false;
             } else {
                 this.togglePlay();
             }
             this.interactWithControls();
-        },
-
-        renderVolume: function (v: number): string {
-            return Math.round(v * 100) + "%";
         },
 
         enterTooltip: function (t: string) {
@@ -910,6 +905,7 @@ export default defineComponent({
         showConfig: function (e?: Event) {
             this.displayConfig = !this.displayConfig;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -942,6 +938,7 @@ export default defineComponent({
             this.displayConfig = false;
             this.contextMenuShown = false;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
             if (e) {
                 e.stopPropagation();
             }
@@ -1195,7 +1192,15 @@ export default defineComponent({
 
         mouseLeavePlayer: function () {
             this.timelineGrabbed = false;
-            if (!this.playing || this.expandedTitle || this.expandedAlbum || this.displayConfig || this.displayAttachments) return;
+            if (
+                !this.playing ||
+                this.expandedTitle ||
+                this.expandedAlbum ||
+                this.displayConfig ||
+                this.displayAttachments ||
+                this.displayRelatedMedia
+            )
+                return;
             this.showControls = false;
             this.volumeShown = isTouchDevice();
             this.helpTooltip = "";
@@ -1213,6 +1218,7 @@ export default defineComponent({
                     this.helpTooltip = "";
                     this.displayConfig = false;
                     this.displayAttachments = false;
+                    this.displayRelatedMedia = false;
                 }
             }
 
@@ -1278,6 +1284,7 @@ export default defineComponent({
 
             this.displayConfig = false;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
         },
 
         togglePlay() {
@@ -1316,6 +1323,7 @@ export default defineComponent({
 
             this.displayConfig = false;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
         },
 
         play: function () {
@@ -1379,6 +1387,7 @@ export default defineComponent({
             this.displayConfig = false;
             this.contextMenuShown = false;
             this.displayAttachments = false;
+            this.displayRelatedMedia = false;
             e.stopPropagation();
         },
 
@@ -1522,7 +1531,7 @@ export default defineComponent({
                     break;
                 case "i":
                 case "I":
-                    this.openExtendedDescription();
+                    this.openDescription();
                     break;
                 case "t":
                 case "T":
@@ -1753,8 +1762,9 @@ export default defineComponent({
             }
             this.isShort = this.metadata.is_anim || this.metadata.duration <= AUTO_LOOP_MIN_DURATION;
             this.canSaveTime = !this.metadata.force_start_beginning;
-            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+            this.hasDescription = !!this.metadata.description_url;
             this.hasAttachments = this.metadata.attachments && this.metadata.attachments.length > 0;
+            this.hasRelatedMedia = this.metadata.related && this.metadata.related.length > 0;
             this.timeSlices = normalizeTimeSlices(
                 (this.metadata.time_slices || []).sort((a, b) => {
                     if (a.time < b.time) {
@@ -2051,7 +2061,7 @@ export default defineComponent({
 
             this.autoNextTimer = setTimeout(() => {
                 this.autoNextTimer = null;
-                if (this.displayConfig || this.expandedTitle || this.displayAttachments || !this.playing) {
+                if (this.displayConfig || this.expandedTitle || this.displayAttachments || this.displayRelatedMedia || !this.playing) {
                     this.setupAutoNextTimer();
                 } else {
                     this.goNext();
@@ -2126,8 +2136,8 @@ export default defineComponent({
             this.updateCurrentTimeSlice();
         },
 
-        refreshExtendedDescription: function () {
-            this.hasExtendedDescription = !!this.metadata.ext_desc_url;
+        refreshDescription: function () {
+            this.hasDescription = !!this.metadata.description_url;
         },
 
         renderScale: function (scale: number) {
@@ -2161,10 +2171,11 @@ export default defineComponent({
 
             this.leaveControls();
 
-            if (this.displayConfig || this.contextMenuShown || this.displayAttachments) {
+            if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;
                 this.displayAttachments = false;
+                this.displayRelatedMedia = false;
                 e.stopPropagation();
                 return;
             }

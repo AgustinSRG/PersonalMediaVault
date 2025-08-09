@@ -46,19 +46,19 @@ They are binary files, with the following structure:
 
 The system is flexible enough to allow multiple encryption algorithms. Currently, there are 2 supported ones:
 
-- `AES256_FLAT`: ID = `1`, Uses ZLIB ([RFC 1950](https://datatracker.ietf.org/doc/html/rfc1950)) to compress the data, and then uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
+- `AES256_ZIP`: ID = `1`, Uses ZLIB ([RFC 1950](https://datatracker.ietf.org/doc/html/rfc1950)) to compress the data, and then uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header of 20 bytes, containing the following fields:
 
 | Starting byte | Size (bytes) | Value name                | Description                                                        |
 | ------------- | ------------ | ------------------------- | ------------------------------------------------------------------ |
-| `2 + H`       | `4`          | Compressed plaintext size | Size of the compressed plaintext, in bytes, used to remove padding |
-| `2 + H + 4`   | `16`         | IV                        | Initialization vector for AES_256_CBC algorithm                    |
+| `0`           | `4`          | Compressed plaintext size | Size of the compressed plaintext, in bytes, used to remove padding |
+| `4`           | `16`         | IV                        | Initialization vector for AES_256_CBC algorithm                    |
 
-- `AES256_FLAT`: ID = `2`, Uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header containing the following fields:
+- `AES256_FLAT`: ID = `2`, Uses AES with a key of 256 bits to encrypt the data, CBC as the mode of operation and an IV of 128 bits. This algorithm uses a header of 20 bytes, containing the following fields:
 
 | Starting byte | Size (bytes) | Value name     | Description                                             |
 | ------------- | ------------ | -------------- | ------------------------------------------------------- |
-| `2 + H`       | `4`          | Plaintext size | Size of the plaintext, in bytes, used to remove padding |
-| `2 + H + 4`   | `16`         | IV             | Initialization vector for AES_256_CBC algorithm         |
+| `0`           | `4`          | Plaintext size | Size of the plaintext, in bytes, used to remove padding |
+| `4`           | `16`         | IV             | Initialization vector for AES_256_CBC algorithm         |
 
 ### Index files
 
@@ -79,7 +79,7 @@ They are binary files, consisting of the following fields:
 
 Encrypted assets have the `.pma` extension.
 
-They stored one or multiple encrypted files.
+They store one or multiple encrypted files.
 
 They are also binary files, and they can be of two types:
 
@@ -99,7 +99,7 @@ The header contains the following fields:
 | `0`           | `8`          | File size        | Size of the original file, in bytes, stored as a **Big Endian unsigned integer** |
 | `8`           | `8`          | Chunk size limit | Max size of a chunk, in bytes, stored as a **Big Endian unsigned integer**       |
 
-After the header, the chunk index is stored. **For each chunk** the file was split into, the chunk index will store a metadata entry, withe the following fields:
+After the header, the chunk index is stored. **For each chunk** the file was split into, the chunk index will store a metadata entry, with the following fields:
 
 | Starting byte | Size (bytes) | Value name    | Description                                                              |
 | ------------- | ------------ | ------------- | ------------------------------------------------------------------------ |
@@ -150,6 +150,7 @@ Media vaults are stored in folders. A vault folder may contain the following fil
 |
 | [**Tag list**](#tags-file) | `tag_list.pmv` | [Encrypted JSON file](#encrypted-json-files) | File to store the metadata of the existing vault tags |
 | [**User configuration**](#user-configuration-file) | `user_config.pmv` | [Encrypted JSON file](#encrypted-json-files) | File to store user configuration, like the vault title or the encoding parameters |
+| [**UseHome pager configuration**](#home-page-configuration-file) | `home_page.pmv` | [Encrypted JSON file](#encrypted-json-files) | File to store the custom home page configuration |
 | [**Main index**](#main-index-file) | `main.index` | [Index file](#index-files) | File to index every single media asset existing in the vault. |
 
 ### Media assets folder
@@ -196,7 +197,6 @@ The file contains the following fields:
 | `id`                    | Number (64 bit unsigned integer)              | Media asset identifier                                                                                                        |
 | `type`                  | Number (8 bit unsigned integer)               | Media type. Can be: `1` (Image), `2` (Video / Animation) or `3` (Audio / Sound)                                               |
 | `title`                 | String                                        | Title                                                                                                                         |
-| `description`           | String                                        | Description                                                                                                                   |
 | `tags`                  | Array&lt;Number (64 bit unsigned integer)&gt; | List of tags for the media. Only identifiers are stored                                                                       |
 | `duration`              | Number (Floating point)                       | Duration of the media in seconds                                                                                              |
 | `width`                 | Number (32 bit unsigned integer)              | Width in pixels                                                                                                               |
@@ -223,6 +223,9 @@ The file contains the following fields:
 | `time_splits`           | Array&lt;TimeSplit&gt;                        | List of time splits for videos or audios                                                                                      |
 | `audio_tracks`          | Array&lt;AudioTrack&gt;                       | List of extra audio tracks for videos                                                                                         |
 | `attachments`           | Array&lt;Attachment&gt;                       | List of attachments stored with the media asset                                                                               |
+| `ext_desc`              | Boolean                                       | True only if the media has a description.                                                                                     |
+| `ext_desc_asset`        | Number (64 bit unsigned integer)              | Id of the asset containing the description.                                                                                   |
+| `related`               | Array&lt;Number (64 bit unsigned integer)&gt; | List of IDs of related media assets                                                                                           |
 
 The `Resolution` object has the following fields:
 
@@ -358,7 +361,7 @@ func ComputePasswordHash(password string, salt []byte) []byte {
 }
 ```
 
-The vault ket is encrypted using the AES256 algorithm, using the system defined in the [Encrypted JSON files](#encrypted-json-files) section. Specifically using the `AES256_FLAT` mode.
+The vault key is encrypted using the AES256 algorithm, using the system defined in the [Encrypted JSON files](#encrypted-json-files) section. Specifically using the `AES256_FLAT` mode.
 
 The key for the encryption is calculated by hashing with SHA256 the the binary concatenation of the password (as UTF-8) and the random salt:
 
@@ -451,12 +454,15 @@ The file has the following fields:
 | Field name                | Type                         | Description                                                 |
 | ------------------------- | ---------------------------- | ----------------------------------------------------------- |
 | `title`                   | String                       | Vault custom title                                          |
+| `logo`                    | String                       | Vault custom logo text                                      |
 | `css`                     | String                       | Custom CSS for the frontend                                 |
 | `max_tasks`               | Number (32 bit integer)      | Max number of tasks to run in parallel                      |
 | `encoding_threads`        | Number (32 bit integer)      | Max number of threads to use for a single encoding task     |
 | `video_previews_interval` | Number (32 bit integer)      | Video previews interval (seconds)                           |
 | `resolutions`             | Array&lt;VideoResolution&gt; | Resolutions to automatically encode when uploading a video  |
 | `image_resolutions`       | Array&lt;ImageResolution&gt; | Resolutions to automatically encode when uploading an image |
+| `invite_limit`            | Number (32 bit integer)      | Max number of invites per user                              |
+| `preserve_originals`      | Boolean                      | Preserve original media before encoding?                    |
 
 The `VideoResolution` object has the following fields:
 
@@ -472,6 +478,33 @@ The `ImageResolution` object has the following fields:
 | ---------- | -------------------------------- | ---------------- |
 | `width`    | Number (32 bit unsigned integer) | Width in pixels  |
 | `height`   | Number (32 bit unsigned integer) | Height in pixels |
+
+### Home page configuration file
+
+The user configuration file, named `home_page.pmv` is an [encrypted JSON file](#encrypted-json-files) used to store the home page configuration for the vault.
+
+The file has the following fields:
+
+| Field name | Type                             | Description                                         |
+| ---------- | -------------------------------- | --------------------------------------------------- |
+| `groups`   | Array&lt;HomePageGroup&gt;       | Groups of elements to display in the home page.     |
+| `next_id`  | Number (64 bit unsigned integer) | ID to assign to the next group created by the user. |
+
+The `HomePageGroup` object has the following fields:
+
+| Field name | Type                             | Description                                                                   |
+| ---------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| `id`       | Number (64 bit unsigned integer) | ID of the group to uniquely identity it.                                      |
+| `type`     | Number (8 bit unsigned integer)  | Type of group (`0` = custom/default, `1` = recent media, `2` = recent albums) |
+| `name`     | String                           | Name for the group, in order to display it to the user.                       |
+| `elements` | Array&lt;HomePageElement&gt;     | List of ordered elements to display for the group. Only for `type` = `0`      |
+
+The `HomePageElement` object has the following fields:
+
+| Field name | Type                             | Description                                        |
+| ---------- | -------------------------------- | -------------------------------------------------- |
+| `t`        | Number (8 bit unsigned integer)  | Type of element (`0` = media/default, `1` = album) |
+| `i`        | Number (64 bit unsigned integer) | Identifier of the media or the album               |
 
 ### Main index file
 

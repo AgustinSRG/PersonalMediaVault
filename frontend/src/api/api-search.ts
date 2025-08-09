@@ -2,8 +2,9 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { SearchResults, RandomResults, AdvancedSearchResults } from "./models";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { SearchResults, RandomResults, AdvancedSearchResults } from "./models";
 import { generateURIQuery, getApiURL } from "@/utils/api";
 
 /**

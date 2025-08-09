@@ -2,10 +2,11 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { AlbumListItem, AlbumListItemMin, Album } from "./models";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { AlbumListItem, AlbumListItemMin, Album } from "./models";
 import { API_PREFIX, getApiURL } from "@/utils/api";
-import { ProvidedAuthConfirmation } from "./api-auth";
+import type { ProvidedAuthConfirmation } from "./api-auth";
 
 const API_GROUP_PREFIX = "/albums";
 

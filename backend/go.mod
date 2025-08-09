@@ -3,7 +3,7 @@ module github.com/AgustinSRG/PersonalMediaVault/backend
 go 1.22
 
 require (
-	github.com/AgustinSRG/encrypted-storage v1.0.0
+	github.com/AgustinSRG/encrypted-storage v1.0.1
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/AgustinSRG/go-disk-usage v1.0.0
 	github.com/gorilla/handlers v1.5.2

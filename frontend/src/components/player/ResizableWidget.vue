@@ -16,7 +16,7 @@
         @contextmenu="stopPropagationEvent"
     >
         <div class="resizable-widget-header" @mousedown="startMoving($event, true)" @touchstart.passive="startMoving($event, false)">
-            <div class="resizable-widget-title">{{ title }}</div>
+            <div class="resizable-widget-title" :title="title">{{ title }}</div>
             <div v-if="actionButtons && actionButtons.length > 0" class="resizable-widget-action-buttons">
                 <button
                     v-for="btn in actionButtons"
@@ -87,7 +87,8 @@
 <script lang="ts">
 import { fetchFromLocalStorage, saveIntoLocalStorage } from "@/utils/local-storage";
 import { useVModel } from "@/utils/v-model";
-import { PropType, nextTick } from "vue";
+import type { PropType } from "vue";
+import { nextTick } from "vue";
 import { defineComponent } from "vue";
 
 const INITIAL_WIDTH = 480;

@@ -84,7 +84,7 @@
 </template>
 
 <script lang="ts">
-import { MediaListItem } from "@/api/models";
+import type { MediaListItem } from "@/api/models";
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
@@ -140,6 +140,7 @@ export default defineComponent({
 
             order: "desc",
             searchParams: AppStatus.SearchParams,
+            seed: AppStatus.RandomSeed,
             page: 0,
 
             currentMedia: AppStatus.CurrentMedia,
@@ -199,7 +200,7 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_TAGS_UPDATE, this.updateTagData.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.load.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH, this.refreshSeed.bind(this));
 
         this.updateSearchParams();
         this.updateTagData();
@@ -237,6 +238,10 @@ export default defineComponent({
             });
         },
 
+        refreshSeed: function () {
+            AppStatus.RefreshSeed();
+        },
+
         load: function () {
             clearNamedTimeout(this.loadRequestId);
             abortNamedApiRequest(this.loadRequestId);
@@ -255,7 +260,7 @@ export default defineComponent({
                 return; // Vault is locked
             }
 
-            makeNamedApiRequest(this.loadRequestId, apiSearchRandom(this.search, Date.now(), this.pageSize))
+            makeNamedApiRequest(this.loadRequestId, apiSearchRandom(this.search, this.seed, this.pageSize))
                 .onSuccess((result) => {
                     const s = new Set();
                     this.pageItems = result.page_items.filter((i) => {
@@ -320,14 +325,22 @@ export default defineComponent({
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
+
+            let mustLoad = false;
+
             if (AppStatus.CurrentSearch !== this.search) {
                 this.search = AppStatus.CurrentSearch;
-                this.load();
+                mustLoad = true;
             }
 
-            if (AppStatus.SearchParams !== this.searchParams) {
+            if (AppStatus.SearchParams !== this.searchParams || AppStatus.RandomSeed !== this.seed) {
+                this.seed = AppStatus.RandomSeed;
                 this.searchParams = AppStatus.SearchParams;
                 this.updateSearchParams();
+                mustLoad = true;
+            }
+
+            if (mustLoad) {
                 this.load();
             }
 
@@ -421,7 +434,7 @@ export default defineComponent({
                 this.goToMedia(this.pageItems[0].id);
             } else {
                 this.switchMediaOnLoad = "prev";
-                this.load();
+                this.refreshSeed();
             }
         },
 
@@ -433,7 +446,7 @@ export default defineComponent({
                 this.goToMedia(this.pageItems[0].id);
             } else {
                 this.switchMediaOnLoad = "next";
-                this.load();
+                this.refreshSeed();
             }
         },
 
@@ -467,7 +480,7 @@ export default defineComponent({
             }
 
             if (event.key.toUpperCase() === "R") {
-                this.load();
+                this.refreshSeed();
                 return true;
             }
 

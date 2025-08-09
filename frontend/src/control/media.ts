@@ -8,7 +8,7 @@ import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
-import { MediaData } from "@/api/models";
+import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 
 /**
@@ -32,6 +32,11 @@ export const EVENT_NAME_MEDIA_LOADING = "current-media-loading";
  * Event triggered when the current media data is updated
  */
 export const EVENT_NAME_MEDIA_UPDATE = "current-media-update";
+
+/**
+ * Event triggered when the current media description is updated
+ */
+export const EVENT_NAME_MEDIA_DESCRIPTION_UPDATE = "current-media-description-update";
 
 /**
  * Management object to fetch media metadata

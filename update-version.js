@@ -38,14 +38,12 @@ function main() {
     }
 
     const VERSION = MAJOR + "." + MINOR + "." + REVISION;
-    const DATE = (new Date()).toISOString().split("T")[0];
 
-    console.log(`Changing version to ${VERSION} | Date: ${DATE}`);
+    console.log(`Changing version to ${VERSION}`);
 
     updateFile(Path.resolve(__dirname, "frontend", ".env"), contents => {
         return contents
-            .replace(/VITE\_\_VERSION=[0-9]+\.[0-9]+\.[0-9]+/, `VITE__VERSION=${VERSION}`)
-            .replace(/VITE\_\_VERSION\_DATE=[0-9]+\-[0-9]+\-[0-9]+/, `VITE__VERSION_DATE=${DATE}`);
+            .replace(/VITE\_\_VERSION=[0-9]+\.[0-9]+\.[0-9]+/, `VITE__VERSION=${VERSION}`);
     });
 
     updateFile(Path.resolve(__dirname, "frontend", "package.json"), contents => {

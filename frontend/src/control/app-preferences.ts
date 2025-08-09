@@ -5,7 +5,7 @@
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./albums";
 import { AppEvents } from "./app-events";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
-import { AlbumListItemMin } from "@/api/models";
+import type { AlbumListItemMin } from "@/api/models";
 
 export type ColorThemeName = "light" | "dark";
 
@@ -330,7 +330,7 @@ export function setPagePreferences(page: string, preferences: PagePreferences) {
  * @param page Page name
  */
 export function resetPagePreferences(page: string) {
-    clearLocalStorage(LS_KEY_PAGE_SETTINGS + page);
+    clearLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page);
     clearLocalStorage(LS_KEY_PAGE_SETTINGS);
     AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
@@ -390,5 +390,5 @@ export function clearPagePreferences() {
     clearLocalStorage(LS_KEY_THEME);
     AppEvents.Emit(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
 
-    ["home", "random", "search", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
+    ["home", "media", "random", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
 }

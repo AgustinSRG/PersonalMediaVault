@@ -18,6 +18,33 @@
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button
+                v-if="(page === 'home' || (page === 'media' && !search)) && canWrite"
+                type="button"
+                :title="$t('Upload')"
+                class="page-header-btn"
+                @click="uploadMedia"
+            >
+                <i class="fas fa-upload"></i>
+            </button>
+            <button
+                v-if="page === 'home' && !homeEditMode && canWrite && !min"
+                type="button"
+                :title="$t('Edit home page')"
+                class="page-header-btn"
+                @click="homeStartEdit"
+            >
+                <i class="fas fa-pencil-alt"></i>
+            </button>
+            <button
+                v-if="page === 'home' && homeEditMode && canWrite"
+                type="button"
+                :title="$t('Finalize home page modifications')"
+                class="page-header-btn"
+                @click="homeFinishEdit"
+            >
+                <LoadingIcon icon="fas fa-check" :loading="savingHome"></LoadingIcon>
+            </button>
+            <button
                 v-if="page === 'random' || (hasOrderAlbums(page) && order === 'rand')"
                 type="button"
                 :title="$t('Refresh')"
@@ -98,10 +125,11 @@
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
+            :editing="homeEditMode"
         ></PageHome>
-        <PageSearch
-            v-if="isDisplayed && page === 'search'"
-            :display="isDisplayed && page === 'search'"
+        <PageMedia
+            v-if="isDisplayed && page === 'media'"
+            :display="isDisplayed && page === 'media'"
             :min="min"
             :page-size="pageSize"
             :display-titles="displayTitles"
@@ -109,7 +137,7 @@
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
-        ></PageSearch>
+        ></PageMedia>
         <PageUpload v-if="isDisplayed && page === 'upload'" :display="isDisplayed && page === 'upload'"></PageUpload>
         <PageRandom
             v-if="isDisplayed && page === 'random'"
@@ -157,12 +185,14 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
+import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_RANDOM_PAGE_REFRESH } from "@/control/pages";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import { waitForHomePageSilentSaveActions } from "@/utils/home";
 
 const PageHome = defineAsyncComponent({
     loader: () => import("@/components/pages/PageHome.vue"),
@@ -170,8 +200,8 @@ const PageHome = defineAsyncComponent({
     delay: 200,
 });
 
-const PageSearch = defineAsyncComponent({
-    loader: () => import("@/components/pages/PageSearch.vue"),
+const PageMedia = defineAsyncComponent({
+    loader: () => import("@/components/pages/PageMedia.vue"),
     loadingComponent: LoadingOverlay,
     delay: 200,
 });
@@ -209,8 +239,9 @@ const PageSettingsDropdown = defineAsyncComponent({
 export default defineComponent({
     name: "PageContent",
     components: {
+        LoadingIcon,
         PageHome,
-        PageSearch,
+        PageMedia,
         PageAlbums,
         PageUpload,
         PageRandom,
@@ -223,6 +254,8 @@ export default defineComponent({
     data: function () {
         const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {
+            canWrite: AuthController.CanWrite,
+
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
             search: AppStatus.CurrentSearch,
@@ -247,6 +280,9 @@ export default defineComponent({
             roundedCorners: pagePreferences.roundedCorners,
 
             pageScroll: 0,
+
+            homeEditMode: false,
+            savingHome: false,
         };
     },
     mounted: function () {
@@ -254,12 +290,17 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED, this.updatePagePreferences.bind(this));
 
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.onAuthChanged.bind(this));
+
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
 
         this.updateSearchParams();
     },
     methods: {
         updatePage: function () {
+            if (this.page !== AppStatus.CurrentPage && AppStatus.CurrentPage === "home") {
+                this.homeEditMode = false;
+            }
             this.page = AppStatus.CurrentPage;
             this.search = AppStatus.CurrentSearch;
             this.isDisplayed = (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0;
@@ -267,6 +308,14 @@ export default defineComponent({
             this.searchParams = AppStatus.SearchParams;
             this.updateSearchParams();
             this.updatePagePreferences();
+        },
+
+        onAuthChanged: function () {
+            this.canWrite = AuthController.CanWrite;
+
+            if (!this.canWrite) {
+                this.homeEditMode = false;
+            }
         },
 
         expandPage: function () {
@@ -284,7 +333,7 @@ export default defineComponent({
         hasConfigOptions: function (p: string): boolean {
             switch (p) {
                 case "home":
-                case "search":
+                case "media":
                 case "adv-search":
                 case "albums":
                 case "random":
@@ -296,8 +345,7 @@ export default defineComponent({
 
         hasOrderDate: function (p: string): boolean {
             switch (p) {
-                case "home":
-                case "search":
+                case "media":
                     return true;
                 default:
                     return false;
@@ -313,20 +361,20 @@ export default defineComponent({
             }
         },
 
-        renderTitle: function (p, s) {
+        renderTitle: function (p: string, s: string): string {
             switch (p) {
                 case "home":
                     return this.$t("Home");
-                case "search":
-                    return this.$t("Search results") + ": " + s;
+                case "media":
+                    return this.$t("Media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
                 case "adv-search":
-                    return this.$t("Advanced search");
+                    return this.$t("Find media");
                 case "upload":
                     return this.$t("Upload media");
                 case "albums":
                     return this.$t("Albums list");
                 case "random":
-                    return this.$t("Random results");
+                    return this.$t("Random media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
                 default:
                     return "";
             }
@@ -336,7 +384,8 @@ export default defineComponent({
             switch (p) {
                 case "home":
                     return "fas fa-home";
-                case "search":
+                case "media":
+                    return "fas fa-photo-film";
                 case "adv-search":
                     return "fas fa-search";
                 case "upload":
@@ -389,6 +438,19 @@ export default defineComponent({
             });
         },
 
+        homeStartEdit: function () {
+            this.homeEditMode = true;
+        },
+
+        homeFinishEdit: function () {
+            this.savingHome = true;
+
+            waitForHomePageSilentSaveActions(() => {
+                this.savingHome = false;
+                this.homeEditMode = false;
+            });
+        },
+
         openConfig: function () {
             this.displayConfigModal = !this.displayConfigModal;
         },
@@ -429,6 +491,10 @@ export default defineComponent({
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.stopPropagation();
             }
+        },
+
+        uploadMedia: function () {
+            AppStatus.GoToPageConditionalSplit("upload");
         },
     },
 });

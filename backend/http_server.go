@@ -176,12 +176,12 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	apiRouter.HandleFunc("/upload", api_uploadMedia).Methods("POST")
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/title", api_editMediaTitle).Methods("POST")
-	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/description", api_editMediaDescription).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/extra", api_editMediaExtraParams).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/thumbnail", api_editMediaThumbnail).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/notes", api_setImageNotes).Methods("POST")
-	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/ext_desc", api_setExtendedDescription).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/description", api_setDescription).Methods("POST")
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/time_slices", api_editMediaTimelineSplices).Methods("POST")
+	apiRouter.HandleFunc("/media/{mid:[0-9]+}/edit/related", api_editMediaRelated).Methods("POST")
 
 	apiRouter.HandleFunc("/media/{mid:[0-9]+}/delete", api_deleteMedia).Methods("POST")
 
@@ -236,6 +236,15 @@ func RunHTTPServer(port string, bindAddr string, isTest bool) *mux.Router {
 	// Config API
 	apiRouter.HandleFunc("/config", api_getConfig).Methods("GET")
 	apiRouter.HandleFunc("/config", api_setConfig).Methods("POST")
+
+	// Home page API
+	apiRouter.HandleFunc("/home", api_listHomePageGroups).Methods("GET")
+	apiRouter.HandleFunc("/home", api_createHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/elements", api_getHomePageGroupElements).Methods("GET")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/name", api_renameHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/move", api_moveHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}/elements", api_setElementsHomePageGroup).Methods("POST")
+	apiRouter.HandleFunc("/home/{id:[0-9]+}", api_deleteHomePageGroup).Methods("DELETE")
 
 	// Tasks API
 	apiRouter.HandleFunc("/tasks", api_getTasks).Methods("GET")

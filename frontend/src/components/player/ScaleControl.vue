@@ -29,7 +29,8 @@
 import { defineComponent } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { isTouchDevice } from "../../utils/touch";
-import { PositionEvent, positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+import type { PositionEvent } from "@/utils/position-event";
+import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
 
 export default defineComponent({
     name: "ScaleControl",
@@ -56,13 +57,12 @@ export default defineComponent({
     mounted: function () {
         if (isTouchDevice()) {
             this.expandedState = true;
+            this.$listenOnDocumentEvent("touchend", this.dropScaleTouch.bind(this));
+            this.$listenOnDocumentEvent("touchmove", this.moveScaleTouch.bind(this));
+        } else {
+            this.$listenOnDocumentEvent("mouseup", this.dropScaleMouse.bind(this));
+            this.$listenOnDocumentEvent("mousemove", this.moveScaleMouse.bind(this));
         }
-
-        this.$listenOnDocumentEvent("mouseup", this.dropScaleMouse.bind(this));
-        this.$listenOnDocumentEvent("touchend", this.dropScaleTouch.bind(this));
-
-        this.$listenOnDocumentEvent("mousemove", this.moveScaleMouse.bind(this));
-        this.$listenOnDocumentEvent("touchmove", this.moveScaleTouch.bind(this));
     },
     methods: {
         onEnter: function () {
@@ -122,6 +122,10 @@ export default defineComponent({
         },
 
         grabScaleMouse: function (e: MouseEvent) {
+            e.stopPropagation();
+            if (isTouchDevice()) {
+                return;
+            }
             this.grabScale(positionEventFromMouseEvent(e));
         },
 
@@ -139,15 +143,18 @@ export default defineComponent({
         },
 
         dropScaleTouch: function (e: TouchEvent) {
-            this.dropScale(positionEventFromTouchEvent(e));
+            e.stopPropagation();
+            this.dropScale(null);
         },
 
-        dropScale(e: PositionEvent) {
+        dropScale(e?: PositionEvent) {
             if (!this.scaleGrabbed) {
                 return;
             }
             this.scaleGrabbed = false;
-            this.modifyScaleByMouse(e.x, e.y);
+            if (e) {
+                this.modifyScaleByMouse(e.x, e.y);
+            }
         },
 
         moveScaleMouse: function (e: MouseEvent) {
@@ -171,7 +178,7 @@ export default defineComponent({
             }
             const offset = this.$el.getBoundingClientRect();
 
-            const offsetX = offset.left + 8 + (this.min ? 24 : 40);
+            const offsetX = offset.left + 8 + 40;
 
             if (x < offsetX) {
                 this.changeScale(0);

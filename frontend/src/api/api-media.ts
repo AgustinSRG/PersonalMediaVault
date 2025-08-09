@@ -2,8 +2,9 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { MediaData, MediaSizeStats } from "./models";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { MediaData, MediaSizeStats } from "./models";
 import { API_PREFIX, getApiURL } from "@/utils/api";
 
 const API_GROUP_PREFIX = "/media";

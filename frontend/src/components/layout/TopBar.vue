@@ -4,8 +4,8 @@
             <button type="button" class="top-bar-button top-bar-menu-btn" :title="$t('Main menu')" @click="menu">
                 <i class="fas fa-bars"></i>
             </button>
-            <img class="top-bar-logo-img" src="/img/icons/favicon.png" alt="PMV" />
-            <span :title="getAppTitle()" class="top-bar-title">PMV</span>
+            <img class="top-bar-logo-img" src="/img/icons/favicon.png" :alt="getAppLogoText(customLogo)" />
+            <span :title="getAppTitle(customTitle)" class="top-bar-title">{{ getAppLogoText(customLogo) }}</span>
         </div>
         <div class="top-bar-search-td">
             <div class="top-bar-center-div">
@@ -93,7 +93,7 @@
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController } from "@/control/auth";
+import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -134,11 +134,19 @@ export default defineComponent({
             hasSearch: !!AppStatus.CurrentSearch,
             searchFocus: false,
             suggestions: [] as SearchBarSuggestion[],
+
+            customTitle: AuthController.Title,
+            customLogo: AuthController.Logo,
         };
     },
 
     mounted: function () {
         this.$listenOnAppEvent(EVENT_NAME_APP_STATUS_CHANGED, this.onSearchChanged.bind(this));
+
+        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, () => {
+            this.customTitle = AuthController.Title;
+            this.customLogo = AuthController.Logo;
+        });
 
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this));
 
@@ -169,8 +177,12 @@ export default defineComponent({
         }
     },
     methods: {
-        getAppTitle: function () {
-            return AuthController.Title || this.$t("Personal Media Vault");
+        getAppTitle: function (customTitle: string) {
+            return customTitle || this.$t("Personal Media Vault");
+        },
+
+        getAppLogoText: function (customLogo: string) {
+            return customLogo || "PMV";
         },
 
         menu: function () {
@@ -545,7 +557,7 @@ export default defineComponent({
                         window.location.host +
                         window.location.pathname +
                         generateURIQuery({
-                            page: "search",
+                            page: "media",
                             search: s.name,
                         })
                     );

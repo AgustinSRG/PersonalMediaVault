@@ -265,6 +265,22 @@ func api_deleteAlbum(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Remove from home page
+
+	err = GetVault().homePage.OnElementDelete(session.key, HomePageElement{
+		ElementType: HOME_PAGE_ELEMENT_TYPE_ALBUM,
+		Id:          album_id,
+	})
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	// Remove from vault
+
 	err = GetVault().albums.DeleteAlbum(album_id, session.key)
 
 	if err != nil {

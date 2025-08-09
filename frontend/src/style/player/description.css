@@ -1,0 +1,28 @@
+/* Media description widget style */
+
+.media-description-body {
+    padding: 0 1rem;
+}
+
+.media-description-body:focus {
+    outline: none;
+}
+
+.media-description-edit {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.media-description-edit textarea {
+    resize: vertical;
+    width: 100%;
+    min-height: 340px;
+}
+
+.media-description-view {
+    font-size: var(--base-font-size);
+    line-height: calc(var(--base-font-size) * 1.5);
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}

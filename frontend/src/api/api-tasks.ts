@@ -2,8 +2,9 @@
 
 "use strict";
 
-import { CommonAuthenticatedErrorHandler, RequestErrorHandler, RequestParams } from "@asanrom/request-browser";
-import { TaskStatus } from "./models";
+import type { CommonAuthenticatedErrorHandler, RequestParams } from "@asanrom/request-browser";
+import { RequestErrorHandler } from "@asanrom/request-browser";
+import type { TaskStatus } from "./models";
 import { getApiURL } from "@/utils/api";
 
 /**

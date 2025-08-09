@@ -150,6 +150,10 @@
     max-width: 50%;
 }
 
+.player-tooltip.hidden {
+    display: none;
+}
+
 .player-help-tip-left {
     left: 8px;
 }
@@ -186,4 +190,10 @@
 
 .next-end-wait-buttons button {
     margin: 0.5rem;
+}
+
+@media (max-width: 500px) {
+    .player-btn.player-btn-hide-mobile {
+        display: none;
+    }
 }

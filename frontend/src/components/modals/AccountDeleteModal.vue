@@ -48,7 +48,7 @@ import { PagesController } from "@/control/pages";
 import { makeApiRequest } from "@asanrom/request-browser";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import AuthConfirmationModal from "./AuthConfirmationModal.vue";
-import { ProvidedAuthConfirmation } from "@/api/api-auth";
+import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 
 export default defineComponent({
     name: "AccountDeleteModal",

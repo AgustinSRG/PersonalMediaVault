@@ -113,16 +113,10 @@
                     </td>
                 </tr>
 
-                <tr
-                    v-if="hasExtendedDescription || canWrite"
-                    class="tr-button"
-                    tabindex="0"
-                    @click="showExtendedDescription"
-                    @keydown="clickOnEnter"
-                >
+                <tr v-if="hasDescription || canWrite" class="tr-button" tabindex="0" @click="showDescription" @keydown="clickOnEnter">
                     <td>
                         <i class="fas fa-file-lines icon-config"></i>
-                        <span class="context-entry-title">{{ $t("Extended description") }}</span>
+                        <span class="context-entry-title">{{ $t("Description") }}</span>
                     </td>
                     <td class="td-right"></td>
                 </tr>
@@ -183,7 +177,7 @@ export default defineComponent({
         notesEdit: Boolean,
         canWrite: Boolean,
 
-        hasExtendedDescription: Boolean,
+        hasDescription: Boolean,
 
         timeSlicesEdit: Boolean,
     },
@@ -196,7 +190,7 @@ export default defineComponent({
         "update:sliceLoop",
         "update:timeSlicesEdit",
         "open-tags",
-        "open-ext-desc",
+        "open-desc",
         "stats",
         "close",
     ],
@@ -294,8 +288,8 @@ export default defineComponent({
             this.$emit("close");
         },
 
-        showExtendedDescription: function () {
-            this.$emit("open-ext-desc");
+        showDescription: function () {
+            this.$emit("open-desc");
             this.shownState = false;
             this.$emit("close");
         },

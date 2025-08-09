@@ -120,8 +120,8 @@ import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asan
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { PagesController } from "@/control/pages";
+import type { InviteSession } from "@/api/api-invites";
 import {
-    InviteSession,
     apiInvitesClearCode,
     apiInvitesDeleteSession,
     apiInvitesGenerateCode,
@@ -132,7 +132,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderDateAndTime, renderTimeSeconds } from "@/utils/time";
 import InviteCloseSessionConfirmationModal from "@/components/modals/InviteCloseSessionConfirmationModal.vue";
-import { SessionDuration } from "@/api/api-auth";
+import type { SessionDuration } from "@/api/api-auth";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 
 export default defineComponent({

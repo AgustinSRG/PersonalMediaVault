@@ -18,6 +18,7 @@ export default defineComponent({
     props: {
         src: String,
         className: String,
+        dragPrevent: Boolean,
     },
     setup: function () {
         return {

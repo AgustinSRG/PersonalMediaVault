@@ -21,7 +21,8 @@
 </template>
 
 <script lang="ts">
-import { computePasswordStrength, getPasswordStrengthTag, PasswordStrengthTag } from "@/utils/password-strength";
+import type { PasswordStrengthTag } from "@/utils/password-strength";
+import { computePasswordStrength, getPasswordStrengthTag } from "@/utils/password-strength";
 import { defineComponent } from "vue";
 
 const CRYPTO_SECURE_ENTROPY = 128;

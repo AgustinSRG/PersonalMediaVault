@@ -2,9 +2,10 @@
 
 "use strict";
 
-import { App } from "vue";
+import type { App } from "vue";
 import { AppEvents } from "./control/app-events";
-import { KeyboardEventHandler, KeyboardManager } from "./control/keyboard";
+import type { KeyboardEventHandler } from "./control/keyboard";
+import { KeyboardManager } from "./control/keyboard";
 
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
