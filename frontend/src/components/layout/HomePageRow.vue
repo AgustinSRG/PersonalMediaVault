@@ -343,7 +343,7 @@ import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroupElements, apiHomeGroupDeleteElement, apiHomeGroupMoveElement, getHomePageElementReference } from "@/api/api-home";
 import { AppStatus } from "@/control/app-status";
 import { TagsController } from "@/control/tags";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
 import {
     doHomePageSilentSaveAction,
@@ -926,25 +926,13 @@ export default defineComponent({
 
         getElementURL: function (element: HomePageElement): string {
             if (element.media) {
-                return (
-                    window.location.protocol +
-                    "//" +
-                    window.location.host +
-                    window.location.pathname +
-                    generateURIQuery({
-                        media: element.media.id + "",
-                    })
-                );
+                return getFrontendUrl({
+                    media: element.media.id,
+                });
             } else if (element.album) {
-                return (
-                    window.location.protocol +
-                    "//" +
-                    window.location.host +
-                    window.location.pathname +
-                    generateURIQuery({
-                        album: element.album.id + "",
-                    })
-                );
+                return getFrontendUrl({
+                    album: element.album.id,
+                });
             } else {
                 return "#";
             }

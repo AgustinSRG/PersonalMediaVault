@@ -146,7 +146,7 @@
 import { AppStatus } from "@/control/app-status";
 import type { UploadEntryMin } from "@/control/upload";
 import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadController } from "@/control/upload";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
@@ -515,15 +515,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
     },
 });

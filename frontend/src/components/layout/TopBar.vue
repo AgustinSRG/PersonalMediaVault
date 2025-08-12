@@ -100,7 +100,7 @@ import { FocusTrap } from "../../utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 
 interface SearchBarSuggestion {
     key: string;
@@ -531,38 +531,20 @@ export default defineComponent({
         getSuggestionUrl: function (s: SearchBarSuggestion): string {
             switch (s.type) {
                 case "media":
-                    return (
-                        window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        window.location.pathname +
-                        generateURIQuery({
-                            media: s.id + "",
-                        })
-                    );
+                    return getFrontendUrl({
+                        media: s.id,
+                    });
                 case "album":
-                    return (
-                        window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        window.location.pathname +
-                        generateURIQuery({
-                            album: s.id + "",
-                        })
-                    );
+                    return getFrontendUrl({
+                        album: s.id,
+                    });
                 case "tag":
-                    return (
-                        window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        window.location.pathname +
-                        generateURIQuery({
-                            page: "media",
-                            search: s.name,
-                        })
-                    );
+                    return getFrontendUrl({
+                        page: "media",
+                        search: s.name,
+                    });
                 default:
-                    return window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    return getFrontendUrl({ page: "home" });
             }
         },
     },

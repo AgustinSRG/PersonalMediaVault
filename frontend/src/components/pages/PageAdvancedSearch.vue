@@ -200,7 +200,7 @@ import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from
 import type { MatchingTag } from "@/control/tags";
 import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
@@ -809,15 +809,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
 
         getThumbnail(thumb: string) {

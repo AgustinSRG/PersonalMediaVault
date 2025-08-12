@@ -142,7 +142,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
 import { apiMediaGetMediaAlbums } from "@/api/api-media";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -521,16 +521,10 @@ export default defineComponent({
         },
 
         getAlbumURL: function (albumId: number, mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                    album: albumId + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+                album: albumId,
+            });
         },
 
         onScroll: function (e: Event) {

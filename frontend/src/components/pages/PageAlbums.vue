@@ -129,7 +129,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
@@ -481,15 +481,9 @@ export default defineComponent({
         },
 
         getAlbumURL: function (albumId: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    album: albumId + "",
-                })
-            );
+            return getFrontendUrl({
+                album: albumId,
+            });
         },
 
         renderDate: function (ts: number): string {

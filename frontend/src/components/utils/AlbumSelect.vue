@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { FocusTrap } from "@/utils/focus-trap";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
@@ -150,15 +150,9 @@ export default defineComponent({
         },
 
         getSuggestionURL: function (s: AlbumItemFiltered): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    album: s.id + "",
-                })
-            );
+            return getFrontendUrl({
+                album: s.id,
+            });
         },
 
         clickSuggestion: function (s: AlbumItemFiltered, e: Event) {

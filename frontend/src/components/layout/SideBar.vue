@@ -145,7 +145,7 @@ import {
 import type { AppStatusPage } from "@/control/app-status";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -278,29 +278,17 @@ export default defineComponent({
             }
         },
 
-        getPageURL: function (page: string, searchParams?: string): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    page: page,
-                    sp: searchParams,
-                })
-            );
+        getPageURL: function (page: AppStatusPage, searchParams?: string): string {
+            return getFrontendUrl({
+                page: page,
+                sp: searchParams || null,
+            });
         },
 
         getAlbumURL: function (albumId: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    album: albumId + "",
-                })
-            );
+            return getFrontendUrl({
+                album: albumId,
+            });
         },
 
         updateAlbums: function () {

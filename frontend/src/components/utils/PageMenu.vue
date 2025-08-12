@@ -96,16 +96,18 @@
 </template>
 
 <script lang="ts">
-import { generateURIQuery } from "@/utils/api";
+import type { AppStatusPage } from "@/control/app-status";
+import { getFrontendUrl } from "@/utils/api";
 import type { PageNode } from "@/utils/menu-make";
 import { generateMenuForPages } from "@/utils/menu-make";
 import { packSearchParams } from "@/utils/search-params";
+import type { PropType } from "vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "PageMenu",
     props: {
-        pageName: String,
+        pageName: String as PropType<AppStatusPage>,
         order: String,
         page: Number,
         pages: Number,
@@ -142,17 +144,11 @@ export default defineComponent({
             e.preventDefault();
         },
 
-        getPageUrl: function (page: number, pageName: string, order: string): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    page: pageName || "",
-                    sp: packSearchParams(page, order || "") || null,
-                })
-            );
+        getPageUrl: function (page: number, pageName: AppStatusPage, order: string): string {
+            return getFrontendUrl({
+                page: pageName || null,
+                sp: packSearchParams(page, order || "") || null,
+            });
         },
     },
 });

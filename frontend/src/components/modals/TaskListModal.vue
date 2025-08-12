@@ -70,7 +70,7 @@
 <script lang="ts">
 import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { generateURIQuery } from "@/utils/api";
+import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
@@ -336,15 +336,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
     },
 });

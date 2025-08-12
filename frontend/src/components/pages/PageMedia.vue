@@ -101,7 +101,7 @@
 import { AppEvents } from "@/control/app-events";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -389,15 +389,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
 
         updateSearchParams: function () {

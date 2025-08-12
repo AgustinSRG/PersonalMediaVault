@@ -96,7 +96,7 @@ import { AppEvents } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -306,15 +306,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
 
         checkExitPrevent: function (): boolean {

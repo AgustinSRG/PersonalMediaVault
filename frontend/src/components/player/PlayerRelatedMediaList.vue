@@ -51,7 +51,7 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
 import type { MediaListItem } from "@/api/models";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import ThumbImage from "../utils/ThumbImage.vue";
 import DurationIndicator from "../utils/DurationIndicator.vue";
 
@@ -125,15 +125,9 @@ export default defineComponent({
         },
 
         getMediaURL: function (mid: number): string {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: mid + "",
-                })
-            );
+            return getFrontendUrl({
+                media: mid,
+            });
         },
 
         getThumbnail(thumb: string) {

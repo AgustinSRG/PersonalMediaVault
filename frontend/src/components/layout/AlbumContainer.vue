@@ -185,7 +185,7 @@ import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { generateURIQuery, getAssetURL } from "@/utils/api";
+import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import AlbumContextMenu from "./AlbumContextMenu.vue";
@@ -550,17 +550,11 @@ export default defineComponent({
             AppStatus.ClickOnMedia(item.id, false);
         },
 
-        getMediaURL: function (item) {
-            return (
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                window.location.pathname +
-                generateURIQuery({
-                    media: item.id + "",
-                    album: this.albumId + "",
-                })
-            );
+        getMediaURL: function (item: AlbumListItem) {
+            return getFrontendUrl({
+                media: item.id,
+                album: this.albumId,
+            });
         },
 
         showOptions: function (item: { pos: number }, i: number, event: MouseEvent) {

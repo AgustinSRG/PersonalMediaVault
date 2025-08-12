@@ -2,10 +2,22 @@
 
 "use strict";
 
+import type { AppStatusPage } from "@/control/app-status";
+
 /**
  * API Prefix
  */
 export const API_PREFIX = "/api";
+
+/**
+ * Resolves URL
+ * @param path The Path
+ * @param base The base URL
+ * @returns The resolved URL
+ */
+function resolveUrl(path: string, base: string): string {
+    return new URL(path, base).toString();
+}
 
 /**
  * Gets API URL from the full path
@@ -14,9 +26,9 @@ export const API_PREFIX = "/api";
  */
 export function getApiURL(path: string): string {
     if (import.meta.env.DEV) {
-        return (import.meta.env.DEV_TEST_HOST || "http://localhost") + path;
+        return resolveUrl(path, import.meta.env.DEV_TEST_HOST || "http://localhost");
     } else {
-        return location.protocol + "//" + location.host + path;
+        return resolveUrl("." + path, location.protocol + "//" + location.host + location.pathname);
     }
 }
 
@@ -27,9 +39,9 @@ export function getApiURL(path: string): string {
  */
 export function getAssetURL(path: string): string {
     if (import.meta.env.DEV) {
-        return (import.meta.env.DEV_TEST_HOST || "http://localhost") + path;
+        return resolveUrl(path, import.meta.env.DEV_TEST_HOST || "http://localhost");
     } else {
-        return location.protocol + "//" + location.host + path;
+        return resolveUrl("." + path, location.protocol + "//" + location.host + location.pathname);
     }
 }
 
@@ -61,4 +73,42 @@ export function generateURIQuery(params: { [key: string]: any | undefined }): st
     }
 
     return result;
+}
+
+/**
+ * Status params for a frontend URL
+ */
+export type FrontendUrlStatusParams = {
+    // Current media
+    media?: number | string;
+
+    // Current album
+    album?: number | string;
+
+    // Current page
+    page?: AppStatusPage;
+
+    // Home page group
+    g?: number;
+
+    // Search tag
+    search?: string;
+
+    // Search params
+    sp?: string;
+
+    // Random seed
+    seed?: number;
+
+    // Split page and media?
+    split?: "yes";
+};
+
+/**
+ * Computes frontend URL from a list of status parameters
+ * @param statusParams The list of status parameters
+ * @returns The frontend URL
+ */
+export function getFrontendUrl(statusParams: FrontendUrlStatusParams): string {
+    return location.protocol + "//" + location.host + location.pathname + generateURIQuery(statusParams);
 }
