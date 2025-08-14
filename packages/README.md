@@ -6,3 +6,4 @@ List of available packages
 
  - [DPKG DEB package builder](./dpkg-deb/)
  - [Windows MSI installer](./windows-msi/)
+ - [Linux generic installer](./linux/)

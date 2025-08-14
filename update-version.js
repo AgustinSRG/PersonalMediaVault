@@ -94,6 +94,13 @@ function main() {
             .replace(/PMV\_VERSION\_REVISION=[0-9]+/, `PMV_VERSION_REVISION=${REVISION}`);
     });
 
+    updateFile(Path.resolve(__dirname, "packages", "linux", "build.sh"), contents => {
+        return contents
+            .replace(/PMV\_VERSION\_MAJOR=[0-9]+/, `PMV_VERSION_MAJOR=${MAJOR}`)
+            .replace(/PMV\_VERSION\_MINOR=[0-9]+/, `PMV_VERSION_MINOR=${MINOR}`)
+            .replace(/PMV\_VERSION\_REVISION=[0-9]+/, `PMV_VERSION_REVISION=${REVISION}`);
+    });
+
     console.log("DONE!");
 }
 
