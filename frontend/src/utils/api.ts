@@ -3,6 +3,7 @@
 "use strict";
 
 import type { AppStatusPage } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 
 /**
  * API Prefix
@@ -26,7 +27,7 @@ function resolveUrl(path: string, base: string): string {
  */
 export function getApiURL(path: string): string {
     if (import.meta.env.DEV) {
-        return resolveUrl(path, import.meta.env.DEV_TEST_HOST || "http://localhost");
+        return resolveUrl(path, import.meta.env.VITE_DEV_TEST_HOST || "http://localhost");
     } else {
         return resolveUrl("." + path, location.protocol + "//" + location.host + location.pathname);
     }
@@ -39,7 +40,9 @@ export function getApiURL(path: string): string {
  */
 export function getAssetURL(path: string): string {
     if (import.meta.env.DEV) {
-        return resolveUrl(path, import.meta.env.DEV_TEST_HOST || "http://localhost");
+        const assetUrl = new URL(resolveUrl(path, import.meta.env.VITE_DEV_TEST_HOST || "http://localhost"));
+        assetUrl.searchParams.set("session_token", AuthController.Session);
+        return assetUrl.toString();
     } else {
         return resolveUrl("." + path, location.protocol + "//" + location.host + location.pathname);
     }
