@@ -36,13 +36,13 @@
 
             <div v-if="canWrite && (type === 2 || type === 3)" class="form-group">
                 <label
-                    >{{ $t("Extra media configuration") }}:<span v-if="busyExtra" class="loader-delayed-custom">
-                        <i class="fa fa-spinner fa-spin mr-1"></i> {{ $t("Saving changes") }}...</span
+                    >{{ $t("Extra media configuration") }}:<span v-if="busyExtra" class="extra-config-loader loader-delayed-custom">
+                        <i class="fa fa-spinner fa-spin"></i> {{ $t("Saving changes") }}...</span
                     ></label
                 >
             </div>
             <div v-if="type === 2 || type === 3" class="table-responsive">
-                <table class="table no-border">
+                <table class="table no-border no-margin">
                     <tbody>
                         <tr v-if="type === 2 || type === 3">
                             <td class="text-right td-shrink">
@@ -72,7 +72,7 @@
                     </tbody>
                 </table>
             </div>
-            <div v-if="errorExtraConfig" class="form-error form-error-pt">{{ errorExtraConfig }}</div>
+            <div v-if="errorExtraConfig" class="form-group form-error">{{ errorExtraConfig }}</div>
 
             <!--- Tags -->
 
