@@ -10,5 +10,9 @@
 			"pmv": true,
 			"pmv.exe": true
 		},
+		"cSpell.words": [
+			"slint",
+			"Slint"
+		],
 	}
 }
