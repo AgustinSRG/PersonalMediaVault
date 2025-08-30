@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"main-res.syso": true,
+			"pmv": true,
+			"pmv.exe": true
+		},
+	}
+}
