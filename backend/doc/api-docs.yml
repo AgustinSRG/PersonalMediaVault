@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 3.0.0
+  version: 3.0.1
 
 # cSpell:ignore allof, anyof, noneof, gyan
 
