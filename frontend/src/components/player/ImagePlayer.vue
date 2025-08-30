@@ -229,6 +229,7 @@
             :page-prev="pagePrev"
             :fit="fit"
             :scale="scale"
+            :scale-range-percent="scaleRangePercent"
         ></PlayerTooltip>
 
         <ImagePlayerConfig
