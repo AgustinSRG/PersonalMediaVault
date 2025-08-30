@@ -1,6 +1,10 @@
 import { Button, VerticalBox } from "std-widgets.slint";
 
 export component AppWindow inherits Window {
+    width: 400px;
+    height: 400px;
+    icon: @image-url("../assets/icon.png");
+    title: @tr("PersonalMediaVault Launcher");
     in-out property <int> counter: 42;
     callback request-increase-value();
     VerticalBox {
@@ -10,6 +14,8 @@ export component AppWindow inherits Window {
 
         Button {
             text: "Increase value";
+            primary: true;
+            height: 35px;
             clicked => {
                 root.request-increase-value();
             }

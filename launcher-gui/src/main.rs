@@ -5,7 +5,10 @@ use std::error::Error;
 
 slint::include_modules!();
 
+
 fn main() -> Result<(), Box<dyn Error>> {
+    slint::init_translations!(concat!(env!("CARGO_MANIFEST_DIR"), "/lang/"));
+
     let ui = AppWindow::new()?;
 
     ui.on_request_increase_value({
