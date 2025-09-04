@@ -496,7 +496,8 @@ const (
 // probeData - Media file properties
 // Returns the path to a temp file containing the thumbnail
 func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMediaResult) (string, error) {
-	if probeData.Type == MediaTypeVideo {
+	switch probeData.Type {
+	case MediaTypeVideo:
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -505,16 +506,20 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		args[0] = FFMPEG_BINARY_PATH
 
 		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
-
-		args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
-
-		// Setting for image
-		args = append(args, "-vframes", "1", "-an")
 
 		// Thumbnail time
 		midPoint := math.Floor(probeData.Duration / 2)
 		args = append(args, "-ss", fmt.Sprint(midPoint))
 
+		// Format
+		args = append(args, "-f", probeData.Format)
+
+		// Input file
+		args = append(args, "-i", originalFilePath)
+
+		// Setting for image
+		args = append(args, "-vframes", "1", "-an")
+
 		// Crop image
 		x := int32(0)
 		y := int32(0)
@@ -548,7 +553,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		}
 
 		return tmpFile, nil
-	} else if probeData.Type == MediaTypeImage {
+	case MediaTypeImage:
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -596,7 +601,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		}
 
 		return tmpFile, nil
-	} else {
+	default:
 		// Cant generate a thumbnail
 		return "", nil
 	}
