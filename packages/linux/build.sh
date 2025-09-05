@@ -58,18 +58,16 @@ cp -rf ../../frontend/dist ${PMV_PKG_FOLDER}/usr/lib/pmv/www
 
 # Scripts
 
-cp ./install.sh ${PMV_PKG_FOLDER}/install.sh
-cp ./uninstall.sh ${PMV_PKG_FOLDER}/uninstall.sh
+cp ./assets/install.sh ${PMV_PKG_FOLDER}/install.sh
+cp ./assets/uninstall.sh ${PMV_PKG_FOLDER}/uninstall.sh
 
-echo "Building package..."
+echo "Built folder: ${PMV_PKG_FOLDER}"
+
+echo "Building compressed package..."
 
 tar czf ${PMV_TAR_NAME} ${PMV_PKG_FOLDER}
 
-echo "Built: ${PMV_TAR_NAME}"
-
-echo "Cleaning up..."
-
-rm -rf ${PMV_PKG_FOLDER}
+echo "Built compressed package: ${PMV_TAR_NAME}"
 
 echo "DONE!"
 
