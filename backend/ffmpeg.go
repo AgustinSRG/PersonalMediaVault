@@ -25,17 +25,21 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
+const H264_DEFAULT_CODEC = "libx264"
+
 var (
 	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"  // Location of FFMPEG binary
 	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe" // Location of FFPROBE binary
+	H264_CODEC          = H264_DEFAULT_CODEC // Codec name for H.264
 )
 
 // Sets FFMPEG config
 // ffmpeg_path - Location of FFMPEG binary
 // ffprobe_path - Location of FFPROBE binary
-func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string) {
+func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string, h264_codec string) {
 	FFMPEG_BINARY_PATH = ffmpeg_path
 	FFPROBE_BINARY_PATH = ffprobe_path
+	H264_CODEC = h264_codec
 
 	ffprobe.SetFFProbeBinPath(FFPROBE_BINARY_PATH)
 }
@@ -293,7 +297,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// MP4
-	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", "-ac", "2", "-pix_fmt", "yuv420p", tempPath+"/video.mp4")
+	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", H264_CODEC, "-acodec", "aac", "-ac", "2", "-pix_fmt", "yuv420p", tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -338,7 +342,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	if canCopyVideo {
 		vCodec = "copy"
 	} else {
-		vCodec = "libx264"
+		vCodec = H264_CODEC
 		args = append(args, "-pix_fmt", "yuv420p")
 	}
 

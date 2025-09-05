@@ -59,7 +59,13 @@ func InitializeTestVault() error {
 		}
 	}
 
-	SetFFMPEGBinaries(ffmpegPath, ffprobePath) // Set FFMPEG paths
+	h264Codec := os.Getenv("H264_CODEC")
+
+	if h264Codec == "" {
+		h264Codec = H264_DEFAULT_CODEC
+	}
+
+	SetFFMPEGBinaries(ffmpegPath, ffprobePath, h264Codec) // Set FFMPEG paths
 
 	if os.Getenv("LOG_DEBUG") == "YES" {
 		SetDebugLogEnabled(true) // Log debug mode

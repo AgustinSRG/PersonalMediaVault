@@ -36,6 +36,7 @@ type BackendOptions struct {
 	// FFmpeg
 	ffmpegPath  string
 	ffprobePath string
+	h264Codec   string
 
 	// Vault
 	vaultPath string
@@ -66,6 +67,7 @@ func main() {
 	options := BackendOptions{
 		ffmpegPath:          os.Getenv("FFMPEG_PATH"),
 		ffprobePath:         os.Getenv("FFPROBE_PATH"),
+		h264Codec:           os.Getenv("H264_CODEC"),
 		vaultPath:           "./vault",
 		tempPath:            "./vault/temp",
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
@@ -88,6 +90,10 @@ func main() {
 		} else {
 			options.ffprobePath = "/usr/bin/ffprobe"
 		}
+	}
+
+	if options.h264Codec == "" {
+		options.h264Codec = H264_DEFAULT_CODEC
 	}
 
 	if options.unencryptedTempPath == "" {
@@ -217,7 +223,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath) // Set FFMPEG paths
+		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath, options.h264Codec) // Set FFMPEG paths and codecs
 
 		SetDebugLogEnabled(options.debug)         // Log debug mode
 		SetRequestLogEnabled(options.logRequests) // Log requests
@@ -326,6 +332,7 @@ func printHelp() {
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
+	fmt.Println("        H264_CODEC                 Name of the ffmpeg codec to encode into H.264 video format.")
 	fmt.Println("        TEMP_PATH                  Temporal path to store things like uploaded files or to use for FFMPEG encoding.")
 	fmt.Println("                                   Note: It should be in a different filesystem if the vault is stored in an unsafe environment.")
 	fmt.Println("                                   By default, this will be stored in ~/.pmv/temp")
