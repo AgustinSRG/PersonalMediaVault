@@ -78,6 +78,8 @@ func main() {
 	}
 	defer child_process_manager.DisposeChildProcessManager() //nolint:errcheck
 
+	ffmpegConfig := loadFFmpegConfig()
+
 	detectLauncherPaths()
 
 	vaultPath, err = filepath.Abs(vaultPath)
@@ -362,7 +364,7 @@ func main() {
 
 	// Initialize the vault if needed
 
-	vaultController.Initialize(vaultPath, launcherConfig, reader)
+	vaultController.Initialize(vaultPath, launcherConfig, reader, ffmpegConfig)
 
 	// Start vault
 
@@ -385,7 +387,7 @@ func printHelp() {
 	fmt.Println(msg)
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
-			ID:    "Description",
+			ID:    "CommandDescription",
 			Other: "Launches a vault with an interactive command line to manage it.",
 		},
 	})
