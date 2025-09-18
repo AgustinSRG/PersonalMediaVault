@@ -283,6 +283,9 @@ export default defineComponent({
 
             currentGroupFirst: -1,
             currentGroupLast: -1,
+
+            storedScroll: 0,
+            shouldRestoreStoreScroll: false,
         };
     },
     watch: {
@@ -294,6 +297,9 @@ export default defineComponent({
         },
         editing: function () {
             this.movingGroup = false;
+
+            this.storeCurrentScroll();
+
             this.load();
         },
         pageSize: function () {
@@ -364,7 +370,19 @@ export default defineComponent({
     },
     methods: {
         scrollToTop: function () {
-            this.$el.scrollTop = 0;
+            let scroll = 0;
+
+            if (this.shouldRestoreStoreScroll) {
+                scroll = this.storedScroll * (this.$el.scrollHeight || 1);
+                this.shouldRestoreStoreScroll = false;
+            }
+
+            this.$el.scrollTop = scroll;
+        },
+
+        storeCurrentScroll: function () {
+            this.storedScroll = (this.$el.scrollTop || 0) / (this.$el.scrollHeight || 1);
+            this.shouldRestoreStoreScroll = true;
         },
 
         autoFocus: function () {
