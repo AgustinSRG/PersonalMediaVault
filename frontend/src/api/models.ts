@@ -349,6 +349,11 @@ export interface MediaData {
     task: number;
 
     /**
+     * If the task failed, the error trace
+     */
+    error?: string;
+
+    /**
      * Path to the original media file
      */
     url: string;
@@ -447,6 +452,11 @@ export interface MediaResolution {
      * If not ready, ID of the encoding task
      */
     task: number;
+
+    /**
+     * If the task failed, the error
+     */
+    error?: string;
 
     /**
      * Path to the media file

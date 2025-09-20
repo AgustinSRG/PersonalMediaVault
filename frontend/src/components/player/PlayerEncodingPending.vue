@@ -23,9 +23,20 @@
         </div>
         <div v-else-if="status === 'not-ready'" class="player-task-info">
             <div class="player-task-info-row">
-                <span>{{
+                <span v-if="encodingError">{{
+                    $t("The encoding process failed. Check the error trace below and report it as a bug.")
+                }}</span>
+                <span v-else>{{
                     $t("It seems the media is not ready yet. This means the media is still being uploaded or it is corrupted.")
                 }}</span>
+            </div>
+            <div v-if="encodingError" class="player-task-info-row">
+                <textarea
+                    class="form-control form-textarea player-task-encoding-error"
+                    rows="10"
+                    :value="encodingError"
+                    readonly
+                ></textarea>
             </div>
             <div class="player-task-info-row">
                 <button type="button" class="btn btn-primary" @click="refreshMedia">
@@ -83,7 +94,7 @@ import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-brow
 import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { defineComponent } from "vue";
+import { defineComponent, nextTick } from "vue";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTasksGetTask } from "@/api/api-tasks";
 
@@ -95,6 +106,7 @@ export default defineComponent({
         res: Number,
         error: Boolean,
         errorMessage: String,
+        encodingError: String,
         canAutoReload: Boolean,
     },
     data: function () {
@@ -160,6 +172,7 @@ export default defineComponent({
             this.stageNumber = -1;
             this.startTime = 0;
             this.estimatedRemainingTime = 0;
+            this.onStatusChanged();
         },
 
         checkTask: function () {
@@ -179,6 +192,7 @@ export default defineComponent({
 
                     this.refreshMedia();
                 });
+                this.onStatusChanged();
                 return;
             }
 
@@ -228,6 +242,8 @@ export default defineComponent({
                         this.progress = 0;
                         setNamedTimeout(this.pendingId, 1500, this.checkTask.bind(this));
                     }
+
+                    this.onStatusChanged();
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
@@ -237,6 +253,7 @@ export default defineComponent({
                         notFound: () => {
                             this.status = "loading";
                             this.checkMediaStatus();
+                            this.onStatusChanged();
                         },
                         temporalError: () => {
                             // Retry
@@ -266,6 +283,7 @@ export default defineComponent({
                             }
                         } else {
                             this.status = "not-ready";
+                            this.onStatusChanged();
                         }
                     } else {
                         if (media.encoded) {
@@ -276,6 +294,7 @@ export default defineComponent({
                             }
                         } else {
                             this.status = "not-ready";
+                            this.onStatusChanged();
                         }
                     }
                 })
@@ -314,6 +333,26 @@ export default defineComponent({
 
         cssProgress: function (p: number) {
             return Math.round(p) + "%";
+        },
+
+        onStatusChanged: function () {
+            if (this.status === "not-ready" && this.encodingError) {
+                nextTick(() => {
+                    this.scrollErrorToBottom();
+                });
+            }
+        },
+
+        scrollErrorToBottom: function () {
+            const el = this.$el.querySelector(".player-task-encoding-error") as HTMLElement;
+
+            if (!el) {
+                return;
+            }
+
+            const bounds = el.getBoundingClientRect();
+
+            el.scrollTop = el.scrollHeight - bounds.height;
         },
     },
 });
