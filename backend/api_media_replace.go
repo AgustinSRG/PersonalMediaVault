@@ -227,6 +227,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	meta.OriginalReady = true
 	meta.OriginalAsset = new_original_asset
+	meta.OriginalError = ""
 
 	if probe_data.Encoded {
 		meta.OriginalEncoded = true

@@ -536,6 +536,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	metaToWrite.OriginalAsset = asset_id
 	metaToWrite.OriginalExtension = encoded_ext
 	metaToWrite.OriginalTask = 0
+	metaToWrite.OriginalError = ""
 
 	err = media.EndWrite(metaToWrite, task.session.key, false)
 
