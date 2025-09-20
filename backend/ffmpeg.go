@@ -663,14 +663,20 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	return cmd, intervalSeconds
 }
 
+// Aux struct to store the FFMpeg error trace
+type FFmpegReadErrStatus struct {
+	errorTrace string
+}
+
 // Reads FFmpeg standard error for debugging purposes
 // Parameters:
 //   - pipe: Pipe to read the standard error
 //   - wg: Wait group to call when done
-func ffmpegReadStdErr(pipe io.ReadCloser, wg *sync.WaitGroup) {
+func ffmpegReadStdErr(pipe io.ReadCloser, readErrStatus *FFmpegReadErrStatus, wg *sync.WaitGroup) {
 	reader := bufio.NewReader(pipe)
 
 	var finished bool = false
+	errorTraceLastLine := ""
 
 	for !finished {
 		line, err := reader.ReadString('\r')
@@ -679,10 +685,18 @@ func ffmpegReadStdErr(pipe io.ReadCloser, wg *sync.WaitGroup) {
 			finished = true
 		}
 
-		line = strings.ReplaceAll(line, "\r", "")
+		if len(line) < 2 {
+			continue
+		}
+
+		line = line[0 : len(line)-1] // Remove delimiter
+
+		errorTraceLastLine = line
 
 		LogDebug("[FFMPEG] " + line)
 	}
+
+	readErrStatus.errorTrace = errorTraceLastLine
 
 	wg.Done()
 }
@@ -764,16 +778,10 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	}
 
 	// Create a pipe to read StdErr
-	var pipeErr io.ReadCloser = nil
+	pipeErr, err := cmd.StderrPipe()
 
-	if log_debug_enabled {
-		pipeErr, err = cmd.StderrPipe()
-
-		if err != nil {
-			return err
-		}
-	} else {
-		cmd.Stderr = nil
+	if err != nil {
+		return err
 	}
 
 	// Start the command
@@ -789,6 +797,8 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	// Add process as a child process
 	child_process_manager.AddChildProcess(cmd.Process) //nolint:errcheck
 
+	ffmpegError := FFmpegReadErrStatus{}
+
 	// Create wait group
 	wg := sync.WaitGroup{}
 
@@ -796,10 +806,8 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	wg.Add(1)
 	go ffmpegReadStdOut(pipeOut, &wg, cmd, input_duration, progress_reporter)
 
-	if pipeErr != nil {
-		wg.Add(1)
-		go ffmpegReadStdErr(pipeErr, &wg)
-	}
+	wg.Add(1)
+	go ffmpegReadStdErr(pipeErr, &ffmpegError, &wg)
 
 	// Wait
 	wg.Wait()
@@ -809,7 +817,11 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	err = cmd.Wait()
 
 	if err != nil {
-		return err
+		if ffmpegError.errorTrace != "" {
+			return errors.New(err.Error() + "\n\n---\n\n" + ffmpegError.errorTrace)
+		} else {
+			return err
+		}
 	}
 
 	return nil

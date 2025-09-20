@@ -12,6 +12,57 @@ import (
 	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
+// Sets the error trace to media
+// for the original encoding process
+func (task *ActiveTask) SetResolutionErrorToMedia(vault *Vault, errorTrace string) {
+	media := GetVault().media.AcquireMediaResource(task.definition.MediaId)
+
+	meta, err := media.StartWrite(task.session.key)
+
+	if err != nil {
+		LogTaskError(task.definition.Id, "Error: "+err.Error())
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+
+		LogTaskError(task.definition.Id, "Error: Media not found")
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	var resToWrite *MediaResolution = nil
+
+	for i := 0; i < len(meta.Resolutions); i++ {
+		if meta.Resolutions[i].Width == task.definition.Resolution.Width && meta.Resolutions[i].Height == task.definition.Resolution.Height && meta.Resolutions[i].Fps == task.definition.Resolution.Fps {
+			resToWrite = &meta.Resolutions[i]
+			break
+		}
+	}
+
+	if resToWrite != nil {
+		resToWrite.Error = errorTrace
+	}
+
+	err = media.EndWrite(meta, task.session.key, false)
+
+	if err != nil {
+		LogTaskError(task.definition.Id, "Error: "+err.Error())
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+}
+
 // This task encodes the media file to a specific resolution
 // Only available for images and for videos
 func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
@@ -272,15 +323,16 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 		Fps:    task.definition.Resolution.Fps,
 	}
 
-	if probe_data.Type == MediaTypeVideo {
+	switch probe_data.Type {
+	case MediaTypeVideo:
 		encoded_temp = path.Join(tempFolder, "video.mp4")
 		encoded_ext = "mp4"
 		cmd = MakeFFMpegEncodeToMP4Command(originalTemp, probe_data.Format, probe_data.Duration, tempFolder, &resolution, probe_data.Width, probe_data.Height, userConfig)
-	} else if probe_data.Type == MediaTypeImage {
+	case MediaTypeImage:
 		encoded_temp = path.Join(tempFolder, "image.png")
 		encoded_ext = "png"
 		cmd = MakeFFMpegEncodeToPNGCommand(originalTemp, probe_data.Format, tempFolder, &resolution, probe_data.Width, probe_data.Height, userConfig)
-	} else {
+	default:
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
 		return
@@ -306,11 +358,16 @@ func (task *ActiveTask) RunEncodeResolutionMediaTask(vault *Vault) {
 
 	if err != nil {
 		if !task.killed {
-			LogTaskError(task.definition.Id, "Error: "+err.Error())
+			LogTaskError(task.definition.Id, err.Error())
 		}
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
+
+		if !task.killed {
+			task.SetResolutionErrorToMedia(vault, err.Error())
+		}
+
 		return
 	}
 
