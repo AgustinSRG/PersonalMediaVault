@@ -555,6 +555,7 @@
     "The album is empty": "",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "",
     "The batch operation was completed successfully.": "",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "",
     "The home page is empty": "",
     "The invite code has expired": "",
     "The media asset was deleted": "",

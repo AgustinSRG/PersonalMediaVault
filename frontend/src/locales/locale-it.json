@@ -555,6 +555,7 @@
     "The album is empty": "L'album è vuoto",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "L'album ha raggiunto il limite di 1024 elementi. Per favore, considera la possibilità di creare un altro album.",
     "The batch operation was completed successfully.": "L'operazione batch è stata completata correttamente.",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "Il processo di codifica non è riuscito. Controlla la traccia di errore qui sotto e segnalala come bug.",
     "The home page is empty": "La home page è vuota",
     "The invite code has expired": "Il codice di invito è scaduto",
     "The media asset was deleted": "La risorsa multimediale è stata eliminata",

@@ -555,6 +555,7 @@
     "The album is empty": "Альбом пуст",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "Альбом достиг предела в 1024 элемента. Пожалуйста, рассмотрите возможность создания еще одного альбома.",
     "The batch operation was completed successfully.": "Пакетная операция завершилась успешно.",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "Процесс кодирования завершился неудачей. Проверьте трассировку ошибки ниже и сообщите об ошибке.",
     "The home page is empty": "Домашняя страница пуста",
     "The invite code has expired": "Срок действия пригласительного кода истек",
     "The media asset was deleted": "Медиа-ресурс удален.",

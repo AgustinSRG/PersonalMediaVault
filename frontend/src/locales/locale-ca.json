@@ -555,6 +555,7 @@
     "The album is empty": "L'àlbum està buit",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "L'àlbum va arribar al límit de 1024 elements. Si us plau, penseu a crear un altre àlbum.",
     "The batch operation was completed successfully.": "L'operació per lots s'ha completat correctament.",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "El procés de codificació ha fallat. Revisa el rastre d'errors a continuació i informa'n com a error.",
     "The home page is empty": "La pàgina d'inici està buida",
     "The invite code has expired": "El codi d'invitació ha caducat",
     "The media asset was deleted": "S'ha suprimit el recurs multimèdia",

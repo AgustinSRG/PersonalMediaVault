@@ -555,6 +555,7 @@
     "The album is empty": "Το άλμπουμ είναι κενό",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "Το άλμπουμ έφτασε στο όριο των 1024 στοιχείων. Σκεφθείτε να δημιουργήσετε ένα άλλο άλμπουμ.",
     "The batch operation was completed successfully.": "Η λειτουργία παρτίδας ολοκληρώθηκε με επιτυχία.",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "Η διαδικασία κωδικοποίησης απέτυχε. Ελέγξτε το ίχνος σφάλματος παρακάτω και αναφέρετέ το ως σφάλμα.",
     "The home page is empty": "Η αρχική σελίδα είναι κενή",
     "The invite code has expired": "Ο κωδικός πρόσκλησης έχει λήξει",
     "The media asset was deleted": "Το στοιχείο πολυμέσων διαγράφηκε",

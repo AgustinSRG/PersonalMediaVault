@@ -555,6 +555,7 @@
     "The album is empty": "アルバムが空です",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "アルバムの要素数は 1024 要素の制限に達しました。 別のアルバムの作成をご検討ください。",
     "The batch operation was completed successfully.": "バッチ操作が正常に完了しました。",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "エンコード処理に失敗しました。以下のエラートレースを確認し、バグとして報告してください。",
     "The home page is empty": "ホームページが空です",
     "The invite code has expired": "招待コードの有効期限が切れました",
     "The media asset was deleted": "メディア資産が削除されました",

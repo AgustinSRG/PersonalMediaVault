@@ -555,6 +555,7 @@
     "The album is empty": "相册是空的",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "专辑达到了1024个元素的限制。 请考虑创建另一张专辑。",
     "The batch operation was completed successfully.": "批量操作成功完成。",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "编码过程失败。请检查下方的错误追踪并将其报告为错误。",
     "The home page is empty": "主页为空",
     "The invite code has expired": "邀请码已过期",
     "The media asset was deleted": "媒体资产已删除",

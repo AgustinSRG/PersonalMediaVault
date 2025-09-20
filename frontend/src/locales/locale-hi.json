@@ -555,6 +555,7 @@
     "The album is empty": "एल्बम खाली है",
     "The album reached the limit of 1024 elements. Please, consider creating another album.": "एल्बम 1024 तत्वों की सीमा तक पहुंच गया। कृपया, एक और एल्बम बनाने पर विचार करें।",
     "The batch operation was completed successfully.": "बैच ऑपरेशन सफलतापूर्वक पूरा हुआ.",
+    "The encoding process failed. Check the error trace below and report it as a bug.": "एन्कोडिंग प्रक्रिया विफल रही। नीचे दिए गए त्रुटि ट्रेस की जाँच करें और इसे बग के रूप में रिपोर्ट करें।",
     "The home page is empty": "होम पेज खाली है",
     "The invite code has expired": "आमंत्रण कोड समाप्त हो गया है",
     "The media asset was deleted": "मीडिया संपत्ति हटा दी गई थी",
