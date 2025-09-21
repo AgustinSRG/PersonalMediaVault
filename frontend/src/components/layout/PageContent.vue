@@ -18,7 +18,7 @@
             </button>
             <div class="page-title" :title="renderTitle(page, search)"><i :class="getIcon(page)"></i> {{ renderTitle(page, search) }}</div>
             <button
-                v-if="(page === 'home' || (page === 'media' && !search)) && canWrite"
+                v-if="(page === 'home' || page === 'media') && canWrite"
                 type="button"
                 :title="$t('Upload')"
                 class="page-header-btn"
