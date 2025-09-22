@@ -21,6 +21,7 @@
                     <a
                         href="javascript:;"
                         class="horizontal-filter-menu-item"
+                        :title="$t('General')"
                         :class="{ selected: page === 'general' }"
                         @click="changePage('general')"
                         >{{ $t("General") }}</a
@@ -28,6 +29,7 @@
                     <a
                         href="javascript:;"
                         class="horizontal-filter-menu-item"
+                        :title="$t('Extra resolutions')"
                         :class="{ selected: page == 'resolutions' }"
                         @click="changePage('resolutions')"
                         >{{ $t("Extra resolutions") }}</a
@@ -35,6 +37,7 @@
                     <a
                         href="javascript:;"
                         class="horizontal-filter-menu-item"
+                        :title="$t('Custom style')"
                         :class="{ selected: page === 'css' }"
                         @click="changePage('css')"
                         >{{ $t("Custom style") }}</a

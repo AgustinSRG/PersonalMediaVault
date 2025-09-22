@@ -28,25 +28,28 @@
 
     border-radius: 0.25rem;
 
-    min-width: fit-content;
+    min-width: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     text-decoration: none;
 }
 
+@media (max-width: 700px) {
+    .horizontal-filter-menu-item {
+        min-width: calc(50% - 0.5rem);
+    }
+}
+
+@media (max-width: 400px) {
+    .horizontal-filter-menu-item {
+        min-width: calc(100% - 0.5rem);
+    }
+}
+
 .horizontal-filter-menu.two-child .horizontal-filter-menu-item {
     width: calc(50% - 0.5rem);
-}
-
-.horizontal-filter-menu.three-child .horizontal-filter-menu-item {
-    width: calc(33.33% - 0.5rem);
-}
-
-.horizontal-filter-menu.four-child .horizontal-filter-menu-item {
-    width: calc(25% - 0.5rem);
-}
-
-.horizontal-filter-menu.five-child .horizontal-filter-menu-item {
-    width: calc(20% - 0.5rem);
 }
 
 .horizontal-filter-menu.image-opts-menu .horizontal-filter-menu-item {

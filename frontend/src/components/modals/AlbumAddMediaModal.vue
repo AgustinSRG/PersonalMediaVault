@@ -26,10 +26,20 @@
             </div>
             <div class="modal-body no-padding">
                 <div class="horizontal-filter-menu two-child modal-top-menu">
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: isUpload }" @click="changeToUpload"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Upload')"
+                        :class="{ selected: isUpload }"
+                        @click="changeToUpload"
                         ><i class="fas fa-upload"></i> {{ $t("Upload") }}</a
                     >
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isUpload }" @click="changeToSearch"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Search')"
+                        :class="{ selected: !isUpload }"
+                        @click="changeToSearch"
                         ><i class="fas fa-search"></i> {{ $t("Search") }}</a
                     >
                 </div>

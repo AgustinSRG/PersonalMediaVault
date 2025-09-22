@@ -40,6 +40,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Pending')"
                 :class="{ selected: selectedState === 'pending' }"
                 @click="updateSelectedState('pending')"
                 >{{ $t("Pending") }} ({{ countPending }})</a
@@ -47,6 +48,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Ready')"
                 :class="{ selected: selectedState === 'ready' }"
                 @click="updateSelectedState('ready')"
                 >{{ $t("Ready") }} ({{ countReady }})</a
@@ -54,6 +56,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Error')"
                 :class="{ selected: selectedState === 'error' }"
                 @click="updateSelectedState('error')"
                 >{{ $t("Error") }} ({{ countError }})</a

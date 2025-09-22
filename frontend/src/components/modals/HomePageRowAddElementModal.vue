@@ -26,10 +26,20 @@
             </div>
             <div class="modal-body no-padding">
                 <div class="horizontal-filter-menu two-child modal-top-menu">
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: isAlbums }" @click="changeToAlbums"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Albums')"
+                        :class="{ selected: isAlbums }"
+                        @click="changeToAlbums"
                         ><i class="fas fa-list"></i> {{ $t("Albums") }}</a
                     >
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isAlbums }" @click="changeToMedia"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Media')"
+                        :class="{ selected: !isAlbums }"
+                        @click="changeToMedia"
                         ><i class="fas fa-photo-film"></i> {{ $t("Media") }}</a
                     >
                 </div>
