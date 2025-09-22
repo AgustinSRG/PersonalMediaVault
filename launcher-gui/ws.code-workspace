@@ -8,9 +8,11 @@
 		"files.exclude": {
 			"main-res.syso": true,
 			"pmv": true,
+			"target": true,
 			"pmv.exe": true
 		},
 		"cSpell.words": [
+			"github",
 			"slint",
 			"Slint"
 		],

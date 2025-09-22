@@ -1,0 +1,95 @@
+import { Button, VerticalBox, HorizontalBox, Palette } from "std-widgets.slint";
+
+export component InitialScreen inherits Window {
+    icon: @image-url("../assets/favicon.png");
+    title: @tr("PersonalMediaVault Launcher");
+
+    /// PersonalMediaVault version
+    in property <string> version: "1.0.0";
+
+    /// Select a folder and open the vault store there
+    callback open-vault-folder();
+
+    /// Open the default vault, located in the user's home folder
+    callback open-default-vault();
+
+    /// Visit the PersonalMediaVault Website
+    callback visit-website();
+
+    /// Visit GitHub page
+    callback visit-git();
+
+    VerticalBox {
+        alignment: LayoutAlignment.start;
+        HorizontalBox {
+            alignment: LayoutAlignment.center;
+            padding-bottom: 0;
+            VerticalBox {
+                alignment: LayoutAlignment.center;
+                Image {
+                    source: @image-url("../assets/favicon.png");
+                    width: 56px;
+                    height: 56px;
+                }
+            }
+
+            VerticalBox {
+                Text {
+                    text: @tr("PersonalMediaVault");
+                    font-size: 14pt;
+                    font-weight: 800;
+                }
+
+                Text {
+                    text: @tr("Version") + ": " + version;
+                    font-weight: 600;
+                }
+
+                HorizontalBox {
+                    alignment: LayoutAlignment.start;
+                    padding: 0;
+
+                    Button {
+                        text: @tr("Visit Website");
+                        icon: (Palette.color-scheme == ColorScheme.dark) ? @image-url("../assets/icons/white/link.svg") : @image-url("../assets/icons/black/link.svg");
+                        clicked => {
+                            root.visit-website();
+                        }
+                    }
+
+                    Button {
+                        text: @tr("Visit GitHub");
+                        icon: (Palette.color-scheme == ColorScheme.dark) ? @image-url("../assets/icons/white/link.svg") : @image-url("../assets/icons/black/link.svg");
+                        clicked => {
+                            root.visit-git();
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            border-width: 0;
+            height: 1px;
+            background: Palette.border;
+        }
+
+        Button {
+            text: @tr("Open Vault Folder");
+            icon: @image-url("../assets/icons/white/folder-open.svg");
+            primary: true;
+            clicked => {
+                root.open-vault-folder();
+            }
+        }
+
+        Button {
+            text: @tr("Open Default Vault");
+            icon: @image-url("../assets/icons/white/box.svg");
+            primary: true;
+            clicked => {
+                root.open-default-vault();
+            }
+        }
+    }
+}

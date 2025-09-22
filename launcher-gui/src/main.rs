@@ -3,23 +3,21 @@
 
 use std::error::Error;
 
+use crate::screens::show_initial_screen;
+
 slint::include_modules!();
 
+mod screens;
+mod status;
+mod constants;
+mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     slint::init_translations!(concat!(env!("CARGO_MANIFEST_DIR"), "/lang/"));
 
-    let ui = AppWindow::new()?;
+    show_initial_screen()?;
 
-    ui.on_request_increase_value({
-        let ui_handle = ui.as_weak();
-        move || {
-            let ui = ui_handle.unwrap();
-            ui.set_counter(ui.get_counter() + 1);
-        }
-    });
-
-    ui.run()?;
+    slint::run_event_loop()?;
 
     Ok(())
 }
