@@ -16,7 +16,7 @@ pub fn select_vault_folder(sender: Sender<LauncherWorkerMessage>, window_handle:
                         let win = window_handle.unwrap();
                         win.set_busy(false);
                     });
-                    sender.send(LauncherWorkerMessage::OpenVault { path: p.to_string() });
+                    let _ = sender.send(LauncherWorkerMessage::OpenVault { path: p.to_string() });
                 }
                 None => {
                     let _ = slint::invoke_from_event_loop(move || {
@@ -26,7 +26,7 @@ pub fn select_vault_folder(sender: Sender<LauncherWorkerMessage>, window_handle:
                 }
             },
             None => {
-                slint::invoke_from_event_loop(move || {
+                let _ = slint::invoke_from_event_loop(move || {
                     let win = window_handle.unwrap();
                     win.set_busy(false);
                 });
