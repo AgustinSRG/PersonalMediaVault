@@ -1,0 +1,38 @@
+
+
+import { Button } from "std-widgets.slint";
+
+export component VaultClosedView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Select a folder and open the vault store there
+    callback open-vault-folder();
+
+    /// Open the default vault, located in the user's home folder
+    callback open-default-vault();
+
+    spacing: 8px;
+
+    Button {
+        text: @tr("Open Vault Folder");
+        icon: @image-url("../assets/icons/folder-open.svg");
+        primary: true;
+        enabled: !busy;
+        colorize-icon: true;
+        clicked => {
+            root.open-vault-folder();
+        }
+    }
+
+    Button {
+        text: @tr("Open Default Vault");
+        icon: @image-url("../assets/icons/box.svg");
+        primary: true;
+        enabled: !busy;
+        colorize-icon: true;
+        clicked => {
+            root.open-default-vault();
+        }
+    }
+}

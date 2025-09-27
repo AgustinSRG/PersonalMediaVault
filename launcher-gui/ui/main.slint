@@ -1,0 +1,62 @@
+import { Button, VerticalBox, HorizontalBox, Palette } from "std-widgets.slint";
+import { AboutComponent } from "about.slint";
+import { LauncherStatus } from "status.slint";
+import { VaultClosedView } from "vault-closed.slint";
+
+export { LauncherStatus }
+
+export component MainWindow inherits Window {
+    icon: @image-url("../assets/favicon.png");
+    title: @tr("PersonalMediaVault Launcher");
+
+    /// PersonalMediaVault version
+    in property <string> version: "1.0.0";
+
+    /// Visit the PersonalMediaVault Website
+    callback visit-website();
+
+    /// Visit GitHub page
+    callback visit-git();
+
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// The general status of the launcher
+    in property <LauncherStatus> launcher-status: closed;
+
+    /// Select a folder and open the vault store there
+    callback open-vault-folder();
+
+    /// Open the default vault, located in the user's home folder
+    callback open-default-vault();
+
+    VerticalBox {
+        alignment: LayoutAlignment.start;
+
+        AboutComponent {
+            version: version;
+            visit-website => {
+                root.visit-website();
+            }
+            visit-git => {
+                root.visit-git();
+            }
+        }
+
+        Rectangle {
+            border-width: 0;
+            height: 1px;
+            background: Palette.border;
+        }
+
+        if(launcher-status == LauncherStatus.closed) : VaultClosedView {
+            busy: busy;
+            open-default-vault => {
+                root.open-default-vault();
+            }
+            open-vault-folder => {
+                root.open-vault-folder();
+            }
+        }
+    }
+}
