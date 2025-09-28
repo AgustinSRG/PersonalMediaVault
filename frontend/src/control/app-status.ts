@@ -503,6 +503,7 @@ export class AppStatus {
             AppStatus.CurrentMedia = -1;
             AppStatus.CurrentHomePageGroup = -1;
             AppStatus.CurrentSearch = "";
+            AppStatus.CurrentPage = "home";
 
             AppStatus.ListSplitMode = false;
 
@@ -523,6 +524,7 @@ export class AppStatus {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = mediaId;
         AppStatus.CurrentSearch = "";
+        AppStatus.CurrentPage = "home";
 
         AppStatus.ListSplitMode = false;
 
@@ -551,6 +553,7 @@ export class AppStatus {
             AppStatus.CurrentMedia = -1;
         }
 
+        AppStatus.CurrentPage = "home";
         AppStatus.ListSplitMode = false;
 
         AppStatus.UpdateLayout();
@@ -584,6 +587,7 @@ export class AppStatus {
     public static ClosePage() {
         AppStatus.CurrentFocus = "left";
         AppStatus.ListSplitMode = false;
+        AppStatus.CurrentPage = "home";
         AppStatus.UpdateLayout();
         AppStatus.OnStatusUpdate();
     }
