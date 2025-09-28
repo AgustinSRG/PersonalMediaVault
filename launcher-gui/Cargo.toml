@@ -11,6 +11,7 @@ open = "5.3.2"
 rfd = "0.15.4"
 serde = { version = "1.0.228", features = ['derive'] }
 serde_json = "1.0.145"
+sha2 = "0.10.9"
 slint = { version = "1.12.1", features = ["gettext"] }
 
 [build-dependencies]
