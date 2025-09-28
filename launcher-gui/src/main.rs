@@ -6,7 +6,7 @@ use std::{env, error::Error, sync::mpsc::channel};
 slint::include_modules!();
 
 mod control;
-mod status;
+mod models;
 mod constants;
 mod utils;
 mod worker;

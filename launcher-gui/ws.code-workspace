@@ -12,6 +12,7 @@
 			"pmv.exe": true
 		},
 		"cSpell.words": [
+			"ffprobe",
 			"github",
 			"slint",
 			"Slint"
