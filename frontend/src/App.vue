@@ -77,6 +77,9 @@ export default defineComponent({
                     case "media":
                         document.title = this.$t("Media") + searchPart + " | " + this.getAppTitle();
                         break;
+                    case "adv-search":
+                        document.title = this.$t("Find media") + " | " + this.getAppTitle();
+                        break;
                     default:
                         document.title = this.getAppTitle();
                 }
