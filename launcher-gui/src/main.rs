@@ -1,7 +1,7 @@
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{error::Error, sync::mpsc::channel};
+use std::{env, error::Error, sync::mpsc::channel};
 
 slint::include_modules!();
 
@@ -35,6 +35,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create worker
     
     let worker_join_handle = run_worker_thread(sender.clone(), receiver, main_window.as_weak());
+
+    // Initialization logic
+
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() >= 2 {
+        // Open specific vault path
+        let _ = sender.send(LauncherWorkerMessage::OpenVault { path: args[1].clone() });
+    }
 
     // Run UI event loop
 
