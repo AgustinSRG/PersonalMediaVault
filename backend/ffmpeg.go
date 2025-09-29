@@ -25,21 +25,38 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const H264_DEFAULT_CODEC = "libx264"
+const FFMPEG_DEFAULT_CODEC = "libx264"
+
+// List of video codecs target of encoding
+// These codecs are widely supported by browsers
+// If an uploaded video maches one of those codecs,
+// it won't be encoded by default
+var FFMPEG_TARGET_VIDEO_CODECS = map[string]bool{
+	"h264": true,
+	"av1":  true,
+	"vp9":  true,
+}
+
+const (
+	FFMPEG_TARGET_AUDIO_CODEC  = "aac"
+	FFMPEG_TARGET_PIXEL_FORMAT = "yuv420p"
+	FFMPEG_TARGET_IMAGE_CODEC  = "image2"
+)
 
 var (
-	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"  // Location of FFMPEG binary
-	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe" // Location of FFPROBE binary
-	H264_CODEC          = H264_DEFAULT_CODEC // Codec name for H.264
+	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"    // Location of FFMPEG binary
+	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe"   // Location of FFPROBE binary
+	FFMPEG_VIDEO_CODEC  = FFMPEG_DEFAULT_CODEC // Codec name for video
 )
 
 // Sets FFMPEG config
-// ffmpeg_path - Location of FFMPEG binary
-// ffprobe_path - Location of FFPROBE binary
-func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string, h264_codec string) {
-	FFMPEG_BINARY_PATH = ffmpeg_path
-	FFPROBE_BINARY_PATH = ffprobe_path
-	H264_CODEC = h264_codec
+// ffmpegPath - Location of FFMPEG binary
+// ffprobePath - Location of FFPROBE binary
+// ffmpegVideoCodec - Name of the video codec
+func SetFFMPEGBinaries(ffmpegPath string, ffprobePath string, ffmpegVideoCodec string) {
+	FFMPEG_BINARY_PATH = ffmpegPath
+	FFPROBE_BINARY_PATH = ffprobePath
+	FFMPEG_VIDEO_CODEC = ffmpegVideoCodec
 
 	ffprobe.SetFFProbeBinPath(FFPROBE_BINARY_PATH)
 }
@@ -126,7 +143,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	audioStream := data.GetFirstAudioStream()
 
 	if videoStream != nil {
-		if data.Format.Duration().Seconds() < 0.5 || format == "image2" {
+		if data.Format.Duration().Seconds() < 0.5 || format == FFMPEG_TARGET_IMAGE_CODEC {
 			// Image
 			encoded := (format == "png_pipe")
 
@@ -149,14 +166,14 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			encoded := validateFormatNameVideo(format)
 			canCopyVideo := true
 
-			if videoStream.CodecName != "h264" || videoStream.PixFmt != "yuv420p" {
+			if !FFMPEG_TARGET_VIDEO_CODECS[videoStream.CodecName] || videoStream.PixFmt != FFMPEG_TARGET_PIXEL_FORMAT {
 				encoded = false
 				canCopyVideo = false
 			}
 
 			canCopyAudio := true
 
-			if audioStream != nil && audioStream.CodecName != "aac" {
+			if audioStream != nil && audioStream.CodecName != FFMPEG_TARGET_AUDIO_CODEC {
 				encoded = false
 				canCopyAudio = false
 			}
@@ -297,7 +314,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// MP4
-	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", H264_CODEC, "-acodec", "aac", "-ac", "2", "-pix_fmt", "yuv420p", tempPath+"/video.mp4")
+	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", FFMPEG_VIDEO_CODEC, "-acodec", FFMPEG_TARGET_AUDIO_CODEC, "-ac", "2", "-pix_fmt", FFMPEG_TARGET_PIXEL_FORMAT, tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -342,8 +359,8 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	if canCopyVideo {
 		vCodec = "copy"
 	} else {
-		vCodec = H264_CODEC
-		args = append(args, "-pix_fmt", "yuv420p")
+		vCodec = FFMPEG_VIDEO_CODEC
+		args = append(args, "-pix_fmt", FFMPEG_TARGET_PIXEL_FORMAT)
 	}
 
 	var aCodec string
@@ -351,7 +368,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	if canCopyAudio {
 		aCodec = "copy"
 	} else {
-		aCodec = "aac"
+		aCodec = FFMPEG_TARGET_AUDIO_CODEC
 		args = append(args, "-ac", "2")
 	}
 
