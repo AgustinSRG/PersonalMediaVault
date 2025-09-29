@@ -14,3 +14,6 @@ pub use hex::*;
 
 mod files;
 pub use files::*;
+
+mod ffmpeg_config;
+pub use ffmpeg_config::*;

@@ -468,11 +468,11 @@ func runCommand(cmdText string, vc *VaultController) {
 		fmt.Println(msg)
 		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 			DefaultMessage: &i18n.Message{
-				ID:    "H264CodecTag",
-				Other: "H.264 encoder: {{.Encoder}}",
+				ID:    "VideoCodecTag",
+				Other: "Video encoder: {{.Encoder}}",
 			},
 			TemplateData: map[string]interface{}{
-				"Encoder": vc.ffmpegConfig.H264Codec,
+				"Encoder": vc.ffmpegConfig.VideoCodec,
 			},
 		})
 		fmt.Println(msg)

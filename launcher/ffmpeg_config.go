@@ -18,7 +18,7 @@ import (
 type FFmpegConfig struct {
 	FFProbePath string `json:"ffmpeg_path"`
 	FFMpegPath  string `json:"ffprobe_path"`
-	H264Codec   string `json:"h264_codec"`
+	VideoCodec  string `json:"video_codec"`
 }
 
 func loadFFmpegConfigFromFile() (*FFmpegConfig, error) {
@@ -82,10 +82,10 @@ func writeFFmpegConfigToFile(config *FFmpegConfig) error {
 	return os.WriteFile(file, b, FILE_PERMISSION)
 }
 
-const H264_CODEC_DEFAULT = "libx264"
-const H264_CODEC_FREE = "libopenh264"
+const VIDEO_CODEC_DEFAULT = "libx264"
+const VIDEO_CODEC_ALTERNATIVE = "libvpx-vp9"
 
-func detectH264Codec(config *FFmpegConfig) (string, error) {
+func detectVideoCodec(config *FFmpegConfig) (string, error) {
 	out, err := exec.Command(config.FFMpegPath, "-encoders").Output()
 
 	if err != nil {
@@ -108,12 +108,12 @@ func detectH264Codec(config *FFmpegConfig) (string, error) {
 		availableCodecs[codecName] = true
 	}
 
-	if availableCodecs[H264_CODEC_DEFAULT] {
-		return H264_CODEC_DEFAULT, nil
+	if availableCodecs[VIDEO_CODEC_DEFAULT] {
+		return VIDEO_CODEC_DEFAULT, nil
 	}
 
-	if availableCodecs[H264_CODEC_FREE] {
-		return H264_CODEC_FREE, nil
+	if availableCodecs[VIDEO_CODEC_ALTERNATIVE] {
+		return VIDEO_CODEC_ALTERNATIVE, nil
 	}
 
 	return "", errors.New("unavailable codec")
@@ -142,14 +142,14 @@ func checkFFmpegCodec(config *FFmpegConfig) bool {
 		availableCodecs[codecName] = true
 	}
 
-	return availableCodecs[config.H264Codec]
+	return availableCodecs[config.VideoCodec]
 }
 
 func loadFFmpegConfig() *FFmpegConfig {
 	result := &FFmpegConfig{
 		FFProbePath: "",
 		FFMpegPath:  "",
-		H264Codec:   "",
+		VideoCodec:  "",
 	}
 
 	configFromFile, err := loadFFmpegConfigFromFile()
@@ -237,21 +237,21 @@ func loadFFmpegConfig() *FFmpegConfig {
 		}
 	}
 
-	if result.H264Codec == "" {
-		detectedCodec, err := detectH264Codec(result)
+	if result.VideoCodec == "" {
+		detectedCodec, err := detectVideoCodec(result)
 
 		if err == nil {
-			result.H264Codec = detectedCodec
+			result.VideoCodec = detectedCodec
 		} else {
 			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
 				DefaultMessage: &i18n.Message{
 					ID:    "CodecWarning",
-					Other: "Warning: Could not detect an encoder for H.264 in your FFMpeg installation. The will lead to errors when trying to encode videos.",
+					Other: "Warning: Could not detect a video encoder in your FFMpeg installation. The will lead to errors when trying to encode videos.",
 				},
 			})
 			fmt.Println(msg)
 
-			result.H264Codec = H264_CODEC_DEFAULT
+			result.VideoCodec = VIDEO_CODEC_DEFAULT
 		}
 	}
 

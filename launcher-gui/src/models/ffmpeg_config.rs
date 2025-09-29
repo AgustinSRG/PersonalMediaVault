@@ -2,8 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
-pub const H264_CODEC_DEFAULT: &str = "libx264";
-pub const H264_CODEC_FREE: &str = "libopenh264";
+pub const VIDEO_CODEC_DEFAULT: &str = "libx264";
+pub const VIDEO_CODEC_ALTERNATIVE: &str = "libvpx-vp9";
 
 /// Represents the configuration for the launcher
 /// for a given vault path
@@ -15,6 +15,6 @@ pub struct FFmpegConfig {
     #[serde(default, rename = "ffprobe_path")]
     pub ffprobe_path: String,
 
-    #[serde(default, rename = "h264_codec")]
-    pub h264_codec: String,
+    #[serde(default, rename = "video_codec")]
+    pub video_codec: String,
 }

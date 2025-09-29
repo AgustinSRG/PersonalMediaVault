@@ -519,7 +519,7 @@ func (vc *VaultController) Start() bool {
 	cmd.Env = append(cmd.Env,
 		"FFMPEG_PATH="+vc.ffmpegConfig.FFMpegPath,
 		"FFPROBE_PATH="+vc.ffmpegConfig.FFProbePath,
-		"H264_CODEC="+vc.ffmpegConfig.H264Codec,
+		"FFMPEG_VIDEO_ENCODER="+vc.ffmpegConfig.VideoCodec,
 		"FRONTEND_PATH="+FRONTEND_PATH,
 	)
 
@@ -1455,23 +1455,23 @@ func (vc *VaultController) SetupFFMpeg() bool {
 		newFFmpegConfig.FFProbePath = ans
 	}
 
-	// Setup H.264 codec
+	// Setup video codec
 
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
-			ID:    "TypeH264Codec",
-			Other: "Type the name of the encoder to use for H.264 video.",
+			ID:    "TypeVideoCodec",
+			Other: "Type the name of the encoder to use for video.",
 		},
 	})
 	fmt.Println(msg)
 
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
-			ID:    "H264Codec",
-			Other: "H.264 encoder [{{.DefaultEncoder}}]",
+			ID:    "VideoCodec",
+			Other: "Video encoder [{{.DefaultEncoder}}]",
 		},
 		TemplateData: map[string]interface{}{
-			"DefaultEncoder": newFFmpegConfig.H264Codec,
+			"DefaultEncoder": newFFmpegConfig.VideoCodec,
 		},
 	})
 	fmt.Print(msg + ": ")
@@ -1494,7 +1494,7 @@ func (vc *VaultController) SetupFFMpeg() bool {
 	ans = strings.TrimSpace(ans)
 
 	if ans != "" {
-		newFFmpegConfig.H264Codec = ans
+		newFFmpegConfig.VideoCodec = ans
 
 		codecCheck := checkFFmpegCodec(newFFmpegConfig)
 

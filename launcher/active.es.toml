@@ -23,8 +23,8 @@ hash = "sha1-c8eac3a602fe7b454e2a5a1b761799e76a88b006"
 other = "Por favor, elija un puerto de escucha para el servidor."
 
 [CodecWarning]
-hash = "sha1-a5cb6e64fa8030f5b54c89e53a8f6a514990b53e"
-other = "Advertencia: No se pudo detectar el codificador para H.264 en su instalación de FFMpeg. Esto provocará errores al intentar codificar vídeos."
+hash = "sha1-e5c772338fd6647cbbfdcd7515b2e2de0c5561a5"
+other = "Advertencia: No se pudo detectar ningún codificador de vídeo en su instalación de FFMpeg. Esto causará errores a la hora de codificar los vídeos."
 
 [CommandDescription]
 hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
@@ -185,14 +185,6 @@ other = "Binario FFProbe: {{.File}}"
 [FilesMissing]
 hash = "sha1-5146c6f0ff117b56eda7ed8fb74f1d8f3e68109d"
 other = "Al parecer, algunos ficheros requeridos no se encuentran disponibles."
-
-[H264Codec]
-hash = "sha1-5e85f5e577a34eb912499cc0dc945f564fc6b8ae"
-other = "Codificador de H.264 [{{.DefaultEncoder}}]"
-
-[H264CodecTag]
-hash = "sha1-95c128d862a66fe2efd36d07850918680a8064e1"
-other = "Codificador de H.264: {{.Encoder}}"
 
 [IsCorrectAsk]
 hash = "sha1-164c44420e37f2305abebafb345c35c606844849"
@@ -438,13 +430,13 @@ other = "Escriba la ruta completa en su sistema de archivos al binario FFMpeg qu
 hash = "sha1-e15d8a850d349817006653126111973d92864a80"
 other = "Escriba la ruta completa en su sistema de archivos al binario FFProbe que desee usar."
 
-[TypeH264Codec]
-hash = "sha1-2359f7925087132a39c2866b69b11f519601f0db"
-other = "Escribe al nombre del codificador a usar para video en formato H.264."
-
 [TypePrivateKeyPath]
 hash = "sha1-2eb9f45faf4b0b41ea878709f2c8b3bfeb65b719"
 other = "Escriba la ruta absoluta de la clave privada SSL que desea usar."
+
+[TypeVideoCodec]
+hash = "sha1-8070e9d9c998d9293d7b860e9679cbc6f85600d8"
+other = "Escriba el nombre del codificador de vídeo a utilizar."
 
 [UnrecognizedCommand]
 hash = "sha1-0e0e01cd69a6a9fdcbf8f1a7959ea2e6ef9c0ed4"
@@ -509,6 +501,14 @@ other = "Deteniendo la galería..."
 [Version]
 hash = "sha1-2da600bf9404843107a9531694f654e5662959e0"
 other = "Versión"
+
+[VideoCodec]
+hash = "sha1-7e5744ddae024de84afb06273a9cea56f7723283"
+other = "Codificador de vídeo [{{.DefaultEncoder}}]"
+
+[VideoCodecTag]
+hash = "sha1-c0b8c5f761e6607415b33338200431dfa9379610"
+other = "Codificador de vídeo: {{.Encoder}}"
 
 [YesNo]
 hash = "sha1-4564b7be7e4aa13e727e17280870edc63e87f8ce"
