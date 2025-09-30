@@ -1,13 +1,20 @@
-import { Button, VerticalBox, HorizontalBox, Palette } from "std-widgets.slint";
+import { Button, VerticalBox, HorizontalBox, Palette, ScrollView } from "std-widgets.slint";
 import { AboutComponent } from "about.slint";
-import { LauncherStatus } from "status.slint";
+import { LauncherStatus, FatalErrorType } from "status.slint";
 import { VaultClosedView } from "vault-closed.slint";
+import { FatalErrorView } from "fatal-error.slint";
 
-export { LauncherStatus }
+export { LauncherStatus, FatalErrorType }
 
 export component MainWindow inherits Window {
     icon: @image-url("../assets/favicon.png");
     title: @tr("PersonalMediaVault Launcher");
+
+    /// The general status of the launcher
+    in property <LauncherStatus> launcher-status: closed;
+
+    preferred-width: 640px;
+    preferred-height: 480px;
 
     /// PersonalMediaVault version
     in property <string> version: "1.0.0";
@@ -18,11 +25,14 @@ export component MainWindow inherits Window {
     /// Visit GitHub page
     callback visit-git();
 
+    /// Close callback
+    callback close-launcher();
+
     /// True if the launcher is busy, meaning the action buttons should be disabled
     in property <bool> busy: false;
 
-    /// The general status of the launcher
-    in property <LauncherStatus> launcher-status: closed;
+    /// Type of fatal error that occurred
+    in property <FatalErrorType> fatal-error-type: unknown;
 
     /// Select a folder and open the vault store there
     callback open-vault-folder();
@@ -31,8 +41,6 @@ export component MainWindow inherits Window {
     callback open-default-vault();
 
     VerticalBox {
-        alignment: LayoutAlignment.start;
-
         AboutComponent {
             version: version;
             visit-website => {
@@ -49,13 +57,23 @@ export component MainWindow inherits Window {
             background: Palette.border;
         }
 
-        if(launcher-status == LauncherStatus.closed) : VaultClosedView {
-            busy: busy;
-            open-default-vault => {
-                root.open-default-vault();
+        VerticalLayout {
+            
+            if(launcher-status == LauncherStatus.closed): VaultClosedView {
+                busy: busy;
+                open-default-vault => {
+                    root.open-default-vault();
+                }
+                open-vault-folder => {
+                    root.open-vault-folder();
+                }
             }
-            open-vault-folder => {
-                root.open-vault-folder();
+
+            if(launcher-status == LauncherStatus.fatal-error): FatalErrorView {
+                fatal-error-type: fatal-error-type;
+                close-launcher => {
+                    root.close-launcher();
+                }
             }
         }
     }

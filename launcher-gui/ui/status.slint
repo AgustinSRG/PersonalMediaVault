@@ -1,1 +1,6 @@
-export enum LauncherStatus { closed, opening, open, lock-ask, creating}
+
+// Status of the launcher
+export enum LauncherStatus { closed, opening, open, lock-ask, creating, fatal-error}
+
+// Type of fatal error
+export enum FatalErrorType { unknown, ffmpeg-missing, ffprobe-missing }

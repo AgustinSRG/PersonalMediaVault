@@ -1,0 +1,52 @@
+import { Button } from "std-widgets.slint";
+import { FatalErrorType } from "status.slint";
+
+export component FatalErrorView inherits VerticalLayout {
+    /// Type of fatal error that occurred
+    in property <FatalErrorType> fatal-error-type: unknown;
+
+    /// Close callback
+    callback close-launcher();
+
+    spacing: 12px;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("Fatal error");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("A fatal error occurred, forcing the launcher to close");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    if(fatal-error-type == FatalErrorType.ffmpeg-missing): Text {
+        text: @tr("Could not find FFmpeg in any of the expected location. Please install FFmpeg in your system.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    if(fatal-error-type == FatalErrorType.ffprobe-missing): Text {
+        text: @tr("Could not find FFprobe in any of the expected location. Please install FFmpeg in your system.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        Button {
+            text: @tr("Close Launcher");
+            icon: @image-url("../assets/icons/close.svg");
+            colorize-icon: true;
+            clicked => {
+                root.close-launcher();
+            }
+        }
+    }
+}
