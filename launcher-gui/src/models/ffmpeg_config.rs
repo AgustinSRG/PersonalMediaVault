@@ -18,3 +18,20 @@ pub struct FFmpegConfig {
     #[serde(default, rename = "video_codec")]
     pub video_codec: String,
 }
+
+impl FFmpegConfig {
+    /// Gets a default configuration, in case of error loading the actual configuration
+    pub fn default_config() -> FFmpegConfig {
+        FFmpegConfig {
+            ffmpeg_path: "/usr/bin/ffmpeg".to_string(),
+            ffprobe_path: "/usr/bin/ffprobe".to_string(),
+            video_codec: VIDEO_CODEC_DEFAULT.to_string(),
+        }
+    }
+}
+
+/// Error related to missing FFmpeg
+pub enum FFmpegBadInstallationError {
+    FFmpegMissing,
+    FFprobeMissing,
+}
