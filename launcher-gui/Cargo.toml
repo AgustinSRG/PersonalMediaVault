@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 dirs = "6.0.0"
 open = "5.3.2"
+pidlock = "0.2.1"
 rfd = "0.15.4"
 serde = { version = "1.0.228", features = ['derive'] }
 serde_json = "1.0.145"

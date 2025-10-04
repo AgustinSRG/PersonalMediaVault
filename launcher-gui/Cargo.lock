@@ -3400,6 +3400,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5be167a7af36ee22fe3115051bc51f6e6c7054c9348e28deb4f49bd6f705a315"
 
 [[package]]
+name = "pidlock"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae82cca341bdb2077500fb70f44aed3dff59c37c204ed327140badda0bdb5ac8"
+dependencies = [
+ "libc",
+ "thiserror 1.0.69",
+ "windows-sys 0.45.0",
+]
+
+[[package]]
 name = "pin-project"
 version = "1.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3460,6 +3471,7 @@ version = "0.1.0"
 dependencies = [
  "dirs",
  "open",
+ "pidlock",
  "rfd",
  "serde",
  "serde_json",

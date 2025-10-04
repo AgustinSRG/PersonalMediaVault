@@ -10,6 +10,14 @@ pub fn file_exists<P>(file: P) -> bool where P: AsRef<Path> {
     }
 }
 
+/// Checks if a folder exists
+pub fn folder_exists<P>(folder: P) -> bool where P: AsRef<Path> {
+    match fs::metadata(folder) {
+        Ok(m) => m.is_dir(),
+        Err(_) => false,
+    }
+}
+
 /// Gets dirname of the current executable
 pub fn get_dirname() -> PathBuf {
     let exe = match env::current_exe() {

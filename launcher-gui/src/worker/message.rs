@@ -3,5 +3,7 @@
 pub enum LauncherWorkerMessage {
     SelectVaultFolder,
     OpenVault { path: String },
+    CreateFolderAndOpen,
+    ForceOpenVault,
     Finish,
 }

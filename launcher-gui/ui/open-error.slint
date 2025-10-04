@@ -1,0 +1,61 @@
+import { Button } from "std-widgets.slint";
+import { OpenErrorType } from "status.slint";
+
+export component OpenErrorView inherits VerticalLayout {
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    /// Type of open error that occurred
+    in property <OpenErrorType> open-error-type: unknown;
+
+    /// Back callback
+    callback go-back();
+
+    spacing: 12px;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("Error opening the vault");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("An error occurred while trying to open the vault");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+
+    if(open-error-type == OpenErrorType.create-folder-error): Text {
+        text: @tr("Could not create the vault folder.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    if(open-error-type == OpenErrorType.lock-error): Text {
+        text: @tr("Could not lock the vault folder. Maybe there is another process already locking the vault.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        Button {
+            text: @tr("Back");
+            icon: @image-url("../assets/icons/arrow-back.svg");
+            colorize-icon: true;
+            clicked => {
+                root.go-back();
+            }
+        }
+    }
+}

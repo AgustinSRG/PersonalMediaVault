@@ -17,3 +17,6 @@ pub use files::*;
 
 mod ffmpeg_config;
 pub use ffmpeg_config::*;
+
+mod lock;
+pub use lock::*;

@@ -1,0 +1,59 @@
+import { Button } from "std-widgets.slint";
+
+export component CreateAskView inherits VerticalLayout {
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    /// Back callback
+    callback go-back();
+
+    /// Confirm callback
+    callback confirm();
+
+    spacing: 12px;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("The vault folder does not exist");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Do you want to create it?");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        spacing: 8px;
+        Button {
+            text: @tr("Back");
+            icon: @image-url("../assets/icons/arrow-back.svg");
+            colorize-icon: true;
+            clicked => {
+                root.go-back();
+            }
+        }
+        Button {
+            text: @tr("Create folder");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            clicked => {
+                root.confirm();
+            }
+        }
+    }
+}

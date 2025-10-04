@@ -1,17 +1,24 @@
 import { Button, VerticalBox, HorizontalBox, Palette, ScrollView } from "std-widgets.slint";
 import { AboutComponent } from "about.slint";
-import { LauncherStatus, FatalErrorType } from "status.slint";
+import { LauncherStatus, FatalErrorType, OpenErrorType } from "status.slint";
 import { VaultClosedView } from "vault-closed.slint";
+import { OpeningView } from "opening.slint";
 import { FatalErrorView } from "fatal-error.slint";
+import { OpenErrorView } from "open-error.slint";
+import { CreateAskView } from "create-ask.slint";
+import { LockAskView } from "lock-ask.slint";
 
-export { LauncherStatus, FatalErrorType }
+export { LauncherStatus, FatalErrorType, OpenErrorType }
 
 export component MainWindow inherits Window {
     icon: @image-url("../assets/favicon.png");
     title: @tr("PersonalMediaVault Launcher");
 
     /// The general status of the launcher
-    in property <LauncherStatus> launcher-status: closed;
+    in-out property <LauncherStatus> launcher-status: closed;
+
+    /// Path of the vault
+    in property <string> vault-path: "";
 
     preferred-width: 640px;
     preferred-height: 480px;
@@ -34,11 +41,20 @@ export component MainWindow inherits Window {
     /// Type of fatal error that occurred
     in property <FatalErrorType> fatal-error-type: unknown;
 
+    /// Type of open error that occurred
+    in property <OpenErrorType> open-error-type: unknown;
+
     /// Select a folder and open the vault store there
     callback open-vault-folder();
 
     /// Open the default vault, located in the user's home folder
     callback open-default-vault();
+
+    /// Create the folder and open it
+    callback create-folder-and-open();
+
+    /// Forcefully open the vault (locked)
+    callback force-open();
 
     VerticalBox {
         AboutComponent {
@@ -58,7 +74,6 @@ export component MainWindow inherits Window {
         }
 
         VerticalLayout {
-            
             if(launcher-status == LauncherStatus.closed): VaultClosedView {
                 busy: busy;
                 open-default-vault => {
@@ -73,6 +88,38 @@ export component MainWindow inherits Window {
                 fatal-error-type: fatal-error-type;
                 close-launcher => {
                     root.close-launcher();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.opening): OpeningView {
+                vault-path: vault-path;
+            }
+
+            if(launcher-status == LauncherStatus.open-error): OpenErrorView {
+                open-error-type: open-error-type;
+                vault-path: vault-path;
+                go-back => {
+                    root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.create-ask): CreateAskView {
+                vault-path: vault-path;
+                confirm => {
+                    root.create-folder-and-open();
+                }
+                go-back => {
+                    root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.lock-ask): LockAskView {
+                vault-path: vault-path;
+                confirm => {
+                    root.force-open();
+                }
+                go-back => {
+                    root.launcher-status = LauncherStatus.closed;
                 }
             }
         }

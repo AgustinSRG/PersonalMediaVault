@@ -1,13 +1,18 @@
 // Prevent console window in addition to Slint window in Windows release builds when, e.g., starting the app via file manager. Ignored on other platforms.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{env, error::Error, sync::mpsc::channel};
+use std::{
+    env,
+    error::Error,
+    path::{self, Path, PathBuf},
+    sync::mpsc::channel,
+};
 
 slint::include_modules!();
 
+mod constants;
 mod control;
 mod models;
-mod constants;
 mod utils;
 mod worker;
 
@@ -33,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     setup_callbacks(&main_window, sender.clone());
 
     // Create worker
-    
+
     let worker_join_handle = run_worker_thread(sender.clone(), receiver, main_window.as_weak());
 
     // Initialization logic
@@ -42,7 +47,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if args.len() >= 2 {
         // Open specific vault path
-        let _ = sender.send(LauncherWorkerMessage::OpenVault { path: args[1].clone() });
+        let p = PathBuf::from(&args[1]);
+
+        if let Ok(abs_path) = path::absolute(p) {
+            let abs_path_str = abs_path.to_string_lossy().to_string();
+            main_window.set_launcher_status(LauncherStatus::Opening);
+            main_window.set_vault_path(abs_path_str.clone().into());
+            let _ = sender.send(LauncherWorkerMessage::OpenVault { path: abs_path_str });
+        }
     }
 
     // Run UI event loop

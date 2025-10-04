@@ -1,0 +1,65 @@
+import { Button } from "std-widgets.slint";
+
+export component LockAskView inherits VerticalLayout {
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    /// Back callback
+    callback go-back();
+
+    /// Confirm callback
+    callback confirm();
+
+    spacing: 12px;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("The vault is locked");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Opening the vault multiple times can result in data corruption.");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("We recommend you to go back, unless this is an issue caused by an unexpected shutdown or a crash.");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        spacing: 8px;
+        Button {
+            text: @tr("Back");
+            icon: @image-url("../assets/icons/arrow-back.svg");
+            colorize-icon: true;
+            clicked => {
+                root.go-back();
+            }
+        }
+        Button {
+            text: @tr("Open anyway");
+            icon: @image-url("../assets/icons/warning.svg");
+            primary: true;
+            colorize-icon: true;
+            clicked => {
+                root.confirm();
+            }
+        }
+    }
+}
