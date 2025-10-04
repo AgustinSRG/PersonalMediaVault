@@ -26,10 +26,6 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if !HandleAuthConfirmation(response, request, session, false) {
-		return
-	}
-
 	vars := mux.Vars(request)
 
 	media_id, err := strconv.ParseUint(vars["mid"], 10, 64)
@@ -124,6 +120,11 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_MEDIA", "Invalid media file provided")
+		return
+	}
+
+	if !HandleAuthConfirmation(response, request, session, false) {
+		DeleteTemporalFile(tempFile)
 		return
 	}
 
