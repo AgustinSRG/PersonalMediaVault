@@ -110,6 +110,13 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	f.Close()
 
+	// Check auth confirmation
+
+	if !HandleAuthConfirmation(response, request, session, false) {
+		DeleteTemporalFile(tempFile)
+		return
+	}
+
 	// Probe uploaded file
 
 	probe_data, err := ProbeMediaFileWithFFProbe(tempFile)
@@ -120,11 +127,6 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		DeleteTemporalFile(tempFile)
 
 		ReturnAPIError(response, 400, "INVALID_MEDIA", "Invalid media file provided")
-		return
-	}
-
-	if !HandleAuthConfirmation(response, request, session, false) {
-		DeleteTemporalFile(tempFile)
 		return
 	}
 
