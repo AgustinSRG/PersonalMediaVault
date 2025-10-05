@@ -5,8 +5,9 @@ import { VaultClosedView } from "vault-closed.slint";
 import { OpeningView } from "opening.slint";
 import { FatalErrorView } from "fatal-error.slint";
 import { OpenErrorView } from "open-error.slint";
-import { CreateAskView } from "create-ask.slint";
+import { CreateFolderAskView } from "create-folder-ask.slint";
 import { LockAskView } from "lock-ask.slint";
+import { InitialConfigView } from "initial-config.slint";
 
 export { LauncherStatus, FatalErrorType, OpenErrorType }
 
@@ -44,6 +45,9 @@ export component MainWindow inherits Window {
     /// Type of open error that occurred
     in property <OpenErrorType> open-error-type: unknown;
 
+    /// Details of the error opening the vault
+    in-out property <string> open-error-details: "";
+
     /// Select a folder and open the vault store there
     callback open-vault-folder();
 
@@ -55,6 +59,35 @@ export component MainWindow inherits Window {
 
     /// Forcefully open the vault (locked)
     callback force-open();
+
+    /// Hostname to open browser
+    in-out property <string> hostname: "localhost";
+    in-out property <bool> hostname-invalid: false;
+
+    /// Listening port
+    in-out property <string> port: "8000";
+    in-out property <bool> port-invalid: false;
+
+    /// Local listening
+    in-out property <bool> listen-local: true;
+
+    /// Initial config
+    callback set-initial-config();
+
+    /// Username input
+    in-out property <string> username: "";
+
+    /// Password input
+    in-out property <string> password: "";
+
+    /// Password input (repeat)
+    in-out property <string> password-repeat: "";
+
+    /// Create vault
+    callback create-vault();
+
+    /// Close vault
+    callback close-vault();
 
     VerticalBox {
         AboutComponent {
@@ -97,15 +130,18 @@ export component MainWindow inherits Window {
 
             if(launcher-status == LauncherStatus.open-error): OpenErrorView {
                 open-error-type: open-error-type;
+                open-error-details: open-error-details;
                 vault-path: vault-path;
                 go-back => {
+                    root.open-error-details = "";
                     root.launcher-status = LauncherStatus.closed;
                 }
             }
 
-            if(launcher-status == LauncherStatus.create-ask): CreateAskView {
+            if(launcher-status == LauncherStatus.create-ask): CreateFolderAskView {
                 vault-path: vault-path;
                 confirm => {
+                    root.launcher-status = LauncherStatus.opening;
                     root.create-folder-and-open();
                 }
                 go-back => {
@@ -116,10 +152,27 @@ export component MainWindow inherits Window {
             if(launcher-status == LauncherStatus.lock-ask): LockAskView {
                 vault-path: vault-path;
                 confirm => {
+                    root.launcher-status = LauncherStatus.opening;
                     root.force-open();
                 }
                 go-back => {
                     root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.initial-config): InitialConfigView {
+                busy: busy;
+                vault-path: vault-path;
+                hostname <=> root.hostname;
+                hostname-invalid <=> root.hostname-invalid;
+                port <=> root.port;
+                port-invalid <=> root.port-invalid;
+                listen-local <=> root.listen-local;
+                confirm => {
+                    root.set-initial-config();
+                }
+                go-back => {
+                    root.close-vault();
                 }
             }
         }

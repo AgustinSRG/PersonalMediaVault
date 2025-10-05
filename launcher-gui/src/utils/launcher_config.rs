@@ -1,11 +1,11 @@
 // Util to locate the vault configuration file
 
-use std::{fs::{self, create_dir_all}, path::PathBuf};
+use std::{fs::{self, create_dir_all, read_to_string}, path::PathBuf};
 
 use dirs::config_dir;
 use sha2::{Digest, Sha256};
 
-use crate::utils::{file_exists, to_hex_string};
+use crate::{models::LauncherConfig, utils::{file_exists, to_hex_string}};
 
 fn compute_vault_path_hash_tag(vault_path: &str) -> String {
     let hash = Sha256::digest(vault_path.to_string().into_bytes());
@@ -59,4 +59,37 @@ pub fn get_launcher_config_file(vault_path: &str) -> String {
     }
 
     file_specific
+}
+
+pub fn load_launcher_config_from_file(path: &str) -> Result<LauncherConfig, ()> {
+    let file_str = match read_to_string(path) {
+        Ok(s) => s,
+        Err(_) => {
+            return Err(());
+        }
+    };
+
+    let config: LauncherConfig = match serde_json::from_str(&file_str) {
+        Ok(c) => c,
+        Err(_) => {
+            return Err(());
+        }
+    };
+
+    Ok(config)
+}
+
+pub fn write_launcher_to_config_file(path: &str, config: &LauncherConfig) -> Result<(), String> {
+    let file_str = match serde_json::to_string(config) {
+        Ok(s) => s,
+        Err(e) => {
+            return Err(e.to_string());
+        },
+    };
+
+    if let Err(e) = fs::write(path, file_str) {
+        return Err(e.to_string());
+    }
+
+    Ok(())
 }

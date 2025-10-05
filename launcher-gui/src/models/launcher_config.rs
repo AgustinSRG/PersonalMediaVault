@@ -14,7 +14,7 @@ impl Default for CacheSize {
 
 /// Represents the configuration for the launcher
 /// for a given vault path
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct LauncherConfig {
     #[serde(default)]
     pub path: String,
@@ -42,4 +42,12 @@ pub struct LauncherConfig {
 
     #[serde(default)]
     pub debug: bool,
+}
+
+impl LauncherConfig {
+    pub fn new() -> LauncherConfig {
+        LauncherConfig{
+            ..Default::default()
+        }
+    }
 }

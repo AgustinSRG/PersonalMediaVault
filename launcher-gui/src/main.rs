@@ -63,6 +63,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Done, wait for worker thread to finish
 
+    let _ = sender.send(LauncherWorkerMessage::CloseVault);
     let _ = sender.send(LauncherWorkerMessage::Finish);
     let _ = worker_join_handle.join();
 

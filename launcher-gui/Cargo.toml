@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 dirs = "6.0.0"
+hostname-validator = "1.1.1"
 open = "5.3.2"
 pidlock = "0.2.1"
 rfd = "0.15.4"

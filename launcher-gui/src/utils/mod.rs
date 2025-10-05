@@ -6,8 +6,8 @@ pub use open_url::*;
 mod default_vault_path;
 pub use default_vault_path::*;
 
-mod vault_config_file;
-pub use vault_config_file::*;
+mod launcher_config;
+pub use launcher_config::*;
 
 mod hex;
 pub use hex::*;
@@ -20,3 +20,6 @@ pub use ffmpeg_config::*;
 
 mod lock;
 pub use lock::*;
+
+mod pmv_binaries;
+pub use pmv_binaries::*;

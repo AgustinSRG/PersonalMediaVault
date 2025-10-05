@@ -17,7 +17,7 @@ pub use status::*;
 
 use crate::{
     models::{FFmpegBadInstallationError, FFmpegConfig},
-    utils::{folder_exists, load_ffmpeg_config},
+    utils::{find_pmv_daemon_binary, load_ffmpeg_config},
     FatalErrorType, LauncherStatus, MainWindow,
 };
 
@@ -29,6 +29,20 @@ pub fn run_worker_thread(
 ) -> JoinHandle<()> {
     // Spawn thread
     spawn(move || {
+        let daemon_binary = match find_pmv_daemon_binary() {
+            Ok(b) => b,
+            Err(_) => {
+                let wh = window_handle.clone();
+                let _ = slint::invoke_from_event_loop(move || {
+                    let win = wh.unwrap();
+                    win.set_launcher_status(LauncherStatus::FatalError);
+                    win.set_fatal_error_type(FatalErrorType::DaemonMissing);
+                });
+
+                "pmvd".to_string()
+            }
+        };
+
         let ffmpeg_config = match load_ffmpeg_config() {
             Ok(c) => c,
             Err(e) => {
@@ -50,7 +64,7 @@ pub fn run_worker_thread(
             }
         };
 
-        let mut status = WorkerThreadStatus::new(ffmpeg_config);
+        let mut status = WorkerThreadStatus::new(daemon_binary, ffmpeg_config);
 
         loop {
             match receiver.recv() {
@@ -73,6 +87,26 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::ForceOpenVault => {
                         force_open_vault(&mut status, &sender, &window_handle);
                     }
+                    LauncherWorkerMessage::CloseVault => {
+                        close_vault(&mut status);
+                    }
+                    LauncherWorkerMessage::SetInitialConfig {
+                        hostname,
+                        port,
+                        local,
+                    } => {
+                        set_initial_config(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            InitialConfig {
+                                hostname: hostname,
+                                port: port,
+                                local: local,
+                            },
+                        );
+                    }
+                    LauncherWorkerMessage::CreateVault => {}
                 },
                 Err(err) => {
                     eprintln!("Error: {}", err);

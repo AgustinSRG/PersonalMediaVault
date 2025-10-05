@@ -8,6 +8,9 @@ export component OpenErrorView inherits VerticalLayout {
     /// Type of open error that occurred
     in property <OpenErrorType> open-error-type: unknown;
 
+    /// Details of the error opening the vault
+    in property <string> open-error-details: "";
+
     /// Back callback
     callback go-back();
 
@@ -42,6 +45,18 @@ export component OpenErrorView inherits VerticalLayout {
 
     if(open-error-type == OpenErrorType.lock-error): Text {
         text: @tr("Could not lock the vault folder. Maybe there is another process already locking the vault.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    if(open-error-type == OpenErrorType.save-config-error): Text {
+        text: @tr("Could not save the launcher configuration.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
+    if (open-error-details != ""): Text {
+        text: open-error-details;
         wrap: TextWrap.word-wrap;
         horizontal-alignment: center;
     }
