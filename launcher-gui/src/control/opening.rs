@@ -6,7 +6,10 @@ use slint::ComponentHandle;
 
 use crate::{worker::LauncherWorkerMessage, LauncherStatus, MainWindow};
 
-pub fn setup_callbacks_vault_opening(ui: &MainWindow, worker_sender: Sender<LauncherWorkerMessage>) {
+pub fn setup_callbacks_vault_opening(
+    ui: &MainWindow,
+    worker_sender: Sender<LauncherWorkerMessage>,
+) {
     ui.on_create_folder_and_open({
         let ui_handle = ui.as_weak();
         let worker_sender_c = worker_sender.clone();
@@ -58,13 +61,59 @@ pub fn setup_callbacks_vault_opening(ui: &MainWindow, worker_sender: Sender<Laun
                 Err(_) => {
                     ui.set_port_invalid(true);
                     return;
-                },
+                }
             };
 
             ui.set_port_invalid(false);
 
             ui.set_busy(true);
-            let _ = worker_sender_c.send(LauncherWorkerMessage::SetInitialConfig { hostname: hostname, port: port, local: local });
+            let _ = worker_sender_c.send(LauncherWorkerMessage::SetInitialConfig {
+                hostname: hostname,
+                port: port,
+                local: local,
+            });
+        }
+    });
+
+    ui.on_create_vault({
+        let ui_handle = ui.as_weak();
+        let worker_sender_c = worker_sender.clone();
+
+        move || {
+            let ui = ui_handle.unwrap();
+
+            let username = ui.get_username().to_string();
+
+            if username.is_empty() || username.len() > 255 {
+                ui.set_username_invalid(true);
+                return;
+            } else {
+                ui.set_username_invalid(false);
+            }
+
+            let password = ui.get_password().to_string();
+
+            if password.is_empty() || password.len() > 255 {
+                ui.set_password_invalid(true);
+                return;
+            } else {
+                ui.set_password_invalid(false);
+            }
+
+            let password_repeat = ui.get_password_repeat().to_string();
+
+            if password_repeat != password {
+                ui.set_password_repeat_invalid(true);
+                return;
+            } else {
+                ui.set_password_repeat_invalid(false);
+            }
+
+            ui.set_busy(true);
+            let _ = worker_sender_c.send(LauncherWorkerMessage::CreateVault {
+                username: username,
+                password: password,
+            });
         }
     });
 }

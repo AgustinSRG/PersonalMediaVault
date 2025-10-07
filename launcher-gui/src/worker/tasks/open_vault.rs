@@ -108,6 +108,12 @@ pub fn open_vault(
         let _ = slint::invoke_from_event_loop(move || {
             let win = wh.unwrap();
             win.set_launcher_status(LauncherStatus::CreateVaultAsk);
+            win.set_username("admin".into());
+            win.set_username_invalid(false);
+            win.set_password("".into());
+            win.set_password_invalid(false);
+            win.set_password_repeat("".into());
+            win.set_password_repeat_invalid(false);
         });
         return;
     }

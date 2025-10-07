@@ -12,7 +12,10 @@ pub enum LauncherWorkerMessage {
         port: u16,
         local: bool,
     },
-    CreateVault,
+    CreateVault {
+        username: String,
+        password: String,
+    },
     CloseVault,
     Finish,
 }

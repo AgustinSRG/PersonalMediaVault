@@ -106,7 +106,17 @@ pub fn run_worker_thread(
                             },
                         );
                     }
-                    LauncherWorkerMessage::CreateVault => {}
+                    LauncherWorkerMessage::CreateVault { username, password } => {
+                        create_vault(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            CreateVaultDetails {
+                                username: username,
+                                password: password,
+                            },
+                        );
+                    }
                 },
                 Err(err) => {
                     eprintln!("Error: {}", err);

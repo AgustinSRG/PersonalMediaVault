@@ -8,6 +8,7 @@ import { OpenErrorView } from "open-error.slint";
 import { CreateFolderAskView } from "create-folder-ask.slint";
 import { LockAskView } from "lock-ask.slint";
 import { InitialConfigView } from "initial-config.slint";
+import { CreateVaultView } from "create-vault.slint";
 
 export { LauncherStatus, FatalErrorType, OpenErrorType }
 
@@ -76,12 +77,15 @@ export component MainWindow inherits Window {
 
     /// Username input
     in-out property <string> username: "";
+    in-out property <bool> username-invalid: false;
 
     /// Password input
     in-out property <string> password: "";
+    in-out property <bool> password-invalid: false;
 
     /// Password input (repeat)
     in-out property <string> password-repeat: "";
+    in-out property <bool> password-repeat-invalid: false;
 
     /// Create vault
     callback create-vault();
@@ -170,6 +174,23 @@ export component MainWindow inherits Window {
                 listen-local <=> root.listen-local;
                 confirm => {
                     root.set-initial-config();
+                }
+                go-back => {
+                    root.close-vault();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.create-vault-ask): CreateVaultView {
+                busy: busy;
+                vault-path: vault-path;
+                username <=> username;
+                username-invalid <=> username-invalid;
+                password <=> password;
+                password-invalid <=> password-invalid;
+                password-repeat <=> password-repeat;
+                password-repeat-invalid <=> password-repeat-invalid;
+                confirm => {
+                    root.create-vault();
                 }
                 go-back => {
                     root.close-vault();
