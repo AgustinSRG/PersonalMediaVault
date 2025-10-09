@@ -1,0 +1,189 @@
+
+import { Button } from "std-widgets.slint";
+import { VaultDaemonStatus, VaultDaemonErrorType } from "status.slint";
+
+export component VaultStatusView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Status of the vault daemon
+    in property <VaultDaemonStatus> daemon-status: VaultDaemonStatus.stopped;
+
+    /// Daemon error type
+    in property <VaultDaemonErrorType> daemon-error-type: VaultDaemonErrorType.unknown;
+
+    /// Daemon error details
+    in property <string> daemon-error-details: "";
+
+    /// Start callback
+    callback start();
+
+    /// Stop callback
+    callback stop();
+
+    /// Restart callback
+    callback restart();
+
+    /// Open browser callback
+    callback open-browser();
+
+    /// Open log callback
+    callback open-log();
+
+    padding-top: 12px;
+    spacing: 12px;
+    alignment: LayoutAlignment.center;
+
+    HorizontalLayout {
+        spacing: 0.5rem;
+        alignment: LayoutAlignment.center;
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            Text {
+                text: @tr("Vault status") + ":";
+                font-size: 12pt;
+                font-weight: 800;
+            }
+        }
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            Text {
+                font-size: 12pt;
+                font-weight: 800;
+
+                states [
+                    stopped when daemon-status == VaultDaemonStatus.stopped: {
+                        text: @tr("STOPPED");
+                        color: gray;
+                    }
+                    starting when daemon-status == VaultDaemonStatus.starting: {
+                        text: @tr("STARTING");
+                        color: green;
+                    }
+                    running when daemon-status == VaultDaemonStatus.running: {
+                        text: @tr("RUNNING");
+                        color: green;
+                    }
+                    error when daemon-status == VaultDaemonStatus.error: {
+                        text: @tr("ERROR");
+                        color: red;
+                    }
+                ]
+            }
+        }
+    }
+
+    Text {
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+
+        states [
+            stopped when daemon-status == VaultDaemonStatus.stopped: {
+                text: @tr("The vault is currently stopped");
+            }
+            starting when daemon-status == VaultDaemonStatus.starting: {
+                text: @tr("Starting the vault...");
+            }
+            running when daemon-status == VaultDaemonStatus.running: {
+                text: @tr("The vault is currently running");
+            }
+            error when daemon-status == VaultDaemonStatus.error: {
+                text: @tr("An error occurred trying to start the vault");
+                color: red;
+            }
+        ]
+    }
+
+    if daemon-status == VaultDaemonStatus.error: Text {
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+        color: red;
+
+        states [
+            unknown-details when daemon-error-type == VaultDaemonErrorType.unknown && daemon-error-details != "": {
+                text: @tr("Error") + ": " + daemon-error-details;
+            }
+            unknown-no-details when daemon-error-type == VaultDaemonErrorType.unknown && daemon-error-details != "": {
+                text: @tr("Unknown error. Please report this as a bug.");
+            }
+            lock when daemon-error-type == VaultDaemonErrorType.lock: {
+                text: @tr("The vault was being locked by another process.");
+            }
+            port-in-use when daemon-error-type == VaultDaemonErrorType.lock: {
+                text: @tr("The configured port is in use by another process. Please change it in the configuration.");
+            }
+            invalid-ssl when daemon-error-type == VaultDaemonErrorType.invalid-ssl: {
+                text: @tr("Invalid SSL configuration. Please change the configuration.");
+            }
+        ]
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        spacing: 8px;
+
+        if (daemon-status == VaultDaemonStatus.stopped || daemon-status == VaultDaemonStatus.error): Button {
+            text: @tr("Start");
+            icon: @image-url("../assets/icons/play.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.start();
+            }
+        }
+
+        if (daemon-status == VaultDaemonStatus.starting || daemon-status == VaultDaemonStatus.running): Button {
+            text: @tr("Restart");
+            icon: @image-url("../assets/icons/restart.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy && daemon-status == VaultDaemonStatus.running;
+            clicked => {
+                root.restart();
+            }
+        }
+
+        if (daemon-status == VaultDaemonStatus.starting || daemon-status == VaultDaemonStatus.running): Button {
+            text: @tr("Stop");
+            icon: @image-url("../assets/icons/stop.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy && daemon-status == VaultDaemonStatus.running;
+            clicked => {
+                root.stop();
+            }
+        }
+    }
+
+    if (daemon-status == VaultDaemonStatus.running): HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 8px;
+        spacing: 8px;
+
+        Button {
+            text: @tr("Open browser");
+            icon: @image-url("../assets/icons/web.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.open-browser();
+            }
+        }
+
+        Button {
+            text: @tr("Open log file");
+            icon: @image-url("../assets/icons/text.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.open-log();
+            }
+        }
+    }
+}

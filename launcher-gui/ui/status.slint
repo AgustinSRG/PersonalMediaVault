@@ -7,3 +7,9 @@ export enum FatalErrorType { unknown, daemon-missing, ffmpeg-missing, ffprobe-mi
 
 // Type of open error
 export enum OpenErrorType { unknown, create-folder-error, lock-error, save-config-error, init-error }
+
+// Status of the daemon
+export enum VaultDaemonStatus { stopped, starting, running, error }
+
+// Type of daemon error
+export enum VaultDaemonErrorType { unknown, lock, port-in-use, invalid-ssl }

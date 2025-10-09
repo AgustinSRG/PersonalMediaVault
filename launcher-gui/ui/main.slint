@@ -1,6 +1,6 @@
 import { Button, VerticalBox, HorizontalBox, Palette, ScrollView } from "std-widgets.slint";
 import { AboutComponent } from "about.slint";
-import { LauncherStatus, FatalErrorType, OpenErrorType } from "status.slint";
+import { LauncherStatus, FatalErrorType, OpenErrorType, VaultDaemonStatus, VaultDaemonErrorType } from "status.slint";
 import { VaultClosedView } from "vault-closed.slint";
 import { OpeningView } from "opening.slint";
 import { FatalErrorView } from "fatal-error.slint";
@@ -9,8 +9,9 @@ import { CreateFolderAskView } from "create-folder-ask.slint";
 import { LockAskView } from "lock-ask.slint";
 import { InitialConfigView } from "initial-config.slint";
 import { CreateVaultView } from "create-vault.slint";
+import { VaultOpenView } from "vault-open.slint";
 
-export { LauncherStatus, FatalErrorType, OpenErrorType }
+export { LauncherStatus, FatalErrorType, OpenErrorType, VaultDaemonStatus, VaultDaemonErrorType }
 
 export component MainWindow inherits Window {
     icon: @image-url("../assets/favicon.png");
@@ -92,6 +93,30 @@ export component MainWindow inherits Window {
 
     /// Close vault
     callback close-vault();
+
+    /// Status of the vault daemon
+    in property <VaultDaemonStatus> daemon-status: VaultDaemonStatus.stopped;
+
+    /// Daemon error type
+    in property <VaultDaemonErrorType> daemon-error-type: VaultDaemonErrorType.unknown;
+
+    /// Daemon error details
+    in property <string> daemon-error-details: "";
+
+    /// Start callback
+    callback start();
+
+    /// Stop callback
+    callback stop();
+
+    /// Restart callback
+    callback restart();
+
+    /// Open browser callback
+    callback open-browser();
+
+    /// Open log callback
+    callback open-log();
 
     VerticalBox {
         AboutComponent {
@@ -194,6 +219,29 @@ export component MainWindow inherits Window {
                 }
                 go-back => {
                     root.close-vault();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.open): VaultOpenView {
+                busy: busy;
+                vault-path: vault-path;
+                daemon-status: daemon-status;
+                daemon-error-type: daemon-error-type;
+                daemon-error-details: daemon-error-details;
+                start => {
+                    root.start();
+                }
+                stop => {
+                    root.stop();
+                }
+                restart => {
+                    root.restart();
+                }
+                open-browser => {
+                    root.open-browser();
+                }
+                open-log => {
+                    root.open-log();
                 }
             }
         }

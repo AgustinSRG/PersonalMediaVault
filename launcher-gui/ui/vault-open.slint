@@ -1,0 +1,92 @@
+import { Button, TabWidget } from "std-widgets.slint";
+import { VaultStatusView } from "vault-status.slint";
+import { VaultDaemonStatus, VaultDaemonErrorType } from "status.slint";
+
+export component VaultOpenView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    /// Status of the vault daemon
+    in property <VaultDaemonStatus> daemon-status: VaultDaemonStatus.stopped;
+
+    /// Daemon error type
+    in property <VaultDaemonErrorType> daemon-error-type: VaultDaemonErrorType.unknown;
+
+    /// Daemon error details
+    in property <string> daemon-error-details: "";
+
+    /// Start callback
+    callback start();
+
+    /// Stop callback
+    callback stop();
+
+    /// Restart callback
+    callback restart();
+
+    /// Open browser callback
+    callback open-browser();
+
+    /// Open log callback
+    callback open-log();
+
+    spacing: 8px;
+    alignment: LayoutAlignment.start;
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+
+    TabWidget {
+        Tab {
+            title: @tr("Status");
+            VaultStatusView{
+                busy: busy;
+                daemon-status: daemon-status;
+                daemon-error-type: daemon-error-type;
+                daemon-error-details: daemon-error-details;
+                start => {
+                    root.start();
+                }
+                stop => {
+                    root.stop();
+                }
+                restart => {
+                    root.restart();
+                }
+                open-browser => {
+                    root.open-browser();
+                }
+                open-log => {
+                    root.open-log();
+                }
+            }
+        }
+
+        Tab {
+            title: @tr("Configuration");
+            Text{
+                text: "TODO";
+            }
+        }
+
+        Tab {
+            title: @tr("FFmpeg");
+            Text{
+                text: "TODO";
+            }
+        }
+
+        Tab {
+            title: @tr("Tools");
+            Text{
+                text: "TODO";
+            }
+        }
+    }
+}
