@@ -1,11 +1,17 @@
 // Util to locate the vault configuration file
 
-use std::{fs::{self, create_dir_all, read_to_string}, path::PathBuf};
+use std::{
+    fs::{self, create_dir_all, read_to_string},
+    path::PathBuf,
+};
 
 use dirs::config_dir;
 use sha2::{Digest, Sha256};
 
-use crate::{models::LauncherConfig, utils::{file_exists, to_hex_string}};
+use crate::{
+    models::LauncherConfig,
+    utils::{file_exists, to_hex_string},
+};
 
 fn compute_vault_path_hash_tag(vault_path: &str) -> String {
     let hash = Sha256::digest(vault_path.to_string().into_bytes());
@@ -17,7 +23,7 @@ fn get_config_file_from_user_config(vault_path: &str) -> Result<String, ()> {
         Some(d) => d,
         None => {
             return Err(());
-        },
+        }
     };
 
     dir.push("PersonalMediaVault");
@@ -33,15 +39,16 @@ fn get_config_file_from_user_config(vault_path: &str) -> Result<String, ()> {
 
     match dir.to_str() {
         Some(d) => Ok(d.to_string()),
-        None => {
-            Err(())
-        },
+        None => Err(()),
     }
 }
 
 pub fn get_launcher_config_file_general(vault_path: &str) -> String {
     let path_buf: PathBuf = [vault_path, "launcher.config.json"].iter().collect();
-    path_buf.to_str().expect("Error decoding PathBuf").to_string()
+    path_buf
+        .to_str()
+        .expect("Error decoding PathBuf")
+        .to_string()
 }
 
 /// Resolves the location of the configuration file for the launcher
@@ -51,7 +58,7 @@ pub fn get_launcher_config_file(vault_path: &str) -> String {
         Ok(p) => p,
         Err(_) => {
             return file_general;
-        },
+        }
     };
 
     if !file_exists(&file_specific) && file_exists(&file_general) {
@@ -84,7 +91,7 @@ pub fn write_launcher_to_config_file(path: &str, config: &LauncherConfig) -> Res
         Ok(s) => s,
         Err(e) => {
             return Err(e.to_string());
-        },
+        }
     };
 
     if let Err(e) = fs::write(path, file_str) {

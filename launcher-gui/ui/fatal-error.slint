@@ -34,6 +34,12 @@ export component FatalErrorView inherits VerticalLayout {
         horizontal-alignment: center;
     }
 
+    if(fatal-error-type == FatalErrorType.frontend-missing): Text {
+        text: @tr("Could not find the frontend in any of the expected locations. Please re-install PersonalMediaVault.");
+        wrap: TextWrap.word-wrap;
+        horizontal-alignment: center;
+    }
+
     if(fatal-error-type == FatalErrorType.ffmpeg-missing): Text {
         text: @tr("Could not find FFmpeg in any of the expected locations. Please install FFmpeg in your system.");
         wrap: TextWrap.word-wrap;

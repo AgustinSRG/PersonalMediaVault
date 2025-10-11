@@ -1,12 +1,13 @@
 // Open vault
 
 use crate::{
+    log_debug,
     models::LauncherConfig,
     utils::{
         file_exists, folder_exists, get_launcher_config_file, load_launcher_config_from_file,
         lock_vault, remove_existing_lock,
     },
-    worker::{LauncherWorkerMessage, WorkerThreadStatus},
+    worker::{tasks::run_vault, LauncherWorkerMessage, WorkerThreadStatus},
     LauncherStatus, MainWindow, OpenErrorType,
 };
 use slint::Weak;
@@ -51,7 +52,7 @@ pub fn create_folder_and_open(
     window_handle: &Weak<MainWindow>,
 ) {
     if let Err(e) = fs::create_dir_all(&status.vault_path) {
-        eprintln!("Error: {e}");
+        log_debug!("Error: {e}");
         let wh = window_handle.clone();
         let _ = slint::invoke_from_event_loop(move || {
             let win = wh.unwrap();
@@ -123,5 +124,6 @@ pub fn open_vault(
         let win = wh.unwrap();
         win.set_launcher_status(LauncherStatus::Open);
     });
-    return;
+
+    run_vault(status, sender, window_handle);
 }

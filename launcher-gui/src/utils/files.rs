@@ -1,9 +1,15 @@
 // File utils
 
-use std::{env, fs, path::{Path, PathBuf}};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 /// Checks if a file exists
-pub fn file_exists<P>(file: P) -> bool where P: AsRef<Path> {
+pub fn file_exists<P>(file: P) -> bool
+where
+    P: AsRef<Path>,
+{
     match fs::metadata(file) {
         Ok(m) => m.is_file(),
         Err(_) => false,
@@ -11,7 +17,10 @@ pub fn file_exists<P>(file: P) -> bool where P: AsRef<Path> {
 }
 
 /// Checks if a folder exists
-pub fn folder_exists<P>(folder: P) -> bool where P: AsRef<Path> {
+pub fn folder_exists<P>(folder: P) -> bool
+where
+    P: AsRef<Path>,
+{
     match fs::metadata(folder) {
         Ok(m) => m.is_dir(),
         Err(_) => false,

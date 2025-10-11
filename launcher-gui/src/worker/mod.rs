@@ -16,8 +16,9 @@ mod status;
 pub use status::*;
 
 use crate::{
+    log_debug,
     models::{FFmpegBadInstallationError, FFmpegConfig},
-    utils::{find_pmv_daemon_binary, load_ffmpeg_config},
+    utils::{find_pmv_daemon_binary, find_pmv_frontend, load_ffmpeg_config},
     FatalErrorType, LauncherStatus, MainWindow,
 };
 
@@ -43,6 +44,20 @@ pub fn run_worker_thread(
             }
         };
 
+        let frontend_path = match find_pmv_frontend() {
+            Ok(b) => b,
+            Err(_) => {
+                let wh = window_handle.clone();
+                let _ = slint::invoke_from_event_loop(move || {
+                    let win = wh.unwrap();
+                    win.set_launcher_status(LauncherStatus::FatalError);
+                    win.set_fatal_error_type(FatalErrorType::FrontendMissing);
+                });
+
+                "frontend".to_string()
+            }
+        };
+
         let ffmpeg_config = match load_ffmpeg_config() {
             Ok(c) => c,
             Err(e) => {
@@ -64,7 +79,7 @@ pub fn run_worker_thread(
             }
         };
 
-        let mut status = WorkerThreadStatus::new(daemon_binary, ffmpeg_config);
+        let mut status = WorkerThreadStatus::new(daemon_binary, frontend_path, ffmpeg_config);
 
         loop {
             match receiver.recv() {
@@ -117,9 +132,51 @@ pub fn run_worker_thread(
                             },
                         );
                     }
+                    LauncherWorkerMessage::StartVault => {
+                        run_vault(&mut status, &sender, &window_handle);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::StopVault => {
+                        stop_vault(&mut status, &window_handle);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::VaultStarted { daemon_id } => {
+                        on_vault_started(&mut status, &window_handle, daemon_id);
+                    }
+                    LauncherWorkerMessage::VaultStartError {
+                        daemon_id,
+                        error_type,
+                        error_details,
+                    } => {
+                        on_vault_start_error(
+                            &mut status,
+                            &window_handle,
+                            daemon_id,
+                            error_type,
+                            error_details,
+                        );
+                    }
+                    LauncherWorkerMessage::VaultStopped { daemon_id } => {
+                        on_vault_stopped(&mut status, &window_handle, daemon_id);
+                    }
+                    LauncherWorkerMessage::OpenBrowser => {
+                        open_vault_in_browser(&status);
+                    }
+                    LauncherWorkerMessage::OpenLogFile => {
+                        open_vault_log_file(&status);
+                    }
                 },
                 Err(err) => {
-                    eprintln!("Error: {}", err);
+                    log_debug!("Error: {}", err);
+
                     return;
                 }
             }

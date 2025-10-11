@@ -3,6 +3,7 @@ use std::sync::mpsc::Sender;
 use slint::Weak;
 
 use crate::{
+    log_debug,
     utils::write_launcher_to_config_file,
     worker::{tasks::open_vault, LauncherWorkerMessage, WorkerThreadStatus},
     LauncherStatus, MainWindow, OpenErrorType,
@@ -27,7 +28,7 @@ pub fn set_initial_config(
     if let Err(e) =
         write_launcher_to_config_file(&status.launcher_config_file, &status.launcher_config)
     {
-        eprintln!("Error: {e}");
+        log_debug!("Error: {e}");
 
         let wh = window_handle.clone();
         let _ = slint::invoke_from_event_loop(move || {

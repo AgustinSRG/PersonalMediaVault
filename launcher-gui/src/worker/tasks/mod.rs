@@ -14,3 +14,6 @@ pub use initial_config::*;
 
 mod close_vault;
 pub use close_vault::*;
+
+mod run_vault;
+pub use run_vault::*;

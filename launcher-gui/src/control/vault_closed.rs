@@ -4,7 +4,9 @@ use std::sync::mpsc::Sender;
 
 use slint::ComponentHandle;
 
-use crate::{utils::get_default_vault_path, worker::LauncherWorkerMessage, LauncherStatus, MainWindow};
+use crate::{
+    utils::get_default_vault_path, worker::LauncherWorkerMessage, LauncherStatus, MainWindow,
+};
 
 pub fn setup_callbacks_vault_closed(ui: &MainWindow, worker_sender: Sender<LauncherWorkerMessage>) {
     ui.on_open_default_vault({
@@ -15,9 +17,7 @@ pub fn setup_callbacks_vault_closed(ui: &MainWindow, worker_sender: Sender<Launc
             let vault_path = get_default_vault_path();
             ui.set_launcher_status(LauncherStatus::Opening);
             ui.set_vault_path(vault_path.clone().into());
-            let _ = worker_sender_c.send(LauncherWorkerMessage::OpenVault {
-                path: vault_path,
-            });
+            let _ = worker_sender_c.send(LauncherWorkerMessage::OpenVault { path: vault_path });
         }
     });
 

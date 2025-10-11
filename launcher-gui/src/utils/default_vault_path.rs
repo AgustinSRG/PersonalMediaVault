@@ -21,13 +21,13 @@ pub fn get_default_vault_path() -> String {
                     Some(s) => s.to_string(),
                     None => {
                         panic!("Could not resolve Path");
-                    },
-                }
+                    }
+                },
                 Err(_) => {
                     panic!("Could not resolve Path");
-                },
+                }
             }
-        },
+        }
         None => {
             let path: PathBuf = ["PersonalMediaVault", "vault"].iter().collect();
             let abs = absolute(path);
@@ -36,12 +36,12 @@ pub fn get_default_vault_path() -> String {
                     Some(s) => s.to_string(),
                     None => {
                         panic!("Could not resolve Path");
-                    },
-                }
+                    }
+                },
                 Err(_) => {
                     panic!("Could not resolve Path");
-                },
+                }
             }
-        },
+        }
     }
 }

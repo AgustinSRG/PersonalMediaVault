@@ -19,7 +19,9 @@ pub fn select_vault_folder(sender: Sender<LauncherWorkerMessage>, window_handle:
                         win.set_launcher_status(LauncherStatus::Opening);
                         win.set_vault_path(path_cloned.into());
                     });
-                    let _ = sender.send(LauncherWorkerMessage::OpenVault { path: p.to_string() });
+                    let _ = sender.send(LauncherWorkerMessage::OpenVault {
+                        path: p.to_string(),
+                    });
                 }
                 None => {
                     let _ = slint::invoke_from_event_loop(move || {

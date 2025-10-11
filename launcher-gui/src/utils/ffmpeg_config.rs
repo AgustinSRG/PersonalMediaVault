@@ -1,10 +1,22 @@
 // FFmpeg config utils
 
-use std::{collections::{HashMap, HashSet}, env, fs::{self, create_dir_all, read_to_string}, path::Path, process::Command};
+use std::{
+    collections::{HashMap, HashSet},
+    env,
+    fs::{self, create_dir_all, read_to_string},
+    path::Path,
+    process::Command,
+};
 
 use dirs::config_dir;
 
-use crate::{models::{FFmpegBadInstallationError, FFmpegConfig, VIDEO_CODEC_ALTERNATIVE, VIDEO_CODEC_DEFAULT}, utils::{file_exists, get_binary_name, get_dirname}};
+use crate::{
+    log_debug,
+    models::{
+        FFmpegBadInstallationError, FFmpegConfig, VIDEO_CODEC_ALTERNATIVE, VIDEO_CODEC_DEFAULT,
+    },
+    utils::{file_exists, get_binary_name, get_dirname},
+};
 
 pub fn load_ffmpeg_config_from_file() -> Result<FFmpegConfig, ()> {
     let mut dir = match config_dir() {
@@ -40,7 +52,7 @@ pub fn load_ffmpeg_config_from_file() -> Result<FFmpegConfig, ()> {
 }
 
 pub fn write_ffmpeg_to_config_file(config: &FFmpegConfig) -> Result<(), String> {
-     let mut dir = match config_dir() {
+    let mut dir = match config_dir() {
         Some(d) => d,
         None => {
             return Err("Could not resolve the user configuration folder".to_string());
@@ -59,7 +71,7 @@ pub fn write_ffmpeg_to_config_file(config: &FFmpegConfig) -> Result<(), String> 
         Ok(s) => s,
         Err(e) => {
             return Err(e.to_string());
-        },
+        }
     };
 
     if let Err(e) = fs::write(dir, file_str) {
@@ -125,7 +137,7 @@ pub fn check_ffmpeg_codec(config: &FFmpegConfig) -> bool {
 }
 
 pub fn load_ffmpeg_config() -> Result<FFmpegConfig, FFmpegBadInstallationError> {
-    let mut result = FFmpegConfig{
+    let mut result = FFmpegConfig {
         ffmpeg_path: "".to_string(),
         ffprobe_path: "".to_string(),
         video_codec: "".to_string(),
@@ -181,14 +193,12 @@ pub fn load_ffmpeg_config() -> Result<FFmpegConfig, FFmpegBadInstallationError> 
         result.video_codec = match detect_video_codec(&result) {
             Ok(c) => c.to_string(),
             Err(e) => {
-                eprintln!("[WARNING] Could not detect a video encoder in your FFMpeg installation. The will lead to errors when trying to encode videos. DEtails: {e}");
+                log_debug!("[WARNING] Could not detect a video encoder in your FFMpeg installation. The will lead to errors when trying to encode videos. DEtails: {e}");
 
                 VIDEO_CODEC_DEFAULT.to_string()
-            },
+            }
         }
     }
 
     Ok(result)
 }
-
-
