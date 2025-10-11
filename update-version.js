@@ -75,6 +75,10 @@ function main() {
             .replace(/\"product_version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `"product_version": "${VERSION}.0"`);
     });
 
+    updateFile(Path.resolve(__dirname, "launcher-gui", "Cargo.toml"), contents => {
+        return contents
+            .replace(/version = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `version = "${VERSION}"`);
+    });
 
     updateFile(Path.resolve(__dirname, "packages", "windows-msi", "make-wix.bat"), contents => {
         return contents
