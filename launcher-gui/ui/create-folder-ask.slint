@@ -10,7 +10,10 @@ export component CreateFolderAskView inherits VerticalLayout {
     /// Confirm callback
     callback confirm();
 
-    spacing: 12px;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    spacing: 1rem;
     alignment: LayoutAlignment.center;
 
     Text {
@@ -36,8 +39,8 @@ export component CreateFolderAskView inherits VerticalLayout {
 
     HorizontalLayout {
         alignment: LayoutAlignment.center;
-        padding-top: 8px;
-        spacing: 8px;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
         Button {
             text: @tr("Back");
             icon: @image-url("../assets/icons/arrow-back.svg");

@@ -1,4 +1,4 @@
-import { Button, Switch, TextEdit, HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { Button, Switch, TextEdit } from "std-widgets.slint";
 import { StringInput } from "string-input.slint";
 
 export component CreateVaultView inherits VerticalLayout {
@@ -20,13 +20,19 @@ export component CreateVaultView inherits VerticalLayout {
     in-out property <string> password-repeat: "";
     in-out property <bool> password-repeat-invalid: false;
 
+    private property <bool> password-visibility: false;
+    private property <bool> password-repeat-visibility: false;
+
     /// Back callback
     callback go-back();
 
     /// Confirm callback
     callback confirm();
 
-    spacing: 12px;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    spacing: 1rem;
     alignment: LayoutAlignment.center;
 
     Text {
@@ -49,7 +55,7 @@ export component CreateVaultView inherits VerticalLayout {
         horizontal-alignment: center;
     }
 
-     Text {
+    Text {
         text: @tr("Input the initial credentials in order to create a new vault");
         wrap: TextWrap.word-wrap;
         font-size: 12pt;
@@ -58,14 +64,14 @@ export component CreateVaultView inherits VerticalLayout {
 
     HorizontalLayout {
         alignment: LayoutAlignment.center;
-        padding-top: 8px;
+        padding-top: 0.75rem;
 
         HorizontalLayout {
             alignment: LayoutAlignment.space-around;
 
             GridLayout {
-                spacing-horizontal: 8px;
-                spacing-vertical: 8px;
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.75rem;
 
                 Row {
                     VerticalLayout {
@@ -77,6 +83,7 @@ export component CreateVaultView inherits VerticalLayout {
                     }
 
                     VerticalLayout {
+                        colspan: 2;
                         alignment: LayoutAlignment.center;
 
                         StringInput {
@@ -88,7 +95,7 @@ export component CreateVaultView inherits VerticalLayout {
 
                 Row {
                     Text {
-                        colspan: 2;
+                        colspan: 3;
                         text: username-invalid ? @tr("Invalid username") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
@@ -109,14 +116,26 @@ export component CreateVaultView inherits VerticalLayout {
                         StringInput {
                             value <=> root.password;
                             read-only: root.busy;
-                            input-type: InputType.password;
+                            input-type: password-visibility ? InputType.text : InputType.password;
+                        }
+                    }
+
+                    VerticalLayout {
+                        Button {
+                            text: "";
+                             icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.password-visibility = !root.password-visibility;
+                            }
                         }
                     }
                 }
 
                 Row {
                     Text {
-                        colspan: 2;
+                        colspan: 3;
                         text: password-invalid ? @tr("Invalid password") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
@@ -137,14 +156,26 @@ export component CreateVaultView inherits VerticalLayout {
                         StringInput {
                             value <=> root.password-repeat;
                             read-only: root.busy;
-                            input-type: InputType.password;
+                            input-type: password-repeat-visibility ? InputType.text : InputType.password;
+                        }
+                    }
+
+                    VerticalLayout {
+                        Button {
+                            text: "";
+                            icon: password-repeat-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.password-repeat-visibility = !root.password-repeat-visibility;
+                            }
                         }
                     }
                 }
 
                 Row {
                     Text {
-                        colspan: 2;
+                        colspan: 3;
                         text: password-repeat-invalid ? @tr("The passwords do not match") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
@@ -156,8 +187,9 @@ export component CreateVaultView inherits VerticalLayout {
 
     HorizontalLayout {
         alignment: LayoutAlignment.center;
-        padding-top: 8px;
-        spacing: 8px;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
         Button {
             text: @tr("Back");
             icon: @image-url("../assets/icons/arrow-back.svg");

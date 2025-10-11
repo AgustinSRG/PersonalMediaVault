@@ -1,12 +1,10 @@
-import { Button, Switch, TextEdit  } from "std-widgets.slint";
-import { StringInput } from "string-input.slint";
 
-export component InitialConfigView inherits VerticalLayout {
+import { StringInput } from "string-input.slint";
+import { Switch, Button } from "std-widgets.slint";
+
+export component VaultConfigHostPortView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
     in property <bool> busy: false;
-
-    /// Path of the vault
-    in property <string> vault-path: "";
 
     /// Hostname to open browser
     in-out property <string> hostname: "localhost";
@@ -19,37 +17,14 @@ export component InitialConfigView inherits VerticalLayout {
     /// Local listening
     in-out property <bool> listen-local: true;
 
-    /// Back callback
-    callback go-back();
-
-    /// Confirm callback
-    callback confirm();
+    /// Save callback
+    callback save();
 
     spacing: 1rem;
-    padding-top: 2rem;
+    padding-top: 1rem;
     padding-left: 1rem;
     padding-right: 1rem;
-    alignment: LayoutAlignment.center;
-
-    Text {
-        text: @tr("Launcher configuration");
-        font-weight: 800;
-        font-size: 16pt;
-        horizontal-alignment: center;
-    }
-
-    Text {
-        text: @tr("Configure the daemon to listen on a specific port");
-        wrap: TextWrap.word-wrap;
-        font-size: 12pt;
-        horizontal-alignment: center;
-    }
-
-    Text {
-        text: @tr("Path") + ": " + vault-path;
-        wrap: TextWrap.char-wrap;
-        horizontal-alignment: center;
-    }
+    alignment: LayoutAlignment.start;
 
     HorizontalLayout {
         alignment: LayoutAlignment.center;
@@ -134,24 +109,15 @@ export component InitialConfigView inherits VerticalLayout {
         alignment: LayoutAlignment.center;
         padding-top: 0.75rem;
         spacing: 0.75rem;
-        Button {
-            text: @tr("Back");
-            icon: @image-url("../assets/icons/arrow-back.svg");
-            colorize-icon: true;
-            enabled: !busy;
-            clicked => {
-                root.go-back();
-            }
-        }
 
         Button {
-            text: @tr("Continue");
+            text: @tr("Apply changes");
             icon: @image-url("../assets/icons/check.svg");
             primary: true;
             colorize-icon: true;
             enabled: !busy;
             clicked => {
-                root.confirm();
+                root.save();
             }
         }
     }

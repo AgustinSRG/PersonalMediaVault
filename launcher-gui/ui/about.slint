@@ -1,5 +1,5 @@
-import { HorizontalBox, Button, VerticalBox, Palette } from "std-widgets.slint";
-export component AboutComponent inherits HorizontalBox {
+import { Button, Palette } from "std-widgets.slint";
+export component AboutComponent inherits HorizontalLayout {
     /// PersonalMediaVault version
     in property <string> version: "1.0.0";
 
@@ -9,20 +9,23 @@ export component AboutComponent inherits HorizontalBox {
     /// Visit GitHub page
     callback visit-git();
 
-    height: 112px;
-
     alignment: LayoutAlignment.center;
-    padding-bottom: 0;
-    VerticalBox {
+    spacing: 2rem;
+    padding: 1rem;
+
+    VerticalLayout {
         alignment: LayoutAlignment.center;
         Image {
             source: @image-url("../assets/favicon.png");
-            width: 56px;
-            height: 56px;
+            width: 5rem;
+            height: 5rem;
         }
     }
 
-    VerticalBox {
+    VerticalLayout {
+        alignment: LayoutAlignment.center;
+        spacing: 1rem;
+
         Text {
             text: @tr("PersonalMediaVault");
             font-size: 14pt;
@@ -34,9 +37,9 @@ export component AboutComponent inherits HorizontalBox {
             font-weight: 600;
         }
 
-        HorizontalBox {
+        HorizontalLayout {
             alignment: LayoutAlignment.start;
-            padding: 0;
+            spacing: 1rem;
 
             Button {
                 text: @tr("Visit Website");

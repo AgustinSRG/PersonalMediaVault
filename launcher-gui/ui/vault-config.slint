@@ -1,0 +1,129 @@
+
+
+import { TabWidget } from "std-widgets.slint";
+import { VaultConfigHostPortView } from "vault-config-host-port.slint";
+import { VaultConfigOtherView } from "vault-config-other.slint";
+import { VaultConfigTlsView } from "vault-config-tls.slint";
+
+export component VaultConfigView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Callback to reset the config
+    callback reset-config();
+
+    /// Hostname to open browser
+    in-out property <string> hostname: "localhost";
+    in-out property <bool> hostname-invalid: false;
+
+    /// Listening port
+    in-out property <string> port: "8000";
+    in-out property <bool> port-invalid: false;
+
+    /// Local listening
+    in-out property <bool> listen-local: true;
+
+    /// Callback to update the host and port config
+    callback update-port-host();
+
+    /// TLS certificate
+    in-out property <string> tls-cert: "";
+    in-out property <bool> tls-cert-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-cert();
+
+    /// TLS key
+    in-out property <string> tls-key: "";
+    in-out property <bool> tls-key-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-key();
+
+    /// TLS enabled
+    in-out property <bool> tls-enabled: true;
+
+    /// Callback to update the TLS config
+    callback update-tls();
+
+    /// Cache size
+    in-out property <string> cache-size: "1024";
+    in-out property <bool> cache-size-invalid: false;
+
+    /// Request logging
+    in-out property <bool> log-requests: false;
+
+    /// Debug logging
+    in-out property <bool> log-debug: false;
+
+    /// Callback to update the rest of config values
+    callback update-other();
+
+    padding-top: 1rem;
+    spacing: 1rem;
+    alignment: LayoutAlignment.start;
+
+    Text {
+        text: @tr("Vault configuration");
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+        font-size: 12pt;
+        font-weight: 800;
+    }
+
+    TabWidget {
+        changed current-index => {
+            root.reset-config();
+        }
+
+        Tab {
+            title: @tr("Host & Port");
+            VaultConfigHostPortView {
+                busy: busy;
+                hostname <=> root.hostname;
+                hostname-invalid <=> root.hostname-invalid;
+                port <=> root.port;
+                port-invalid <=> root.port-invalid;
+                listen-local <=> root.listen-local;
+                save => {
+                    root.update-port-host();
+                }
+            }
+        }
+
+        Tab {
+            title: @tr("TLS");
+            VaultConfigTlsView {
+                busy: busy;
+                tls-enabled <=> tls-enabled;
+                tls-cert <=> tls-cert;
+                tls-cert-invalid <=> tls-cert-invalid;
+                tls-key <=> tls-key;
+                tls-key-invalid <=> tls-cert-invalid;
+                select-tls-cert => {
+                    root.select-tls-cert();
+                }
+                select-tls-key => {
+                    root.select-tls-key();
+                }
+                save => {
+                    root.update-tls();
+                }
+            }
+        }
+
+        Tab {
+            title: @tr("Other");
+            VaultConfigOtherView {
+                busy: busy;
+                cache-size <=> root.cache-size;
+                cache-size-invalid <=> root.cache-size-invalid;
+                log-requests <=> root.log-requests;
+                log-debug <=> root.log-debug;
+                save => {
+                    root.update-other();
+                }
+            }
+        }
+    }
+}

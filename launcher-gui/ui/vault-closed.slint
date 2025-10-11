@@ -1,6 +1,6 @@
 
 
-import { Button, VerticalBox } from "std-widgets.slint";
+import { Button } from "std-widgets.slint";
 
 export component VaultClosedView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
@@ -12,7 +12,10 @@ export component VaultClosedView inherits VerticalLayout {
     /// Open the default vault, located in the user's home folder
     callback open-default-vault();
 
-    spacing: 12px;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    spacing: 1rem;
     alignment: LayoutAlignment.center;
 
     Text {
@@ -30,9 +33,9 @@ export component VaultClosedView inherits VerticalLayout {
     }
 
     HorizontalLayout {
-        padding-top: 16px;
+        padding-top: 2rem;
         alignment: LayoutAlignment.center;
-        spacing: 8px;
+        spacing: 0.75rem;
 
         Button {
             text: @tr("Open Vault Folder");

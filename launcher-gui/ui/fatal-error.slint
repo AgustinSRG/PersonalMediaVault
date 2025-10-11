@@ -8,7 +8,10 @@ export component FatalErrorView inherits VerticalLayout {
     /// Close callback
     callback close-launcher();
 
-    spacing: 12px;
+    spacing: 1rem;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
     alignment: LayoutAlignment.center;
 
     Text {
@@ -45,7 +48,7 @@ export component FatalErrorView inherits VerticalLayout {
 
     HorizontalLayout {
         alignment: LayoutAlignment.center;
-        padding-top: 8px;
+        padding-top: 0.75rem;
         Button {
             text: @tr("Close Launcher");
             icon: @image-url("../assets/icons/close.svg");
