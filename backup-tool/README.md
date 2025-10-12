@@ -10,6 +10,12 @@ In order to install dependencies, type:
 go get github.com/AgustinSRG/PersonalMediaVault/backup-tool
 ```
 
+Also, install `go-winres` to embed the icon on Windows:
+
+```
+go install github.com/tc-hib/go-winres@latest
+```
+
 To compile the code type:
 
 ```

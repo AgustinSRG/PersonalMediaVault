@@ -62,6 +62,14 @@ function main() {
             .replace(/version\: [0-9]+\.[0-9]+\.[0-9]+/, `version: ${VERSION}`);
     });
 
+    updateFile(Path.resolve(__dirname, "backup-tool", "winres", "winres.json"), contents => {
+        return contents
+            .replace(/\"version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\"/, `"version": "${VERSION}"`)
+            .replace(/\"ProductVersion\":\s\"[0-9]+\.[0-9]+\.[0-9]+\"/, `"ProductVersion": "${VERSION}"`)
+            .replace(/\"file_version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `"file_version": "${VERSION}.0"`)
+            .replace(/\"product_version\":\s\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/, `"product_version": "${VERSION}.0"`);
+    });
+
     updateFile(Path.resolve(__dirname, "launcher", "main.go"), contents => {
         return contents
             .replace(/VERSION = \"[0-9]+\.[0-9]+\.[0-9]+\"/, `VERSION = "${VERSION}"`);

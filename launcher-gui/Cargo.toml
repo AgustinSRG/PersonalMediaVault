@@ -21,3 +21,4 @@ slint = { version = "1.13.1", features = ["gettext"] }
 
 [build-dependencies]
 slint-build = "1.12.1"
+winres = "0.1.12"
