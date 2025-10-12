@@ -1,6 +1,6 @@
 // Util to find the PMV binaries
 
-use std::path::{absolute, Path};
+use std::path::Path;
 
 use crate::utils::{file_exists, folder_exists, get_binary_name, get_dirname};
 

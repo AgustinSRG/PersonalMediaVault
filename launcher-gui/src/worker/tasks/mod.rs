@@ -17,3 +17,12 @@ pub use close_vault::*;
 
 mod run_vault;
 pub use run_vault::*;
+
+mod config_vault;
+pub use config_vault::*;
+
+mod select_ffmpeg_paths;
+pub use select_ffmpeg_paths::*;
+
+mod select_tls_paths;
+pub use select_tls_paths::*;

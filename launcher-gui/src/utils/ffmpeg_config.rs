@@ -1,7 +1,7 @@
 // FFmpeg config utils
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     env,
     fs::{self, create_dir_all, read_to_string},
     path::Path,

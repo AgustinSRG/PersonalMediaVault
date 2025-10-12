@@ -173,6 +173,94 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::OpenLogFile => {
                         open_vault_log_file(&status);
                     }
+                    LauncherWorkerMessage::ResetConfig => {
+                        reset_ui_config(&mut status, &window_handle);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::UpdateHostPortConfig { host, port, local } => {
+                        update_config_host_port(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            HostPortConfigDetails { host, port, local },
+                        );
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::UpdateTlsConfig { enabled, cert, key } => {
+                        update_config_tls(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            TlsConfigDetails { enabled, cert, key },
+                        );
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::UpdateFFmpegConfig {
+                        ffmpeg_path,
+                        ffprobe_path,
+                        video_codec,
+                    } => {
+                        update_config_ffmpeg(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            FFmpegConfigDetails {
+                                ffmpeg_path,
+                                ffprobe_path,
+                                video_codec,
+                            },
+                        );
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::UpdateOtherConfig {
+                        cache_size,
+                        log_requests,
+                        log_debug,
+                    } => {
+                        update_config_other(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            OtherConfigDetails {
+                                cache_size,
+                                log_requests,
+                                log_debug,
+                            },
+                        );
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::SelectFFmpegBinary => {
+                        select_ffmpeg_binary(window_handle.clone());
+                    }
+                    LauncherWorkerMessage::SelectFFprobeBinary => {
+                        select_ffprobe_binary(window_handle.clone());
+                    }
+                    LauncherWorkerMessage::SelectTlsCert => {
+                        select_tls_cert(window_handle.clone());
+                    }
+                    LauncherWorkerMessage::SelectTlsKey => {
+                        select_tls_key(window_handle.clone());
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);

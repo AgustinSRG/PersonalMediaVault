@@ -7,7 +7,7 @@ use crate::{
         file_exists, folder_exists, get_launcher_config_file, load_launcher_config_from_file,
         lock_vault, remove_existing_lock,
     },
-    worker::{tasks::run_vault, LauncherWorkerMessage, WorkerThreadStatus},
+    worker::{reset_ui_config, tasks::run_vault, LauncherWorkerMessage, WorkerThreadStatus},
     LauncherStatus, MainWindow, OpenErrorType,
 };
 use slint::Weak;
@@ -125,5 +125,6 @@ pub fn open_vault(
         win.set_launcher_status(LauncherStatus::Open);
     });
 
+    reset_ui_config(status, window_handle);
     run_vault(status, sender, window_handle);
 }

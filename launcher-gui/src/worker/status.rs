@@ -1,17 +1,15 @@
 // Worker thread status
 
-use std::{
-    process::Child,
-    sync::{
-        mpsc::{Receiver, Sender},
-        Arc,
-    },
-};
+use std::sync::{mpsc::Receiver, Arc};
 
 use duct::Handle;
 use pidlock::Pidlock;
 
-use crate::models::{FFmpegConfig, LauncherConfig};
+use crate::{
+    log_debug,
+    models::{FFmpegConfig, LauncherConfig},
+    utils::{write_ffmpeg_to_config_file, write_launcher_to_config_file},
+};
 
 pub struct WorkerThreadStatus {
     pub daemon_binary: String,
@@ -54,6 +52,20 @@ impl WorkerThreadStatus {
             daemon_process_wait_receiver: None,
 
             log_file: None,
+        }
+    }
+
+    pub fn save_launcher_config(&self) {
+        if let Err(e) =
+            write_launcher_to_config_file(&self.launcher_config_file, &self.launcher_config)
+        {
+            log_debug!("Error: {e}");
+        }
+    }
+
+    pub fn save_ffmpeg_config(&self) {
+        if let Err(e) = write_ffmpeg_to_config_file(&self.ffmpeg_config) {
+            log_debug!("Error: {e}");
         }
     }
 }

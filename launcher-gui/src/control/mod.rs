@@ -12,6 +12,9 @@ use opening::*;
 mod vault_status;
 use vault_status::*;
 
+mod vault_config;
+use vault_config::*;
+
 use crate::{worker::LauncherWorkerMessage, MainWindow};
 use std::sync::mpsc::Sender;
 
@@ -19,7 +22,8 @@ pub fn setup_callbacks(ui: &MainWindow, worker_sender: Sender<LauncherWorkerMess
     setup_callbacks_about(ui);
     setup_callbacks_vault_closed(ui, worker_sender.clone());
     setup_callbacks_vault_opening(ui, worker_sender.clone());
-    setup_callbacks_vault_status(ui, worker_sender);
+    setup_callbacks_vault_status(ui, worker_sender.clone());
+    setup_callbacks_vault_config(ui, worker_sender);
 
     ui.on_close_launcher({
         move || {

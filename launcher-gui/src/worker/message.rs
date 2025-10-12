@@ -33,6 +33,31 @@ pub enum LauncherWorkerMessage {
     },
     OpenBrowser,
     OpenLogFile,
+    ResetConfig,
+    UpdateHostPortConfig {
+        host: String,
+        port: u16,
+        local: bool,
+    },
+    UpdateTlsConfig {
+        enabled: bool,
+        cert: String,
+        key: String,
+    },
+    UpdateFFmpegConfig {
+        ffmpeg_path: String,
+        ffprobe_path: String,
+        video_codec: String,
+    },
+    UpdateOtherConfig {
+        cache_size: i32,
+        log_requests: bool,
+        log_debug: bool,
+    },
+    SelectFFmpegBinary,
+    SelectFFprobeBinary,
+    SelectTlsCert,
+    SelectTlsKey,
     CloseVault,
     Finish,
 }

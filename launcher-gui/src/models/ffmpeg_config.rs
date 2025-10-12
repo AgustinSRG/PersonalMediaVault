@@ -7,7 +7,7 @@ pub const VIDEO_CODEC_ALTERNATIVE: &str = "libvpx-vp9";
 
 /// Represents the configuration for the launcher
 /// for a given vault path
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FFmpegConfig {
     #[serde(default, rename = "ffmpeg_path")]
     pub ffmpeg_path: String,

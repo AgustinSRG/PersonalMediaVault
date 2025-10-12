@@ -13,6 +13,10 @@ impl Default for CacheSize {
 }
 
 impl CacheSize {
+    pub fn new(i: i32) -> Self {
+        CacheSize(i)
+    }
+    
     pub fn as_i32(&self) -> i32 {
         self.0
     }
@@ -20,7 +24,7 @@ impl CacheSize {
 
 /// Represents the configuration for the launcher
 /// for a given vault path
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct LauncherConfig {
     #[serde(default)]
     pub path: String,
