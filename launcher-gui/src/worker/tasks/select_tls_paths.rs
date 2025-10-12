@@ -18,6 +18,7 @@ pub fn select_tls_cert(window_handle: Weak<MainWindow>) {
                         win.set_busy(false);
                         win.set_tls_cert(path_cloned.into());
                         win.set_tls_cert_invalid(false);
+                        win.set_dirty_tls(true);
                     });
                 }
                 None => {
@@ -49,6 +50,7 @@ pub fn select_tls_key(window_handle: Weak<MainWindow>) {
                         win.set_busy(false);
                         win.set_tls_key(path_cloned.into());
                         win.set_tls_key_invalid(false);
+                        win.set_dirty_tls(true);
                     });
                 }
                 None => {

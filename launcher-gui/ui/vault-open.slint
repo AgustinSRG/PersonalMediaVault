@@ -72,6 +72,10 @@ export component VaultOpenView inherits VerticalLayout {
     /// TLS enabled
     in-out property <bool> tls-enabled: true;
 
+    // Dirty and saved for TLS
+    in-out property <bool> dirty-tls: false;
+    in-out property <bool> saved-tls: false;
+
     /// Callback to update the TLS config
     callback update-tls();
 
@@ -161,6 +165,8 @@ export component VaultOpenView inherits VerticalLayout {
                 tls-cert-invalid <=> tls-cert-invalid;
                 tls-key <=> tls-key;
                 tls-key-invalid <=> tls-cert-invalid;
+                dirty-tls <=> root.dirty-tls;
+                saved-tls <=> root.saved-tls;
 
                 ffmpeg-path <=> ffmpeg-path;
                 ffmpeg-path-invalid <=> ffmpeg-path-invalid;

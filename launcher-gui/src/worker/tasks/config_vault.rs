@@ -35,6 +35,9 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
             win.set_tls_key(launcher_config.ssl_key.into());
             win.set_tls_key_invalid(false);
 
+            win.set_saved_tls(false);
+            win.set_dirty_tls(false);
+
             win.set_ffmpeg_path(ffmpeg_config.ffmpeg_path.into());
             win.set_ffmpeg_path_invalid(false);
 
@@ -105,6 +108,16 @@ pub fn update_config_tls(
     }
 
     status.save_launcher_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_tls(true);
+            win.set_dirty_tls(false);
+        });
+    }
 
     run_vault(status, sender, window_handle);
 }

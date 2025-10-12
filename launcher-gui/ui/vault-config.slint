@@ -48,6 +48,10 @@ export component VaultConfigView inherits VerticalLayout {
     /// TLS enabled
     in-out property <bool> tls-enabled: true;
 
+    // Dirty and saved for TLS
+    in-out property <bool> dirty-tls: false;
+    in-out property <bool> saved-tls: false;
+
     /// Callback to update the TLS config
     callback update-tls();
 
@@ -127,6 +131,8 @@ export component VaultConfigView inherits VerticalLayout {
                 tls-cert-invalid <=> tls-cert-invalid;
                 tls-key <=> tls-key;
                 tls-key-invalid <=> tls-cert-invalid;
+                dirty <=> dirty-tls;
+                saved <=> saved-tls;
                 select-tls-cert => {
                     root.select-tls-cert();
                 }

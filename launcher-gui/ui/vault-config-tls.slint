@@ -23,6 +23,10 @@ export component VaultConfigTlsView inherits VerticalLayout {
     /// TLS enabled
     in-out property <bool> tls-enabled: true;
 
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
     /// Save callback
     callback save();
 
@@ -49,6 +53,10 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         text: @tr("Enable TLS / HTTPS for the vault");
                         checked <=> root.tls-enabled;
                         enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
                     }
                 }
 
@@ -67,6 +75,10 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         StringInput {
                             value <=> root.tls-cert;
                             read-only: root.busy || !tls-enabled;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
 
@@ -109,6 +121,10 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         StringInput {
                             value <=> root.tls-key;
                             read-only: root.busy || !tls-enabled;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
 
@@ -135,7 +151,6 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         color: red;
                     }
                 }
-
             }
         }
     }
@@ -150,10 +165,19 @@ export component VaultConfigTlsView inherits VerticalLayout {
             icon: @image-url("../assets/icons/check.svg");
             primary: true;
             colorize-icon: true;
-            enabled: !busy;
+            enabled: !busy && dirty;
             clicked => {
                 root.save();
             }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
         }
     }
 }
