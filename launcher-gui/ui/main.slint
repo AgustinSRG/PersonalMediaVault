@@ -146,6 +146,26 @@ export component MainWindow inherits Window {
     /// Callback to update the TLS config
     callback update-tls();
 
+    /// FFmpeg binary
+    in-out property <string> ffmpeg-path: "";
+    in-out property <bool> ffmpeg-path-invalid: false;
+
+    /// Callback to select the ffmpeg binary
+    callback select-ffmpeg-path();
+
+    /// FFprobe binary
+    in-out property <string> ffprobe-path: "";
+    in-out property <bool> ffprobe-path-invalid: false;
+
+    /// Callback to select the ffprobe binary
+    callback select-ffprobe-path();
+
+    in-out property <string> video-codec: "";
+    in-out property <bool> video-codec-invalid: false;
+
+    /// Callback to update the FFMpeg config
+    callback update-ffmpeg();
+
     /// Cache size
     in-out property <string> cache-size: "1024";
     in-out property <bool> cache-size-invalid: false;
@@ -280,11 +300,20 @@ export component MainWindow inherits Window {
                 port <=> root.port;
                 port-invalid <=> root.port-invalid;
                 listen-local <=> root.listen-local;
+
                 tls-enabled <=> tls-enabled;
                 tls-cert <=> tls-cert;
                 tls-cert-invalid <=> tls-cert-invalid;
                 tls-key <=> tls-key;
                 tls-key-invalid <=> tls-cert-invalid;
+
+                ffmpeg-path <=> ffmpeg-path;
+                ffmpeg-path-invalid <=> ffmpeg-path-invalid;
+                ffprobe-path <=> ffprobe-path;
+                ffprobe-path-invalid <=> ffprobe-path-invalid;
+                video-codec <=> video-codec;
+                video-codec-invalid <=> video-codec-invalid;
+
                 cache-size <=> root.cache-size;
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
@@ -309,18 +338,31 @@ export component MainWindow inherits Window {
                 reset-config => {
                     root.reset-config();
                 }
+
+                update-port-host => {
+                    root.update-port-host();
+                }
+
                 select-tls-cert => {
                     root.select-tls-cert();
                 }
                 select-tls-key => {
                     root.select-tls-key();
                 }
-                update-port-host => {
-                    root.update-port-host();
-                }
                 update-tls => {
                     root.update-tls();
                 }
+
+                select-ffmpeg-path => {
+                    root.select-ffmpeg-path();
+                }
+                select-ffprobe-path => {
+                    root.select-ffprobe-path();
+                }
+                update-ffmpeg => {
+                    root.update-ffmpeg();
+                }
+
                 update-other => {
                     root.update-other();
                 }

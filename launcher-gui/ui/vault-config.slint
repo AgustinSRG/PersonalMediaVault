@@ -4,6 +4,7 @@ import { TabWidget } from "std-widgets.slint";
 import { VaultConfigHostPortView } from "vault-config-host-port.slint";
 import { VaultConfigOtherView } from "vault-config-other.slint";
 import { VaultConfigTlsView } from "vault-config-tls.slint";
+import { VaultConfigFFmpegView } from "vault-config-ffmpeg.slint";
 
 export component VaultConfigView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
@@ -45,6 +46,26 @@ export component VaultConfigView inherits VerticalLayout {
 
     /// Callback to update the TLS config
     callback update-tls();
+
+     /// FFmpeg binary
+    in-out property <string> ffmpeg-path: "";
+    in-out property <bool> ffmpeg-path-invalid: false;
+
+    /// Callback to select the ffmpeg binary
+    callback select-ffmpeg-path();
+
+    /// FFprobe binary
+    in-out property <string> ffprobe-path: "";
+    in-out property <bool> ffprobe-path-invalid: false;
+
+    /// Callback to select the ffprobe binary
+    callback select-ffprobe-path();
+
+    in-out property <string> video-codec: "";
+    in-out property <bool> video-codec-invalid: false;
+
+    /// Callback to update the FFMpeg config
+    callback update-ffmpeg();
 
     /// Cache size
     in-out property <string> cache-size: "1024";
@@ -108,6 +129,28 @@ export component VaultConfigView inherits VerticalLayout {
                 }
                 save => {
                     root.update-tls();
+                }
+            }
+        }
+
+        Tab {
+            title: @tr("FFmpeg");
+            VaultConfigFFmpegView {
+                busy: busy;
+                ffmpeg-path <=> ffmpeg-path;
+                ffmpeg-path-invalid <=> ffmpeg-path-invalid;
+                ffprobe-path <=> ffprobe-path;
+                ffprobe-path-invalid <=> ffprobe-path-invalid;
+                video-codec <=> video-codec;
+                video-codec-invalid <=> video-codec-invalid;
+                select-ffmpeg-path => {
+                    root.select-ffmpeg-path();
+                }
+                select-ffprobe-path => {
+                    root.select-ffprobe-path();
+                }
+                save => {
+                    root.update-ffmpeg();
                 }
             }
         }

@@ -71,6 +71,26 @@ export component VaultOpenView inherits VerticalLayout {
     /// Callback to update the TLS config
     callback update-tls();
 
+    /// FFmpeg binary
+    in-out property <string> ffmpeg-path: "";
+    in-out property <bool> ffmpeg-path-invalid: false;
+
+    /// Callback to select the ffmpeg binary
+    callback select-ffmpeg-path();
+
+    /// FFprobe binary
+    in-out property <string> ffprobe-path: "";
+    in-out property <bool> ffprobe-path-invalid: false;
+
+    /// Callback to select the ffprobe binary
+    callback select-ffprobe-path();
+
+    in-out property <string> video-codec: "";
+    in-out property <bool> video-codec-invalid: false;
+
+    /// Callback to update the FFMpeg config
+    callback update-ffmpeg();
+
     /// Cache size
     in-out property <string> cache-size: "1024";
     in-out property <bool> cache-size-invalid: false;
@@ -96,7 +116,7 @@ export component VaultOpenView inherits VerticalLayout {
     TabWidget {
         Tab {
             title: @tr("Status");
-            VaultStatusView{
+            VaultStatusView {
                 busy: busy;
                 daemon-status: daemon-status;
                 daemon-error-type: daemon-error-type;
@@ -121,7 +141,7 @@ export component VaultOpenView inherits VerticalLayout {
 
         Tab {
             title: @tr("Configuration");
-            VaultConfigView{
+            VaultConfigView {
                 busy: busy;
                 hostname <=> root.hostname;
                 hostname-invalid <=> root.hostname-invalid;
@@ -133,6 +153,12 @@ export component VaultOpenView inherits VerticalLayout {
                 tls-cert-invalid <=> tls-cert-invalid;
                 tls-key <=> tls-key;
                 tls-key-invalid <=> tls-cert-invalid;
+                ffmpeg-path <=> ffmpeg-path;
+                ffmpeg-path-invalid <=> ffmpeg-path-invalid;
+                ffprobe-path <=> ffprobe-path;
+                ffprobe-path-invalid <=> ffprobe-path-invalid;
+                video-codec <=> video-codec;
+                video-codec-invalid <=> video-codec-invalid;
                 cache-size <=> root.cache-size;
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
@@ -143,6 +169,12 @@ export component VaultOpenView inherits VerticalLayout {
                 select-tls-key => {
                     root.select-tls-key();
                 }
+                select-ffmpeg-path => {
+                    root.select-ffmpeg-path();
+                }
+                select-ffprobe-path => {
+                    root.select-ffprobe-path();
+                }
                 reset-config => {
                     root.reset-config();
                 }
@@ -152,6 +184,9 @@ export component VaultOpenView inherits VerticalLayout {
                 update-tls => {
                     root.update-tls();
                 }
+                update-ffmpeg => {
+                    root.update-ffmpeg();
+                }
                 update-other => {
                     root.update-other();
                 }
@@ -159,15 +194,15 @@ export component VaultOpenView inherits VerticalLayout {
         }
 
         Tab {
-            title: @tr("FFmpeg");
-            Text{
+            title: @tr("Backup");
+            Text {
                 text: "TODO";
             }
         }
 
         Tab {
-            title: @tr("Tools");
-            Text{
+            title: @tr("Other Tools");
+            Text {
                 text: "TODO";
             }
         }

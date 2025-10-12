@@ -1,0 +1,179 @@
+
+import { StringInput } from "string-input.slint";
+import { Switch, Button } from "std-widgets.slint";
+
+export component VaultConfigFFmpegView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// FFmpeg binary
+    in-out property <string> ffmpeg-path: "";
+    in-out property <bool> ffmpeg-path-invalid: false;
+
+    /// Callback to select the ffmpeg binary
+    callback select-ffmpeg-path();
+
+    /// FFprobe binary
+    in-out property <string> ffprobe-path: "";
+    in-out property <bool> ffprobe-path-invalid: false;
+
+    /// Callback to select the ffprobe binary
+    callback select-ffprobe-path();
+
+    in-out property <string> video-codec: "";
+    in-out property <bool> video-codec-invalid: false;
+
+    /// Save callback
+    callback save();
+
+    spacing: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    alignment: LayoutAlignment.start;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
+
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.75rem;
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("FFmpeg binary") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.ffmpeg-path;
+                            read-only: root.busy;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Find");
+                            icon: @image-url("../assets/icons/folder-open.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.select-ffmpeg-path();
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: ffmpeg-path-invalid ? @tr("Invalid FFmpeg binary path") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("FFprobe binary") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.ffprobe-path;
+                            read-only: root.busy;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Find");
+                            icon: @image-url("../assets/icons/folder-open.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.select-ffprobe-path();
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: ffprobe-path-invalid ? @tr("Invalid FFprobe binary path") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Video encoder name") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.video-codec;
+                            read-only: root.busy;
+                        }
+                    }
+
+                    VerticalLayout { }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: video-codec-invalid ? @tr("Invalid video encoder. You can run 'ffmpeg -encoders' in order to check the available ones.") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Apply changes");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.save();
+            }
+        }
+    }
+}
