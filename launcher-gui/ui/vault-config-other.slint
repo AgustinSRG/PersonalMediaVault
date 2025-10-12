@@ -16,6 +16,10 @@ export component VaultConfigOtherView inherits VerticalLayout {
     /// Debug logging
     in-out property <bool> log-debug: false;
 
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
     /// Save callback
     callback save();
 
@@ -51,6 +55,10 @@ export component VaultConfigOtherView inherits VerticalLayout {
                             value <=> root.cache-size;
                             read-only: root.busy;
                             input-type: InputType.number;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
                 }
@@ -70,6 +78,10 @@ export component VaultConfigOtherView inherits VerticalLayout {
                         text: @tr("Log HTTP requests to the vault");
                         checked <=> root.log-requests;
                         enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
                     }
                 }
 
@@ -79,6 +91,10 @@ export component VaultConfigOtherView inherits VerticalLayout {
                         text: @tr("Log debug messages (for troubleshooting)");
                         checked <=> root.log-debug;
                         enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
                     }
                 }
             }
@@ -95,10 +111,19 @@ export component VaultConfigOtherView inherits VerticalLayout {
             icon: @image-url("../assets/icons/check.svg");
             primary: true;
             colorize-icon: true;
-            enabled: !busy;
+            enabled: !busy && dirty;
             clicked => {
                 root.save();
             }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
         }
     }
 }

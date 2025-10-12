@@ -188,6 +188,10 @@ export component MainWindow inherits Window {
     /// Debug logging
     in-out property <bool> log-debug: false;
 
+    // Dirty and saved for other
+    in-out property <bool> dirty-other: false;
+    in-out property <bool> saved-other: false;
+
     /// Callback to update the rest of config values
     callback update-other();
 
@@ -336,6 +340,8 @@ export component MainWindow inherits Window {
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
                 log-debug <=> root.log-debug;
+                dirty-other <=> root.dirty-other;
+                saved-other <=> root.saved-other;
 
                 start => {
                     root.start();

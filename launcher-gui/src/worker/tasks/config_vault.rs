@@ -55,6 +55,9 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
 
             win.set_log_requests(launcher_config.log_requests);
             win.set_log_debug(launcher_config.debug);
+
+            win.set_saved_other(false);
+            win.set_dirty_other(false);
         });
     }
 }
@@ -173,6 +176,16 @@ pub fn update_config_other(
     status.launcher_config.debug = details.log_debug;
 
     status.save_launcher_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_other(true);
+            win.set_dirty_other(false);
+        });
+    }
 
     run_vault(status, sender, window_handle);
 }
