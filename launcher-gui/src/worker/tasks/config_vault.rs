@@ -47,6 +47,9 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
             win.set_video_codec(ffmpeg_config.video_codec.into());
             win.set_video_codec_invalid(false);
 
+            win.set_saved_ffmpeg(false);
+            win.set_dirty_ffmpeg(false);
+
             win.set_cache_size(launcher_config.cache_size.as_i32().to_string().into());
             win.set_cache_size_invalid(false);
 
@@ -139,6 +142,16 @@ pub fn update_config_ffmpeg(
     status.ffmpeg_config.video_codec = details.video_codec;
 
     status.save_ffmpeg_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_ffmpeg(true);
+            win.set_dirty_ffmpeg(false);
+        });
+    }
 
     run_vault(status, sender, window_handle);
 }

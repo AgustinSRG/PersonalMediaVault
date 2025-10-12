@@ -18,6 +18,7 @@ pub fn select_ffmpeg_binary(window_handle: Weak<MainWindow>) {
                         win.set_busy(false);
                         win.set_ffmpeg_path(path_cloned.into());
                         win.set_ffmpeg_path_invalid(false);
+                        win.set_dirty_ffmpeg(true);
                     });
                 }
                 None => {
@@ -49,6 +50,7 @@ pub fn select_ffprobe_binary(window_handle: Weak<MainWindow>) {
                         win.set_busy(false);
                         win.set_ffprobe_path(path_cloned.into());
                         win.set_ffprobe_path_invalid(false);
+                        win.set_dirty_ffmpeg(true);
                     });
                 }
                 None => {

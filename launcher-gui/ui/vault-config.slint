@@ -72,6 +72,10 @@ export component VaultConfigView inherits VerticalLayout {
     in-out property <string> video-codec: "";
     in-out property <bool> video-codec-invalid: false;
 
+    // Dirty and saved for FFmpeg
+    in-out property <bool> dirty-ffmpeg: false;
+    in-out property <bool> saved-ffmpeg: false;
+
     /// Callback to update the FFMpeg config
     callback update-ffmpeg();
 
@@ -155,6 +159,8 @@ export component VaultConfigView inherits VerticalLayout {
                 ffprobe-path-invalid <=> ffprobe-path-invalid;
                 video-codec <=> video-codec;
                 video-codec-invalid <=> video-codec-invalid;
+                dirty <=> dirty-ffmpeg;
+                saved <=> saved-ffmpeg;
                 select-ffmpeg-path => {
                     root.select-ffmpeg-path();
                 }

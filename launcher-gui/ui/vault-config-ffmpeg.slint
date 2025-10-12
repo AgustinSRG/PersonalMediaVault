@@ -23,6 +23,10 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
     in-out property <string> video-codec: "";
     in-out property <bool> video-codec-invalid: false;
 
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
     /// Save callback
     callback save();
 
@@ -58,6 +62,10 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         StringInput {
                             value <=> root.ffmpeg-path;
                             read-only: root.busy;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
 
@@ -100,6 +108,10 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         StringInput {
                             value <=> root.ffprobe-path;
                             read-only: root.busy;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
 
@@ -142,6 +154,10 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         StringInput {
                             value <=> root.video-codec;
                             read-only: root.busy;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
 
@@ -170,10 +186,19 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
             icon: @image-url("../assets/icons/check.svg");
             primary: true;
             colorize-icon: true;
-            enabled: !busy;
+            enabled: !busy && dirty;
             clicked => {
                 root.save();
             }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
         }
     }
 }
