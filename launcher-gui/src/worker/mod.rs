@@ -115,9 +115,9 @@ pub fn run_worker_thread(
                             &sender,
                             &window_handle,
                             InitialConfig {
-                                hostname: hostname,
-                                port: port,
-                                local: local,
+                                hostname,
+                                port,
+                                local,
                             },
                         );
                     }
@@ -126,10 +126,7 @@ pub fn run_worker_thread(
                             &mut status,
                             &sender,
                             &window_handle,
-                            CreateVaultDetails {
-                                username: username,
-                                password: password,
-                            },
+                            CreateVaultDetails { username, password },
                         );
                     }
                     LauncherWorkerMessage::StartVault => {

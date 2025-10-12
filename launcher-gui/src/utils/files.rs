@@ -45,8 +45,8 @@ pub fn get_dirname() -> PathBuf {
 /// Appends ".exe" for Windows
 pub fn get_binary_name(name: &str) -> String {
     if env::consts::OS == "windows" {
-        return name.to_string() + ".exe";
+        name.to_string() + ".exe"
     } else {
-        return name.to_string();
+        name.to_string()
     }
 }

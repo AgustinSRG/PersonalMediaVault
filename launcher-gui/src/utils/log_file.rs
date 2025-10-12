@@ -52,9 +52,9 @@ pub fn get_log_file() -> Result<String, String> {
     log_files.sort();
 
     if log_files.len() > LIMIT_LOG_FILES {
-        for i in 0..(log_files.len() - LIMIT_LOG_FILES) {
+        for file in log_files.iter().take(log_files.len() - LIMIT_LOG_FILES) {
             let mut pb: PathBuf = Path::new(&logs_folder).to_path_buf();
-            pb.push(&log_files[i]);
+            pb.push(file);
             let _ = remove_file(pb);
         }
     }

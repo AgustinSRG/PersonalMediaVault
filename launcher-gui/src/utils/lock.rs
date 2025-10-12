@@ -6,7 +6,7 @@ use pidlock::Pidlock;
 
 use crate::log_debug;
 
-pub const LOCK_FILE_NAME: &'static str = "vault.lock";
+pub const LOCK_FILE_NAME: &str = "vault.lock";
 
 /// Tries to lock the vault folder
 pub fn lock_vault(path: &str) -> Result<Pidlock, ()> {

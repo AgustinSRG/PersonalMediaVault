@@ -16,7 +16,7 @@ impl CacheSize {
     pub fn new(i: i32) -> Self {
         CacheSize(i)
     }
-    
+
     pub fn as_i32(&self) -> i32 {
         self.0
     }
@@ -90,12 +90,10 @@ impl LauncherConfig {
             } else {
                 "".to_string()
             }
+        } else if port != 80 {
+            format!(":{port}")
         } else {
-            if port != 80 {
-                format!(":{port}")
-            } else {
-                "".to_string()
-            }
+            "".to_string()
         };
 
         format!("{protocol}//{hostname}{port_part}")

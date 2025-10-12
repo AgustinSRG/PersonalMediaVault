@@ -45,7 +45,7 @@ fn get_random_launcher_tag() -> String {
 
     let pid = process::id();
 
-    return timestamp.to_string() + "-" + &pid.to_string();
+    timestamp.to_string() + "-" + &pid.to_string()
 }
 
 pub fn run_vault(

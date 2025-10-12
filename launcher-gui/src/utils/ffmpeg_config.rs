@@ -28,7 +28,7 @@ pub fn load_ffmpeg_config_from_file() -> Result<FFmpegConfig, ()> {
 
     dir.push("PersonalMediaVault");
 
-    if let Err(_) = create_dir_all(&dir) {
+    if create_dir_all(&dir).is_err() {
         return Err(());
     }
 

@@ -37,9 +37,9 @@ impl WorkerThreadStatus {
         ffmpeg_config: FFmpegConfig,
     ) -> WorkerThreadStatus {
         WorkerThreadStatus {
-            daemon_binary: daemon_binary,
-            frontend_path: frontend_path,
-            ffmpeg_config: ffmpeg_config,
+            daemon_binary,
+            frontend_path,
+            ffmpeg_config,
 
             vault_path: "".to_string(),
             vault_lock: None,

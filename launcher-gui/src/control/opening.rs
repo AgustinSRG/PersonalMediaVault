@@ -68,9 +68,9 @@ pub fn setup_callbacks_vault_opening(
 
             ui.set_busy(true);
             let _ = worker_sender_c.send(LauncherWorkerMessage::SetInitialConfig {
-                hostname: hostname,
-                port: port,
-                local: local,
+                hostname,
+                port,
+                local,
             });
         }
     });
@@ -110,10 +110,7 @@ pub fn setup_callbacks_vault_opening(
             }
 
             ui.set_busy(true);
-            let _ = worker_sender_c.send(LauncherWorkerMessage::CreateVault {
-                username: username,
-                password: password,
-            });
+            let _ = worker_sender_c.send(LauncherWorkerMessage::CreateVault { username, password });
         }
     });
 }

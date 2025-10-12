@@ -29,7 +29,7 @@ fn get_config_file_from_user_config(vault_path: &str) -> Result<String, ()> {
     dir.push("PersonalMediaVault");
     dir.push("launcher_config");
 
-    if let Err(_) = create_dir_all(&dir) {
+    if create_dir_all(&dir).is_err() {
         return Err(());
     }
 
