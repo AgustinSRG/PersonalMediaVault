@@ -26,6 +26,9 @@ pub fn reset_ui_config(status: &mut WorkerThreadStatus, window_handle: &Weak<Mai
 
             win.set_listen_local(launcher_config.local);
 
+            win.set_saved_host_port(false);
+            win.set_dirty_host_port(false);
+
             win.set_tls_cert(launcher_config.ssl_cert.into());
             win.set_tls_cert_invalid(false);
 
@@ -67,6 +70,16 @@ pub fn update_config_host_port(
     status.launcher_config.local = details.local;
 
     status.save_launcher_config();
+
+    {
+        let wh = window_handle.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            let win = wh.unwrap();
+
+            win.set_saved_host_port(true);
+            win.set_dirty_host_port(false);
+        });
+    }
 
     run_vault(status, sender, window_handle);
 }

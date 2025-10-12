@@ -24,6 +24,10 @@ export component VaultConfigView inherits VerticalLayout {
     /// Local listening
     in-out property <bool> listen-local: true;
 
+    // Dirty and saved for host-port
+    in-out property <bool> dirty-host-port: false;
+    in-out property <bool> saved-host-port: false;
+
     /// Callback to update the host and port config
     callback update-port-host();
 
@@ -106,6 +110,8 @@ export component VaultConfigView inherits VerticalLayout {
                 port <=> root.port;
                 port-invalid <=> root.port-invalid;
                 listen-local <=> root.listen-local;
+                dirty <=> root.dirty-host-port;
+                saved <=> root.saved-host-port;
                 save => {
                     root.update-port-host();
                 }

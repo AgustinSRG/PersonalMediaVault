@@ -81,6 +81,10 @@ export component MainWindow inherits Window {
     /// Initial config
     callback set-initial-config();
 
+    // Dirty and saved for host-port
+    in-out property <bool> dirty-host-port: false;
+    in-out property <bool> saved-host-port: false;
+
     /// Callback to update the host and port config
     callback update-port-host();
 
@@ -300,6 +304,8 @@ export component MainWindow inherits Window {
                 port <=> root.port;
                 port-invalid <=> root.port-invalid;
                 listen-local <=> root.listen-local;
+                dirty-host-port <=> root.dirty-host-port;
+                saved-host-port <=> root.saved-host-port;
 
                 tls-enabled <=> tls-enabled;
                 tls-cert <=> tls-cert;

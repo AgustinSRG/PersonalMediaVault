@@ -48,6 +48,10 @@ export component VaultOpenView inherits VerticalLayout {
     /// Local listening
     in-out property <bool> listen-local: true;
 
+    // Dirty and saved for host-port
+    in-out property <bool> dirty-host-port: false;
+    in-out property <bool> saved-host-port: false;
+
     /// Callback to update the host and port config
     callback update-port-host();
 
@@ -143,26 +147,33 @@ export component VaultOpenView inherits VerticalLayout {
             title: @tr("Configuration");
             VaultConfigView {
                 busy: busy;
+
                 hostname <=> root.hostname;
                 hostname-invalid <=> root.hostname-invalid;
                 port <=> root.port;
                 port-invalid <=> root.port-invalid;
                 listen-local <=> root.listen-local;
+                dirty-host-port <=> root.dirty-host-port;
+                saved-host-port <=> root.saved-host-port;
+
                 tls-enabled <=> tls-enabled;
                 tls-cert <=> tls-cert;
                 tls-cert-invalid <=> tls-cert-invalid;
                 tls-key <=> tls-key;
                 tls-key-invalid <=> tls-cert-invalid;
+
                 ffmpeg-path <=> ffmpeg-path;
                 ffmpeg-path-invalid <=> ffmpeg-path-invalid;
                 ffprobe-path <=> ffprobe-path;
                 ffprobe-path-invalid <=> ffprobe-path-invalid;
                 video-codec <=> video-codec;
                 video-codec-invalid <=> video-codec-invalid;
+
                 cache-size <=> root.cache-size;
                 cache-size-invalid <=> root.cache-size-invalid;
                 log-requests <=> root.log-requests;
                 log-debug <=> root.log-debug;
+
                 select-tls-cert => {
                     root.select-tls-cert();
                 }

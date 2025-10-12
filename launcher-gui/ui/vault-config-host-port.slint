@@ -17,6 +17,10 @@ export component VaultConfigHostPortView inherits VerticalLayout {
     /// Local listening
     in-out property <bool> listen-local: true;
 
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
     /// Save callback
     callback save();
 
@@ -52,6 +56,10 @@ export component VaultConfigHostPortView inherits VerticalLayout {
                         StringInput {
                             value <=> root.hostname;
                             read-only: root.busy;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
                 }
@@ -80,6 +88,10 @@ export component VaultConfigHostPortView inherits VerticalLayout {
                             value <=> root.port;
                             read-only: root.busy;
                             input-type: InputType.number;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
                         }
                     }
                 }
@@ -99,6 +111,10 @@ export component VaultConfigHostPortView inherits VerticalLayout {
                         text: @tr("Listen only on localhost (recommended for local vaults)");
                         checked <=> root.listen-local;
                         enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
                     }
                 }
             }
@@ -115,10 +131,19 @@ export component VaultConfigHostPortView inherits VerticalLayout {
             icon: @image-url("../assets/icons/check.svg");
             primary: true;
             colorize-icon: true;
-            enabled: !busy;
+            enabled: !busy && dirty;
             clicked => {
                 root.save();
             }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
         }
     }
 }
