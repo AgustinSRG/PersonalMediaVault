@@ -125,7 +125,7 @@ pub fn run_vault(
         args.push("--debug".to_string());
     }
 
-    let mut cmd = cmd(status.daemon_binary.clone(), args)
+    let cmd = cmd(status.daemon_binary.clone(), args)
         .unchecked()
         .env("FFMPEG_PATH", status.ffmpeg_config.ffmpeg_path.clone())
         .env("FFPROBE_PATH", status.ffmpeg_config.ffprobe_path.clone())
@@ -134,15 +134,25 @@ pub fn run_vault(
             status.ffmpeg_config.video_codec.clone(),
         )
         .env("FRONTEND_PATH", status.frontend_path.clone())
+        .env(
+            "SSL_CERT",
+            if status.launcher_config.has_ssl() {
+                status.launcher_config.ssl_cert.clone()
+            } else {
+                "".to_string()
+            },
+        )
+        .env(
+            "SSL_KEY",
+            if status.launcher_config.has_ssl() {
+                status.launcher_config.ssl_key.clone()
+            } else {
+                "".to_string()
+            },
+        )
         .stderr_to_stdout()
         .stdout_file(log_file)
         .stdin_null();
-
-    if status.launcher_config.has_ssl() {
-        cmd = cmd
-            .env("SSL_CERT", status.launcher_config.ssl_cert.clone())
-            .env("SSL_KEY", status.launcher_config.ssl_key.clone())
-    }
 
     let handle = match cmd.start() {
         Ok(p) => p,

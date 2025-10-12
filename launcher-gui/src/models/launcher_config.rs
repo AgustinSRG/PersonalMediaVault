@@ -70,7 +70,7 @@ impl LauncherConfig {
 
         let port = self.port;
 
-        format!("{protocol}//127.0.0.1:{port}/api/admin/launcher/{launcher_tag}")
+        format!("{protocol}//localhost:{port}/api/admin/launcher/{launcher_tag}")
     }
 
     pub fn get_browser_url(&self) -> String {

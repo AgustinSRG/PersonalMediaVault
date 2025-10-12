@@ -4,7 +4,7 @@
 use std::{
     env,
     error::Error,
-    path::{self, Path, PathBuf},
+    path::{self, PathBuf},
     sync::mpsc::channel,
 };
 
