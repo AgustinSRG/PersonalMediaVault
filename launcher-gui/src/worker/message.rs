@@ -1,12 +1,13 @@
 // Message sent to the worker thread from the event loop
 
-use crate::VaultDaemonErrorType;
+use crate::{VaultDaemonErrorType, VaultSelectedTool};
 
 pub enum LauncherWorkerMessage {
     SelectVaultFolder,
     OpenVault {
         path: String,
     },
+
     CreateFolderAndOpen,
     ForceOpenVault,
     SetInitialConfig {
@@ -18,6 +19,7 @@ pub enum LauncherWorkerMessage {
         username: String,
         password: String,
     },
+
     StartVault,
     StopVault,
     VaultStarted {
@@ -33,6 +35,7 @@ pub enum LauncherWorkerMessage {
     },
     OpenBrowser,
     OpenLogFile,
+
     ResetConfig,
     UpdateHostPortConfig {
         host: String,
@@ -58,6 +61,19 @@ pub enum LauncherWorkerMessage {
     SelectFFprobeBinary,
     SelectTlsCert,
     SelectTlsKey,
+
+    RunTool {
+        tool: VaultSelectedTool,
+    },
+    CancelTool,
+    ToolSuccess{
+        tool_id: u64,
+    },
+    ToolError{
+        tool_id: u64,
+        error_details: String,
+    },
+
     CloseVault,
     Finish,
 }

@@ -26,3 +26,6 @@ pub use select_ffmpeg_paths::*;
 
 mod select_tls_paths;
 pub use select_tls_paths::*;
+
+mod vault_tools;
+pub use vault_tools::*;

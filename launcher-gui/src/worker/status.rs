@@ -28,6 +28,10 @@ pub struct WorkerThreadStatus {
     pub daemon_process_wait_receiver: Option<Receiver<bool>>,
 
     pub log_file: Option<String>,
+
+    pub tool_id: u64,
+    pub tool_process: Option<Arc<Handle>>,
+    pub tool_process_wait_receiver: Option<Receiver<bool>>,
 }
 
 impl WorkerThreadStatus {
@@ -52,6 +56,10 @@ impl WorkerThreadStatus {
             daemon_process_wait_receiver: None,
 
             log_file: None,
+
+            tool_id: 0,
+            tool_process: None,
+            tool_process_wait_receiver: None,
         }
     }
 

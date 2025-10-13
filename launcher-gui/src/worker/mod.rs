@@ -258,6 +258,31 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::SelectTlsKey => {
                         select_tls_key(window_handle.clone());
                     }
+                    LauncherWorkerMessage::RunTool { tool } => {
+                        run_vault_tool(&mut status, &sender, &window_handle, tool);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::CancelTool => {
+                        cancel_vault_tool(&mut status);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::ToolSuccess { tool_id } => {
+                        on_tool_success(&mut status, &sender, &window_handle, tool_id);
+                    }
+                    LauncherWorkerMessage::ToolError {
+                        tool_id,
+                        error_details,
+                    } => {
+                        on_tool_error(&mut status, &sender, &window_handle, tool_id, error_details);
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);

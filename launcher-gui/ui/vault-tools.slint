@@ -152,10 +152,16 @@ export component VaultToolsView inherits VerticalLayout {
             }
         }
 
-        if tool-status == VaultToolStatus.running: ProgressIndicator {
-            width: 100%;
-            height: 1rem;
-            indeterminate: true;
+        if tool-status == VaultToolStatus.running: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            ProgressIndicator {
+                width: 24rem;
+                height: 0.75rem;
+                indeterminate: true;
+            }
         }
 
         if tool-status == VaultToolStatus.success: HorizontalLayout {

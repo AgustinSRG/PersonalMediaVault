@@ -146,7 +146,7 @@ export component VaultOpenView inherits VerticalLayout {
         Tab {
             title: @tr("Status");
             VaultStatusView {
-                busy: busy;
+                busy: busy || tool-status == VaultToolStatus.running;
                 daemon-status: daemon-status;
                 daemon-error-type: daemon-error-type;
                 daemon-error-details: daemon-error-details;
@@ -171,7 +171,7 @@ export component VaultOpenView inherits VerticalLayout {
         Tab {
             title: @tr("Configuration");
             VaultConfigView {
-                busy: busy;
+                busy: busy || tool-status == VaultToolStatus.running;
 
                 hostname <=> root.hostname;
                 hostname-invalid <=> root.hostname-invalid;
