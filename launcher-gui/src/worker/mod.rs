@@ -130,7 +130,7 @@ pub fn run_worker_thread(
                         );
                     }
                     LauncherWorkerMessage::StartVault => {
-                        run_vault(&mut status, &sender, &window_handle);
+                        run_vault(&mut status, &sender, &window_handle, true);
                         let wh = window_handle.clone();
                         let _ = slint::invoke_from_event_loop(move || {
                             let win = wh.unwrap();

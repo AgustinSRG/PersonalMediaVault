@@ -52,6 +52,7 @@ pub fn run_vault(
     status: &mut WorkerThreadStatus,
     sender: &Sender<LauncherWorkerMessage>,
     window_handle: &Weak<MainWindow>,
+    open_browser: bool,
 ) {
     stop_vault(status, window_handle); // In case the vault is not stopped, stop it
 
@@ -184,6 +185,7 @@ pub fn run_vault(
         daemon_process_wait_sender,
         daemon_id,
         health_check_url,
+        open_browser,
     );
 
     status.daemon_process = Some(daemon_process);
@@ -197,6 +199,7 @@ pub fn wait_for_daemon_process(
     daemon_process_wait_sender: Sender<bool>,
     daemon_id: u64,
     health_check_url: String,
+    open_browser: bool,
 ) {
     thread::spawn(move || {
         let mut started = false;
@@ -269,7 +272,9 @@ pub fn wait_for_daemon_process(
 
         let _ = sender.send(LauncherWorkerMessage::VaultStarted { daemon_id });
 
-        let _ = sender.send(LauncherWorkerMessage::OpenBrowser);
+        if open_browser {
+            let _ = sender.send(LauncherWorkerMessage::OpenBrowser);
+        }
 
         let _ = process.wait();
 

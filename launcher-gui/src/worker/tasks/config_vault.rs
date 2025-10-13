@@ -90,7 +90,7 @@ pub fn update_config_host_port(
         });
     }
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, true);
 }
 
 pub struct TlsConfigDetails {
@@ -125,7 +125,7 @@ pub fn update_config_tls(
         });
     }
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, true);
 }
 
 pub struct FFmpegConfigDetails {
@@ -156,7 +156,7 @@ pub fn update_config_ffmpeg(
         });
     }
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, false);
 }
 
 pub struct OtherConfigDetails {
@@ -187,5 +187,5 @@ pub fn update_config_other(
         });
     }
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, false);
 }

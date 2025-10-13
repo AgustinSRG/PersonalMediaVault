@@ -145,7 +145,7 @@ pub fn on_tool_success(
         win.set_tool_status(VaultToolStatus::Success);
     });
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, false);
 }
 
 pub fn on_tool_error(
@@ -173,5 +173,5 @@ pub fn on_tool_error(
         win.set_tool_error(error_details.into());
     });
 
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, false);
 }

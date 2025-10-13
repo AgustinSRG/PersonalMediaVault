@@ -126,5 +126,5 @@ pub fn open_vault(
     });
 
     reset_ui_config(status, window_handle);
-    run_vault(status, sender, window_handle);
+    run_vault(status, sender, window_handle, true);
 }
