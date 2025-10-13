@@ -1,6 +1,14 @@
 import { Button, Palette, ScrollView } from "std-widgets.slint";
 import { AboutComponent } from "about.slint";
-import { LauncherStatus, FatalErrorType, OpenErrorType, VaultDaemonStatus, VaultDaemonErrorType } from "status.slint";
+import { 
+    LauncherStatus,
+    FatalErrorType,
+    OpenErrorType,
+    VaultDaemonStatus,
+    VaultDaemonErrorType,
+    VaultToolStatus,
+    VaultSelectedTool
+} from "status.slint";
 import { VaultClosedView } from "vault-closed.slint";
 import { OpeningView } from "opening.slint";
 import { FatalErrorView } from "fatal-error.slint";
@@ -11,7 +19,15 @@ import { InitialConfigView } from "initial-config.slint";
 import { CreateVaultView } from "create-vault.slint";
 import { VaultOpenView } from "vault-open.slint";
 
-export { LauncherStatus, FatalErrorType, OpenErrorType, VaultDaemonStatus, VaultDaemonErrorType }
+export { 
+    LauncherStatus,
+    FatalErrorType,
+    OpenErrorType,
+    VaultDaemonStatus,
+    VaultDaemonErrorType,
+    VaultToolStatus,
+    VaultSelectedTool
+}
 
 export component MainWindow inherits Window {
     icon: @image-url("../assets/favicon.png");
@@ -195,6 +211,18 @@ export component MainWindow inherits Window {
     /// Callback to update the rest of config values
     callback update-other();
 
+    /// The status of the tool
+    in-out property <VaultToolStatus> tool-status: VaultToolStatus.idle;
+
+    /// Error of the tool
+    in property <string> tool-error: "";
+
+    /// Run the selected tool
+    callback run-tool(VaultSelectedTool);
+
+    /// Cancel the tool that is running
+    callback cancel-tool();
+
     VerticalLayout {
         alignment: LayoutAlignment.start;
         spacing: 0.75rem;
@@ -343,6 +371,9 @@ export component MainWindow inherits Window {
                 dirty-other <=> root.dirty-other;
                 saved-other <=> root.saved-other;
 
+                tool-status <=> tool-status;
+                tool-error: tool-error;
+
                 start => {
                     root.start();
                 }
@@ -389,6 +420,14 @@ export component MainWindow inherits Window {
 
                 update-other => {
                     root.update-other();
+                }
+
+                run-tool(t) => {
+                    root.run-tool(t);
+                }
+
+                cancel-tool => {
+                    root.cancel-tool();
                 }
             }
         }

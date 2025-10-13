@@ -1,7 +1,8 @@
 import { Button, TabWidget } from "std-widgets.slint";
 import { VaultStatusView } from "vault-status.slint";
-import { VaultDaemonStatus, VaultDaemonErrorType } from "status.slint";
+import { VaultDaemonStatus, VaultDaemonErrorType, VaultToolStatus, VaultSelectedTool } from "status.slint";
 import { VaultConfigView } from "vault-config.slint";
+import { VaultToolsView } from "vault-tools.slint";
 
 export component VaultOpenView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
@@ -120,6 +121,18 @@ export component VaultOpenView inherits VerticalLayout {
     /// Callback to update the rest of config values
     callback update-other();
 
+    /// The status of the tool
+    in-out property <VaultToolStatus> tool-status: VaultToolStatus.idle;
+
+    /// Error of the tool
+    in property <string> tool-error: "";
+
+    /// Run the selected tool
+    callback run-tool(VaultSelectedTool);
+
+    /// Cancel the tool that is running
+    callback cancel-tool();
+
     spacing: 0.75rem;
     alignment: LayoutAlignment.start;
 
@@ -231,8 +244,19 @@ export component VaultOpenView inherits VerticalLayout {
 
         Tab {
             title: @tr("Other Tools");
-            Text {
-                text: "TODO";
+            VaultToolsView {
+                busy: busy;
+
+                tool-status <=> tool-status;
+                tool-error: tool-error;
+
+                run-tool(t) => {
+                    root.run-tool(t);
+                }
+
+                cancel-tool => {
+                    root.cancel-tool();
+                }
             }
         }
     }

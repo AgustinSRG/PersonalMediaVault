@@ -13,3 +13,9 @@ export enum VaultDaemonStatus { stopped, starting, running, stopping, error }
 
 // Type of daemon error
 export enum VaultDaemonErrorType { unknown, lock, port-in-use, invalid-ssl }
+
+// Selected vault tool
+export enum VaultSelectedTool { none, clean, recover }
+
+// Status of the tool
+export enum VaultToolStatus{ idle, running, success, error }
