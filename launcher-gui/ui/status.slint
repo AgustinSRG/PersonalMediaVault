@@ -19,3 +19,15 @@ export enum VaultSelectedTool { none, clean, recover }
 
 // Status of the tool
 export enum VaultToolStatus{ idle, running, success, error }
+
+// Selected backup option
+export enum VaultSelectedBackupOption { none, backup, key-export, key-recover }
+
+// Status of the backup
+export enum VaultBackupStatus{ idle, running, success, error }
+
+// Current task of the backup
+export enum VaultBackupCurrentTask{ none, finding-files, checking-files, copying-files }
+
+// Error type for tha backup
+export enum VaultBackupErrorType { unknown, locked, same-folder }

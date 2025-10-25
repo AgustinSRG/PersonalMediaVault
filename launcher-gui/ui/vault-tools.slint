@@ -130,7 +130,7 @@ export component VaultToolsView inherits VerticalLayout {
                 }
             }
 
-            Button {
+            if tool-status != VaultToolStatus.success: Button {
                 text: @tr("Start");
                 icon: @image-url("../assets/icons/play.svg");
                 primary: true;
@@ -141,7 +141,7 @@ export component VaultToolsView inherits VerticalLayout {
                 }
             }
 
-            Button {
+            if tool-status != VaultToolStatus.success: Button {
                 text: @tr("Cancel");
                 icon: @image-url("../assets/icons/close.svg");
                 colorize-icon: true;

@@ -1,0 +1,597 @@
+import {
+    VaultSelectedBackupOption,
+    VaultBackupStatus,
+    VaultBackupCurrentTask,
+    VaultBackupErrorType,
+} from "status.slint";
+import { Button, ProgressIndicator } from "std-widgets.slint";
+import { StringInput } from "string-input.slint";
+
+export component VaultBackupView inherits VerticalLayout {
+     /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// The status of the backup
+    in-out property <VaultBackupStatus> backup-status: VaultBackupStatus.idle;
+
+    /// The current task of the backup
+    in-out property <VaultBackupCurrentTask> backup-task: VaultBackupCurrentTask.none;
+
+    /// Vault encryption key
+    in-out property <string> encryption-key: "";
+    in-out property <bool> encryption-key-invalid: false;
+
+    /// Error type of the backup
+    in property <VaultBackupErrorType> backup-error-type: VaultBackupErrorType.unknown;
+
+    /// Error of the backup
+    in property <string> backup-error: "";
+
+    /// Progress of the backup
+    in property <float> backup-progress: 0;
+
+    /// True if the progress is indeterminate
+    in property <bool> backup-progress-indeterminate: true;
+
+    /// Global progress
+    in property <string> backup-progress-global: "";
+
+    /// Current file progress
+    in property <string> backup-progress-file: "";
+
+    // Backup path
+    in-out property <string> backup-path: "";
+    in-out property <bool> backup-path-invalid: false;
+
+    /// Username input
+    in-out property <string> username: "";
+    in-out property <bool> username-invalid: false;
+
+    /// Password input
+    in-out property <string> password: "";
+    in-out property <bool> password-invalid: false;
+
+    /// Password input (repeat)
+    in-out property <string> password-repeat: "";
+    in-out property <bool> password-repeat-invalid: false;
+
+    /// Selected option
+    private property <VaultSelectedBackupOption> selected-backup-option: none;
+
+    /// Password visibility
+    private property <bool> password-visibility: false;
+    private property <bool> password-repeat-visibility: false;
+    private property <bool> encryption-key-visibility: false;
+
+    /// Run the selected tool
+    callback run-backup(VaultSelectedBackupOption);
+
+    /// Cancel the backup process
+    callback cancel-backup();
+
+    /// Callback to select backup path
+    callback select-backup-path();
+
+    /// Callback to copy the encryption key to clipboard
+    callback copy-encryption-key();
+
+    padding-top: 1rem;
+    spacing: 1rem;
+    alignment: LayoutAlignment.start;
+
+    if selected-backup-option == VaultSelectedBackupOption.none: VerticalLayout {
+        spacing: 1rem;
+        alignment: LayoutAlignment.start;
+
+        Text {
+            text: @tr("Backup");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+        }
+
+        Text {
+            text: @tr("Select the backup tool you want to use");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+
+            Button {
+                text: @tr("Create or update backup");
+                icon: @image-url("../assets/icons/backup.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.selected-backup-option = VaultSelectedBackupOption.backup;
+                    root.backup-status = VaultBackupStatus.idle;
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+
+            Button {
+                text: @tr("Export encryption key");
+                icon: @image-url("../assets/icons/key.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.selected-backup-option = VaultSelectedBackupOption.key-export;
+                    root.backup-status = VaultBackupStatus.idle;
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+
+            Button {
+                text: @tr("Recover encryption key");
+                icon: @image-url("../assets/icons/lock-open.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.selected-backup-option = VaultSelectedBackupOption.key-recover;
+                    root.backup-status = VaultBackupStatus.idle;
+                }
+            }
+        }
+    }
+
+    if selected-backup-option != VaultSelectedBackupOption.none: VerticalLayout {
+        spacing: 1rem;
+        alignment: LayoutAlignment.start;
+
+        Text {
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+
+            states [
+                backup when selected-backup-option == VaultSelectedBackupOption.backup: {
+                    text: @tr("Create or update backup");
+                }
+                key-export when selected-backup-option == VaultSelectedBackupOption.key-export: {
+                    text: @tr("Export encryption key");
+                }
+                key-recover when selected-backup-option == VaultSelectedBackupOption.key-recover: {
+                    text: @tr("Recover encryption key");
+                }
+            ]
+        }
+
+        Text {
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            states [
+                backup when selected-backup-option == VaultSelectedBackupOption.backup: {
+                    text: @tr("Make a backup of the vault in order to keep it safe from data loss events.");
+                }
+                key-export when selected-backup-option == VaultSelectedBackupOption.key-export: {
+                    text: @tr("Export the vault encryption key to use it in case you lose your password.");
+                }
+                key-recover when selected-backup-option == VaultSelectedBackupOption.key-recover: {
+                    text: @tr("Did you lose your password? Use the tool to recover access using the encryption key.");
+                }
+            ]
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+
+            HorizontalLayout {
+                alignment: LayoutAlignment.space-around;
+
+                if selected-backup-option == VaultSelectedBackupOption.backup: GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.75rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Backup path") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+
+                            StringInput {
+                                value <=> root.backup-path;
+                                read-only: root.busy;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+
+                            Button {
+                                text: @tr("Find");
+                                icon: @image-url("../assets/icons/folder-open.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.select-backup-path();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if selected-backup-option == VaultSelectedBackupOption.key-export: GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.75rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Password") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            StringInput {
+                                value <=> root.password;
+                                read-only: root.busy;
+                                input-type: password-visibility ? InputType.text : InputType.password;
+                            }
+                        }
+
+                        VerticalLayout {
+                            Button {
+                                text: "";
+                                icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.password-visibility = !root.password-visibility;
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: password-invalid ? @tr("Invalid password") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+                }
+
+                if selected-backup-option == VaultSelectedBackupOption.key-recover: GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.75rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Encryption key") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            StringInput {
+                                value <=> root.encryption-key;
+                                read-only: root.busy;
+                                input-type: encryption-key-visibility ? InputType.text : InputType.password;
+                            }
+                        }
+
+                        VerticalLayout {
+                            Button {
+                                text: "";
+                                icon: encryption-key-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.encryption-key-visibility = !root.encryption-key-visibility;
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: encryption-key-invalid ? @tr("Invalid encryption key: Decryption test failed for vault files") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("New root username") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            colspan: 2;
+                            alignment: LayoutAlignment.center;
+
+                            StringInput {
+                                value <=> root.username;
+                                read-only: root.busy;
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: username-invalid ? @tr("Invalid username") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Password") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            StringInput {
+                                value <=> root.password;
+                                read-only: root.busy;
+                                input-type: password-visibility ? InputType.text : InputType.password;
+                            }
+                        }
+
+                        VerticalLayout {
+                            Button {
+                                text: "";
+                                icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.password-visibility = !root.password-visibility;
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: password-invalid ? @tr("Invalid password") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Password (again)") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            StringInput {
+                                value <=> root.password-repeat;
+                                read-only: root.busy;
+                                input-type: password-repeat-visibility ? InputType.text : InputType.password;
+                            }
+                        }
+
+                        VerticalLayout {
+                            Button {
+                                text: "";
+                                icon: password-repeat-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.password-repeat-visibility = !root.password-repeat-visibility;
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: password-repeat-invalid ? @tr("The passwords do not match") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+            spacing: 0.75rem;
+
+            Button {
+                text: @tr("Back");
+                icon: @image-url("../assets/icons/arrow-back.svg");
+                colorize-icon: true;
+                enabled: !busy && backup-status != VaultBackupStatus.running;
+                clicked => {
+                    root.selected-backup-option = VaultSelectedBackupOption.none;
+                }
+            }
+
+            if backup-status != VaultBackupStatus.success: Button {
+                text: @tr("Start");
+                icon: @image-url("../assets/icons/play.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy && backup-status != VaultBackupStatus.running;
+                clicked => {
+                    root.run-backup(root.selected-backup-option);
+                }
+            }
+
+            if backup-status != VaultBackupStatus.success: Button {
+                text: @tr("Cancel");
+                icon: @image-url("../assets/icons/close.svg");
+                colorize-icon: true;
+                enabled: !busy && backup-status == VaultBackupStatus.running;
+                clicked => {
+                    root.cancel-backup();
+                }
+            }
+        }
+    }
+
+    if backup-status == VaultBackupStatus.running: HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-left: 1rem;
+        padding-right: 1rem;
+
+        ProgressIndicator {
+            width: 24rem;
+            height: 0.75rem;
+            progress: backup-progress;
+            indeterminate: backup-progress-indeterminate;
+        }
+    }
+
+    if backup-status == VaultBackupStatus.running && backup-task != VaultBackupCurrentTask.none && backup-progress-global != "": HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-left: 1rem;
+        padding-right: 1rem;
+
+        Text {
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+
+            states [
+                finding-files when backup-task == VaultBackupCurrentTask.finding-files: {
+                    text: @tr("Finding files") + ": " + backup-progress-global;
+                }
+                checking-files when backup-task == VaultBackupCurrentTask.finding-files: {
+                    text: @tr("Checking files") + ": " + backup-progress-global;
+                }
+                copying-files when backup-task == VaultBackupCurrentTask.finding-files: {
+                    text: @tr("Copying files") + ": " + backup-progress-global;
+                }
+            ]
+        }
+    }
+
+    if backup-status == VaultBackupStatus.running && backup-task != VaultBackupCurrentTask.none && backup-progress-file != "": HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-left: 1rem;
+        padding-right: 1rem;
+
+        Text {
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            text: backup-progress-file;
+        }
+    }
+
+    if backup-status == VaultBackupStatus.success: HorizontalLayout {
+        Text {
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
+
+            states [
+                backup when selected-backup-option == VaultSelectedBackupOption.backup: {
+                    text: @tr("Backup completed") + ": " + backup-progress-global;
+                }
+                key-export when selected-backup-option == VaultSelectedBackupOption.key-export: {
+                    text: @tr("Encryption key successfully exported!");
+                }
+                key-recover when selected-backup-option == VaultSelectedBackupOption.key-recover: {
+                    text: @tr("Encryption key successfully recovered!");
+                }
+            ]
+        }
+    }
+
+    if backup-status == VaultBackupStatus.error: HorizontalLayout {
+        Text {
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: red;
+
+            states [
+                locked when backup-error-type == VaultBackupErrorType.unknown: {
+                    text: @tr("Error") + ": " + @tr("The target folder is locked by another process.");
+                }
+                same-folder when backup-error-type == VaultBackupErrorType.same-folder: {
+                    text: @tr("Error") + ": " + @tr("The target folder is the same as the source folder.");
+                }
+                unknown when backup-error-type == VaultBackupErrorType.unknown: {
+                    text: @tr("Error") + ": " + (backup-error == "" ? @tr("Unknown error") : backup-error);
+                }
+            ]
+        }
+    }
+
+    if selected-backup-option == VaultSelectedBackupOption.key-export && backup-status == VaultBackupStatus.success: GridLayout {
+        spacing-horizontal: 0.75rem;
+        spacing-vertical: 0.75rem;
+
+        Row {
+            VerticalLayout {
+                alignment: LayoutAlignment.center;
+                Text {
+                    text: @tr("Encryption key") + ": ";
+                    wrap: TextWrap.word-wrap;
+                }
+            }
+
+            VerticalLayout {
+                alignment: LayoutAlignment.center;
+
+                StringInput {
+                    value <=> root.encryption-key;
+                    read-only: true;
+                }
+            }
+
+            VerticalLayout {
+                alignment: LayoutAlignment.center;
+
+                Button {
+                    text: @tr("Copy");
+                    icon: @image-url("../assets/icons/copy.svg");
+                    colorize-icon: true;
+                    enabled: !busy;
+                    clicked => {
+                        root.copy-encryption-key();
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,13 +1,17 @@
 import { Button, Palette, ScrollView } from "std-widgets.slint";
 import { AboutComponent } from "about.slint";
-import { 
+import {
     LauncherStatus,
     FatalErrorType,
     OpenErrorType,
     VaultDaemonStatus,
     VaultDaemonErrorType,
     VaultToolStatus,
-    VaultSelectedTool
+    VaultSelectedTool,
+    VaultSelectedBackupOption,
+    VaultBackupStatus,
+    VaultBackupErrorType,
+    VaultBackupCurrentTask,
 } from "status.slint";
 import { VaultClosedView } from "vault-closed.slint";
 import { OpeningView } from "opening.slint";
@@ -26,7 +30,11 @@ export {
     VaultDaemonStatus,
     VaultDaemonErrorType,
     VaultToolStatus,
-    VaultSelectedTool
+    VaultSelectedTool,
+    VaultSelectedBackupOption,
+    VaultBackupStatus,
+    VaultBackupErrorType,
+    VaultBackupCurrentTask
 }
 
 export component MainWindow inherits Window {
@@ -211,6 +219,50 @@ export component MainWindow inherits Window {
     /// Callback to update the rest of config values
     callback update-other();
 
+    /// The status of the backup
+    in-out property <VaultBackupStatus> backup-status: VaultBackupStatus.idle;
+
+    /// The current task of the backup
+    in-out property <VaultBackupCurrentTask> backup-task: VaultBackupCurrentTask.none;
+
+    /// Vault encryption key
+    in-out property <string> encryption-key: "";
+    in-out property <bool> encryption-key-invalid: false;
+
+    /// Error type of the backup
+    in property <VaultBackupErrorType> backup-error-type: VaultBackupErrorType.unknown;
+
+    /// Error of the backup
+    in property <string> backup-error: "";
+
+    /// Progress of the backup
+    in property <float> backup-progress: 0;
+
+    /// True if the progress is indeterminate
+    in property <bool> backup-progress-indeterminate: true;
+
+    /// Global progress
+    in property <string> backup-progress-global: "";
+
+    /// Current file progress
+    in property <string> backup-progress-file: "";
+
+    // Backup path
+    in-out property <string> backup-path: "";
+    in-out property <bool> backup-path-invalid: false;
+
+    /// Run the selected tool
+    callback run-backup(VaultSelectedBackupOption);
+
+    /// Cancel the backup process
+    callback cancel-backup();
+
+    /// Callback to select backup path
+    callback select-backup-path();
+
+    /// Callback to copy the encryption key to clipboard
+    callback copy-encryption-key();
+
     /// The status of the tool
     in-out property <VaultToolStatus> tool-status: VaultToolStatus.idle;
 
@@ -371,6 +423,27 @@ export component MainWindow inherits Window {
                 dirty-other <=> root.dirty-other;
                 saved-other <=> root.saved-other;
 
+                backup-status <=> backup-status;
+                backup-path <=> backup-path;
+                backup-path-invalid <=> backup-path-invalid;
+                encryption-key <=> encryption-key;
+                encryption-key-invalid <=> encryption-key-invalid;
+                username <=> username;
+                username-invalid <=> username-invalid;
+                password <=> password;
+                password-invalid <=> password-invalid;
+                password-repeat <=> password-repeat;
+                password-repeat-invalid <=> password-repeat-invalid;
+
+                backup-error: backup-error;
+                backup-error-type: backup-error-type;
+
+                backup-task <=> backup-task;
+                backup-progress: backup-progress;
+                backup-progress-indeterminate: backup-progress-indeterminate;
+                backup-progress-global: backup-progress-global;
+                backup-progress-file: backup-progress-file;
+
                 tool-status <=> tool-status;
                 tool-error: tool-error;
 
@@ -420,6 +493,22 @@ export component MainWindow inherits Window {
 
                 update-other => {
                     root.update-other();
+                }
+
+                run-backup(t) => {
+                    root.run-backup(t);
+                }
+
+                cancel-backup => {
+                    root.cancel-backup();
+                }
+
+                select-backup-path => {
+                    root.select-backup-path();
+                }
+
+                copy-encryption-key => {
+                    root.copy-encryption-key();
                 }
 
                 run-tool(t) => {
