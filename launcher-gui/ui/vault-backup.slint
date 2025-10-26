@@ -210,7 +210,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                             StringInput {
                                 value <=> root.backup-path;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                             }
                         }
 
@@ -221,7 +221,7 @@ export component VaultBackupView inherits VerticalLayout {
                                 text: @tr("Find");
                                 icon: @image-url("../assets/icons/folder-open.svg");
                                 colorize-icon: true;
-                                enabled: !busy;
+                                enabled: !busy || backup-status == VaultBackupStatus.running;
                                 clicked => {
                                     root.select-backup-path();
                                 }
@@ -238,6 +238,35 @@ export component VaultBackupView inherits VerticalLayout {
                         VerticalLayout {
                             alignment: LayoutAlignment.center;
                             Text {
+                                text: @tr("Main vault username") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            colspan: 2;
+                            alignment: LayoutAlignment.center;
+
+                            StringInput {
+                                value <=> root.username;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                            }
+                        }
+                    }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: username-invalid ? @tr("Invalid username") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
                                 text: @tr("Password") + ": ";
                                 wrap: TextWrap.word-wrap;
                             }
@@ -247,7 +276,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                                 input-type: password-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -292,7 +321,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.encryption-key;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                                 input-type: encryption-key-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -323,7 +352,7 @@ export component VaultBackupView inherits VerticalLayout {
                         VerticalLayout {
                             alignment: LayoutAlignment.center;
                             Text {
-                                text: @tr("New root username") + ": ";
+                                text: @tr("New main username") + ": ";
                                 wrap: TextWrap.word-wrap;
                             }
                         }
@@ -334,7 +363,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                             StringInput {
                                 value <=> root.username;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                             }
                         }
                     }
@@ -361,7 +390,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                                 input-type: password-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -401,7 +430,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password-repeat;
-                                read-only: root.busy;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running;
                                 input-type: password-repeat-visibility ? InputType.text : InputType.password;
                             }
                         }
