@@ -1,4 +1,4 @@
-// Callbacks for vault status view
+// Callbacks for vault tools view
 
 use std::sync::mpsc::Sender;
 

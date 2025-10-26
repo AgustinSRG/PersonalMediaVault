@@ -283,6 +283,9 @@ pub fn run_worker_thread(
                     } => {
                         on_tool_error(&mut status, &sender, &window_handle, tool_id, error_details);
                     }
+                    LauncherWorkerMessage::SelectBackupPath => {
+                        select_backup_path(window_handle.clone());
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);

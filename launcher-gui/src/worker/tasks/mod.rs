@@ -27,5 +27,8 @@ pub use select_ffmpeg_paths::*;
 mod select_tls_paths;
 pub use select_tls_paths::*;
 
+mod select_backup_path;
+pub use select_backup_path::*;
+
 mod vault_tools;
 pub use vault_tools::*;

@@ -62,6 +62,8 @@ pub enum LauncherWorkerMessage {
     SelectTlsCert,
     SelectTlsKey,
 
+    SelectBackupPath,
+
     RunTool {
         tool: VaultSelectedTool,
     },
