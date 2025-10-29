@@ -596,6 +596,13 @@ export default defineComponent({
                 return;
             }
 
+            if (e.target) {
+                const target = e.target as HTMLElement;
+                if (target.classList && target.classList.contains("image-scroller")) {
+                    return;
+                }
+            }
+
             if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
                 this.displayConfig = false;
                 this.contextMenuShown = false;

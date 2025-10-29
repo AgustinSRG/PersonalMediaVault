@@ -6,7 +6,7 @@ const localStorageCache = new Map();
 
 // A prefix for all local storage keys
 // This is necessary for multiple vaults in different paths on the same domain
-const locationLocalStorageKeyPrefix = (window.location ? (location.pathname || "/") : "/").substring(1);
+const locationLocalStorageKeyPrefix = (window.location ? location.pathname || "/" : "/").substring(1);
 
 /**
  * Fetches a value from local storage
