@@ -18,7 +18,9 @@ pub use status::*;
 use crate::{
     log_debug,
     models::{FFmpegBadInstallationError, FFmpegConfig},
-    utils::{find_pmv_daemon_binary, find_pmv_frontend, load_ffmpeg_config},
+    utils::{
+        find_pmv_daemon_binary, find_pmv_frontend, load_ffmpeg_config, set_clipboard_contents,
+    },
     FatalErrorType, LauncherStatus, MainWindow,
 };
 
@@ -285,6 +287,12 @@ pub fn run_worker_thread(
                     }
                     LauncherWorkerMessage::SelectBackupPath => {
                         select_backup_path(window_handle.clone());
+                    }
+                    LauncherWorkerMessage::ExportVaultKey { username, password } => {
+                        export_vault_key(&mut status, &window_handle, username, password);
+                    }
+                    LauncherWorkerMessage::CopyToClipboard { contents } => {
+                        set_clipboard_contents(&mut status.clipboard, &contents);
                     }
                 },
                 Err(err) => {

@@ -109,6 +109,7 @@ export component VaultBackupView inherits VerticalLayout {
                 clicked => {
                     root.selected-backup-option = VaultSelectedBackupOption.backup;
                     root.backup-status = VaultBackupStatus.idle;
+                    root.backup-path-invalid = false;
                 }
             }
         }
@@ -125,6 +126,10 @@ export component VaultBackupView inherits VerticalLayout {
                 clicked => {
                     root.selected-backup-option = VaultSelectedBackupOption.key-export;
                     root.backup-status = VaultBackupStatus.idle;
+                    root.username = "";
+                    root.username-invalid = false;
+                    root.password = "";
+                    root.password-invalid = false;
                 }
             }
         }
@@ -141,6 +146,14 @@ export component VaultBackupView inherits VerticalLayout {
                 clicked => {
                     root.selected-backup-option = VaultSelectedBackupOption.key-recover;
                     root.backup-status = VaultBackupStatus.idle;
+                    root.encryption-key = "";
+                    root.encryption-key-invalid = false;
+                    root.username = "";
+                    root.username-invalid = false;
+                    root.password = "";
+                    root.password-invalid = false;
+                    root.password-repeat = "";
+                    root.password-repeat-invalid = false;
                 }
             }
         }
@@ -180,7 +193,7 @@ export component VaultBackupView inherits VerticalLayout {
                     text: @tr("Export the vault encryption key to use it in case you lose your password.");
                 }
                 key-recover when selected-backup-option == VaultSelectedBackupOption.key-recover: {
-                    text: @tr("Did you lose your password? Use the tool to recover access using the encryption key.");
+                    text: @tr("Did you lose your password? Use the tool to recover access using the encryption key.") + "\n" + @tr("Warning: This will reset all the security options and delete all the extra accounts of the vault.");
                 }
             ]
         }
@@ -210,7 +223,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                             StringInput {
                                 value <=> root.backup-path;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                             }
                         }
 
@@ -221,7 +234,7 @@ export component VaultBackupView inherits VerticalLayout {
                                 text: @tr("Find");
                                 icon: @image-url("../assets/icons/folder-open.svg");
                                 colorize-icon: true;
-                                enabled: !busy || backup-status == VaultBackupStatus.running;
+                                enabled: !busy && backup-status != VaultBackupStatus.running && backup-status != VaultBackupStatus.success;
                                 clicked => {
                                     root.select-backup-path();
                                 }
@@ -249,7 +262,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                             StringInput {
                                 value <=> root.username;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                             }
                         }
                     }
@@ -276,7 +289,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                                 input-type: password-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -321,7 +334,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.encryption-key;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                                 input-type: encryption-key-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -363,7 +376,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                             StringInput {
                                 value <=> root.username;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                             }
                         }
                     }
@@ -390,7 +403,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                                 input-type: password-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -430,7 +443,7 @@ export component VaultBackupView inherits VerticalLayout {
                             alignment: LayoutAlignment.center;
                             StringInput {
                                 value <=> root.password-repeat;
-                                read-only: root.busy || backup-status == VaultBackupStatus.running;
+                                read-only: root.busy || backup-status == VaultBackupStatus.running || backup-status == VaultBackupStatus.success;
                                 input-type: password-repeat-visibility ? InputType.text : InputType.password;
                             }
                         }
@@ -586,38 +599,47 @@ export component VaultBackupView inherits VerticalLayout {
         }
     }
 
-    if selected-backup-option == VaultSelectedBackupOption.key-export && backup-status == VaultBackupStatus.success: GridLayout {
-        spacing-horizontal: 0.75rem;
-        spacing-vertical: 0.75rem;
+    if selected-backup-option == VaultSelectedBackupOption.key-export && backup-status == VaultBackupStatus.success: HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
 
-        Row {
-            VerticalLayout {
-                alignment: LayoutAlignment.center;
-                Text {
-                    text: @tr("Encryption key") + ": ";
-                    wrap: TextWrap.word-wrap;
-                }
-            }
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
 
-            VerticalLayout {
-                alignment: LayoutAlignment.center;
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.75rem;
 
-                StringInput {
-                    value <=> root.encryption-key;
-                    read-only: true;
-                }
-            }
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Encryption key") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
 
-            VerticalLayout {
-                alignment: LayoutAlignment.center;
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
 
-                Button {
-                    text: @tr("Copy");
-                    icon: @image-url("../assets/icons/copy.svg");
-                    colorize-icon: true;
-                    enabled: !busy;
-                    clicked => {
-                        root.copy-encryption-key();
+                        StringInput {
+                            value <=> root.encryption-key;
+                            read-only: true;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Copy");
+                            icon: @image-url("../assets/icons/copy.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.copy-encryption-key();
+                            }
+                        }
                     }
                 }
             }

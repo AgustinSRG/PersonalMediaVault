@@ -64,14 +64,22 @@ pub enum LauncherWorkerMessage {
 
     SelectBackupPath,
 
+    ExportVaultKey {
+        username: String,
+        password: String,
+    },
+    CopyToClipboard {
+        contents: String,
+    },
+
     RunTool {
         tool: VaultSelectedTool,
     },
     CancelTool,
-    ToolSuccess{
+    ToolSuccess {
         tool_id: u64,
     },
-    ToolError{
+    ToolError {
         tool_id: u64,
         error_details: String,
     },

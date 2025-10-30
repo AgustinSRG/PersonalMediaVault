@@ -27,4 +27,7 @@ pub use pmv_binaries::*;
 mod log_file;
 pub use log_file::*;
 
+mod clipboard;
+pub use clipboard::*;
+
 mod debug;

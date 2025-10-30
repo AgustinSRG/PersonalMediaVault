@@ -2,13 +2,14 @@
 
 use std::sync::{mpsc::Receiver, Arc};
 
+use arboard::Clipboard;
 use duct::Handle;
 use pidlock::Pidlock;
 
 use crate::{
     log_debug,
     models::{FFmpegConfig, LauncherConfig},
-    utils::{write_ffmpeg_to_config_file, write_launcher_to_config_file},
+    utils::{get_clipboard, write_ffmpeg_to_config_file, write_launcher_to_config_file},
 };
 
 pub struct WorkerThreadStatus {
@@ -32,6 +33,8 @@ pub struct WorkerThreadStatus {
     pub tool_id: u64,
     pub tool_process: Option<Arc<Handle>>,
     pub tool_process_wait_receiver: Option<Receiver<bool>>,
+
+    pub clipboard: Option<Clipboard>,
 }
 
 impl WorkerThreadStatus {
@@ -60,6 +63,8 @@ impl WorkerThreadStatus {
             tool_id: 0,
             tool_process: None,
             tool_process_wait_receiver: None,
+
+            clipboard: get_clipboard(),
         }
     }
 
