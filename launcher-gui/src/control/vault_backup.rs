@@ -4,7 +4,7 @@ use std::sync::mpsc::Sender;
 
 use slint::ComponentHandle;
 
-use crate::{utils::set_clipboard_contents, worker::LauncherWorkerMessage, MainWindow};
+use crate::{models::AES_KEY_SIZE, worker::LauncherWorkerMessage, MainWindow, VaultBackupStatus};
 
 pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<LauncherWorkerMessage>) {
     ui.on_select_backup_path({
@@ -60,11 +60,63 @@ pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<Launc
                         return;
                     }
 
+                    ui.set_backup_status(VaultBackupStatus::Running);
+                    ui.set_backup_progress_indeterminate(true);
+                    ui.set_backup_progress_global("".to_string().into());
+                    ui.set_backup_progress_file("".to_string().into());
                     ui.set_busy(true);
                     let _ =
                         sender.send(LauncherWorkerMessage::ExportVaultKey { username, password });
                 }
-                crate::VaultSelectedBackupOption::KeyRecover => {}
+                crate::VaultSelectedBackupOption::KeyRecover => {
+                    ui.set_encryption_key_invalid(false);
+                    ui.set_username_invalid(false);
+                    ui.set_password_invalid(false);
+                    ui.set_password_repeat_invalid(false);
+
+                    let mut has_error = false;
+
+                    let encryption_key =
+                        hex::decode(ui.get_encryption_key().to_string()).unwrap_or(Vec::new());
+
+                    if encryption_key.len() != AES_KEY_SIZE {
+                        has_error = true;
+                        ui.set_encryption_key_invalid(true);
+                    }
+
+                    let username = ui.get_username().to_string();
+
+                    if username.is_empty() {
+                        has_error = true;
+                        ui.set_username_invalid(true);
+                    }
+
+                    let password = ui.get_password().to_string();
+                    let password_repeat = ui.get_password_repeat().to_string();
+
+                    if password.is_empty() {
+                        has_error = true;
+                        ui.set_password_invalid(true);
+                    } else if password != password_repeat {
+                        has_error = true;
+                        ui.set_password_repeat_invalid(true);
+                    }
+
+                    if has_error {
+                        return;
+                    }
+
+                    ui.set_backup_status(VaultBackupStatus::Running);
+                    ui.set_backup_progress_indeterminate(true);
+                    ui.set_backup_progress_global("".to_string().into());
+                    ui.set_backup_progress_file("".to_string().into());
+                    ui.set_busy(true);
+                    let _ = sender.send(LauncherWorkerMessage::RecoverEncryptionKey {
+                        key: encryption_key,
+                        username,
+                        password,
+                    });
+                }
             }
         }
     });

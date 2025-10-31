@@ -35,3 +35,6 @@ pub use vault_tools::*;
 
 mod key_export;
 pub use key_export::*;
+
+mod key_recover;
+pub use key_recover::*;

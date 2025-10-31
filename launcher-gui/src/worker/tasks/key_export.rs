@@ -3,8 +3,8 @@ use std::path::Path;
 use slint::Weak;
 
 use crate::{
-    models::VaultCredentials, utils::to_hex_string, worker::WorkerThreadStatus, MainWindow,
-    VaultBackupErrorType, VaultBackupStatus,
+    models::VaultCredentials, worker::WorkerThreadStatus, MainWindow, VaultBackupErrorType,
+    VaultBackupStatus,
 };
 
 pub fn export_vault_key(
@@ -38,6 +38,7 @@ pub fn export_vault_key(
         let _ = slint::invoke_from_event_loop(move || {
             let win = wh.unwrap();
             win.set_busy(false);
+            win.set_backup_status(VaultBackupStatus::Idle);
             win.set_username_invalid(true);
         });
         return;
@@ -51,6 +52,7 @@ pub fn export_vault_key(
                 let _ = slint::invoke_from_event_loop(move || {
                     let win = wh.unwrap();
                     win.set_busy(false);
+                    win.set_backup_status(VaultBackupStatus::Idle);
                     win.set_password_invalid(true);
                 });
                 return;
@@ -69,7 +71,7 @@ pub fn export_vault_key(
         },
     };
 
-    let hey_hex = to_hex_string(&key).to_uppercase();
+    let hey_hex = hex::encode(&key).to_uppercase();
     let wh = window_handle.clone();
     let _ = slint::invoke_from_event_loop(move || {
         let win = wh.unwrap();

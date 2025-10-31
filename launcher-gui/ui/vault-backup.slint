@@ -207,7 +207,7 @@ export component VaultBackupView inherits VerticalLayout {
 
                 if selected-backup-option == VaultSelectedBackupOption.backup: GridLayout {
                     spacing-horizontal: 0.75rem;
-                    spacing-vertical: 0.75rem;
+                    spacing-vertical: 0.5rem;
 
                     Row {
                         VerticalLayout {
@@ -241,11 +241,21 @@ export component VaultBackupView inherits VerticalLayout {
                             }
                         }
                     }
+
+                    Row {
+                        Text {
+                            colspan: 3;
+                            text: backup-path-invalid ? @tr("Invalid backup path") : "";
+                            wrap: TextWrap.word-wrap;
+                            color: red;
+                            font-size: 10pt;
+                        }
+                    }
                 }
 
                 if selected-backup-option == VaultSelectedBackupOption.key-export: GridLayout {
                     spacing-horizontal: 0.75rem;
-                    spacing-vertical: 0.75rem;
+                    spacing-vertical: 0.5rem;
 
                     Row {
                         VerticalLayout {
@@ -273,6 +283,7 @@ export component VaultBackupView inherits VerticalLayout {
                             text: username-invalid ? @tr("Invalid username") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
 
@@ -313,13 +324,14 @@ export component VaultBackupView inherits VerticalLayout {
                             text: password-invalid ? @tr("Invalid password") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
                 }
 
                 if selected-backup-option == VaultSelectedBackupOption.key-recover: GridLayout {
                     spacing-horizontal: 0.75rem;
-                    spacing-vertical: 0.75rem;
+                    spacing-vertical: 0.5rem;
 
                     Row {
                         VerticalLayout {
@@ -355,9 +367,10 @@ export component VaultBackupView inherits VerticalLayout {
                     Row {
                         Text {
                             colspan: 3;
-                            text: encryption-key-invalid ? @tr("Invalid encryption key: Decryption test failed for vault files") : "";
+                            text: encryption-key-invalid ? @tr("Invalid encryption key.") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
 
@@ -387,6 +400,7 @@ export component VaultBackupView inherits VerticalLayout {
                             text: username-invalid ? @tr("Invalid username") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
 
@@ -427,6 +441,7 @@ export component VaultBackupView inherits VerticalLayout {
                             text: password-invalid ? @tr("Invalid password") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
 
@@ -467,6 +482,7 @@ export component VaultBackupView inherits VerticalLayout {
                             text: password-repeat-invalid ? @tr("The passwords do not match") : "";
                             wrap: TextWrap.word-wrap;
                             color: red;
+                            font-size: 10pt;
                         }
                     }
                 }
@@ -592,6 +608,9 @@ export component VaultBackupView inherits VerticalLayout {
                 same-folder when backup-error-type == VaultBackupErrorType.same-folder: {
                     text: @tr("Error") + ": " + @tr("The target folder is the same as the source folder.");
                 }
+                no-encrypted-files when backup-error-type == VaultBackupErrorType.no-encrypted-files: {
+                    text: @tr("Error") + ": " + @tr("The vault does not have any encrypted files yet.");
+                }
                 unknown when backup-error-type == VaultBackupErrorType.unknown: {
                     text: @tr("Error") + ": " + (backup-error == "" ? @tr("Unknown error") : backup-error);
                 }
@@ -608,7 +627,7 @@ export component VaultBackupView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.5rem;
 
                 Row {
                     VerticalLayout {

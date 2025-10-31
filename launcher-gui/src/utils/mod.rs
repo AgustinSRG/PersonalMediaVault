@@ -9,9 +9,6 @@ pub use default_vault_path::*;
 mod launcher_config;
 pub use launcher_config::*;
 
-mod hex;
-pub use hex::*;
-
 mod files;
 pub use files::*;
 
@@ -29,5 +26,8 @@ pub use log_file::*;
 
 mod clipboard;
 pub use clipboard::*;
+
+mod encryption_key;
+pub use encryption_key::*;
 
 mod debug;

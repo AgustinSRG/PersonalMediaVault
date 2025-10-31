@@ -11,10 +11,13 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 /// Current method for hashing credentials
-pub const VAULT_CRED_METHOD_AES_SHA256: &'static str = "aes256/sha256/salt16";
+const VAULT_CRED_METHOD_AES_SHA256: &'static str = "aes256/sha256/salt16";
 
-// Size for the salt
-pub const SALT_SIZE: usize = 16;
+/// Size for the salt
+const SALT_SIZE: usize = 16;
+
+/// Size of an AES key
+pub const AES_KEY_SIZE: usize = 32;
 
 /// An extra account of the vault
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]

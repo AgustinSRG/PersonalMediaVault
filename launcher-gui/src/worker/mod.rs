@@ -294,6 +294,22 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::CopyToClipboard { contents } => {
                         set_clipboard_contents(&mut status.clipboard, &contents);
                     }
+                    LauncherWorkerMessage::RecoverEncryptionKey {
+                        key,
+                        username,
+                        password,
+                    } => {
+                        recover_encryption_key(
+                            &mut status,
+                            &sender,
+                            &window_handle,
+                            RecoverEncryptionKeyOptions {
+                                key,
+                                username,
+                                password,
+                            },
+                        );
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);

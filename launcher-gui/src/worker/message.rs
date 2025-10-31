@@ -71,6 +71,11 @@ pub enum LauncherWorkerMessage {
     CopyToClipboard {
         contents: String,
     },
+    RecoverEncryptionKey {
+        key: Vec<u8>,
+        username: String,
+        password: String,
+    },
 
     RunTool {
         tool: VaultSelectedTool,
