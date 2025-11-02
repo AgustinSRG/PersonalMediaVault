@@ -35,7 +35,30 @@ pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<Launc
 
             match option {
                 crate::VaultSelectedBackupOption::None => {}
-                crate::VaultSelectedBackupOption::Backup => {}
+                crate::VaultSelectedBackupOption::Backup => {
+                    ui.set_backup_path_invalid(false);
+
+                    let mut has_error = false;
+
+                    let backup_path = ui.get_backup_path().to_string();
+
+                    if backup_path.is_empty() {
+                        has_error = true;
+                        ui.set_backup_path_invalid(true);
+                    }
+
+                    if has_error {
+                        return;
+                    }
+
+                    ui.set_backup_status(VaultBackupStatus::Running);
+                    ui.set_backup_progress_indeterminate(true);
+                    ui.set_backup_progress_global("".to_string().into());
+                    ui.set_backup_progress_file("".to_string().into());
+                    ui.set_busy(true);
+                    let _ =
+                        sender.send(LauncherWorkerMessage::StartBackup { backup_path });
+                }
                 crate::VaultSelectedBackupOption::KeyExport => {
                     ui.set_username_invalid(false);
                     ui.set_password_invalid(false);

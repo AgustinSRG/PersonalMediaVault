@@ -77,6 +77,14 @@ pub enum LauncherWorkerMessage {
         password: String,
     },
 
+    StartBackup {
+        backup_path: String,
+    },
+    CancelBackup,
+    BackupEnded {
+        task_id: u64,
+    },
+
     RunTool {
         tool: VaultSelectedTool,
     },

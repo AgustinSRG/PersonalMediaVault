@@ -33,4 +33,7 @@ pub use encryption_key::*;
 mod cancellable;
 pub use cancellable::*;
 
+mod size_display;
+pub use size_display::*;
+
 mod debug;

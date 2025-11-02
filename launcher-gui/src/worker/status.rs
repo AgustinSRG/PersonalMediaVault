@@ -9,7 +9,10 @@ use pidlock::Pidlock;
 use crate::{
     log_debug,
     models::{FFmpegConfig, LauncherConfig},
-    utils::{get_clipboard, write_ffmpeg_to_config_file, write_launcher_to_config_file},
+    utils::{
+        get_clipboard, write_ffmpeg_to_config_file, write_launcher_to_config_file,
+        CancellableTaskController,
+    },
 };
 
 pub struct WorkerThreadStatus {
@@ -29,6 +32,9 @@ pub struct WorkerThreadStatus {
     pub daemon_process_wait_receiver: Option<Receiver<bool>>,
 
     pub log_file: Option<String>,
+
+    pub backup_task_id: u64,
+    pub backup_cancellable_task: Option<CancellableTaskController>,
 
     pub tool_id: u64,
     pub tool_process: Option<Arc<Handle>>,
@@ -59,6 +65,9 @@ impl WorkerThreadStatus {
             daemon_process_wait_receiver: None,
 
             log_file: None,
+
+            backup_task_id: 0,
+            backup_cancellable_task: None,
 
             tool_id: 0,
             tool_process: None,

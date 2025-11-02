@@ -38,3 +38,6 @@ pub use key_export::*;
 
 mod key_recover;
 pub use key_recover::*;
+
+mod backup;
+pub use backup::*;

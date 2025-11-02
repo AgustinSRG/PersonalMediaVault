@@ -310,6 +310,29 @@ pub fn run_worker_thread(
                             },
                         );
                     }
+                    LauncherWorkerMessage::StartBackup { backup_path } => {
+                        start_backup(&mut status, &sender, &window_handle, backup_path);
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::CancelBackup => {
+                        if let Some(t) = &status.backup_cancellable_task {
+                            t.cancel();
+                        }
+                        let wh = window_handle.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            let win = wh.unwrap();
+                            win.set_busy(false);
+                        });
+                    }
+                    LauncherWorkerMessage::BackupEnded { task_id } => {
+                        if status.backup_task_id == task_id {
+                            status.backup_cancellable_task = None;
+                        }
+                    }
                 },
                 Err(err) => {
                     log_debug!("Error: {}", err);
