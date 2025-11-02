@@ -30,4 +30,7 @@ pub use clipboard::*;
 mod encryption_key;
 pub use encryption_key::*;
 
+mod cancellable;
+pub use cancellable::*;
+
 mod debug;
