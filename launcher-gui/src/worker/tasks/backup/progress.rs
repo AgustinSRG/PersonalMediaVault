@@ -116,16 +116,16 @@ impl BackupProgressStatus {
                     display_size(self.bytes_total)
                 ),
             )
-        } else {
+        } else if self.files_total > 0 {
             (
                 progress,
                 format!(
                     "{}% {} / {}",
-                    progress_int,
-                    self.files_done,
-                    self.files_total,
+                    progress_int, self.files_done, self.files_total,
                 ),
             )
+        } else {
+            (1.0, "100% (0 / 0)".to_string())
         }
     }
 
@@ -152,11 +152,13 @@ impl BackupProgressStatus {
         }
     }
 
-    pub fn update(&self) {
+    pub fn update(&mut self) {
         let indeterminate = self.indeterminate;
         let task = self.current_task;
         let (progress_global, progress_global_str) = self.get_global_progress();
         let file_progress = self.get_file_progress();
+
+        self.last_update = SystemTime::now();
 
         let wh = self.main_window.clone();
         let _ = slint::invoke_from_event_loop(move || {

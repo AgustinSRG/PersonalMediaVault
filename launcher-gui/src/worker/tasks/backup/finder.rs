@@ -18,7 +18,12 @@ fn find_files_recursive(
     path: PathBuf,
 ) -> Result<(), ()> {
     if progress.should_update() {
-        progress.update();
+        if task.is_cancelled() {
+            progress.set_idle();
+            return Err(());
+        } else {
+            progress.update();
+        }
     }
 
     let joined_path = vault_path.join(&path);
@@ -45,7 +50,7 @@ fn find_files_recursive(
                     entries.push(BackupEntry { path: new_path });
                     progress.files_done += 1;
                 } else if file_type.is_dir() {
-                    find_files_recursive(task, entries, progress, vault_path, new_path);
+                    find_files_recursive(task, entries, progress, vault_path, new_path)?;
                 }
             }
         }

@@ -1,10 +1,9 @@
-
 const UNITS: &'static str = "kMGTPE";
 const UNIT: u64 = 1024;
 
 pub fn display_size(bytes: u64) -> String {
     if bytes < UNIT {
-        return format!("{} B", bytes)
+        return format!("{} B", bytes);
     }
 
     let mut div = UNIT;

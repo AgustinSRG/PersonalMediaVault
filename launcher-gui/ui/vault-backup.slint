@@ -602,7 +602,7 @@ export component VaultBackupView inherits VerticalLayout {
             color: red;
 
             states [
-                locked when backup-error-type == VaultBackupErrorType.unknown: {
+                locked when backup-error-type == VaultBackupErrorType.locked: {
                     text: @tr("Error") + ": " + @tr("The target folder is locked by another process.");
                 }
                 same-folder when backup-error-type == VaultBackupErrorType.same-folder: {

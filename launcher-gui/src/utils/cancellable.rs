@@ -61,7 +61,7 @@ impl CancellableTaskController {
 
         drop(status);
 
-        let mut end_receiver = self.end_receiver.lock().unwrap();
+        let end_receiver = self.end_receiver.lock().unwrap();
 
         let _ = end_receiver.recv();
     }

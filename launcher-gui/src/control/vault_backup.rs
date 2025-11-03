@@ -27,6 +27,16 @@ pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<Launc
         }
     });
 
+    ui.on_cancel_backup({
+        let ui_handle = ui.as_weak();
+        let sender = worker_sender.clone();
+        move || {
+            let ui = ui_handle.unwrap();
+            ui.set_busy(true);
+            let _ = sender.send(LauncherWorkerMessage::CancelBackup);
+        }
+    });
+
     ui.on_run_backup({
         let ui_handle = ui.as_weak();
         let sender = worker_sender.clone();
@@ -56,8 +66,7 @@ pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<Launc
                     ui.set_backup_progress_global("".to_string().into());
                     ui.set_backup_progress_file("".to_string().into());
                     ui.set_busy(true);
-                    let _ =
-                        sender.send(LauncherWorkerMessage::StartBackup { backup_path });
+                    let _ = sender.send(LauncherWorkerMessage::StartBackup { backup_path });
                 }
                 crate::VaultSelectedBackupOption::KeyExport => {
                     ui.set_username_invalid(false);

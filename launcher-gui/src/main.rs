@@ -17,6 +17,7 @@ mod utils;
 mod worker;
 
 use control::*;
+use normalize_path::NormalizePath;
 
 use crate::worker::{run_worker_thread, LauncherWorkerMessage};
 
@@ -50,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let p = PathBuf::from(&args[1]);
 
         if let Ok(abs_path) = path::absolute(p) {
-            let abs_path_str = abs_path.to_string_lossy().to_string();
+            let abs_path_str = abs_path.normalize().to_string_lossy().to_string();
             main_window.set_launcher_status(LauncherStatus::Opening);
             main_window.set_vault_path(abs_path_str.clone().into());
             let _ = sender.send(LauncherWorkerMessage::OpenVault { path: abs_path_str });

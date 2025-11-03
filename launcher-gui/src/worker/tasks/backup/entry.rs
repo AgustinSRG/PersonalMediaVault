@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, time::SystemTime};
+use std::{path::PathBuf, time::SystemTime};
 
 /// Backup entry
 /// A file to be backend up
@@ -28,7 +28,7 @@ pub struct CheckedBackupEntry {
 
 impl CheckedBackupEntry {
     pub fn new(entry: BackupEntry, size: u64, modified: SystemTime) -> CheckedBackupEntry {
-        CheckedBackupEntry{
+        CheckedBackupEntry {
             path: entry.path,
             size,
             modified,

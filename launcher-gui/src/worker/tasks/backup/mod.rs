@@ -1,4 +1,6 @@
 mod backup;
+mod check;
+mod copy;
 mod entry;
 mod finder;
 mod progress;
