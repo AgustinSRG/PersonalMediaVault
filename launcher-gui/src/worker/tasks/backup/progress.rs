@@ -97,7 +97,11 @@ impl BackupProgressStatus {
         }
 
         let progress: f64 = if self.bytes_total == 0 {
-            0.0
+            if self.files_total == 0 {
+                0.0
+            } else {
+                (self.files_done as f64) / (self.files_total as f64)
+            }
         } else {
             (self.bytes_done as f64) / (self.bytes_total as f64)
         };
@@ -184,10 +188,14 @@ impl BackupProgressStatus {
     }
 
     pub fn set_success(&self) {
+        let files_str = self.files_total.to_string();
+        let bytes_str = display_size(self.bytes_total);
         let wh = self.main_window.clone();
         let _ = slint::invoke_from_event_loop(move || {
             let win = wh.unwrap();
             win.set_backup_status(VaultBackupStatus::Success);
+            win.set_backup_result_files(files_str.into());
+            win.set_backup_result_bytes(bytes_str.into());
         });
     }
 

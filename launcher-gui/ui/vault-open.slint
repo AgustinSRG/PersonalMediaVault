@@ -175,6 +175,10 @@ export component VaultOpenView inherits VerticalLayout {
     in-out property <string> password-repeat: "";
     in-out property <bool> password-repeat-invalid: false;
 
+    /// Result of the backup
+    in property <string> backup-result-files: "0";
+    in property <string> backup-result-bytes: "0 B";
+
     /// Run the selected tool
     callback run-backup(VaultSelectedBackupOption);
 
@@ -327,6 +331,9 @@ export component VaultOpenView inherits VerticalLayout {
                 backup-progress-indeterminate: backup-progress-indeterminate;
                 backup-progress-global: backup-progress-global;
                 backup-progress-file: backup-progress-file;
+
+                backup-result-files: backup-result-files;
+                backup-result-bytes: backup-result-bytes;
 
                 run-backup(t) => {
                     root.run-backup(t);

@@ -17,6 +17,10 @@ export component VaultBackupView inherits VerticalLayout {
     /// The current task of the backup
     in-out property <VaultBackupCurrentTask> backup-task: VaultBackupCurrentTask.none;
 
+    /// Result of the backup
+    in property <string> backup-result-files: "0";
+    in property <string> backup-result-bytes: "0 B";
+
     /// Vault encryption key
     in-out property <string> encryption-key: "";
     in-out property <bool> encryption-key-invalid: false;
@@ -583,7 +587,7 @@ export component VaultBackupView inherits VerticalLayout {
 
             states [
                 backup when selected-backup-option == VaultSelectedBackupOption.backup: {
-                    text: @tr("Backup completed") + ": " + backup-progress-global;
+                    text: @tr("Backup completed! Files updated: {}, Bytes copied: {}", backup-result-files, backup-result-bytes);
                 }
                 key-export when selected-backup-option == VaultSelectedBackupOption.key-export: {
                     text: @tr("Encryption key successfully exported!");
