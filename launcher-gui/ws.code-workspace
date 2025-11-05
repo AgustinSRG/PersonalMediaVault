@@ -14,8 +14,10 @@
 		"cSpell.words": [
 			"ffprobe",
 			"github",
+			"msgctxt",
 			"slint",
 			"Slint"
 		],
+		"cSpell.useGitignore": false,
 	}
 }
