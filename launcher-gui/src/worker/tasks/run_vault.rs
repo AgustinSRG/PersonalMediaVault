@@ -1,10 +1,11 @@
 use crate::{
-    MainWindow, VaultDaemonErrorType, VaultDaemonStatus, utils::{command_no_window, get_log_file, open_url_async}, worker::{LauncherWorkerMessage, WorkerThreadStatus}
+    utils::{command_no_window, get_log_file, open_log_file, open_url_async},
+    worker::{LauncherWorkerMessage, WorkerThreadStatus},
+    MainWindow, VaultDaemonErrorType, VaultDaemonStatus,
 };
 use duct::{cmd, Handle};
 use slint::Weak;
 use std::{
-    fs::File,
     process,
     sync::{
         mpsc::{channel, Sender},
@@ -77,7 +78,7 @@ pub fn run_vault(
         }
     };
 
-    let log_file = match File::create(&log_file_path) {
+    let log_file = match open_log_file(&log_file_path) {
         Ok(f) => f,
         Err(e) => {
             let err_str = e.to_string();

@@ -1,7 +1,9 @@
 // Log files utils
 
+#[cfg(unix)]
+use std::io;
 use std::{
-    fs::{create_dir_all, read_dir, remove_file},
+    fs::{create_dir_all, read_dir, remove_file, File},
     path::{Path, PathBuf},
     process,
 };
@@ -81,4 +83,33 @@ pub fn get_log_file() -> Result<String, String> {
     pb.push(file_name);
 
     Ok(pb.to_string_lossy().to_string())
+}
+
+#[cfg(unix)]
+pub fn open_log_file<P>(path: P) -> Result<File, io::Error>
+where
+    P: AsRef<Path>,
+{
+    File::create(path)
+}
+
+#[cfg(windows)]
+pub fn open_log_file<P>(path: P) -> Result<File, io::Error>
+where
+    P: AsRef<Path>,
+{
+    use std::fs::OpenOptions;
+    use std::os::windows::fs::OpenOptionsExt;
+
+    const FILE_SHARE_READ: u32 = 0x00000001;
+    const FILE_SHARE_WRITE: u32 = 0x00000002;
+
+    OpenOptions::new()
+        // Standard options for a log file: append, create if it doesn't exist
+        .append(true)
+        .create(true)
+        // Windows-specific extension to set the file sharing mode.
+        // We allow other processes to read (FILE_SHARE_READ) and write (FILE_SHARE_WRITE)
+        .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+        .open(path)
 }
