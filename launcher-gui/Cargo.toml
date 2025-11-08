@@ -1,5 +1,5 @@
 [package]
-name = "pmv-launcher"
+name = "pmv-gui"
 version = "4.0.0"
 edition = "2021"
 
