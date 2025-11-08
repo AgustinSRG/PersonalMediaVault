@@ -1,6 +1,6 @@
 
 import { StringInput } from "string-input.slint";
-import { Switch, Button } from "std-widgets.slint";
+import { Button } from "std-widgets.slint";
 
 export component VaultConfigFFmpegView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
@@ -45,7 +45,7 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.25rem;
 
                 Row {
                     VerticalLayout {
@@ -90,6 +90,7 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         text: ffmpeg-path-invalid ? @tr("Invalid FFmpeg binary path") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -136,6 +137,7 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         text: ffprobe-path-invalid ? @tr("Invalid FFprobe binary path") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -170,6 +172,7 @@ export component VaultConfigFFmpegView inherits VerticalLayout {
                         text: video-codec-invalid ? @tr("Invalid video encoder. You can run 'ffmpeg -encoders' in order to check the available ones.") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
             }

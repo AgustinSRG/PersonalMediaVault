@@ -52,6 +52,20 @@ export component MainWindow inherits Window {
 
     default-font-size: 11pt;
 
+    out property <bool> is-dark-theme-default: Palette.color-scheme == ColorScheme.dark;
+
+    public function set-dark-theme() {
+        Palette.color-scheme = ColorScheme.dark;
+    }
+
+    public function set-light-theme() {
+        Palette.color-scheme = ColorScheme.light;
+    }
+
+    public function set-default-theme() {
+        Palette.color-scheme = is-dark-theme-default ? ColorScheme.dark : ColorScheme.light;
+    }
+
     /// PersonalMediaVault version
     in property <string> version: "1.0.0";
 

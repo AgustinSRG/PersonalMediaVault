@@ -39,7 +39,7 @@ export component VaultConfigHostPortView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.25rem;
 
                 Row {
                     VerticalLayout {
@@ -70,6 +70,7 @@ export component VaultConfigHostPortView inherits VerticalLayout {
                         text: hostname-invalid ? @tr("Invalid hostname") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -102,6 +103,7 @@ export component VaultConfigHostPortView inherits VerticalLayout {
                         text: port-invalid ? @tr("Invalid port. Must be a number between 1 and 65535") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 

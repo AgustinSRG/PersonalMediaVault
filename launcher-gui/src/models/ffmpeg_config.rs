@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 pub const VIDEO_CODEC_DEFAULT: &str = "libx264";
 pub const VIDEO_CODEC_ALTERNATIVE: &str = "libvpx-vp9";
 
-/// Represents the configuration for the launcher
-/// for a given vault path
+/// Represents the FFmpeg configuration
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FFmpegConfig {
     #[serde(default, rename = "ffmpeg_path")]

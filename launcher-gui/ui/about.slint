@@ -1,5 +1,5 @@
 import { Button, Palette } from "std-widgets.slint";
-export component AboutComponent inherits HorizontalLayout {
+export component AboutComponent inherits VerticalLayout {
     /// PersonalMediaVault version
     in property <string> version: "1.0.0";
 
@@ -9,54 +9,67 @@ export component AboutComponent inherits HorizontalLayout {
     /// Visit GitHub page
     callback visit-git();
 
-    alignment: LayoutAlignment.center;
-    spacing: 2rem;
-    padding: 1rem;
+    alignment: LayoutAlignment.start;
+    spacing: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 
-    VerticalLayout {
+    HorizontalLayout {
         alignment: LayoutAlignment.center;
-        Image {
-            source: @image-url("../assets/favicon.png");
-            width: 5rem;
-            height: 5rem;
+        spacing: 2rem;
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            Image {
+                source: @image-url("../assets/favicon.png");
+                width: 4rem;
+                height: 4rem;
+            }
+        }
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+            spacing: 1rem;
+
+            Text {
+                text: @tr("PersonalMediaVault");
+                font-size: 14pt;
+                font-weight: 800;
+            }
+
+            Text {
+                text: @tr("Version") + ": " + version;
+                font-weight: 600;
+            }
         }
     }
 
-    VerticalLayout {
+    HorizontalLayout {
         alignment: LayoutAlignment.center;
         spacing: 1rem;
 
-        Text {
-            text: @tr("PersonalMediaVault");
-            font-size: 14pt;
-            font-weight: 800;
+        Button {
+            text: @tr("Preferences");
+            icon: @image-url("../assets/icons/settings.svg");
+            colorize-icon: true;
         }
 
-        Text {
-            text: @tr("Version") + ": " + version;
-            font-weight: 600;
-        }
-
-        HorizontalLayout {
-            alignment: LayoutAlignment.start;
-            spacing: 1rem;
-
-            Button {
-                text: @tr("Visit Website");
-                icon: @image-url("../assets/icons/link.svg");
-                colorize-icon: true;
-                clicked => {
-                    root.visit-website();
-                }
+        Button {
+            text: @tr("Visit Website");
+            icon: @image-url("../assets/icons/link.svg");
+            colorize-icon: true;
+            clicked => {
+                root.visit-website();
             }
+        }
 
-            Button {
-                text: @tr("Visit GitHub");
-                icon: @image-url("../assets/icons/link.svg");
-                colorize-icon: true;
-                clicked => {
-                    root.visit-git();
-                }
+        Button {
+            text: @tr("Visit GitHub");
+            icon: @image-url("../assets/icons/link.svg");
+            colorize-icon: true;
+            clicked => {
+                root.visit-git();
             }
         }
     }

@@ -38,7 +38,7 @@ export component VaultConfigOtherView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.25rem;
 
                 Row {
                     VerticalLayout {
@@ -69,6 +69,7 @@ export component VaultConfigOtherView inherits VerticalLayout {
                         text: cache-size-invalid ? @tr("Invalid cache size. Must be a number greater or equal to 0.") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -82,6 +83,16 @@ export component VaultConfigOtherView inherits VerticalLayout {
                             root.dirty = true;
                             root.saved = false;
                         }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
                     }
                 }
 

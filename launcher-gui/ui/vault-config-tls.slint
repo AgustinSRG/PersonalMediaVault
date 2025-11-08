@@ -45,7 +45,7 @@ export component VaultConfigTlsView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.25rem;
 
                 Row {
                     Switch {
@@ -57,6 +57,16 @@ export component VaultConfigTlsView inherits VerticalLayout {
                             root.dirty = true;
                             root.saved = false;
                         }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -103,6 +113,7 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         text: tls-cert-invalid ? @tr("Invalid TLS certificate") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -149,6 +160,7 @@ export component VaultConfigTlsView inherits VerticalLayout {
                         text: tls-key-invalid ? @tr("Invalid TLS private key") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
             }

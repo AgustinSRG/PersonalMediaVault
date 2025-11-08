@@ -1,4 +1,4 @@
-import { Button, Switch, TextEdit } from "std-widgets.slint";
+import { Button, TextEdit } from "std-widgets.slint";
 import { StringInput } from "string-input.slint";
 
 export component CreateVaultView inherits VerticalLayout {
@@ -71,7 +71,7 @@ export component CreateVaultView inherits VerticalLayout {
 
             GridLayout {
                 spacing-horizontal: 0.75rem;
-                spacing-vertical: 0.75rem;
+                spacing-vertical: 0.25rem;
 
                 Row {
                     VerticalLayout {
@@ -99,6 +99,7 @@ export component CreateVaultView inherits VerticalLayout {
                         text: username-invalid ? @tr("Invalid username") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -123,7 +124,7 @@ export component CreateVaultView inherits VerticalLayout {
                     VerticalLayout {
                         Button {
                             text: "";
-                             icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                            icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
                             colorize-icon: true;
                             enabled: !busy;
                             clicked => {
@@ -139,6 +140,7 @@ export component CreateVaultView inherits VerticalLayout {
                         text: password-invalid ? @tr("Invalid password") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
 
@@ -179,6 +181,7 @@ export component CreateVaultView inherits VerticalLayout {
                         text: password-repeat-invalid ? @tr("The passwords do not match") : "";
                         wrap: TextWrap.word-wrap;
                         color: red;
+                        font-size: 10pt;
                     }
                 }
             }

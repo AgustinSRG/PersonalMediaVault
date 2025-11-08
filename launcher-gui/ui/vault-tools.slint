@@ -115,6 +115,36 @@ export component VaultToolsView inherits VerticalLayout {
             text: @tr("Note: The tool requires the vault to be stopped in order to run");
         }
 
+        if tool-status == VaultToolStatus.running: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            ProgressIndicator {
+                width: 24rem;
+                height: 0.75rem;
+                indeterminate: true;
+            }
+        }
+
+        if tool-status == VaultToolStatus.success: HorizontalLayout {
+            Text {
+                text: @tr("Tool successfully used!");
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+                color: green;
+            }
+        }
+
+        if tool-status == VaultToolStatus.error: HorizontalLayout {
+            Text {
+                text: @tr("Error") + ": " + (tool-error == "" ? @tr("Unknown error") : tool-error);
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+                color: red;
+            }
+        }
+
         HorizontalLayout {
             alignment: LayoutAlignment.center;
             padding-top: 0.75rem;
@@ -149,36 +179,6 @@ export component VaultToolsView inherits VerticalLayout {
                 clicked => {
                     root.cancel-tool();
                 }
-            }
-        }
-
-        if tool-status == VaultToolStatus.running: HorizontalLayout {
-            alignment: LayoutAlignment.center;
-            padding-left: 1rem;
-            padding-right: 1rem;
-
-            ProgressIndicator {
-                width: 24rem;
-                height: 0.75rem;
-                indeterminate: true;
-            }
-        }
-
-        if tool-status == VaultToolStatus.success: HorizontalLayout {
-            Text {
-                text: @tr("Tool successfully used!");
-                wrap: TextWrap.word-wrap;
-                horizontal-alignment: center;
-                color: green;
-            }
-        }
-
-        if tool-status == VaultToolStatus.error: HorizontalLayout {
-            Text {
-                text: @tr("Error") + ": " + (tool-error == "" ? @tr("Unknown error") : tool-error);
-                wrap: TextWrap.word-wrap;
-                horizontal-alignment: center;
-                color: red;
             }
         }
     }
