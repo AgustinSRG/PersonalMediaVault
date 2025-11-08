@@ -16,8 +16,6 @@ Also, install the [slint-tr-extractor](https://crates.io/crates/slint-tr-extract
 cargo install slint-tr-extractor
 ```
 
-If you are in Windows, install the [GetText tools](https://gnuwin32.sourceforge.net/packages/gettext.htm), used to generate the translations files.
-
 ## Compiling
 
 Use the compilation script to compile the app for production:
