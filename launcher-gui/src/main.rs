@@ -19,12 +19,23 @@ mod worker;
 use control::*;
 use normalize_path::NormalizePath;
 
-use crate::worker::{run_worker_thread, LauncherWorkerMessage};
+use crate::{utils::{folder_exists, get_dirname}, worker::{LauncherWorkerMessage, run_worker_thread}};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Load initial data
 
-    slint::init_translations!(concat!(env!("CARGO_MANIFEST_DIR"), "/lang/"));
+    if folder_exists("/usr/lib/pmv/lang/") {
+        slint::init_translations!("/usr/lib/pmv/lang/");
+    } else {
+        let mut lang_dir = get_dirname();
+        lang_dir.push("lang");
+
+        if folder_exists(&lang_dir) {
+            slint::init_translations!(lang_dir);
+        } else {
+            slint::init_translations!("./lang/");
+        }
+    }
 
     // Instantiate the screens
 
