@@ -23,3 +23,6 @@ Copy-Item -Path "..\..\backup-tool\pmv-backup.exe" -Destination "PersonalMediaVa
 
 # Copy launcher
 Copy-Item -Path "..\..\launcher\pmv.exe" -Destination "PersonalMediaVault\pmv.exe" -Force
+
+# Copy launcher (GUI)
+Copy-Item -Path "..\..\launcher-gui\target\release\pmv-gui.exe" -Destination "PersonalMediaVault\pmv-gui.exe" -Force
