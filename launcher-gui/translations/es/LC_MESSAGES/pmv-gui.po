@@ -40,7 +40,7 @@ msgstr "Visitar web"
 #: ui/about.slint:54
 msgctxt "AboutComponent"
 msgid "Visit GitHub"
-msgstr "Visitar GitHubc"
+msgstr "Visitar GitHub"
 
 #: ui/vault-closed.slint:22
 msgctxt "VaultClosedView"
@@ -551,7 +551,7 @@ msgstr "¡Cambios en la configuración guardados!"
 #: ui/vault-config-tls.slint:53
 msgctxt "VaultConfigTlsView"
 msgid "Enable TLS / HTTPS for the vault"
-msgstr "Habilitar TLS / HTTPS para la gelaría"
+msgstr "Habilitar TLS / HTTPS para la galería"
 
 #: ui/vault-config-tls.slint:67
 msgctxt "VaultConfigTlsView"
