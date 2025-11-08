@@ -5,7 +5,8 @@
 
     <String Id="ProgramPackageDescription">Aplicación web para almacenar y visualizar ficheros multimedia (vídeos, audios e imágenes), la cual puede usarse tanto en local como en un servidor personal.</String>
     <String Id="ShortCutDescription">Galería Multimedia Personal</String>
-    <String Id="OpenWithMessage">Abrir con	PersonalMediaVault</String>
+    <String Id="OpenWithMessage">Abrir con PersonalMediaVault</String>
+    <String Id="OpenWithConsoleMessage">Abrir con PersonalMediaVault (Consola)</String>
     <String Id="InstallTitle">Instalar PersonalMediaVault</String>
     <String Id="UninstallMessage">Desinstalar PersonalMediaVault</String>
     <String Id="UninstallDescription">Desinstala PersonalMediaVault de su sistema</String>
