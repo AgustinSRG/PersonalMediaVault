@@ -11,8 +11,7 @@ use duct::{cmd, Handle};
 use slint::Weak;
 
 use crate::{
-    worker::{run_vault, LauncherWorkerMessage, WorkerThreadStatus},
-    MainWindow, VaultSelectedTool, VaultToolStatus,
+    MainWindow, VaultSelectedTool, VaultToolStatus, utils::command_no_window, worker::{LauncherWorkerMessage, WorkerThreadStatus, run_vault}
 };
 
 pub fn cancel_vault_tool(status: &mut WorkerThreadStatus) {
@@ -58,6 +57,7 @@ pub fn run_vault_tool(
     let cmd = cmd(status.daemon_binary.clone(), args)
         .stderr_null()
         .stdout_null()
+        .before_spawn(command_no_window)
         .stdin_null();
 
     let handle = match cmd.start() {

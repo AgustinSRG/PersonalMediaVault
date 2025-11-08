@@ -1,7 +1,5 @@
 use crate::{
-    utils::{get_log_file, open_url_async},
-    worker::{LauncherWorkerMessage, WorkerThreadStatus},
-    MainWindow, VaultDaemonErrorType, VaultDaemonStatus,
+    MainWindow, VaultDaemonErrorType, VaultDaemonStatus, utils::{command_no_window, get_log_file, open_url_async}, worker::{LauncherWorkerMessage, WorkerThreadStatus}
 };
 use duct::{cmd, Handle};
 use slint::Weak;
@@ -151,6 +149,7 @@ pub fn run_vault(
                 "".to_string()
             },
         )
+        .before_spawn(command_no_window)
         .stderr_to_stdout()
         .stdout_file(log_file)
         .stdin_null();
