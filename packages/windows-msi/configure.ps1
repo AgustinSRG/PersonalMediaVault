@@ -26,6 +26,3 @@ Copy-Item -Path "..\..\launcher\pmv.exe" -Destination "PersonalMediaVault\pmv.ex
 
 # Copy launcher (GUI)
 Copy-Item -Path "..\..\launcher-gui\target\release\pmv-gui.exe" -Destination "PersonalMediaVault\pmv-gui.exe" -Force
-
-# Copy translations for launcher
-Copy-Item -Path "..\..\launcher-gui\lang" -Destination "PersonalMediaVault\lang" -Recurse -Force
