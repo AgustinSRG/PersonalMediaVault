@@ -39,4 +39,10 @@ pub fn create_vault(
     }
 
     open_vault(status, sender, window_handle);
+
+    let wh = window_handle.clone();
+    let _ = slint::invoke_from_event_loop(move || {
+        let win = wh.unwrap();
+        win.set_busy(false);
+    });
 }
