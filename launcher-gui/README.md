@@ -23,10 +23,10 @@ If you are in Windows, install the [GetText tools](https://gnuwin32.sourceforge.
 Use the compilation script to compile the app for production:
 
 ```sh
-./build.sh
+./build-production.sh
 ```
 
 The result will be saved in `target/release`.
 
-If you are compiling in Windows, use the `build.bat` script instead.
+If you are compiling in Windows, use the `build-production.bat` script instead.
 
