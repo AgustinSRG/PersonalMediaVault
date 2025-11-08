@@ -149,7 +149,7 @@ impl BackupProgressStatus {
                         display_size(self.file_bytes_total)
                     ))
                 } else {
-                    Some(format!("{f}"))
+                    Some(f.to_string())
                 }
             }
             None => None,

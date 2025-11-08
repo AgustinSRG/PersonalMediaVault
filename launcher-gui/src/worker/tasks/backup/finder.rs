@@ -80,19 +80,15 @@ pub fn find_files_to_backup(
     progress: &mut BackupProgressStatus,
     vault_path: &str,
 ) -> Result<Vec<BackupEntry>, ()> {
-    let mut entries: Vec<BackupEntry> = Vec::new();
-
-    entries.push(BackupEntry::new(&["main.index"]));
-
-    entries.push(BackupEntry::new(&["credentials.json"]));
-
-    entries.push(BackupEntry::new(&["media_ids.json"]));
-
-    entries.push(BackupEntry::new(&["tasks.json"]));
-
-    entries.push(BackupEntry::new(&["albums.pmv"]));
-    entries.push(BackupEntry::new(&["tag_list.pmv"]));
-    entries.push(BackupEntry::new(&["user_config.pmv"]));
+    let mut entries: Vec<BackupEntry> = vec![
+        BackupEntry::new(&["main.index"]),
+        BackupEntry::new(&["credentials.json"]),
+        BackupEntry::new(&["media_ids.json"]),
+        BackupEntry::new(&["tasks.json"]),
+        BackupEntry::new(&["albums.pmv"]),
+        BackupEntry::new(&["tag_list.pmv"]),
+        BackupEntry::new(&["user_config.pmv"]),
+    ];
 
     progress.files_done = entries.len() as u64;
 

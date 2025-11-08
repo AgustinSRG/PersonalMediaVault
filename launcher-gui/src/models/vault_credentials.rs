@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 /// Current method for hashing credentials
-const VAULT_CRED_METHOD_AES_SHA256: &'static str = "aes256/sha256/salt16";
+const VAULT_CRED_METHOD_AES_SHA256: &str = "aes256/sha256/salt16";
 
 /// Size for the salt
 const SALT_SIZE: usize = 16;
@@ -174,7 +174,7 @@ impl VaultCredentials {
 
         let password_hash = Sha256::digest([password_bytes, salt].concat());
 
-        let password_double_hash = Sha256::digest(&password_hash);
+        let password_double_hash = Sha256::digest(password_hash);
 
         // Compare with expected password hash
 
@@ -209,7 +209,7 @@ impl VaultCredentials {
 
         let password_hash = Sha256::digest([password_bytes, salt.clone()].concat());
 
-        let password_double_hash = Sha256::digest(&password_hash);
+        let password_double_hash = Sha256::digest(password_hash);
 
         // Encrypt key
 
@@ -223,7 +223,7 @@ impl VaultCredentials {
         // Update fields
 
         self.method = VAULT_CRED_METHOD_AES_SHA256.to_string();
-        self.password_hash = BASE64_STANDARD.encode(&password_double_hash);
+        self.password_hash = BASE64_STANDARD.encode(password_double_hash);
         self.salt = BASE64_STANDARD.encode(&salt);
         self.encrypted_key = BASE64_STANDARD.encode(&encrypted_key);
         self.accounts = Vec::new();

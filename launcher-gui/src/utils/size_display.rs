@@ -1,4 +1,4 @@
-const UNITS: &'static str = "kMGTPE";
+const UNITS: &str = "kMGTPE";
 const UNIT: u64 = 1024;
 
 pub fn display_size(bytes: u64) -> String {

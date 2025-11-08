@@ -24,7 +24,7 @@ pub fn test_encryption_key_in_vault(vault_path: &str, key: &[u8]) -> EncryptionK
     let path = Path::new(vault_path);
     let mut test_files: Vec<PathBuf> = Vec::with_capacity(TEST_FILES_COUNT);
 
-    find_pmv_files(&mut test_files, &path, TEST_FILES_COUNT);
+    find_pmv_files(&mut test_files, path, TEST_FILES_COUNT);
 
     if test_files.is_empty() {
         return EncryptionKeyTestResult::NotEncryptedFiles;
@@ -36,7 +36,7 @@ pub fn test_encryption_key_in_vault(vault_path: &str, key: &[u8]) -> EncryptionK
         }
     }
 
-    return EncryptionKeyTestResult::Valid;
+    EncryptionKeyTestResult::Valid
 }
 
 fn find_pmv_files(result: &mut Vec<PathBuf>, path: &Path, limit: usize) {

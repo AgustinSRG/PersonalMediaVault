@@ -4,7 +4,7 @@ use slint::Weak;
 
 use crate::{
     utils::CancellableTaskController,
-    worker::{tasks::backup::backup::make_backup, LauncherWorkerMessage},
+    worker::{tasks::backup::make_backup::make_backup, LauncherWorkerMessage},
     MainWindow,
 };
 

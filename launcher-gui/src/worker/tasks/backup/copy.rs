@@ -29,7 +29,7 @@ pub fn copy_backup_files(
 
     let _ = fs::create_dir_all(&temp_path);
 
-    let mut read_buffer = [0 as u8; READ_BUFFER_SIZE];
+    let mut read_buffer = [0_u8; READ_BUFFER_SIZE];
 
     for file in files {
         if progress.should_update() {
@@ -65,8 +65,8 @@ pub fn copy_backup_files(
                     VaultBackupErrorType::Unknown,
                     format!(
                         "Error {} creating file {}",
-                        err.to_string(),
-                        temp_file_path.to_string_lossy().to_string()
+                        err,
+                        temp_file_path.to_string_lossy()
                     ),
                 );
                 return Err(());
@@ -87,8 +87,8 @@ pub fn copy_backup_files(
                     VaultBackupErrorType::Unknown,
                     format!(
                         "Error {} opening file {}",
-                        err.to_string(),
-                        original_file_path.to_string_lossy().to_string()
+                        err,
+                        original_file_path.to_string_lossy()
                     ),
                 );
                 return Err(());
@@ -117,8 +117,8 @@ pub fn copy_backup_files(
                         VaultBackupErrorType::Unknown,
                         format!(
                             "Error {} reading file {}",
-                            err.to_string(),
-                            original_file_path.to_string_lossy().to_string()
+                            err,
+                            original_file_path.to_string_lossy()
                         ),
                     );
                     return Err(());
@@ -139,8 +139,8 @@ pub fn copy_backup_files(
                     VaultBackupErrorType::Unknown,
                     format!(
                         "Error {} writing file {}",
-                        err.to_string(),
-                        temp_file_path.to_string_lossy().to_string()
+                        err,
+                        temp_file_path.to_string_lossy()
                     ),
                 );
                 return Err(());
@@ -164,8 +164,8 @@ pub fn copy_backup_files(
                 VaultBackupErrorType::Unknown,
                 format!(
                     "Error {} setting modified date of file {}",
-                    err.to_string(),
-                    temp_file_path.to_string_lossy().to_string()
+                    err,
+                    temp_file_path.to_string_lossy()
                 ),
             );
             return Err(());
@@ -199,8 +199,8 @@ pub fn copy_backup_files(
                 VaultBackupErrorType::Unknown,
                 format!(
                     "Error {} moving file {}",
-                    err.to_string(),
-                    backup_file_path.to_string_lossy().to_string()
+                    err,
+                    backup_file_path.to_string_lossy()
                 ),
             );
             return Err(());

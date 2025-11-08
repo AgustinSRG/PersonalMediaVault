@@ -86,8 +86,8 @@ pub fn check_backup_files(
                         VaultBackupErrorType::Unknown,
                         format!(
                             "Error (file: {}): {}",
-                            backup_file_path.to_string_lossy().to_string(),
-                            err.to_string()
+                            backup_file_path.to_string_lossy(),
+                            err
                         ),
                     );
                     return Err(());

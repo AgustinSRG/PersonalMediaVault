@@ -12,7 +12,7 @@ use crate::{models::LauncherConfig, utils::file_exists};
 
 fn compute_vault_path_hash_tag(vault_path: &str) -> String {
     let hash = Sha256::digest(vault_path.to_string().into_bytes());
-    hex::encode(&hash)[31..].to_lowercase()
+    hex::encode(hash)[31..].to_lowercase()
 }
 
 fn get_config_file_from_user_config(vault_path: &str) -> Result<String, ()> {
