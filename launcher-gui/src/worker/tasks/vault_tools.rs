@@ -11,7 +11,9 @@ use duct::{cmd, Handle};
 use slint::Weak;
 
 use crate::{
-    MainWindow, VaultSelectedTool, VaultToolStatus, utils::command_no_window, worker::{LauncherWorkerMessage, WorkerThreadStatus, run_vault}
+    utils::command_no_window,
+    worker::{run_vault, LauncherWorkerMessage, WorkerThreadStatus},
+    MainWindow, VaultSelectedTool, VaultToolStatus,
 };
 
 pub fn cancel_vault_tool(status: &mut WorkerThreadStatus) {

@@ -4,10 +4,13 @@ use pidlock::Pidlock;
 use slint::Weak;
 
 use crate::{
-    MainWindow, VaultBackupCurrentTask, VaultBackupErrorType, log_debug, utils::{CancellableTaskController, LOCK_FILE_NAME}, worker::tasks::backup::{
+    log_debug,
+    utils::{CancellableTaskController, LOCK_FILE_NAME},
+    worker::tasks::backup::{
         check::check_backup_files, copy::copy_backup_files, finder::find_files_to_backup,
         progress::BackupProgressStatus,
-    }
+    },
+    MainWindow, VaultBackupCurrentTask, VaultBackupErrorType,
 };
 
 pub fn make_backup(

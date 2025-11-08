@@ -26,7 +26,7 @@ pub fn find_pmv_daemon_binary() -> Result<String, ()> {
         Ok(d) => d,
         Err(_) => {
             return Err(());
-        },
+        }
     };
 
     dir.pop();
@@ -63,7 +63,7 @@ pub fn find_pmv_frontend() -> Result<String, ()> {
         Ok(d) => d,
         Err(_) => {
             return Err(());
-        },
+        }
     };
     dir.pop();
     dir.push("frontend");
