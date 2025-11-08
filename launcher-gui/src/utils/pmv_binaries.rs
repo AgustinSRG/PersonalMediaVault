@@ -1,6 +1,6 @@
 // Util to find the PMV binaries
 
-use std::path::Path;
+use std::path::{self, Path};
 
 use crate::utils::{file_exists, folder_exists, get_binary_name, get_dirname};
 
@@ -22,7 +22,13 @@ pub fn find_pmv_daemon_binary() -> Result<String, ()> {
         return Ok(p);
     }
 
-    dir = get_dirname();
+    dir = match path::absolute(".") {
+        Ok(d) => d,
+        Err(_) => {
+            return Err(());
+        },
+    };
+
     dir.pop();
     dir.push("backend");
     dir.push(get_binary_name("pmvd"));
@@ -53,7 +59,12 @@ pub fn find_pmv_frontend() -> Result<String, ()> {
         return Ok(p);
     }
 
-    dir = get_dirname();
+    dir = match path::absolute(".") {
+        Ok(d) => d,
+        Err(_) => {
+            return Err(());
+        },
+    };
     dir.pop();
     dir.push("frontend");
     dir.push("dist");
