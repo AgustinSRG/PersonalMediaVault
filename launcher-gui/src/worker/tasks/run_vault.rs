@@ -347,6 +347,6 @@ pub fn open_vault_in_browser(status: &WorkerThreadStatus) {
 
 pub fn open_vault_log_file(status: &WorkerThreadStatus) {
     if let Some(f) = &status.log_file {
-        open_url_async(f);
+        open_url_async(&format!("file:///{f}"));
     }
 }

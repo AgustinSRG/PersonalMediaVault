@@ -1,6 +1,5 @@
 // Log files utils
 
-#[cfg(unix)]
 use std::io;
 use std::{
     fs::{create_dir_all, read_dir, remove_file, File},
