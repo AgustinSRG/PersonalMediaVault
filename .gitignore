@@ -2,6 +2,10 @@
 # Dependency directories
 node_modules
 
+# Releases
+
+/release
+
 # =========================
 # Operating System Files
 # =========================
