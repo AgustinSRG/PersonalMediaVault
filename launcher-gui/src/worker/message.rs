@@ -97,6 +97,11 @@ pub enum LauncherWorkerMessage {
         error_details: String,
     },
 
+    SetUserSettings {
+        locale_index: usize,
+        theme_index: usize,
+    },
+
     CloseVault,
     Finish,
 }

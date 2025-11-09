@@ -41,3 +41,6 @@ pub use key_recover::*;
 
 mod backup;
 pub use backup::*;
+
+mod set_user_settings;
+pub use set_user_settings::*;

@@ -8,3 +8,6 @@ pub use ffmpeg_config::*;
 
 mod vault_credentials;
 pub use vault_credentials::*;
+
+mod user_settings;
+pub use user_settings::*;

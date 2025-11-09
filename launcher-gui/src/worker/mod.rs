@@ -17,7 +17,7 @@ pub use status::*;
 
 use crate::{
     log_debug,
-    models::{FFmpegBadInstallationError, FFmpegConfig},
+    models::{FFmpegBadInstallationError, FFmpegConfig, UserSettings},
     utils::{
         find_pmv_daemon_binary, find_pmv_frontend, load_ffmpeg_config, set_clipboard_contents,
     },
@@ -29,6 +29,8 @@ pub fn run_worker_thread(
     sender: Sender<LauncherWorkerMessage>,
     receiver: Receiver<LauncherWorkerMessage>,
     window_handle: Weak<MainWindow>,
+    user_settings: UserSettings,
+    dark_theme_default: bool,
 ) -> JoinHandle<()> {
     // Spawn thread
     spawn(move || {
@@ -81,7 +83,13 @@ pub fn run_worker_thread(
             }
         };
 
-        let mut status = WorkerThreadStatus::new(daemon_binary, frontend_path, ffmpeg_config);
+        let mut status = WorkerThreadStatus::new(
+            daemon_binary,
+            frontend_path,
+            ffmpeg_config,
+            user_settings,
+            dark_theme_default,
+        );
 
         loop {
             match receiver.recv() {
@@ -332,6 +340,12 @@ pub fn run_worker_thread(
                         if status.backup_task_id == task_id {
                             status.backup_cancellable_task = None;
                         }
+                    }
+                    LauncherWorkerMessage::SetUserSettings {
+                        locale_index,
+                        theme_index,
+                    } => {
+                        set_user_settings(&mut status, &window_handle, locale_index, theme_index);
                     }
                 },
                 Err(err) => {

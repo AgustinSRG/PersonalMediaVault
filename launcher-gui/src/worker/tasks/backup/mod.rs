@@ -1,8 +1,8 @@
-mod make_backup;
 mod check;
 mod copy;
 mod entry;
 mod finder;
+mod make_backup;
 mod progress;
 mod thread;
 

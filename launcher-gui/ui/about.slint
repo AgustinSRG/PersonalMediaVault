@@ -9,6 +9,9 @@ export component AboutComponent inherits VerticalLayout {
     /// Visit GitHub page
     callback visit-git();
 
+    /// Display user settings popup
+    callback display-user-settings();
+
     alignment: LayoutAlignment.start;
     spacing: 1rem;
     padding-top: 1rem;
@@ -53,6 +56,9 @@ export component AboutComponent inherits VerticalLayout {
             text: @tr("Preferences");
             icon: @image-url("../assets/icons/settings.svg");
             colorize-icon: true;
+            clicked => {
+                root.display-user-settings();
+            }
         }
 
         Button {

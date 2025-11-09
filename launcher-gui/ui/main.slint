@@ -22,6 +22,7 @@ import { LockAskView } from "lock-ask.slint";
 import { InitialConfigView } from "initial-config.slint";
 import { CreateVaultView } from "create-vault.slint";
 import { VaultOpenView } from "vault-open.slint";
+import { UserSettingsPopupWindow } from "settings-popup.slint";
 
 export { 
     LauncherStatus,
@@ -52,6 +53,13 @@ export component MainWindow inherits Window {
 
     default-font-size: 11pt;
 
+    /// User settings
+    in-out property <int> settings-locale-index: 0;
+    in-out property <int> settings-theme-index: 0;
+
+    /// Settings apply callback
+    callback apply-user-settings();
+
     out property <bool> is-dark-theme-default: Palette.color-scheme == ColorScheme.dark;
 
     public function set-dark-theme() {
@@ -60,10 +68,6 @@ export component MainWindow inherits Window {
 
     public function set-light-theme() {
         Palette.color-scheme = ColorScheme.light;
-    }
-
-    public function set-default-theme() {
-        Palette.color-scheme = is-dark-theme-default ? ColorScheme.dark : ColorScheme.light;
     }
 
     /// PersonalMediaVault version
@@ -305,6 +309,9 @@ export component MainWindow inherits Window {
             visit-git => {
                 root.visit-git();
             }
+            display-user-settings => {
+                popup.show();
+            }
         }
 
         Rectangle {
@@ -539,6 +546,30 @@ export component MainWindow inherits Window {
                 cancel-tool => {
                     root.cancel-tool();
                 }
+            }
+        }
+    }
+
+    popup := PopupWindow {
+        close-policy: PopupClosePolicy.close-on-click-outside;
+
+        width: 32rem;
+        height: 18rem;
+
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        UserSettingsPopupWindow {
+            busy: busy;
+            settings-locale-index <=> root.settings-locale-index;
+            settings-theme-index <=> root.settings-theme-index;
+
+            apply-user-settings => {
+                root.apply-user-settings();
+            }
+
+            close-popup => {
+                popup.close();
             }
         }
     }

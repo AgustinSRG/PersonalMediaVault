@@ -19,7 +19,10 @@ mod worker;
 use control::*;
 use normalize_path::NormalizePath;
 
-use crate::worker::{run_worker_thread, LauncherWorkerMessage};
+use crate::{
+    models::UserSettings,
+    worker::{run_worker_thread, LauncherWorkerMessage},
+};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Instantiate the screens
@@ -34,9 +37,36 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     setup_callbacks(&main_window, sender.clone());
 
+    // Initial user settings
+
+    let dark_theme_default = main_window.get_is_dark_theme_default();
+
+    let user_settings = UserSettings::load();
+
+    main_window.set_settings_locale_index(user_settings.get_locale_index() as i32);
+    main_window.set_settings_theme_index(user_settings.get_theme_index() as i32);
+
+    if !user_settings.locale.is_empty() {
+        let _ = slint::select_bundled_translation(&user_settings.locale);
+    }
+
+    if !user_settings.theme.is_empty() {
+        if user_settings.theme == "dark" {
+            main_window.invoke_set_dark_theme();
+        } else {
+            main_window.invoke_set_light_theme();
+        }
+    }
+
     // Create worker
 
-    let worker_join_handle = run_worker_thread(sender.clone(), receiver, main_window.as_weak());
+    let worker_join_handle = run_worker_thread(
+        sender.clone(),
+        receiver,
+        main_window.as_weak(),
+        user_settings,
+        dark_theme_default,
+    );
 
     // Initialization logic
 

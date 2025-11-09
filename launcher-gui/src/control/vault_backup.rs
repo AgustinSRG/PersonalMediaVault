@@ -108,8 +108,7 @@ pub fn setup_callbacks_vault_backup(ui: &MainWindow, worker_sender: Sender<Launc
 
                     let mut has_error = false;
 
-                    let encryption_key =
-                        hex::decode(ui.get_encryption_key()).unwrap_or_default();
+                    let encryption_key = hex::decode(ui.get_encryption_key()).unwrap_or_default();
 
                     if encryption_key.len() != AES_KEY_SIZE {
                         has_error = true;

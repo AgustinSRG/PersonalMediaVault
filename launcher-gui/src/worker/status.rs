@@ -8,7 +8,7 @@ use pidlock::Pidlock;
 
 use crate::{
     log_debug,
-    models::{FFmpegConfig, LauncherConfig},
+    models::{FFmpegConfig, LauncherConfig, UserSettings},
     utils::{
         get_clipboard, write_ffmpeg_to_config_file, write_launcher_to_config_file,
         CancellableTaskController,
@@ -41,6 +41,9 @@ pub struct WorkerThreadStatus {
     pub tool_process_wait_receiver: Option<Receiver<bool>>,
 
     pub clipboard: Option<Clipboard>,
+
+    pub user_settings: UserSettings,
+    pub dark_theme_default: bool,
 }
 
 impl WorkerThreadStatus {
@@ -48,6 +51,8 @@ impl WorkerThreadStatus {
         daemon_binary: String,
         frontend_path: String,
         ffmpeg_config: FFmpegConfig,
+        user_settings: UserSettings,
+        dark_theme_default: bool,
     ) -> WorkerThreadStatus {
         WorkerThreadStatus {
             daemon_binary,
@@ -74,6 +79,9 @@ impl WorkerThreadStatus {
             tool_process_wait_receiver: None,
 
             clipboard: get_clipboard(),
+
+            user_settings,
+            dark_theme_default,
         }
     }
 
