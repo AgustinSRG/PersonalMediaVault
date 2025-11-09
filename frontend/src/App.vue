@@ -128,6 +128,7 @@ export default defineComponent({
 
         onLoadedLocale: function (locale: string) {
             this.$updateLocale(locale);
+            this.updateTitle();
         },
     },
 });
