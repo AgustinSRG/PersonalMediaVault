@@ -109,14 +109,9 @@ impl UserSettings {
 
     pub fn set_with_indexes(&mut self, locale_index: usize, theme_index: usize) {
         self.locale = AVAILABLE_LOCALES
-            .iter()
-            .nth(locale_index)
+            .get(locale_index)
             .unwrap_or(&"")
             .to_string();
-        self.theme = AVAILABLE_THEMES
-            .iter()
-            .nth(theme_index)
-            .unwrap_or(&"")
-            .to_string();
+        self.theme = AVAILABLE_THEMES.get(theme_index).unwrap_or(&"").to_string();
     }
 }
