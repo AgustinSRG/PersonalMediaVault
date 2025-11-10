@@ -17,871 +17,952 @@ msgctxt "AppWindow"
 msgid "PersonalMediaVault Launcher"
 msgstr "Lanzador de PersonalMediaVault"
 
-#: ui/main.slint:42
+#: ui/main.slint:42 ui/main.slint:43 ui/main.slint:43 ui/main.slint:43
 msgctxt "MainWindow"
 msgid "PersonalMediaVault Launcher"
 msgstr "Lanzador de PersonalMediaVault"
 
-#: ui/about.slint:30
+#: ui/about.slint:30 ui/about.slint:39 ui/about.slint:39 ui/about.slint:39
 msgctxt "AboutComponent"
 msgid "PersonalMediaVault"
 msgstr "PersonalMediaVault"
 
-#: ui/about.slint:36
+#: ui/about.slint:36 ui/about.slint:45 ui/about.slint:45 ui/about.slint:45
 msgctxt "AboutComponent"
 msgid "Version"
 msgstr "Versión"
 
-#: ui/about.slint:45
+#: ui/about.slint:45 ui/about.slint:65 ui/about.slint:65 ui/about.slint:65
 msgctxt "AboutComponent"
 msgid "Visit Website"
 msgstr "Visitar web"
 
-#: ui/about.slint:54
+#: ui/about.slint:54 ui/about.slint:74 ui/about.slint:74 ui/about.slint:74
 msgctxt "AboutComponent"
 msgid "Visit GitHub"
 msgstr "Visitar GitHub"
 
-#: ui/vault-closed.slint:22
+#: ui/vault-closed.slint:22 ui/vault-closed.slint:22 ui/vault-closed.slint:22 ui/vault-closed.slint:22
 msgctxt "VaultClosedView"
 msgid "Welcome to PersonalMediaVault"
 msgstr "Le damos la bienvenida a PersonalMediaVault"
 
-#: ui/vault-closed.slint:29
+#: ui/vault-closed.slint:29 ui/vault-closed.slint:29 ui/vault-closed.slint:29 ui/vault-closed.slint:29
 msgctxt "VaultClosedView"
 msgid ""
 "Start by opening a vault folder, or opening the default vault folder, "
 "located in your user home directory."
-msgstr "Comience abriendo una carpeta con un galería, o abriendo la galería por defecto, la cual se encuentra en su carpeta de usuario."
+msgstr ""
+"Comience abriendo una carpeta con un galería, o abriendo la galería por "
+"defecto, la cual se encuentra en su carpeta de usuario."
 
-#: ui/vault-closed.slint:41
+#: ui/vault-closed.slint:41 ui/vault-closed.slint:41 ui/vault-closed.slint:41 ui/vault-closed.slint:41
 msgctxt "VaultClosedView"
 msgid "Open Vault Folder"
 msgstr "Abrir carpeta de galería"
 
-#: ui/vault-closed.slint:52
+#: ui/vault-closed.slint:52 ui/vault-closed.slint:52 ui/vault-closed.slint:52 ui/vault-closed.slint:52
 msgctxt "VaultClosedView"
 msgid "Open Default Vault"
 msgstr "Abrir galería por defecto"
 
-#: ui/fatal-error.slint:18
+#: ui/fatal-error.slint:18 ui/fatal-error.slint:18 ui/fatal-error.slint:18 ui/fatal-error.slint:18
 msgctxt "FatalErrorView"
 msgid "Fatal error"
 msgstr "Error grave"
 
-#: ui/fatal-error.slint:25
+#: ui/fatal-error.slint:25 ui/fatal-error.slint:25 ui/fatal-error.slint:25 ui/fatal-error.slint:25
 msgctxt "FatalErrorView"
 msgid "A fatal error occurred, forcing the launcher to close"
 msgstr "Ha ocurrido un error grave, forzando a que el lanzador deba cerrarse"
 
-#: ui/fatal-error.slint:32
+#: ui/fatal-error.slint:32 ui/fatal-error.slint:32 ui/fatal-error.slint:32 ui/fatal-error.slint:32
 msgctxt "FatalErrorView"
 msgid ""
 "Could not find the daemon in any of the expected locations. Please "
 "re-install PersonalMediaVault."
-msgstr "No se pudo encontrar el binario del servicio en ninguna de las localizaciones esperadas. Por favor, reinstale PersonalMediaVault."
+msgstr ""
+"No se pudo encontrar el binario del servicio en ninguna de las "
+"localizaciones esperadas. Por favor, reinstale PersonalMediaVault."
 
-#: ui/fatal-error.slint:38
+#: ui/fatal-error.slint:38 ui/fatal-error.slint:38 ui/fatal-error.slint:38 ui/fatal-error.slint:38
 msgctxt "FatalErrorView"
 msgid ""
 "Could not find the frontend in any of the expected locations. Please "
 "re-install PersonalMediaVault."
-msgstr "No se pudo encontrar la interfaz web en ninguna de las localizaciones esperadas. Por favor, reinstale PersonalMediaVault."
+msgstr ""
+"No se pudo encontrar la interfaz web en ninguna de las localizaciones "
+"esperadas. Por favor, reinstale PersonalMediaVault."
 
-#: ui/fatal-error.slint:44
+#: ui/fatal-error.slint:44 ui/fatal-error.slint:44 ui/fatal-error.slint:44 ui/fatal-error.slint:44
 msgctxt "FatalErrorView"
 msgid ""
 "Could not find FFmpeg in any of the expected locations. Please install "
 "FFmpeg in your system."
-msgstr "No se pudo encontrar FFmpeg en ninguna de las localizaciones esperadas. Por favor, instale FFmpeg en su sistema."
+msgstr ""
+"No se pudo encontrar FFmpeg en ninguna de las localizaciones esperadas. Por "
+"favor, instale FFmpeg en su sistema."
 
-#: ui/fatal-error.slint:50
+#: ui/fatal-error.slint:50 ui/fatal-error.slint:50 ui/fatal-error.slint:50 ui/fatal-error.slint:50
 msgctxt "FatalErrorView"
 msgid ""
 "Could not find FFprobe in any of the expected locations. Please install "
 "FFmpeg in your system."
-msgstr "No se pudo encontrar FFprobe en ninguna de las localizaciones esperadas. Por favor, instale FFmpeg en su sistema."
+msgstr ""
+"No se pudo encontrar FFprobe en ninguna de las localizaciones esperadas. Por "
+"favor, instale FFmpeg en su sistema."
 
-#: ui/fatal-error.slint:59
+#: ui/fatal-error.slint:59 ui/fatal-error.slint:59 ui/fatal-error.slint:59 ui/fatal-error.slint:59
 msgctxt "FatalErrorView"
 msgid "Close Launcher"
 msgstr "Cerrar lanzador"
 
-#: ui/open-error.slint:24
+#: ui/open-error.slint:24 ui/open-error.slint:24 ui/open-error.slint:24 ui/open-error.slint:24
 msgctxt "OpenErrorView"
 msgid "Error opening the vault"
 msgstr "ERror abriendo la galería"
 
-#: ui/open-error.slint:31
+#: ui/open-error.slint:31 ui/open-error.slint:31 ui/open-error.slint:31 ui/open-error.slint:31
 msgctxt "OpenErrorView"
 msgid "An error occurred while trying to open the vault"
 msgstr "Ha ocurrido un error tratando de abrir la galería"
 
-#: ui/open-error.slint:38
+#: ui/open-error.slint:38 ui/open-error.slint:38 ui/open-error.slint:38 ui/open-error.slint:38
 msgctxt "OpenErrorView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/open-error.slint:44
+#: ui/open-error.slint:44 ui/open-error.slint:44 ui/open-error.slint:44 ui/open-error.slint:44
 msgctxt "OpenErrorView"
 msgid "Could not create the vault folder."
 msgstr "No se pudo crear la carpeta para la galería."
 
-#: ui/open-error.slint:50
+#: ui/open-error.slint:50 ui/open-error.slint:50 ui/open-error.slint:50 ui/open-error.slint:50
 msgctxt "OpenErrorView"
 msgid ""
 "Could not lock the vault folder. Maybe there is another process already "
 "locking the vault."
-msgstr "No se pudo bloquear la carpeta de la galería. Posiblemente otro proceso la está usando en este momento."
+msgstr ""
+"No se pudo bloquear la carpeta de la galería. Posiblemente otro proceso la "
+"está usando en este momento."
 
-#: ui/open-error.slint:56
+#: ui/open-error.slint:56 ui/open-error.slint:56 ui/open-error.slint:56 ui/open-error.slint:56
 msgctxt "OpenErrorView"
 msgid "Could not save the launcher configuration."
 msgstr "No se pudo guardar la configuración del lanzador."
 
-#: ui/open-error.slint:71
+#: ui/open-error.slint:71 ui/open-error.slint:71 ui/open-error.slint:71 ui/open-error.slint:71
 msgctxt "OpenErrorView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/opening.slint:13
+#: ui/opening.slint:13 ui/opening.slint:13 ui/opening.slint:13 ui/opening.slint:13
 msgctxt "OpeningView"
 msgid "Opening vault folder"
 msgstr "Abriendo carpeta de galería"
 
-#: ui/opening.slint:20
+#: ui/opening.slint:20 ui/opening.slint:20 ui/opening.slint:20 ui/opening.slint:20
 msgctxt "OpeningView"
 msgid "The vault folder is being opened"
 msgstr "La carpeta de la galería está siendo abierta"
 
-#: ui/opening.slint:27
+#: ui/opening.slint:27 ui/opening.slint:27 ui/opening.slint:27 ui/opening.slint:27
 msgctxt "OpeningView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/lock-ask.slint:20
+#: ui/lock-ask.slint:20 ui/lock-ask.slint:20 ui/lock-ask.slint:20 ui/lock-ask.slint:20
 msgctxt "LockAskView"
 msgid "The vault is locked"
 msgstr "La galería está bloqueada"
 
-#: ui/lock-ask.slint:27
+#: ui/lock-ask.slint:27 ui/lock-ask.slint:27 ui/lock-ask.slint:27 ui/lock-ask.slint:27
 msgctxt "LockAskView"
 msgid "Opening the vault multiple times can result in data corruption."
 msgstr "Abrir la galería múltiples veces puede resultar en corrupción de datos."
 
-#: ui/lock-ask.slint:34
+#: ui/lock-ask.slint:34 ui/lock-ask.slint:34 ui/lock-ask.slint:34 ui/lock-ask.slint:34
 msgctxt "LockAskView"
 msgid ""
 "We recommend you to go back, unless this is an issue caused by an unexpected "
 "shutdown or a crash."
-msgstr "Le recomendamos retroceder, a menos que esté seguro de que no hay ningún otro proceso usando la galería."
+msgstr ""
+"Le recomendamos retroceder, a menos que esté seguro de que no hay ningún "
+"otro proceso usando la galería."
 
-#: ui/lock-ask.slint:41
+#: ui/lock-ask.slint:41 ui/lock-ask.slint:41 ui/lock-ask.slint:41 ui/lock-ask.slint:41
 msgctxt "LockAskView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/lock-ask.slint:51
+#: ui/lock-ask.slint:51 ui/lock-ask.slint:51 ui/lock-ask.slint:51 ui/lock-ask.slint:51
 msgctxt "LockAskView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/lock-ask.slint:59
+#: ui/lock-ask.slint:59 ui/lock-ask.slint:59 ui/lock-ask.slint:59 ui/lock-ask.slint:59
 msgctxt "LockAskView"
 msgid "Open anyway"
 msgstr "Abrir de todas formas"
 
-#: ui/create-folder-ask.slint:20
+#: ui/create-folder-ask.slint:20 ui/create-folder-ask.slint:20 ui/create-folder-ask.slint:20 ui/create-folder-ask.slint:20
 msgctxt "CreateFolderAskView"
 msgid "The vault folder does not exist"
 msgstr "La carpeta de la galería no existe"
 
-#: ui/create-folder-ask.slint:27
+#: ui/create-folder-ask.slint:27 ui/create-folder-ask.slint:27 ui/create-folder-ask.slint:27 ui/create-folder-ask.slint:27
 msgctxt "CreateFolderAskView"
 msgid "Do you want to create it?"
 msgstr "¿Desea crearla?"
 
-#: ui/create-folder-ask.slint:34
+#: ui/create-folder-ask.slint:34 ui/create-folder-ask.slint:34 ui/create-folder-ask.slint:34 ui/create-folder-ask.slint:34
 msgctxt "CreateFolderAskView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/create-folder-ask.slint:45
+#: ui/create-folder-ask.slint:45 ui/create-folder-ask.slint:45 ui/create-folder-ask.slint:45 ui/create-folder-ask.slint:45
 msgctxt "CreateFolderAskView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/create-folder-ask.slint:53
+#: ui/create-folder-ask.slint:53 ui/create-folder-ask.slint:53 ui/create-folder-ask.slint:53 ui/create-folder-ask.slint:53
 msgctxt "CreateFolderAskView"
 msgid "Create folder"
 msgstr "Crear carpeta"
 
-#: ui/initial-config.slint:35
+#: ui/initial-config.slint:35 ui/initial-config.slint:35 ui/initial-config.slint:35 ui/initial-config.slint:35
 msgctxt "InitialConfigView"
 msgid "Launcher configuration"
 msgstr "Configuración del lanzador"
 
-#: ui/initial-config.slint:42
+#: ui/initial-config.slint:42 ui/initial-config.slint:42 ui/initial-config.slint:42 ui/initial-config.slint:42
 msgctxt "InitialConfigView"
 msgid "Configure the daemon to listen on a specific port"
 msgstr "Configure el servicio para usar un puerto"
 
-#: ui/initial-config.slint:49
+#: ui/initial-config.slint:49 ui/initial-config.slint:49 ui/initial-config.slint:49 ui/initial-config.slint:49
 msgctxt "InitialConfigView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/initial-config.slint:69
+#: ui/initial-config.slint:69 ui/initial-config.slint:69 ui/initial-config.slint:69 ui/initial-config.slint:69
 msgctxt "InitialConfigView"
 msgid "Listening hostname"
 msgstr "Nombre del host"
 
-#: ui/initial-config.slint:87
+#: ui/initial-config.slint:87 ui/initial-config.slint:87 ui/initial-config.slint:87 ui/initial-config.slint:87
 msgctxt "InitialConfigView"
 msgid "Invalid hostname"
 msgstr "Nombre del host no válido"
 
-#: ui/initial-config.slint:97
+#: ui/initial-config.slint:97 ui/initial-config.slint:98 ui/initial-config.slint:98 ui/initial-config.slint:98
 msgctxt "InitialConfigView"
 msgid "Listening port"
 msgstr "Puerto de escucha"
 
-#: ui/initial-config.slint:115
+#: ui/initial-config.slint:115 ui/initial-config.slint:116 ui/initial-config.slint:116 ui/initial-config.slint:116
 msgctxt "InitialConfigView"
 msgid "Invalid port. Must be a number between 1 and 65535"
 msgstr "Puerto no válido. Debe estar entre 1 y 65535"
 
-#: ui/initial-config.slint:124
+#: ui/initial-config.slint:124 ui/initial-config.slint:126 ui/initial-config.slint:126 ui/initial-config.slint:126
 msgctxt "InitialConfigView"
 msgid "Listen only on localhost (recommended for local vaults)"
 msgstr "Escuchar solo en local (recomendado para galerías locales)"
 
-#: ui/initial-config.slint:138
+#: ui/initial-config.slint:138 ui/initial-config.slint:140 ui/initial-config.slint:140 ui/initial-config.slint:140
 msgctxt "InitialConfigView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/initial-config.slint:148
+#: ui/initial-config.slint:148 ui/initial-config.slint:150 ui/initial-config.slint:150 ui/initial-config.slint:150
 msgctxt "InitialConfigView"
 msgid "Continue"
 msgstr "Continuar"
 
-#: ui/create-vault.slint:39
+#: ui/create-vault.slint:39 ui/create-vault.slint:39 ui/create-vault.slint:39 ui/create-vault.slint:39
 msgctxt "CreateVaultView"
 msgid "Create vault"
 msgstr "Crear galería"
 
-#: ui/create-vault.slint:46
+#: ui/create-vault.slint:46 ui/create-vault.slint:46 ui/create-vault.slint:46 ui/create-vault.slint:46
 msgctxt "CreateVaultView"
 msgid "No vault found in the selected path"
 msgstr "No se ha encontrado ninguna galería en la carpeta seleccionada"
 
-#: ui/create-vault.slint:53
+#: ui/create-vault.slint:53 ui/create-vault.slint:53 ui/create-vault.slint:53 ui/create-vault.slint:53
 msgctxt "CreateVaultView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/create-vault.slint:59
+#: ui/create-vault.slint:59 ui/create-vault.slint:59 ui/create-vault.slint:59 ui/create-vault.slint:59
 msgctxt "CreateVaultView"
 msgid "Input the initial credentials in order to create a new vault"
 msgstr "Especifique unos credenciales iniciales para la nueva galería"
 
-#: ui/create-vault.slint:80
+#: ui/create-vault.slint:80 ui/create-vault.slint:80 ui/create-vault.slint:80 ui/create-vault.slint:80
 msgctxt "CreateVaultView"
 msgid "Username"
 msgstr "Usuario"
 
-#: ui/create-vault.slint:99
+#: ui/create-vault.slint:99 ui/create-vault.slint:99 ui/create-vault.slint:99 ui/create-vault.slint:99
 msgctxt "CreateVaultView"
 msgid "Invalid username"
 msgstr "Usuario no válido"
 
-#: ui/create-vault.slint:109
+#: ui/create-vault.slint:109 ui/create-vault.slint:110 ui/create-vault.slint:110 ui/create-vault.slint:110
 msgctxt "CreateVaultView"
 msgid "Password"
 msgstr "Contraseña"
 
-#: ui/create-vault.slint:139
+#: ui/create-vault.slint:139 ui/create-vault.slint:140 ui/create-vault.slint:140 ui/create-vault.slint:140
 msgctxt "CreateVaultView"
 msgid "Invalid password"
 msgstr "Contraseña no válida"
 
-#: ui/create-vault.slint:149
+#: ui/create-vault.slint:149 ui/create-vault.slint:151 ui/create-vault.slint:151 ui/create-vault.slint:151
 msgctxt "CreateVaultView"
 msgid "Password (again)"
 msgstr "Contraseña (de nuevo)"
 
-#: ui/create-vault.slint:179
+#: ui/create-vault.slint:179 ui/create-vault.slint:181 ui/create-vault.slint:181 ui/create-vault.slint:181
 msgctxt "CreateVaultView"
 msgid "The passwords do not match"
 msgstr "Las contraseñas no coinciden"
 
-#: ui/create-vault.slint:194
+#: ui/create-vault.slint:194 ui/create-vault.slint:197 ui/create-vault.slint:197 ui/create-vault.slint:197
 msgctxt "CreateVaultView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/create-vault.slint:204
+#: ui/create-vault.slint:204 ui/create-vault.slint:207 ui/create-vault.slint:207 ui/create-vault.slint:207
 msgctxt "CreateVaultView"
 msgid "Continue"
 msgstr "Continuar"
 
-#: ui/vault-open.slint:210
+#: ui/vault-open.slint:210 ui/vault-open.slint:210 ui/vault-open.slint:210 ui/vault-open.slint:210
 msgctxt "VaultOpenView"
 msgid "Path"
 msgstr "Ruta"
 
-#: ui/vault-open.slint:217
+#: ui/vault-open.slint:217 ui/vault-open.slint:217 ui/vault-open.slint:217 ui/vault-open.slint:217
 msgctxt "VaultOpenView"
 msgid "Status"
 msgstr "Estado"
 
-#: ui/vault-open.slint:242
+#: ui/vault-open.slint:242 ui/vault-open.slint:242 ui/vault-open.slint:242 ui/vault-open.slint:242
 msgctxt "VaultOpenView"
 msgid "Configuration"
 msgstr "Configuración"
 
-#: ui/vault-open.slint:309
+#: ui/vault-open.slint:309 ui/vault-open.slint:309 ui/vault-open.slint:309 ui/vault-open.slint:309
 msgctxt "VaultOpenView"
 msgid "Backup"
 msgstr "Copia de seguridad"
 
-#: ui/vault-open.slint:357
+#: ui/vault-open.slint:357 ui/vault-open.slint:357 ui/vault-open.slint:357 ui/vault-open.slint:357
 msgctxt "VaultOpenView"
 msgid "Other Tools"
 msgstr "Otras herramientas"
 
-#: ui/vault-status.slint:44
+#: ui/vault-status.slint:44 ui/vault-status.slint:44 ui/vault-status.slint:44 ui/vault-status.slint:44
 msgctxt "VaultStatusView"
 msgid "Vault status"
 msgstr "Estado de la galería"
 
-#: ui/vault-status.slint:58
+#: ui/vault-status.slint:58 ui/vault-status.slint:58 ui/vault-status.slint:58 ui/vault-status.slint:58
 msgctxt "VaultStatusView"
 msgid "STOPPED"
 msgstr "PARADA"
 
-#: ui/vault-status.slint:62
+#: ui/vault-status.slint:62 ui/vault-status.slint:62 ui/vault-status.slint:62 ui/vault-status.slint:62
 msgctxt "VaultStatusView"
 msgid "STOPPING"
 msgstr "PARANDO"
 
-#: ui/vault-status.slint:66
+#: ui/vault-status.slint:66 ui/vault-status.slint:66 ui/vault-status.slint:66 ui/vault-status.slint:66
 msgctxt "VaultStatusView"
 msgid "STARTING"
 msgstr "INICIANDO"
 
-#: ui/vault-status.slint:70
+#: ui/vault-status.slint:70 ui/vault-status.slint:70 ui/vault-status.slint:70 ui/vault-status.slint:70
 msgctxt "VaultStatusView"
 msgid "RUNNING"
 msgstr "INICIADA"
 
-#: ui/vault-status.slint:74
+#: ui/vault-status.slint:74 ui/vault-status.slint:74 ui/vault-status.slint:74 ui/vault-status.slint:74
 msgctxt "VaultStatusView"
 msgid "ERROR"
 msgstr "ERROR"
 
-#: ui/vault-status.slint:88
+#: ui/vault-status.slint:88 ui/vault-status.slint:88 ui/vault-status.slint:88 ui/vault-status.slint:88
 msgctxt "VaultStatusView"
 msgid "The vault is currently stopped"
 msgstr "La galería se encuentra parada"
 
-#: ui/vault-status.slint:91
+#: ui/vault-status.slint:91 ui/vault-status.slint:91 ui/vault-status.slint:91 ui/vault-status.slint:91
 msgctxt "VaultStatusView"
 msgid "Stopping the vault..."
 msgstr "Deteniendo la galería..."
 
-#: ui/vault-status.slint:94
+#: ui/vault-status.slint:94 ui/vault-status.slint:94 ui/vault-status.slint:94 ui/vault-status.slint:94
 msgctxt "VaultStatusView"
 msgid "Starting the vault..."
 msgstr "Iniciando la galería..."
 
-#: ui/vault-status.slint:97
+#: ui/vault-status.slint:97 ui/vault-status.slint:97 ui/vault-status.slint:97 ui/vault-status.slint:97
 msgctxt "VaultStatusView"
 msgid "The vault is currently running"
 msgstr "La galería se encuentra en funcionamiento"
 
-#: ui/vault-status.slint:100
+#: ui/vault-status.slint:100 ui/vault-status.slint:100 ui/vault-status.slint:100 ui/vault-status.slint:100
 msgctxt "VaultStatusView"
 msgid "An error occurred trying to start the vault"
 msgstr "Un error ha ocurrido intentando iniciar la galería"
 
-#: ui/vault-status.slint:113
+#: ui/vault-status.slint:113 ui/vault-status.slint:113 ui/vault-status.slint:113 ui/vault-status.slint:113
 msgctxt "VaultStatusView"
 msgid "Error"
 msgstr "Error"
 
-#: ui/vault-status.slint:116
+#: ui/vault-status.slint:116 ui/vault-status.slint:116 ui/vault-status.slint:116 ui/vault-status.slint:116
 msgctxt "VaultStatusView"
 msgid "Unknown error. Please report this as a bug."
 msgstr "Error desconocido. Por favor, reporte esto como un bug."
 
-#: ui/vault-status.slint:119
+#: ui/vault-status.slint:119 ui/vault-status.slint:119 ui/vault-status.slint:119 ui/vault-status.slint:119
 msgctxt "VaultStatusView"
 msgid "The vault was being locked by another process."
 msgstr "La galería está siendo usada por otro proceso."
 
-#: ui/vault-status.slint:122
+#: ui/vault-status.slint:122 ui/vault-status.slint:122 ui/vault-status.slint:122 ui/vault-status.slint:122
 msgctxt "VaultStatusView"
 msgid ""
 "The configured port is in use by another process. Please change it in the "
 "configuration."
-msgstr "El puerto se escucha se encuentra ocupado. Por favor, cámbielo o en la configuración."
+msgstr ""
+"El puerto se escucha se encuentra ocupado. Por favor, cámbielo o en la "
+"configuración."
 
-#: ui/vault-status.slint:125
+#: ui/vault-status.slint:125 ui/vault-status.slint:125 ui/vault-status.slint:125 ui/vault-status.slint:125
 msgctxt "VaultStatusView"
 msgid "Invalid SSL configuration. Please change the configuration."
 msgstr "Configuración SSL no válida. Por favor, revise su configuración."
 
-#: ui/vault-status.slint:136
+#: ui/vault-status.slint:136 ui/vault-status.slint:136 ui/vault-status.slint:136 ui/vault-status.slint:136
 msgctxt "VaultStatusView"
 msgid "Start"
 msgstr "Iniciar"
 
-#: ui/vault-status.slint:147
+#: ui/vault-status.slint:147 ui/vault-status.slint:147 ui/vault-status.slint:147 ui/vault-status.slint:147
 msgctxt "VaultStatusView"
 msgid "Restart"
 msgstr "Reiniciar"
 
-#: ui/vault-status.slint:158
+#: ui/vault-status.slint:158 ui/vault-status.slint:158 ui/vault-status.slint:158 ui/vault-status.slint:158
 msgctxt "VaultStatusView"
 msgid "Stop"
 msgstr "Detener"
 
-#: ui/vault-status.slint:175
+#: ui/vault-status.slint:175 ui/vault-status.slint:175 ui/vault-status.slint:175 ui/vault-status.slint:175
 msgctxt "VaultStatusView"
 msgid "Open browser"
 msgstr "Abrir navegador"
 
-#: ui/vault-status.slint:186
+#: ui/vault-status.slint:186 ui/vault-status.slint:186 ui/vault-status.slint:186 ui/vault-status.slint:186
 msgctxt "VaultStatusView"
 msgid "Open log file"
 msgstr "Abrir fichero de log"
 
-#: ui/vault-config.slint:104
+#: ui/vault-config.slint:104 ui/vault-config.slint:104 ui/vault-config.slint:104 ui/vault-config.slint:104
 msgctxt "VaultConfigView"
 msgid "Vault configuration"
 msgstr "Configuración de la galería"
 
-#: ui/vault-config.slint:117
+#: ui/vault-config.slint:117 ui/vault-config.slint:117 ui/vault-config.slint:117 ui/vault-config.slint:117
 msgctxt "VaultConfigView"
 msgid "Host & Port"
 msgstr "Host y puerto"
 
-#: ui/vault-config.slint:134
+#: ui/vault-config.slint:134 ui/vault-config.slint:134 ui/vault-config.slint:134 ui/vault-config.slint:134
 msgctxt "VaultConfigView"
 msgid "TLS"
 msgstr "TLS"
 
-#: ui/vault-config.slint:157
+#: ui/vault-config.slint:157 ui/vault-config.slint:157 ui/vault-config.slint:157 ui/vault-config.slint:157
 msgctxt "VaultConfigView"
 msgid "FFmpeg"
 msgstr "FFmpeg"
 
-#: ui/vault-config.slint:181
+#: ui/vault-config.slint:181 ui/vault-config.slint:181 ui/vault-config.slint:181 ui/vault-config.slint:181
 msgctxt "VaultConfigView"
 msgid "Other"
 msgstr "Otros"
 
-#: ui/vault-config-host-port.slint:48
+#: ui/vault-config-host-port.slint:48 ui/vault-config-host-port.slint:48 ui/vault-config-host-port.slint:48 ui/vault-config-host-port.slint:48
 msgctxt "VaultConfigHostPortView"
 msgid "Listening hostname"
 msgstr "Nombre del host"
 
-#: ui/vault-config-host-port.slint:70
+#: ui/vault-config-host-port.slint:70 ui/vault-config-host-port.slint:70 ui/vault-config-host-port.slint:70 ui/vault-config-host-port.slint:70
 msgctxt "VaultConfigHostPortView"
 msgid "Invalid hostname"
 msgstr "Nombre del host no válido"
 
-#: ui/vault-config-host-port.slint:80
+#: ui/vault-config-host-port.slint:80 ui/vault-config-host-port.slint:81 ui/vault-config-host-port.slint:81 ui/vault-config-host-port.slint:81
 msgctxt "VaultConfigHostPortView"
 msgid "Listening port"
 msgstr "Puerto de escucha"
 
-#: ui/vault-config-host-port.slint:102
+#: ui/vault-config-host-port.slint:102 ui/vault-config-host-port.slint:103 ui/vault-config-host-port.slint:103 ui/vault-config-host-port.slint:103
 msgctxt "VaultConfigHostPortView"
 msgid "Invalid port. Must be a number between 1 and 65535"
 msgstr "Puerto no válido. Debe estar entre 1 y 65535"
 
-#: ui/vault-config-host-port.slint:111
+#: ui/vault-config-host-port.slint:111 ui/vault-config-host-port.slint:113 ui/vault-config-host-port.slint:113 ui/vault-config-host-port.slint:113
 msgctxt "VaultConfigHostPortView"
 msgid "Listen only on localhost (recommended for local vaults)"
 msgstr "Escuchar solo en local (recomendado para galerías locales)"
 
-#: ui/vault-config-host-port.slint:130
+#: ui/vault-config-host-port.slint:130 ui/vault-config-host-port.slint:132 ui/vault-config-host-port.slint:132 ui/vault-config-host-port.slint:132
 msgctxt "VaultConfigHostPortView"
 msgid "Apply changes"
 msgstr "Aplicar cambios"
 
-#: ui/vault-config-host-port.slint:143
+#: ui/vault-config-host-port.slint:143 ui/vault-config-host-port.slint:145 ui/vault-config-host-port.slint:145 ui/vault-config-host-port.slint:145
 msgctxt "VaultConfigHostPortView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
 
-#: ui/vault-config-other.slint:47
+#: ui/vault-config-other.slint:47 ui/vault-config-other.slint:47 ui/vault-config-other.slint:47 ui/vault-config-other.slint:47
 msgctxt "VaultConfigOtherView"
 msgid "Cache size"
 msgstr "Tamaño de caché"
 
-#: ui/vault-config-other.slint:69
+#: ui/vault-config-other.slint:69 ui/vault-config-other.slint:69 ui/vault-config-other.slint:69 ui/vault-config-other.slint:69
 msgctxt "VaultConfigOtherView"
 msgid "Invalid cache size. Must be a number greater or equal to 0."
 msgstr "Tamaño de caché no válido. Debe ser mayor o igual a 0."
 
-#: ui/vault-config-other.slint:78
+#: ui/vault-config-other.slint:78 ui/vault-config-other.slint:79 ui/vault-config-other.slint:79 ui/vault-config-other.slint:79
 msgctxt "VaultConfigOtherView"
 msgid "Log HTTP requests to the vault"
 msgstr "Registrar peticiones HTTP en los logs"
 
-#: ui/vault-config-other.slint:91
+#: ui/vault-config-other.slint:91 ui/vault-config-other.slint:102 ui/vault-config-other.slint:102 ui/vault-config-other.slint:102
 msgctxt "VaultConfigOtherView"
 msgid "Log debug messages (for troubleshooting)"
 msgstr "Registrar mensajes de depuración en los logs"
 
-#: ui/vault-config-other.slint:110
+#: ui/vault-config-other.slint:110 ui/vault-config-other.slint:121 ui/vault-config-other.slint:121 ui/vault-config-other.slint:121
 msgctxt "VaultConfigOtherView"
 msgid "Apply changes"
 msgstr "Aplicar cambios"
 
-#: ui/vault-config-other.slint:123
+#: ui/vault-config-other.slint:123 ui/vault-config-other.slint:134 ui/vault-config-other.slint:134 ui/vault-config-other.slint:134
 msgctxt "VaultConfigOtherView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
 
-#: ui/vault-config-tls.slint:53
+#: ui/vault-config-tls.slint:53 ui/vault-config-tls.slint:53 ui/vault-config-tls.slint:53 ui/vault-config-tls.slint:53
 msgctxt "VaultConfigTlsView"
 msgid "Enable TLS / HTTPS for the vault"
 msgstr "Habilitar TLS / HTTPS para la galería"
 
-#: ui/vault-config-tls.slint:67
+#: ui/vault-config-tls.slint:67 ui/vault-config-tls.slint:77 ui/vault-config-tls.slint:77 ui/vault-config-tls.slint:77
 msgctxt "VaultConfigTlsView"
 msgid "TLS certificate file"
 msgstr "Fichero de certificado"
 
-#: ui/vault-config-tls.slint:89 ui/vault-config-tls.slint:135
+#: ui/vault-config-tls.slint:89 ui/vault-config-tls.slint:135 ui/vault-config-tls.slint:99 ui/vault-config-tls.slint:146 ui/vault-config-tls.slint:99 ui/vault-config-tls.slint:146 ui/vault-config-tls.slint:99 ui/vault-config-tls.slint:146
 msgctxt "VaultConfigTlsView"
 msgid "Find"
 msgstr "Buscar"
 
-#: ui/vault-config-tls.slint:103
+#: ui/vault-config-tls.slint:103 ui/vault-config-tls.slint:113 ui/vault-config-tls.slint:113 ui/vault-config-tls.slint:113
 msgctxt "VaultConfigTlsView"
 msgid "Invalid TLS certificate"
 msgstr "Certificado TLS no válido"
 
-#: ui/vault-config-tls.slint:113
+#: ui/vault-config-tls.slint:113 ui/vault-config-tls.slint:124 ui/vault-config-tls.slint:124 ui/vault-config-tls.slint:124
 msgctxt "VaultConfigTlsView"
 msgid "TLS private key file"
 msgstr "Fichero de clave privada"
 
-#: ui/vault-config-tls.slint:149
+#: ui/vault-config-tls.slint:149 ui/vault-config-tls.slint:160 ui/vault-config-tls.slint:160 ui/vault-config-tls.slint:160
 msgctxt "VaultConfigTlsView"
 msgid "Invalid TLS private key"
 msgstr "Clave privada no válida"
 
-#: ui/vault-config-tls.slint:164
+#: ui/vault-config-tls.slint:164 ui/vault-config-tls.slint:176 ui/vault-config-tls.slint:176 ui/vault-config-tls.slint:176
 msgctxt "VaultConfigTlsView"
 msgid "Apply changes"
 msgstr "Aplicar cambios"
 
-#: ui/vault-config-tls.slint:177
+#: ui/vault-config-tls.slint:177 ui/vault-config-tls.slint:189 ui/vault-config-tls.slint:189 ui/vault-config-tls.slint:189
 msgctxt "VaultConfigTlsView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
 
-#: ui/vault-config-ffmpeg.slint:54
+#: ui/vault-config-ffmpeg.slint:54 ui/vault-config-ffmpeg.slint:54 ui/vault-config-ffmpeg.slint:54 ui/vault-config-ffmpeg.slint:54
 msgctxt "VaultConfigFFmpegView"
 msgid "FFmpeg binary"
 msgstr "Binario FFmpeg"
 
-#: ui/vault-config-ffmpeg.slint:76 ui/vault-config-ffmpeg.slint:122
+#: ui/vault-config-ffmpeg.slint:76 ui/vault-config-ffmpeg.slint:122 ui/vault-config-ffmpeg.slint:76 ui/vault-config-ffmpeg.slint:123 ui/vault-config-ffmpeg.slint:76 ui/vault-config-ffmpeg.slint:123 ui/vault-config-ffmpeg.slint:76 ui/vault-config-ffmpeg.slint:123
 msgctxt "VaultConfigFFmpegView"
 msgid "Find"
 msgstr "Buscar"
 
-#: ui/vault-config-ffmpeg.slint:90
+#: ui/vault-config-ffmpeg.slint:90 ui/vault-config-ffmpeg.slint:90 ui/vault-config-ffmpeg.slint:90 ui/vault-config-ffmpeg.slint:90
 msgctxt "VaultConfigFFmpegView"
 msgid "Invalid FFmpeg binary path"
 msgstr "Ruta al binario FFmpeg no válida"
 
-#: ui/vault-config-ffmpeg.slint:100
+#: ui/vault-config-ffmpeg.slint:100 ui/vault-config-ffmpeg.slint:101 ui/vault-config-ffmpeg.slint:101 ui/vault-config-ffmpeg.slint:101
 msgctxt "VaultConfigFFmpegView"
 msgid "FFprobe binary"
 msgstr "Binario FFprobe"
 
-#: ui/vault-config-ffmpeg.slint:136
+#: ui/vault-config-ffmpeg.slint:136 ui/vault-config-ffmpeg.slint:137 ui/vault-config-ffmpeg.slint:137 ui/vault-config-ffmpeg.slint:137
 msgctxt "VaultConfigFFmpegView"
 msgid "Invalid FFprobe binary path"
 msgstr "Ruta al binario FFprobe no válida"
 
-#: ui/vault-config-ffmpeg.slint:146
+#: ui/vault-config-ffmpeg.slint:146 ui/vault-config-ffmpeg.slint:148 ui/vault-config-ffmpeg.slint:148 ui/vault-config-ffmpeg.slint:148
 msgctxt "VaultConfigFFmpegView"
 msgid "Video encoder name"
 msgstr "Nombre del codificador de vídeo"
 
-#: ui/vault-config-ffmpeg.slint:170
+#: ui/vault-config-ffmpeg.slint:170 ui/vault-config-ffmpeg.slint:172 ui/vault-config-ffmpeg.slint:172 ui/vault-config-ffmpeg.slint:172
 msgctxt "VaultConfigFFmpegView"
 msgid ""
 "Invalid video encoder. You can run 'ffmpeg -encoders' in order to check the "
 "available ones."
-msgstr "Codificador de vídeo no válido. Use 'ffmpeg -encoders' para obtener la lista de codificadores disponibles en su sistema."
+msgstr ""
+"Codificador de vídeo no válido. Use 'ffmpeg -encoders' para obtener la lista "
+"de codificadores disponibles en su sistema."
 
-#: ui/vault-config-ffmpeg.slint:185
+#: ui/vault-config-ffmpeg.slint:185 ui/vault-config-ffmpeg.slint:188 ui/vault-config-ffmpeg.slint:188 ui/vault-config-ffmpeg.slint:188
 msgctxt "VaultConfigFFmpegView"
 msgid "Apply changes"
 msgstr "Aplicar cambios"
 
-#: ui/vault-config-ffmpeg.slint:198
+#: ui/vault-config-ffmpeg.slint:198 ui/vault-config-ffmpeg.slint:201 ui/vault-config-ffmpeg.slint:201 ui/vault-config-ffmpeg.slint:201
 msgctxt "VaultConfigFFmpegView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
 
-#: ui/vault-tools.slint:33
+#: ui/vault-tools.slint:33 ui/vault-tools.slint:33 ui/vault-tools.slint:33 ui/vault-tools.slint:33
 msgctxt "VaultToolsView"
 msgid "Vault Tools"
 msgstr "Herramientas de la galería"
 
-#: ui/vault-tools.slint:41
+#: ui/vault-tools.slint:41 ui/vault-tools.slint:41 ui/vault-tools.slint:41 ui/vault-tools.slint:41
 msgctxt "VaultToolsView"
 msgid "Select the tool you want to use"
 msgstr "Elija la herramienta que desea usar"
 
-#: ui/vault-tools.slint:50 ui/vault-tools.slint:91
+#: ui/vault-tools.slint:50 ui/vault-tools.slint:91 ui/vault-tools.slint:50 ui/vault-tools.slint:91 ui/vault-tools.slint:50 ui/vault-tools.slint:91 ui/vault-tools.slint:50 ui/vault-tools.slint:91
 msgctxt "VaultToolsView"
 msgid "Clean inconsistent files"
 msgstr "Limpiar archivos inconsistentes"
 
-#: ui/vault-tools.slint:66 ui/vault-tools.slint:94
+#: ui/vault-tools.slint:66 ui/vault-tools.slint:94 ui/vault-tools.slint:66 ui/vault-tools.slint:94 ui/vault-tools.slint:66 ui/vault-tools.slint:94 ui/vault-tools.slint:66 ui/vault-tools.slint:94
 msgctxt "VaultToolsView"
 msgid "Recover lost items"
 msgstr "Recuperar elementos perdidos"
 
-#: ui/vault-tools.slint:104
+#: ui/vault-tools.slint:104 ui/vault-tools.slint:104 ui/vault-tools.slint:104 ui/vault-tools.slint:104
 msgctxt "VaultToolsView"
 msgid "With this tool you can remove media assets that are not indexed."
 msgstr "Con esta herramienta puede limpiar los elementos no indexados."
 
-#: ui/vault-tools.slint:107
+#: ui/vault-tools.slint:107 ui/vault-tools.slint:107 ui/vault-tools.slint:107 ui/vault-tools.slint:107
 msgctxt "VaultToolsView"
 msgid "With this tool you can recover media assets that are not indexed."
 msgstr "Con esta herramienta puede recuperar los elementos no indexados."
 
-#: ui/vault-tools.slint:115
+#: ui/vault-tools.slint:115 ui/vault-tools.slint:115 ui/vault-tools.slint:115 ui/vault-tools.slint:115
 msgctxt "VaultToolsView"
 msgid "Note: The tool requires the vault to be stopped in order to run"
 msgstr "Nota: Esta herramienta requiere detener la galería mientras se usa"
 
-#: ui/vault-tools.slint:124
+#: ui/vault-tools.slint:124 ui/vault-tools.slint:154 ui/vault-tools.slint:154 ui/vault-tools.slint:154
 msgctxt "VaultToolsView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/vault-tools.slint:134
+#: ui/vault-tools.slint:134 ui/vault-tools.slint:164 ui/vault-tools.slint:164 ui/vault-tools.slint:164
 msgctxt "VaultToolsView"
 msgid "Start"
 msgstr "Iniciar"
 
-#: ui/vault-tools.slint:145
+#: ui/vault-tools.slint:145 ui/vault-tools.slint:175 ui/vault-tools.slint:175 ui/vault-tools.slint:175
 msgctxt "VaultToolsView"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ui/vault-tools.slint:169
+#: ui/vault-tools.slint:169 ui/vault-tools.slint:132 ui/vault-tools.slint:132 ui/vault-tools.slint:132
 msgctxt "VaultToolsView"
 msgid "Tool successfully used!"
 msgstr "Herramienta usada con éxito"
 
-#: ui/vault-tools.slint:178
+#: ui/vault-tools.slint:178 ui/vault-tools.slint:141 ui/vault-tools.slint:141 ui/vault-tools.slint:141
 msgctxt "VaultToolsView"
 msgid "Error"
 msgstr "Error"
 
-#: ui/vault-tools.slint:178
+#: ui/vault-tools.slint:178 ui/vault-tools.slint:141 ui/vault-tools.slint:141 ui/vault-tools.slint:141
 msgctxt "VaultToolsView"
 msgid "Unknown error"
 msgstr "Error desconocido"
 
-#: ui/vault-backup.slint:91
+#: ui/vault-backup.slint:91 ui/vault-backup.slint:91 ui/vault-backup.slint:91 ui/vault-backup.slint:91
 msgctxt "VaultBackupView"
 msgid "Backup"
 msgstr "Copia de seguridad"
 
-#: ui/vault-backup.slint:99
+#: ui/vault-backup.slint:99 ui/vault-backup.slint:99 ui/vault-backup.slint:99 ui/vault-backup.slint:99
 msgctxt "VaultBackupView"
 msgid "Select the backup tool you want to use"
 msgstr "Elija la opción de copia de seguridad que desea usar"
 
-#: ui/vault-backup.slint:108 ui/vault-backup.slint:178
+#: ui/vault-backup.slint:108 ui/vault-backup.slint:178 ui/vault-backup.slint:108 ui/vault-backup.slint:178 ui/vault-backup.slint:108 ui/vault-backup.slint:178 ui/vault-backup.slint:108 ui/vault-backup.slint:178
 msgctxt "VaultBackupView"
 msgid "Create or update backup"
 msgstr "Crear o actualizar copia de seguridad"
 
-#: ui/vault-backup.slint:125 ui/vault-backup.slint:181
+#: ui/vault-backup.slint:125 ui/vault-backup.slint:181 ui/vault-backup.slint:125 ui/vault-backup.slint:181 ui/vault-backup.slint:125 ui/vault-backup.slint:181 ui/vault-backup.slint:125 ui/vault-backup.slint:181
 msgctxt "VaultBackupView"
 msgid "Export encryption key"
 msgstr "Exportar clave de encriptación"
 
-#: ui/vault-backup.slint:145 ui/vault-backup.slint:184
+#: ui/vault-backup.slint:145 ui/vault-backup.slint:184 ui/vault-backup.slint:145 ui/vault-backup.slint:184 ui/vault-backup.slint:145 ui/vault-backup.slint:184 ui/vault-backup.slint:145 ui/vault-backup.slint:184
 msgctxt "VaultBackupView"
 msgid "Recover encryption key"
 msgstr "Recuperar clave de encriptación"
 
-#: ui/vault-backup.slint:194
+#: ui/vault-backup.slint:194 ui/vault-backup.slint:194 ui/vault-backup.slint:194 ui/vault-backup.slint:194
 msgctxt "VaultBackupView"
 msgid ""
 "Make a backup of the vault in order to keep it safe from data loss events."
-msgstr "Haga una copia de seguridad de la galería para evitar pérdidas de datos accidentales."
+msgstr ""
+"Haga una copia de seguridad de la galería para evitar pérdidas de datos "
+"accidentales."
 
-#: ui/vault-backup.slint:197
+#: ui/vault-backup.slint:197 ui/vault-backup.slint:197 ui/vault-backup.slint:197 ui/vault-backup.slint:197
 msgctxt "VaultBackupView"
 msgid "Export the vault encryption key to use it in case you lose your password."
-msgstr "Exporte la clave de encriptación y guárdela por si pierde sus credenciales de acceso."
+msgstr ""
+"Exporte la clave de encriptación y guárdela por si pierde sus credenciales "
+"de acceso."
 
-#: ui/vault-backup.slint:200
+#: ui/vault-backup.slint:200 ui/vault-backup.slint:200 ui/vault-backup.slint:200 ui/vault-backup.slint:200
 msgctxt "VaultBackupView"
 msgid ""
 "Did you lose your password? Use the tool to recover access using the "
 "encryption key."
-msgstr "¿Ha perdido sus contraseña? Puede usar esta herramienta para recuperar el acceso usando la clave de encriptación."
+msgstr ""
+"¿Ha perdido sus contraseña? Puede usar esta herramienta para recuperar el "
+"acceso usando la clave de encriptación."
 
-#: ui/vault-backup.slint:200
+#: ui/vault-backup.slint:200 ui/vault-backup.slint:200 ui/vault-backup.slint:200 ui/vault-backup.slint:200
 msgctxt "VaultBackupView"
 msgid ""
 "Warning: This will reset all the security options and delete all the extra "
 "accounts of the vault."
-msgstr "Advertencia: Esto borrará todos los usuarios y reiniciará las opciones de seguridad a sus valores por defecto."
+msgstr ""
+"Advertencia: Esto borrará todos los usuarios y reiniciará las opciones de "
+"seguridad a sus valores por defecto."
 
-#: ui/vault-backup.slint:220
+#: ui/vault-backup.slint:220 ui/vault-backup.slint:220 ui/vault-backup.slint:220 ui/vault-backup.slint:220
 msgctxt "VaultBackupView"
 msgid "Backup path"
 msgstr "Ruta de la copia"
 
-#: ui/vault-backup.slint:238
+#: ui/vault-backup.slint:238 ui/vault-backup.slint:238 ui/vault-backup.slint:238 ui/vault-backup.slint:238
 msgctxt "VaultBackupView"
 msgid "Find"
 msgstr "Buscar"
 
-#: ui/vault-backup.slint:252
+#: ui/vault-backup.slint:252 ui/vault-backup.slint:252 ui/vault-backup.slint:252 ui/vault-backup.slint:252
 msgctxt "VaultBackupView"
 msgid "Invalid backup path"
 msgstr "Ruta de la copia de seguridad no válida"
 
-#: ui/vault-backup.slint:268
+#: ui/vault-backup.slint:268 ui/vault-backup.slint:268 ui/vault-backup.slint:268 ui/vault-backup.slint:268
 msgctxt "VaultBackupView"
 msgid "Main vault username"
 msgstr "Usuario principal"
 
-#: ui/vault-backup.slint:287 ui/vault-backup.slint:404
+#: ui/vault-backup.slint:287 ui/vault-backup.slint:404 ui/vault-backup.slint:287 ui/vault-backup.slint:404 ui/vault-backup.slint:287 ui/vault-backup.slint:404 ui/vault-backup.slint:287 ui/vault-backup.slint:404
 msgctxt "VaultBackupView"
 msgid "Invalid username"
 msgstr "Usuario no válido"
 
-#: ui/vault-backup.slint:298 ui/vault-backup.slint:415
+#: ui/vault-backup.slint:298 ui/vault-backup.slint:415 ui/vault-backup.slint:298 ui/vault-backup.slint:415 ui/vault-backup.slint:298 ui/vault-backup.slint:415 ui/vault-backup.slint:298 ui/vault-backup.slint:415
 msgctxt "VaultBackupView"
 msgid "Password"
 msgstr "Contraseña"
 
-#: ui/vault-backup.slint:328 ui/vault-backup.slint:445
+#: ui/vault-backup.slint:328 ui/vault-backup.slint:445 ui/vault-backup.slint:328 ui/vault-backup.slint:445 ui/vault-backup.slint:328 ui/vault-backup.slint:445 ui/vault-backup.slint:328 ui/vault-backup.slint:445
 msgctxt "VaultBackupView"
 msgid "Invalid password"
 msgstr "Contraseña no válida"
 
-#: ui/vault-backup.slint:344 ui/vault-backup.slint:640
+#: ui/vault-backup.slint:344 ui/vault-backup.slint:640 ui/vault-backup.slint:344 ui/vault-backup.slint:602 ui/vault-backup.slint:344 ui/vault-backup.slint:602 ui/vault-backup.slint:344 ui/vault-backup.slint:602
 msgctxt "VaultBackupView"
 msgid "Encryption key"
 msgstr "Clave de encriptación"
 
-#: ui/vault-backup.slint:374
+#: ui/vault-backup.slint:374 ui/vault-backup.slint:374 ui/vault-backup.slint:374 ui/vault-backup.slint:374
 msgctxt "VaultBackupView"
 msgid "Invalid encryption key."
 msgstr "Clave de encriptación no válida."
 
-#: ui/vault-backup.slint:385
+#: ui/vault-backup.slint:385 ui/vault-backup.slint:385 ui/vault-backup.slint:385 ui/vault-backup.slint:385
 msgctxt "VaultBackupView"
 msgid "New main username"
 msgstr "Nuevo usuario principal"
 
-#: ui/vault-backup.slint:456
+#: ui/vault-backup.slint:456 ui/vault-backup.slint:456 ui/vault-backup.slint:456 ui/vault-backup.slint:456
 msgctxt "VaultBackupView"
 msgid "Password (again)"
 msgstr "Contraseña (de nuevo)"
 
-#: ui/vault-backup.slint:486
+#: ui/vault-backup.slint:486 ui/vault-backup.slint:486 ui/vault-backup.slint:486 ui/vault-backup.slint:486
 msgctxt "VaultBackupView"
 msgid "The passwords do not match"
 msgstr "Las contraseñas no coinciden"
 
-#: ui/vault-backup.slint:502
+#: ui/vault-backup.slint:502 ui/vault-backup.slint:640 ui/vault-backup.slint:640 ui/vault-backup.slint:640
 msgctxt "VaultBackupView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/vault-backup.slint:512
+#: ui/vault-backup.slint:512 ui/vault-backup.slint:650 ui/vault-backup.slint:650 ui/vault-backup.slint:650
 msgctxt "VaultBackupView"
 msgid "Start"
 msgstr "Iniciar"
 
-#: ui/vault-backup.slint:523
+#: ui/vault-backup.slint:523 ui/vault-backup.slint:661 ui/vault-backup.slint:661 ui/vault-backup.slint:661
 msgctxt "VaultBackupView"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ui/vault-backup.slint:558
+#: ui/vault-backup.slint:558 ui/vault-backup.slint:520 ui/vault-backup.slint:520 ui/vault-backup.slint:520
 msgctxt "VaultBackupView"
 msgid "Finding files"
 msgstr "Buscando archivos"
 
-#: ui/vault-backup.slint:561
+#: ui/vault-backup.slint:561 ui/vault-backup.slint:523 ui/vault-backup.slint:523 ui/vault-backup.slint:523
 msgctxt "VaultBackupView"
 msgid "Checking files"
 msgstr "Comprobando archivos"
 
-#: ui/vault-backup.slint:564
+#: ui/vault-backup.slint:564 ui/vault-backup.slint:526 ui/vault-backup.slint:526 ui/vault-backup.slint:526
 msgctxt "VaultBackupView"
 msgid "Copying files"
 msgstr "Copiando archivos"
 
-#: ui/vault-backup.slint:590
+#: ui/vault-backup.slint:590 ui/vault-backup.slint:552 ui/vault-backup.slint:552 ui/vault-backup.slint:552
 msgctxt "VaultBackupView"
 msgid "Backup completed! Files updated: {}, Bytes copied: {}"
-msgstr "¡Copia de seguridad completada! Archivos actualizados: {}. Bytes copiados: {}"
+msgstr ""
+"¡Copia de seguridad completada! Archivos actualizados: {}. Bytes copiados: {}"
 
-#: ui/vault-backup.slint:593
+#: ui/vault-backup.slint:593 ui/vault-backup.slint:555 ui/vault-backup.slint:555 ui/vault-backup.slint:555
 msgctxt "VaultBackupView"
 msgid "Encryption key successfully exported!"
 msgstr "¡Clave de encriptación exportada con éxito!"
 
-#: ui/vault-backup.slint:596
+#: ui/vault-backup.slint:596 ui/vault-backup.slint:558 ui/vault-backup.slint:558 ui/vault-backup.slint:558
 msgctxt "VaultBackupView"
 msgid "Encryption key successfully recovered!"
 msgstr "¡Clave de encriptación recuperada con éxito!"
 
-#: ui/vault-backup.slint:610 ui/vault-backup.slint:613 ui/vault-backup.slint:616 ui/vault-backup.slint:619
+#: ui/vault-backup.slint:610 ui/vault-backup.slint:613 ui/vault-backup.slint:616 ui/vault-backup.slint:619 ui/vault-backup.slint:572 ui/vault-backup.slint:575 ui/vault-backup.slint:578 ui/vault-backup.slint:581 ui/vault-backup.slint:572 ui/vault-backup.slint:575 ui/vault-backup.slint:578 ui/vault-backup.slint:581 ui/vault-backup.slint:572 ui/vault-backup.slint:575 ui/vault-backup.slint:578 ui/vault-backup.slint:581
 msgctxt "VaultBackupView"
 msgid "Error"
 msgstr "Error"
 
-#: ui/vault-backup.slint:610
+#: ui/vault-backup.slint:610 ui/vault-backup.slint:572 ui/vault-backup.slint:572 ui/vault-backup.slint:572
 msgctxt "VaultBackupView"
 msgid "The target folder is locked by another process."
 msgstr "La carpeta de destino está bloqueada por otro proceso."
 
-#: ui/vault-backup.slint:613
+#: ui/vault-backup.slint:613 ui/vault-backup.slint:575 ui/vault-backup.slint:575 ui/vault-backup.slint:575
 msgctxt "VaultBackupView"
 msgid "The target folder is the same as the source folder."
 msgstr "La carpeta de destino es la misma que la de origen."
 
-#: ui/vault-backup.slint:616
+#: ui/vault-backup.slint:616 ui/vault-backup.slint:578 ui/vault-backup.slint:578 ui/vault-backup.slint:578
 msgctxt "VaultBackupView"
 msgid "The vault does not have any encrypted files yet."
 msgstr "La galería no tiene ningún archivo encriptado todavía."
 
-#: ui/vault-backup.slint:619
+#: ui/vault-backup.slint:619 ui/vault-backup.slint:581 ui/vault-backup.slint:581 ui/vault-backup.slint:581
 msgctxt "VaultBackupView"
 msgid "Unknown error"
 msgstr "Error desconocido"
 
-#: ui/vault-backup.slint:658
+#: ui/vault-backup.slint:658 ui/vault-backup.slint:620 ui/vault-backup.slint:620 ui/vault-backup.slint:620
 msgctxt "VaultBackupView"
 msgid "Copy"
 msgstr "Copiar"
+
+#: ui/about.slint:56 ui/about.slint:56 ui/about.slint:56
+msgctxt "AboutComponent"
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: ui/settings-popup.slint:28 ui/settings-popup.slint:28 ui/settings-popup.slint:28
+msgctxt "UserSettingsPopupWindow"
+msgid "Preferences"
+msgstr "Preferencias"
+
+#: ui/settings-popup.slint:48 ui/settings-popup.slint:48 ui/settings-popup.slint:48
+msgctxt "UserSettingsPopupWindow"
+msgid "Language"
+msgstr "Idioma"
+
+#: ui/settings-popup.slint:58 ui/settings-popup.slint:58 ui/settings-popup.slint:58
+msgctxt "UserSettingsPopupWindow"
+msgid "System language (default)"
+msgstr "Idioma del sistema (por defecto)"
+
+#: ui/settings-popup.slint:72 ui/settings-popup.slint:72 ui/settings-popup.slint:72
+msgctxt "UserSettingsPopupWindow"
+msgid "Color theme"
+msgstr "Tema de color"
+
+#: ui/settings-popup.slint:82 ui/settings-popup.slint:82 ui/settings-popup.slint:82
+msgctxt "UserSettingsPopupWindow"
+msgid "System theme (default)"
+msgstr "Tema del sistema (por defecto)"
+
+#: ui/settings-popup.slint:82 ui/settings-popup.slint:82 ui/settings-popup.slint:82
+msgctxt "UserSettingsPopupWindow"
+msgid "Dark theme"
+msgstr "Tema oscuro"
+
+#: ui/settings-popup.slint:82 ui/settings-popup.slint:82 ui/settings-popup.slint:82
+msgctxt "UserSettingsPopupWindow"
+msgid "Light theme"
+msgstr "Tema claro"
+
+#: ui/settings-popup.slint:101 ui/settings-popup.slint:101 ui/settings-popup.slint:101
+msgctxt "UserSettingsPopupWindow"
+msgid "Done"
+msgstr "Listo"
+
+#: ui/settings-popup.slint:113 ui/settings-popup.slint:113 ui/settings-popup.slint:113
+msgctxt "UserSettingsPopupWindow"
+msgid ""
+"Note: if you change the language, you must restart the launcher to make the "
+"changes effective"
+msgstr ""
+"Nota: Si cambia el idioma, deberá reiniciar el lanzador para que los cambios "
+"surtan efecto"
 
