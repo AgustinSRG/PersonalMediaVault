@@ -43,7 +43,7 @@
                 :title="$t('Pending')"
                 :class="{ selected: selectedState === 'pending' }"
                 @click="updateSelectedState('pending')"
-                >{{ $t("Pending") }} ({{ countPending }})</a
+                >{{ $t("Pending") }} ({{ entriesPending.length }})</a
             >
             <a
                 href="javascript:;"
@@ -51,7 +51,7 @@
                 :title="$t('Ready')"
                 :class="{ selected: selectedState === 'ready' }"
                 @click="updateSelectedState('ready')"
-                >{{ $t("Ready") }} ({{ countReady }})</a
+                >{{ $t("Ready") }} ({{ entriesReady.length }})</a
             >
             <a
                 href="javascript:;"
@@ -59,7 +59,7 @@
                 :title="$t('Error')"
                 :class="{ selected: selectedState === 'error' }"
                 @click="updateSelectedState('error')"
-                >{{ $t("Error") }} ({{ countError }})</a
+                >{{ $t("Error") }} ({{ entriesError.length }})</a
             >
         </div>
 
@@ -120,13 +120,13 @@
             </div>
         </div>
 
-        <div v-if="pendingToUpload.length > 0" class="upload-table table-responsive">
-            <div v-if="pendingToUpload.length > 0" class="form-group">
+        <div v-if="entriesPending.length > 0 || entriesReady.length > 0 || entriesError.length > 0" class="upload-table table-responsive">
+            <div v-if="entriesReady.length > 0 || entriesError.length > 0" class="form-group">
                 <button type="button" class="btn btn-primary" @click="clearList">
                     <i class="fas fa-broom"></i> {{ $t("Clear list") }}
                 </button>
             </div>
-            <div v-if="countCancellable > 0" class="form-group">
+            <div v-if="entriesPending.length > 0" class="form-group">
                 <button type="button" class="btn btn-primary" @click="cancelAll">
                     <i class="fas fa-times"></i> {{ $t("Cancel all uploads") }}
                 </button>
@@ -148,7 +148,16 @@
 <script lang="ts">
 import { AppStatus } from "@/control/app-status";
 import type { UploadEntryMin } from "@/control/upload";
-import { EVENT_NAME_UPLOAD_LIST_UPDATE, UploadController } from "@/control/upload";
+import {
+    EVENT_NAME_UPLOAD_LIST_CLEAR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_NEW,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
+    UploadController,
+} from "@/control/upload";
 import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
@@ -161,9 +170,14 @@ const UploadModal = defineAsyncComponent({
     delay: 1000,
 });
 
-const STATE_FILTER_PENDING = ["pending", "uploading", "encrypting", "tag"];
-const STATE_FILTER_READY = ["ready"];
-const STATE_FILTER_ERROR = ["error"];
+function removeEntryFromList(list: UploadEntryMin[], e: UploadEntryMin) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].id === e.id) {
+            list.splice(i, 1);
+            return;
+        }
+    }
+}
 
 export default defineComponent({
     name: "PageUpload",
@@ -180,19 +194,14 @@ export default defineComponent({
     data: function () {
         return {
             dragging: false,
-            pendingToUpload: [] as UploadEntryMin[],
-            countCancellable: 0,
 
-            optionsShown: false,
+            entriesPending: [] as UploadEntryMin[],
+            entriesReady: [] as UploadEntryMin[],
+            entriesError: [] as UploadEntryMin[],
 
-            maxParallelUploads: UploadController.MaxParallelUploads,
+            maxParallelUploads: UploadController.GetMaxParallelUploads(),
 
-            countPending: 0,
-            countReady: 0,
-            countError: 0,
-
-            stateFilter: STATE_FILTER_PENDING.slice(),
-            selectedState: "pending",
+            selectedState: "pending" as "pending" | "ready" | "error",
 
             filteredEntries: [] as UploadEntryMin[],
 
@@ -210,29 +219,86 @@ export default defineComponent({
         },
     },
     mounted: function () {
-        this.pendingToUpload = UploadController.GetEntries();
-        this.updateCountCancellable(this.pendingToUpload);
-        this.updateFilteredEntries();
+        this.refreshUploadList();
 
-        this.$listenOnAppEvent(
-            EVENT_NAME_UPLOAD_LIST_UPDATE,
-            (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => {
-                switch (mode) {
-                    case "clear":
-                        this.onPendingClear();
-                        break;
-                    case "push":
-                        this.onPendingPush(entry);
-                        break;
-                    case "rm":
-                        this.onPendingRemove(index);
-                        break;
-                    case "update":
-                        this.onPendingUpdate(index, entry);
-                        break;
-                }
-            },
-        );
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_CLEAR, () => {
+            this.refreshUploadList();
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, (e: UploadEntryMin) => {
+            this.entriesPending.push(e);
+            if (this.selectedState === "pending") {
+                this.filteredEntries.push(e);
+            }
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, (e: UploadEntryMin) => {
+            const entry = this.entriesPending.find((p) => p.id === e.id);
+
+            if (entry) {
+                entry.status = e.status;
+                entry.progress = e.progress;
+                entry.mid = e.mid;
+            }
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, (e: UploadEntryMin) => {
+            removeEntryFromList(this.entriesPending, e);
+
+            this.entriesReady.push(e);
+
+            if (this.selectedState === "pending") {
+                removeEntryFromList(this.filteredEntries, e);
+            } else if (this.selectedState === "ready") {
+                this.filteredEntries.unshift(e);
+            }
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, (e: UploadEntryMin) => {
+            removeEntryFromList(this.entriesPending, e);
+
+            this.entriesError.push(e);
+
+            if (this.selectedState === "pending") {
+                removeEntryFromList(this.filteredEntries, e);
+            } else if (this.selectedState === "error") {
+                this.filteredEntries.unshift(e);
+            }
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, (e: UploadEntryMin) => {
+            removeEntryFromList(this.entriesError, e);
+
+            this.entriesError.push(e);
+
+            if (this.selectedState === "error") {
+                removeEntryFromList(this.filteredEntries, e);
+            } else if (this.selectedState === "pending") {
+                this.filteredEntries.push(e);
+            }
+        });
+
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, (e: UploadEntryMin) => {
+            switch (e.status) {
+                case "ready":
+                    removeEntryFromList(this.entriesReady, e);
+                    if (this.selectedState === "ready") {
+                        removeEntryFromList(this.filteredEntries, e);
+                    }
+                    break;
+                case "error":
+                    removeEntryFromList(this.entriesError, e);
+                    if (this.selectedState === "error") {
+                        removeEntryFromList(this.filteredEntries, e);
+                    }
+                    break;
+                default:
+                    removeEntryFromList(this.entriesPending, e);
+                    if (this.selectedState === "pending") {
+                        removeEntryFromList(this.filteredEntries, e);
+                    }
+            }
+        });
 
         if (this.display) {
             this.autoFocus();
@@ -259,25 +325,22 @@ export default defineComponent({
             });
         },
 
-        updateSelectedState: function (s: string) {
+        updateSelectedState: function (s: "pending" | "ready" | "error") {
             this.selectedState = s;
-            switch (s) {
-                case "ready":
-                    this.stateFilter = STATE_FILTER_READY.slice();
-                    break;
-                case "error":
-                    this.stateFilter = STATE_FILTER_ERROR.slice();
-                    break;
-                default:
-                    this.stateFilter = STATE_FILTER_PENDING.slice();
-            }
             this.updateFilteredEntries();
         },
 
         updateFilteredEntries: function () {
-            this.filteredEntries = this.pendingToUpload.filter((e: UploadEntryMin) => {
-                return this.stateFilter.includes(e.status);
-            });
+            switch (this.selectedState) {
+                case "ready":
+                    this.filteredEntries = this.entriesReady.slice();
+                    break;
+                case "error":
+                    this.filteredEntries = this.entriesError.slice();
+                    break;
+                default:
+                    this.filteredEntries = this.entriesPending.slice();
+            }
 
             if (this.selectedState !== "pending") {
                 this.filteredEntries = this.filteredEntries.reverse();
@@ -285,8 +348,7 @@ export default defineComponent({
         },
 
         updateMaxParallelUploads: function (m: number) {
-            this.maxParallelUploads = m;
-            UploadController.MaxParallelUploads = m;
+            UploadController.SetMaxParallelUploads(m);
         },
 
         inputFileChanged: function (e: InputEvent) {
@@ -387,6 +449,8 @@ export default defineComponent({
                     }
                 case "tag":
                     return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
+                case "album":
+                    return this.$t("Inserting into album") + "...";
                 case "error":
                     switch (err) {
                         case "invalid-media":
@@ -421,106 +485,18 @@ export default defineComponent({
             }
         },
 
-        showOptions: function (b: boolean) {
-            this.optionsShown = b;
-        },
-
-        onPendingPush: function (m: UploadEntryMin) {
-            this.pendingToUpload.push(m);
-            this.updateCountCancellable(this.pendingToUpload);
-
-            if (this.stateFilter.includes(m.status)) {
-                if (this.selectedState === "pending") {
-                    this.filteredEntries.push(m);
-                } else {
-                    this.filteredEntries.unshift(m);
-                }
-            }
-        },
-
-        onPendingRemove: function (i: number) {
-            const removed = this.pendingToUpload.splice(i, 1)[0];
-            this.updateCountCancellable(this.pendingToUpload);
-
-            if (removed) {
-                for (let j = 0; j < this.filteredEntries.length; j++) {
-                    if (this.filteredEntries[j].id === removed.id) {
-                        this.filteredEntries.splice(j, 1);
-                        break;
-                    }
-                }
-            }
-        },
-
-        onPendingClear: function () {
-            this.pendingToUpload = UploadController.GetEntries();
-            this.updateCountCancellable(this.pendingToUpload);
-            this.updateFilteredEntries();
-        },
-
-        onPendingUpdate: function (i: number, m: UploadEntryMin) {
-            const mustUpdate = this.pendingToUpload[i].status !== m.status;
-            this.pendingToUpload[i].status = m.status;
-            this.pendingToUpload[i].error = m.error;
-            this.pendingToUpload[i].progress = m.progress;
-            this.pendingToUpload[i].mid = m.mid;
-            if (mustUpdate) {
-                this.updateCountCancellable(this.pendingToUpload);
-            }
-
-            let found = false;
-
-            for (let j = 0; j < this.filteredEntries.length; j++) {
-                if (this.filteredEntries[j].id === m.id) {
-                    found = true;
-                    if (mustUpdate && !this.stateFilter.includes(m.status)) {
-                        this.filteredEntries.splice(j, 1);
-                    } else {
-                        this.filteredEntries[j].status = m.status;
-                        this.filteredEntries[j].error = m.error;
-                        this.filteredEntries[j].progress = m.progress;
-                        this.filteredEntries[j].mid = m.mid;
-                    }
-                }
-            }
-
-            if (!found && mustUpdate && this.stateFilter.includes(m.status)) {
-                if (this.selectedState === "pending") {
-                    this.filteredEntries.push(m);
-                } else {
-                    this.filteredEntries.unshift(m);
-                }
-            }
-        },
-
-        updateCountCancellable: function (list: UploadEntryMin[]) {
-            let count = 0;
-            let countPending = 0;
-            let countReady = 0;
-            let countError = 0;
-            for (const l of list) {
-                if (l.status !== "ready" && l.status !== "error") {
-                    count++;
-                }
-
-                if (STATE_FILTER_PENDING.includes(l.status)) {
-                    countPending++;
-                } else if (STATE_FILTER_READY.includes(l.status)) {
-                    countReady++;
-                } else if (STATE_FILTER_ERROR.includes(l.status)) {
-                    countError++;
-                }
-            }
-            this.countCancellable = count;
-            this.countPending = countPending;
-            this.countReady = countReady;
-            this.countError = countError;
-        },
-
         getMediaURL: function (mid: number): string {
             return getFrontendUrl({
                 media: mid,
             });
+        },
+
+        refreshUploadList: function () {
+            this.entriesPending = UploadController.GetPendingEntries();
+            this.entriesReady = UploadController.GetReadyEntries();
+            this.entriesError = UploadController.GetErrorEntries();
+
+            this.updateFilteredEntries();
         },
     },
 });

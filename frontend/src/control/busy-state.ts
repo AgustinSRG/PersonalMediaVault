@@ -18,10 +18,7 @@ export class BusyStateController {
      */
     public static Initialize() {
         window.addEventListener("beforeunload", function (e: BeforeUnloadEvent) {
-            if (
-                BusyStateController.BusySet.size > 0 ||
-                UploadController.GetEntries().filter((a) => a.status !== "error" && a.status !== "ready").length > 0
-            ) {
+            if (BusyStateController.BusySet.size > 0 || UploadController.GetPendingEntries().length > 0) {
                 // Cancel the event
                 e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
                 // Chrome requires returnValue to be set

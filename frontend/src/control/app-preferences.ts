@@ -392,3 +392,23 @@ export function clearPagePreferences() {
 
     ["home", "media", "random", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
 }
+
+const DEFAULT_MAX_PARALLEL_UPLOADS = 1;
+
+const LS_KEY_MAX_PARALLEL_UPLOADS = "app-pref-parallel-uploads";
+
+/**
+ * Gets the max parallel uploads setting
+ * @returns The max parallel uploads
+ */
+export function getMaxParallelUploads(): number {
+    return Math.max(1, Number(fetchFromLocalStorageCache(LS_KEY_MAX_PARALLEL_UPLOADS, DEFAULT_MAX_PARALLEL_UPLOADS)));
+}
+
+/**
+ * Sets the max parallel uploads setting
+ * @param maxParallelUploads The max parallel uploads
+ */
+export function setMaxParallelUploads(maxParallelUploads: number) {
+    saveIntoLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS, maxParallelUploads);
+}

@@ -16,8 +16,7 @@
 import { apiDiskUsage } from "@/api/api-about";
 import { AppEvents } from "@/control/app-events";
 import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import type { UploadEntryMin } from "@/control/upload";
-import { EVENT_NAME_UPLOAD_LIST_UPDATE } from "@/control/upload";
+import { EVENT_NAME_UPLOAD_LIST_ENTRY_READY } from "@/control/upload";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -56,7 +55,7 @@ export default defineComponent({
 
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadDone.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, this.onUploadDone.bind(this));
     },
     beforeUnmount: function () {
         if (this.loadingTimeout) {
@@ -126,18 +125,12 @@ export default defineComponent({
             );
         },
 
-        onUploadDone: function (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin) {
+        onUploadDone: function () {
             if (this.loading) {
                 return;
             }
 
-            if (mode !== "update") {
-                return;
-            }
-
-            if (entry.status === "ready") {
-                this.load();
-            }
+            this.load();
         },
     },
 });
