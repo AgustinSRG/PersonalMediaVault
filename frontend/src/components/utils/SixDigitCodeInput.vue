@@ -39,7 +39,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const code: { c: string }[] = [{ c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }, { c: "" }];
+        const code: { c: string }[] = [{ c: " " }, { c: " " }, { c: " " }, { c: " " }, { c: " " }, { c: " " }];
 
         updateCode(code, this.val || "");
 
@@ -54,12 +54,26 @@ export default defineComponent({
     },
     methods: {
         onCodeUpdated: function () {
-            this.valState = this.code.map((c) => c.c).join("");
+            this.valState = this.code.map((c) => c.c || " ").join("");
         },
 
         onKeyDown: function (event: KeyboardEvent, c: { c: string }, i: number) {
             if (event.key === "Backspace" && !c.c) {
                 event.preventDefault();
+                this.goNextChar(c, i);
+            } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                if (i < this.code.length - 1) {
+                    this.focusInput(i + 1);
+                }
+            } else if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                if (i > 0) {
+                    this.focusInput(i - 1);
+                }
+            } else if (event.key.length === 1) {
+                event.preventDefault();
+                c.c = event.key.toUpperCase();
                 this.goNextChar(c, i);
             }
         },
@@ -72,27 +86,24 @@ export default defineComponent({
             if (!c.c) {
                 // Go back
                 if (i > 0) {
-                    const nextInput = this.$el.querySelector(".code-char-" + (i - 1));
-
-                    if (nextInput) {
-                        nextInput.focus();
-                        if (nextInput.select) {
-                            nextInput.select();
-                        }
-                    }
+                    this.focusInput(i - 1);
                 }
 
                 return;
             }
 
             if (i < this.code.length - 1) {
-                const nextInput = this.$el.querySelector(".code-char-" + (i + 1));
+                this.focusInput(i + 1);
+            }
+        },
 
-                if (nextInput) {
-                    nextInput.focus();
-                    if (nextInput.select) {
-                        nextInput.select();
-                    }
+        focusInput: function (i: number) {
+            const inputEl = this.$el.querySelector(".code-char-" + i);
+
+            if (inputEl) {
+                inputEl.focus();
+                if (inputEl.select) {
+                    inputEl.select();
                 }
             }
         },
