@@ -1,6 +1,16 @@
 <template>
     <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" tabindex="-1" @scroll.passive="onPageScroll">
-        <form class="adv-search-form" @submit="onSubmit">
+        <form class="media-search-form" @submit="onSubmit">
+            <div class="form-group search-option-container">
+                <button type="button" class="page-option" :class="{ current: mode === 'basic' }" @click="setMode('basic')">
+                    {{ $t("Basic search") }}
+                </button>
+
+                <button type="button" class="page-option" :class="{ current: mode === 'adv' }" @click="setMode('adv')">
+                    {{ $t("Advanced search") }}
+                </button>
+            </div>
+
             <div class="form-group">
                 <label>{{ $t("Title must contain") }}:</label>
                 <input
@@ -10,11 +20,12 @@
                     autocomplete="off"
                     maxlength="255"
                     class="form-control form-control-full-width"
+                    :class="{ 'auto-focus': !!textSearch }"
                     @input="markDirty"
                 />
             </div>
 
-            <div class="form-group">
+            <div v-if="mode === 'adv'" class="form-group">
                 <label>{{ $t("Tags") }}:</label>
                 <select v-model="tagMode" class="form-control form-select form-control-full-width" @change="markDirty">
                     <option :value="'all'">
@@ -32,6 +43,7 @@
                 </select>
             </div>
             <div v-if="tagMode !== 'untagged'" class="form-group media-tags">
+                <label v-if="mode === 'basic'">{{ $t("Tags") }}:</label>
                 <div v-for="tag in tags" :key="tag" class="media-tag">
                     <div class="media-tag-name">{{ getTagName(tag, tagVersion) }}</div>
                     <button type="button" :title="$t('Remove tag')" class="media-tag-btn" @click="removeTag(tag)">
@@ -64,7 +76,7 @@
                 </button>
             </div>
 
-            <div v-if="advancedSearch">
+            <div v-if="mode === 'adv'">
                 <div class="form-group">
                     <label>{{ $t("Media type") }}:</label>
                     <select
@@ -94,38 +106,9 @@
                     </select>
                 </div>
             </div>
-
-            <div class="">
-                <button
-                    v-if="!advancedSearch"
-                    type="button"
-                    class="btn btn-primary advanced-toggle-btn btn-mr tags-focus-skip"
-                    @click="toggleAdvancedSearch"
-                    @keydown="onTagsSkipKeyDown"
-                >
-                    <i class="fas fa-cog"></i> {{ $t("More options") }}
-                </button>
-                <button
-                    v-if="advancedSearch"
-                    type="button"
-                    class="btn btn-primary advanced-toggle-btn btn-mr"
-                    @click="toggleAdvancedSearch"
-                >
-                    <i class="fas fa-cog"></i> {{ $t("Less options") }}
-                </button>
-                <button v-if="!loading" type="submit" class="btn btn-primary btn-mr">
-                    <i class="fas fa-search"></i> {{ $t("Search") }}
-                </button>
-                <button v-if="loading" type="button" class="btn btn-primary btn-mr" disabled>
-                    <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
-                </button>
-                <button v-if="loading" type="button" class="btn btn-primary btn-mr" @click="cancel">
-                    <i class="fas fa-times"></i> {{ $t("Cancel") }}
-                </button>
-            </div>
         </form>
 
-        <div class="search-results" tabindex="-1">
+        <div class="search-results tags-focus-skip" tabindex="-1">
             <div v-if="!loading && started && fullListLength === 0" class="search-results-msg-display">
                 <div class="search-results-msg-icon"><i class="fas fa-search"></i></div>
                 <div class="search-results-msg-text">
@@ -222,11 +205,18 @@ import { isTouchDevice } from "@/utils/touch";
 import ThumbImage from "../utils/ThumbImage.vue";
 import AlbumSelect from "../utils/AlbumSelect.vue";
 import DurationIndicator from "../utils/DurationIndicator.vue";
+import type { SearchMode } from "@/control/app-preferences";
+import { getPreferredSearchMode, setPreferredSearchMode } from "@/control/app-preferences";
 
 const INITIAL_WINDOW_SIZE = 50;
 
+type PageSearchParameters = {
+    textSearch: string;
+    tags: number[];
+};
+
 export default defineComponent({
-    name: "PageAdvancedSearch",
+    name: "PageSearch",
     components: {
         ThumbImage,
         AlbumSelect,
@@ -253,7 +243,7 @@ export default defineComponent({
             loadRequestId: getUniqueStringId(),
             dirtyTimeoutId: getUniqueStringId(),
             mediaIndexMap: new Map<number, number>(),
-            listScroller: null as BigListScroller,
+            listScroller: null as BigListScroller<MediaListItem>,
             findTagTimeout: null as ReturnType<typeof setTimeout> | null,
             continueCheckInterval: null as ReturnType<typeof setInterval> | null,
             checkContainerTimer: null as ReturnType<typeof setInterval> | null,
@@ -264,6 +254,8 @@ export default defineComponent({
     data: function () {
         return {
             loading: false,
+
+            searchParams: AppStatus.SearchParams,
 
             order: "" as "" | "desc" | "asc",
             textSearch: "",
@@ -282,7 +274,7 @@ export default defineComponent({
             started: false,
             finished: true,
 
-            advancedSearch: false,
+            mode: getPreferredSearchMode(),
 
             tagVersion: TagsController.TagsVersion,
             tags: [] as number[],
@@ -351,8 +343,6 @@ export default defineComponent({
     mounted: function () {
         this.pageScrollStatus = 0;
 
-        this.advancedSearch = false;
-
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 20);
 
         this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
@@ -391,6 +381,11 @@ export default defineComponent({
         });
 
         this.checkContainerTimer = setInterval(this.checkContainerHeight.bind(this), 1000);
+
+        const parsedParams = this.parsePageSearchParameters();
+        this.textSearch = parsedParams.textSearch;
+        this.tags = parsedParams.tags;
+        this.updateSearchParams();
 
         this.startSearch();
 
@@ -434,6 +429,18 @@ export default defineComponent({
             setNamedTimeout(this.dirtyTimeoutId, 330, () => {
                 this.startSearch();
             });
+        },
+
+        setMode: function (mode: SearchMode) {
+            this.mode = mode;
+            setPreferredSearchMode(mode);
+
+            if (mode !== "adv") {
+                this.tagMode = "all";
+            }
+
+            this.startSearch();
+            this.autoFocus();
         },
 
         autoFocus: function () {
@@ -486,10 +493,11 @@ export default defineComponent({
             }
 
             const pageSize = this.pageSize;
+            const order = this.mode === "adv" ? this.order || "desc" : "desc";
 
             makeNamedApiRequest(
                 this.loadRequestId,
-                apiAdvancedSearch(this.getTagMode(), this.getTagList(), this.order || "desc", this.continueRef, pageSize),
+                apiAdvancedSearch(this.getTagMode(), this.getTagList(), order, this.continueRef, pageSize),
             )
                 .onSuccess((result) => {
                     const completePageList = this.listScroller.list;
@@ -538,18 +546,6 @@ export default defineComponent({
                 });
         },
 
-        toggleAdvancedSearch: function () {
-            this.advancedSearch = !this.advancedSearch;
-
-            nextTick(() => {
-                const btn = this.$el.querySelector(".advanced-toggle-btn");
-
-                if (btn) {
-                    btn.focus();
-                }
-            });
-        },
-
         filterElements: function (results: MediaListItem[]) {
             TagsController.OnMediaListReceived(results);
             const filterText = normalizeString(this.textSearch).trim().toLowerCase();
@@ -587,9 +583,11 @@ export default defineComponent({
                     }
                 }
 
-                if (filterType) {
-                    if (e.type !== filterType) {
-                        continue;
+                if (this.mode === "adv") {
+                    if (filterType) {
+                        if (e.type !== filterType) {
+                            continue;
+                        }
                     }
                 }
 
@@ -670,6 +668,8 @@ export default defineComponent({
         startSearch: function () {
             clearNamedTimeout(this.dirtyTimeoutId);
 
+            this.updateSearchParams();
+
             this.loading = true;
             this.listScroller.reset();
             this.fullListLength = 0;
@@ -681,7 +681,7 @@ export default defineComponent({
             this.started = true;
             this.finished = false;
 
-            if (this.albumSearch >= 0) {
+            if (this.albumSearch >= 0 && this.mode === "adv") {
                 this.loadAlbumSearch();
             } else {
                 this.load();
@@ -1033,6 +1033,15 @@ export default defineComponent({
                 }
                 this.onCurrentMediaChanged();
             }
+
+            if (!this.inModal && this.searchParams !== AppStatus.SearchParams) {
+                const parsedParams = this.parsePageSearchParameters();
+                this.textSearch = parsedParams.textSearch;
+                this.tags = parsedParams.tags;
+                this.updateSearchParams();
+                this.startSearch();
+                this.autoFocus();
+            }
         },
 
         findCurrentMediaIndex: function (): number {
@@ -1055,9 +1064,9 @@ export default defineComponent({
             const completePageList = this.listScroller.list;
             const i = this.findCurrentMediaIndex();
             if (i !== -1 && i < completePageList.length - 1) {
-                this.goToMedia(completePageList[i + 1].id);
+                this.goToMedia(completePageList[i + 1]);
             } else if (i === -1 && completePageList.length > 0) {
-                this.goToMedia(completePageList[0].id);
+                this.goToMedia(completePageList[0]);
             }
         },
 
@@ -1065,9 +1074,9 @@ export default defineComponent({
             const completePageList = this.listScroller.list;
             const i = this.findCurrentMediaIndex();
             if (i !== -1 && i > 0) {
-                this.goToMedia(completePageList[i - 1].id);
+                this.goToMedia(completePageList[i - 1]);
             } else if (i === -1 && completePageList.length > 0) {
-                this.goToMedia(completePageList[0].id);
+                this.goToMedia(completePageList[0]);
             }
         },
 
@@ -1222,6 +1231,60 @@ export default defineComponent({
             }
 
             this.windowWidth = cont.getBoundingClientRect().width;
+        },
+
+        parsePageSearchParameters: function (): PageSearchParameters {
+            if (this.inModal || !AppStatus.SearchParams) {
+                return {
+                    textSearch: "",
+                    tags: [],
+                };
+            }
+
+            const parts = AppStatus.SearchParams.split("~");
+
+            const tags = parts[0]
+                .split("-")
+                .filter((p) => !!p)
+                .map((p) => parseInt(p, 10))
+                .filter((p) => !isNaN(p) && p >= 0);
+
+            const tagSet = new Set<number>();
+            const filteredTags: number[] = [];
+
+            for (const tag of tags) {
+                if (tagSet.has(tag)) {
+                    continue;
+                }
+
+                tagSet.add(tag);
+                filteredTags.push(tag);
+            }
+
+            const textSearch = parts.slice(1).join("~").substring(0, 128).trim();
+
+            return {
+                tags: filteredTags,
+                textSearch,
+            };
+        },
+
+        updateSearchParams: function () {
+            if (this.inModal) {
+                return;
+            }
+
+            let newSearchParams = "";
+
+            if (this.tags.length > 0 || this.textSearch.length > 0) {
+                newSearchParams = this.tags.join("-") + (this.textSearch ? "~" + this.textSearch : "");
+            }
+
+            this.searchParams = newSearchParams;
+
+            if (AppStatus.SearchParams !== newSearchParams) {
+                AppStatus.ChangeSearchParams(newSearchParams);
+            }
         },
     },
 });

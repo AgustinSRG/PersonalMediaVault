@@ -167,3 +167,11 @@
     right: 0.25rem;
     max-width: calc(100% - 0.5rem);
 }
+
+.search-option-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}

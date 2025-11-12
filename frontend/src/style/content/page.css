@@ -79,3 +79,27 @@
 .search-continue-mark {
     padding: 0.5rem;
 }
+
+.page-option {
+    display: block;
+    padding: 0.5rem 1rem;
+    min-width: 40px;
+    min-height: 40px;
+    box-shadow: none;
+    border: solid 1px var(--theme-border-color);
+    border-radius: 100vw;
+    cursor: pointer;
+    font-size: 16px;
+    background: transparent;
+    color: var(--theme-fg-color);
+}
+
+.page-option:hover {
+    background: var(--hover-color);
+}
+
+.page-option.current,
+.page-option.current:hover {
+    font-weight: bold;
+    background: var(--selected-color);
+}

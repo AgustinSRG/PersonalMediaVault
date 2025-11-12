@@ -43,7 +43,7 @@
                         ><i class="fas fa-photo-film"></i> {{ $t("Media") }}</a
                     >
                 </div>
-                <PageAdvancedSearch
+                <PageSearch
                     v-if="!isAlbums"
                     :display="true"
                     :in-modal="true"
@@ -57,7 +57,7 @@
                     :max-items-size="maxItemSize"
                     :remove-media-from-list="mediaElements"
                     @select-media="selectMedia"
-                ></PageAdvancedSearch>
+                ></PageSearch>
                 <PageAlbums
                     v-else
                     :display="true"
@@ -88,7 +88,7 @@ import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
-import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
+import PageSearch from "@/components/pages/PageSearch.vue";
 import PageAlbums from "@/components/pages/PageAlbums.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { AppEvents } from "@/control/app-events";
@@ -102,7 +102,7 @@ import type { MediaListItem } from "@/api/models";
 export default defineComponent({
     name: "HomePageRowAddElementModal",
     components: {
-        PageAdvancedSearch,
+        PageSearch,
         PageAlbums,
     },
     props: {
@@ -117,7 +117,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const pagePreferences = getPagePreferences("adv-search");
+        const pagePreferences = getPagePreferences("search");
         return {
             busy: false,
 
@@ -300,7 +300,7 @@ export default defineComponent({
         },
 
         updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences(this.isAlbums ? "albums" : "adv-search");
+            const pagePreferences = getPagePreferences(this.isAlbums ? "albums" : "search");
 
             this.pageSize = pagePreferences.pageSize;
 

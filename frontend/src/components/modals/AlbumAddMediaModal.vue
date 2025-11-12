@@ -43,7 +43,7 @@
                         ><i class="fas fa-search"></i> {{ $t("Search") }}</a
                     >
                 </div>
-                <PageAdvancedSearch
+                <PageSearch
                     v-if="!isUpload"
                     :display="true"
                     :in-modal="true"
@@ -56,7 +56,7 @@
                     :min-items-size="minItemSize"
                     :max-items-size="maxItemSize"
                     @select-media="selectMedia"
-                ></PageAdvancedSearch>
+                ></PageSearch>
                 <PageUpload v-if="isUpload" :display="true" :in-modal="true" :fixed-album="aid" @media-go="close"></PageUpload>
             </div>
 
@@ -73,7 +73,7 @@
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
-import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
+import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { AppEvents } from "@/control/app-events";
@@ -87,7 +87,7 @@ import type { MediaListItem } from "@/api/models";
 export default defineComponent({
     name: "AlbumAddMediaModal",
     components: {
-        PageAdvancedSearch,
+        PageSearch,
         PageUpload,
     },
     props: {
@@ -101,7 +101,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const pagePreferences = getPagePreferences("adv-search");
+        const pagePreferences = getPagePreferences("search");
         return {
             busy: false,
 
@@ -209,7 +209,7 @@ export default defineComponent({
         },
 
         updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences("adv-search");
+            const pagePreferences = getPagePreferences("search");
 
             this.pageSize = pagePreferences.pageSize;
 

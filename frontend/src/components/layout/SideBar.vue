@@ -58,12 +58,12 @@
 
             <a
                 class="side-bar-option"
-                :class="{ selected: album < 0 && page === 'adv-search' }"
+                :class="{ selected: album < 0 && page === 'search' }"
                 :title="$t('Find media')"
-                :href="getPageURL('adv-search')"
+                :href="getPageURL('search')"
                 target="_blank"
                 rel="noopener noreferrer"
-                @click="goToPage('adv-search', $event)"
+                @click="goToPage('search', $event)"
             >
                 <div class="side-bar-option-icon"><i class="fas fa-search"></i></div>
                 <div class="side-bar-option-text">{{ $t("Find media") }}</div>

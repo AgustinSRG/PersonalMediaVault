@@ -22,7 +22,7 @@
                 </button>
             </div>
             <div class="modal-body no-padding">
-                <PageAdvancedSearch
+                <PageSearch
                     :display="true"
                     :in-modal="true"
                     :min="false"
@@ -35,7 +35,7 @@
                     :max-items-size="maxItemSize"
                     :remove-media-from-list="mediaElements"
                     @select-media="selectMedia"
-                ></PageAdvancedSearch>
+                ></PageSearch>
             </div>
 
             <div v-if="pageScroll > 0" class="modal-button-br-container">
@@ -52,7 +52,7 @@ import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
-import PageAdvancedSearch from "@/components/pages/PageAdvancedSearch.vue";
+import PageSearch from "@/components/pages/PageSearch.vue";
 import { AppEvents } from "@/control/app-events";
 import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/pages";
 import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
@@ -61,7 +61,7 @@ import type { MediaListItem } from "@/api/models";
 export default defineComponent({
     name: "AddRelatedMediaModal",
     components: {
-        PageAdvancedSearch,
+        PageSearch,
     },
     props: {
         display: Boolean,
@@ -75,7 +75,7 @@ export default defineComponent({
         };
     },
     data: function () {
-        const pagePreferences = getPagePreferences("adv-search");
+        const pagePreferences = getPagePreferences("search");
         return {
             busy: false,
 
@@ -133,7 +133,7 @@ export default defineComponent({
         },
 
         updatePagePreferences: function () {
-            const pagePreferences = getPagePreferences("adv-search");
+            const pagePreferences = getPagePreferences("search");
 
             this.pageSize = pagePreferences.pageSize;
 

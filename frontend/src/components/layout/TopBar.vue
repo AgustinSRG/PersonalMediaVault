@@ -60,6 +60,7 @@
                         >
                             <i v-if="s.type === 'tag'" class="fas fa-tag"></i>
                             <i v-else-if="s.type === 'album'" class="fas fa-list-ol"></i>
+                            <i v-else-if="s.type === 'search'" class="fas fa-search"></i>
                             <i v-else-if="s.type === 'media' && s.mediaType === 1" class="fas fa-image"></i>
                             <i v-else-if="s.type === 'media' && s.mediaType === 2" class="fas fa-video"></i>
                             <i v-else-if="s.type === 'media' && s.mediaType === 3" class="fas fa-headphones"></i>
@@ -110,7 +111,7 @@ interface SearchBarSuggestion {
     name: string;
     nameLower: string;
 
-    type: "tag" | "album" | "media";
+    type: "tag" | "album" | "media" | "search";
     mediaType?: number;
 
     starts: boolean;
@@ -221,6 +222,12 @@ export default defineComponent({
             this.$el.querySelector(".top-bar-search-input").blur();
         },
 
+        goFindMedia: function () {
+            const search = this.search;
+            AppStatus.GoToSearch("");
+            AppStatus.GoFindMedia(search);
+        },
+
         onSearchChanged: function () {
             this.search = AppStatus.CurrentSearch;
             this.hasSearch = !!AppStatus.CurrentSearch;
@@ -312,13 +319,18 @@ export default defineComponent({
             if (s.type === "album") {
                 this.search = "";
                 AppStatus.ClickOnAlbum(Number(s.id));
+                this.goSearch();
             } else if (s.type === "media") {
                 this.search = "";
                 AppStatus.ClickOnMedia(Number(s.id), false);
-            } else {
+                this.goSearch();
+            } else if (s.type === "tag") {
                 this.search = s.name;
+                this.goSearch();
+            } else {
+                this.goFindMedia();
             }
-            this.goSearch();
+
             this.blurSearchInstantly();
         },
 
@@ -335,7 +347,7 @@ export default defineComponent({
             if (this.suggestions.length > 0) {
                 this.selectSearch(this.suggestions[0]);
             } else {
-                this.goSearch();
+                this.goFindMedia();
             }
         },
 
@@ -429,6 +441,18 @@ export default defineComponent({
                     return 1;
                 }
             });
+
+            if (this.search) {
+                suggestions.push({
+                    key: "search:text",
+                    id: "search:text",
+                    name: this.search,
+                    nameLower: this.search.toLowerCase(),
+                    starts: true,
+                    contains: true,
+                    type: "search",
+                });
+            }
 
             this.bigListScroller.reset();
             this.bigListScroller.addElements(suggestions);

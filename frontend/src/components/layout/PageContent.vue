@@ -99,7 +99,7 @@
                 <i class="fas fa-arrow-down-short-wide"></i>
             </button>
             <button
-                v-if="page === 'adv-search' && pageScroll > 0"
+                v-if="page === 'search' && pageScroll > 0"
                 type="button"
                 :title="$t('Go to the top')"
                 class="page-header-btn"
@@ -150,10 +150,10 @@
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
         ></PageRandom>
-        <PageAdvancedSearch
-            v-if="isDisplayed && page === 'adv-search'"
+        <PageSearch
+            v-if="isDisplayed && page === 'search'"
             v-model:page-scroll="pageScroll"
-            :display="isDisplayed && page === 'adv-search'"
+            :display="isDisplayed && page === 'search'"
             :min="min"
             :in-modal="false"
             :no-album="-1"
@@ -163,7 +163,7 @@
             :row-size-min="rowSizeMin"
             :min-items-size="minItemSize"
             :max-items-size="maxItemSize"
-        ></PageAdvancedSearch>
+        ></PageSearch>
         <PageAlbums
             v-if="isDisplayed && page === 'albums'"
             :display="isDisplayed && page === 'albums'"
@@ -224,8 +224,8 @@ const PageAlbums = defineAsyncComponent({
     delay: 200,
 });
 
-const PageAdvancedSearch = defineAsyncComponent({
-    loader: () => import("@/components/pages/PageAdvancedSearch.vue"),
+const PageSearch = defineAsyncComponent({
+    loader: () => import("@/components/pages/PageSearch.vue"),
     loadingComponent: LoadingOverlay,
     delay: 200,
 });
@@ -245,7 +245,7 @@ export default defineComponent({
         PageAlbums,
         PageUpload,
         PageRandom,
-        PageAdvancedSearch,
+        PageSearch,
         PageSettingsDropdown,
     },
     props: {
@@ -334,7 +334,7 @@ export default defineComponent({
             switch (p) {
                 case "home":
                 case "media":
-                case "adv-search":
+                case "search":
                 case "albums":
                 case "random":
                     return true;
@@ -367,7 +367,7 @@ export default defineComponent({
                     return this.$t("Home");
                 case "media":
                     return this.$t("Media") + (s ? " (" + this.$t("Tag") + ": " + s + ")" : "");
-                case "adv-search":
+                case "search":
                     return this.$t("Find media");
                 case "upload":
                     return this.$t("Upload media");
@@ -386,7 +386,7 @@ export default defineComponent({
                     return "fas fa-home";
                 case "media":
                     return "fas fa-photo-film";
-                case "adv-search":
+                case "search":
                     return "fas fa-search";
                 case "upload":
                     return "fas fa-upload";

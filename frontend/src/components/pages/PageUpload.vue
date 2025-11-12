@@ -6,7 +6,7 @@
                 v-for="v in parallelOptions"
                 :key="v"
                 type="button"
-                class="upload-parallel-option"
+                class="page-option"
                 :class="{ current: maxParallelUploads === v }"
                 @click="updateMaxParallelUploads(v)"
             >
@@ -348,6 +348,7 @@ export default defineComponent({
         },
 
         updateMaxParallelUploads: function (m: number) {
+            this.maxParallelUploads = m;
             UploadController.SetMaxParallelUploads(m);
         },
 

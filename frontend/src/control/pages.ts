@@ -37,12 +37,12 @@ export const EVENT_NAME_GO_PREV = "media-go-prev";
 /**
  * Event triggered when the user requests going to the top of the advanced search page
  */
-export const EVENT_NAME_ADVANCED_SEARCH_GO_TOP = "adv-search-go-top";
+export const EVENT_NAME_ADVANCED_SEARCH_GO_TOP = "search-go-top";
 
 /**
  * Event triggered when the advanced search container is scrolled
  */
-export const EVENT_NAME_ADVANCED_SEARCH_SCROLL = "adv-search-scroll";
+export const EVENT_NAME_ADVANCED_SEARCH_SCROLL = "search-scroll";
 
 /**
  * Event triggered when the user makes changes to the basic metadata of the current media

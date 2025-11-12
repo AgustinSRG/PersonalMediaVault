@@ -390,7 +390,7 @@ export function clearPagePreferences() {
     clearLocalStorage(LS_KEY_THEME);
     AppEvents.Emit(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
 
-    ["home", "media", "random", "random", "albums", "upload", "adv-search"].forEach(resetPagePreferences);
+    ["home", "media", "random", "random", "albums", "upload", "search"].forEach(resetPagePreferences);
 }
 
 const DEFAULT_MAX_PARALLEL_UPLOADS = 1;
@@ -411,4 +411,32 @@ export function getMaxParallelUploads(): number {
  */
 export function setMaxParallelUploads(maxParallelUploads: number) {
     saveIntoLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS, maxParallelUploads);
+}
+
+export type SearchMode = "basic" | "adv";
+
+const DEFAULT_SEARCH_MODE = "basic";
+
+const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
+
+/**
+ * Gets the preferred search mode for media
+ * @returns The search mode
+ */
+export function getPreferredSearchMode(): SearchMode {
+    const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE, DEFAULT_SEARCH_MODE) + "";
+
+    if (!["basic", "adv"].includes(searchMode)) {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    return searchMode as SearchMode;
+}
+
+/**
+ * Sets the preferred search mode for media
+ * @param mode The search mode
+ */
+export function setPreferredSearchMode(mode: SearchMode) {
+    saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
 }
