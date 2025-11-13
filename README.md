@@ -1,11 +1,4 @@
-
 # ![PersonalMediaVault](./favicon.readme.png) Personal Media Vault
-
-[![Backend (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml)
-[![Backup tool (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
-[![Launcher (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
-[![Frontend (Vue) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 
 Web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
 
@@ -13,52 +6,185 @@ Web application to store media files (video, audio and pictures) in an encrypted
 
 ### Quick access links
 
- - 🌐 [PersonalMediaVault product website](https://agustinsrg.github.io/pmv-site/)
- - 📣 [Announcements](https://github.com/AgustinSRG/PersonalMediaVault/discussions/categories/announcements)
- - 🐛 [Report a bug](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=bug_report.md)
- - ☣️ [Report a vulnerability](https://github.com/AgustinSRG/PersonalMediaVault/security/advisories/new)
- - 💡 [Suggest a new feature](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=feature_request.md)
- - 🙏 [Need help? Ask a question](https://github.com/AgustinSRG/PersonalMediaVault/discussions/new?category=q-a)
+- 🌐 [PersonalMediaVault product website](https://agustinsrg.github.io/pmv-site/)
+- 📣 [Announcements](https://github.com/AgustinSRG/PersonalMediaVault/discussions/categories/announcements)
+- 🐛 [Report a bug](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=bug_report.md)
+- ☣️ [Report a vulnerability](https://github.com/AgustinSRG/PersonalMediaVault/security/advisories/new)
+- 💡 [Suggest a new feature](https://github.com/AgustinSRG/PersonalMediaVault/issues/new?template=feature_request.md)
+- 🙏 [Need help? Ask a question](https://github.com/AgustinSRG/PersonalMediaVault/discussions/new?category=q-a)
 
 ## Features
 
- - Support for videos, audios and pictures.
- - Web interface: The project provides a Web interface, allowing the access to the vault from multiple devices and operating systems.
- - Encrypted and easy to back-up storage: The vault is encrypted using the user's password, and is stored in files in a data folder. It's possible to make backups of the vault just by copying the folder, ideal for tools like rsync. This project also provides its own backup tool for doing that.
- - Indexed tags: Each media asset can be tagged, so the user can search for it with a tag based search system.
- - Albums: Media files can be sorted using albums.
- - Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
- - Automated thumbnail generation: When videos or images are uploaded, a default thumbnail is generated. You can change the default thumbnail at any moment after the upload.
- - Subtitles support: SubRip subtitles can be added to your videos and audios.
- - Multiple audio track support: Videos can have multiple audio tracks, usually for multi-language audio.
- - Video timeline previews: Get previews while hovering the video timeline.
- - Video timeline slices: Divide long videos in sections to quickly navigate through them.
- - Image annotations: Add comments to images.
- - Attachments: Upload any file attached to your media to preserve them in the encrypted vault. This can be used to preserve a copy of the raw media file, before the encoding.
+- Support for videos, audios and pictures.
+- Web interface: The project provides a Web interface, allowing the access to the vault from multiple devices and operating systems.
+- Encrypted and easy to back-up storage: The vault is encrypted using the user's password, and is stored in files in a data folder. It's possible to make backups of the vault just by copying the folder, ideal for tools like rsync. This project also provides its own backup tool for doing that.
+- Indexed tags: Each media asset can be tagged, so the user can search for it with a tag based search system.
+- Albums: Media files can be sorted using albums.
+- Media encoding: Media files are encoded into multiple formats in order to allow the playback from multiple browsers. For videos and pictures, they can also be resized into multiple resolutions for different kind of devices.
+- Automated thumbnail generation: When videos or images are uploaded, a default thumbnail is generated. You can change the default thumbnail at any moment after the upload.
+- Subtitles support: SubRip subtitles can be added to your videos and audios.
+- Multiple audio track support: Videos can have multiple audio tracks, usually for multi-language audio.
+- Video timeline previews: Get previews while hovering the video timeline.
+- Video timeline slices: Divide long videos in sections to quickly navigate through them.
+- Image annotations: Add comments to images.
+- Attachments: Upload any file attached to your media to preserve them in the encrypted vault. This can be used to preserve a copy of the raw media file, before the encoding.
 
-## Installation
+## Run in a container
 
-Depending on the operating system you are using, there are multiple installation options.
+Running the vault in an isolated container is the most secure way of running it, gives access to all the features and allows for a fine-grained configuration. 
 
-### Linux with DEB package support
+However, this may be a bit complex for non technical users. So, if you only need a local vault, go to the [Installation packages](#installation-packages) section instead.
 
-For apt-compatible Linux distributions, we provide a DEB package:
+You will need a container management system, for example [Docker](https://www.docker.com/) or [Podman](https://podman.io/). In the documentation, Docker commands are being used, so, if you are using Podman, make sure to replace `docker` for `podman` before running them.
 
-| Version | Arch | Download | Hash | Hash alg.  |
-|---|---|---|---|---|
-| 3.0.1 | amd64 | [GitHub](https://github.com/AgustinSRG/PersonalMediaVault/releases/download/v3.0.1/personalmediavault_3.0.1_amd64.deb) <br /> [Mega](https://mega.nz/file/gHcTgRoK#QIqb7tn3V0oQ73T3Kz148Vg0jJ3LogdAlcJhRJCDR-k) | `1cf14716a0058e1fd9e8542256907059e695411955df478ec86d4ff2d745a14c` | SHA256 |
+You can find the official image of the project uploaded to [Docker Hub](https://hub.docker.com/r/asanrom/pmv) and [GitHub Packages](https://github.com/AgustinSRG/PersonalMediaVault/pkgs/container/personalmediavault).
 
-Download it, and check its integrity using:
+To create a vault setup, fist create a compose file ([docker-compose.yml](./packages/docker-compose/docker-compose.yml)):
+
+<details>
+<summary>File contents (docker-compose.yml):</summary>
+
+```yml
+services:
+  pmvd:
+    hostname: "pmvd"
+    image: "asanrom/pmv"
+    ports:
+      - "${VAULT_PORT}:8000"
+    restart: unless-stopped
+    volumes:
+      - ${VAULT_PATH:-./vault}:/vault
+      - ${VAULT_SSL_PATH:-./ssl}:/ssl:ro
+    environment:
+      - USING_PROXY=${USING_PROXY:-NO}
+      - VAULT_INITIAL_USER=${VAULT_INITIAL_USER:-admin}
+      - VAULT_INITIAL_PASSWORD=${VAULT_INITIAL_PASSWORD:-changeme}
+      - SSL_CERT=${SSL_CERT:-}
+      - SSL_KEY=${SSL_KEY:-}
+    command: --daemon
+      --clean
+      --port 8000
+      --skip-lock
+      --vault-path /vault
+      --cache-size ${VAULT_CACHE_SIZE:-1024}
+      ${VAULT_EXTRA_OPTIONS:-}
+```
+</details><br>
+
+After that, create in the same folder an environment file ([.env](./packages/docker-compose/.env.example)) for the configuration parameters in the compose file.
+
+<details>
+<summary>File contents (.env):</summary>
 
 ```sh
-sha256sum ./personalmediavault_3.0.1_amd64.deb
-```
+####################################
+# PersonalMediaVault configuration #
+####################################
 
-Then, install it using `apt`:
+# Listening port
+VAULT_PORT=8000
+
+# Path where the vault will be stored
+VAULT_PATH=./vault
+
+# SSL (recommended)
+#
+# Running the vault with HTTP is the most secure option
+# Obtain a key and a certificate for your domain
+#
+# Set VAULT_SSL_PATH to the path where the key and the certificate are stored
+# This path will be mapped to /ssl in the container
+# Set SSL_KEY and SSL_CERT to the key and certificate chain files respectively
+# The files must be in the /ssl path (eg: /ssl/certificate.pem) and in PEM format
+
+VAULT_SSL_PATH=./ssl
+
+#SSL_KEY=/ssl/key.pem
+#SSL_CERT=/ssl/certificate.pem
+
+# Reverse proxy
+#
+# Sometimes is better to use a reverse proxy (line NGINX)
+# as the frontend and forward the requests to the daemon
+#
+# If you are using it, set USING_PROXY to YES in order for
+# the daemon to change the way it resolves the IP addresses of clients
+
+USING_PROXY=NO
+
+# Initial vault user
+#
+# If the vault has no users, an initial user will be created
+#
+# Set VAULT_INITIAL_USER and VAULT_INITIAL_PASSWORD
+# for the username and password respectively
+#
+# Make sure to change them the first time you log into the vault.
+
+VAULT_INITIAL_USER=admin
+VAULT_INITIAL_PASSWORD=changeme
+
+# Cache size
+# You can modify it to accelerate the read speed
+# but will also result in higher memory usage
+# The recommended value is 1024
+
+VAULT_CACHE_SIZE=1024
+
+# Extra options
+#
+# You can set the following extra options,
+# separating them with spaces:
+#
+#   --log-requests - Enables request logging
+#   --debug - Enables debug logging (useful for troubleshooting)
+#   --fix-consistency - Fixes vault consistency at startup (takes some time)
+#   --recover - Recovers non-indexed media assets.
+
+VAULT_EXTRA_OPTIONS=--log-requests
+```
+</details><br>
+
+Read the environment file in order to configure the file. Then, you can start the vault:
 
 ```sh
-sudo apt install ./personalmediavault_3.0.1_amd64.deb
+docker compose up -d
 ```
+
+In case you want to upgrade the image, run:
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+In case you want to stop it, run:
+
+```sh
+docker compose down
+```
+
+## Installation packages
+
+We offer several installation packages depending on the operating system you are using. You can find those packages in the [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases) section of the repository.
+
+This method is ideal for non-technical users, as a graphical launcher will be installed to run the vault without any commands.
+
+Read the sections below for installation instructions.
+
+### Windows
+
+For Windows, download the MSI installer (PersonalMediaVault-{VERSION}-x64.msi) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+
+Run the installer and and everything will be set up for the application to work.
+
+After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
+
+### Debian, Ubuntu or other Debian based Linux distribution
+
+For Debian-based Linux distributions, download the DEB package (personalmediavault_{VERSION}_amd64.deb) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+
+Install the package, with `apt` or with your graphical package manager.
 
 You can also install it directly from the PPA repository (built automatically with GitHub actions):
 
@@ -76,69 +202,98 @@ sudo apt update
 sudo apt install personalmediavault
 ```
 
-After the installation, the binary files will be available in `/usr/bin`, and the frontend files will be available in `/usr/lib/pmv/www`.
+After it's installed, you can run the launcher with `pmv /path/to/vault` or the graphical launcher by searching for "PersonalMediaVault" in your application menu.
 
-To run a vault, type:
+### Fedora Linux
 
-```sh
-pmv /path/to/vault
-```
+For Fedora-based Linux distributions, download the RPM package (personalmediavault_{VERSION}_amd64.rpm) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
-### Windows
+Install the package, with `dnf` or with your graphical package manager.
 
-For Windows, we provide a MSI installer:
+After it's installed, you can run the launcher with `pmv /path/to/vault` or the graphical launcher by searching for "PersonalMediaVault" in your application menu.
 
-| Version | Arch | Language | Download | Hash |
-|---|---|---|---|---|
-| 3.0.1 | x64 | English | [Mega](https://mega.nz/file/4K9kUQyb#HCMTtoCwb8E7GFPOTi47RrH-1g3epChu91MrFG0-laA) | SHA256: `A5FF97F0F8EFB34E00BADBE537D0161258493E8D007CA05C2A94772B8B726A77` |
-| 3.0.1 | x64 | Spanish | [Mega](https://mega.nz/file/9PdVEJjB#2dD6tcF6j8syQRsHRNwx7zoJsxpuaCPJr6nHeJRqPR8) | SHA256: `2C5CD262CB2E73C2AD2281EB09647C324A33F78C168863D2D651BF619882FDA1` |
+### Arch Linux
 
-In order to install Personal Media Vault in Windows, run the installer and everything will be set up for the application to work.
+For Arch-based Linux distributions, download the PKG.TAR package (personalmediavault_{VERSION}_amd64.pkg.tar) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
-When downloading the MSI installer, check the file hash with PowerShell to make sure the file was not modified:
+Install the package, with `pacman` or with your graphical package manager.
 
-```ps1
-Get-FileHash -Path "PersonalMediaVault-3.0.1-x64.msi" -Algorithm SHA256
-Get-FileHash -Path "PersonalMediaVault-3.0.1-x64-es.msi" -Algorithm SHA256
-```
+After it's installed, you can run the launcher with `pmv /path/to/vault` or the graphical launcher by searching for "PersonalMediaVault" in your application menu.
 
-After it's installed, create an empty folder to store your media vault and right click it. You should see a new option "Open with PersonalMediaVault". Click it to run the vault launcher.
+### Other Linux distribution
 
-## Docker
+For any other Linux distribution, you can download the TAR.GZ package (personalmediavault_{VERSION}_amd64.tar.gz) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
-You can run this project with docker, using the [official image](https://hub.docker.com/r/asanrom/pmv) uploaded to Docker Hub.
-
-In order to pull the image, type:
+Uncompress it, and run the installation script (`install.sh`) with administration privileges:
 
 ```sh
-docker pull asanrom/pmv
+sudo ./install.sh
 ```
 
-To run a personal media vault instance, you can create a container, which is going to run the backend binary inside it.
+After it's installed, you can run the launcher with `pmv /path/to/vault` or the graphical launcher by searching for "PersonalMediaVault" in your application menu.
 
-Here is an example command to create a container:
+### KDE service menu
 
-```sh
-docker run -p 80:80 -v /path/to/the/vault:/vault -e VAULT_INITIAL_USER=admin -e VAULT_INITIAL_PASSWORD=admin asanrom/pmv --daemon --clean --log-requests --vault-path /vault
+If you are using a Linux distribution, and KDE as your desktop environment, you can get the same context menu options to open vaults that are installed in the Windows package.
+
+Create the file `~/.local/share/kio/servicemenus/pmv-open.desktop` with the following contents:
+
+<details>
+<summary>File contents (pmv-open.desktop):</summary>
+
+```conf
+[Desktop Entry]
+Name=Open with PersonalMediaVault
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory
+Actions=openWithPmv
+
+[Desktop Action openWithPmv]
+Name=Open with PersonalMediaVault
+Name[es]=Abrir con PersonalMediaVault
+Terminal=false
+Icon=pmv
+StartupWMClass=pmv
+Exec=pmv-gui .
 ```
+</details><br>
 
-You can replace `/path/to/the/vault` for the path where you have your vault stored.
+If you prefer to use the console launcher instead, use the following desktop entry:
 
-For empty vaults, a default `admin`, with password `admin` will be created. You can also override them by changing the environment variables `VAULT_INITIAL_USER` and `VAULT_INITIAL_PASSWORD` respectively. You should change the password as soon as you first login into your vault to protect it with a strong password.
+<details>
+<summary>File contents (pmv-open-console.desktop):</summary>
 
-For more options, run:
+```conf
+[Desktop Entry]
+Name=Open with PersonalMediaVault (Console)
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory
+Actions=openWithPmvConsole
 
-```sh
-docker run asanrom/pmv --help
+[Desktop Action openWithPmvConsole]
+Name=Open with PersonalMediaVault (Console)
+Name[es]=Abrir con PersonalMediaVault (Consola)
+Terminal=false
+Icon=pmv
+StartupWMClass=pmv
+Exec=konsole --separate -e 'pmv .'
 ```
+</details>
 
 ## Project components
 
- - [Backend](./backend): Manages the vault, encodes and stores the media files and provides a HTTP API for clients to access it.
- - [Frontend](./frontend): Uses the HTTP API to access the vault, providing a web interface to the user.
- - [Backup tool](./backup-tool): Tool to make backups of media vaults (copies the new files and replaces the old ones, using the last modified date).
- - [Launcher](./launcher): CLI program to launch the web app. This component is made in order to make it easier to use in local, when you do not have the backend configured as a system service.
- - [Installation Packages](./packages): Collection of installation packages for multiple operating systems.
+[![Backend (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml)
+[![Backup tool (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
+[![Launcher (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
+[![Frontend (Vue) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml)
+
+- [Backend](./backend): Manages the vault, encodes and stores the media files and provides a HTTP API for clients to access it.
+- [Frontend](./frontend): Uses the HTTP API to access the vault, providing a web interface to the user.
+- [Backup tool](./backup-tool): Tool to make backups of media vaults (copies the new files and replaces the old ones, using the last modified date).
+- [Launcher](./launcher): CLI program to launch the web app. This component is made in order to make it easier to use in local, when you do not have the backend configured as a system service.
+- [Installation Packages](./packages): Collection of installation packages for multiple operating systems.
 
 ## Project motivation
 
@@ -150,9 +305,11 @@ This is a personal project developed with the goal of making a media management 
 
 ## License
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
+
 This project is under the [MIT License](./LICENSE).
 
 ## Contributing
 
- - [Pull requests](https://github.com/AgustinSRG/PersonalMediaVault/pulls)
- - [Contributing guidelines](./CONTRIBUTING.md)
+- [Pull requests](https://github.com/AgustinSRG/PersonalMediaVault/pulls)
+- [Contributing guidelines](./CONTRIBUTING.md)
