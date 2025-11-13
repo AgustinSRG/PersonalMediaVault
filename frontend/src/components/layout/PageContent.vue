@@ -251,10 +251,17 @@ export default defineComponent({
     props: {
         min: Boolean,
     },
+    setup: function () {
+        return {
+            resizeObserver: null as ResizeObserver,
+        };
+    },
     data: function () {
         const pagePreferences = getPagePreferences(AppStatus.CurrentPage);
         return {
             canWrite: AuthController.CanWrite,
+
+            windowWidth: window.innerWidth,
 
             isDisplayed: (AppStatus.CurrentMedia < 0 || AppStatus.ListSplitMode) && AppStatus.CurrentAlbum < 0,
             page: AppStatus.CurrentPage,
@@ -295,6 +302,20 @@ export default defineComponent({
         this.$addKeyboardHandler(this.handleGlobalKey.bind(this), 10);
 
         this.updateSearchParams();
+
+        this.resizeObserver = new ResizeObserver(() => {
+            if (this.windowWidth !== window.innerWidth) {
+                this.updatePagePreferences();
+                this.windowWidth = window.innerWidth;
+            }
+        });
+
+        this.resizeObserver.observe(document.body);
+    },
+    beforeUnmount: function () {
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
     },
     methods: {
         updatePage: function () {
