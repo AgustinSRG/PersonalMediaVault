@@ -135,7 +135,9 @@ textarea.form-control::-webkit-resizer {
 }
 
 .media-search-form {
-    padding: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .form-range {
@@ -363,4 +365,10 @@ textarea.form-control::-webkit-resizer {
 
 .hidden-input {
     display: none;
+}
+
+.button-list-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }

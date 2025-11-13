@@ -63,12 +63,12 @@
                     />
                 </div>
             </div>
-            <div v-if="tagMode !== 'untagged' && matchingTags.length > 0" class="form-group">
+            <div v-if="tagMode !== 'untagged' && matchingTags.length > 0" class="button-list-row form-group">
                 <button
                     v-for="mt in matchingTags"
                     :key="mt.id"
                     type="button"
-                    class="btn btn-primary btn-sm btn-tag-mini btn-add-tag"
+                    class="btn btn-primary btn-sm btn-add-tag"
                     @click="addMatchingTag(mt)"
                     @keydown="onSuggestionKeydown"
                 >
@@ -164,7 +164,7 @@
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
-            <div v-if="!finished && fullListLength >= pageSize" class="search-continue-mark">
+            <div v-if="!finished" class="search-continue-mark">
                 <button type="button" class="btn btn-primary btn-mr" disabled>
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Searching") }}... ({{ cssProgress(progress) }})
                 </button>
