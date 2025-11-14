@@ -1,6 +1,13 @@
 # ![PersonalMediaVault](./favicon.readme.png) Personal Media Vault
 
-Web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
+[![Backend](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml)
+[![Frontend](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml)
+[![Launcher (CLI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
+[![Launcher (GUI)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher-gui.yml)
+[![Backup tool](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
+
+Self-hosted web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser.
 
 ![Screenshot](https://agustinsrg.github.io/pmv-site/images/screenshot.png)
 
@@ -174,7 +181,7 @@ Read the sections below for installation instructions.
 
 ### Windows
 
-For Windows, download the MSI installer (PersonalMediaVault-{VERSION}-x64.msi) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Windows, download the **MSI** installer (`PersonalMediaVault-{VERSION}-x64.msi`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Run the installer and and everything will be set up for the application to work.
 
@@ -182,7 +189,7 @@ After it's installed, create an empty folder to store your media vault and right
 
 ### Debian, Ubuntu or other Debian based Linux distribution
 
-For Debian-based Linux distributions, download the DEB package (personalmediavault_{VERSION}_amd64.deb) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Debian-based Linux distributions, download the **DEB** package (`personalmediavault_{VERSION}_amd64.deb`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Install the package, with `apt` or with your graphical package manager.
 
@@ -206,7 +213,7 @@ After it's installed, you can run the launcher with `pmv /path/to/vault` or the 
 
 ### Fedora Linux
 
-For Fedora-based Linux distributions, download the RPM package (personalmediavault_{VERSION}_amd64.rpm) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Fedora-based Linux distributions, download the **RPM** package (`personalmediavault_{VERSION}_amd64.rpm`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Install the package, with `dnf` or with your graphical package manager.
 
@@ -214,7 +221,7 @@ After it's installed, you can run the launcher with `pmv /path/to/vault` or the 
 
 ### Arch Linux
 
-For Arch-based Linux distributions, download the PKG.TAR package (personalmediavault_{VERSION}_amd64.pkg.tar) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Arch-based Linux distributions, download the **PKG.TAR** package (`personalmediavault_{VERSION}_amd64.pkg.tar`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Install the package, with `pacman` or with your graphical package manager.
 
@@ -222,7 +229,7 @@ After it's installed, you can run the launcher with `pmv /path/to/vault` or the 
 
 ### Other Linux distribution
 
-For any other Linux distribution, you can download the TAR.GZ package (personalmediavault_{VERSION}_amd64.tar.gz) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For any other Linux distribution, you can download the **TAR.GZ** package (`personalmediavault_{VERSION}_amd64.tar.gz`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Uncompress it, and run the installation script (`install.sh`) with administration privileges:
 
@@ -284,11 +291,6 @@ Exec=konsole --separate -e 'pmv .'
 
 ## Project components
 
-[![Backend (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backend.yml)
-[![Backup tool (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/backup-tool.yml)
-[![Launcher (Go) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/launcher.yml)
-[![Frontend (Vue) CI](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml/badge.svg)](https://github.com/AgustinSRG/PersonalMediaVault/actions/workflows/frontend.yml)
-
 - [Backend](./backend): Manages the vault, encodes and stores the media files and provides a HTTP API for clients to access it.
 - [Frontend](./frontend): Uses the HTTP API to access the vault, providing a web interface to the user.
 - [Backup tool](./backup-tool): Tool to make backups of media vaults (copies the new files and replaces the old ones, using the last modified date).
@@ -304,8 +306,6 @@ This is a personal project developed with the goal of making a media management 
 **Why a web application?:** By making it a web application, its usage becomes very flexible. You can run the backend in a computer in your LAN or a remote server and you are able to use the app from all the devices connected to the Internet without any extra installation. Also, web interfaces are easier to develop to work in multiple devices and they offer standard features already implemented that are required for the app, like the video player.
 
 ## License
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 
 This project is under the [MIT License](./LICENSE).
 
