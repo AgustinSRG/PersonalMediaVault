@@ -16,6 +16,10 @@ cd ../launcher
 echo "Building launcher..."
 ./build-production.sh
 
+cd ../launcher-gui
+echo "Building launcher (GUI)..."
+./build-production.sh
+
 cd ../frontend
 echo "Building frontend..."
 npm install
@@ -32,7 +36,7 @@ PMV_VERSION_REVISION=0
 PMV_BIN_ARCH=amd64
 
 PMV_MAINTAINER="AgustinSRG <agustinsanromanguzman@gmail.com>"
-PMV_DESCRIPTION="PersonalMediaVault - Web application to store media files in an encrypted storage, and to visualize them using a web browser."
+PMV_DESCRIPTION="PersonalMediaVault - Self-hosted web application to store media files in an encrypted storage, and to visualize them using a web browser."
 
 PMV_DEB_NAME=personalmediavault_${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}_amd64
 
@@ -54,6 +58,7 @@ mkdir -p ${PMV_PKG_FOLDER}/usr/bin
 cp ../../backend/pmvd ${PMV_PKG_FOLDER}/usr/bin/pmvd
 cp ../../backup-tool/pmv-backup ${PMV_PKG_FOLDER}/usr/bin/pmv-backup
 cp ../../launcher/pmv ${PMV_PKG_FOLDER}/usr/bin/pmv
+cp ../../launcher-gui/target/release/pmv-gui ${PMV_PKG_FOLDER}/usr/bin/pmv-gui
 
 mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
 

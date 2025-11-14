@@ -6,6 +6,7 @@ This is a script to create a DEB package for apt-based Linux distributions.
 
 - [Golang](https://go.dev/) - Last stable version
 - [NodeJS](https://nodejs.org/) - Last stable version
+- [Rust](https://www.rust-lang.org/) - Last stable version
 
 ## Building
 

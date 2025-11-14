@@ -1,8 +1,15 @@
 [Desktop Entry]
 Name=PersonalMediaVault
 GenericName=Media Gallery Manager
-TryExec=pmv
-Exec=gnome-terminal --window --class="pmv" --working-directory="%F" --title="PersonalMediaVault" -x sh -c "pmv"
+Comment=Self-hosted web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser
+Exec=pmv-gui
 Type=Application
+Terminal=false
 Icon=pmv
-StartupNotify=false
+Categories=AudioVideo
+StartupNotify=true
+StartupWMClass=pmv
+
+GenericName[es_ES]=Gestor de galería multimedia
+Comment[es_ES]=Aplicación web local para almacenar archivos multimedia encriptados y visualizarlos usando un navegador web.
+
