@@ -1,4 +1,4 @@
-name: Launcher-GUI (Rust) CI
+name: Launcher (GUI)
 
 on:
   push:
