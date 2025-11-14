@@ -16,6 +16,10 @@ cd ../launcher
 echo "Building launcher..."
 ./build-production.sh
 
+cd ../launcher-gui
+echo "Building GUI launcher..."
+./build-production.sh
+
 cd ../frontend
 echo "Building frontend..."
 npm install
@@ -51,10 +55,19 @@ mkdir -p ${PMV_PKG_FOLDER}/usr/bin
 cp ../../backend/pmvd ${PMV_PKG_FOLDER}/usr/bin/pmvd
 cp ../../backup-tool/pmv-backup ${PMV_PKG_FOLDER}/usr/bin/pmv-backup
 cp ../../launcher/pmv ${PMV_PKG_FOLDER}/usr/bin/pmv
+cp ../../launcher-gui/target/release/pmv-gui ${PMV_PKG_FOLDER}/usr/bin/pmv-gui
 
 mkdir -p ${PMV_PKG_FOLDER}/usr/lib/pmv
 
 cp -rf ../../frontend/dist ${PMV_PKG_FOLDER}/usr/lib/pmv/www
+
+# Desktop entry
+
+mkdir -p ${PMV_PKG_FOLDER}/usr/share/applications
+mkdir -p ${PMV_PKG_FOLDER}/usr/share/pixmaps
+
+cp ./assets/pmv.svg ${PMV_PKG_FOLDER}/usr/share/pixmaps/pmv.svg
+cp ./assets/pmv.desktop ${PMV_PKG_FOLDER}/usr/share/applications/pmv.desktop
 
 # Scripts
 
