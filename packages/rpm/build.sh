@@ -93,7 +93,7 @@ echo "BuildArch: x86_64" >> ${SPEC_FILE}
 echo "URL:       https://agustinsrg.github.io/pmv-site/" >> ${SPEC_FILE}
 echo "BugURL:    https://github.com/AgustinSRG/PersonalMediaVault/issues" >> ${SPEC_FILE}
 echo "License:   MIT" >> ${SPEC_FILE}
-echo "Requires:  ffmpeg | ffmpeg-free" >> ${SPEC_FILE}
+echo "Requires:  ffmpeg-free" >> ${SPEC_FILE}
 echo "Source0:   ${PMV_TAR_NAME}" >> ${SPEC_FILE}
 
 echo "" >> ${SPEC_FILE}
