@@ -37,8 +37,8 @@ PMV_BIN_ARCH=amd64
 
 PMV_PKG_NAME=personalmediavault-${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}-amd64
 
-PMV_PKG_FOLDER=./${PMV_PKG_NAME}
-PMV_TAR_NAME=./${PMV_PKG_NAME}.tar.gz
+PMV_PKG_FOLDER=${PMV_PKG_NAME}
+PMV_TAR_NAME=${PMV_PKG_NAME}.tar.gz
 
 echo "Preparing folder:" ${PMV_PKG_FOLDER}
 
@@ -93,7 +93,7 @@ echo "Release:   1%{?dist}" >> ${SPEC_FILE}
 echo "Summary:   Personal Media Vault" >> ${SPEC_FILE}
 echo "BuildArch: x86_64" >> ${SPEC_FILE}
 echo "URL:       https://agustinsrg.github.io/pmv-site/" >> ${SPEC_FILE}
-echo "BugURL:    https://github.com/AgustinSRG/PersonalMediaVault/issues"
+echo "BugURL:    https://github.com/AgustinSRG/PersonalMediaVault/issues" >> ${SPEC_FILE}
 echo "License:   MIT" >> ${SPEC_FILE}
 echo "Requires:  ffmpeg" >> ${SPEC_FILE}
 echo "Source0:   ${PMV_TAR_NAME}" >> ${SPEC_FILE}
