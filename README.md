@@ -213,7 +213,7 @@ After it's installed, you can run the launcher with `pmv /path/to/vault` or the 
 
 ### Fedora Linux
 
-For Fedora-based Linux distributions, download the **RPM** package (`personalmediavault_{VERSION}_amd64.rpm`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Fedora-based Linux distributions, download the **RPM** package (`personalmediavault-{VERSION}.x86_64.rpm`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
 Install the package, with `dnf` or with your graphical package manager.
 
