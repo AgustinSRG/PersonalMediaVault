@@ -103,6 +103,10 @@ echo "Self-hosted web application to store media files (video, audio and picture
 
 echo "" >> ${SPEC_FILE}
 
+echo "%global debug_package %{nil}" >> ${SPEC_FILE}
+
+echo "" >> ${SPEC_FILE}
+
 echo "%prep" >> ${SPEC_FILE}
 echo "%setup -q" >> ${SPEC_FILE}
 
