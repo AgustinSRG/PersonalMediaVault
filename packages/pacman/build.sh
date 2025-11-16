@@ -86,7 +86,7 @@ echo "# Maintainer: Agustin San Roman <agustinsrg@air-institute.com>" > ${PKG_BU
 echo "" >> ${PKG_BUILD_FILE}
 
 echo "pkgname=personalmediavault" >> ${PKG_BUILD_FILE}
-echo "pkgver=2.7.1" >> ${PKG_BUILD_FILE}
+echo "pkgver=${PMV_VERSION_MAJOR}.${PMV_VERSION_MINOR}.${PMV_VERSION_REVISION}" >> ${PKG_BUILD_FILE}
 echo "pkgrel=1" >> ${PKG_BUILD_FILE}
 echo 'pkgdesc="Self-hosted web application to store media files (video, audio and pictures) in an encrypted storage, and visualize them using a web browser."' >> ${PKG_BUILD_FILE}
 echo "arch=('x86_64')" >> ${PKG_BUILD_FILE}
