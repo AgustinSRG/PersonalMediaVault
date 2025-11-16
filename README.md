@@ -221,9 +221,13 @@ After it's installed, you can run the launcher with `pmv /path/to/vault` or the 
 
 ### Arch Linux
 
-For Arch-based Linux distributions, download the **PKG.TAR** package (`personalmediavault_{VERSION}_amd64.pkg.tar`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
+For Arch-based Linux distributions, download the **PKG.TAR.ZST** package (`personalmediavault-{VERSION}-x86_64.pkg.tar.zst`) from [Releases](https://github.com/AgustinSRG/PersonalMediaVault/releases).
 
-Install the package, with `pacman` or with your graphical package manager.
+Install the package, with `pacman`:
+
+```sh
+sudo pacman -U personalmediavault-{VERSION}-x86_64.pkg.tar.zst
+```
 
 After it's installed, you can run the launcher with `pmv /path/to/vault` or the graphical launcher by searching for "PersonalMediaVault" in your application menu.
 
