@@ -11,7 +11,7 @@ echo "Building backend..."
 cd ../backup-tool
 echo "Building backup tool..."
 ./build-production.sh
-
+c
 cd ../launcher
 echo "Building launcher..."
 ./build-production.sh
@@ -25,7 +25,7 @@ echo "Building frontend..."
 npm install
 npm run build
 
-cd ../packages/linux
+cd ../packages/pacman
 
 # Build package
 
@@ -94,6 +94,7 @@ echo 'url="https://agustinsrg.github.io/pmv-site/"' >> ${PKG_BUILD_FILE}
 echo "license=('MIT')" >> ${PKG_BUILD_FILE}
 echo "depends=('ffmpeg')" >> ${PKG_BUILD_FILE}
 echo "source=('${PMV_TAR_NAME}')" >> ${PKG_BUILD_FILE}
+echo "cksums=('SKIP')"
 
 echo "" >> ${PKG_BUILD_FILE}
 

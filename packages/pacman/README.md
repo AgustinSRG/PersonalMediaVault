@@ -8,6 +8,12 @@ This is a script to build the pacman package in order to install the project in 
 - [NodeJS](https://nodejs.org/) - Last stable version
 - [Rust](https://www.rust-lang.org/) - Last stable version
 
+You will also need the development tools for Arch linux:
+
+```sh
+sudo pacman -S devtools
+```
+
 ## Building
 
 Crate the `pkg.tar` package file with the following command:
