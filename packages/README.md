@@ -8,4 +8,5 @@ List of available packages
  - [Windows MSI installer](./windows-msi/)
  - [DPKG DEB package builder](./dpkg-deb/)
  - [Fedora RPM package builder](./rpm/)
+ - [Pacman package builder](./pacman/)
  - [Linux generic installer](./linux/)

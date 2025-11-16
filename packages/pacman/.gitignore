@@ -1,4 +1,3 @@
 personalmediavault_*
 *.tar.gz
-*.spec
-*.rpm
+*.tar
