@@ -8,15 +8,24 @@
     outline: none;
 }
 
-.media-description-edit {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+.media-description-body.editing {
+    width: 100%;
+    height: 100%;
+    padding: 0 0.5rem;
+    padding-right: 0;
 }
 
-.media-description-edit textarea {
-    resize: vertical;
+.media-description-edit {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
     width: 100%;
-    min-height: 340px;
+    height: 100%;
+}
+
+.media-description-edit .form-control.form-textarea {
+    resize: none;
+    width: 100%;
+    height: 100%;
 }
 
 .media-description-view {

@@ -10,7 +10,7 @@
             @clicked="propagateClick"
             @action-btn="clickActionButton"
         >
-            <div class="media-description-body" tabindex="-1">
+            <div class="media-description-body" :class="{ editing: editing }" tabindex="-1">
                 <LoadingOverlay v-if="loading"></LoadingOverlay>
                 <div v-if="!loading && editing" class="media-description-edit">
                     <textarea
@@ -103,15 +103,6 @@ export default defineComponent({
             }
 
             if (!this.editing) {
-                if (this.baseFontSize !== 18) {
-                    buttons.push({
-                        id: "size-reset",
-                        name: this.$t("Reset font size"),
-                        icon: "fas fa-magnifying-glass",
-                        key: ["r", "R"],
-                    });
-                }
-
                 buttons.push({
                     id: "size-minus",
                     name: this.$t("Smaller font size"),
@@ -268,10 +259,6 @@ export default defineComponent({
                     break;
                 case "edit":
                     this.startEdit();
-                    break;
-                case "size-reset":
-                    this.baseFontSize = 18;
-                    this.saveBaseFontSize();
                     break;
                 case "size-plus":
                     this.baseFontSize = Math.min(128, this.baseFontSize + 1);
