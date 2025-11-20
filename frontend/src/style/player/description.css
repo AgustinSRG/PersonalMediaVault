@@ -35,3 +35,27 @@
     word-wrap: break-word;
     white-space: pre-wrap;
 }
+
+.widget-settings table {
+    width: 100%;
+}
+
+.widget-settings td {
+    padding: 0.5rem;
+}
+
+.btn.btn-read {
+    margin-left: 0.25rem;
+}
+
+.media-description-view.reading .media-description-paragraph {
+    cursor: pointer;
+}
+
+.media-description-view.reading .media-description-paragraph:not(.reading):hover {
+    background-color: var(--hover-color);
+}
+
+.media-description-view.reading .media-description-paragraph.reading {
+    background-color: var(--selected-color);
+}
