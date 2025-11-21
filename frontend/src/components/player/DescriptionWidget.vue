@@ -65,7 +65,7 @@
                                         class="form-control form-control-full-width"
                                         @change="onChangedVoiceReadingSettings"
                                     >
-                                        <option :value="''">--- {{ $t("Select a voice") }} ---</option>
+                                        <option :value="''">--- {{ $t("Default voice") }} ---</option>
                                         <option v-for="v in voices" :key="v.voiceURI" :value="v.voiceURI">
                                             {{ v.name }} ({{ v.lang }})
                                         </option>
@@ -310,7 +310,7 @@ export default defineComponent({
                         icon: "fas fa-pause",
                         key: "-",
                     });
-                } else if (this.speechSynthesisAvailable && this.contentLines.length > 0) {
+                } else if (this.speechSynthesisAvailable && this.contentLines.length > 0 && this.voiceReadingSettings.enabled) {
                     buttons.push({
                         id: "read-play",
                         name: this.$t("Start reading"),
@@ -769,11 +769,20 @@ export default defineComponent({
                     default:
                         console.error(ev.error);
                 }
+
+                if (this.voiceReaderSample !== reader) {
+                    return;
+                }
+
                 this.voiceReaderSample = null;
                 this.playingSample = false;
             });
 
             reader.addEventListener("end", () => {
+                if (this.voiceReaderSample !== reader) {
+                    return;
+                }
+
                 this.voiceReaderSample = null;
                 this.playingSample = false;
             });
@@ -885,11 +894,20 @@ export default defineComponent({
                     default:
                         console.error(ev.error);
                 }
+
+                if (this.voiceReader !== reader) {
+                    return;
+                }
+
                 this.voiceReader = null;
                 this.reading = false;
             });
 
             reader.addEventListener("end", () => {
+                if (this.voiceReader !== reader) {
+                    return;
+                }
+
                 this.voiceReader = null;
                 this.readNextLine();
             });

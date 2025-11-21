@@ -7,7 +7,9 @@
  * @returns True if available
  */
 export function isSpeechSynthesisAvailable(): boolean {
-    return !!window.speechSynthesis;
+    const n = navigator as any;
+    const isChromium = !!n.userAgentData && n.userAgentData.brands.some((data) => data.brand == "Chromium");
+    return !!window.speechSynthesis && isChromium;
 }
 
 /**
