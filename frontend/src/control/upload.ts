@@ -644,13 +644,8 @@ export class UploadController {
                         AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
                         UploadController.CheckQueue();
 
-                        switch (m.status) {
-                            case "tag":
-                                UploadController.AddNextTag(m);
-                                break;
-                            case "album":
-                                UploadController.InsertIntoAlbum(m);
-                                break;
+                        if (m.status === "tag") {
+                            UploadController.AddNextTag(m);
                         }
                     }
                 } else {
