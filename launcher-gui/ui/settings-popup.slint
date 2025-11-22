@@ -1,0 +1,119 @@
+
+
+import { ComboBox, Button, Palette } from "std-widgets.slint";
+export component UserSettingsPopupWindow inherits Rectangle {
+    background: Palette.alternate-background;
+    border-radius: 8px;
+
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// User settings
+    in-out property <int> settings-locale-index: 0;
+    in-out property <int> settings-theme-index: 0;
+
+    /// Settings apply callback
+    callback apply-user-settings();
+
+    /// Close popup
+    callback close-popup();
+
+    VerticalLayout {
+        spacing: 1rem;
+        padding: 1rem;
+
+        alignment: LayoutAlignment.start;
+
+        Text {
+            text: @tr("Preferences");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            HorizontalLayout {
+                alignment: LayoutAlignment.space-around;
+
+                GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.5rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Language") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+
+                            ComboBox {
+                                enabled: !busy;
+                                model: [@tr("System language (default)"), "English - en", "Español - es"];
+                                current-index <=> root.settings-locale-index;
+
+                                changed current-index => {
+                                    root.apply-user-settings();
+                                }
+                            }
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Color theme") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+
+                            ComboBox {
+                                enabled: !busy;
+                                model: [@tr("System theme (default)"), @tr("Dark theme"), @tr("Light theme")];
+                                current-index <=> root.settings-theme-index;
+
+                                changed current-index => {
+                                    root.apply-user-settings();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+            spacing: 0.75rem;
+
+            Button {
+                text: @tr("Done");
+                icon: @image-url("../assets/icons/check.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.close-popup();
+                }
+            }
+        }
+
+        Text {
+            text: @tr("Note: if you change the language, you must restart the launcher to make the changes effective");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 10pt;
+        }
+    }
+}

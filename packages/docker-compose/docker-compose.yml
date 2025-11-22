@@ -1,0 +1,24 @@
+services:
+  pmvd:
+    hostname: "pmvd"
+    image: "asanrom/pmv"
+    ports:
+      - "${VAULT_PORT}:8000"
+    restart: unless-stopped
+    volumes:
+      - ${VAULT_PATH:-./vault}:/vault
+      - ${VAULT_SSL_PATH:-./ssl}:/ssl:ro
+    environment:
+      - USING_PROXY=${USING_PROXY:-NO}
+      - VAULT_INITIAL_USER=${VAULT_INITIAL_USER:-admin}
+      - VAULT_INITIAL_PASSWORD=${VAULT_INITIAL_PASSWORD:-changeme}
+      - SSL_CERT=${SSL_CERT:-}
+      - SSL_KEY=${SSL_KEY:-}
+    command:
+      --daemon
+      --clean
+      --port 8000
+      --skip-lock
+      --vault-path /vault
+      --cache-size ${VAULT_CACHE_SIZE:-1024}
+      ${VAULT_EXTRA_OPTIONS:-}

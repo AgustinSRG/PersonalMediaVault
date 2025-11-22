@@ -22,6 +22,14 @@ other = "Fichero de certificado"
 hash = "sha1-c8eac3a602fe7b454e2a5a1b761799e76a88b006"
 other = "Por favor, elija un puerto de escucha para el servidor."
 
+[CodecWarning]
+hash = "sha1-e5c772338fd6647cbbfdcd7515b2e2de0c5561a5"
+other = "Advertencia: No se pudo detectar ningún codificador de vídeo en su instalación de FFMpeg. Esto causará errores a la hora de codificar los vídeos."
+
+[CommandDescription]
+hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
+other = "Lanza una galería multimedia con una línea de comandos interactiva para configurarla."
+
 [ConfigChangesSaved]
 hash = "sha1-97bc6a6aaad6d03f18cd235176e32a066716974e"
 other = "Los cambios en la configuración se han guardado correctamente."
@@ -29,10 +37,6 @@ other = "Los cambios en la configuración se han guardado correctamente."
 [ConfiguredAddress]
 hash = "sha1-c32c05b370532551d1b26c1e617cea135646a22d"
 other = "Se ha configurado la dirección de escucha: {{.Address}}"
-
-[Description]
-hash = "sha1-26a1e5e2892fd8b0547095c4b8643601cbe4b707"
-other = "Lanza una galería multimedia con una línea de comandos interactiva para configurarla."
 
 [DisableSSLAsk]
 hash = "sha1-bed20db79e8f5de88053154ab90df34aaacfc1b2"
@@ -78,9 +82,21 @@ other = "Uso: cache-size [tamaño] - Establece el tamaño de la caché"
 hash = "sha1-4407ffe7f09c4d50f4be960bcc7a88dd9ca0251e"
 other = "Error: No se pudo encontrar el binario codificador multimedia (ffmpeg)"
 
+[ErrorEncoderFound]
+hash = "sha1-de3a17a1eed0c489262383072e5e5aa37dba1bb3"
+other = "Error: Codificador no encontrado en FFMpeg: {{.Codec}}"
+
+[ErrorEncoderFound2]
+hash = "sha1-ba22c4fd7af72eddbe5fb972fe9edc728b02fcd2"
+other = "Lance 'ffmpeg -encoders' para comprobar la lista de codificadores disponibles."
+
 [ErrorFileExplorer]
 hash = "sha1-873ecc24fdf711c83df0a7fb283652288aceab62"
 other = "Error: no se pudo abrir el explorador de archivos: {{.Message}}"
+
+[ErrorFileNotFound]
+hash = "sha1-7ef62a4f747fa457e32d1381a7e25becf0e35e6a"
+other = "Error: Archivo no encontrado: {{.File}}"
 
 [ErrorFrontMissing]
 hash = "sha1-4eee2930e12911f18c2949f40487432159bf6d63"
@@ -149,6 +165,22 @@ other = "El nombre de usuario no puede exceder los 255 caracteres"
 [ErrorVaultLocked]
 hash = "sha1-0550fd491c58c2bb31d1548b30b274bbceb41dca"
 other = "La galería está siendo usada por otro proceso. No es posible iniciarla."
+
+[FFMpegBin]
+hash = "sha1-1d51cdef3ca3a62b60d7710976624f8f7f5d7978"
+other = "Ruta de FFMpeg [{{.DefaultPath}}]"
+
+[FFMpegBinaryTag]
+hash = "sha1-d25a8db3d4703527e740179ae063738102395279"
+other = "Binario FFMpeg: {{.File}}"
+
+[FFProbeBin]
+hash = "sha1-7ffb4592d0b671172bed0d5fc2c924049a24d232"
+other = "Ruta de FFProbe [{{.DefaultPath}}]"
+
+[FFProbeBinaryTag]
+hash = "sha1-9c93094c753d5928a01e5e8830f487c1c34690cc"
+other = "Binario FFProbe: {{.File}}"
 
 [FilesMissing]
 hash = "sha1-5146c6f0ff117b56eda7ed8fb74f1d8f3e68109d"
@@ -225,6 +257,14 @@ other = "clean - Reinicia la galería, eliminado los ficheros inconsistentes"
 [ManualCommandExit]
 hash = "sha1-af66fb1a6c9ed64b6c16bb0d1a7892fe103ab667"
 other = "exit - Detiene la galería. Tras esto el programa se cierra."
+
+[ManualCommandFFMpeg]
+hash = "sha1-88826e2bfa1e7ad0da9ed67fd3d59cba80b0536f"
+other = "ffmpeg - Muestra la configuración de FFMpeg"
+
+[ManualCommandFFMpegSetup]
+hash = "sha1-5411ff8dc8199c0d2ae981980dece7c05c4db0ed"
+other = "ffmpeg-setup - Establece la configuración de ffmpeg y sus codificadores"
 
 [ManualCommandHelp]
 hash = "sha1-9dc978bce9c8e65aef780f9b19bf34a14a43c92d"
@@ -358,6 +398,10 @@ other = "La galería no tiene SSL habilitado."
 hash = "sha1-c90259e834f5f2b6f7d090ff91d27b29693ecbe3"
 other = "Clave privada SSL: {{.File}}"
 
+[SetupFFMpegAsk]
+hash = "sha1-7f2d51b8eb7f9d40b6573e416213163f6e46a8a7"
+other = "Desea cambiar la configuración de FFMpeg?"
+
 [SetupSSLAsk]
 hash = "sha1-6e571b8dfbbb06d36e5de07edee2dc533b159ce5"
 other = "¿Desea habilitar SSL para su galería multimedia?"
@@ -378,9 +422,21 @@ other = "Estado: Detenida"
 hash = "sha1-15096d1b5894cda0f1f1002dcdebcf4ccee65639"
 other = "Escriba la ruta absoluta del certificado SSL que desea usar."
 
+[TypeFFMpegPath]
+hash = "sha1-3e4f3bf9a85d0f0600bc0c43a0467a78b935392e"
+other = "Escriba la ruta completa en su sistema de archivos al binario FFMpeg que desee usar."
+
+[TypeFFProbePath]
+hash = "sha1-e15d8a850d349817006653126111973d92864a80"
+other = "Escriba la ruta completa en su sistema de archivos al binario FFProbe que desee usar."
+
 [TypePrivateKeyPath]
 hash = "sha1-2eb9f45faf4b0b41ea878709f2c8b3bfeb65b719"
 other = "Escriba la ruta absoluta de la clave privada SSL que desea usar."
+
+[TypeVideoCodec]
+hash = "sha1-8070e9d9c998d9293d7b860e9679cbc6f85600d8"
+other = "Escriba el nombre del codificador de vídeo a utilizar."
 
 [UnrecognizedCommand]
 hash = "sha1-0e0e01cd69a6a9fdcbf8f1a7959ea2e6ef9c0ed4"
@@ -445,6 +501,14 @@ other = "Deteniendo la galería..."
 [Version]
 hash = "sha1-2da600bf9404843107a9531694f654e5662959e0"
 other = "Versión"
+
+[VideoCodec]
+hash = "sha1-7e5744ddae024de84afb06273a9cea56f7723283"
+other = "Codificador de vídeo [{{.DefaultEncoder}}]"
+
+[VideoCodecTag]
+hash = "sha1-c0b8c5f761e6607415b33338200431dfa9379610"
+other = "Codificador de vídeo: {{.Encoder}}"
 
 [YesNo]
 hash = "sha1-4564b7be7e4aa13e727e17280870edc63e87f8ce"

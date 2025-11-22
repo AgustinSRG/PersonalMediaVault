@@ -23,6 +23,7 @@ import (
 type VaultController struct {
 	vaultPath     string
 	launchConfig  LauncherConfig
+	ffmpegConfig  *FFmpegConfig
 	consoleReader *bufio.Reader
 
 	started        bool
@@ -35,10 +36,11 @@ type VaultController struct {
 	lock *sync.Mutex
 }
 
-func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherConfig, consoleReader *bufio.Reader) {
+func (vc *VaultController) Initialize(vaultPath string, launchConfig LauncherConfig, consoleReader *bufio.Reader, ffmpegConfig *FFmpegConfig) {
 	vc.vaultPath = vaultPath
 	vc.launchConfig = launchConfig
 	vc.consoleReader = consoleReader
+	vc.ffmpegConfig = ffmpegConfig
 
 	vc.lock = &sync.Mutex{}
 
@@ -495,7 +497,15 @@ func (vc *VaultController) Start() bool {
 	})
 	fmt.Println(msg)
 
-	cmd := exec.Command(BACKEND_BIN, "--daemon", "--clean", "--vault-path", vc.vaultPath, "--port", port, "--bind", bindAddr, "--launch-tag", vc.launchTag, "--cache-size", fmt.Sprint(cacheSize))
+	cmd := exec.Command(BACKEND_BIN,
+		"--daemon",
+		"--clean",
+		"--vault-path", vc.vaultPath,
+		"--port", port,
+		"--bind", bindAddr,
+		"--launch-tag", vc.launchTag,
+		"--cache-size", fmt.Sprint(cacheSize),
+	)
 
 	if vc.launchConfig.LogRequests {
 		cmd.Args = append(cmd.Args, "--log-requests")
@@ -506,7 +516,12 @@ func (vc *VaultController) Start() bool {
 	}
 
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "FFMPEG_PATH="+FFMPEG_BIN, "FFPROBE_PATH="+FFPROBE_BIN, "FRONTEND_PATH="+FRONTEND_PATH)
+	cmd.Env = append(cmd.Env,
+		"FFMPEG_PATH="+vc.ffmpegConfig.FFMpegPath,
+		"FFPROBE_PATH="+vc.ffmpegConfig.FFProbePath,
+		"FFMPEG_VIDEO_ENCODER="+vc.ffmpegConfig.VideoCodec,
+		"FRONTEND_PATH="+FRONTEND_PATH,
+	)
 
 	if vc.launchConfig.hasSSL() {
 		cmd.Env = append(cmd.Env, "SSL_CERT="+vc.launchConfig.SSL_Cert, "SSL_KEY="+vc.launchConfig.SSL_Key)
@@ -1286,6 +1301,247 @@ func (vc *VaultController) disableSSL() bool {
 		fmt.Println(msg)
 		return true
 	}
+}
+
+func (vc *VaultController) SetupFFMpeg() bool {
+	msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "SetupFFMpegAsk",
+			Other: "Do you want to setup FFMpeg configuration?",
+		},
+	})
+	ynMsg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "YesNo",
+			Other: "y/n",
+		},
+	})
+	fmt.Print(msg + " (" + ynMsg + "): ")
+
+	ans, err := vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if !checkYesNoAnswer(ans) {
+		return false
+	}
+
+	// Load ffmpeg config
+
+	newFFmpegConfig := loadFFmpegConfig()
+
+	// Setup FFmpeg path
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypeFFMpegPath",
+			Other: "Type the absolute path in your file system to the FFMpeg binary you want to use.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "FFMpegBin",
+			Other: "FFMpeg path [{{.DefaultPath}}]",
+		},
+		TemplateData: map[string]interface{}{
+			"DefaultPath": newFFmpegConfig.FFMpegPath,
+		},
+	})
+	fmt.Print(msg + ": ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if ans != "" {
+		if !fileExists(ans) {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorFileNotFound",
+					Other: "Error: File not found: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": ans,
+				},
+			})
+			fmt.Println(msg)
+			return false
+		}
+
+		newFFmpegConfig.FFMpegPath = ans
+	}
+
+	// Setup FFProbe path
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypeFFProbePath",
+			Other: "Type the absolute path in your file system to the FFProbe binary you want to use.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "FFProbeBin",
+			Other: "FFProbe path [{{.DefaultPath}}]",
+		},
+		TemplateData: map[string]interface{}{
+			"DefaultPath": newFFmpegConfig.FFProbePath,
+		},
+	})
+	fmt.Print(msg + ": ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if ans != "" {
+		if !fileExists(ans) {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorFileNotFound",
+					Other: "Error: File not found: {{.File}}",
+				},
+				TemplateData: map[string]interface{}{
+					"File": ans,
+				},
+			})
+			fmt.Println(msg)
+			return false
+		}
+
+		newFFmpegConfig.FFProbePath = ans
+	}
+
+	// Setup video codec
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "TypeVideoCodec",
+			Other: "Type the name of the encoder to use for video.",
+		},
+	})
+	fmt.Println(msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "VideoCodec",
+			Other: "Video encoder [{{.DefaultEncoder}}]",
+		},
+		TemplateData: map[string]interface{}{
+			"DefaultEncoder": newFFmpegConfig.VideoCodec,
+		},
+	})
+	fmt.Print(msg + ": ")
+
+	ans, err = vc.consoleReader.ReadString('\n')
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		os.Exit(1)
+	}
+
+	ans = strings.TrimSpace(ans)
+
+	if ans != "" {
+		newFFmpegConfig.VideoCodec = ans
+
+		codecCheck := checkFFmpegCodec(newFFmpegConfig)
+
+		if !codecCheck {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorEncoderFound",
+					Other: "Error: Encoder not found in FFMpeg: {{.Codec}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Codec": ans,
+				},
+			})
+			fmt.Println(msg)
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorEncoderFound2",
+					Other: "Run 'ffmpeg -encoders' to check the list of available encoders.",
+				},
+				TemplateData: map[string]interface{}{
+					"Codec": ans,
+				},
+			})
+			fmt.Println(msg)
+			return false
+		}
+	}
+
+	err = writeFFmpegConfigToFile(newFFmpegConfig)
+
+	if err != nil {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "Error",
+				Other: "Error: {{.Message}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Message": err.Error(),
+			},
+		})
+		fmt.Println(msg)
+		return false
+	}
+
+	vc.ffmpegConfig = newFFmpegConfig
+
+	return true
 }
 
 func (vc *VaultController) SetLogRequests(d bool) bool {

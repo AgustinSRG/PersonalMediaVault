@@ -25,17 +25,38 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
+const FFMPEG_DEFAULT_CODEC = "libx264"
+
+// List of video codecs target of encoding
+// These codecs are widely supported by browsers
+// If an uploaded video maches one of those codecs,
+// it won't be encoded by default
+var FFMPEG_TARGET_VIDEO_CODECS = map[string]bool{
+	"h264": true,
+	"av1":  true,
+	"vp9":  true,
+}
+
+const (
+	FFMPEG_TARGET_AUDIO_CODEC  = "aac"
+	FFMPEG_TARGET_PIXEL_FORMAT = "yuv420p"
+	FFMPEG_TARGET_IMAGE_CODEC  = "image2"
+)
+
 var (
-	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"  // Location of FFMPEG binary
-	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe" // Location of FFPROBE binary
+	FFMPEG_BINARY_PATH  = "/usr/bin/ffmpeg"    // Location of FFMPEG binary
+	FFPROBE_BINARY_PATH = "/usr/bin/ffprobe"   // Location of FFPROBE binary
+	FFMPEG_VIDEO_CODEC  = FFMPEG_DEFAULT_CODEC // Codec name for video
 )
 
 // Sets FFMPEG config
-// ffmpeg_path - Location of FFMPEG binary
-// ffprobe_path - Location of FFPROBE binary
-func SetFFMPEGBinaries(ffmpeg_path string, ffprobe_path string) {
-	FFMPEG_BINARY_PATH = ffmpeg_path
-	FFPROBE_BINARY_PATH = ffprobe_path
+// ffmpegPath - Location of FFMPEG binary
+// ffprobePath - Location of FFPROBE binary
+// ffmpegVideoCodec - Name of the video codec
+func SetFFMPEGBinaries(ffmpegPath string, ffprobePath string, ffmpegVideoCodec string) {
+	FFMPEG_BINARY_PATH = ffmpegPath
+	FFPROBE_BINARY_PATH = ffprobePath
+	FFMPEG_VIDEO_CODEC = ffmpegVideoCodec
 
 	ffprobe.SetFFProbeBinPath(FFPROBE_BINARY_PATH)
 }
@@ -122,7 +143,7 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 	audioStream := data.GetFirstAudioStream()
 
 	if videoStream != nil {
-		if data.Format.Duration().Seconds() < 0.5 || format == "image2" {
+		if data.Format.Duration().Seconds() < 0.5 || format == FFMPEG_TARGET_IMAGE_CODEC {
 			// Image
 			encoded := (format == "png_pipe")
 
@@ -145,14 +166,14 @@ func ProbeMediaFileWithFFProbe(file string) (*FFprobeMediaResult, error) {
 			encoded := validateFormatNameVideo(format)
 			canCopyVideo := true
 
-			if videoStream.CodecName != "h264" || videoStream.PixFmt != "yuv420p" {
+			if !FFMPEG_TARGET_VIDEO_CODECS[videoStream.CodecName] || videoStream.PixFmt != FFMPEG_TARGET_PIXEL_FORMAT {
 				encoded = false
 				canCopyVideo = false
 			}
 
 			canCopyAudio := true
 
-			if audioStream != nil && audioStream.CodecName != "aac" {
+			if audioStream != nil && audioStream.CodecName != FFMPEG_TARGET_AUDIO_CODEC {
 				encoded = false
 				canCopyAudio = false
 			}
@@ -293,7 +314,7 @@ func MakeFFMpegEncodeToMP4Command(originalFilePath string, originalFileFormat st
 	args = append(args, "-t", fmt.Sprint(originalFileDuration))
 
 	// MP4
-	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", "libx264", "-acodec", "aac", "-ac", "2", "-pix_fmt", "yuv420p", tempPath+"/video.mp4")
+	args = append(args, "-max_muxing_queue_size", "9999", "-vcodec", FFMPEG_VIDEO_CODEC, "-acodec", FFMPEG_TARGET_AUDIO_CODEC, "-ac", "2", "-pix_fmt", FFMPEG_TARGET_PIXEL_FORMAT, tempPath+"/video.mp4")
 
 	cmd.Args = args
 
@@ -338,8 +359,8 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	if canCopyVideo {
 		vCodec = "copy"
 	} else {
-		vCodec = "libx264"
-		args = append(args, "-pix_fmt", "yuv420p")
+		vCodec = FFMPEG_VIDEO_CODEC
+		args = append(args, "-pix_fmt", FFMPEG_TARGET_PIXEL_FORMAT)
 	}
 
 	var aCodec string
@@ -347,7 +368,7 @@ func MakeFFMpegEncodeToMP4OriginalCommand(originalFilePath string, originalFileF
 	if canCopyAudio {
 		aCodec = "copy"
 	} else {
-		aCodec = "aac"
+		aCodec = FFMPEG_TARGET_AUDIO_CODEC
 		args = append(args, "-ac", "2")
 	}
 
@@ -496,7 +517,8 @@ const (
 // probeData - Media file properties
 // Returns the path to a temp file containing the thumbnail
 func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMediaResult) (string, error) {
-	if probeData.Type == MediaTypeVideo {
+	switch probeData.Type {
+	case MediaTypeVideo:
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -505,16 +527,20 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		args[0] = FFMPEG_BINARY_PATH
 
 		args = append(args, "-y", "-progress", "pipe:1") // Overwrite
-
-		args = append(args, "-f", probeData.Format, "-i", originalFilePath) // Input file
-
-		// Setting for image
-		args = append(args, "-vframes", "1", "-an")
 
 		// Thumbnail time
 		midPoint := math.Floor(probeData.Duration / 2)
 		args = append(args, "-ss", fmt.Sprint(midPoint))
 
+		// Format
+		args = append(args, "-f", probeData.Format)
+
+		// Input file
+		args = append(args, "-i", originalFilePath)
+
+		// Setting for image
+		args = append(args, "-vframes", "1", "-an")
+
 		// Crop image
 		x := int32(0)
 		y := int32(0)
@@ -548,7 +574,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		}
 
 		return tmpFile, nil
-	} else if probeData.Type == MediaTypeImage {
+	case MediaTypeImage:
 		tmpFile := GetTemporalFileName("jpg", false)
 		cmd := exec.Command(FFMPEG_BINARY_PATH)
 
@@ -596,7 +622,7 @@ func GenerateThumbnailFromMedia(originalFilePath string, probeData *FFprobeMedia
 		}
 
 		return tmpFile, nil
-	} else {
+	default:
 		// Cant generate a thumbnail
 		return "", nil
 	}
@@ -654,14 +680,20 @@ func MakeFFMpegEncodeToPreviewsCommand(originalFilePath string, originalFileForm
 	return cmd, intervalSeconds
 }
 
+// Aux struct to store the FFMpeg error trace
+type FFmpegReadErrStatus struct {
+	errorTrace string
+}
+
 // Reads FFmpeg standard error for debugging purposes
 // Parameters:
 //   - pipe: Pipe to read the standard error
 //   - wg: Wait group to call when done
-func ffmpegReadStdErr(pipe io.ReadCloser, wg *sync.WaitGroup) {
+func ffmpegReadStdErr(pipe io.ReadCloser, readErrStatus *FFmpegReadErrStatus, wg *sync.WaitGroup) {
 	reader := bufio.NewReader(pipe)
 
 	var finished bool = false
+	errorTraceLastLine := ""
 
 	for !finished {
 		line, err := reader.ReadString('\r')
@@ -670,10 +702,18 @@ func ffmpegReadStdErr(pipe io.ReadCloser, wg *sync.WaitGroup) {
 			finished = true
 		}
 
-		line = strings.ReplaceAll(line, "\r", "")
+		if len(line) < 2 {
+			continue
+		}
+
+		line = line[0 : len(line)-1] // Remove delimiter
+
+		errorTraceLastLine = line
 
 		LogDebug("[FFMPEG] " + line)
 	}
+
+	readErrStatus.errorTrace = errorTraceLastLine
 
 	wg.Done()
 }
@@ -755,16 +795,10 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	}
 
 	// Create a pipe to read StdErr
-	var pipeErr io.ReadCloser = nil
+	pipeErr, err := cmd.StderrPipe()
 
-	if log_debug_enabled {
-		pipeErr, err = cmd.StderrPipe()
-
-		if err != nil {
-			return err
-		}
-	} else {
-		cmd.Stderr = nil
+	if err != nil {
+		return err
 	}
 
 	// Start the command
@@ -780,6 +814,8 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	// Add process as a child process
 	child_process_manager.AddChildProcess(cmd.Process) //nolint:errcheck
 
+	ffmpegError := FFmpegReadErrStatus{}
+
 	// Create wait group
 	wg := sync.WaitGroup{}
 
@@ -787,10 +823,8 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	wg.Add(1)
 	go ffmpegReadStdOut(pipeOut, &wg, cmd, input_duration, progress_reporter)
 
-	if pipeErr != nil {
-		wg.Add(1)
-		go ffmpegReadStdErr(pipeErr, &wg)
-	}
+	wg.Add(1)
+	go ffmpegReadStdErr(pipeErr, &ffmpegError, &wg)
 
 	// Wait
 	wg.Wait()
@@ -800,7 +834,11 @@ func RunFFMpegCommandAsync(cmd *exec.Cmd, input_duration float64, progress_repor
 	err = cmd.Wait()
 
 	if err != nil {
-		return err
+		if ffmpegError.errorTrace != "" {
+			return errors.New(err.Error() + "\n\n---\n\n" + ffmpegError.errorTrace)
+		} else {
+			return err
+		}
 	}
 
 	return nil

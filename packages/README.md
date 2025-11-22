@@ -4,6 +4,9 @@ This folder contains the tools and source code to make the installation packages
 
 List of available packages
 
- - [DPKG DEB package builder](./dpkg-deb/)
+ - [Docker compose stup](./docker-compose/)
  - [Windows MSI installer](./windows-msi/)
+ - [DPKG DEB package builder](./dpkg-deb/)
+ - [Fedora RPM package builder](./rpm/)
+ - [Pacman package builder](./pacman/)
  - [Linux generic installer](./linux/)

@@ -1,0 +1,576 @@
+import { Button, Palette, ScrollView } from "std-widgets.slint";
+import { AboutComponent } from "about.slint";
+import {
+    LauncherStatus,
+    FatalErrorType,
+    OpenErrorType,
+    VaultDaemonStatus,
+    VaultDaemonErrorType,
+    VaultToolStatus,
+    VaultSelectedTool,
+    VaultSelectedBackupOption,
+    VaultBackupStatus,
+    VaultBackupErrorType,
+    VaultBackupCurrentTask,
+} from "status.slint";
+import { VaultClosedView } from "vault-closed.slint";
+import { OpeningView } from "opening.slint";
+import { FatalErrorView } from "fatal-error.slint";
+import { OpenErrorView } from "open-error.slint";
+import { CreateFolderAskView } from "create-folder-ask.slint";
+import { LockAskView } from "lock-ask.slint";
+import { InitialConfigView } from "initial-config.slint";
+import { CreateVaultView } from "create-vault.slint";
+import { VaultOpenView } from "vault-open.slint";
+import { UserSettingsPopupWindow } from "settings-popup.slint";
+
+export { 
+    LauncherStatus,
+    FatalErrorType,
+    OpenErrorType,
+    VaultDaemonStatus,
+    VaultDaemonErrorType,
+    VaultToolStatus,
+    VaultSelectedTool,
+    VaultSelectedBackupOption,
+    VaultBackupStatus,
+    VaultBackupErrorType,
+    VaultBackupCurrentTask
+}
+
+export component MainWindow inherits Window {
+    icon: @image-url("../assets/favicon.png");
+    title: @tr("PersonalMediaVault Launcher");
+
+    /// The general status of the launcher
+    in-out property <LauncherStatus> launcher-status: closed;
+
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    preferred-width: 54rem;
+    preferred-height: 45rem;
+
+    default-font-size: 11pt;
+
+    /// User settings
+    in-out property <int> settings-locale-index: 0;
+    in-out property <int> settings-theme-index: 0;
+
+    /// Settings apply callback
+    callback apply-user-settings();
+
+    out property <bool> is-dark-theme-default: Palette.color-scheme == ColorScheme.dark;
+
+    public function set-dark-theme() {
+        Palette.color-scheme = ColorScheme.dark;
+    }
+
+    public function set-light-theme() {
+        Palette.color-scheme = ColorScheme.light;
+    }
+
+    /// PersonalMediaVault version
+    in property <string> version: "1.0.0";
+
+    /// Visit the PersonalMediaVault Website
+    callback visit-website();
+
+    /// Visit GitHub page
+    callback visit-git();
+
+    /// Close callback
+    callback close-launcher();
+
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Type of fatal error that occurred
+    in property <FatalErrorType> fatal-error-type: unknown;
+
+    /// Type of open error that occurred
+    in property <OpenErrorType> open-error-type: unknown;
+
+    /// Details of the error opening the vault
+    in-out property <string> open-error-details: "";
+
+    /// Select a folder and open the vault store there
+    callback open-vault-folder();
+
+    /// Open the default vault, located in the user's home folder
+    callback open-default-vault();
+
+    /// Create the folder and open it
+    callback create-folder-and-open();
+
+    /// Forcefully open the vault (locked)
+    callback force-open();
+
+    /// Hostname to open browser
+    in-out property <string> hostname: "localhost";
+    in-out property <bool> hostname-invalid: false;
+
+    /// Listening port
+    in-out property <string> port: "8000";
+    in-out property <bool> port-invalid: false;
+
+    /// Local listening
+    in-out property <bool> listen-local: true;
+
+    /// Callback to reset the config
+    callback reset-config();
+
+    /// Initial config
+    callback set-initial-config();
+
+    // Dirty and saved for host-port
+    in-out property <bool> dirty-host-port: false;
+    in-out property <bool> saved-host-port: false;
+
+    /// Callback to update the host and port config
+    callback update-port-host();
+
+    /// Username input
+    in-out property <string> username: "";
+    in-out property <bool> username-invalid: false;
+
+    /// Password input
+    in-out property <string> password: "";
+    in-out property <bool> password-invalid: false;
+
+    /// Password input (repeat)
+    in-out property <string> password-repeat: "";
+    in-out property <bool> password-repeat-invalid: false;
+
+    /// Create vault
+    callback create-vault();
+
+    /// Close vault
+    callback close-vault();
+
+    /// Status of the vault daemon
+    in property <VaultDaemonStatus> daemon-status: VaultDaemonStatus.stopped;
+
+    /// Daemon error type
+    in property <VaultDaemonErrorType> daemon-error-type: VaultDaemonErrorType.unknown;
+
+    /// Daemon error details
+    in property <string> daemon-error-details: "";
+
+    /// Start callback
+    callback start();
+
+    /// Stop callback
+    callback stop();
+
+    /// Restart callback
+    callback restart();
+
+    /// Open browser callback
+    callback open-browser();
+
+    /// Open log callback
+    callback open-log();
+
+    /// TLS certificate
+    in-out property <string> tls-cert: "";
+    in-out property <bool> tls-cert-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-cert();
+
+    /// TLS key
+    in-out property <string> tls-key: "";
+    in-out property <bool> tls-key-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-key();
+
+    /// TLS enabled
+    in-out property <bool> tls-enabled: true;
+
+    // Dirty and saved for TLS
+    in-out property <bool> dirty-tls: false;
+    in-out property <bool> saved-tls: false;
+
+    /// Callback to update the TLS config
+    callback update-tls();
+
+    /// FFmpeg binary
+    in-out property <string> ffmpeg-path: "";
+    in-out property <bool> ffmpeg-path-invalid: false;
+
+    /// Callback to select the ffmpeg binary
+    callback select-ffmpeg-path();
+
+    /// FFprobe binary
+    in-out property <string> ffprobe-path: "";
+    in-out property <bool> ffprobe-path-invalid: false;
+
+    /// Callback to select the ffprobe binary
+    callback select-ffprobe-path();
+
+    in-out property <string> video-codec: "";
+    in-out property <bool> video-codec-invalid: false;
+
+    // Dirty and saved for FFmpeg
+    in-out property <bool> dirty-ffmpeg: false;
+    in-out property <bool> saved-ffmpeg: false;
+
+    /// Callback to update the FFMpeg config
+    callback update-ffmpeg();
+
+    /// Cache size
+    in-out property <string> cache-size: "1024";
+    in-out property <bool> cache-size-invalid: false;
+
+    /// Request logging
+    in-out property <bool> log-requests: false;
+
+    /// Debug logging
+    in-out property <bool> log-debug: false;
+
+    // Dirty and saved for other
+    in-out property <bool> dirty-other: false;
+    in-out property <bool> saved-other: false;
+
+    /// Callback to update the rest of config values
+    callback update-other();
+
+    /// The status of the backup
+    in-out property <VaultBackupStatus> backup-status: VaultBackupStatus.idle;
+
+    /// The current task of the backup
+    in-out property <VaultBackupCurrentTask> backup-task: VaultBackupCurrentTask.none;
+
+    /// Vault encryption key
+    in-out property <string> encryption-key: "";
+    in-out property <bool> encryption-key-invalid: false;
+
+    /// Error type of the backup
+    in property <VaultBackupErrorType> backup-error-type: VaultBackupErrorType.unknown;
+
+    /// Error of the backup
+    in property <string> backup-error: "";
+
+    /// Progress of the backup
+    in property <float> backup-progress: 0;
+
+    /// True if the progress is indeterminate
+    in property <bool> backup-progress-indeterminate: true;
+
+    /// Global progress
+    in property <string> backup-progress-global: "";
+
+    /// Current file progress
+    in property <string> backup-progress-file: "";
+
+    /// Result of the backup
+    in property <string> backup-result-files: "0";
+    in property <string> backup-result-bytes: "0 B";
+
+    // Backup path
+    in-out property <string> backup-path: "";
+    in-out property <bool> backup-path-invalid: false;
+
+    /// Run the selected tool
+    callback run-backup(VaultSelectedBackupOption);
+
+    /// Cancel the backup process
+    callback cancel-backup();
+
+    /// Callback to select backup path
+    callback select-backup-path();
+
+    /// Callback to copy the encryption key to clipboard
+    callback copy-encryption-key();
+
+    /// The status of the tool
+    in-out property <VaultToolStatus> tool-status: VaultToolStatus.idle;
+
+    /// Error of the tool
+    in property <string> tool-error: "";
+
+    /// Run the selected tool
+    callback run-tool(VaultSelectedTool);
+
+    /// Cancel the tool that is running
+    callback cancel-tool();
+
+    VerticalLayout {
+        alignment: LayoutAlignment.start;
+        spacing: 0.75rem;
+
+        AboutComponent {
+            version: version;
+            visit-website => {
+                root.visit-website();
+            }
+            visit-git => {
+                root.visit-git();
+            }
+            display-user-settings => {
+                popup.show();
+            }
+        }
+
+        Rectangle {
+            border-width: 0;
+            height: 1px;
+            background: Palette.border;
+        }
+
+        VerticalLayout {
+            if(launcher-status == LauncherStatus.closed): VaultClosedView {
+                busy: busy;
+                open-default-vault => {
+                    root.open-default-vault();
+                }
+                open-vault-folder => {
+                    root.open-vault-folder();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.fatal-error): FatalErrorView {
+                fatal-error-type: fatal-error-type;
+                close-launcher => {
+                    root.close-launcher();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.opening): OpeningView {
+                vault-path: vault-path;
+            }
+
+            if(launcher-status == LauncherStatus.open-error): OpenErrorView {
+                open-error-type: open-error-type;
+                open-error-details: open-error-details;
+                vault-path: vault-path;
+                go-back => {
+                    root.open-error-details = "";
+                    root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.create-ask): CreateFolderAskView {
+                vault-path: vault-path;
+                confirm => {
+                    root.launcher-status = LauncherStatus.opening;
+                    root.create-folder-and-open();
+                }
+                go-back => {
+                    root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.lock-ask): LockAskView {
+                vault-path: vault-path;
+                confirm => {
+                    root.launcher-status = LauncherStatus.opening;
+                    root.force-open();
+                }
+                go-back => {
+                    root.launcher-status = LauncherStatus.closed;
+                }
+            }
+
+            if(launcher-status == LauncherStatus.initial-config): InitialConfigView {
+                busy: busy;
+                vault-path: vault-path;
+                hostname <=> root.hostname;
+                hostname-invalid <=> root.hostname-invalid;
+                port <=> root.port;
+                port-invalid <=> root.port-invalid;
+                listen-local <=> root.listen-local;
+                confirm => {
+                    root.set-initial-config();
+                }
+                go-back => {
+                    root.close-vault();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.create-vault-ask): CreateVaultView {
+                busy: busy;
+                vault-path: vault-path;
+                username <=> username;
+                username-invalid <=> username-invalid;
+                password <=> password;
+                password-invalid <=> password-invalid;
+                password-repeat <=> password-repeat;
+                password-repeat-invalid <=> password-repeat-invalid;
+                confirm => {
+                    root.create-vault();
+                }
+                go-back => {
+                    root.close-vault();
+                }
+            }
+
+            if(launcher-status == LauncherStatus.open): VaultOpenView {
+                busy: busy;
+
+                vault-path: vault-path;
+
+                daemon-status: daemon-status;
+                daemon-error-type: daemon-error-type;
+                daemon-error-details: daemon-error-details;
+
+                hostname <=> root.hostname;
+                hostname-invalid <=> root.hostname-invalid;
+                port <=> root.port;
+                port-invalid <=> root.port-invalid;
+                listen-local <=> root.listen-local;
+                dirty-host-port <=> root.dirty-host-port;
+                saved-host-port <=> root.saved-host-port;
+
+                tls-enabled <=> tls-enabled;
+                tls-cert <=> tls-cert;
+                tls-cert-invalid <=> tls-cert-invalid;
+                tls-key <=> tls-key;
+                tls-key-invalid <=> tls-cert-invalid;
+                dirty-tls <=> root.dirty-tls;
+                saved-tls <=> root.saved-tls;
+
+                ffmpeg-path <=> ffmpeg-path;
+                ffmpeg-path-invalid <=> ffmpeg-path-invalid;
+                ffprobe-path <=> ffprobe-path;
+                ffprobe-path-invalid <=> ffprobe-path-invalid;
+                video-codec <=> video-codec;
+                video-codec-invalid <=> video-codec-invalid;
+                dirty-ffmpeg <=> root.dirty-ffmpeg;
+                saved-ffmpeg <=> root.saved-ffmpeg;
+
+                cache-size <=> root.cache-size;
+                cache-size-invalid <=> root.cache-size-invalid;
+                log-requests <=> root.log-requests;
+                log-debug <=> root.log-debug;
+                dirty-other <=> root.dirty-other;
+                saved-other <=> root.saved-other;
+
+                backup-status <=> backup-status;
+                backup-path <=> backup-path;
+                backup-path-invalid <=> backup-path-invalid;
+                encryption-key <=> encryption-key;
+                encryption-key-invalid <=> encryption-key-invalid;
+                username <=> username;
+                username-invalid <=> username-invalid;
+                password <=> password;
+                password-invalid <=> password-invalid;
+                password-repeat <=> password-repeat;
+                password-repeat-invalid <=> password-repeat-invalid;
+
+                backup-error: backup-error;
+                backup-error-type: backup-error-type;
+
+                backup-task <=> backup-task;
+                backup-progress: backup-progress;
+                backup-progress-indeterminate: backup-progress-indeterminate;
+                backup-progress-global: backup-progress-global;
+                backup-progress-file: backup-progress-file;
+
+                backup-result-files: backup-result-files;
+                backup-result-bytes: backup-result-bytes;
+
+                tool-status <=> tool-status;
+                tool-error: tool-error;
+
+                start => {
+                    root.start();
+                }
+                stop => {
+                    root.stop();
+                }
+                restart => {
+                    root.restart();
+                }
+                open-browser => {
+                    root.open-browser();
+                }
+                open-log => {
+                    root.open-log();
+                }
+
+                reset-config => {
+                    root.reset-config();
+                }
+
+                update-port-host => {
+                    root.update-port-host();
+                }
+
+                select-tls-cert => {
+                    root.select-tls-cert();
+                }
+                select-tls-key => {
+                    root.select-tls-key();
+                }
+                update-tls => {
+                    root.update-tls();
+                }
+
+                select-ffmpeg-path => {
+                    root.select-ffmpeg-path();
+                }
+                select-ffprobe-path => {
+                    root.select-ffprobe-path();
+                }
+                update-ffmpeg => {
+                    root.update-ffmpeg();
+                }
+
+                update-other => {
+                    root.update-other();
+                }
+
+                run-backup(t) => {
+                    root.run-backup(t);
+                }
+
+                cancel-backup => {
+                    root.cancel-backup();
+                }
+
+                select-backup-path => {
+                    root.select-backup-path();
+                }
+
+                copy-encryption-key => {
+                    root.copy-encryption-key();
+                }
+
+                run-tool(t) => {
+                    root.run-tool(t);
+                }
+
+                cancel-tool => {
+                    root.cancel-tool();
+                }
+            }
+        }
+    }
+
+    popup := PopupWindow {
+        close-policy: PopupClosePolicy.close-on-click-outside;
+
+        width: 32rem;
+        height: 18rem;
+
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        UserSettingsPopupWindow {
+            busy: busy;
+            settings-locale-index <=> root.settings-locale-index;
+            settings-theme-index <=> root.settings-theme-index;
+
+            apply-user-settings => {
+                root.apply-user-settings();
+            }
+
+            close-popup => {
+                popup.close();
+            }
+        }
+    }
+}

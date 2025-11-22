@@ -62,6 +62,7 @@
             :tid="imagePendingTask"
             :res="currentResolution"
             :error="mediaError"
+            :encoding-error="imageEncodeError"
             :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
@@ -424,6 +425,7 @@ export default defineComponent({
             imageURL: "",
             imagePending: false,
             imagePendingTask: 0,
+            imageEncodeError: "",
 
             currentResolution: -1,
             width: 0,
@@ -592,6 +594,13 @@ export default defineComponent({
         grabScroll: function (e: TouchEvent | MouseEvent) {
             if ("button" in e && e.button !== 0) {
                 return;
+            }
+
+            if (e.target) {
+                const target = e.target as HTMLElement;
+                if (target.classList && target.classList.contains("image-scroller")) {
+                    return;
+                }
             }
 
             if (this.displayConfig || this.contextMenuShown || this.displayAttachments || this.displayRelatedMedia) {
@@ -1145,6 +1154,7 @@ export default defineComponent({
                     this.imageURL = getAssetURL(this.metadata.url);
                     this.imagePending = false;
                     this.imagePendingTask = 0;
+                    this.imageEncodeError = "";
                     this.width = this.metadata.width;
                     this.height = this.metadata.height;
                     this.setupAutoNextTimer();
@@ -1152,6 +1162,7 @@ export default defineComponent({
                     this.imageURL = "";
                     this.imagePending = true;
                     this.imagePendingTask = this.metadata.task;
+                    this.imageEncodeError = this.metadata.error || "";
                     this.loading = false;
                 }
             } else {
@@ -1161,6 +1172,7 @@ export default defineComponent({
                         this.imageURL = getAssetURL(res.url);
                         this.imagePending = false;
                         this.imagePendingTask = 0;
+                        this.imageEncodeError = "";
                         this.width = this.metadata.width;
                         this.height = this.metadata.height;
                         this.setupAutoNextTimer();
@@ -1168,12 +1180,14 @@ export default defineComponent({
                         this.imageURL = "";
                         this.imagePending = true;
                         this.imagePendingTask = res.task;
+                        this.imageEncodeError = res.error || "";
                         this.loading = false;
                     }
                 } else {
                     this.imageURL = "";
                     this.imagePending = true;
                     this.imagePendingTask = 0;
+                    this.imageEncodeError = "";
                     this.loading = false;
                 }
             }

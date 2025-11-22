@@ -18,6 +18,12 @@ echo Building launcher...
 
 call build-production.bat
 
+cd "..\launcher-gui"
+
+echo Building launcher (GUI version)...
+
+call build-production.bat
+
 cd "..\frontend"
 
 echo Building frontend...

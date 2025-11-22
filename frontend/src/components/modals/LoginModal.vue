@@ -8,10 +8,20 @@
             </div>
             <div class="modal-body">
                 <div v-if="!tfaRequired" class="horizontal-filter-menu two-child no-border">
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: !isCode }" @click="changeToCredentials"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Credentials')"
+                        :class="{ selected: !isCode }"
+                        @click="changeToCredentials"
                         ><i class="fas fa-key"></i> {{ $t("Credentials") }}</a
                     >
-                    <a href="javascript:;" class="horizontal-filter-menu-item" :class="{ selected: isCode }" @click="changeToCode"
+                    <a
+                        href="javascript:;"
+                        class="horizontal-filter-menu-item"
+                        :title="$t('Invite code')"
+                        :class="{ selected: isCode }"
+                        @click="changeToCode"
                         ><i class="fas fa-user-check"></i> {{ $t("Invite code") }}</a
                     >
                 </div>

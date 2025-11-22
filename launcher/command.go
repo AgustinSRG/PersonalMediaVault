@@ -445,6 +445,41 @@ func runCommand(cmdText string, vc *VaultController) {
 		if vc.disableSSL() {
 			askRestart(vc)
 		}
+	case "ffmpeg":
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "FFMpegBinaryTag",
+				Other: "FFMpeg binary: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": vc.ffmpegConfig.FFMpegPath,
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "FFProbeBinaryTag",
+				Other: "FFProbe binary: {{.File}}",
+			},
+			TemplateData: map[string]interface{}{
+				"File": vc.ffmpegConfig.FFProbePath,
+			},
+		})
+		fmt.Println(msg)
+		msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "VideoCodecTag",
+				Other: "Video encoder: {{.Encoder}}",
+			},
+			TemplateData: map[string]interface{}{
+				"Encoder": vc.ffmpegConfig.VideoCodec,
+			},
+		})
+		fmt.Println(msg)
+	case "ffmpeg-setup":
+		if vc.SetupFFMpeg() {
+			askRestart(vc)
+		}
 	case "log-requests", "requests-log":
 		if len(args) == 2 {
 			if checkYesNoAnswer(args[1]) {
@@ -729,6 +764,22 @@ func printCommandList() {
 		DefaultMessage: &i18n.Message{
 			ID:    "ManualCommandSSLDisable",
 			Other: "ssl-disable - Disables SSL (use regular HTTP)",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandFFMpeg",
+			Other: "ffmpeg - Prints FFMpeg configuration",
+		},
+	})
+	manList = append(manList, msg)
+
+	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+		DefaultMessage: &i18n.Message{
+			ID:    "ManualCommandFFMpegSetup",
+			Other: "ffmpeg-setup - Setups FFMpeg binary paths and codecs",
 		},
 	})
 	manList = append(manList, msg)

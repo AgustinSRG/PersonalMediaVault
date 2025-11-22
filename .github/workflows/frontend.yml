@@ -1,4 +1,4 @@
-name: Frontend (Vue) CI
+name: Frontend
 
 on:
   push:

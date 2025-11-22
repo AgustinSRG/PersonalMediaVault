@@ -1,0 +1,31 @@
+
+export component OpeningView inherits VerticalLayout {
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    spacing: 1rem;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("Opening vault folder") + "...";
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("The vault folder is being opened");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+}

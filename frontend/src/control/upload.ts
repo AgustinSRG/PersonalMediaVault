@@ -2,27 +2,74 @@
 
 "use strict";
 
-import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
+import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
 import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
 import { EVENT_NAME_UNAUTHORIZED } from "./auth";
-import { setLastUsedTag } from "./app-preferences";
+import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTagsTagMedia } from "@/api/api-tags";
+import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
+import { removeFromArray } from "@/utils/objects";
 
-const TICK_DELAY_MS = 500;
+/**
+ * Max number of uploads in the completed lists (ready, error)
+ * to keep before starting to remove them
+ */
+const MAX_COMPLETED_UPLOADS = 1024;
+
+/**
+ * Interval to check for encryption progress
+ * (In milliseconds)
+ */
+const ENCRYPTION_CHECK_INTERVAL_MS = 250;
+
+/**
+ * Delay to wait after an error
+ * (In milliseconds)
+ */
+const RETRY_DELAY_MS = 1500;
 
 const REQUEST_PREFIX_UPLOAD = "upload-media-";
 const REQUEST_PREFIX_CHECK_ENCRYPTION = "check-media-encryption-";
 
 /**
- * Event triggered when the upload list updates
- * Handler like: (mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) => void
+ * Event triggered when an upload entry is added
  */
-export const EVENT_NAME_UPLOAD_LIST_UPDATE = "upload-list-update";
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_NEW = "upload-list-entry-new";
+
+/**
+ * Event triggered when an upload entry progresses
+ */
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS = "upload-list-entry-progress";
+
+/**
+ * Event triggered when an upload entry is ready
+ */
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_READY = "upload-list-entry-ready";
+
+/**
+ * Event triggered when an upload entry results in an error
+ */
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR = "upload-list-entry-error";
+
+/**
+ * Event triggered when an upload entry is retried after error
+ */
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY = "upload-list-entry-retry";
+
+/**
+ * Event triggered when an upload entry is removed
+ */
+export const EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED = "upload-list-entry-rm";
+
+/**
+ * Event triggered when an upload entry list is cleared, meaning it needs full refresh
+ */
+export const EVENT_NAME_UPLOAD_LIST_CLEAR = "upload-list-clear";
 
 /**
  * Removes extension if present, in order to get the title
@@ -61,7 +108,7 @@ export interface UploadEntryMin {
     /**
      * Upload status
      */
-    status: "pending" | "uploading" | "encrypting" | "tag" | "ready" | "error";
+    status: "pending" | "uploading" | "encrypting" | "tag" | "album" | "ready" | "error";
 
     /**
      * Error (only relevant if status = 'error')
@@ -110,6 +157,11 @@ interface UploadEntry extends UploadEntryMin {
      * List of remaining tags to add to the media
      */
     tags: string[];
+
+    /**
+     * Timer to retry an operation, after its failure
+     */
+    retryTimer: ReturnType<typeof setTimeout> | null;
 }
 
 /**
@@ -119,7 +171,31 @@ export class UploadController {
     /**
      * Upload entries
      */
-    public static Entries: UploadEntry[] = [];
+    private static Entries = {
+        pending: [] as UploadEntry[],
+        ready: [] as UploadEntry[],
+        error: [] as UploadEntry[],
+    };
+
+    /**
+     * Map of upload entries
+     */
+    private static EntriesMap: Map<number, UploadEntry> = new Map();
+
+    /**
+     * Upload queue
+     */
+    private static UploadQueue: UploadEntry[] = [];
+
+    /**
+     * Queue for albums
+     */
+    private static AlbumQueue: Map<number, UploadEntry[]> = new Map();
+
+    /**
+     * Number of pending uploads (not ready or error)
+     */
+    private static PendingCount = 0;
 
     /**
      * Number of active uploads
@@ -129,7 +205,7 @@ export class UploadController {
     /**
      * Max number of parallel active uploads
      */
-    public static MaxParallelUploads = 1;
+    private static MaxParallelUploads = getMaxParallelUploads();
 
     /**
      * Counter to assign unique IDs to each entry
@@ -137,46 +213,102 @@ export class UploadController {
     private static NextId = 0;
 
     /**
-     * Interval to check the entries
-     */
-    private static timer: number = null;
-
-    /**
-     * Gets the list of entries
+     * Gets the list of pending entries
      * @returns The list of entries
      */
-    public static GetEntries(): UploadEntryMin[] {
-        return UploadController.Entries.map((e) => {
-            return {
-                id: e.id,
-                name: e.name,
-                size: e.size,
-                mid: e.mid,
-                status: e.status,
-                error: e.error,
-                progress: e.progress,
-            };
+    public static GetPendingEntries(): UploadEntryMin[] {
+        return UploadController.Entries.pending.map(minimizeEntry);
+    }
+
+    /**
+     * Gets the list of ready entries
+     * @returns The list of entries
+     */
+    public static GetReadyEntries(): UploadEntryMin[] {
+        return UploadController.Entries.ready.map(minimizeEntry);
+    }
+
+    /**
+     * Gets the list of ready entries
+     * @returns The list of entries
+     */
+    public static GetErrorEntries(): UploadEntryMin[] {
+        return UploadController.Entries.error.map(minimizeEntry);
+    }
+
+    /**
+     * Gets the max parallel uploads
+     * @returns The max parallel uploads
+     */
+    public static GetMaxParallelUploads(): number {
+        return UploadController.MaxParallelUploads;
+    }
+
+    /**
+     * Sets the max parallel uploads
+     * @param maxParallelUploads The max parallel uploads
+     */
+    public static SetMaxParallelUploads(maxParallelUploads: number) {
+        UploadController.MaxParallelUploads = maxParallelUploads;
+        setMaxParallelUploads(maxParallelUploads);
+        UploadController.CheckQueue();
+    }
+
+    /**
+     * Checks the upload queue
+     */
+    private static CheckQueue() {
+        while (UploadController.UploadQueue.length > 0 && UploadController.UploadingCount < UploadController.MaxParallelUploads) {
+            UploadController.UploadMedia(UploadController.UploadQueue.shift());
+        }
+
+        UploadController.AlbumQueue.forEach((queue) => {
+            if (queue.length === 0) {
+                return;
+            }
+
+            const headEntry = queue[0];
+
+            if (headEntry.busy || headEntry.status !== "album") {
+                return;
+            }
+
+            UploadController.InsertIntoAlbum(headEntry);
         });
     }
 
     /**
-     * Checks entries and initiates uploads if necessary
+     * Adds entry to album queue
+     * @param entry The entry
      */
-    private static tick() {
-        for (let index = 0; index < UploadController.Entries.length; index++) {
-            const pending = UploadController.Entries[index];
-            if (pending.status === "pending") {
-                if (UploadController.UploadingCount < UploadController.MaxParallelUploads) {
-                    UploadController.UploadMedia(pending, index);
-                }
-            } else if (pending.status === "encrypting") {
-                if (!pending.busy && Date.now() - pending.lastRequest > 1000) {
-                    UploadController.CheckEncryptionStatus(pending, index);
-                }
-            } else if (pending.status === "tag") {
-                if (!pending.busy) {
-                    UploadController.AddNextTag(pending, index);
-                }
+    private static AddToAlbumQueue(entry: UploadEntry) {
+        if (entry.album < 0) {
+            return;
+        }
+
+        if (UploadController.AlbumQueue.has(entry.album)) {
+            const q = UploadController.AlbumQueue.get(entry.album);
+            q.push(entry);
+        } else {
+            UploadController.AlbumQueue.set(entry.album, [entry]);
+        }
+    }
+
+    /**
+     * Removes entry from album queue
+     * @param entry The upload entry
+     */
+    private static RemoveFromAlbumQueue(entry: UploadEntry) {
+        if (entry.album < 0) {
+            return;
+        }
+
+        if (UploadController.AlbumQueue.has(entry.album)) {
+            const q = UploadController.AlbumQueue.get(entry.album);
+            removeFromArray(q, entry);
+
+            if (q.length === 0) {
+                UploadController.AlbumQueue.delete(entry.album);
             }
         }
     }
@@ -191,7 +323,8 @@ export class UploadController {
     public static AddFile(file: File, album: number, tags: string[]): number {
         UploadController.NextId++;
         const id = UploadController.NextId;
-        UploadController.Entries.push({
+
+        const entry: UploadEntry = {
             id: id,
             file: file,
             name: file.name,
@@ -204,19 +337,26 @@ export class UploadController {
             lastRequest: 0,
             album: album,
             tags: tags.slice(),
-        });
-        if (UploadController.timer === null) {
-            UploadController.timer = setInterval(UploadController.tick, TICK_DELAY_MS);
+            retryTimer: null,
+        };
+
+        UploadController.EntriesMap.set(entry.id, entry);
+        UploadController.Entries.pending.push(entry);
+        UploadController.UploadQueue.push(entry);
+
+        if (album >= 0) {
+            if (UploadController.AlbumQueue.has(album)) {
+                const q = UploadController.AlbumQueue.get(album);
+                q.push(entry);
+            } else {
+                UploadController.AlbumQueue.set(album, [entry]);
+            }
         }
-        UploadController.Emit("push", {
-            id: id,
-            name: file.name,
-            size: file.size,
-            status: "pending",
-            error: "",
-            progress: 0,
-            mid: -1,
-        });
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, minimizeEntry(entry));
+
+        UploadController.CheckQueue();
+
         return id;
     }
 
@@ -225,45 +365,24 @@ export class UploadController {
      * @param id The entry ID
      */
     public static TryAgain(id: number) {
-        for (let i = 0; i < UploadController.Entries.length; i++) {
-            if (UploadController.Entries[i].id === id) {
-                if (UploadController.Entries[i].status !== "error") {
-                    return;
-                }
+        const entry = UploadController.EntriesMap.get(id);
 
-                UploadController.Entries[i].error = "";
-                UploadController.Entries[i].status = "pending";
-                UploadController.Entries[i].progress = 0;
+        if (!entry || entry.status !== "error") {
+            return;
+        }
 
-                UploadController.CheckEmptyList();
-                UploadController.Emit("update", UploadController.Entries[i], i);
-                return;
-            }
-        }
-    }
+        entry.error = "";
+        entry.status = "pending";
+        entry.progress = 0;
 
-    /**
-     * Checks if the list if empty.
-     * Meaning there are no pending uploads.
-     */
-    public static CheckEmptyList() {
-        let isEmpty = false;
-        for (const entry of UploadController.Entries) {
-            if (entry.status !== "ready" && entry.status !== "error") {
-                isEmpty = false;
-                break;
-            }
-        }
-        if (isEmpty) {
-            if (UploadController.timer !== null) {
-                clearInterval(UploadController.timer);
-                UploadController.timer = null;
-            }
-        } else {
-            if (UploadController.timer === null) {
-                UploadController.timer = setInterval(UploadController.tick, TICK_DELAY_MS);
-            }
-        }
+        removeFromArray(UploadController.Entries.error, entry);
+        UploadController.Entries.pending.push(entry);
+
+        UploadController.UploadQueue.push(entry);
+
+        UploadController.AddToAlbumQueue(entry);
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, minimizeEntry(entry));
     }
 
     /**
@@ -271,83 +390,184 @@ export class UploadController {
      * @param id The entry ID
      */
     public static RemoveFile(id: number) {
+        const entry = UploadController.EntriesMap.get(id);
+
+        if (!entry) {
+            return;
+        }
+
+        UploadController.EntriesMap.delete(entry.id);
+
         // Abort requests
         abortNamedApiRequest(REQUEST_PREFIX_UPLOAD + id);
         abortNamedApiRequest(REQUEST_PREFIX_CHECK_ENCRYPTION + id);
 
-        // Remove from the array
-        for (let i = 0; i < UploadController.Entries.length; i++) {
-            if (UploadController.Entries[i].id === id) {
-                if (UploadController.Entries[i].status === "encrypting") {
-                    UploadController.UploadingCount--;
-                }
-
-                UploadController.Entries.splice(i, 1);
-                UploadController.CheckEmptyList();
-                UploadController.Emit("rm", null, i);
-                return;
-            }
+        // Abort timers
+        if (entry.retryTimer) {
+            clearTimeout(entry.retryTimer);
         }
+
+        // Remove from lists
+
+        switch (entry.status) {
+            case "ready":
+                removeFromArray(UploadController.Entries.ready, entry);
+                break;
+            case "error":
+                removeFromArray(UploadController.Entries.error, entry);
+                break;
+            default:
+                removeFromArray(UploadController.Entries.pending, entry);
+                removeFromArray(UploadController.UploadQueue, entry);
+        }
+
+        UploadController.RemoveFromAlbumQueue(entry);
+
+        // Decrease the uploading count in case if was in the encrypting phase
+        // In the uploading phase, since it is a single request, it is handled in the cancel callback
+
+        if (entry.status === "encrypting") {
+            UploadController.UploadingCount--;
+        }
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(entry));
     }
 
     /**
      * Clears any completed uploads from the list
      */
     public static ClearList() {
-        const entries = UploadController.Entries.slice();
+        const completedUploads = UploadController.Entries.ready.concat(UploadController.Entries.error);
 
-        for (const entry of entries) {
-            if (entry.status === "ready" || entry.status === "error") {
-                UploadController.RemoveFile(entry.id);
-            }
+        for (const entry of completedUploads) {
+            UploadController.EntriesMap.delete(entry.id);
         }
 
-        UploadController.CheckEmptyList();
-        UploadController.Emit("clear");
+        UploadController.Entries.ready = [];
+        UploadController.Entries.error = [];
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_CLEAR);
     }
 
     /**
      * Cancels all pending uploads
      */
     public static CancelAll() {
-        const entries = UploadController.Entries.slice();
+        const pendingUploads = UploadController.Entries.pending;
 
-        for (const entry of entries) {
+        for (const entry of pendingUploads) {
             UploadController.RemoveFile(entry.id);
         }
 
-        UploadController.CheckEmptyList();
-        UploadController.Emit("clear");
+        const completedUploads = UploadController.Entries.ready.concat(UploadController.Entries.error);
+
+        for (const entry of completedUploads) {
+            UploadController.EntriesMap.delete(entry.id);
+        }
+
+        UploadController.Entries.pending = [];
+        UploadController.Entries.ready = [];
+        UploadController.Entries.error = [];
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_CLEAR);
+    }
+
+    /**
+     * Checks a completed list for its max length
+     * @param list The completed list (ready or error)
+     */
+    private static CheckCompletedList(list: UploadEntry[]) {
+        if (list.length > MAX_COMPLETED_UPLOADS) {
+            const toRemove = list.shift();
+
+            UploadController.EntriesMap.delete(toRemove.id);
+
+            AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(toRemove));
+        }
+    }
+
+    /**
+     * Call when entry is ready
+     * @param m The upload entry
+     */
+    private static OnUploadEntryReady(m: UploadEntry) {
+        removeFromArray(UploadController.Entries.pending, m);
+        UploadController.Entries.ready.push(m);
+
+        UploadController.RemoveFromAlbumQueue(m);
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, minimizeEntry(m));
+
+        UploadController.CheckQueue();
+
+        if (MediaController.MediaId === m.mid) {
+            MediaController.Load();
+        }
+
+        if (AlbumsController.CurrentNext && AlbumsController.CurrentNext.id === m.mid) {
+            AlbumsController.PreFetchAlbumNext();
+        }
+
+        if (m.album !== -1) {
+            AlbumsController.OnChangedAlbum(m.album, true);
+        }
+
+        UploadController.CheckCompletedList(UploadController.Entries.ready);
+    }
+
+    /**
+     * Call when an entry reaches the error status
+     * Moves the entry and emits the event
+     * @param m The entry
+     */
+    private static OnEntryError(m: UploadEntry) {
+        removeFromArray(UploadController.Entries.pending, m);
+        UploadController.Entries.error.push(m);
+
+        UploadController.RemoveFromAlbumQueue(m);
+
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, minimizeEntry(m));
+
+        UploadController.CheckQueue();
+
+        UploadController.CheckCompletedList(UploadController.Entries.error);
     }
 
     /**
      * Uploads the media file
      * @param m The entry
-     * @param index The index of the entry in the array
      */
-    private static UploadMedia(m: UploadEntry, index: number) {
+    private static UploadMedia(m: UploadEntry) {
         UploadController.UploadingCount++;
 
         m.status = "uploading";
         m.progress = 0;
-        UploadController.Emit("update", m, index);
+        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
-        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, m.album))
+        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, -1))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
-                UploadController.Emit("update", m, index);
+                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
             })
             .onSuccess((data) => {
                 m.mid = data.media_id;
                 m.status = "encrypting";
                 m.progress = 0;
-                UploadController.Emit("update", m, index);
+
+                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+
+                m.retryTimer = setTimeout(() => {
+                    UploadController.CheckEncryptionStatus(m);
+                }, ENCRYPTION_CHECK_INTERVAL_MS);
             })
             .onCancel(() => {
                 UploadController.UploadingCount--;
+                UploadController.RemoveFile(m.id);
+                UploadController.CheckQueue();
             })
             .onRequestError((err, handleErr) => {
                 UploadController.UploadingCount--;
+
                 handleErr(err, {
                     unauthorized: () => {
                         m.error = "access-denied";
@@ -375,28 +595,30 @@ export class UploadController {
                         m.status = "error";
                     },
                 });
-                UploadController.CheckEmptyList();
-                UploadController.Emit("update", m, index);
+
+                UploadController.OnEntryError(m);
             })
             .onUnexpectedError((err) => {
                 UploadController.UploadingCount--;
+
                 m.error = "no-internet";
                 console.error(err);
                 m.status = "error";
-                UploadController.CheckEmptyList();
-                UploadController.Emit("update", m, index);
+
+                UploadController.OnEntryError(m);
             });
     }
 
     /**
      * Checks encryption status of the media
      * @param m The entry
-     * @param index The index of the entry in the array
      */
-    private static CheckEncryptionStatus(m: UploadEntry, index: number) {
+    private static CheckEncryptionStatus(m: UploadEntry) {
         if (m.busy) {
             return;
         }
+
+        m.retryTimer = null;
 
         m.busy = true;
         m.lastRequest = Date.now();
@@ -408,24 +630,31 @@ export class UploadController {
                     if (m.tags.length > 0) {
                         m.status = "tag";
                         m.progress = m.tags.length;
+                    } else if (m.album >= 0) {
+                        m.status = "album";
                     } else {
                         m.status = "ready";
                     }
 
-                    UploadController.Emit("update", m, index);
-
-                    if (m.album !== -1) {
-                        AlbumsController.OnChangedAlbum(m.album, true);
-                    }
-
-                    if (MediaController.MediaId === m.mid) {
-                        MediaController.Load();
-                    }
-
                     UploadController.UploadingCount--;
+
+                    if (m.status === "ready") {
+                        UploadController.OnUploadEntryReady(m);
+                    } else {
+                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                        UploadController.CheckQueue();
+
+                        if (m.status === "tag") {
+                            UploadController.AddNextTag(m);
+                        }
+                    }
                 } else {
                     m.progress = Math.max(m.progress, media.ready_p);
-                    UploadController.Emit("update", m, index);
+                    AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+
+                    m.retryTimer = setTimeout(() => {
+                        UploadController.CheckEncryptionStatus(m);
+                    }, ENCRYPTION_CHECK_INTERVAL_MS);
                 }
             })
             .onCancel(() => {
@@ -440,38 +669,53 @@ export class UploadController {
                     notFound: () => {
                         m.error = "deleted";
                         m.status = "error";
+
                         UploadController.UploadingCount--;
-                        UploadController.CheckEmptyList();
-                        UploadController.Emit("update", m, index);
+
+                        UploadController.OnEntryError(m);
                     },
-                    temporalError: () => {},
+                    temporalError: () => {
+                        // Retry
+
+                        m.retryTimer = setTimeout(() => {
+                            UploadController.CheckEncryptionStatus(m);
+                        }, RETRY_DELAY_MS);
+                    },
                 });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;
                 console.error(err);
+
+                // Retry
+
+                m.retryTimer = setTimeout(() => {
+                    UploadController.CheckEncryptionStatus(m);
+                }, RETRY_DELAY_MS);
             });
     }
 
     /**
      * Adds next tag to the media
      * @param m The entry
-     * @param index The index of the entry in the array
      */
-    private static AddNextTag(m: UploadEntry, index: number) {
+    private static AddNextTag(m: UploadEntry) {
         if (m.busy) {
             return;
         }
 
+        m.retryTimer = null;
+
         if (m.tags.length === 0) {
-            m.status = "ready";
-            UploadController.Emit("update", m, index);
-            UploadController.CheckEmptyList();
-            if (MediaController.MediaId === m.mid) {
-                MediaController.Load();
-            } else if (AlbumsController.CurrentNext && AlbumsController.CurrentNext.id === m.mid) {
-                AlbumsController.PreFetchAlbumNext();
+            m.status = m.album >= 0 ? "album" : "ready";
+
+            if (m.status === "ready") {
+                UploadController.OnUploadEntryReady(m);
+            } else {
+                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                UploadController.CheckQueue();
             }
+
             return;
         }
 
@@ -480,14 +724,19 @@ export class UploadController {
         const tag = m.tags[0];
         const mediaId = m.mid;
 
-        makeApiRequest(apiTagsTagMedia(mediaId, tag))
+        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiTagsTagMedia(mediaId, tag))
             .onSuccess((res) => {
                 setLastUsedTag(res.id);
+
                 m.tags.shift(); // Remove tag from list
                 m.progress = m.tags.length;
                 m.busy = false;
-                UploadController.Emit("update", m, index);
+
+                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+
                 TagsController.AddTag(res.id, res.name);
+
+                UploadController.AddNextTag(m);
             })
             .onCancel(() => {
                 m.busy = false;
@@ -497,39 +746,142 @@ export class UploadController {
                 handleErr(err, {
                     unauthorized: () => {
                         AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+
+                        m.error = "access-denied";
+                        m.status = "error";
+                        UploadController.OnEntryError(m);
                     },
                     invalidTagName: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
-                        UploadController.Emit("update", m, index);
+                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+
+                        UploadController.AddNextTag(m);
                     },
                     badRequest: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
-                        UploadController.Emit("update", m, index);
+                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+
+                        UploadController.AddNextTag(m);
                     },
                     accessDenied: () => {
                         m.error = "access-denied";
                         m.status = "error";
-                        UploadController.Emit("update", m, index);
-                        UploadController.CheckEmptyList();
+                        UploadController.OnEntryError(m);
                     },
-                    temporalError: () => {},
+                    temporalError: () => {
+                        // Retry
+
+                        m.retryTimer = setTimeout(() => {
+                            UploadController.AddNextTag(m);
+                        }, RETRY_DELAY_MS);
+                    },
                 });
             })
             .onUnexpectedError((err) => {
                 m.busy = false;
                 console.error(err);
+
+                // Retry
+
+                m.retryTimer = setTimeout(() => {
+                    UploadController.AddNextTag(m);
+                }, RETRY_DELAY_MS);
             });
     }
 
     /**
-     * Emits list update event
-     * @param mode Mode
-     * @param entry Entry
-     * @param index Index
+     * Inserts media into album
+     * @param m The entry
      */
-    private static Emit(mode: "push" | "rm" | "update" | "clear", entry?: UploadEntryMin, index?: number) {
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_UPDATE, mode, entry, index);
+    private static InsertIntoAlbum(m: UploadEntry) {
+        if (m.busy) {
+            return;
+        }
+
+        m.retryTimer = null;
+
+        m.busy = true;
+
+        const albumId = m.album;
+        const mediaId = m.mid;
+
+        makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiAlbumsAddMediaToAlbum(albumId, mediaId))
+            .onSuccess(() => {
+                m.busy = false;
+                m.status = "ready";
+
+                UploadController.OnUploadEntryReady(m);
+            })
+            .onCancel(() => {
+                m.busy = false;
+            })
+            .onRequestError((err, handleErr) => {
+                m.busy = false;
+                handleErr(err, {
+                    unauthorized: () => {
+                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+
+                        m.error = "access-denied";
+                        m.status = "error";
+                        UploadController.OnEntryError(m);
+                    },
+                    badRequest: () => {
+                        m.status = "ready";
+
+                        UploadController.OnUploadEntryReady(m);
+                    },
+                    notFound: () => {
+                        m.status = "ready";
+
+                        UploadController.OnUploadEntryReady(m);
+                    },
+                    maxSizeReached: () => {
+                        m.status = "ready";
+
+                        UploadController.OnUploadEntryReady(m);
+                    },
+                    accessDenied: () => {
+                        m.error = "access-denied";
+                        m.status = "error";
+                        UploadController.OnEntryError(m);
+                    },
+                    temporalError: () => {
+                        // Retry
+
+                        m.retryTimer = setTimeout(() => {
+                            UploadController.InsertIntoAlbum(m);
+                        }, RETRY_DELAY_MS);
+                    },
+                });
+            })
+            .onUnexpectedError((err) => {
+                m.busy = false;
+                console.error(err);
+
+                // Retry
+
+                m.retryTimer = setTimeout(() => {
+                    UploadController.InsertIntoAlbum(m);
+                }, RETRY_DELAY_MS);
+            });
     }
+}
+
+/**
+ * Minimizes upload entry
+ * @param e The entry
+ * @returns The minimized entry
+ */
+function minimizeEntry(e: UploadEntry): UploadEntryMin {
+    return {
+        id: e.id,
+        name: e.name,
+        size: e.size,
+        mid: e.mid,
+        status: e.status,
+        error: e.error,
+        progress: e.progress,
+    };
 }

@@ -1,0 +1,62 @@
+
+
+import { Button } from "std-widgets.slint";
+
+export component VaultClosedView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Select a folder and open the vault store there
+    callback open-vault-folder();
+
+    /// Open the default vault, located in the user's home folder
+    callback open-default-vault();
+
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    spacing: 1rem;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("Welcome to PersonalMediaVault");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Start by opening a vault folder, or opening the default vault folder, located in your user home directory.");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    HorizontalLayout {
+        padding-top: 2rem;
+        alignment: LayoutAlignment.center;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Open Vault Folder");
+            icon: @image-url("../assets/icons/folder-open.svg");
+            primary: true;
+            enabled: !busy;
+            colorize-icon: true;
+            clicked => {
+                root.open-vault-folder();
+            }
+        }
+
+        Button {
+            text: @tr("Open Default Vault");
+            icon: @image-url("../assets/icons/box.svg");
+            primary: true;
+            enabled: !busy;
+            colorize-icon: true;
+            clicked => {
+                root.open-default-vault();
+            }
+        }
+    }
+}

@@ -210,13 +210,25 @@
                 </div>
 
                 <div v-if="!editing && rowIndex > 0" class="home-page-row-go-left">
-                    <button type="button" class="home-page-row-go-button" :title="$t('Scroll to the left')" @click="goLeft">
+                    <button
+                        type="button"
+                        class="home-page-row-go-button"
+                        :title="$t('Scroll to the left')"
+                        @click="goLeft"
+                        @dblclick="goFirst"
+                    >
                         <i class="fas fa-chevron-left"></i>
                     </button>
                 </div>
 
                 <div v-if="!editing && rowIndex < rowSplitCount - 1" class="home-page-row-go-right">
-                    <button type="button" class="home-page-row-go-button" :title="$t('Scroll to the right')" @click="goRight">
+                    <button
+                        type="button"
+                        class="home-page-row-go-button"
+                        :title="$t('Scroll to the right')"
+                        @click="goRight"
+                        @dblclick="goLast"
+                    >
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
@@ -994,12 +1006,20 @@ export default defineComponent({
             });
         },
 
+        goFirst: function () {
+            this.rowIndex = 0;
+        },
+
         goLeft: function () {
             this.rowIndex = Math.max(0, this.rowIndex - 1);
         },
 
         goRight: function () {
             this.rowIndex = Math.min(this.rowIndex + 1, this.rowSplitCount - 1);
+        },
+
+        goLast: function () {
+            this.rowIndex = this.rowSplitCount - 1;
         },
 
         focusElementIndex: function (i: number) {

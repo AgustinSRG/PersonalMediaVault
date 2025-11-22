@@ -209,6 +209,7 @@ The file contains the following fields:
 | `original_ext`          | String                                        | Extension of the original asset file. Eg: `mp4`                                                                               |
 | `original_encoded`      | Boolean                                       | True if the original asset is encoded                                                                                         |
 | `original_task`         | Number (64 bit unsigned integer)              | If the original asset is not encoded, the ID of the task assigned to encode it                                                |
+| `original_error`        | String                                        | If the original asset is not encoded, and the task failed, the error trace of the task.                                       |
 | `thumb_ready`           | Boolean                                       | True if the thumbnail asset exists and is ready                                                                               |
 | `thumb_asset`           | Number (64 bit unsigned integer)              | Asset ID of the thumbnail asset. The thumbnail asset is Single-File                                                           |
 | `previews_ready`        | Boolean                                       | True if the video previews asset exists and is ready                                                                          |
@@ -238,6 +239,7 @@ The `Resolution` object has the following fields:
 | `asset`    | Number (64 bit unsigned integer) | Asset ID of the asset. The asset is Single-File                 |
 | `ext`      | String                           | Asset file extension. Example: `mp4`                            |
 | `task_id`  | Number (64 bit unsigned integer) | If the asset is not ready, ID of the task assigned to encode it |
+| `error`    | String                           | Error trace if the task failed                                  |
 
 The `Subtitle` object has the following fields:
 

@@ -1,0 +1,151 @@
+
+import { StringInput } from "string-input.slint";
+import { Switch, Button } from "std-widgets.slint";
+
+export component VaultConfigHostPortView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Hostname to open browser
+    in-out property <string> hostname: "localhost";
+    in-out property <bool> hostname-invalid: false;
+
+    /// Listening port
+    in-out property <string> port: "8000";
+    in-out property <bool> port-invalid: false;
+
+    /// Local listening
+    in-out property <bool> listen-local: true;
+
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
+    /// Save callback
+    callback save();
+
+    spacing: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    alignment: LayoutAlignment.start;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
+
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.25rem;
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Listening hostname") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.hostname;
+                            read-only: root.busy;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: hostname-invalid ? @tr("Invalid hostname") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Listening port") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        StringInput {
+                            value <=> root.port;
+                            read-only: root.busy;
+                            input-type: InputType.number;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: port-invalid ? @tr("Invalid port. Must be a number between 1 and 65535") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    Switch {
+                        colspan: 2;
+                        text: @tr("Listen only on localhost (recommended for local vaults)");
+                        checked <=> root.listen-local;
+                        enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Apply changes");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy && dirty;
+            clicked => {
+                root.save();
+            }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
+        }
+    }
+}

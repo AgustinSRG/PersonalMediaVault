@@ -13,7 +13,7 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const BACKEND_VERSION = "3.0.1"
+const BACKEND_VERSION = "4.0.1"
 
 type BackendOptions struct {
 	debug       bool // Debug mode
@@ -34,8 +34,9 @@ type BackendOptions struct {
 	skipLock bool
 
 	// FFmpeg
-	ffmpegPath  string
-	ffprobePath string
+	ffmpegPath       string
+	ffprobePath      string
+	ffmpegVideoCodec string
 
 	// Vault
 	vaultPath string
@@ -66,6 +67,7 @@ func main() {
 	options := BackendOptions{
 		ffmpegPath:          os.Getenv("FFMPEG_PATH"),
 		ffprobePath:         os.Getenv("FFPROBE_PATH"),
+		ffmpegVideoCodec:    os.Getenv("FFMPEG_VIDEO_ENCODER"),
 		vaultPath:           "./vault",
 		tempPath:            "./vault/temp",
 		unencryptedTempPath: os.Getenv("TEMP_PATH"),
@@ -87,6 +89,13 @@ func main() {
 			options.ffprobePath = "/ffmpeg/bin/ffprobe.exe"
 		} else {
 			options.ffprobePath = "/usr/bin/ffprobe"
+		}
+	}
+
+	if options.ffmpegVideoCodec == "" {
+		options.ffmpegVideoCodec = os.Getenv("H264_CODEC")
+		if options.ffmpegVideoCodec == "" {
+			options.ffmpegVideoCodec = FFMPEG_DEFAULT_CODEC
 		}
 	}
 
@@ -217,7 +226,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath) // Set FFMPEG paths
+		SetFFMPEGBinaries(options.ffmpegPath, options.ffprobePath, options.ffmpegVideoCodec) // Set FFMPEG paths and codecs
 
 		SetDebugLogEnabled(options.debug)         // Log debug mode
 		SetRequestLogEnabled(options.logRequests) // Log requests
@@ -326,6 +335,7 @@ func printHelp() {
 	fmt.Println("    ENVIRONMENT VARIABLES:")
 	fmt.Println("        FFMPEG_PATH                Path to ffmpeg binary.")
 	fmt.Println("        FFPROBE_PATH               Path to ffprobe binary.")
+	fmt.Println("        FFMPEG_VIDEO_ENCODER       Name of the ffmpeg video encoder.")
 	fmt.Println("        TEMP_PATH                  Temporal path to store things like uploaded files or to use for FFMPEG encoding.")
 	fmt.Println("                                   Note: It should be in a different filesystem if the vault is stored in an unsafe environment.")
 	fmt.Println("                                   By default, this will be stored in ~/.pmv/temp")

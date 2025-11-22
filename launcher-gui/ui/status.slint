@@ -1,0 +1,33 @@
+
+// Status of the launcher
+export enum LauncherStatus { closed, fatal-error, opening, open-error, create-ask, lock-ask, initial-config, create-vault-ask, open}
+
+// Type of fatal error
+export enum FatalErrorType { unknown, daemon-missing, frontend-missing, ffmpeg-missing, ffprobe-missing }
+
+// Type of open error
+export enum OpenErrorType { unknown, create-folder-error, lock-error, save-config-error, init-error }
+
+// Status of the daemon
+export enum VaultDaemonStatus { stopped, starting, running, stopping, error }
+
+// Type of daemon error
+export enum VaultDaemonErrorType { unknown, lock, port-in-use, invalid-ssl }
+
+// Selected vault tool
+export enum VaultSelectedTool { none, clean, recover }
+
+// Status of the tool
+export enum VaultToolStatus{ idle, running, success, error }
+
+// Selected backup option
+export enum VaultSelectedBackupOption { none, backup, key-export, key-recover }
+
+// Status of the backup
+export enum VaultBackupStatus{ idle, running, success, error }
+
+// Current task of the backup
+export enum VaultBackupCurrentTask{ none, finding-files, checking-files, copying-files }
+
+// Error type for tha backup
+export enum VaultBackupErrorType { unknown, locked, same-folder, no-encrypted-files }

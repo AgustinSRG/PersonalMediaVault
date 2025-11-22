@@ -12,6 +12,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('General')"
                 :class="{ selected: page === 'general' }"
                 @click="changePage('general')"
                 >{{ $t("General") }}</a
@@ -20,6 +21,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Description')"
                 :class="{ selected: page === 'description' }"
                 @click="changePage('description')"
                 >{{ $t("Description") }}</a
@@ -28,6 +30,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Attachments')"
                 :class="{ selected: page === 'attachments' }"
                 @click="changePage('attachments')"
                 >{{ $t("Attachments") }}</a
@@ -36,6 +39,7 @@
             <a
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Related media')"
                 :class="{ selected: page === 'related' }"
                 @click="changePage('related')"
                 >{{ $t("Related media") }}</a
@@ -45,6 +49,7 @@
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Subtitles')"
                 :class="{ selected: page === 'subtitles' }"
                 @click="changePage('subtitles')"
                 >{{ $t("Subtitles") }}</a
@@ -53,6 +58,7 @@
                 v-if="type === 2"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Audio tracks')"
                 :class="{ selected: page === 'audios' }"
                 @click="changePage('audios')"
                 >{{ $t("Audio tracks") }}</a
@@ -61,6 +67,7 @@
                 v-if="type === 2 || type === 3"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Time slices')"
                 :class="{ selected: page === 'time-slices' }"
                 @click="changePage('time-slices')"
                 >{{ $t("Time slices") }}</a
@@ -69,6 +76,7 @@
                 v-if="type === 1"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Image notes')"
                 :class="{ selected: page === 'image-notes' }"
                 @click="changePage('image-notes')"
                 >{{ $t("Image notes") }}</a
@@ -78,6 +86,7 @@
                 v-if="type === 1 || type === 2"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Resolutions')"
                 :class="{ selected: page === 'resolutions' }"
                 @click="changePage('resolutions')"
                 >{{ $t("Resolutions") }}</a
@@ -86,6 +95,7 @@
                 v-if="canWrite"
                 href="javascript:;"
                 class="horizontal-filter-menu-item"
+                :title="$t('Danger zone')"
                 :class="{ selected: page === 'danger' }"
                 @click="changePage('danger')"
                 >{{ $t("Danger zone") }}</a

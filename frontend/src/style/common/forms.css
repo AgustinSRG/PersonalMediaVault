@@ -22,6 +22,11 @@
     font-size: 10px;
 }
 
+.btn-xxs {
+    font-size: 12px;
+    padding: 7px 10px;
+}
+
 .btn-mr {
     margin-right: 0.5rem;
     margin-bottom: 0.5rem;
@@ -29,6 +34,10 @@
 
 .btn i {
     margin-right: 12px;
+}
+
+.btn.btn-xxs i {
+    margin-right: 5px;
 }
 
 .btn:disabled {
@@ -134,8 +143,10 @@ textarea.form-control::-webkit-resizer {
     padding-top: 1rem;
 }
 
-.adv-search-form {
-    padding: 1rem;
+.media-search-form {
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .form-range {
@@ -363,4 +374,10 @@ textarea.form-control::-webkit-resizer {
 
 .hidden-input {
     display: none;
+}
+
+.button-list-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }

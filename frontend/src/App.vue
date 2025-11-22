@@ -7,8 +7,7 @@ import MainLayout from "./components/layout/MainLayout.vue";
 import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./control/albums";
 import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./control/app-status";
 import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./control/media";
-import type { UploadEntryMin } from "./control/upload";
-import { EVENT_NAME_UPLOAD_LIST_UPDATE } from "./control/upload";
+import { EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, EVENT_NAME_UPLOAD_LIST_ENTRY_READY, type UploadEntryMin } from "./control/upload";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
@@ -30,7 +29,8 @@ export default defineComponent({
         this.$listenOnAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, this.updateAppStatus.bind(this));
         this.$listenOnAppEvent(EVENT_NAME_MEDIA_UPDATE, this.updateAppStatus.bind(this));
 
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_UPDATE, this.onUploadFinished.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, this.onUploadReady.bind(this));
+        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, this.onUploadError.bind(this));
 
         this.$listenOnAppEvent(EVENT_NAME_LOADED_LOCALE, this.onLoadedLocale.bind(this));
 
@@ -77,6 +77,9 @@ export default defineComponent({
                     case "media":
                         document.title = this.$t("Media") + searchPart + " | " + this.getAppTitle();
                         break;
+                    case "search":
+                        document.title = this.$t("Find media") + " | " + this.getAppTitle();
+                        break;
                     default:
                         document.title = this.getAppTitle();
                 }
@@ -112,19 +115,17 @@ export default defineComponent({
             this.updateMediaMetadata();
         },
 
-        onUploadFinished: function (mode: "push" | "rm" | "update", m: UploadEntryMin) {
-            if (mode !== "update") {
-                return;
-            }
-            if (m.status === "ready") {
-                PagesController.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
-            } else if (m.status === "error") {
-                PagesController.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
-            }
+        onUploadReady: function (m: UploadEntryMin) {
+            PagesController.ShowSnackBar(this.$t("Successfully uploaded") + ": " + m.name);
+        },
+
+        onUploadError: function (m: UploadEntryMin) {
+            PagesController.ShowSnackBar(this.$t("Error uploading file") + ": " + m.name);
         },
 
         onLoadedLocale: function (locale: string) {
             this.$updateLocale(locale);
+            this.updateTitle();
         },
     },
 });

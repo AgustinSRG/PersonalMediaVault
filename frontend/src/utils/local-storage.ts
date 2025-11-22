@@ -4,6 +4,10 @@
 
 const localStorageCache = new Map();
 
+// A prefix for all local storage keys
+// This is necessary for multiple vaults in different paths on the same domain
+const locationLocalStorageKeyPrefix = (window.location ? location.pathname || "/" : "/").substring(1);
+
 /**
  * Fetches a value from local storage
  * @param key The local storage key
@@ -11,7 +15,7 @@ const localStorageCache = new Map();
  * @returns The fetched value, or the default value
  */
 export function fetchFromLocalStorage<T>(key: string, defaultVal: T): T {
-    const v = localStorage.getItem(key);
+    const v = localStorage.getItem(locationLocalStorageKeyPrefix + key);
 
     if (v === undefined || v === null) {
         return defaultVal;
@@ -47,7 +51,7 @@ export function fetchFromLocalStorageCache<T>(key: string, defaultVal: T): T {
  * @param val The value to store
  */
 export function saveIntoLocalStorage(key: string, val: any) {
-    localStorage.setItem(key, JSON.stringify(val));
+    localStorage.setItem(locationLocalStorageKeyPrefix + key, JSON.stringify(val));
     if (localStorageCache.has(key)) {
         localStorageCache.set(key, val);
     }
@@ -58,7 +62,7 @@ export function saveIntoLocalStorage(key: string, val: any) {
  * @param key The local storage key
  */
 export function clearLocalStorage(key: string) {
-    localStorage.removeItem(key);
+    localStorage.removeItem(locationLocalStorageKeyPrefix + key);
     if (localStorageCache.has(key)) {
         localStorageCache.delete(key);
     }

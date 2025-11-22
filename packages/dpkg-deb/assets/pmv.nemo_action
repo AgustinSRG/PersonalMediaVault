@@ -2,7 +2,7 @@
 Name=Open with PersonalMediaVault
 Comment=Opens folder a media vault with PersonalMediaVault
 
-Exec=gnome-terminal --window --class="pmv" --working-directory="%F" --title="PersonalMediaVault" -x sh -c "pmv ."
+Exec=pmv-gui %F
 
 Selection=S
 Extensions=dir

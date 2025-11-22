@@ -105,6 +105,7 @@
             :res="-1"
             :error="mediaError"
             :error-message="mediaErrorMessage"
+            :encoding-error="audioEncodeError"
             :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
@@ -570,6 +571,7 @@ export default defineComponent({
             audioURL: "",
             audioPending: false,
             audioPendingTask: 0,
+            audioEncodeError: "",
 
             thumbnail: "",
             title: "",
@@ -1608,6 +1610,7 @@ export default defineComponent({
                 this.audioURL = getAssetURL(this.metadata.url);
                 this.audioPending = false;
                 this.audioPendingTask = 0;
+                this.audioEncodeError = "";
                 this.getAudioElement().load();
                 this.setupAutoNextTimer();
             } else {
@@ -1615,6 +1618,7 @@ export default defineComponent({
                 this.onClearURL();
                 this.audioPending = true;
                 this.audioPendingTask = this.metadata.task;
+                this.audioEncodeError = this.metadata.error || "";
                 this.duration = 0;
                 this.loading = false;
                 this.clearAudioRenderer();

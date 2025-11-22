@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
     <!-- Use * to generate product ID on every build -->
-    <Product Id="*" Name="PersonalMediaVault" Version="3.0.1.0" Language="!(loc.LanguageID)" Manufacturer="AgustinSRG" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
+    <Product Id="*" Name="PersonalMediaVault" Version="4.0.1.0" Language="!(loc.LanguageID)" Manufacturer="AgustinSRG" UpgradeCode="63d97155-cc29-4629-bc40-b690a6b68e58">
 
         <Package Compressed="yes" InstallScope="perMachine" Manufacturer="AgustinSRG" Description="!(loc.ProgramPackageDescription)" Platform="x64" />
 
@@ -23,26 +23,52 @@
 
         <ComponentGroup Id="RegistryEntries">
             <Component Id="RegistryEntry1" Directory="TARGETDIR" Guid="{735842c1-0b44-4361-8910-0f9c498be3a2}">
-                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv">
-                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv-gui">
+                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv-gui.exe" KeyPath="yes" />
                     <RegistryValue Type="string" Value="!(loc.OpenWithMessage)" />
                 </RegistryKey>
             </Component>
 
             <Component Id="RegistryEntry2" Directory="TARGETDIR" Guid="{2f96149f-f11c-4fc6-984c-d0e9a764a734}">
-                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv\command">
-                    <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv-gui\command">
+                    <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv-gui.exe&quot; &quot;%1&quot;" />
                 </RegistryKey>
             </Component>
 
             <Component Id="RegistryEntry3" Directory="TARGETDIR" Guid="{da3988a2-367f-4a3b-9f1d-c19c220fddfc}">
-                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv">
-                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv-gui">
+                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv-gui.exe" KeyPath="yes" />
                     <RegistryValue Type="string" Value="!(loc.OpenWithMessage)" />
                 </RegistryKey>
             </Component>
 
             <Component Id="RegistryEntry4" Directory="TARGETDIR" Guid="{807752fb-ee50-4097-beef-6b8f9a377461}">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv-gui\command">
+                    <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv-gui.exe&quot; &quot;%V&quot;" />
+                </RegistryKey>
+            </Component>
+
+            <Component Id="RegistryEntry5" Directory="TARGETDIR" Guid="{13487986-d62b-45da-9c98-cf88b8d6818a}">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv">
+                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                    <RegistryValue Type="string" Value="!(loc.OpenWithConsoleMessage)" />
+                </RegistryKey>
+            </Component>
+
+            <Component Id="RegistryEntry6" Directory="TARGETDIR" Guid="{7783b5c0-99d5-41ae-93d3-281e8bbe6d0a}">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\pmv\command">
+                    <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%1&quot;" />
+                </RegistryKey>
+            </Component>
+
+            <Component Id="RegistryEntry7" Directory="TARGETDIR" Guid="{9dac0f4e-c57c-4334-b9a9-9bbd708ac698}">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv">
+                    <RegistryValue Type="string" Name="Icon" Value="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" KeyPath="yes" />
+                    <RegistryValue Type="string" Value="!(loc.OpenWithConsoleMessage)" />
+                </RegistryKey>
+            </Component>
+
+            <Component Id="RegistryEntry8" Directory="TARGETDIR" Guid="{f4bdba65-2287-44c5-8fc7-3754e14b98a5}">
                 <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\background\shell\pmv\command">
                     <RegistryValue Type="string" Value="&quot;[ProgramFiles64Folder]PersonalMediaVault\pmv.exe&quot; &quot;%V&quot;" />
                 </RegistryKey>
@@ -53,7 +79,7 @@
         <DirectoryRef Id="DIR_Shortcuts">
             <Component Id="CMP_MenuShortcut" Guid="{c9555200-a6ea-473b-ab2e-ec381903864e}">
 
-                <Shortcut Id="ExeShortCut" Name="PersonalMediaVault" Description="!(loc.ShortCutDescription)" Target="[ProgramFiles64Folder]PersonalMediaVault\pmv.exe" />
+                <Shortcut Id="ExeShortCut" Name="PersonalMediaVault" Description="!(loc.ShortCutDescription)" Target="[ProgramFiles64Folder]PersonalMediaVault\pmv-gui.exe" />
 
                 <Shortcut Id="UninstallShortcut" Name="!(loc.UninstallMessage)" Description="!(loc.UninstallDescription)" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" />
 

@@ -52,6 +52,11 @@
     text-align: center;
 }
 
+.form-control.form-textarea.player-task-encoding-error {
+    width: 100%;
+    resize: none;
+}
+
 .player-task-progress-bar {
     height: 2.5rem;
     width: 100%;

@@ -1,4 +1,4 @@
-name: Launcher (Go) CI
+name: Launcher (CLI)
 
 on:
   push:

@@ -1,0 +1,36 @@
+name: Launcher (GUI)
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - launcher-gui/**
+      - .github/workflows/**
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - launcher-gui/**
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - name: Install library dependencies
+      run: sudo apt install libfreetype-dev libfontconfig-dev
+
+    - name: Run Clippy
+      working-directory: ./launcher-gui
+      run: cargo clippy
+
+    - name: Run Tests
+      working-directory: ./launcher-gui
+      run: cargo test --verbose

@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"main-res.syso": true,
+			"pmv": true,
+			"target": true,
+			"pmv.exe": true
+		},
+		"cSpell.words": [
+			"ffprobe",
+			"github",
+			"msgctxt",
+			"slint",
+			"Slint"
+		],
+		"cSpell.useGitignore": false,
+	}
+}

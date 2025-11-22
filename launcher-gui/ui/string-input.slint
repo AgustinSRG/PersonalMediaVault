@@ -1,0 +1,32 @@
+
+
+import { Palette } from "std-widgets.slint";
+export component StringInput inherits Rectangle {
+    in-out property <string> value: "";
+    in property <bool> read-only: false;
+    in property <InputType> input-type: InputType.text;
+
+    clip: true;
+    border-color: Palette.border;
+    border-width: 1px;
+    width: 20rem;
+    height: 2rem;
+
+    TextInput {
+        text <=> value;
+        width: max(parent.width, self.preferred-width);
+        vertical-alignment: center;
+        read-only: root.read-only;
+        input-type: root.input-type;
+
+        private property <length> margin: 0.5rem;
+        x: margin;
+        cursor-position-changed(cursor-position) => {
+            if cursor-position.x + self.x < margin {
+                self.x = - cursor-position.x + margin;
+            } else if cursor-position.x + self.x > parent.width - margin - self.text-cursor-width {
+                self.x = parent.width - cursor-position.x - margin - self.text-cursor-width;
+            }
+        }
+    }
+}

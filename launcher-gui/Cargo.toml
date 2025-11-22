@@ -1,0 +1,30 @@
+[package]
+name = "pmv-gui"
+version = "4.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.22.1"
+chrono = "0.4.42"
+dirs = "6.0.0"
+duct = "1.1.0"
+hostname-validator = "1.1.1"
+open = "5.3.2"
+pidlock = "0.2.1"
+pmv_encryption_rs = "1.0.0"
+reqwest = { version = "0.12.23", features = ['blocking'] }
+rfd = "0.15.4"
+serde = { version = "1.0.228", features = ['derive'] }
+serde_json = { version = "1.0.145", features = ['raw_value'] }
+sha2 = "0.10.9"
+slint = { version = "1.13.1", features = ["gettext", "renderer-skia"] }
+rand = { version = "0.9.2", features = ["std_rng"] }
+arboard = "3.6.1"
+hex = "0.4.3"
+normalize-path = "0.2.1"
+
+[build-dependencies]
+slint-build = "1.12.1"
+winres = "0.1.12"

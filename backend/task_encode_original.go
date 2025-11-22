@@ -12,6 +12,46 @@ import (
 	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 )
 
+// Sets the error trace to media
+// for the original encoding process
+func (task *ActiveTask) SetOriginalErrorToMedia(vault *Vault, errorTrace string) {
+	media := GetVault().media.AcquireMediaResource(task.definition.MediaId)
+
+	meta, err := media.StartWrite(task.session.key)
+
+	if err != nil {
+		LogTaskError(task.definition.Id, "Error: "+err.Error())
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	if meta == nil {
+		media.CancelWrite()
+
+		LogTaskError(task.definition.Id, "Error: Media not found")
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	meta.OriginalError = errorTrace
+
+	err = media.EndWrite(meta, task.session.key, false)
+
+	if err != nil {
+		LogTaskError(task.definition.Id, "Error: "+err.Error())
+
+		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(task.definition.MediaId)
+}
+
 // This task encodes the original media file so it's playable from the browser
 // We have:
 //   - Videos (mp4)
@@ -242,7 +282,8 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	var encoded_ext string
 	var cmd *exec.Cmd
 
-	if probe_data.Type == MediaTypeVideo {
+	switch probe_data.Type {
+	case MediaTypeVideo:
 		encoded_temp = path.Join(tempFolder, "video.mp4")
 		encoded_ext = "mp4"
 		cmd = MakeFFMpegEncodeToMP4OriginalCommand(
@@ -256,15 +297,15 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 			task.definition.FirstTimeEncoding && probe_data.CanCopyVideo,
 			task.definition.FirstTimeEncoding && probe_data.CanCopyAudio,
 		)
-	} else if probe_data.Type == MediaTypeAudio {
+	case MediaTypeAudio:
 		encoded_temp = path.Join(tempFolder, "audio.mp3")
 		encoded_ext = "mp3"
 		cmd = MakeFFMpegEncodeToMP3Command(originalTemp, probe_data.Format, tempFolder, userConfig)
-	} else if probe_data.Type == MediaTypeImage {
+	case MediaTypeImage:
 		encoded_temp = path.Join(tempFolder, "image.png")
 		encoded_ext = "png"
 		cmd = MakeFFMpegEncodeOriginalToPNGCommand(originalTemp, probe_data.Format, tempFolder, userConfig)
-	} else {
+	default:
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
 		return
@@ -297,10 +338,12 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	}
 
 	if err != nil {
-		LogTaskError(task.definition.Id, "Error: "+err.Error())
+		LogTaskError(task.definition.Id, err.Error())
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
+
+		task.SetOriginalErrorToMedia(vault, err.Error())
 		return
 	}
 
@@ -493,6 +536,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	metaToWrite.OriginalAsset = asset_id
 	metaToWrite.OriginalExtension = encoded_ext
 	metaToWrite.OriginalTask = 0
+	metaToWrite.OriginalError = ""
 
 	err = media.EndWrite(metaToWrite, task.session.key, false)
 

@@ -1,0 +1,195 @@
+
+import { StringInput } from "string-input.slint";
+import { Switch, Button } from "std-widgets.slint";
+
+export component VaultConfigTlsView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// TLS certificate
+    in-out property <string> tls-cert: "";
+    in-out property <bool> tls-cert-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-cert();
+
+    /// TLS key
+    in-out property <string> tls-key: "";
+    in-out property <bool> tls-key-invalid: false;
+
+    /// Callback to select certificate file
+    callback select-tls-key();
+
+    /// TLS enabled
+    in-out property <bool> tls-enabled: true;
+
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
+    /// Save callback
+    callback save();
+
+    spacing: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    alignment: LayoutAlignment.start;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
+
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.25rem;
+
+                Row {
+                    Switch {
+                        colspan: 3;
+                        text: @tr("Enable TLS / HTTPS for the vault");
+                        checked <=> root.tls-enabled;
+                        enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("TLS certificate file") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.tls-cert;
+                            read-only: root.busy || !tls-enabled;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Find");
+                            icon: @image-url("../assets/icons/folder-open.svg");
+                            colorize-icon: true;
+                            enabled: !busy && tls-enabled;
+                            clicked => {
+                                root.select-tls-cert();
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: tls-cert-invalid ? @tr("Invalid TLS certificate") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("TLS private key file") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.tls-key;
+                            read-only: root.busy || !tls-enabled;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+
+                        Button {
+                            text: @tr("Find");
+                            icon: @image-url("../assets/icons/folder-open.svg");
+                            colorize-icon: true;
+                            enabled: !busy && tls-enabled;
+                            clicked => {
+                                root.select-tls-key();
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: tls-key-invalid ? @tr("Invalid TLS private key") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Apply changes");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy && dirty;
+            clicked => {
+                root.save();
+            }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
+        }
+    }
+}

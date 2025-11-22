@@ -420,7 +420,7 @@ export default defineComponent({
         },
 
         goAdvancedSearch: function () {
-            AppStatus.GoToPage("adv-search");
+            AppStatus.GoToPage("search");
         },
 
         findCurrentMediaIndex: function (): number {

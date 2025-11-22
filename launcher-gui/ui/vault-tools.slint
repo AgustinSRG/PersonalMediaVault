@@ -1,0 +1,185 @@
+
+import { VaultToolStatus, VaultSelectedTool } from "status.slint";
+import { Button, ProgressIndicator } from "std-widgets.slint";
+
+export component VaultToolsView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// The status of the tool
+    in-out property <VaultToolStatus> tool-status: VaultToolStatus.idle;
+
+    /// Error of the tool
+    in property <string> tool-error: "";
+
+    /// Selected tool
+    private property <VaultSelectedTool> selected-tool: none;
+
+    /// Run the selected tool
+    callback run-tool(VaultSelectedTool);
+
+    /// Cancel the tool that is running
+    callback cancel-tool();
+
+    padding-top: 1rem;
+    spacing: 1rem;
+    alignment: LayoutAlignment.start;
+
+    if selected-tool == VaultSelectedTool.none: VerticalLayout {
+        spacing: 1rem;
+        alignment: LayoutAlignment.start;
+
+        Text {
+            text: @tr("Vault Tools");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+        }
+
+        Text {
+            text: @tr("Select the tool you want to use");
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+
+            Button {
+                text: @tr("Clean inconsistent files");
+                icon: @image-url("../assets/icons/clean.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.selected-tool = VaultSelectedTool.clean;
+                    root.tool-status = VaultToolStatus.idle;
+                }
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+
+            Button {
+                text: @tr("Recover lost items");
+                icon: @image-url("../assets/icons/recover.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy;
+                clicked => {
+                    root.selected-tool = VaultSelectedTool.recover;
+                    root.tool-status = VaultToolStatus.idle;
+                }
+            }
+        }
+    }
+
+    if selected-tool != VaultSelectedTool.none: VerticalLayout {
+        spacing: 1rem;
+        alignment: LayoutAlignment.start;
+
+        Text {
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            font-size: 12pt;
+            font-weight: 800;
+
+            states [
+                clean when selected-tool == VaultSelectedTool.clean: {
+                    text: @tr("Clean inconsistent files");
+                }
+                recover when selected-tool == VaultSelectedTool.recover: {
+                    text: @tr("Recover lost items");
+                }
+            ]
+        }
+
+        Text {
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            states [
+                clean when selected-tool == VaultSelectedTool.clean: {
+                    text: @tr("With this tool you can remove media assets that are not indexed.");
+                }
+                recover when selected-tool == VaultSelectedTool.recover: {
+                    text: @tr("With this tool you can recover media assets that are not indexed.");
+                }
+            ]
+        }
+
+        Text {
+            wrap: TextWrap.char-wrap;
+            horizontal-alignment: center;
+            text: @tr("Note: The tool requires the vault to be stopped in order to run");
+        }
+
+        if tool-status == VaultToolStatus.running: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-left: 1rem;
+            padding-right: 1rem;
+
+            ProgressIndicator {
+                width: 24rem;
+                height: 0.75rem;
+                indeterminate: true;
+            }
+        }
+
+        if tool-status == VaultToolStatus.success: HorizontalLayout {
+            Text {
+                text: @tr("Tool successfully used!");
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+                color: green;
+            }
+        }
+
+        if tool-status == VaultToolStatus.error: HorizontalLayout {
+            Text {
+                text: @tr("Error") + ": " + (tool-error == "" ? @tr("Unknown error") : tool-error);
+                wrap: TextWrap.word-wrap;
+                horizontal-alignment: center;
+                color: red;
+            }
+        }
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+            spacing: 0.75rem;
+
+            Button {
+                text: @tr("Back");
+                icon: @image-url("../assets/icons/arrow-back.svg");
+                colorize-icon: true;
+                enabled: !busy && tool-status != VaultToolStatus.running;
+                clicked => {
+                    root.selected-tool = VaultSelectedTool.none;
+                }
+            }
+
+            if tool-status != VaultToolStatus.success: Button {
+                text: @tr("Start");
+                icon: @image-url("../assets/icons/play.svg");
+                primary: true;
+                colorize-icon: true;
+                enabled: !busy && tool-status != VaultToolStatus.running;
+                clicked => {
+                    root.run-tool(root.selected-tool);
+                }
+            }
+
+            if tool-status != VaultToolStatus.success: Button {
+                text: @tr("Cancel");
+                icon: @image-url("../assets/icons/close.svg");
+                colorize-icon: true;
+                enabled: !busy && tool-status == VaultToolStatus.running;
+                clicked => {
+                    root.cancel-tool();
+                }
+            }
+        }
+    }
+}

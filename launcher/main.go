@@ -15,7 +15,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
-const VERSION = "3.0.1"
+const VERSION = "4.0.1"
 
 // Program entry point
 func main() {
@@ -77,6 +77,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer child_process_manager.DisposeChildProcessManager() //nolint:errcheck
+
+	ffmpegConfig := loadFFmpegConfig()
 
 	detectLauncherPaths()
 
@@ -362,7 +364,7 @@ func main() {
 
 	// Initialize the vault if needed
 
-	vaultController.Initialize(vaultPath, launcherConfig, reader)
+	vaultController.Initialize(vaultPath, launcherConfig, reader, ffmpegConfig)
 
 	// Start vault
 
@@ -385,7 +387,7 @@ func printHelp() {
 	fmt.Println(msg)
 	msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
 		DefaultMessage: &i18n.Message{
-			ID:    "Description",
+			ID:    "CommandDescription",
 			Other: "Launches a vault with an interactive command line to manage it.",
 		},
 	})

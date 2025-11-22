@@ -1,4 +1,4 @@
-name: Backup tool (Go) CI
+name: Backup tool
 
 on:
   push:

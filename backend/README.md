@@ -65,6 +65,7 @@ Also, here is a list of environment variables to configure other options:
 |---|---|
 | FFMPEG_PATH | Path to `ffmpeg` binary |
 | FFPROBE_PATH | Path to `ffprobe` binary |
+| FFMPEG_VIDEO_ENCODER | Name of the FFmpeg codec to encode the videos. |
 | TEMP_PATH | Temporal path to store things like uploaded files or to use for FFMPEG encoding.  Note: It should be in a different filesystem if the vault is stored in an unsafe environment. By default, this will be stored in `~/.pmv/temp` |
 | FRONTEND_PATH | Path to static frontend to serve it. |
 | SSL_CERT | Path to the SSL certificate. Required to enable HTTPS |

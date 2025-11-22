@@ -40,6 +40,7 @@
     animation-duration: 0.2s;
 
     overflow: auto;
+    scrollbar-gutter: stable;
 }
 
 .modal-container.closing {

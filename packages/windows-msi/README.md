@@ -4,16 +4,17 @@ Windows MSI installer for PersonalMediaVault
 
 ## Requirements
 
+The following software is required to build the installer:
+
+- [WiX ToolSet](https://wixtoolset.org/documentation/manual/v3/overview/alltools.html)
 - [Golang](https://go.dev/) - Last stable version
 - [NodeJS](https://nodejs.org/) - Last stable version
-- [WiX ToolSet](https://wixtoolset.org/documentation/manual/v3/overview/alltools.html)
 - [FFmpeg](https://ffmpeg.org/)
+- [Rust](https://www.rust-lang.org/)
+
+Make sure you have installed in `C:\ffmpeg\bin` the binaries `ffmpeg.exe` and `ffprobe.exe`.
 
 ## Building
-
-First, make sure you have built all of PersonalMediaVault components (backend, frontend, backup-tool)
-
-Also, make sure you have installed in `C:\ffmpeg\bin` the binaries `ffmpeg.exe` and `ffprobe.exe`
 
 To generate the MSI installer, run the following script:
 

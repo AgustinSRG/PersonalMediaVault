@@ -69,6 +69,7 @@ type MediaAPIMetaResolution struct {
 	Ready  bool   `json:"ready"`
 	Url    string `json:"url"`
 	Task   uint64 `json:"task"`
+	Error  string `json:"error,omitempty"`
 }
 
 type MediaAPIMetaSubtitle struct {
@@ -115,6 +116,7 @@ type MediaAPIMetaResponse struct {
 	Encoded       bool   `json:"encoded"`
 	Url           string `json:"url"`
 	Task          uint64 `json:"task"`
+	Error         string `json:"error,omitempty"`
 
 	VideoPreviews         string  `json:"video_previews"`
 	VideoPreviewsInterval float64 `json:"video_previews_interval"`
@@ -215,12 +217,14 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 		result.Ready = true
 		result.Encoded = false
 		result.Task = meta.OriginalTask
+		result.Error = meta.OriginalError
 		result.Url = "/assets/b/" + fmt.Sprint(media_id) + "/" + fmt.Sprint(meta.OriginalAsset) + "/original_" + fmt.Sprint(media_id) + "." + meta.OriginalExtension + "?fp=" + GetVault().credentials.GetFingerprint()
 	} else {
 		result.Ready = false
 		result.ReadyProgress = GetVault().media.GetProgress(media_id)
 		result.Encoded = false
 		result.Task = meta.OriginalTask
+		result.Error = meta.OriginalError
 		result.Url = ""
 	}
 
@@ -272,6 +276,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 				r.Ready = false
 				r.Url = ""
 				r.Task = meta.Resolutions[i].TaskId
+				r.Error = meta.Resolutions[i].Error
 			}
 
 			resolutions[i] = r

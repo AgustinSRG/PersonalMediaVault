@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 3.0.1
+  version: 4.0.1
 
 # cSpell:ignore allof, anyof, noneof, gyan
 
@@ -798,6 +798,9 @@ paths:
                 type: number
                 format: int64
                 description: "Task ID in case encoded = false"
+              error:
+                type: string
+                description: "Error trace of the encoding task failed"
               url:
                 type: string
                 description: "URL of the asset to be displayed. Blank if not encoded yet."
@@ -834,6 +837,9 @@ paths:
                       type: number
                       format: int64
                       description: "Encoding task ID if ready = false"
+                    error:
+                      type: string
+                      description: "Error trace of the task, in case it failed"
                     url:
                       type: string
                       description: "Playback URL"

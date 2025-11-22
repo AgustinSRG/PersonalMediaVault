@@ -30,7 +30,7 @@ export type AppStatusFocus = "right" | "left";
 /**
  * Page
  */
-export type AppStatusPage = "home" | "media" | "random" | "random" | "albums" | "upload" | "adv-search";
+export type AppStatusPage = "home" | "media" | "random" | "random" | "albums" | "upload" | "search";
 
 /**
  * App status manager object
@@ -132,7 +132,7 @@ export class AppStatus {
 
         const page = getParameterByName("page");
 
-        if (page && ["home", "media", "random", "albums", "upload", "adv-search"].includes(page)) {
+        if (page && ["home", "media", "random", "albums", "upload", "search"].includes(page)) {
             AppStatus.CurrentPage = page as AppStatusPage;
         } else {
             AppStatus.CurrentPage = "home";
@@ -502,7 +502,7 @@ export class AppStatus {
             AppStatus.CurrentAlbum = albumId;
             AppStatus.CurrentMedia = -1;
             AppStatus.CurrentHomePageGroup = -1;
-            AppStatus.CurrentSearch = "";
+            AppStatus.CurrentPage = "home";
 
             AppStatus.ListSplitMode = false;
 
@@ -523,6 +523,7 @@ export class AppStatus {
         AppStatus.CurrentAlbum = albumId;
         AppStatus.CurrentMedia = mediaId;
         AppStatus.CurrentSearch = "";
+        AppStatus.CurrentPage = "home";
 
         AppStatus.ListSplitMode = false;
 
@@ -551,6 +552,7 @@ export class AppStatus {
             AppStatus.CurrentMedia = -1;
         }
 
+        AppStatus.CurrentPage = "home";
         AppStatus.ListSplitMode = false;
 
         AppStatus.UpdateLayout();
@@ -584,6 +586,7 @@ export class AppStatus {
     public static ClosePage() {
         AppStatus.CurrentFocus = "left";
         AppStatus.ListSplitMode = false;
+        AppStatus.CurrentPage = "home";
         AppStatus.UpdateLayout();
         AppStatus.OnStatusUpdate();
     }
@@ -606,5 +609,31 @@ export class AppStatus {
         AppStatus.SearchParams = params;
 
         AppStatus.OnStatusUpdate();
+    }
+
+    /**
+     * Navigates to the page to find media
+     * @param textSearch The text to search
+     */
+    public static GoFindMedia(textSearch: string) {
+        ExitPreventer.TryExit(() => {
+            AppStatus.CurrentPage = "search";
+
+            AppStatus.CurrentAlbum = -1;
+
+            AppStatus.CurrentHomePageGroup = -1;
+
+            if (AppStatus.CurrentMedia >= 0) {
+                AppStatus.ListSplitMode = true;
+            }
+
+            AppStatus.SearchParams = "~" + textSearch;
+
+            AppStatus.UpdateLayout();
+
+            AppStatus.CurrentFocus = "right";
+
+            AppStatus.OnStatusUpdate();
+        });
     }
 }

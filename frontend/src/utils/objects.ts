@@ -38,3 +38,20 @@ export function clone<T = any>(o: T): T {
         return o2;
     }
 }
+
+/**
+ * Removes element from array
+ * @param a The array
+ * @param e The element
+ * @returns True if the element was found and removed
+ */
+export function removeFromArray<T>(a: T[], e: T): boolean {
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] === e) {
+            a.splice(i, 1);
+            return true;
+        }
+    }
+
+    return false;
+}

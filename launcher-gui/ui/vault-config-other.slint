@@ -1,0 +1,140 @@
+
+import { StringInput } from "string-input.slint";
+import { Switch, Button } from "std-widgets.slint";
+
+export component VaultConfigOtherView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Cache size
+    in-out property <string> cache-size: "1024";
+    in-out property <bool> cache-size-invalid: false;
+
+    /// Request logging
+    in-out property <bool> log-requests: false;
+
+    /// Debug logging
+    in-out property <bool> log-debug: false;
+
+    /// Dirty and saved
+    in-out property <bool> dirty: false;
+    in-out property <bool> saved: false;
+
+    /// Save callback
+    callback save();
+
+    spacing: 1rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    alignment: LayoutAlignment.start;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
+
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.25rem;
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Cache size") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        StringInput {
+                            value <=> root.cache-size;
+                            read-only: root.busy;
+                            input-type: InputType.number;
+                            changed value => {
+                                root.dirty = true;
+                                root.saved = false;
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: cache-size-invalid ? @tr("Invalid cache size. Must be a number greater or equal to 0.") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    Switch {
+                        colspan: 2;
+                        text: @tr("Log HTTP requests to the vault");
+                        checked <=> root.log-requests;
+                        enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 2;
+                        text: "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    Switch {
+                        colspan: 2;
+                        text: @tr("Log debug messages (for troubleshooting)");
+                        checked <=> root.log-debug;
+                        enabled: !busy;
+                        changed checked => {
+                            root.dirty = true;
+                            root.saved = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Apply changes");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy && dirty;
+            clicked => {
+                root.save();
+            }
+        }
+    }
+
+    if saved: HorizontalLayout {
+        Text {
+            text: @tr("Configuration changes successfully saved!");
+            wrap: TextWrap.word-wrap;
+            horizontal-alignment: center;
+            color: green;
+        }
+    }
+}

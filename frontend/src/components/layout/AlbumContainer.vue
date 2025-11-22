@@ -21,7 +21,13 @@
                         <i class="fas fa-star"></i>
                     </button>
 
-                    <button v-if="canWrite" type="button" :title="$t('Add media')" class="album-header-btn" @click="addMediaToAlbum">
+                    <button
+                        v-if="canWrite && albumListLength < 1024"
+                        type="button"
+                        :title="$t('Add media')"
+                        class="album-header-btn"
+                        @click="addMediaToAlbum"
+                    >
                         <i class="fas fa-plus"></i>
                     </button>
 

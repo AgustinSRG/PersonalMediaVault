@@ -118,6 +118,7 @@
             :res="currentResolution"
             :error="mediaError"
             :error-message="mediaErrorMessage"
+            :encoding-error="videoEncodeError"
             :can-auto-reload="!expandedTitle && !expandedAlbum"
         ></PlayerEncodingPending>
 
@@ -596,6 +597,7 @@ export default defineComponent({
             videoURL: "",
             videoPending: false,
             videoPendingTask: 0,
+            videoEncodeError: "",
 
             canSaveTime: true,
 
@@ -1828,12 +1830,14 @@ export default defineComponent({
                     this.videoURL = getAssetURL(this.metadata.url);
                     this.videoPending = false;
                     this.videoPendingTask = 0;
+                    this.videoEncodeError = "";
                     this.setupAutoNextTimer();
                 } else {
                     this.videoURL = "";
                     this.onClearURL();
                     this.videoPending = true;
                     this.videoPendingTask = this.metadata.task;
+                    this.videoEncodeError = this.metadata.error || "";
                     this.duration = 0;
                     this.loading = false;
                 }
@@ -1844,12 +1848,14 @@ export default defineComponent({
                         this.videoURL = getAssetURL(res.url);
                         this.videoPending = false;
                         this.videoPendingTask = 0;
+                        this.videoEncodeError = "";
                         this.setupAutoNextTimer();
                     } else {
                         this.videoURL = "";
                         this.onClearURL();
                         this.videoPending = true;
                         this.videoPendingTask = res.task;
+                        this.videoEncodeError = res.error || "";
                         this.duration = 0;
                         this.loading = false;
                     }
@@ -1858,6 +1864,7 @@ export default defineComponent({
                     this.onClearURL();
                     this.videoPending = true;
                     this.videoPendingTask = 0;
+                    this.videoEncodeError = "";
                     this.duration = 0;
                     this.loading = false;
                 }

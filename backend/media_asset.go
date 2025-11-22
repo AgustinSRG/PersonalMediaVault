@@ -64,6 +64,8 @@ type MediaResolution struct {
 	Extension string `json:"ext"`   // Extension of the media file
 
 	TaskId uint64 `json:"task_id"` // Id of the task that must encode the resolution (only when Ready = false)
+
+	Error string `json:"error,omitempty"` // Error trace for the task
 }
 
 // Contains data of a subtitles file
@@ -111,11 +113,12 @@ type MediaMetadata struct {
 
 	NextAssetID uint64 `json:"next_asset_id"` // Id to give to the next asset file
 
-	OriginalReady     bool   `json:"original_ready"`          // True if original media asset is fully uploaded and encrypted
-	OriginalAsset     uint64 `json:"original_asset"`          // ID of the asset file (MediaAssetFile) where the media is stored
-	OriginalExtension string `json:"original_ext"`            // Extension of the original media file
-	OriginalTask      uint64 `json:"original_task,omitempty"` // ID of the task that must encode the original asset (only if OriginalEncoded = false)
-	OriginalEncoded   bool   `json:"original_encoded"`        // True if the original asset is ready for playback
+	OriginalReady     bool   `json:"original_ready"`           // True if original media asset is fully uploaded and encrypted
+	OriginalAsset     uint64 `json:"original_asset"`           // ID of the asset file (MediaAssetFile) where the media is stored
+	OriginalExtension string `json:"original_ext"`             // Extension of the original media file
+	OriginalTask      uint64 `json:"original_task,omitempty"`  // ID of the task that must encode the original asset (only if OriginalEncoded = false)
+	OriginalEncoded   bool   `json:"original_encoded"`         // True if the original asset is ready for playback
+	OriginalError     string `json:"original_error,omitempty"` // Error trace of the original encoding process
 
 	ThumbnailReady bool   `json:"thumb_ready"` // True if the thumbnail is ready to be displayed
 	ThumbnailAsset uint64 `json:"thumb_asset"` // ID of the asset file (MediaAssetFile) where the thumbnail is stored

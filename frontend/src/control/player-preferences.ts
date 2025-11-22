@@ -692,6 +692,86 @@ export function setDescriptionSize(size: number) {
     saveIntoLocalStorage(LS_KEY_DESCRIPTION_SIZE, size);
 }
 
+const LS_KEY_DESCRIPTION_READ_SETTINGS = "player-pref-desc-read-settings";
+
+/**
+ * Settings for reading description
+ */
+export type DescriptionWidgetReadSettings = {
+    /**
+     * Enabled reading?
+     */
+    enabled: boolean;
+
+    /**
+     * Volume (0-1)
+     */
+    volume: number;
+
+    /**
+     * Pitch (0-2)
+     */
+    pitch: number;
+
+    /**
+     * Rate (0.1 - 10)
+     */
+    rate: number;
+
+    /**
+     * Selected voice URI
+     */
+    voice: string;
+};
+
+/**
+ * Sets the settings for reading the description
+ * @returns Settings for reading description
+ */
+export function getDescriptionWidgetReadSettings(): DescriptionWidgetReadSettings {
+    const result: DescriptionWidgetReadSettings = {
+        enabled: false,
+        volume: 1,
+        pitch: 1,
+        rate: 1,
+        voice: "",
+    };
+
+    const unparsedSettings = fetchFromLocalStorageCache(LS_KEY_DESCRIPTION_READ_SETTINGS, null as unknown);
+
+    if (typeof unparsedSettings === "object" && unparsedSettings !== null) {
+        if ("enabled" in unparsedSettings) {
+            result.enabled = !!unparsedSettings.enabled;
+        }
+
+        if ("volume" in unparsedSettings && typeof unparsedSettings.volume === "number") {
+            result.volume = Math.max(0, Math.min(1, unparsedSettings.volume));
+        }
+
+        if ("pitch" in unparsedSettings && typeof unparsedSettings.pitch === "number") {
+            result.pitch = Math.max(0, Math.min(2, unparsedSettings.pitch));
+        }
+
+        if ("rate" in unparsedSettings && typeof unparsedSettings.rate === "number") {
+            result.rate = Math.max(0.1, Math.min(10, unparsedSettings.rate));
+        }
+
+        if ("voice" in unparsedSettings) {
+            result.voice = unparsedSettings.voice + "";
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Sets the settings for reading description
+ * @param settings Settings for reading description
+ */
+export function setDescriptionWidgetReadSettings(settings: DescriptionWidgetReadSettings) {
+    saveIntoLocalStorage(LS_KEY_DESCRIPTION_READ_SETTINGS, settings);
+}
+
 const LS_KEY_SHOW_AUDIO_TITLE = "player-pref-audio-title";
 
 /**
@@ -759,6 +839,7 @@ export function clearPlayerPreferences() {
     clearLocalStorage(LS_KEY_TOGGLE_PLAY_DELAY);
 
     clearLocalStorage(LS_KEY_DESCRIPTION_SIZE);
+    clearLocalStorage(LS_KEY_DESCRIPTION_READ_SETTINGS);
 
     clearLocalStorage(LS_KEY_SHOW_AUDIO_TITLE);
     clearLocalStorage(LS_KEY_SHOW_AUDIO_THUMBNAIL);

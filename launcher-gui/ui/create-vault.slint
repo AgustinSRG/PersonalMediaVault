@@ -1,0 +1,217 @@
+import { Button, TextEdit } from "std-widgets.slint";
+import { StringInput } from "string-input.slint";
+
+export component CreateVaultView inherits VerticalLayout {
+    /// True if the launcher is busy, meaning the action buttons should be disabled
+    in property <bool> busy: false;
+
+    /// Path of the vault
+    in property <string> vault-path: "";
+
+    /// Username input
+    in-out property <string> username: "";
+    in-out property <bool> username-invalid: false;
+
+    /// Password input
+    in-out property <string> password: "";
+    in-out property <bool> password-invalid: false;
+
+    /// Password input (repeat)
+    in-out property <string> password-repeat: "";
+    in-out property <bool> password-repeat-invalid: false;
+
+    private property <bool> password-visibility: false;
+    private property <bool> password-repeat-visibility: false;
+
+    /// Back callback
+    callback go-back();
+
+    /// Confirm callback
+    callback confirm();
+
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    spacing: 1rem;
+    alignment: LayoutAlignment.center;
+
+    Text {
+        text: @tr("Create vault");
+        font-weight: 800;
+        font-size: 16pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("No vault found in the selected path");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Path") + ": " + vault-path;
+        wrap: TextWrap.char-wrap;
+        horizontal-alignment: center;
+    }
+
+    Text {
+        text: @tr("Input the initial credentials in order to create a new vault");
+        wrap: TextWrap.word-wrap;
+        font-size: 12pt;
+        horizontal-alignment: center;
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+
+        HorizontalLayout {
+            alignment: LayoutAlignment.space-around;
+
+            GridLayout {
+                spacing-horizontal: 0.75rem;
+                spacing-vertical: 0.25rem;
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Username") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        colspan: 2;
+                        alignment: LayoutAlignment.center;
+
+                        StringInput {
+                            value <=> root.username;
+                            read-only: root.busy;
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: username-invalid ? @tr("Invalid username") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Password") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        StringInput {
+                            value <=> root.password;
+                            read-only: root.busy;
+                            input-type: password-visibility ? InputType.text : InputType.password;
+                        }
+                    }
+
+                    VerticalLayout {
+                        Button {
+                            text: "";
+                            icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.password-visibility = !root.password-visibility;
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: password-invalid ? @tr("Invalid password") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+
+                Row {
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        Text {
+                            text: @tr("Password (again)") + ": ";
+                            wrap: TextWrap.word-wrap;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: LayoutAlignment.center;
+                        StringInput {
+                            value <=> root.password-repeat;
+                            read-only: root.busy;
+                            input-type: password-repeat-visibility ? InputType.text : InputType.password;
+                        }
+                    }
+
+                    VerticalLayout {
+                        Button {
+                            text: "";
+                            icon: password-repeat-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                            colorize-icon: true;
+                            enabled: !busy;
+                            clicked => {
+                                root.password-repeat-visibility = !root.password-repeat-visibility;
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Text {
+                        colspan: 3;
+                        text: password-repeat-invalid ? @tr("The passwords do not match") : "";
+                        wrap: TextWrap.word-wrap;
+                        color: red;
+                        font-size: 10pt;
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.center;
+        padding-top: 0.75rem;
+        spacing: 0.75rem;
+
+        Button {
+            text: @tr("Back");
+            icon: @image-url("../assets/icons/arrow-back.svg");
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.go-back();
+            }
+        }
+
+        Button {
+            text: @tr("Continue");
+            icon: @image-url("../assets/icons/check.svg");
+            primary: true;
+            colorize-icon: true;
+            enabled: !busy;
+            clicked => {
+                root.confirm();
+            }
+        }
+    }
+}
