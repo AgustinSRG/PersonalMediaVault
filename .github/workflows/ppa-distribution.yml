@@ -40,10 +40,13 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install library dependencies
+        run: sudo apt install libfreetype-dev libfontconfig-dev libssl-dev pkg-config
+
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 20.x
 
       - name: Install GPG
         run: sudo apt install -y gpg
