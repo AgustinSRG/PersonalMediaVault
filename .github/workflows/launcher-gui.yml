@@ -24,6 +24,9 @@ jobs:
 
     - uses: dtolnay/rust-toolchain@stable
 
+    - name: Install library dependencies
+      run: sudo apt install libfreetype-dev libfontconfig-dev
+
     - name: Run Clippy
       working-directory: ./launcher-gui
       run: cargo clippy
