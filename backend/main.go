@@ -345,6 +345,17 @@ func printHelp() {
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 	fmt.Println("        VAULT_INITIAL_USER         The initial vault username to set if the vault folder is empty.")
 	fmt.Println("        VAULT_INITIAL_PASSWORD     The initial vault password to set if the vault folder is empty.")
+	fmt.Println("    SEMANTIC SEARCH CONFIG (ENV VARIABLES):")
+	fmt.Println("        SEMANTIC_SEARCH_ENABLED    Set it to 'YES' to enable semantic search.")
+	fmt.Println("                                   The rest of the options must be configured. Otherwise you will get an error.")
+	fmt.Println("        QDRANT_HOST                Host of the Qdrant database.")
+	fmt.Println("        QDRANT_PORT                GRPC port of the Qdrant database. Default: '6334'")
+	fmt.Println("        QDRANT_API_KEY             API key for the Qdrant database.")
+	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
+	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
+	fmt.Println("        QDRANT_INITIAL_SCAN        By default, when the vault is unlocked,")
+	fmt.Println("                                   a task to scan for missing media in the Qdrant database will be created.")
+	fmt.Println("                                   Set this variable to 'NO' to disable it.")
 }
 
 // Prints version to standard output

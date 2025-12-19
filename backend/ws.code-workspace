@@ -24,6 +24,8 @@
 			"nolint",
 			"pmvd",
 			"pquerna",
+			"Qdrant",
+			"QDRANT",
 			"rgba",
 			"subrip",
 			"totp",
