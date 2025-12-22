@@ -84,7 +84,7 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 	if semanticSearchConfig != nil && semanticSearchConfig.Enabled {
 		semanticSearchSubSystem, err := CreateSemanticSearchSystem(semanticSearchConfig, vault.credentials.GetFingerprint())
 
-		if err != nil {
+		if err == nil {
 			vault.semanticSearch = semanticSearchSubSystem
 			semanticSearchSubSystem.Initialize()
 		} else {
