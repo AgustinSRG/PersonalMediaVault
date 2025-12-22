@@ -283,6 +283,26 @@ func (s *SemanticSearchSystem) initializeInternal() {
 				continue
 			}
 
+			doneCreatingIndexes := false
+
+			for !doneCreatingIndexes {
+				mediaFieldType := qdrant.FieldType_FieldTypeInteger
+
+				_, err := s.qdrantClient.CreateFieldIndex(context.Background(), &qdrant.CreateFieldIndexCollection{
+					CollectionName: s.qDrantCollectionName,
+					FieldName:      "media",
+					FieldType:      &mediaFieldType,
+				})
+
+				if err != nil {
+					LogErrorMsg("[SemanticSearch] Error creating Qdrant index: " + err.Error() + ". Trying again in 2 seconds...")
+					time.Sleep(2 * time.Second)
+					continue
+				}
+
+				doneCreatingIndexes = true
+			}
+
 			LogInfo("[SemanticSearch] Qdrant collection created: " + s.qDrantCollectionName)
 		}
 
