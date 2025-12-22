@@ -351,11 +351,11 @@ func printHelp() {
 	fmt.Println("        QDRANT_HOST                Host of the Qdrant database.")
 	fmt.Println("        QDRANT_PORT                GRPC port of the Qdrant database. Default: '6334'")
 	fmt.Println("        QDRANT_API_KEY             API key for the Qdrant database.")
-	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
-	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
 	fmt.Println("        QDRANT_INITIAL_SCAN        By default, when the vault is unlocked,")
 	fmt.Println("                                   a task to scan for missing media in the Qdrant database will be created.")
 	fmt.Println("                                   Set this variable to 'NO' to disable it.")
+	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
+	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
 }
 
 // Prints version to standard output
