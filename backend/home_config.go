@@ -159,8 +159,8 @@ func (hpc *HomePageConfigManager) readInternal(key []byte) (*HomePageConfigurati
 		}
 
 		// Cleanup elements to prevent issues
-		for i, _ := range mp.Groups {
-			for j, _ := range mp.Groups[i].Elements {
+		for i := range mp.Groups {
+			for j := range mp.Groups[i].Elements {
 				if mp.Groups[i].Elements[j].ElementType > HOME_PAGE_ELEMENT_TYPE_ALBUM {
 					mp.Groups[i].Elements[j].ElementType = HOME_PAGE_ELEMENT_TYPE_MEDIA
 				}
@@ -541,7 +541,7 @@ func (hpc *HomePageConfigManager) OnElementDelete(key []byte, element HomePageEl
 		return nil // Nothing to delete
 	}
 
-	for i, _ := range config.Groups {
+	for i := range config.Groups {
 		if config.Groups[i].FindElement(&element) != -1 {
 			newList := make([]HomePageElement, 0)
 

@@ -113,48 +113,49 @@ func main() {
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
 
-		if arg == "--debug" {
+		switch arg {
+		case "--debug":
 			options.debug = true
-		} else if arg == "--log-requests" {
+		case "--log-requests":
 			options.logRequests = true
-		} else if arg == "--help" || arg == "-h" {
+		case "--help", "-h":
 			printHelp()
 			return
-		} else if arg == "--version" || arg == "-v" {
+		case "--version", "-v":
 			printVersion()
 			return
-		} else if arg == "--daemon" || arg == "-d" {
+		case "--daemon", "-d":
 			options.daemon = true
-		} else if arg == "--clean" || arg == "-c" {
+		case "--clean", "-c":
 			options.clean = true
-		} else if arg == "--cors-insecure" {
+		case "--cors-insecure":
 			CORS_INSECURE_MODE_ENABLED = true
-		} else if arg == "--init" || arg == "-i" {
+		case "--init", "-i":
 			options.initialize = true
-		} else if arg == "--skip-lock" || arg == "-sl" {
+		case "--skip-lock", "-sl":
 			options.skipLock = true
-		} else if arg == "--port" || arg == "-p" {
+		case "--port", "-p":
 			if i == len(args)-1 {
 				fmt.Println("The option '--port' requires a value")
 				os.Exit(1)
 			}
 			options.port = args[i+1]
 			i++
-		} else if arg == "--launch-tag" {
+		case "--launch-tag":
 			if i == len(args)-1 {
 				fmt.Println("The option '--launch-tag' requires a value")
 				os.Exit(1)
 			}
 			LAUNCHER_TAG = args[i+1]
 			i++
-		} else if arg == "--bind" || arg == "-b" {
+		case "--bind", "-b":
 			if i == len(args)-1 {
 				fmt.Println("The option '--bind' requires a value")
 				os.Exit(1)
 			}
 			options.bindAddr = args[i+1]
 			i++
-		} else if arg == "--vault-path" || arg == "-vp" {
+		case "--vault-path", "-vp":
 			if i == len(args)-1 {
 				fmt.Println("The option '--vault-path' requires a value")
 				os.Exit(1)
@@ -162,11 +163,11 @@ func main() {
 			options.vaultPath = args[i+1]
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
-		} else if arg == "--fix-consistency" {
+		case "--fix-consistency":
 			options.fix = true
-		} else if arg == "--recover" {
+		case "--recover":
 			options.recover = true
-		} else if arg == "--cache-size" {
+		case "--cache-size":
 			if i == len(args)-1 {
 				fmt.Println("The option '--cache-size' requires a value")
 				os.Exit(1)
@@ -181,7 +182,7 @@ func main() {
 
 			options.previewsCacheSize = cacheSize
 			i++
-		} else {
+		default:
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
 		}

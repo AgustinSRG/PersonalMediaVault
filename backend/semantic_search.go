@@ -1,5 +1,7 @@
 // Semantic search system
 
+// cSpell:ignore uuid, NewIDUUID
+
 package main
 
 import (
