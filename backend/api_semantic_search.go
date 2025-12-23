@@ -179,7 +179,7 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 
 	mediaIdList := make([]uint64, len(vectors))
 
-	for i := 0; i < len(vectors); i++ {
+	for i := range vectors {
 		mediaIdList[i] = vectors[i].Media
 	}
 
@@ -200,6 +200,90 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 		Count:    total_count,
 		Items:    mediaItemsInfo,
 		Continue: uint64(scanned),
+	}
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
+type SearchMediaSemanticEncodeTextBody struct {
+	Text string `json:"text"`
+}
+
+type SearchMediaSemanticEncodeResponse struct {
+	Vector []float32 `json:"vector"`
+}
+
+const MAX_TEXT_ENCODE_SIZE = 300
+
+func api_searchMediaSemanticEncodeText(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	// Check if system is available
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch == nil {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	semanticSearchStatus := semanticSearch.GetStatus()
+
+	if !semanticSearchStatus.available {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	// Params
+
+	request.Body = http.MaxBytesReader(response, request.Body, JSON_BODY_MAX_LENGTH)
+
+	var p SearchMediaSemanticEncodeTextBody
+
+	err := json.NewDecoder(request.Body).Decode(&p)
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	if len(p.Text) == 0 {
+		ReturnAPIError(response, 400, "EMPTY_TEXT", "The text cannot be empty")
+		return
+	}
+
+	if len(p.Text) > MAX_TEXT_ENCODE_SIZE {
+		p.Text = p.Text[0:MAX_TEXT_ENCODE_SIZE]
+	}
+
+	// Encode
+
+	vector, err := semanticSearch.ClipEncodeText(p.Text)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	// Response
+
+	result := SearchMediaSemanticEncodeResponse{
+		Vector: vector,
 	}
 
 	jsonResult, err := json.Marshal(result)
