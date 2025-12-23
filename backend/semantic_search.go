@@ -418,8 +418,6 @@ const (
 
 // Indexed vector
 type QdrantIndexedVector struct {
-	// Point ID
-	Id *qdrant.PointId
 	// The media ID
 	Media uint64
 	// The type of vector
@@ -454,7 +452,6 @@ func QdrantIndexedVectorFromScoredPoint(p *qdrant.ScoredPoint) *QdrantIndexedVec
 	}
 
 	return &QdrantIndexedVector{
-		Id:         p.Id,
 		Media:      mediaId,
 		VectorType: vectorType,
 		DataHash:   dataHash,
