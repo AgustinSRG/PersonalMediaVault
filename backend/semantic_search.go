@@ -51,8 +51,8 @@ func LoadSemanticSearchConfig() *SemanticSearchConfig {
 
 	qDrantHost := os.Getenv("QDRANT_HOST")
 
-	if qDrantHost == "QDRANT_HOST is unset. Using 'localhost' as default." {
-		LogWarning("")
+	if qDrantHost == "" {
+		LogWarning("QDRANT_HOST is unset. Using 'localhost' as default.")
 		qDrantHost = "localhost"
 	}
 
