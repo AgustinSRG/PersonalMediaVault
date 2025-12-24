@@ -5,6 +5,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -272,6 +275,113 @@ func api_searchMediaSemanticEncodeText(response http.ResponseWriter, request *ht
 	// Encode
 
 	vector, err := semanticSearch.ClipEncodeText(p.Text)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	// Response
+
+	result := SearchMediaSemanticEncodeResponse{
+		Vector: vector,
+	}
+
+	jsonResult, err := json.Marshal(result)
+
+	if err != nil {
+		LogError(err)
+
+		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		return
+	}
+
+	ReturnAPI_JSON(response, request, jsonResult)
+}
+
+func api_searchMediaSemanticEncodeImage(response http.ResponseWriter, request *http.Request) {
+	session := GetSessionFromRequest(request)
+
+	if session == nil {
+		ReturnAPIError(response, 401, "UNAUTHORIZED", "You must provide a valid active session to use this API.")
+		return
+	}
+
+	// Check if system is available
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch == nil {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	semanticSearchStatus := semanticSearch.GetStatus()
+
+	if !semanticSearchStatus.available {
+		ReturnAPIError(response, 404, "SYSTEM_UNAVAILABLE", "The semantic search sub-system is unavailable.")
+		return
+	}
+
+	// Params
+
+	_, p, err := mime.ParseMediaType(request.Header.Get("Content-Type"))
+
+	if err != nil {
+		response.WriteHeader(400)
+		return
+	}
+
+	boundary := p["boundary"]
+
+	reader := multipart.NewReader(request.Body, boundary)
+
+	part, err := reader.NextPart()
+
+	if err != nil {
+		ReturnAPIError(response, 400, "INVALID_MULTIPART_BODY", "Invalid multipart body received")
+		return
+	}
+
+	mazSize := semanticSearch.GetClipImageSizeLimit()
+	image := make([]byte, 0)
+	buf := make([]byte, 1024*1024)
+	finished := false
+
+	for !finished {
+		n, err := part.Read(buf)
+
+		if err != nil && err != io.EOF {
+			ReturnAPIError(response, 400, "INVALID_MULTIPART_BODY", "Invalid multipart body received")
+			return
+		}
+
+		if err == io.EOF {
+			finished = true
+		}
+
+		if n == 0 {
+			continue
+		}
+
+		image = append(image, buf[:n]...)
+
+		if int64(len(image)) > mazSize {
+			ReturnAPIError(response, 413, "IMAGE_TOO_LARGE", "The image size cannot exceed "+fmt.Sprint(mazSize)+" bytes.")
+			return
+		}
+	}
+
+	// Encode
+
+	vector, isInvalidImageError, err := semanticSearch.ClipEncodeImage(image)
+
+	if isInvalidImageError {
+		ReturnAPIError(response, 400, "INVALID_IMAGE", "Invalid image received")
+		return
+	}
 
 	if err != nil {
 		LogError(err)

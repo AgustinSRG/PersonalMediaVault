@@ -85,6 +85,7 @@ Also, here is the list environment variables to configure semantic search:
 | QDRANT_INITIAL_SCAN | By default, when the vault is unlocked, a task to scan for missing media in the Qdrant database will be created. Set this variable to `NO` to disable it. |
 | CLIP_API_BASE | Base URL of the CLIP API (provided by `pmv-ai-service`). Example: `http://localhost:5000/clip` |
 | CLIP_API_AUTH | Value of the `Authorization` header in order to use the CLIP API. |
+| CLIP_IMAGE_SIZE_LIMIT_MB | Limit on size (MB) before the images are discarded from being encoded by CLIP. Default: `20` |
 
 ## Documentation
 

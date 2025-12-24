@@ -357,6 +357,7 @@ func printHelp() {
 	fmt.Println("                                   Set this variable to 'NO' to disable it.")
 	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
 	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
+	fmt.Println("        CLIP_IMAGE_SIZE_LIMIT_MB   Limit on size (MB) before the images are discarded from being encoded by CLIP. Default: '20'")
 }
 
 // Prints version to standard output

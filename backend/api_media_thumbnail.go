@@ -55,9 +55,7 @@ func api_editMediaThumbnail(response http.ResponseWriter, request *http.Request)
 	part, err := reader.NextPart()
 
 	if err != nil {
-		LogError(err)
-
-		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
+		ReturnAPIError(response, 400, "INVALID_MULTIPART_BODY", "Invalid multipart body received")
 		return
 	}
 

@@ -29,16 +29,18 @@ const (
 
 // Semantic search configuration
 type SemanticSearchConfig struct {
-	Enabled           bool
-	QdrantHost        string
-	QdrantPort        int
-	QdrantApiKey      string
-	QdrantInitialScan bool
-	ClipApiBaseUrl    string
-	ClipApiAuth       string
+	Enabled            bool
+	QdrantHost         string
+	QdrantPort         int
+	QdrantApiKey       string
+	QdrantInitialScan  bool
+	ClipApiBaseUrl     string
+	ClipApiAuth        string
+	ClipImageSizeLimit uint64
 }
 
 const QDRANT_DEFAULT_PORT = 6334
+const CLIP_DEFAULT_SIZE_LIMIT_MB = 20
 
 func LoadSemanticSearchConfig() *SemanticSearchConfig {
 	if os.Getenv("SEMANTIC_SEARCH_ENABLED") != "YES" {
@@ -86,14 +88,28 @@ func LoadSemanticSearchConfig() *SemanticSearchConfig {
 		LogWarning("CLIP_API_AUTH is empty. This will probably cause authentication errors when calling the CLIP API.")
 	}
 
+	clipImageSizeLimit := uint64(CLIP_DEFAULT_SIZE_LIMIT_MB) * 1024 * 1024
+	clipImageSizeLimitMbStr := os.Getenv("CLIP_IMAGE_SIZE_LIMIT_MB")
+
+	if clipImageSizeLimitMbStr != "" {
+		v, err := strconv.ParseUint(clipImageSizeLimitMbStr, 10, 32)
+
+		if err == nil {
+			clipImageSizeLimit = v * 1024 * 1024
+		} else {
+			LogWarning("Error parsing CLIP_IMAGE_SIZE_LIMIT_MB value: " + err.Error() + " | Using " + fmt.Sprint(CLIP_DEFAULT_SIZE_LIMIT_MB) + " as fallback value.")
+		}
+	}
+
 	return &SemanticSearchConfig{
-		Enabled:           true,
-		QdrantHost:        qDrantHost,
-		QdrantPort:        qdrantPort,
-		QdrantApiKey:      qdrantApiKey,
-		QdrantInitialScan: qdrantInitialScan,
-		ClipApiBaseUrl:    clipApiBase,
-		ClipApiAuth:       clipApiAuth,
+		Enabled:            true,
+		QdrantHost:         qDrantHost,
+		QdrantPort:         qdrantPort,
+		QdrantApiKey:       qdrantApiKey,
+		QdrantInitialScan:  qdrantInitialScan,
+		ClipApiBaseUrl:     clipApiBase,
+		ClipApiAuth:        clipApiAuth,
+		ClipImageSizeLimit: clipImageSizeLimit,
 	}
 }
 
@@ -118,6 +134,7 @@ type SemanticSearchSystem struct {
 	clipEncodeTextUrl    string
 	clipEncodeImageUrl   string
 	clipApiAuth          string
+	clipImageSizeLimit   int64
 
 	// Status
 	status   SemanticSearchSystemStatus
@@ -148,6 +165,7 @@ func CreateSemanticSearchSystem(config *SemanticSearchConfig, vaultFingerprint s
 		clipEncodeTextUrl:    clipEncodeTextUrl,
 		clipEncodeImageUrl:   clipEncodeImageUrl,
 		clipApiAuth:          config.ClipApiAuth,
+		clipImageSizeLimit:   int64(config.ClipImageSizeLimit),
 
 		status: SemanticSearchSystemStatus{
 			available:           false,
@@ -173,6 +191,11 @@ func (s *SemanticSearchSystem) SetStatusAvailable(clipModelDimensions uint) {
 
 	s.status.available = true
 	s.status.clipModelDimensions = clipModelDimensions
+}
+
+// Gets the image size limit for the CLIP encoder
+func (s *SemanticSearchSystem) GetClipImageSizeLimit() int64 {
+	return s.clipImageSizeLimit
 }
 
 type ClipModelMetadata struct {
@@ -374,15 +397,15 @@ func (s *SemanticSearchSystem) ClipEncodeText(text string) ([]float32, error) {
 	return s.clipEncodeTextInternal(text)
 }
 
-func (s *SemanticSearchSystem) clipEncodeImageInternal(image []byte) ([]float32, error) {
+func (s *SemanticSearchSystem) clipEncodeImageInternal(image []byte) ([]float32, bool, error) {
 	resp, err := http.Post(s.clipEncodeImageUrl, "application/json", bytes.NewReader(image))
 
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New("not successful status code: " + fmt.Sprint(resp.StatusCode))
+		return nil, resp.StatusCode == 400, errors.New("not successful status code: " + fmt.Sprint(resp.StatusCode))
 	}
 
 	var p ClipVectorResponse
@@ -390,21 +413,21 @@ func (s *SemanticSearchSystem) clipEncodeImageInternal(image []byte) ([]float32,
 	err = json.NewDecoder(resp.Body).Decode(&p)
 
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if p.Features == nil {
-		return nil, errors.New("received nil features")
+		return nil, false, errors.New("received nil features")
 	}
 
-	return p.Features, nil
+	return p.Features, false, nil
 }
 
 // Encodes image into a vector
 // image - Bytes of the image file
 // Note: Make sure the file is not too big
 // The file must be validated before calling this function
-func (s *SemanticSearchSystem) ClipEncodeImage(image []byte) ([]float32, error) {
+func (s *SemanticSearchSystem) ClipEncodeImage(image []byte) (vector []float32, isInvalidImageError bool, err error) {
 	return s.clipEncodeImageInternal(image)
 }
 
