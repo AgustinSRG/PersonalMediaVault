@@ -146,10 +146,10 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 
 	page_items_meta := GetMediaMinInfoList(page_items, session)
 
-	for i := 0; i < len(page_items_meta); i++ {
+	for i := range page_items_meta {
 		mediaInfo := page_items_meta[i]
 
-		if mediaInfo.Type == MediaTypeDeleted {
+		if mediaInfo.Type == MediaTypeDeleted && mediaInfo.isDeleted {
 			if tagToSearch != "" {
 				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
 
@@ -275,10 +275,10 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 
 	page_items_meta := GetMediaMinInfoList(page_items, session)
 
-	for i := 0; i < len(page_items_meta); i++ {
+	for i := range page_items_meta {
 		mediaInfo := page_items_meta[i]
 
-		if mediaInfo.Type == MediaTypeDeleted {
+		if mediaInfo.Type == MediaTypeDeleted && mediaInfo.isDeleted {
 			if tagToSearch != "" {
 				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
 

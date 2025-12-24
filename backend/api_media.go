@@ -26,6 +26,7 @@ type MediaListAPIItem struct {
 	Tags      []uint64  `json:"tags"`
 	Thumbnail string    `json:"thumbnail"`
 	Duration  float64   `json:"duration"`
+	isDeleted bool      // True only if the media was deleted
 }
 
 // Gets media minified info (preview)
@@ -1541,6 +1542,14 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
+	}
+
+	// Remove from semantic search index
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.DeleteVectors(request.Context(), media_id)
 	}
 
 	// Delete

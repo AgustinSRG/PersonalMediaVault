@@ -196,6 +196,14 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 
 	mediaItemsInfo := GetMediaMinInfoList(mediaIdList, session)
 
+	for i := range mediaItemsInfo {
+		mediaInfo := mediaItemsInfo[i]
+
+		if mediaInfo.Type == MediaTypeDeleted && mediaInfo.isDeleted {
+			semanticSearch.DeleteVectors(request.Context(), mediaIdList[i])
+		}
+	}
+
 	// Result
 
 	result := AdvancedSearchResultResponse{

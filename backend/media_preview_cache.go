@@ -240,6 +240,7 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 		Thumbnail: "",
 		Duration:  0,
 		Tags:      make([]uint64, 0),
+		isDeleted: false,
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
@@ -252,6 +253,7 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 
 	if meta == nil {
 		c.removeEntry(media_id)
+		result.isDeleted = true
 		return &result
 	}
 
