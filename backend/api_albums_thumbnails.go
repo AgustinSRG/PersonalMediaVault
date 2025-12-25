@@ -291,7 +291,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 		if err != nil && err != io.EOF {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -311,7 +311,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 		if err != nil {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -319,7 +319,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 		}
 	}
 
-	f.Close()
+	_ = f.Close()
 
 	// Probe uploaded file
 
@@ -372,7 +372,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		os.Remove(thumb_encrypted_file)
+		_ = os.Remove(thumb_encrypted_file)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -383,7 +383,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 	success, asset_path, asset_lock := GetVault().albums.AcquireThumbnailAsset(thumb_asset)
 
 	if !success {
-		os.Remove(thumb_encrypted_file)
+		_ = os.Remove(thumb_encrypted_file)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Album not found")
 		return
@@ -406,7 +406,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		os.Remove(asset_path)
+		_ = os.Remove(asset_path)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
@@ -419,14 +419,14 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		os.Remove(asset_path)
+		_ = os.Remove(asset_path)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
 	}
 
 	if !success {
-		os.Remove(asset_path)
+		_ = os.Remove(asset_path)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Album not found")
 		return
@@ -440,7 +440,7 @@ func api_editAlbumThumbnail(response http.ResponseWriter, request *http.Request)
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 

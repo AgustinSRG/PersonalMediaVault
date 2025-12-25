@@ -39,7 +39,7 @@ func FixVaultConsistency(vault *Vault) {
 
 					if dirs[i].Name() != prefixByteHex {
 						LogInfo("Found inconsistency: Media folder prefix invalid 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_id) + "' (removing)")
-						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
+						_ = os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
 						continue
 					}
 
@@ -54,7 +54,7 @@ func FixVaultConsistency(vault *Vault) {
 					if !exists {
 						// Remove directory
 						LogInfo("Found inconsistency: Media folder not indexed 'media/" + dirs[i].Name() + "/" + fmt.Sprint(media_id) + "' (removing)")
-						os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
+						_ = os.RemoveAll(path.Join(vault.path, "media", dirs[i].Name(), fmt.Sprint(media_id)))
 					}
 				}
 

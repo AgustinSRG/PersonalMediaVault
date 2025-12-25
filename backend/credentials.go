@@ -135,7 +135,7 @@ func InitializeCredentialsPath(base_path string) {
 
 		fmt.Println("Vault does not exists. Please provide a set of credentials to create one.")
 
-		var username string = os.Getenv("PMV_INIT_SET_USER")
+		var username = os.Getenv("PMV_INIT_SET_USER")
 
 		for username == "" {
 			fmt.Print("Enter Username: ")
@@ -159,8 +159,8 @@ func InitializeCredentialsPath(base_path string) {
 			}
 		}
 
-		var password string = os.Getenv("PMV_INIT_SET_PASSWORD")
-		var password_repeat string = os.Getenv("PMV_INIT_SET_PASSWORD")
+		var password = os.Getenv("PMV_INIT_SET_PASSWORD")
+		var password_repeat = os.Getenv("PMV_INIT_SET_PASSWORD")
 
 		for password == "" || password != password_repeat {
 			fmt.Print("Enter Password: ")
@@ -390,7 +390,7 @@ func (manager *VaultCredentialsManager) InitAccountCredentials(user string, pass
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 
-	var accountIndex int = -1
+	var accountIndex = -1
 
 	for i, ac := range manager.credentials.Accounts {
 		if ac.User == user {
@@ -801,7 +801,7 @@ func (manager *VaultCredentialsManager) getAccount(user string) (found bool, res
 	} else {
 		result.root = false
 
-		var foundAccount bool = false
+		var foundAccount = false
 
 		for i := 0; i < len(manager.credentials.Accounts); i++ {
 			account := &manager.credentials.Accounts[i]

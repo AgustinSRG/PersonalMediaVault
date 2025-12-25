@@ -464,7 +464,7 @@ func (media *MediaAsset) Delete() {
 	media.lock.RequestWrite()
 	media.lock.StartWrite()
 
-	os.Remove(path.Join(media.path, "meta.pmv"))
+	_ = os.Remove(path.Join(media.path, "meta.pmv"))
 
 	media.lock.EndWrite()
 
@@ -505,7 +505,7 @@ func (media *MediaAsset) deleteAll() {
 	media.lock.RequestWrite()
 	media.lock.StartWrite()
 
-	os.RemoveAll(media.path)
+	_ = os.RemoveAll(media.path)
 
 	media.lock.EndWrite()
 }

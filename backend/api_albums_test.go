@@ -642,14 +642,15 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 	containsAlbum2 = false
 
 	for i := 0; i < len(res3); i++ {
-		if res3[i].Id == album1 {
+		switch res3[i].Id {
+		case album1:
 			containsAlbum1 = true
 
 			if res3[i].Size != 2 {
 				t.Error(ErrorMismatch("AlbumSize", fmt.Sprint(res3[i].Size), fmt.Sprint(2)))
 			}
 
-		} else if res3[i].Id == album2 {
+		case album2:
 			containsAlbum2 = true
 		}
 	}

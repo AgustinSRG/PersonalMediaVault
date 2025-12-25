@@ -35,13 +35,13 @@ func CopyFile(src, dst string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
+	defer source.Close() //nolint:errcheck
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
+	defer destination.Close() //nolint:errcheck
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }

@@ -20,7 +20,7 @@ func TestVaultTagManager(t *testing.T) {
 
 	// Initialize new tag manager
 
-	var tm *VaultTagManager = GetVault().tags
+	var tm = GetVault().tags
 
 	// Tests start here
 	//////////////////////////

@@ -213,5 +213,5 @@ func TestIndexedList(t *testing.T) {
 
 	f.Close()
 
-	os.Remove(test_file)
+	_ = os.Remove(test_file)
 }

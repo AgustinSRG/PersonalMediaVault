@@ -213,7 +213,7 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	var seed int64 = time.Now().UnixMilli()
+	var seed = time.Now().UnixMilli()
 	seedStr := request.URL.Query().Get("seed")
 	if seedStr != "" {
 		seed, err = strconv.ParseInt(seedStr, 10, 64)

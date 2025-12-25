@@ -1120,7 +1120,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 
@@ -1393,7 +1393,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 				asset_lock.RequestWrite()
 				asset_lock.StartWrite()
 
-				os.Remove(asset_path)
+				_ = os.Remove(asset_path)
 
 				asset_lock.EndWrite()
 

@@ -692,7 +692,7 @@ type FFmpegReadErrStatus struct {
 func ffmpegReadStdErr(pipe io.ReadCloser, readErrStatus *FFmpegReadErrStatus, wg *sync.WaitGroup) {
 	reader := bufio.NewReader(pipe)
 
-	var finished bool = false
+	var finished = false
 	errorTraceLastLine := ""
 
 	for !finished {
@@ -729,7 +729,7 @@ func ffmpegReadStdErr(pipe io.ReadCloser, readErrStatus *FFmpegReadErrStatus, wg
 func ffmpegReadStdOut(pipe io.ReadCloser, wg *sync.WaitGroup, cmd *exec.Cmd, input_duration float64, progress_reporter func(progress float64) bool) {
 	reader := bufio.NewReader(pipe)
 
-	var finished bool = false
+	var finished = false
 
 	for !finished {
 		line, err := reader.ReadString('\n')

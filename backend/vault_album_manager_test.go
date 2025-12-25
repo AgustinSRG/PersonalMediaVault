@@ -34,7 +34,7 @@ func TestVaultAlbumManager(t *testing.T) {
 
 	// Initialize new albums manager
 
-	var tm *VaultAlbumsManager = GetVault().albums
+	var tm = GetVault().albums
 
 	// Tests start here
 	//////////////////////////
