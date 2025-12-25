@@ -331,6 +331,16 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
+	// Index (semantic search)
+
+	if meta.OriginalEncoded {
+		semanticSearch := GetVault().semanticSearch
+
+		if semanticSearch != nil && semanticSearch.GetStatus().available {
+			semanticSearch.RequestMediaIndexing(media_id, session.key, false)
+		}
+	}
+
 	// Response
 
 	response.WriteHeader(200)

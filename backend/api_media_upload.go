@@ -849,6 +849,16 @@ func BackgroundTaskSaveOriginal(session *ActiveSession, media_id uint64, tempFil
 	}
 
 	GetVault().media.ReleaseMediaResource(media_id)
+
+	// Index (semantic search)
+
+	if meta.OriginalEncoded {
+		semanticSearch := GetVault().semanticSearch
+
+		if semanticSearch != nil && semanticSearch.GetStatus().available {
+			semanticSearch.RequestMediaIndexing(media_id, session.key, false)
+		}
+	}
 }
 
 func AddMediaToMainIndex(media_id uint64) error {

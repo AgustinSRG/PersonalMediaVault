@@ -7,9 +7,12 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	encrypted_storage "github.com/AgustinSRG/encrypted-storage"
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -139,6 +143,12 @@ type SemanticSearchSystem struct {
 	// Status
 	status   SemanticSearchSystemStatus
 	statusMu *sync.Mutex
+
+	// Qdrant pending state
+	qDrantBusy          map[uint64]*sync.WaitGroup
+	qDrantPendingIndex  map[uint64]bool
+	qDrantPendingDelete map[uint64]bool
+	qDrantPendingMu     *sync.Mutex
 }
 
 // Creates instance of SemanticSearchSystem
@@ -172,6 +182,11 @@ func CreateSemanticSearchSystem(config *SemanticSearchConfig, vaultFingerprint s
 			clipModelDimensions: 0,
 		},
 		statusMu: &sync.Mutex{},
+
+		qDrantBusy:          make(map[uint64]*sync.WaitGroup),
+		qDrantPendingIndex:  make(map[uint64]bool),
+		qDrantPendingDelete: make(map[uint64]bool),
+		qDrantPendingMu:     &sync.Mutex{},
 	}, nil
 }
 
@@ -449,6 +464,24 @@ type QdrantIndexedVector struct {
 	VectorType QdrantIndexedVectorType
 	// A hash of the data
 	DataHash string
+	// The vector
+	Vector []float32
+}
+
+func NewQdrantIndexedVector(vector []float32, media_id uint64, vectorType QdrantIndexedVectorType, dataHash string) (*QdrantIndexedVector, error) {
+	id, err := uuid.NewV7()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &QdrantIndexedVector{
+		Id:         qdrant.NewIDUUID(id.String()),
+		Media:      media_id,
+		VectorType: vectorType,
+		DataHash:   dataHash,
+		Vector:     vector,
+	}, nil
 }
 
 func QdrantIndexedVectorFromScoredPoint(p *qdrant.ScoredPoint) *QdrantIndexedVector {
@@ -476,11 +509,26 @@ func QdrantIndexedVectorFromScoredPoint(p *qdrant.ScoredPoint) *QdrantIndexedVec
 		}
 	}
 
+	var vector []float32 = nil
+
+	if p.Vectors != nil {
+		vo := p.Vectors.GetVector()
+
+		if vo != nil {
+			dense := vo.GetDense()
+
+			if dense != nil {
+				vector = dense.GetData()
+			}
+		}
+	}
+
 	return &QdrantIndexedVector{
 		Id:         p.Id,
 		Media:      mediaId,
 		VectorType: vectorType,
 		DataHash:   dataHash,
+		Vector:     vector,
 	}
 }
 
@@ -568,24 +616,6 @@ func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *Semantic
 	return result, nil
 }
 
-// Deletes all vector associated with a media asset
-func (s *SemanticSearchSystem) DeleteVectorsByMedia(ctx context.Context, media uint64) error {
-	_, err := s.qdrantClient.Delete(ctx, &qdrant.DeletePoints{
-		CollectionName: s.qDrantCollectionName,
-		Points: &qdrant.PointsSelector{
-			PointsSelectorOneOf: &qdrant.PointsSelector_Filter{
-				Filter: &qdrant.Filter{
-					Must: []*qdrant.Condition{
-						qdrant.NewMatchInt(QDRANT_FIELD_MEDIA, int64(media)),
-					},
-				},
-			},
-		},
-	})
-
-	return err
-}
-
 // Deletes vectors by IDs
 func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*QdrantIndexedVector) error {
 	if len(vectors) == 0 {
@@ -612,34 +642,334 @@ func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*Qdr
 	return err
 }
 
-// Inserts a vector into the Qdrant database
-// media - ID of the associated media
-// vectorType - Vector type
-// dataHash - Data hash
-// vector - The vector
-func (s *SemanticSearchSystem) InsertVector(ctx context.Context, media uint64, vectorType QdrantIndexedVectorType, dataHash string, vector []float32) error {
-	id, err := uuid.NewV7()
-
-	if err != nil {
-		return err
+// Inserts vectors into the Qdrant database
+// ctx - The execution context
+// vectors - List of vectors to insert. make sure all vectors contain a non-nil 'Vector' field
+func (s *SemanticSearchSystem) InsertVectors(ctx context.Context, vectors []*QdrantIndexedVector) error {
+	if len(vectors) == 0 {
+		return nil
 	}
 
-	idStr := id.String()
+	points := make([]*qdrant.PointStruct, len(vectors))
 
-	_, err = s.qdrantClient.Upsert(ctx, &qdrant.UpsertPoints{
+	for i, v := range vectors {
+		points[i] = &qdrant.PointStruct{
+			Id:      v.Id,
+			Vectors: qdrant.NewVectors(v.Vector...),
+			Payload: qdrant.NewValueMap(map[string]any{
+				QDRANT_FIELD_MEDIA:       int64(v.Media),
+				QDRANT_FIELD_VECTOR_TYPE: int64(v.VectorType),
+				QDRANT_FIELD_DATA_HASH:   v.DataHash,
+			}),
+		}
+	}
+
+	_, err := s.qdrantClient.Upsert(ctx, &qdrant.UpsertPoints{
 		CollectionName: s.qDrantCollectionName,
-		Points: []*qdrant.PointStruct{
-			{
-				Id:      qdrant.NewIDUUID(idStr),
-				Vectors: qdrant.NewVectors(vector...),
-				Payload: qdrant.NewValueMap(map[string]any{
-					QDRANT_FIELD_MEDIA:       int64(media),
-					QDRANT_FIELD_VECTOR_TYPE: int64(vectorType),
-					QDRANT_FIELD_DATA_HASH:   dataHash,
-				}),
-			},
-		},
+		Points:         points,
 	})
 
 	return err
+}
+
+func (s *SemanticSearchSystem) removeMediaFromQdrantIndex(media_id uint64) {
+	vectors, err := s.GetIndexedVectors(context.Background(), media_id)
+
+	if err != nil {
+		LogErrorMsg("Error fetching indexed vectors: " + err.Error())
+		return
+	}
+
+	err = s.DeleteVectors(context.Background(), vectors)
+
+	if err != nil {
+		LogErrorMsg("Error deleting vectors: " + err.Error())
+	}
+}
+
+func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_asset uint64, key []byte) (image []byte, err error) {
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		return nil, nil
+	}
+
+	found, asset_path, asset_lock := media.AcquireAsset(original_asset, ASSET_SINGLE_FILE)
+
+	if !found {
+		GetVault().media.ReleaseMediaResource(media_id)
+		return nil, nil
+	}
+
+	asset_lock.StartRead() // Start reading the asset
+
+	rs, err := encrypted_storage.CreateFileBlockEncryptReadStream(asset_path, key, FILE_PERMISSION)
+
+	if err != nil {
+		asset_lock.EndRead()
+		media.ReleaseAsset(original_asset)
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		return nil, errors.New("error reading asset file (" + asset_path + "): " + err.Error())
+	}
+
+	sizeLimit := s.clipImageSizeLimit
+
+	if rs.FileSize() > sizeLimit {
+		rs.Close()
+		asset_lock.EndRead()
+		media.ReleaseAsset(original_asset)
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		return nil, nil
+	}
+
+	imageData, err := io.ReadAll(rs)
+
+	rs.Close()
+	asset_lock.EndRead()
+	media.ReleaseAsset(original_asset)
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	return imageData, err
+
+}
+
+func (s *SemanticSearchSystem) addOrUpdateMediaIndex(media_id uint64, key []byte) {
+	vectors, err := s.GetIndexedVectors(context.Background(), media_id)
+
+	if err != nil {
+		LogErrorMsg("Error fetching indexed vectors: " + err.Error())
+		return
+	}
+
+	vectorsTitle := make([]*QdrantIndexedVector, 0)
+	vectorsImage := make([]*QdrantIndexedVector, 0)
+
+	titleHash := ""
+	imageHash := ""
+
+	for _, v := range vectors {
+		switch v.VectorType {
+		case VECTOR_TYPE_TEXT:
+			vectorsTitle = append(vectorsTitle, v)
+			titleHash = v.DataHash
+		case VECTOR_TYPE_IMAGE:
+			vectorsImage = append(vectorsImage, v)
+			imageHash = v.DataHash
+		}
+	}
+
+	media := GetVault().media.AcquireMediaResource(media_id)
+
+	if media == nil {
+		err = s.DeleteVectors(context.Background(), vectors)
+
+		if err != nil {
+			LogErrorMsg("Error deleting vectors: " + err.Error())
+		}
+
+		return
+	}
+
+	meta, err := media.ReadMetadata(key)
+
+	if err != nil {
+		LogError(err)
+
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		return
+	}
+
+	GetVault().media.ReleaseMediaResource(media_id)
+
+	if meta == nil {
+		err = s.DeleteVectors(context.Background(), vectors)
+
+		if err != nil {
+			LogErrorMsg("Error deleting vectors: " + err.Error())
+		}
+
+		return
+	}
+
+	vectorsToInsert := make([]*QdrantIndexedVector, 0)
+
+	// Title
+
+	actualTitleHash := strings.ToLower(hex.EncodeToString(sha256.New().Sum([]byte(meta.Title))))
+
+	if actualTitleHash != titleHash || len(vectorsTitle) != 1 {
+		// Re-index of title vector required
+
+		err = s.DeleteVectors(context.Background(), vectorsTitle)
+
+		if err != nil {
+			LogErrorMsg("Error deleting vectors: " + err.Error())
+			return
+		}
+
+		if len(meta.Title) > 0 {
+			features, err := s.ClipEncodeText(meta.Title)
+
+			if err != nil {
+				LogErrorMsg("Error encoding title: " + err.Error())
+				return
+			}
+
+			vectorTitle, err := NewQdrantIndexedVector(features, media_id, VECTOR_TYPE_TEXT, actualTitleHash)
+
+			if err != nil {
+				LogErrorMsg("Error creating vector: " + err.Error())
+				return
+			}
+
+			vectorsToInsert = append(vectorsToInsert, vectorTitle)
+		}
+	}
+
+	// Image
+
+	actualImageHash := fmt.Sprint(meta.OriginalAsset)
+
+	if actualImageHash != imageHash || len(vectorsImage) != 1 {
+		// Re-index of image vector required
+
+		err = s.DeleteVectors(context.Background(), vectorsImage)
+
+		if err != nil {
+			LogErrorMsg("Error deleting vectors: " + err.Error())
+			return
+		}
+
+		if meta.Type == MediaTypeImage && meta.OriginalEncoded {
+			image, err := s.extractImageFromMedia(media_id, meta.OriginalAsset, key)
+
+			if err != nil {
+				LogError(err)
+			}
+
+			if image != nil {
+				features, isInvalidImageError, err := s.ClipEncodeImage(image)
+
+				if isInvalidImageError {
+					LogErrorMsg("Invalid image when encoding for indexing. media_id=" + fmt.Sprint(media_id) + ", asset_id=" + fmt.Sprint(meta.OriginalAsset))
+					return
+				} else if err != nil {
+					LogErrorMsg("Error encoding image: " + err.Error())
+					return
+				} else {
+					vectorImage, err := NewQdrantIndexedVector(features, media_id, VECTOR_TYPE_IMAGE, actualImageHash)
+
+					if err != nil {
+						LogErrorMsg("Error creating vector: " + err.Error())
+						return
+					}
+
+					vectorsToInsert = append(vectorsToInsert, vectorImage)
+				}
+			}
+		}
+	}
+
+	// Insert vectors
+
+	err = s.InsertVectors(context.Background(), vectorsToInsert)
+
+	if err != nil {
+		LogErrorMsg("Error inserting vectors: " + err.Error())
+	}
+}
+
+func (s *SemanticSearchSystem) doQdrantIndexingOperation(media_id uint64, isDeletion bool, key []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	finished := false
+
+	for !finished {
+		if isDeletion {
+			s.removeMediaFromQdrantIndex(media_id)
+			finished = true
+		} else {
+			s.addOrUpdateMediaIndex(media_id, key)
+		}
+
+		s.qDrantPendingMu.Lock()
+
+		if finished {
+			delete(s.qDrantPendingDelete, media_id)
+			delete(s.qDrantPendingIndex, media_id)
+			delete(s.qDrantBusy, media_id)
+		} else if s.qDrantPendingDelete[media_id] {
+			delete(s.qDrantPendingDelete, media_id)
+			isDeletion = true
+		} else if s.qDrantPendingIndex[media_id] {
+			delete(s.qDrantPendingIndex, media_id)
+			isDeletion = false
+		} else {
+			delete(s.qDrantBusy, media_id)
+			finished = true
+		}
+
+		s.qDrantPendingMu.Unlock()
+	}
+}
+
+// Request for the vectors associated with a media asset to be deleted
+// from the Qdrant database
+func (s *SemanticSearchSystem) RequestMediaIndexRemoval(media_id uint64, key []byte, wait bool) {
+	s.qDrantPendingMu.Lock()
+
+	waitGroup := s.qDrantBusy[media_id]
+
+	canStartOperation := waitGroup == nil
+
+	if waitGroup != nil {
+		delete(s.qDrantPendingIndex, media_id)
+
+		s.qDrantPendingDelete[media_id] = true
+	} else {
+		waitGroup = &sync.WaitGroup{}
+		waitGroup.Add(1)
+		s.qDrantBusy[media_id] = waitGroup
+	}
+
+	s.qDrantPendingMu.Unlock()
+
+	if canStartOperation {
+		go s.doQdrantIndexingOperation(media_id, true, key, waitGroup)
+	}
+
+	if wait {
+		waitGroup.Wait()
+	}
+}
+
+func (s *SemanticSearchSystem) RequestMediaIndexing(media_id uint64, key []byte, wait bool) {
+	s.qDrantPendingMu.Lock()
+
+	waitGroup := s.qDrantBusy[media_id]
+
+	canStartOperation := waitGroup == nil
+
+	if waitGroup != nil {
+		if !s.qDrantPendingDelete[media_id] {
+			s.qDrantPendingIndex[media_id] = true
+		}
+	} else {
+		waitGroup = &sync.WaitGroup{}
+		waitGroup.Add(1)
+		s.qDrantBusy[media_id] = waitGroup
+	}
+
+	s.qDrantPendingMu.Unlock()
+
+	if canStartOperation {
+		go s.doQdrantIndexingOperation(media_id, false, key, waitGroup)
+	}
+
+	if wait {
+		waitGroup.Wait()
+	}
 }

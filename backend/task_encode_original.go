@@ -564,6 +564,14 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		media.ReleaseAsset(old_asset)
 	}
 
+	// Index (semantic search)
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.RequestMediaIndexing(task.definition.MediaId, task.session.key, false)
+	}
+
 	// Finish task
 	GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 	DeleteTemporalPath(tempFolder)

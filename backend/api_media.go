@@ -753,6 +753,14 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
+	// Index (semantic search)
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.RequestMediaIndexing(media_id, session.key, false)
+	}
+
 	response.WriteHeader(200)
 }
 
@@ -1554,11 +1562,7 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 	semanticSearch := GetVault().semanticSearch
 
 	if semanticSearch != nil && semanticSearch.GetStatus().available {
-		err = semanticSearch.DeleteVectorsByMedia(request.Context(), media_id)
-
-		if err != nil {
-			LogError(err)
-		}
+		semanticSearch.RequestMediaIndexRemoval(media_id, session.key, true)
 	}
 
 	// Delete

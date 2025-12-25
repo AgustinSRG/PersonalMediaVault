@@ -195,11 +195,7 @@ func api_searchMediaSemantic(response http.ResponseWriter, request *http.Request
 	// Read meta of media items
 
 	mediaItemsInfo := GetMediaMinInfoList(mediaIdList, session, func(media_id uint64) {
-		err := semanticSearch.DeleteVectorsByMedia(request.Context(), media_id)
-
-		if err != nil {
-			LogError(err)
-		}
+		semanticSearch.RequestMediaIndexRemoval(media_id, session.key, false)
 	})
 
 	// Result
