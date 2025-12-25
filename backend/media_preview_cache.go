@@ -197,7 +197,7 @@ func (c *MediaPreviewCache) resolveEntry(media_id uint64, data *MediaListAPIItem
 }
 
 // Gets media preview from cache of from the vault data
-func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaListAPIItem {
+func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) (info *MediaListAPIItem, deleted bool) {
 	entry, wg := c.getEntryOrMarkAsPending(media_id)
 
 	if entry != nil {
@@ -217,13 +217,13 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 
 			c.mutex.Unlock()
 
-			return data_tmp
+			return data_tmp, false
 		} else {
 			data_tmp := entry.data
 
 			c.mutex.Unlock()
 
-			return data_tmp
+			return data_tmp, false
 		}
 	}
 
@@ -240,7 +240,6 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 		Thumbnail: "",
 		Duration:  0,
 		Tags:      make([]uint64, 0),
-		isDeleted: false,
 	}
 
 	media := GetVault().media.AcquireMediaResource(media_id)
@@ -253,8 +252,7 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 
 	if meta == nil {
 		c.removeEntry(media_id)
-		result.isDeleted = true
-		return &result
+		return &result, true
 	}
 
 	result.Type = meta.Type
@@ -275,5 +273,5 @@ func (c *MediaPreviewCache) GetMediaPreview(media_id uint64, key []byte) *MediaL
 
 	c.resolveEntry(media_id, &result)
 
-	return &result
+	return &result, false
 }

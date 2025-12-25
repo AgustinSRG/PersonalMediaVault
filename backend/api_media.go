@@ -26,24 +26,29 @@ type MediaListAPIItem struct {
 	Tags      []uint64  `json:"tags"`
 	Thumbnail string    `json:"thumbnail"`
 	Duration  float64   `json:"duration"`
-	isDeleted bool      // True only if the media was deleted
 }
 
 // Gets media minified info (preview)
-func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
-	return GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
+func GetMediaMinInfo(media_id uint64, session *ActiveSession, onDeletedItemFound func(uint64)) *MediaListAPIItem {
+	info, deleted := GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
+
+	if deleted && onDeletedItemFound != nil {
+		go onDeletedItemFound(media_id)
+	}
+
+	return info
 }
 
 // Gets media minified info (preview) for a single item in a list
 // Runs in a co-routine
-func GetMediaMinInfoListTask(list []uint64, session *ActiveSession, result []*MediaListAPIItem, index int, wg *sync.WaitGroup) {
+func GetMediaMinInfoListTask(list []uint64, session *ActiveSession, result []*MediaListAPIItem, index int, wg *sync.WaitGroup, onDeletedItemFound func(uint64)) {
 	defer wg.Done()
-	result[index] = GetMediaMinInfo(list[index], session)
+	result[index] = GetMediaMinInfo(list[index], session, onDeletedItemFound)
 }
 
 // Gets media minified info (preview) for a list
 // Uses co-routines
-func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPIItem {
+func GetMediaMinInfoList(list []uint64, session *ActiveSession, onDeletedItemFound func(uint64)) []*MediaListAPIItem {
 	result := make([]*MediaListAPIItem, len(list))
 
 	if len(list) == 0 {
@@ -55,7 +60,7 @@ func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPII
 	wg.Add(len(list))
 
 	for i := range list {
-		go GetMediaMinInfoListTask(list, session, result, i, wg)
+		go GetMediaMinInfoListTask(list, session, result, i, wg, onDeletedItemFound)
 	}
 
 	wg.Wait()
@@ -380,7 +385,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	// Related media
 
 	if len(meta.Related) > 0 {
-		result.Related = GetMediaMinInfoList(meta.Related, session)
+		result.Related = GetMediaMinInfoList(meta.Related, session, nil)
 	}
 
 	// Time slices
@@ -1549,7 +1554,11 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 	semanticSearch := GetVault().semanticSearch
 
 	if semanticSearch != nil && semanticSearch.GetStatus().available {
-		semanticSearch.DeleteVectors(request.Context(), media_id)
+		err = semanticSearch.DeleteVectorsByMedia(request.Context(), media_id)
+
+		if err != nil {
+			LogError(err)
+		}
 	}
 
 	// Delete

@@ -441,6 +441,8 @@ const (
 
 // Indexed vector
 type QdrantIndexedVector struct {
+	// The ID of the vector
+	Id *qdrant.PointId
 	// The media ID
 	Media uint64
 	// The type of vector
@@ -475,6 +477,7 @@ func QdrantIndexedVectorFromScoredPoint(p *qdrant.ScoredPoint) *QdrantIndexedVec
 	}
 
 	return &QdrantIndexedVector{
+		Id:         p.Id,
 		Media:      mediaId,
 		VectorType: vectorType,
 		DataHash:   dataHash,
@@ -566,7 +569,7 @@ func (s *SemanticSearchSystem) QueryVectors(ctx context.Context, query *Semantic
 }
 
 // Deletes all vector associated with a media asset
-func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, media uint64) error {
+func (s *SemanticSearchSystem) DeleteVectorsByMedia(ctx context.Context, media uint64) error {
 	_, err := s.qdrantClient.Delete(ctx, &qdrant.DeletePoints{
 		CollectionName: s.qDrantCollectionName,
 		Points: &qdrant.PointsSelector{
@@ -575,6 +578,32 @@ func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, media uint64) 
 					Must: []*qdrant.Condition{
 						qdrant.NewMatchInt(QDRANT_FIELD_MEDIA, int64(media)),
 					},
+				},
+			},
+		},
+	})
+
+	return err
+}
+
+// Deletes vectors by IDs
+func (s *SemanticSearchSystem) DeleteVectors(ctx context.Context, vectors []*QdrantIndexedVector) error {
+	if len(vectors) == 0 {
+		return nil
+	}
+
+	vectorIds := make([]*qdrant.PointId, len(vectors))
+
+	for i := range vectors {
+		vectorIds[i] = vectors[i].Id
+	}
+
+	_, err := s.qdrantClient.Delete(ctx, &qdrant.DeletePoints{
+		CollectionName: s.qDrantCollectionName,
+		Points: &qdrant.PointsSelector{
+			PointsSelectorOneOf: &qdrant.PointsSelector_Points{
+				Points: &qdrant.PointsIdsList{
+					Ids: vectorIds,
 				},
 			},
 		},

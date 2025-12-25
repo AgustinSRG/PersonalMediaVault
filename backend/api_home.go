@@ -87,7 +87,7 @@ type HomeElementApiResult struct {
 func GetMediaMinInfoListTaskHome(mediaId uint64, session *ActiveSession, result []*HomeElementApiResult, index int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	result[index] = &HomeElementApiResult{
-		Media: GetMediaMinInfo(mediaId, session),
+		Media: GetMediaMinInfo(mediaId, session, nil),
 	}
 }
 
