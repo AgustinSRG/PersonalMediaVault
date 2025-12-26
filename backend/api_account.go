@@ -8,13 +8,14 @@ import (
 )
 
 type AccountContextAPIResponse struct {
-	Username string `json:"username"`
-	Root     bool   `json:"root"`
-	Write    bool   `json:"write"`
-	Title    string `json:"title"`
-	Logo     string `json:"logo"`
-	Style    string `json:"css"`
-	Version  string `json:"version"`
+	Username              string `json:"username"`
+	Root                  bool   `json:"root"`
+	Write                 bool   `json:"write"`
+	Title                 string `json:"title"`
+	Logo                  string `json:"logo"`
+	Style                 string `json:"css"`
+	Version               string `json:"version"`
+	SemanticSearchEnabled bool   `json:"semanticSearch,omitempty"`
 }
 
 type ChangeUsernameBody struct {
@@ -56,6 +57,7 @@ func api_getAccountContext(response http.ResponseWriter, request *http.Request) 
 	result.Logo = config.CustomLogo
 	result.Style = config.CustomCSS
 	result.Version = BACKEND_VERSION
+	result.SemanticSearchEnabled = GetVault().semanticSearch != nil
 
 	jsonResult, err := json.Marshal(result)
 
