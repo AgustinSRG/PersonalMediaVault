@@ -124,6 +124,9 @@ type SemanticSearchSystemStatus struct {
 
 	// Dimensions for the
 	clipModelDimensions uint
+
+	// True if the initial scan was performed
+	ranInitialScan bool
 }
 
 // Semantic search sub-system
@@ -200,12 +203,14 @@ func (s *SemanticSearchSystem) GetStatus() SemanticSearchSystemStatus {
 
 // Sets the status as available
 // clipModelDimensions - Dimensions of the CLIP model
-func (s *SemanticSearchSystem) SetStatusAvailable(clipModelDimensions uint) {
+// ranInitialScan - True if the initial scan was executed
+func (s *SemanticSearchSystem) SetStatusAvailable(clipModelDimensions uint, ranInitialScan bool) {
 	s.statusMu.Lock()
 	defer s.statusMu.Unlock()
 
 	s.status.available = true
 	s.status.clipModelDimensions = clipModelDimensions
+	s.status.ranInitialScan = ranInitialScan
 }
 
 // Gets the image size limit for the CLIP encoder
@@ -356,9 +361,22 @@ func (s *SemanticSearchSystem) initializeInternal() {
 		doneCheckingDatabase = true
 	}
 
+	// Initial scan
+
+	ranInitialScan := false
+
+	if s.qdrantInitialScan {
+		session := GetVault().sessions.FindAnySession()
+
+		if session != nil {
+			go s.DoQdrantInitialScan(session.key)
+			ranInitialScan = true
+		}
+	}
+
 	// Done
 
-	s.SetStatusAvailable(modelDimensions)
+	s.SetStatusAvailable(modelDimensions, ranInitialScan)
 
 	LogDebug("[SemanticSearch] Initialization successful. Service available.")
 }
@@ -971,5 +989,80 @@ func (s *SemanticSearchSystem) RequestMediaIndexing(media_id uint64, key []byte,
 
 	if wait {
 		waitGroup.Wait()
+	}
+}
+
+const QDRANT_INITIAL_SCAN_PAGE_SIZE = 64
+
+func (s *SemanticSearchSystem) getInitialScanPage(page int64) (items []uint64, isEnd bool, err error) {
+	skip := page * QDRANT_INITIAL_SCAN_PAGE_SIZE
+
+	main_index, err := GetVault().index.StartRead()
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	page_items, err := main_index.ListValues(skip, QDRANT_INITIAL_SCAN_PAGE_SIZE)
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	return page_items, len(page_items) < QDRANT_INITIAL_SCAN_PAGE_SIZE, nil
+}
+
+// Run the initial scan
+func (s *SemanticSearchSystem) DoQdrantInitialScan(key []byte) {
+	finished := false
+
+	page := int64(0)
+
+	for !finished {
+		pageItems, isEnd, err := s.getInitialScanPage(page)
+
+		if err != nil {
+			LogError(err)
+			return
+		}
+
+		for _, mediaId := range pageItems {
+			LogDebug("[QDRANT] [INITIAL SCAN] Checking media #" + fmt.Sprint(mediaId))
+			s.RequestMediaIndexing(mediaId, key, true)
+		}
+
+		page++
+
+		finished = !isEnd
+	}
+}
+
+// Tries to set the initial scan as ran
+func (s *SemanticSearchSystem) TrySetRanInitialScan() bool {
+	s.statusMu.Lock()
+	defer s.statusMu.Unlock()
+
+	if !s.status.available {
+		return false
+	}
+
+	if s.status.ranInitialScan {
+		return false
+	}
+
+	s.status.ranInitialScan = true
+
+	return true
+}
+
+func (s *SemanticSearchSystem) OnNewSession(session *ActiveSession) {
+	if !s.qdrantInitialScan {
+		return
+	}
+
+	mustRun := s.TrySetRanInitialScan()
+
+	if mustRun {
+		go s.DoQdrantInitialScan(session.key)
 	}
 }
