@@ -1673,7 +1673,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/subtitles/set":
+  "/api/media/{mid}/subtitles/set":
     post:
       summary: Sets subtitles
       description: Add a subtitles file for videos and audios
@@ -1685,7 +1685,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1753,7 +1753,7 @@ paths:
                 description: "SRT file URL"
                 example: "/assets/b/0/0/subrip.srt"
   
-  "/api/media/{id}/subtitles/remove":
+  "/api/media/{mid}/subtitles/remove":
     post:
       summary: Removes subtitles
       description: Removes subtitles
@@ -1763,7 +1763,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1818,7 +1818,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/subtitles/rename":
+  "/api/media/{mid}/subtitles/rename":
     post:
       summary: Renames subtitles
       description: Renames subtitles
@@ -1828,7 +1828,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1881,7 +1881,7 @@ paths:
         200:
           description: Success
 
-  "/api/media/{id}/audios/set":
+  "/api/media/{mid}/audios/set":
     post:
       summary: Sets audio track
       description: Add an extra audio track to a video
@@ -1893,7 +1893,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1959,7 +1959,7 @@ paths:
                 description: "Audio file URL"
                 example: "/assets/b/0/0/audio.mp3"
 
-  "/api/media/{id}/audios/remove":
+  "/api/media/{mid}/audios/remove":
     post:
       summary: Removes audio track
       description: Removes audio track
@@ -1969,7 +1969,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -2024,7 +2024,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/audios/rename":
+  "/api/media/{mid}/audios/rename":
     post:
       summary: Renames subtitles
       description: Renames subtitles
@@ -2034,7 +2034,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -2212,7 +2212,7 @@ paths:
                 description: "Attachment file URL"
                 example: "/assets/b/0/0/example.txt"
                 
-  "/api/media/{id}/attachments/remove":
+  "/api/media/{mid}/attachments/remove":
     post:
       summary: Removes attachment
       description: Removes attachment
@@ -2222,7 +2222,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -3868,13 +3868,10 @@ paths:
                 items:
                   $ref: '#/definitions/HomePageGroupElementRef'
               add:
-                description: "Include this property to add an element"
                 $ref: '#/definitions/HomePageGroupElementRef'
               delete:
-                description: "Include this property to delete an element"
                 $ref: '#/definitions/HomePageGroupElementRef'
               move:
-                description: "Include this property to move an element"
                 $ref: '#/definitions/HomePageGroupElementRefMove'
       security:
         - SessionTokenHeader: []
