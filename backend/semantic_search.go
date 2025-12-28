@@ -230,7 +230,15 @@ type ClipApiMetadataResponse struct {
 }
 
 func (s *SemanticSearchSystem) getClipModelDimensions() (uint, error) {
-	resp, err := http.Get(s.clipBaseUrl)
+	req, err := http.NewRequest("GET", s.clipBaseUrl, nil)
+
+	if err != nil {
+		return 0, err
+	}
+
+	req.Header.Add("Authorization", s.clipApiAuth)
+
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		return 0, err
@@ -400,7 +408,16 @@ func (s *SemanticSearchSystem) clipEncodeTextInternal(text string) ([]float32, e
 		return nil, err
 	}
 
-	resp, err := http.Post(s.clipEncodeTextUrl, "application/json", bytes.NewReader(jsonRes))
+	req, err := http.NewRequest("POST", s.clipEncodeTextUrl, bytes.NewReader(jsonRes))
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", s.clipApiAuth)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		return nil, err
@@ -431,7 +448,16 @@ func (s *SemanticSearchSystem) ClipEncodeText(text string) ([]float32, error) {
 }
 
 func (s *SemanticSearchSystem) clipEncodeImageInternal(image []byte) ([]float32, bool, error) {
-	resp, err := http.Post(s.clipEncodeImageUrl, "application/json", bytes.NewReader(image))
+	req, err := http.NewRequest("POST", s.clipEncodeImageUrl, bytes.NewReader(image))
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	req.Header.Add("Authorization", s.clipApiAuth)
+	req.Header.Add("Content-Type", "application/octet-stream")
+
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		return nil, false, err
