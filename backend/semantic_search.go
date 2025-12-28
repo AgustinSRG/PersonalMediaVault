@@ -81,7 +81,7 @@ func LoadSemanticSearchConfig() *SemanticSearchConfig {
 
 	clipApiBase := os.Getenv("CLIP_API_BASE")
 
-	if clipApiBase != "" {
+	if clipApiBase == "" {
 		clipApiBase = "http://localhost:5000/clip"
 		LogWarning("CLIP_API_BASE is empty. Using '" + clipApiBase + "' as the default value.")
 	}
