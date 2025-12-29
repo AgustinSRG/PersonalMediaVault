@@ -413,6 +413,13 @@ export function setMaxParallelUploads(maxParallelUploads: number) {
     saveIntoLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS, maxParallelUploads);
 }
 
+/**
+ * Clears preferences for the upload page
+ */
+export function clearUploadPreferences() {
+    clearLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS);
+}
+
 export type SearchMode = "basic" | "adv" | "semantic" | "image";
 
 const DEFAULT_SEARCH_MODE = "basic";
@@ -462,4 +469,12 @@ export function getSemanticSearchOnlyImages(): boolean {
  */
 export function setSemanticSearchOnlyImages(b: boolean) {
     saveIntoLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, b);
+}
+
+/**
+ * Clears preferences for the search page
+ */
+export function clearSearchPreferences() {
+    clearLocalStorage(LS_KEY_SEARCH_MODE);
+    clearLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES);
 }

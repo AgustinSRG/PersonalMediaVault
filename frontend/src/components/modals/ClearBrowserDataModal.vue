@@ -119,7 +119,14 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import { clearCachedAlbumPositions, clearCachedTimes, clearPlayerPreferences } from "@/control/player-preferences";
-import { clearAlbumsOrderMap, clearFavAlbums, clearLastUsedTags, clearPagePreferences } from "@/control/app-preferences";
+import {
+    clearAlbumsOrderMap,
+    clearFavAlbums,
+    clearLastUsedTags,
+    clearPagePreferences,
+    clearSearchPreferences,
+    clearUploadPreferences,
+} from "@/control/app-preferences";
 import { PagesController } from "@/control/pages";
 import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
@@ -210,6 +217,8 @@ export default defineComponent({
             if (this.clearPagePreferences) {
                 clearPagePreferences();
                 clearLanguageSetting();
+                clearUploadPreferences();
+                clearSearchPreferences();
             }
 
             if (this.clearResizableWidgets) {
