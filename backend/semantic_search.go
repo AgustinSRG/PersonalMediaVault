@@ -1148,6 +1148,8 @@ func (s *SemanticSearchSystem) getInitialScanPage(page int64) (items []uint64, i
 		return nil, false, err
 	}
 
+	defer GetVault().index.EndRead(main_index)
+
 	page_items, err := main_index.ListValues(skip, QDRANT_INITIAL_SCAN_PAGE_SIZE)
 
 	if err != nil {
