@@ -1154,7 +1154,7 @@ func (s *SemanticSearchSystem) getInitialScanPage(page int64) (items []uint64, i
 		return nil, false, err
 	}
 
-	return page_items, len(page_items) < QDRANT_INITIAL_SCAN_PAGE_SIZE, nil
+	return page_items, len(page_items) >= QDRANT_INITIAL_SCAN_PAGE_SIZE, nil
 }
 
 // Run the initial scan
