@@ -15,6 +15,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -759,24 +760,142 @@ func (s *SemanticSearchSystem) extractImageFromMedia(media_id uint64, original_a
 
 	sizeLimit := s.clipImageSizeLimit
 
-	if rs.FileSize() > sizeLimit {
+	if rs.FileSize() <= sizeLimit {
+		imageData, err := io.ReadAll(rs)
+
 		rs.Close()
 		asset_lock.EndRead()
 		media.ReleaseAsset(original_asset)
 		GetVault().media.ReleaseMediaResource(media_id)
 
-		return nil, nil
+		return imageData, err
 	}
 
-	imageData, err := io.ReadAll(rs)
+	// Image too big, decrypt into a temporal file for encoding
 
+	tempFile := GetTemporalFileName("png", false)
+
+	f, err := os.OpenFile(tempFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FILE_PERMISSION)
+
+	if err != nil {
+		rs.Close()
+		asset_lock.EndRead()
+		media.ReleaseAsset(original_asset)
+		GetVault().media.ReleaseMediaResource(media_id)
+
+		return nil, err
+	}
+
+	buf := make([]byte, 1024*1024)
+	var finished = false
+
+	for !finished {
+		c, err := rs.Read(buf)
+
+		if err != nil && err != io.EOF {
+			_ = f.Close()
+			DeleteTemporalFile(tempFile)
+
+			rs.Close()
+			asset_lock.EndRead()
+			media.ReleaseAsset(original_asset)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			return nil, err
+		}
+
+		if err == io.EOF {
+			finished = true
+		}
+
+		if c == 0 {
+			continue
+		}
+
+		_, err = f.Write(buf[:c])
+
+		if err != nil {
+			_ = f.Close()
+			DeleteTemporalFile(tempFile)
+
+			rs.Close()
+			asset_lock.EndRead()
+			media.ReleaseAsset(original_asset)
+			GetVault().media.ReleaseMediaResource(media_id)
+
+			return nil, err
+		}
+	}
+
+	_ = f.Close()
 	rs.Close()
+
 	asset_lock.EndRead()
 	media.ReleaseAsset(original_asset)
 	GetVault().media.ReleaseMediaResource(media_id)
 
-	return imageData, err
+	// Probe the image
 
+	probe_data, err := ProbeMediaFileWithFFProbe(tempFile)
+
+	if err != nil {
+		DeleteTemporalFile(tempFile)
+
+		return nil, err
+	}
+
+	if probe_data.Type != MediaTypeImage {
+		DeleteTemporalFile(tempFile)
+
+		return nil, nil
+	}
+
+	// Encode image to reduce its size
+
+	userConfig, err := GetVault().config.Read(key)
+
+	if err != nil {
+		DeleteTemporalFile(tempFile)
+
+		return nil, err
+	}
+
+	tempFolder, err := GetTemporalFolder(false)
+
+	if err != nil {
+		DeleteTemporalFile(tempFile)
+
+		return nil, err
+	}
+
+	cmd := MakeFFMpegEncodeToPNGCommand(tempFile, probe_data.Format, tempFolder, &UserConfigResolution{
+		Width:  900,
+		Height: 900,
+		Fps:    -1,
+	}, probe_data.Width, probe_data.Height, userConfig)
+
+	err = cmd.Run()
+
+	if err != nil {
+		DeleteTemporalFile(tempFile)
+		DeleteTemporalPath(tempFolder)
+
+		return nil, err
+	}
+
+	DeleteTemporalFile(tempFile)
+
+	// Load the smaller image file into memory
+
+	imageData, err := os.ReadFile(path.Join(tempFolder, "image.png"))
+
+	DeleteTemporalPath(tempFolder)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imageData, nil
 }
 
 func (s *SemanticSearchSystem) addOrUpdateMediaIndex(media_id uint64, key []byte) {
