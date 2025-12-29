@@ -68,6 +68,32 @@
                 </div>
             </div>
 
+            <div v-if="mode === 'image'">
+                <input type="file" class="file-hidden" name="image-select" @change="onImageFileChanged" />
+                <div
+                    class="upload-box auto-focus"
+                    :class="{ dragging: imageDragging }"
+                    tabindex="0"
+                    @click="clickToSelect"
+                    @dragover="dragOver"
+                    @dragenter="dragEnter"
+                    @dragstart="dragEnter"
+                    @dragend="dragLeave"
+                    @dragleave="dragLeave"
+                    @drop="onDrop"
+                    @keydown="clickOnEnter"
+                >
+                    <div v-if="loading && !vectorLoaded" class="upload-box-hint">{{ $t("Loading image") }}...</div>
+                    <div v-else-if="imageError" class="upload-box-hint">{{ imageError }}</div>
+                    <div v-else-if="imageUrl" class="upload-box-image-container">
+                        <img class="upload-box-image" :src="imageUrl" />
+                    </div>
+                    <div v-else class="upload-box-hint">
+                        {{ $t("Drop an image here or click to open the file selection dialog.") }}
+                    </div>
+                </div>
+            </div>
+
             <div v-if="mode === 'adv'" class="form-group">
                 <label>{{ $t("Tags") }}:</label>
                 <select v-model="tagMode" class="form-control form-select form-control-full-width" @change="markDirty">
@@ -258,7 +284,7 @@ import {
     setPreferredSearchMode,
     setSemanticSearchOnlyImages,
 } from "@/control/app-preferences";
-import { apiSemanticSearch, apiSemanticSearchEncodeText } from "@/api/api-semantic-search";
+import { apiSemanticSearch, apiSemanticSearchEncodeImage, apiSemanticSearchEncodeText } from "@/api/api-semantic-search";
 
 const INITIAL_WINDOW_SIZE = 50;
 
@@ -301,6 +327,7 @@ export default defineComponent({
             checkContainerTimer: null as ReturnType<typeof setInterval> | null,
             pageScrollStatus: useVModel(props, "pageScroll"),
             windowResizeObserver: null as ResizeObserver,
+            imageFile: null as File | null,
         };
     },
     data: function () {
@@ -345,6 +372,9 @@ export default defineComponent({
             vector: [],
             vectorLoaded: false,
             onlyImages: getSemanticSearchOnlyImages(),
+            imageUrl: null as string | null,
+            imageDragging: false,
+            imageError: "",
         };
     },
     computed: {
@@ -490,6 +520,10 @@ export default defineComponent({
         }
 
         this.windowResizeObserver.disconnect();
+
+        if (this.imageUrl) {
+            URL.revokeObjectURL(this.imageUrl);
+        }
     },
     methods: {
         markDirty: function () {
@@ -758,6 +792,152 @@ export default defineComponent({
                 });
         },
 
+        loadSemanticImageVector: function () {
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
+
+            if (!this.display || this.finished) {
+                return;
+            }
+
+            this.loading = true;
+
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
+
+            makeNamedApiRequest(this.loadRequestId, apiSemanticSearchEncodeImage(this.imageFile))
+                .onSuccess((result) => {
+                    this.vector = result.vector;
+                    this.vectorLoaded = true;
+                    this.loadSemanticImage();
+                })
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        invalidImage: () => {
+                            this.imageError = this.$t("Invalid image file selected.");
+                            this.loading = false;
+                            this.finished = true;
+                            if (!this.inModal) {
+                                this.onCurrentMediaChanged();
+                            }
+                        },
+                        imageTooLarge: () => {
+                            this.imageError = this.$t("The image you selected is too large. Try using an smaller image.");
+                            this.loading = false;
+                            this.finished = true;
+                            if (!this.inModal) {
+                                this.onCurrentMediaChanged();
+                            }
+                        },
+                        notAvailable: () => {
+                            this.imageError = this.$t("Image encoding service not available. Try again later.");
+                            this.loading = false;
+                            this.finished = true;
+                            if (!this.inModal) {
+                                this.onCurrentMediaChanged();
+                            }
+                        },
+                        temporalError: () => {
+                            // Retry
+                            setNamedTimeout(this.loadRequestId, 1500, this.loadSemanticImageVector.bind(this));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    setNamedTimeout(this.loadRequestId, 1500, this.loadSemanticImageVector.bind(this));
+                });
+        },
+
+        loadSemanticImage: function () {
+            if (!this.vectorLoaded) {
+                this.loadSemanticImageVector();
+                return;
+            }
+
+            clearNamedTimeout(this.loadRequestId);
+            abortNamedApiRequest(this.loadRequestId);
+
+            if (!this.display || this.finished) {
+                return;
+            }
+
+            this.loading = true;
+
+            if (AuthController.Locked) {
+                return; // Vault is locked
+            }
+
+            const pageSize = this.pageSize;
+
+            makeNamedApiRequest(
+                this.loadRequestId,
+                apiSemanticSearch({
+                    vector: this.vector,
+                    limit: pageSize,
+                    continuationToken: this.continueRef,
+                    vectorType: "image",
+                }),
+            )
+                .onSuccess((result) => {
+                    const completePageList = this.listScroller.list;
+                    this.filterElements(result.items);
+                    this.page = result.scanned;
+                    this.totalPages = result.total_count;
+                    this.progress = (Math.max(0, result.scanned) / Math.max(1, result.total_count)) * 100;
+                    this.continueRef = result["continue"];
+                    if (completePageList.length >= pageSize) {
+                        // Done for now
+                        this.loading = false;
+
+                        if (this.page >= this.totalPages) {
+                            this.finished = true;
+                        }
+
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
+                    } else if (result.scanned < result.total_count) {
+                        // Maybe there are more items
+                        this.loadSemanticImage();
+                    } else {
+                        this.loading = false;
+                        this.finished = true;
+                        if (!this.inModal) {
+                            this.onCurrentMediaChanged();
+                        }
+                    }
+                })
+                .onRequestError((err, handleErr) => {
+                    handleErr(err, {
+                        unauthorized: () => {
+                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        },
+                        invalidVectorSize: () => {
+                            this.loading = false;
+                            this.finished = true;
+                            if (!this.inModal) {
+                                this.onCurrentMediaChanged();
+                            }
+                        },
+                        temporalError: () => {
+                            // Retry
+                            setNamedTimeout(this.loadRequestId, 1500, this.loadSemanticImage.bind(this));
+                        },
+                    });
+                })
+                .onUnexpectedError((err) => {
+                    console.error(err);
+                    // Retry
+                    setNamedTimeout(this.loadRequestId, 1500, this.loadSemanticImage.bind(this));
+                });
+        },
+
         filterElements: function (results: MediaListItem[]) {
             TagsController.OnMediaListReceived(results);
             const filterText = this.mode === "basic" || this.mode === "adv" ? normalizeString(this.textSearch).trim().toLowerCase() : "";
@@ -893,6 +1073,7 @@ export default defineComponent({
             this.started = true;
             this.finished = false;
             this.vectorLoaded = false;
+            this.imageError = "";
 
             this.continueSearch();
         },
@@ -900,6 +1081,8 @@ export default defineComponent({
         continueSearch: function () {
             if (this.mode === "semantic" && this.textSearch) {
                 this.loadSemantic();
+            } else if (this.mode === "image" && this.imageFile) {
+                this.loadSemanticImage();
             } else if (this.albumSearch >= 0 && this.mode === "adv") {
                 this.loadAlbumSearch();
             } else {
@@ -1504,6 +1687,58 @@ export default defineComponent({
             if (AppStatus.SearchParams !== newSearchParams) {
                 AppStatus.ChangeSearchParams(newSearchParams);
             }
+        },
+
+        dragOver: function (e: DragEvent) {
+            e.preventDefault();
+        },
+        dragEnter: function (e: DragEvent) {
+            e.preventDefault();
+            this.imageDragging = true;
+        },
+        dragLeave: function (e: DragEvent) {
+            e.preventDefault();
+            this.imageDragging = false;
+        },
+
+        clickToSelect: function () {
+            const fileElem = this.$el.querySelector(".file-hidden");
+            if (fileElem) {
+                fileElem.value = null;
+                fileElem.click();
+            }
+        },
+
+        onDrop: function (e: DragEvent) {
+            e.preventDefault();
+            this.imageDragging = false;
+            const data = e.dataTransfer.files;
+            if (data && data.length > 0) {
+                this.setImageFile(data[0]);
+            }
+        },
+
+        onImageFileChanged: function (e: InputEvent) {
+            const data = (e.target as HTMLInputElement).files;
+            if (data && data.length > 0) {
+                this.setImageFile(data[0]);
+            }
+        },
+
+        setImageFile: function (image: File) {
+            if (this.imageUrl) {
+                URL.revokeObjectURL(this.imageUrl);
+                this.imageUrl = null;
+            }
+
+            if (this.imageFile === image || !image) {
+                return;
+            }
+
+            this.imageFile = image;
+            this.imageUrl = URL.createObjectURL(image);
+
+            this.startSearch();
         },
     },
 });
