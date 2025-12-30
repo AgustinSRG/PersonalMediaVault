@@ -18,6 +18,7 @@
         @touchstart="stopPropagationEvent"
         @click="stopPropagationEvent"
         @dblclick="stopPropagationEvent"
+        @contextmenu="stopPropagationEvent"
     >
         <table class="player-context-menu-table">
             <tbody>
@@ -228,6 +229,7 @@ export default defineComponent({
         shown: function () {
             if (this.shown) {
                 nextTick(() => {
+                    this.computeDimensions();
                     this.$el.focus();
                 });
             }
@@ -325,25 +327,32 @@ export default defineComponent({
 
         computeDimensions: function () {
             const pageWidth = window.innerWidth;
-            const pageHeight = window.innerHeight;
+            const pageHeight = window.innerHeight || 1;
+
+            const elementBounds = (this.$el as HTMLElement).getBoundingClientRect();
 
             const x = this.x;
             const y = this.y;
 
-            const top = y;
-            const left = x;
+            if (y + elementBounds.height > pageHeight) {
+                this.bottom = "0";
+                this.top = "auto";
+            } else {
+                this.top = y + "px";
+                this.bottom = "auto";
+            }
 
+            const maxHeight = pageHeight;
+
+            this.maxHeight = maxHeight + "px";
+
+            const left = x;
             const maxWidth = pageWidth - left;
 
-            const maxHeight = pageHeight - top;
-
-            this.top = top + "px";
             this.left = left + "px";
             this.right = "auto";
-            this.bottom = "auto";
             this.width = "auto";
             this.maxWidth = maxWidth + "px";
-            this.maxHeight = maxHeight + "px";
         },
     },
 });

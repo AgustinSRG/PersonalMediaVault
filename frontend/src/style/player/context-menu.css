@@ -42,7 +42,7 @@
 }
 
 .player-context-menu-table td {
-    padding: 1rem 0.75rem;
+    padding: 0.8rem 0.75rem;
     text-align: left;
     vertical-align: middle;
     white-space: nowrap;
@@ -70,5 +70,5 @@
 }
 
 .context-entry-title {
-    font-size: small;
+    font-size: medium;
 }
