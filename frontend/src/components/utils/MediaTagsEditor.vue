@@ -309,7 +309,7 @@ export default defineComponent({
                         }
                     }
                     this.$emit("tags-update");
-                    this.focusInput();
+                    this.focusInput(true);
                 })
                 .onCancel(() => {
                     this.busy = false;

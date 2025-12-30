@@ -371,6 +371,7 @@ export default defineComponent({
 
                     if (inputElem) {
                         inputElem.focus();
+                        inputElem.select();
                     }
                 }
             }
@@ -407,6 +408,7 @@ export default defineComponent({
 
             if (inputElem) {
                 inputElem.focus();
+                inputElem.select();
             }
         },
 
@@ -419,6 +421,7 @@ export default defineComponent({
 
             if (inputElement) {
                 inputElement.focus();
+                inputElement.select();
             }
         },
 
