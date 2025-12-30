@@ -82,6 +82,7 @@ Also, here is the list environment variables to configure semantic search:
 | QDRANT_HOST | Host of the Qdrant database. |
 | QDRANT_PORT | GRPC port of the Qdrant database. Default: `6334` |
 | QDRANT_API_KEY | API key for the Qdrant database. |
+| QDRANT_USE_TLS | Set it to `YES` in order to use TLS to connect to the Qdrant database. |
 | QDRANT_INITIAL_SCAN | By default, when the vault is unlocked, a task to scan for missing media in the Qdrant database will be created. Set this variable to `NO` to disable it. |
 | CLIP_API_BASE | Base URL of the CLIP API (provided by `pmv-ai-service`). Example: `http://localhost:5000/clip` |
 | CLIP_API_AUTH | Value of the `Authorization` header in order to use the CLIP API. |

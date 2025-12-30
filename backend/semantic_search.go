@@ -38,6 +38,7 @@ type SemanticSearchConfig struct {
 	QdrantHost         string
 	QdrantPort         int
 	QdrantApiKey       string
+	QdrantUseTls       bool
 	QdrantInitialScan  bool
 	ClipApiBaseUrl     string
 	ClipApiAuth        string
@@ -78,6 +79,8 @@ func LoadSemanticSearchConfig() *SemanticSearchConfig {
 		LogWarning("QDRANT_API_KEY is empty. This will probably cause authentication errors when connecting to the Qdrant database.")
 	}
 
+	qdrantUseTls := strings.ToUpper(os.Getenv("QDRANT_USE_TLS")) == "YES"
+
 	qdrantInitialScan := strings.ToUpper(os.Getenv("QDRANT_INITIAL_SCAN")) != "NO"
 
 	clipApiBase := os.Getenv("CLIP_API_BASE")
@@ -111,6 +114,7 @@ func LoadSemanticSearchConfig() *SemanticSearchConfig {
 		QdrantHost:         qDrantHost,
 		QdrantPort:         qdrantPort,
 		QdrantApiKey:       qdrantApiKey,
+		QdrantUseTls:       qdrantUseTls,
 		QdrantInitialScan:  qdrantInitialScan,
 		ClipApiBaseUrl:     clipApiBase,
 		ClipApiAuth:        clipApiAuth,
@@ -161,6 +165,7 @@ func CreateSemanticSearchSystem(config *SemanticSearchConfig, vaultFingerprint s
 		Host:   config.QdrantHost,
 		Port:   config.QdrantPort,
 		APIKey: config.QdrantApiKey,
+		UseTLS: config.QdrantUseTls,
 	})
 
 	if err != nil {

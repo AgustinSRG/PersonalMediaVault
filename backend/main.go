@@ -352,6 +352,7 @@ func printHelp() {
 	fmt.Println("        QDRANT_HOST                Host of the Qdrant database.")
 	fmt.Println("        QDRANT_PORT                GRPC port of the Qdrant database. Default: '6334'")
 	fmt.Println("        QDRANT_API_KEY             API key for the Qdrant database.")
+	fmt.Println("        QDRANT_USE_TLS             Set it to 'YES' in order to use TLS to connect to the Qdrant database.")
 	fmt.Println("        QDRANT_INITIAL_SCAN        By default, when the vault is unlocked,")
 	fmt.Println("                                   a task to scan for missing media in the Qdrant database will be created.")
 	fmt.Println("                                   Set this variable to 'NO' to disable it.")
