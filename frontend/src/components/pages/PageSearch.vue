@@ -204,7 +204,12 @@
                     </div>
                     <div v-if="displayTitles" class="search-result-title">{{ $t("Loading") }}...</div>
                 </div>
-                <div v-for="item in pageItems" :key="item.id" class="search-result-item" :class="{ current: currentMedia == item.id }">
+                <div
+                    v-for="item in pageItems"
+                    :key="item.id"
+                    class="search-result-item"
+                    :class="{ current: currentMedia === item.id, 'last-current': lastCurrentMedia === item.id }"
+                >
                     <a
                         class="clickable"
                         :href="getMediaURL(item.id)"
@@ -341,6 +346,7 @@ export default defineComponent({
             type: 0,
 
             currentMedia: AppStatus.CurrentMedia,
+            lastCurrentMedia: AppStatus.CurrentMedia,
 
             pageItems: [] as MediaListItem[],
             page: 0,
@@ -424,6 +430,11 @@ export default defineComponent({
         },
         pageSize: function () {
             this.updatePageSize();
+        },
+        min: function () {
+            if (!this.min) {
+                this.scrollToLastCurrentMedia();
+            }
         },
     },
     mounted: function () {
@@ -580,6 +591,26 @@ export default defineComponent({
 
             nextTick(() => {
                 const currentElem = this.$el.querySelector(".search-result-item.current");
+                if (currentElem) {
+                    currentElem.scrollIntoView();
+                }
+            });
+
+            return true;
+        },
+
+        scrollToLastCurrentMedia: function (): boolean {
+            if (!this.mediaIndexMap.has(this.lastCurrentMedia)) {
+                return false;
+            }
+            const index = this.mediaIndexMap.get(this.lastCurrentMedia);
+
+            if (index < this.listScroller.windowPosition || index >= this.listScroller.windowPosition + this.listScroller.windowSize) {
+                this.listScroller.moveWindowToElement(this.mediaIndexMap.get(this.lastCurrentMedia));
+            }
+
+            nextTick(() => {
+                const currentElem = this.$el.querySelector(".search-result-item.last-current");
                 if (currentElem) {
                     currentElem.scrollIntoView();
                 }
@@ -1425,6 +1456,9 @@ export default defineComponent({
         onAppStatusChanged: function () {
             const changed = this.currentMedia !== AppStatus.CurrentMedia;
             this.currentMedia = AppStatus.CurrentMedia;
+            if (AppStatus.CurrentMedia >= 0) {
+                this.lastCurrentMedia = AppStatus.CurrentMedia;
+            }
             if (!this.inModal) {
                 if (changed) {
                     nextTick(() => {
