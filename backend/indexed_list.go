@@ -52,7 +52,7 @@ func OpenIndexedListForReading(file string) (*IndexedListFile, error) {
 
 // Closes the file
 func (file *IndexedListFile) Close() {
-	file.f.Close()
+	_ = file.f.Close()
 }
 
 // Returns the number of items in the index

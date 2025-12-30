@@ -42,6 +42,8 @@ Running the vault in an isolated container is the most secure way of running it,
 
 However, this may be a bit complex for non technical users. So, if you only need a local vault, go to the [Installation packages](#installation-packages) section instead.
 
+Note: If you wish to enable AI features, use the compose file present in the [packages/docker-compose-with-ai](./packages/docker-compose-with-ai) folder instead.
+
 You will need a container management system, for example [Docker](https://www.docker.com/) or [Podman](https://podman.io/). In the documentation, Docker commands are being used, so, if you are using Podman, make sure to replace `docker` for `podman` before running them.
 
 You can find the official image of the project uploaded to [Docker Hub](https://hub.docker.com/r/asanrom/pmv) and [GitHub Packages](https://github.com/AgustinSRG/PersonalMediaVault/pkgs/container/personalmediavault).

@@ -122,12 +122,13 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 	containsAlbum2 := false
 
 	for i := 0; i < len(res1); i++ {
-		if res1[i].Id == album1 {
+		switch res1[i].Id {
+		case album1:
 			containsAlbum1 = true
 			if res1[i].Name != album1Name {
 				t.Error(ErrorMismatch("AlbumName", res1[i].Name, album1Name))
 			}
-		} else if res1[i].Id == album2 {
+		case album2:
 			containsAlbum2 = true
 			if res1[i].Name != album2Name {
 				t.Error(ErrorMismatch("AlbumName", res1[i].Name, album2Name))
@@ -641,14 +642,15 @@ func Albums_API_Test(server *httptest.Server, session string, t *testing.T) {
 	containsAlbum2 = false
 
 	for i := 0; i < len(res3); i++ {
-		if res3[i].Id == album1 {
+		switch res3[i].Id {
+		case album1:
 			containsAlbum1 = true
 
 			if res3[i].Size != 2 {
 				t.Error(ErrorMismatch("AlbumSize", fmt.Sprint(res3[i].Size), fmt.Sprint(2)))
 			}
 
-		} else if res3[i].Id == album2 {
+		case album2:
 			containsAlbum2 = true
 		}
 	}

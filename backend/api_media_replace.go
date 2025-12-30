@@ -80,7 +80,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		if err != nil && err != io.EOF {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -100,7 +100,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -108,7 +108,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	f.Close()
+	_ = f.Close()
 
 	// Check auth confirmation
 
@@ -148,7 +148,8 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		os.Remove(media_encrypted_file)
+		_ = os.Remove(media_encrypted_file)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
@@ -158,7 +159,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		os.Remove(media_encrypted_file)
+		_ = os.Remove(media_encrypted_file)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
@@ -168,16 +169,22 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	if meta == nil {
 		media.CancelWrite()
-		os.Remove(media_encrypted_file)
+
+		_ = os.Remove(media_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
 	if meta.Type != probe_data.Type {
 		media.CancelWrite()
-		os.Remove(media_encrypted_file)
+
+		_ = os.Remove(media_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 400, "INVALID_MEDIA_TYPE", "You tried to replace a media with a different type of media.")
 		return
 	}
@@ -189,7 +196,9 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 
 	if !success {
 		media.CancelWrite()
-		os.Remove(media_encrypted_file)
+
+		_ = os.Remove(media_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
@@ -210,7 +219,9 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 		LogError(err)
 
 		media.CancelWrite()
-		os.Remove(media_encrypted_file)
+
+		_ = os.Remove(media_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -264,7 +275,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 
@@ -315,7 +326,7 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 
@@ -330,6 +341,16 @@ func api_replaceMedia(response http.ResponseWriter, request *http.Request) {
 	// Clear cache
 
 	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
+
+	// Index (semantic search)
+
+	if meta.OriginalEncoded {
+		semanticSearch := GetVault().semanticSearch
+
+		if semanticSearch != nil && semanticSearch.GetStatus().available {
+			semanticSearch.RequestMediaIndexing(media_id, session.key, false)
+		}
+	}
 
 	// Response
 

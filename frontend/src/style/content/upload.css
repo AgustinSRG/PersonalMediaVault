@@ -16,7 +16,7 @@
 
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: 0.5rem;
 
     cursor: pointer;
 }
@@ -24,6 +24,21 @@
 .upload-box:hover,
 .upload-box.dragging {
     background: var(--hover-color);
+}
+
+.upload-box-image-container {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-box-image {
+    height: 100%;
+    width: auto;
 }
 
 .upload-list {

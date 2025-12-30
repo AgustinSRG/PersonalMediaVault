@@ -29,20 +29,26 @@ type MediaListAPIItem struct {
 }
 
 // Gets media minified info (preview)
-func GetMediaMinInfo(media_id uint64, session *ActiveSession) *MediaListAPIItem {
-	return GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
+func GetMediaMinInfo(media_id uint64, session *ActiveSession, onDeletedItemFound func(uint64)) *MediaListAPIItem {
+	info, deleted := GetVault().media.preview_cache.GetMediaPreview(media_id, session.key)
+
+	if deleted && onDeletedItemFound != nil {
+		go onDeletedItemFound(media_id)
+	}
+
+	return info
 }
 
 // Gets media minified info (preview) for a single item in a list
 // Runs in a co-routine
-func GetMediaMinInfoListTask(list []uint64, session *ActiveSession, result []*MediaListAPIItem, index int, wg *sync.WaitGroup) {
+func GetMediaMinInfoListTask(list []uint64, session *ActiveSession, result []*MediaListAPIItem, index int, wg *sync.WaitGroup, onDeletedItemFound func(uint64)) {
 	defer wg.Done()
-	result[index] = GetMediaMinInfo(list[index], session)
+	result[index] = GetMediaMinInfo(list[index], session, onDeletedItemFound)
 }
 
 // Gets media minified info (preview) for a list
 // Uses co-routines
-func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPIItem {
+func GetMediaMinInfoList(list []uint64, session *ActiveSession, onDeletedItemFound func(uint64)) []*MediaListAPIItem {
 	result := make([]*MediaListAPIItem, len(list))
 
 	if len(list) == 0 {
@@ -54,7 +60,7 @@ func GetMediaMinInfoList(list []uint64, session *ActiveSession) []*MediaListAPII
 	wg.Add(len(list))
 
 	for i := range list {
-		go GetMediaMinInfoListTask(list, session, result, i, wg)
+		go GetMediaMinInfoListTask(list, session, result, i, wg, onDeletedItemFound)
 	}
 
 	wg.Wait()
@@ -379,7 +385,7 @@ func api_getMedia(response http.ResponseWriter, request *http.Request) {
 	// Related media
 
 	if len(meta.Related) > 0 {
-		result.Related = GetMediaMinInfoList(meta.Related, session)
+		result.Related = GetMediaMinInfoList(meta.Related, session, nil)
 	}
 
 	// Time slices
@@ -747,6 +753,14 @@ func api_editMediaTitle(response http.ResponseWriter, request *http.Request) {
 
 	GetVault().media.preview_cache.RemoveEntryOrMarkInvalid(media_id)
 
+	// Index (semantic search)
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.RequestMediaIndexing(media_id, session.key, false)
+	}
+
 	response.WriteHeader(200)
 }
 
@@ -1106,7 +1120,7 @@ func api_mediaRequestEncode(response http.ResponseWriter, request *http.Request)
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 
@@ -1379,7 +1393,7 @@ func api_mediaRemoveResolution(response http.ResponseWriter, request *http.Reque
 				asset_lock.RequestWrite()
 				asset_lock.StartWrite()
 
-				os.Remove(asset_path)
+				_ = os.Remove(asset_path)
 
 				asset_lock.EndWrite()
 
@@ -1541,6 +1555,14 @@ func api_deleteMedia(response http.ResponseWriter, request *http.Request) {
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
 		return
+	}
+
+	// Remove from semantic search index
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.RequestMediaIndexRemoval(media_id, session.key, true)
 	}
 
 	// Delete
