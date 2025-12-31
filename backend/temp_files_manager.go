@@ -148,7 +148,7 @@ func GetTemporalFolder(encrypted bool) (string, error) {
 // Deletes temporal file
 // file - File path
 func DeleteTemporalFile(file string) {
-	os.Remove(file)
+	_ = os.Remove(file)
 }
 
 // Deletes temporal path
@@ -167,5 +167,5 @@ func DeleteTemporalPath(p string) {
 		}
 	}
 
-	os.Remove(p)
+	_ = os.Remove(p)
 }

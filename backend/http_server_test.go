@@ -74,7 +74,7 @@ func DoTestRequestWithConfirmation(server *httptest.Server, method string, path 
 		return 0, nil, err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	bodyData, err := io.ReadAll(resp.Body)
 
@@ -123,7 +123,7 @@ func DoTestRangeRequest(server *httptest.Server, session string, method string, 
 		return 0, nil, nil, err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	bodyData, err := io.ReadAll(resp.Body)
 

@@ -162,7 +162,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-		f.Close()
+		_ = f.Close()
 
 		asset_lock.EndRead()
 
@@ -177,7 +177,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 	buf := make([]byte, 1024*1024)
 
-	var finished bool = false
+	var finished = false
 	var bytesCopied int64 = 0
 
 	for !finished {
@@ -186,7 +186,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		if err != nil && err != io.EOF {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-			f.Close()
+			_ = f.Close()
 			s.Close()
 
 			asset_lock.EndRead()
@@ -213,7 +213,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		if err != nil {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-			f.Close()
+			_ = f.Close()
 			s.Close()
 
 			asset_lock.EndRead()
@@ -231,7 +231,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(s.FileSize())))
 
 		if task.killed {
-			f.Close()
+			_ = f.Close()
 			s.Close()
 
 			asset_lock.EndRead()
@@ -246,7 +246,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		}
 	}
 
-	f.Close()
+	_ = f.Close()
 	s.Close()
 
 	asset_lock.EndRead()
@@ -374,7 +374,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-		f.Close()
+		_ = f.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
@@ -388,7 +388,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-		f.Close()
+		_ = f.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
@@ -401,12 +401,12 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 	if err != nil {
 		LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-		f.Close()
-		ws.Close()
+		_ = f.Close()
+		_ = ws.Close()
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
-		os.Remove(encrypted_temp)
+		_ = os.Remove(encrypted_temp)
 		return
 	}
 
@@ -419,12 +419,12 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		if err != nil && err != io.EOF {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-			f.Close()
-			ws.Close()
+			_ = f.Close()
+			_ = ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			DeleteTemporalPath(tempFolder)
-			os.Remove(encrypted_temp)
+			_ = os.Remove(encrypted_temp)
 			return
 		}
 
@@ -441,12 +441,13 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		if err != nil {
 			LogTaskError(task.definition.Id, "Error: "+err.Error())
 
-			f.Close()
-			ws.Close()
+			_ = f.Close()
+			_ = ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			DeleteTemporalPath(tempFolder)
-			os.Remove(encrypted_temp)
+
+			_ = os.Remove(encrypted_temp)
 			return
 		}
 
@@ -454,18 +455,19 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		task.status.SetProgress(float64(bytesCopied) * 100 / math.Max(1, float64(encodedSize)))
 
 		if task.killed {
-			f.Close()
-			ws.Close()
+			_ = f.Close()
+			_ = ws.Close()
 
 			GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 			DeleteTemporalPath(tempFolder)
-			os.Remove(encrypted_temp)
+
+			_ = os.Remove(encrypted_temp)
 			return
 		}
 	}
 
-	f.Close()
-	ws.Close()
+	_ = f.Close()
+	_ = ws.Close()
 
 	// Write changes to metadata
 
@@ -475,7 +477,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 
 		DeleteTemporalPath(tempFolder)
-		os.Remove(encrypted_temp)
+		_ = os.Remove(encrypted_temp)
 
 		return
 	}
@@ -487,7 +489,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
-		os.Remove(encrypted_temp)
+		_ = os.Remove(encrypted_temp)
 		return
 	}
 
@@ -503,7 +505,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
-		os.Remove(encrypted_temp)
+		_ = os.Remove(encrypted_temp)
 		return
 	}
 
@@ -524,7 +526,7 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 
 		GetVault().media.ReleaseMediaResource(task.definition.MediaId)
 		DeleteTemporalPath(tempFolder)
-		os.Remove(encrypted_temp)
+		_ = os.Remove(encrypted_temp)
 		return
 	}
 
@@ -557,11 +559,19 @@ func (task *ActiveTask) RunEncodeOriginalMediaTask(vault *Vault) {
 		old_asset_lock.RequestWrite()
 		old_asset_lock.StartWrite()
 
-		os.Remove(old_asset_path)
+		_ = os.Remove(old_asset_path)
 
 		old_asset_lock.EndWrite()
 
 		media.ReleaseAsset(old_asset)
+	}
+
+	// Index (semantic search)
+
+	semanticSearch := GetVault().semanticSearch
+
+	if semanticSearch != nil && semanticSearch.GetStatus().available {
+		semanticSearch.RequestMediaIndexing(task.definition.MediaId, task.session.key, false)
 	}
 
 	// Finish task

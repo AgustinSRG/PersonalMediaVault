@@ -22,6 +22,8 @@ type Vault struct {
 
 	homePage *HomePageConfigManager // Home page config
 
+	semanticSearch *SemanticSearchSystem // Semantic search sub-system (may be nil if disabled)
+
 	config *UserConfigManager // User config
 }
 
@@ -76,6 +78,19 @@ func (vault *Vault) Initialize(base_path string, preview_cache_size int) error {
 
 	vault.homePage = &HomePageConfigManager{}
 	vault.homePage.Initialize(base_path)
+
+	semanticSearchConfig := LoadSemanticSearchConfig()
+
+	if semanticSearchConfig != nil && semanticSearchConfig.Enabled {
+		semanticSearchSubSystem, err := CreateSemanticSearchSystem(semanticSearchConfig, vault.credentials.GetFingerprint())
+
+		if err == nil {
+			vault.semanticSearch = semanticSearchSubSystem
+			semanticSearchSubSystem.Initialize()
+		} else {
+			LogErrorMsg("Semantic Search Sub-system failed to initialize: " + err.Error())
+		}
+	}
 
 	return nil
 }

@@ -114,7 +114,7 @@ func (vmi *VaultMainIndex) Delete() error {
 // res - Temp file resource
 func (vmi *VaultMainIndex) CancelWrite(res *VaultIndexWriteResource) {
 	res.file.Close()
-	os.Remove(res.path)
+	_ = os.Remove(res.path)
 	vmi.lock.EndWrite()
 }
 

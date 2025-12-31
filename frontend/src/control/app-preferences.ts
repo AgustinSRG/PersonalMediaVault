@@ -413,7 +413,14 @@ export function setMaxParallelUploads(maxParallelUploads: number) {
     saveIntoLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS, maxParallelUploads);
 }
 
-export type SearchMode = "basic" | "adv";
+/**
+ * Clears preferences for the upload page
+ */
+export function clearUploadPreferences() {
+    clearLocalStorage(LS_KEY_MAX_PARALLEL_UPLOADS);
+}
+
+export type SearchMode = "basic" | "adv" | "semantic" | "image";
 
 const DEFAULT_SEARCH_MODE = "basic";
 
@@ -421,12 +428,17 @@ const LS_KEY_SEARCH_MODE = "app-pref-search-mode";
 
 /**
  * Gets the preferred search mode for media
+ * @param semanticSearchAvailable True if semantic search is available
  * @returns The search mode
  */
-export function getPreferredSearchMode(): SearchMode {
+export function getPreferredSearchMode(semanticSearchAvailable: boolean): SearchMode {
     const searchMode = fetchFromLocalStorageCache(LS_KEY_SEARCH_MODE, DEFAULT_SEARCH_MODE) + "";
 
-    if (!["basic", "adv"].includes(searchMode)) {
+    if (!["basic", "adv", "semantic", "image"].includes(searchMode)) {
+        return DEFAULT_SEARCH_MODE;
+    }
+
+    if (!semanticSearchAvailable && (searchMode === "semantic" || searchMode === "image")) {
         return DEFAULT_SEARCH_MODE;
     }
 
@@ -439,4 +451,30 @@ export function getPreferredSearchMode(): SearchMode {
  */
 export function setPreferredSearchMode(mode: SearchMode) {
     saveIntoLocalStorage(LS_KEY_SEARCH_MODE, mode);
+}
+
+const LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES = "app-pref-search-semantic-images";
+
+/**
+ * Gets the app preference to search only images in semantic search
+ * @returns The preference value
+ */
+export function getSemanticSearchOnlyImages(): boolean {
+    return fetchFromLocalStorageCache(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, true);
+}
+
+/**
+ * Sets the app preference to search only images in semantic search
+ * @param b The preference value
+ */
+export function setSemanticSearchOnlyImages(b: boolean) {
+    saveIntoLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES, b);
+}
+
+/**
+ * Clears preferences for the search page
+ */
+export function clearSearchPreferences() {
+    clearLocalStorage(LS_KEY_SEARCH_MODE);
+    clearLocalStorage(LS_KEY_SEARCH_SEMANTIC_ONLY_IMAGES);
 }

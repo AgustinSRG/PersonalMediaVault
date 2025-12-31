@@ -47,6 +47,11 @@ export interface AccountContext {
      * Current PMV version
      */
     version: string;
+
+    /**
+     * True if semantic search is available
+     */
+    semanticSearch?: boolean;
 }
 
 /**

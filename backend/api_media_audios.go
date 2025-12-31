@@ -102,7 +102,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		if err != nil && err != io.EOF {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -122,7 +122,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		if err != nil {
 			LogError(err)
 
-			f.Close()
+			_ = f.Close()
 			DeleteTemporalFile(tempFile)
 
 			ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -130,7 +130,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		}
 	}
 
-	f.Close()
+	_ = f.Close()
 
 	// Probe uploaded file
 
@@ -169,7 +169,8 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		os.Remove(audio_encrypted_file)
+		_ = os.Remove(audio_encrypted_file)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
@@ -179,7 +180,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 	if err != nil {
 		LogError(err)
 
-		os.Remove(audio_encrypted_file)
+		_ = os.Remove(audio_encrypted_file)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
@@ -189,16 +190,22 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 
 	if meta == nil {
 		media.CancelWrite()
-		os.Remove(audio_encrypted_file)
+
+		_ = os.Remove(audio_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
 	if meta.Type != MediaTypeVideo {
 		media.CancelWrite()
-		os.Remove(audio_encrypted_file)
+
+		_ = os.Remove(audio_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 400, "NOT_SUPPORTED", "This feature is not supported for the media type. Only for videos.")
 		return
 	}
@@ -210,7 +217,9 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 
 	if !success {
 		media.CancelWrite()
-		os.Remove(audio_encrypted_file)
+
+		_ = os.Remove(audio_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
@@ -231,7 +240,9 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 		LogError(err)
 
 		media.CancelWrite()
-		os.Remove(audio_encrypted_file)
+
+		_ = os.Remove(audio_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -252,7 +263,7 @@ func api_addMediaAudioTrack(response http.ResponseWriter, request *http.Request)
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 
@@ -362,7 +373,7 @@ func api_removeMediaAudioTrack(response http.ResponseWriter, request *http.Reque
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 

@@ -46,7 +46,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var p []ImageNote = make([]ImageNote, 0)
+	var p = make([]ImageNote, 0)
 
 	err = json.NewDecoder(request.Body).Decode(&p)
 	if err != nil {
@@ -83,7 +83,8 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 	media := GetVault().media.AcquireMediaResource(media_id)
 
 	if media == nil {
-		os.Remove(notes_encrypted_file)
+		_ = os.Remove(notes_encrypted_file)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
@@ -93,7 +94,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		LogError(err)
 
-		os.Remove(notes_encrypted_file)
+		_ = os.Remove(notes_encrypted_file)
 
 		GetVault().media.ReleaseMediaResource(media_id)
 
@@ -103,16 +104,22 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	if meta == nil {
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+
+		_ = os.Remove(notes_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
 		return
 	}
 
 	if meta.Type != MediaTypeImage {
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+
+		_ = os.Remove(notes_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
+
 		ReturnAPIError(response, 400, "NOT_SUPPORTED", "This feature is not supported for the media type. Only for images.")
 		return
 	}
@@ -124,7 +131,9 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 
 	if !success {
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+
+		_ = os.Remove(notes_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 404, "NOT_FOUND", "Media not found")
@@ -145,7 +154,9 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 		LogError(err)
 
 		media.CancelWrite()
-		os.Remove(notes_encrypted_file)
+
+		_ = os.Remove(notes_encrypted_file)
+
 		GetVault().media.ReleaseMediaResource(media_id)
 
 		ReturnAPIError(response, 500, "INTERNAL_ERROR", "Internal server error, Check the logs for details.")
@@ -163,7 +174,7 @@ func api_setImageNotes(response http.ResponseWriter, request *http.Request) {
 			asset_lock.RequestWrite()
 			asset_lock.StartWrite()
 
-			os.Remove(asset_path)
+			_ = os.Remove(asset_path)
 
 			asset_lock.EndWrite()
 

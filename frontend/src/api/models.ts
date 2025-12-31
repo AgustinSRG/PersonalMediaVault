@@ -653,7 +653,7 @@ export interface AdvancedSearchResults {
     scanned: number;
 
     /**
-     * Reference of the last item, tro continue fetching more items
+     * Reference of the last item, in order continue fetching more items
      */
     continue: number;
 

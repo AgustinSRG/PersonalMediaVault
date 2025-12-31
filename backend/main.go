@@ -13,7 +13,7 @@ import (
 	child_process_manager "github.com/AgustinSRG/go-child-process-manager"
 )
 
-const BACKEND_VERSION = "4.0.1"
+const BACKEND_VERSION = "5.0.0"
 
 type BackendOptions struct {
 	debug       bool // Debug mode
@@ -113,48 +113,49 @@ func main() {
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
 
-		if arg == "--debug" {
+		switch arg {
+		case "--debug":
 			options.debug = true
-		} else if arg == "--log-requests" {
+		case "--log-requests":
 			options.logRequests = true
-		} else if arg == "--help" || arg == "-h" {
+		case "--help", "-h":
 			printHelp()
 			return
-		} else if arg == "--version" || arg == "-v" {
+		case "--version", "-v":
 			printVersion()
 			return
-		} else if arg == "--daemon" || arg == "-d" {
+		case "--daemon", "-d":
 			options.daemon = true
-		} else if arg == "--clean" || arg == "-c" {
+		case "--clean", "-c":
 			options.clean = true
-		} else if arg == "--cors-insecure" {
+		case "--cors-insecure":
 			CORS_INSECURE_MODE_ENABLED = true
-		} else if arg == "--init" || arg == "-i" {
+		case "--init", "-i":
 			options.initialize = true
-		} else if arg == "--skip-lock" || arg == "-sl" {
+		case "--skip-lock", "-sl":
 			options.skipLock = true
-		} else if arg == "--port" || arg == "-p" {
+		case "--port", "-p":
 			if i == len(args)-1 {
 				fmt.Println("The option '--port' requires a value")
 				os.Exit(1)
 			}
 			options.port = args[i+1]
 			i++
-		} else if arg == "--launch-tag" {
+		case "--launch-tag":
 			if i == len(args)-1 {
 				fmt.Println("The option '--launch-tag' requires a value")
 				os.Exit(1)
 			}
 			LAUNCHER_TAG = args[i+1]
 			i++
-		} else if arg == "--bind" || arg == "-b" {
+		case "--bind", "-b":
 			if i == len(args)-1 {
 				fmt.Println("The option '--bind' requires a value")
 				os.Exit(1)
 			}
 			options.bindAddr = args[i+1]
 			i++
-		} else if arg == "--vault-path" || arg == "-vp" {
+		case "--vault-path", "-vp":
 			if i == len(args)-1 {
 				fmt.Println("The option '--vault-path' requires a value")
 				os.Exit(1)
@@ -162,11 +163,11 @@ func main() {
 			options.vaultPath = args[i+1]
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
-		} else if arg == "--fix-consistency" {
+		case "--fix-consistency":
 			options.fix = true
-		} else if arg == "--recover" {
+		case "--recover":
 			options.recover = true
-		} else if arg == "--cache-size" {
+		case "--cache-size":
 			if i == len(args)-1 {
 				fmt.Println("The option '--cache-size' requires a value")
 				os.Exit(1)
@@ -181,7 +182,7 @@ func main() {
 
 			options.previewsCacheSize = cacheSize
 			i++
-		} else {
+		default:
 			fmt.Println("Invalid argument: " + arg)
 			os.Exit(1)
 		}
@@ -345,6 +346,19 @@ func printHelp() {
 	fmt.Println("        USING_PROXY                Set to 'YES' if you are using a reverse proxy.")
 	fmt.Println("        VAULT_INITIAL_USER         The initial vault username to set if the vault folder is empty.")
 	fmt.Println("        VAULT_INITIAL_PASSWORD     The initial vault password to set if the vault folder is empty.")
+	fmt.Println("    SEMANTIC SEARCH CONFIG (ENV VARIABLES):")
+	fmt.Println("        SEMANTIC_SEARCH_ENABLED    Set it to 'YES' to enable semantic search.")
+	fmt.Println("                                   The rest of the options must be configured. Otherwise you will get an error.")
+	fmt.Println("        QDRANT_HOST                Host of the Qdrant database.")
+	fmt.Println("        QDRANT_PORT                GRPC port of the Qdrant database. Default: '6334'")
+	fmt.Println("        QDRANT_API_KEY             API key for the Qdrant database.")
+	fmt.Println("        QDRANT_USE_TLS             Set it to 'YES' in order to use TLS to connect to the Qdrant database.")
+	fmt.Println("        QDRANT_INITIAL_SCAN        By default, when the vault is unlocked,")
+	fmt.Println("                                   a task to scan for missing media in the Qdrant database will be created.")
+	fmt.Println("                                   Set this variable to 'NO' to disable it.")
+	fmt.Println("        CLIP_API_BASE              Base URL of the CLIP API (provided by pmv-ai-service). Example: 'http://localhost:5000/clip'")
+	fmt.Println("        CLIP_API_AUTH              Value of the 'Authorization' header in order to use the CLIP API.")
+	fmt.Println("        CLIP_IMAGE_SIZE_LIMIT_MB   Limit on size (MB) before the images are discarded from being encoded by CLIP. Default: '20'")
 }
 
 // Prints version to standard output

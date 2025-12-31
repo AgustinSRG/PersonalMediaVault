@@ -200,7 +200,7 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 	f_info, err := f.Stat()
 
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 
 		return "", err
 	}
@@ -208,7 +208,7 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_file, FILE_PERMISSION)
 
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 
 		return "", err
 	}
@@ -216,10 +216,10 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
-		ws.Close()
-		f.Close()
+		_ = ws.Close()
+		_ = f.Close()
 
-		os.Remove(encrypted_file)
+		_ = os.Remove(encrypted_file)
 
 		return "", err
 	}
@@ -237,10 +237,10 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 		c, err := f.Read(buf)
 
 		if err != nil && err != io.EOF {
-			ws.Close()
-			f.Close()
+			_ = ws.Close()
+			_ = f.Close()
 
-			os.Remove(encrypted_file)
+			_ = os.Remove(encrypted_file)
 
 			GetVault().media.EndProgress(mid)
 
@@ -260,12 +260,12 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 		if err != nil {
 			LogError(err)
 
-			ws.Close()
-			f.Close()
+			_ = ws.Close()
+			_ = f.Close()
 
 			GetVault().media.EndProgress(mid)
 
-			os.Remove(encrypted_file)
+			_ = os.Remove(encrypted_file)
 
 			return "", err
 		}
@@ -284,8 +284,8 @@ func EncryptOriginalAssetFile(mid uint64, file string, key []byte, preserve_orig
 		GetVault().media.SetProgress(mid, p)
 	}
 
-	ws.Close()
-	f.Close()
+	_ = ws.Close()
+	_ = f.Close()
 
 	if !preserve_original || second_phase {
 		GetVault().media.EndProgress(mid)
@@ -310,7 +310,7 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 	f_info, err := f.Stat()
 
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 
 		return "", err
 	}
@@ -318,7 +318,7 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 	ws, err := encrypted_storage.CreateFileBlockEncryptWriteStream(encrypted_file, FILE_PERMISSION)
 
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 
 		return "", err
 	}
@@ -326,10 +326,10 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 	err = ws.Initialize(f_info.Size(), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
-		ws.Close()
-		f.Close()
+		_ = ws.Close()
+		_ = f.Close()
 
-		os.Remove(encrypted_file)
+		_ = os.Remove(encrypted_file)
 
 		return "", err
 	}
@@ -341,10 +341,10 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 		c, err := f.Read(buf)
 
 		if err != nil && err != io.EOF {
-			ws.Close()
-			f.Close()
+			_ = ws.Close()
+			_ = f.Close()
 
-			os.Remove(encrypted_file)
+			_ = os.Remove(encrypted_file)
 
 			return "", err
 		}
@@ -362,17 +362,17 @@ func EncryptAssetFile(file string, key []byte) (string, error) {
 		if err != nil {
 			LogError(err)
 
-			ws.Close()
-			f.Close()
+			_ = ws.Close()
+			_ = f.Close()
 
-			os.Remove(encrypted_file)
+			_ = os.Remove(encrypted_file)
 
 			return "", err
 		}
 	}
 
-	ws.Close()
-	f.Close()
+	_ = ws.Close()
+	_ = f.Close()
 
 	return encrypted_file, nil
 }
@@ -390,9 +390,9 @@ func EncryptAssetData(data []byte, key []byte) (string, error) {
 	err = ws.Initialize(int64(len(data)), ENCRYPTED_BLOCK_MAX_SIZE, key)
 
 	if err != nil {
-		ws.Close()
+		_ = ws.Close()
 
-		os.Remove(encrypted_file)
+		_ = os.Remove(encrypted_file)
 
 		return "", err
 	}
@@ -402,14 +402,14 @@ func EncryptAssetData(data []byte, key []byte) (string, error) {
 	if err != nil {
 		LogError(err)
 
-		ws.Close()
+		_ = ws.Close()
 
-		os.Remove(encrypted_file)
+		_ = os.Remove(encrypted_file)
 
 		return "", err
 	}
 
-	ws.Close()
+	_ = ws.Close()
 
 	return encrypted_file, nil
 }

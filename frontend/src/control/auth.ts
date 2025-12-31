@@ -98,6 +98,11 @@ export class AuthController {
     public static CSS = "";
 
     /**
+     * True if semantic search is available
+     */
+    public static SemanticSearchAvailable = false;
+
+    /**
      * Initialization logic
      * Runs at app startup
      */
@@ -167,6 +172,7 @@ export class AuthController {
                 AuthController.Title = response.title;
                 AuthController.Logo = response.logo;
                 AuthController.CSS = response.css;
+                AuthController.SemanticSearchAvailable = response.semanticSearch || false;
                 if (import.meta.env.VITE__VERSION !== response.version) {
                     AppEvents.Emit(EVENT_NAME_APP_NEW_VERSION);
                 }

@@ -144,27 +144,21 @@ func api_searchMedia(response http.ResponseWriter, request *http.Request) {
 
 	// Read metadata
 
-	page_items_meta := GetMediaMinInfoList(page_items, session)
+	page_items_meta := GetMediaMinInfoList(page_items, session, func(media_id uint64) {
+		if tagToSearch != "" {
+			err, _ = GetVault().tags.UnTagMedia(media_id, tag_id, session.key)
 
-	for i := 0; i < len(page_items_meta); i++ {
-		mediaInfo := page_items_meta[i]
+			if err != nil {
+				LogError(err)
+			}
+		} else {
+			err = GetVault().index.RemoveElement(media_id)
 
-		if mediaInfo.Type == MediaTypeDeleted {
-			if tagToSearch != "" {
-				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
-
-				if err != nil {
-					LogError(err)
-				}
-			} else {
-				err = GetVault().index.RemoveElement(page_items[i])
-
-				if err != nil {
-					LogError(err)
-				}
+			if err != nil {
+				LogError(err)
 			}
 		}
-	}
+	})
 
 	// Send response
 
@@ -219,7 +213,7 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	var seed int64 = time.Now().UnixMilli()
+	var seed = time.Now().UnixMilli()
 	seedStr := request.URL.Query().Get("seed")
 	if seedStr != "" {
 		seed, err = strconv.ParseInt(seedStr, 10, 64)
@@ -273,27 +267,21 @@ func api_randomMedia(response http.ResponseWriter, request *http.Request) {
 
 	// Read meta of media items
 
-	page_items_meta := GetMediaMinInfoList(page_items, session)
+	page_items_meta := GetMediaMinInfoList(page_items, session, func(media_id uint64) {
+		if tagToSearch != "" {
+			err, _ = GetVault().tags.UnTagMedia(media_id, tag_id, session.key)
 
-	for i := 0; i < len(page_items_meta); i++ {
-		mediaInfo := page_items_meta[i]
+			if err != nil {
+				LogError(err)
+			}
+		} else {
+			err = GetVault().index.RemoveElement(media_id)
 
-		if mediaInfo.Type == MediaTypeDeleted {
-			if tagToSearch != "" {
-				err, _ = GetVault().tags.UnTagMedia(page_items[i], tag_id, session.key)
-
-				if err != nil {
-					LogError(err)
-				}
-			} else {
-				err = GetVault().index.RemoveElement(page_items[i])
-
-				if err != nil {
-					LogError(err)
-				}
+			if err != nil {
+				LogError(err)
 			}
 		}
-	}
+	})
 
 	// Send response
 
@@ -455,7 +443,7 @@ func api_advancedSearch(response http.ResponseWriter, request *http.Request) {
 
 	// Read meta of media items
 
-	mediaItemsInfo := GetMediaMinInfoList(mediaIdList, session)
+	mediaItemsInfo := GetMediaMinInfoList(mediaIdList, session, nil)
 
 	// Result
 

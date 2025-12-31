@@ -1717,7 +1717,7 @@ export default defineComponent({
                 return;
             }
 
-            analyser.getByteFrequencyData(dataArray);
+            analyser.getByteFrequencyData(dataArray as Uint8Array<ArrayBuffer>);
 
             bufferLength = Math.floor(Math.max(1, bufferLength / 2));
 

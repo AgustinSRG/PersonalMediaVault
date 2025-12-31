@@ -164,7 +164,7 @@ func api_getAlbum(response http.ResponseWriter, request *http.Request) {
 		Thumbnail:    getAlbumThumbnail(album_id, album, session),
 	}
 
-	result.List = GetMediaMinInfoList(album.List, session)
+	result.List = GetMediaMinInfoList(album.List, session, nil)
 
 	jsonResult, err := json.Marshal(result)
 

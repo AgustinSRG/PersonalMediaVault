@@ -1,0 +1,72 @@
+services:
+
+  # Qdrant vector database
+  pmv_qdrant:
+    hostname: "pmv-qdrant"
+    image: qdrant/qdrant
+    networks:
+      - pmv_with_ai_network
+    ports:
+      - '6334'
+    volumes:
+      - ./qdrant-db:/qdrant/storage
+    restart: unless-stopped
+    environment:
+      - QDRANT__LOG_LEVEL=${QDRANT_LOG_LEVEL:-INFO}
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY:-change_me}
+      - QDRANT__GRPC_PORT=6334
+
+  # AI service for encoding text and images into vectors
+  pmv_ai:
+    hostname: "pmv-ai"
+    image: asanrom/pmv-ai-service
+    networks:
+      - pmv_with_ai_network
+    ports:
+      - '8080'
+    volumes:
+      - ./ai-models:/home/app/.data
+    restart: unless-stopped
+    environment:
+      - LOGLEVEL=${AI_SERVICE_LOG_LEVEL:-INFO}
+      - API_AUTHORIZATION=${AI_SERVICE_AUTH_TOKEN:-}
+      - CLIP_MODEL_NAME=${CLIP_MODEL_NAME:-ViT-B/32}
+
+  # PersonalMediaVault daemon
+  pmvd:
+    hostname: "pmvd"
+    image: "asanrom/pmv"
+    networks:
+      - pmv_with_ai_network
+    ports:
+      - "${VAULT_PORT}:8000"
+    restart: unless-stopped
+    volumes:
+      - ${VAULT_PATH:-./vault}:/vault
+      - ${VAULT_SSL_PATH:-./ssl}:/ssl:ro
+    environment:
+      - USING_PROXY=${USING_PROXY:-NO}
+      - VAULT_INITIAL_USER=${VAULT_INITIAL_USER:-admin}
+      - VAULT_INITIAL_PASSWORD=${VAULT_INITIAL_PASSWORD:-changeme}
+      - SSL_CERT=${SSL_CERT:-}
+      - SSL_KEY=${SSL_KEY:-}
+      - SEMANTIC_SEARCH_ENABLED=YES
+      - QDRANT_HOST=pmv-qdrant
+      - QDRANT_PORT=6334
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-change_me}
+      - QDRANT_USE_TLS=NO
+      - QDRANT_INITIAL_SCAN=YES
+      - CLIP_API_BASE=http://pmv-ai:8080/clip
+      - CLIP_API_AUTH=${AI_SERVICE_AUTH_TOKEN:-}
+      - CLIP_IMAGE_SIZE_LIMIT_MB=25
+    command:
+      --daemon
+      --clean
+      --port 8000
+      --skip-lock
+      --vault-path /vault
+      --cache-size ${VAULT_CACHE_SIZE:-1024}
+      ${VAULT_EXTRA_OPTIONS:-}
+
+networks:
+  pmv_with_ai_network:

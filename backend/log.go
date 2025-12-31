@@ -43,6 +43,10 @@ func LogError(err error) {
 	LogLine("[ERROR] " + err.Error())
 }
 
+func LogErrorMsg(err string) {
+	LogLine("[ERROR] " + err)
+}
+
 func LogTaskError(task_id uint64, err string) {
 	LogLine("[TASK #" + fmt.Sprint(task_id) + "] [ERROR] " + err)
 }

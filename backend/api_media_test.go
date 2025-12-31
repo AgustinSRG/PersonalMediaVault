@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -435,7 +436,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		writer.Close()
+		_ = writer.Close()
 
 		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/edit/thumbnail")
 
@@ -461,7 +462,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
@@ -540,7 +541,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		writer.Close()
+		_ = writer.Close()
 
 		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/subtitles/set")
 
@@ -566,7 +567,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
@@ -709,7 +710,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		writer.Close()
+		_ = writer.Close()
 
 		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/audios/set")
 
@@ -735,7 +736,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
@@ -878,7 +879,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		writer.Close()
+		_ = writer.Close()
 
 		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/attachments/add")
 
@@ -904,7 +905,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(resp.StatusCode), "200"))
@@ -1175,7 +1176,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		writer.Close()
+		_ = writer.Close()
 
 		apiURL, err := url.JoinPath(server.URL, "/api/media/"+url.PathEscape(fmt.Sprint(mediaId))+"/replace")
 
@@ -1202,7 +1203,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 			return
 		}
 
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		if resp.StatusCode != 200 {
 			t.Error(ErrorMismatch("StatusCode", fmt.Sprint(statusCode), "200"))
@@ -1442,7 +1443,7 @@ func _TestUploadedMedia(server *httptest.Server, session string, t *testing.T, m
 	}
 
 	if !reflect.DeepEqual(bodyResponseBytes, originalAssetBytes[assetBytes-32:]) {
-		t.Error(ErrorMismatch("Content-Length", fmt.Sprint(bodyResponseBytes), fmt.Sprint(originalAssetBytes[assetBytes-32:])))
+		t.Error(ErrorMismatch("Content-Length", hex.EncodeToString(bodyResponseBytes), hex.EncodeToString(originalAssetBytes[assetBytes-32:])))
 	}
 
 	// Finish: Delete media
@@ -1505,7 +1506,7 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 		return 0, "", err
 	}
 
-	writer.Close()
+	_ = writer.Close()
 
 	req, err := http.NewRequest("POST", apiURL+"?title="+url.QueryEscape(title)+"&album="+url.QueryEscape(album), &b)
 
@@ -1522,7 +1523,7 @@ func UploadTestMedia(server *httptest.Server, session string, mt MediaType, titl
 		return 0, filePath, err
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != 200 {
 		return 0, filePath, errors.New("Upload error. Status code: " + fmt.Sprint(resp.StatusCode))

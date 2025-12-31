@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: PersonalMediaVault Backend API
   description: API to access PersonalMediaVault from a web client.
-  version: 4.0.1
+  version: 5.0.0
 
 # cSpell:ignore allof, anyof, noneof, gyan
 
@@ -41,6 +41,8 @@ tags:
     description: Invite codes API. Manages codes to temporally invite users or devices.
   - name: home
     description: Home page API. Manages home page customization.
+  - name: semantic_search
+    description: Semantic search API. Allows the client to search using vectors instead of tags.
   
 
 paths:
@@ -176,6 +178,9 @@ paths:
               write:
                 type: boolean
                 description: "True if the user has write access to the vault"
+              semanticSearch:
+                type: boolean
+                description: "True if the semantic search feature is enabled"
   "/api/account/username":
     post:
       summary: Change username
@@ -1668,7 +1673,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/subtitles/set":
+  "/api/media/{mid}/subtitles/set":
     post:
       summary: Sets subtitles
       description: Add a subtitles file for videos and audios
@@ -1680,7 +1685,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1748,7 +1753,7 @@ paths:
                 description: "SRT file URL"
                 example: "/assets/b/0/0/subrip.srt"
   
-  "/api/media/{id}/subtitles/remove":
+  "/api/media/{mid}/subtitles/remove":
     post:
       summary: Removes subtitles
       description: Removes subtitles
@@ -1758,7 +1763,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1813,7 +1818,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/subtitles/rename":
+  "/api/media/{mid}/subtitles/rename":
     post:
       summary: Renames subtitles
       description: Renames subtitles
@@ -1823,7 +1828,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1876,7 +1881,7 @@ paths:
         200:
           description: Success
 
-  "/api/media/{id}/audios/set":
+  "/api/media/{mid}/audios/set":
     post:
       summary: Sets audio track
       description: Add an extra audio track to a video
@@ -1888,7 +1893,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -1954,7 +1959,7 @@ paths:
                 description: "Audio file URL"
                 example: "/assets/b/0/0/audio.mp3"
 
-  "/api/media/{id}/audios/remove":
+  "/api/media/{mid}/audios/remove":
     post:
       summary: Removes audio track
       description: Removes audio track
@@ -1964,7 +1969,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -2019,7 +2024,7 @@ paths:
         200:
           description: Success
           
-  "/api/media/{id}/audios/rename":
+  "/api/media/{mid}/audios/rename":
     post:
       summary: Renames subtitles
       description: Renames subtitles
@@ -2029,7 +2034,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -2207,7 +2212,7 @@ paths:
                 description: "Attachment file URL"
                 example: "/assets/b/0/0/example.txt"
                 
-  "/api/media/{id}/attachments/remove":
+  "/api/media/{mid}/attachments/remove":
     post:
       summary: Removes attachment
       description: Removes attachment
@@ -2217,7 +2222,7 @@ paths:
         - application/json
       parameters:
         - in: path
-          name: id
+          name: mid
           required: true
           type: number
           format: int64
@@ -2509,24 +2514,7 @@ paths:
         200:
           description: Search results
           schema:
-            properties:
-              total_count:
-                type: number
-                format: int64
-                description: "Total number of possible results to be filtered"
-              scanned:
-                type: number
-                format: int64
-                description: Number of scanned items
-              continue:
-                type: number
-                format: int64
-                description: Reference of the last item to continue fetching more items.
-              items:
-                type: array
-                description: Found items
-                items:
-                  $ref: '#/definitions/MediaListItem'
+            $ref: "#/definitions/AdvancedSearchResultResponse"
           
   "/api/random":
     get:
@@ -3880,13 +3868,10 @@ paths:
                 items:
                   $ref: '#/definitions/HomePageGroupElementRef'
               add:
-                description: "Include this property to add an element"
                 $ref: '#/definitions/HomePageGroupElementRef'
               delete:
-                description: "Include this property to delete an element"
                 $ref: '#/definitions/HomePageGroupElementRef'
               move:
-                description: "Include this property to move an element"
                 $ref: '#/definitions/HomePageGroupElementRefMove'
       security:
         - SessionTokenHeader: []
@@ -4060,6 +4045,140 @@ paths:
         200:
           description: OK
   
+  "/api/search/semantic":
+    post:
+      summary: Performs a semantic search query
+      description: |-
+        Performs a semantic search query using a vector instead of tags.
+        In order to obtain the vector, use the encoder endpoints for text and images.
+      tags:
+        - semantic_search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Search query parameters
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticBody"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        400:
+          description: Bad request
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_VECTOR_SIZE - Invalid vector size. Make sure to use the encoding APIs. Do not fabricate vectors.
+                enum:
+                  - INVALID_VECTOR_SIZE
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        200:
+          description: Search results
+          schema:
+            $ref: "#/definitions/AdvancedSearchResultResponse"
+  
+  "/api/search/semantic/encoder/text":
+    post:
+      summary: Encodes text into vector
+      description: |-
+        Encodes a text into a vector.
+        The vector then can be used to perform a semantic search query.
+      tags:
+        - semantic_search
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: Text to be encoded
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticEncodeTextBody"
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        400:
+          description: Bad request
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * EMPTY_TEXT - Empty text. Make sure the text is not empty.
+                enum:
+                  - EMPTY_TEXT
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        404:
+          description: Not found (Semantic search system unavailable)
+        200:
+          description: Search results
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
+
+  "/api/search/semantic/encoder/image":
+    post:
+      summary: Encodes image into vector
+      description: |-
+        Encodes an image into a vector.
+        The vector then can be used to perform a semantic search query.
+      tags:
+        - semantic_search
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: image
+          type: file
+          description: The image to encode.
+      security:
+        - SessionTokenHeader: []
+      responses:
+        401:
+          description: Unauthorized (No valid session)
+        400:
+          description: Bad request
+          schema:
+            properties:
+              code:
+                type: string
+                description: >
+                  Error code:
+                    * INVALID_IMAGE - Invalid image file.
+                    * INVALID_MULTIPART_BODY - Invalid multipart body received
+                enum:
+                  - INVALID_IMAGE
+                  - INVALID_MULTIPART_BODY
+              message:
+                type: string
+                description: "Error message"
+                example: "Error message"
+        404:
+          description: Not found (Semantic search system unavailable)
+        413:
+          description: Image file too large (The default is 20MB, but it can be changed in the backend settings)
+        200:
+          description: Search results
+          schema:
+            $ref: "#/definitions/SearchMediaSemanticEncodeResponse"
+
 definitions:
     MediaListItem:
       description: Media asset info to show in lists
@@ -4330,3 +4449,80 @@ definitions:
           type: number
           format: int32
           description: "Position to move the element"
+      required:
+        - t
+        - i
+        - position
+    
+    SearchMediaSemanticBody:
+      description: "Semantic search query parameters"
+      properties:
+        vector:
+          type: array
+          items:
+            type: number
+            format: float32
+          description: Vector used for the semantic search based on distance
+        vectorType:
+          type: string
+          enum:
+            - text
+            - image
+            - any
+          description: Optional filter by the type of vector.
+        limit:
+          type: number
+          format: int32
+          description: "Max number of results to get. Max: 256."
+        continuationToken:
+          type: number
+          format: int64
+          description: "Continuation token in order to fetch more results from a previous query"
+      required:
+        - vector
+    
+    AdvancedSearchResultResponse:
+      description: "Search result for a vault scanning operation"
+      properties:
+        total_count:
+          type: number
+          format: int64
+          description: "Total number of possible results to be filtered"
+        scanned:
+          type: number
+          format: int64
+          description: Number of scanned items
+        continue:
+          type: number
+          format: int64
+          description: Reference of the last item to continue fetching more items.
+        items:
+          type: array
+          description: Found items
+          items:
+            $ref: '#/definitions/MediaListItem'
+      required: 
+        - total_count
+        - scanned
+        - items
+  
+    SearchMediaSemanticEncodeTextBody:
+      description: Body that includes a text to be encoded into a vector
+      properties:
+        text:
+          type: string
+          description: "Text to be encoded into a vector"
+      required:
+        - text
+
+    SearchMediaSemanticEncodeResponse:
+      description: Response that includes a vector, result of encoding for semantic search
+      properties:
+        vector:
+          type: array
+          items:
+            type: number
+            format: float32
+          description: Vector used for the semantic search based on distance
+      required:
+        - vector
