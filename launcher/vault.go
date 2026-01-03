@@ -784,11 +784,96 @@ func (vc *VaultController) WaitForProcess() {
 
 func (vc *VaultController) Clean() {
 	// Clean
-	cmd := exec.Command(BACKEND_BIN, "--clean", "--fix-consistency", "--skip-lock", "--vault-path", vc.vaultPath)
+	reader := bufio.NewReader(os.Stdin)
+
+	var username string = ""
+
+	for username == "" {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "EnterUsername",
+				Other: "Enter Username",
+			},
+		})
+		fmt.Print(msg + ": ")
+		readUsername, err := reader.ReadString('\n')
+		if err != nil {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
+			os.Exit(1)
+		}
+
+		username = strings.TrimSpace(readUsername)
+
+		if username == "" {
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorUsernameBlank",
+					Other: "Username cannot be blank.",
+				},
+			})
+			fmt.Println(msg)
+			continue
+		}
+	}
+
+	var password string = ""
+
+	for password == "" {
+		msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+			DefaultMessage: &i18n.Message{
+				ID:    "EnterPassword",
+				Other: "Enter Password",
+			},
+		})
+		fmt.Print(msg + ": ")
+		bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			msg, _ := Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "Error",
+					Other: "Error: {{.Message}}",
+				},
+				TemplateData: map[string]interface{}{
+					"Message": err.Error(),
+				},
+			})
+			fmt.Println(msg)
+			os.Exit(1)
+		}
+
+		password = strings.TrimSpace(string(bytePassword))
+
+		if password == "" {
+			msg, _ = Localizer.Localize(&i18n.LocalizeConfig{
+				DefaultMessage: &i18n.Message{
+					ID:    "ErrorPasswordBlank",
+					Other: "Password cannot be blank.",
+				},
+			})
+			fmt.Println(msg)
+			continue
+		}
+
+		fmt.Print("\n")
+	}
+
+	cmd := exec.Command(BACKEND_BIN, "--clean", "--remove-trash", "--skip-lock", "--vault-path", vc.vaultPath)
 
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "VAULT_USER="+username, "VAULT_PASSWORD="+password)
 
 	err := cmd.Run()
 
