@@ -146,6 +146,58 @@ type MediaMetadata struct {
 	Related []uint64 `json:"related,omitempty"` // List of IDs of related media assets
 }
 
+// Returns a set containing every single used asset ID
+func (meta *MediaMetadata) GetUsedAssetIdSet() map[uint64]bool {
+	result := make(map[uint64]bool)
+
+	// Original
+	result[meta.OriginalAsset] = true
+
+	// Description
+	if meta.HasDescription {
+		result[meta.DescriptionAsset] = true
+	}
+
+	// Thumbnail
+	if meta.ThumbnailReady {
+		result[meta.ThumbnailAsset] = true
+	}
+
+	// Resolutions
+	for _, r := range meta.Resolutions {
+		if r.Ready {
+			result[r.Asset] = true
+		}
+	}
+
+	// Video previews
+	if meta.PreviewsReady {
+		result[meta.PreviewsAsset] = true
+	}
+
+	// Subtitles
+	for _, s := range meta.Subtitles {
+		result[s.Asset] = true
+	}
+
+	// Audio tracks
+	for _, a := range meta.AudioTracks {
+		result[a.Asset] = true
+	}
+
+	// Image notes
+	if meta.HasImageNotes {
+		result[meta.ImageNotesAsset] = true
+	}
+
+	// Attachments
+	for _, a := range meta.Attachments {
+		result[a.Asset] = true
+	}
+
+	return result
+}
+
 // Creates a new media asset. Creates the folder and stores the initial metadata.
 // Used in the upload process
 // key - Vault encryption key

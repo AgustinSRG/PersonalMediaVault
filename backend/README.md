@@ -53,7 +53,8 @@ Also, here is a list of available debug options:
 | Option | Description |
 |---|---|
 | `--skip-lock` | Ignores vault lockfile. |
-| `--fix-consistency` | Fixes vault consistency at startup (takes some time). |
+| `--check-trash` | Checks the vault (at startup) in order to find trash files. This option requires the vault credentials passed in the environment variables `VAULT_USER` and `VAULT_PASSWORD`, in order to decrypt the vault files. |
+| `--remove-trash` | Removes the trash files. Combine this option with `--check-trash`. |
 | `--debug` | Enables debug mode. |
 | `--log-requests` | Enables logging requests to standard output. |
 | `--cors-insecure` | Allows all CORS requests (insecure, for development). |

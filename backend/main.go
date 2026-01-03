@@ -20,11 +20,12 @@ type BackendOptions struct {
 	logRequests bool
 
 	// Run modes
-	daemon     bool
-	initialize bool
-	clean      bool
-	fix        bool
-	recover    bool
+	daemon      bool
+	initialize  bool
+	handleTrash bool
+	removeTrash bool
+	clean       bool
+	recover     bool
 
 	// Port + Bind
 	port     string
@@ -164,7 +165,12 @@ func main() {
 			options.tempPath = path.Join(options.vaultPath, "temp")
 			i++
 		case "--fix-consistency":
-			options.fix = true
+			LogWarning("The '--fix-consistency' option is deprecated. Please use '--remove-trash' instead.")
+		case "--check-trash":
+			options.handleTrash = true
+		case "--remove-trash":
+			options.handleTrash = true
+			options.removeTrash = true
 		case "--recover":
 			options.recover = true
 		case "--cache-size":
@@ -188,7 +194,7 @@ func main() {
 		}
 	}
 
-	if options.daemon || options.clean || options.initialize || options.fix {
+	if options.daemon || options.clean || options.initialize || options.handleTrash {
 		if !options.skipLock {
 			// Setup lockfile
 			if !TryLockVault(options.vaultPath) {
@@ -207,6 +213,11 @@ func main() {
 	if options.clean {
 		LogInfo("Cleaning vault temporal files...")
 		ClearTemporalFilesPath()
+	}
+
+	if options.handleTrash {
+		LogInfo("Handling trash files...")
+		FindAndHandleTrashFiles(options.vaultPath, options.removeTrash)
 	}
 
 	if options.daemon {
@@ -267,14 +278,9 @@ func main() {
 			RecoverVaultAssets(&vault)
 		}
 
-		if options.fix {
-			LogInfo("Fixing vault consistency...")
-			FixVaultConsistency(&vault)
-		}
-
 		// Create and run HTTP server
 		RunHTTPServer(options.port, options.bindAddr, false)
-	} else if options.clean || options.fix || options.recover {
+	} else if options.clean || options.recover {
 		vault := Vault{}
 		err := vault.Initialize(options.vaultPath, options.previewsCacheSize)
 
@@ -297,13 +303,8 @@ func main() {
 			RecoverVaultAssets(&vault)
 		}
 
-		if options.fix {
-			LogInfo("Fixing vault consistency...")
-			FixVaultConsistency(&vault)
-		}
-
 		return
-	} else if options.initialize {
+	} else if options.initialize || options.handleTrash {
 		return
 	} else {
 		printHelp()
@@ -327,7 +328,10 @@ func printHelp() {
 
 	fmt.Println("    DEBUG OPTIONS:")
 	fmt.Println("        --skip-lock                Ignores vault lockfile.")
-	fmt.Println("        --fix-consistency          Fixes vault consistency at startup (takes some time).")
+	fmt.Println("        --check-trash              Checks the vault (at startup) in order to find trash files.")
+	fmt.Println("                                   This option requires the vault credentials passed in the environment variables")
+	fmt.Println("                                   VAULT_USER and VAULT_PASSWORD, in order to decrypt the vault files.")
+	fmt.Println("        --remove-trash             Removes the trash files. Combine this option with --check-trash.")
 	fmt.Println("        --recover                  Recovers non-indexed media assets.")
 	fmt.Println("        --debug                    Enables debug mode.")
 	fmt.Println("        --log-requests             Enables logging requests to standard output.")

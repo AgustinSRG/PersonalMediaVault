@@ -46,6 +46,26 @@ func (data *VaultAlbumData) HasMedia(media_id uint64) bool {
 	return false
 }
 
+// Gets a map with every album thumbnail asset ID
+// mapped to true
+func (data *VaultAlbumsData) GetThumbnailsIdMap() map[uint64]bool {
+	result := make(map[uint64]bool)
+
+	for _, album := range data.Albums {
+		if album == nil {
+			continue
+		}
+
+		if album.Thumbnail == nil {
+			continue
+		}
+
+		result[*album.Thumbnail] = true
+	}
+
+	return result
+}
+
 // Represents an asset file that stores a thumbnail of an album
 type AlbumThumbnailAsset struct {
 	id uint64 // File ID

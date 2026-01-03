@@ -54,6 +54,18 @@ func (data *VaultTagListData) FindTag(tag_name string) (bool, uint64) {
 	return false, 0
 }
 
+// Creates a map, mapping every single existing tag ID
+// with the value true
+func (data *VaultTagListData) GetExistingTagsMap() map[uint64]bool {
+	result := make(map[uint64]bool)
+
+	for id := range data.Tags {
+		result[id] = true
+	}
+
+	return result
+}
+
 // Parses tag name
 // Removes line breaks and other weird stuff from the name
 // Also converts to lowercase
