@@ -87,6 +87,8 @@ pub enum LauncherWorkerMessage {
 
     RunTool {
         tool: VaultSelectedTool,
+        username: String,
+        password: String,
     },
     CancelTool,
     ToolSuccess {

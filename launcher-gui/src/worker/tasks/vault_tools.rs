@@ -34,6 +34,8 @@ pub fn run_vault_tool(
     sender: &Sender<LauncherWorkerMessage>,
     window_handle: &Weak<MainWindow>,
     tool: VaultSelectedTool,
+    username: String,
+    password: String,
 ) {
     cancel_vault_tool(status);
 
@@ -43,7 +45,7 @@ pub fn run_vault_tool(
         }
         VaultSelectedTool::Clean => vec![
             "--clean".to_string(),
-            "--fix-consistency".to_string(),
+            "--remove-trash".to_string(),
             "--skip-lock".to_string(),
             "--vault-path".to_string(),
             status.vault_path.clone(),
@@ -56,11 +58,20 @@ pub fn run_vault_tool(
         ],
     };
 
-    let cmd = cmd(status.daemon_binary.clone(), args)
-        .stderr_null()
-        .stdout_null()
+    let mut cmd = cmd(status.daemon_binary.clone(), args)
+        .stderr_to_stdout()
+        .stdout_capture()
         .before_spawn(command_no_window)
         .stdin_null();
+
+    match tool {
+        VaultSelectedTool::Clean => {
+            cmd = cmd
+                .env("VAULT_USER", username)
+                .env("VAULT_PASSWORD", password)
+        }
+        _ => {}
+    }
 
     let handle = match cmd.start() {
         Ok(p) => p,
@@ -100,6 +111,30 @@ pub fn run_vault_tool(
     });
 }
 
+fn find_tool_error_in_output(o: &str) -> Option<String> {
+    let lines: Vec<&str> = o
+        .split("\n")
+        .map(|l| l.trim())
+        .filter(|l| l.len() > 0)
+        .collect();
+
+    for line in lines {
+        let line_parts: Vec<&str> = line.split("[ERROR]").collect();
+
+        if line_parts.len() < 2 {
+            continue;
+        }
+
+        let err_msg_joined = line_parts[1..].join("[ERROR]");
+
+        let err_msg_trim = err_msg_joined.trim();
+
+        return Some(err_msg_trim.to_string());
+    }
+
+    None
+}
+
 pub fn wait_for_tool_process(
     sender: Sender<LauncherWorkerMessage>,
     process: Arc<Handle>,
@@ -113,13 +148,30 @@ pub fn wait_for_tool_process(
 
         let _ = daemon_process_wait_sender.send(true);
 
-        if let Err(e) = r {
-            let _ = sender.send(LauncherWorkerMessage::ToolError {
-                tool_id,
-                error_details: e.to_string(),
-            });
-        } else {
-            let _ = sender.send(LauncherWorkerMessage::ToolSuccess { tool_id });
+        match r {
+            Ok(o) => {
+                let out_utf8 = String::from_utf8_lossy(&o.stdout).to_string();
+
+                let err_option = find_tool_error_in_output(&out_utf8);
+
+                match err_option {
+                    Some(err_msg) => {
+                        let _ = sender.send(LauncherWorkerMessage::ToolError {
+                            tool_id,
+                            error_details: err_msg,
+                        });
+                    }
+                    None => {
+                        let _ = sender.send(LauncherWorkerMessage::ToolSuccess { tool_id });
+                    }
+                }
+            }
+            Err(e) => {
+                let _ = sender.send(LauncherWorkerMessage::ToolError {
+                    tool_id,
+                    error_details: e.to_string(),
+                });
+            }
         }
     });
 }

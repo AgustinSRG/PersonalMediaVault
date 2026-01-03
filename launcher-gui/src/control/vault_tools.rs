@@ -16,6 +16,8 @@ pub fn setup_callbacks_vault_tools(ui: &MainWindow, worker_sender: Sender<Launch
 
             let _ = worker_sender_c.send(LauncherWorkerMessage::RunTool {
                 tool: selected_tool,
+                username: ui.get_username().to_string(),
+                password: ui.get_password().to_string(),
             });
         }
     });

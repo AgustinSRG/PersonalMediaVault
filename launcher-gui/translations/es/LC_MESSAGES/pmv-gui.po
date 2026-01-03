@@ -648,67 +648,61 @@ msgctxt "VaultConfigFFmpegView"
 msgid "Configuration changes successfully saved!"
 msgstr "¡Cambios en la configuración guardados!"
 
-#: ui/vault-tools.slint:33
+#: ui/vault-tools.slint:43
 msgctxt "VaultToolsView"
 msgid "Vault Tools"
 msgstr "Herramientas de la galería"
 
-#: ui/vault-tools.slint:41
+#: ui/vault-tools.slint:51
 msgctxt "VaultToolsView"
 msgid "Select the tool you want to use"
 msgstr "Elija la herramienta que desea usar"
 
-#: ui/vault-tools.slint:50 ui/vault-tools.slint:91
-msgctxt "VaultToolsView"
-msgid "Clean inconsistent files"
-msgstr "Limpiar archivos inconsistentes"
-
-#: ui/vault-tools.slint:66 ui/vault-tools.slint:94
+#: ui/vault-tools.slint:78 ui/vault-tools.slint:106
 msgctxt "VaultToolsView"
 msgid "Recover lost items"
 msgstr "Recuperar elementos perdidos"
 
-#: ui/vault-tools.slint:104
 msgctxt "VaultToolsView"
 msgid "With this tool you can remove media assets that are not indexed."
 msgstr "Con esta herramienta puede limpiar los elementos no indexados."
 
-#: ui/vault-tools.slint:107
+#: ui/vault-tools.slint:119
 msgctxt "VaultToolsView"
 msgid "With this tool you can recover media assets that are not indexed."
 msgstr "Con esta herramienta puede recuperar los elementos no indexados."
 
-#: ui/vault-tools.slint:115
+#: ui/vault-tools.slint:192
 msgctxt "VaultToolsView"
 msgid "Note: The tool requires the vault to be stopped in order to run"
 msgstr "Nota: Esta herramienta requiere detener la galería mientras se usa"
 
-#: ui/vault-tools.slint:154
+#: ui/vault-tools.slint:231
 msgctxt "VaultToolsView"
 msgid "Back"
 msgstr "Volver"
 
-#: ui/vault-tools.slint:164
+#: ui/vault-tools.slint:241
 msgctxt "VaultToolsView"
 msgid "Start"
 msgstr "Iniciar"
 
-#: ui/vault-tools.slint:175
+#: ui/vault-tools.slint:252
 msgctxt "VaultToolsView"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ui/vault-tools.slint:132
+#: ui/vault-tools.slint:209
 msgctxt "VaultToolsView"
 msgid "Tool successfully used!"
 msgstr "Herramienta usada con éxito"
 
-#: ui/vault-tools.slint:141
+#: ui/vault-tools.slint:218
 msgctxt "VaultToolsView"
 msgid "Error"
 msgstr "Error"
 
-#: ui/vault-tools.slint:141
+#: ui/vault-tools.slint:218
 msgctxt "VaultToolsView"
 msgid "Unknown error"
 msgstr "Error desconocido"
@@ -960,4 +954,24 @@ msgid ""
 msgstr ""
 "Nota: Si cambia el idioma, deberá reiniciar el lanzador para que los cambios "
 "surtan efecto"
+
+#: ui/vault-tools.slint:60 ui/vault-tools.slint:103
+msgctxt "VaultToolsView"
+msgid "Clean trash files"
+msgstr "Borrar ficheros basura"
+
+#: ui/vault-tools.slint:116
+msgctxt "VaultToolsView"
+msgid "With this tool you can remove trash files from the vault folder."
+msgstr "Con esta herramienta puede borrar los archivos basura que se encuentren en el directorio de la galería."
+
+#: ui/vault-tools.slint:139
+msgctxt "VaultToolsView"
+msgid "Main vault username"
+msgstr "Usuario principal"
+
+#: ui/vault-tools.slint:159
+msgctxt "VaultToolsView"
+msgid "Password"
+msgstr "Contraseña"
 

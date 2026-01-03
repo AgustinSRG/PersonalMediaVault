@@ -1,6 +1,7 @@
 
 import { VaultToolStatus, VaultSelectedTool } from "status.slint";
 import { Button, ProgressIndicator } from "std-widgets.slint";
+import { StringInput } from "string-input.slint";
 
 export component VaultToolsView inherits VerticalLayout {
     /// True if the launcher is busy, meaning the action buttons should be disabled
@@ -14,6 +15,15 @@ export component VaultToolsView inherits VerticalLayout {
 
     /// Selected tool
     private property <VaultSelectedTool> selected-tool: none;
+
+    /// Username input
+    in-out property <string> username: "";
+
+    /// Password input
+    in-out property <string> password: "";
+
+    /// Password visibility
+    private property <bool> password-visibility: false;
 
     /// Run the selected tool
     callback run-tool(VaultSelectedTool);
@@ -47,7 +57,7 @@ export component VaultToolsView inherits VerticalLayout {
             alignment: LayoutAlignment.center;
 
             Button {
-                text: @tr("Clean inconsistent files");
+                text: @tr("Clean trash files");
                 icon: @image-url("../assets/icons/clean.svg");
                 primary: true;
                 colorize-icon: true;
@@ -55,6 +65,8 @@ export component VaultToolsView inherits VerticalLayout {
                 clicked => {
                     root.selected-tool = VaultSelectedTool.clean;
                     root.tool-status = VaultToolStatus.idle;
+                    root.username = "";
+                    root.password = "";
                 }
             }
         }
@@ -88,7 +100,7 @@ export component VaultToolsView inherits VerticalLayout {
 
             states [
                 clean when selected-tool == VaultSelectedTool.clean: {
-                    text: @tr("Clean inconsistent files");
+                    text: @tr("Clean trash files");
                 }
                 recover when selected-tool == VaultSelectedTool.recover: {
                     text: @tr("Recover lost items");
@@ -101,12 +113,77 @@ export component VaultToolsView inherits VerticalLayout {
             horizontal-alignment: center;
             states [
                 clean when selected-tool == VaultSelectedTool.clean: {
-                    text: @tr("With this tool you can remove media assets that are not indexed.");
+                    text: @tr("With this tool you can remove trash files from the vault folder.");
                 }
                 recover when selected-tool == VaultSelectedTool.recover: {
                     text: @tr("With this tool you can recover media assets that are not indexed.");
                 }
             ]
+        }
+
+        if selected-tool == VaultSelectedTool.clean: HorizontalLayout {
+            alignment: LayoutAlignment.center;
+            padding-top: 0.75rem;
+
+            HorizontalLayout {
+                alignment: LayoutAlignment.space-around;
+
+                GridLayout {
+                    spacing-horizontal: 0.75rem;
+                    spacing-vertical: 0.75rem;
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Main vault username") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            colspan: 2;
+                            alignment: LayoutAlignment.center;
+
+                            StringInput {
+                                value <=> root.username;
+                                read-only: root.busy || tool-status == VaultToolStatus.running || tool-status == VaultToolStatus.success;
+                            }
+                        }
+                    }
+
+                    Row {
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            Text {
+                                text: @tr("Password") + ": ";
+                                wrap: TextWrap.word-wrap;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: LayoutAlignment.center;
+                            StringInput {
+                                value <=> root.password;
+                                read-only: root.busy || tool-status == VaultToolStatus.running || tool-status == VaultToolStatus.success;
+                                input-type: password-visibility ? InputType.text : InputType.password;
+                            }
+                        }
+
+                        VerticalLayout {
+                            Button {
+                                text: "";
+                                icon: password-visibility ? @image-url("../assets/icons/visibility-off.svg") : @image-url("../assets/icons/visibility.svg");
+                                colorize-icon: true;
+                                enabled: !busy;
+                                clicked => {
+                                    root.password-visibility = !root.password-visibility;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Text {

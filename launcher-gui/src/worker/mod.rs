@@ -268,8 +268,8 @@ pub fn run_worker_thread(
                     LauncherWorkerMessage::SelectTlsKey => {
                         select_tls_key(window_handle.clone());
                     }
-                    LauncherWorkerMessage::RunTool { tool } => {
-                        run_vault_tool(&mut status, &sender, &window_handle, tool);
+                    LauncherWorkerMessage::RunTool { tool, username, password } => {
+                        run_vault_tool(&mut status, &sender, &window_handle, tool, username, password);
                         let wh = window_handle.clone();
                         let _ = slint::invoke_from_event_loop(move || {
                             let win = wh.unwrap();
