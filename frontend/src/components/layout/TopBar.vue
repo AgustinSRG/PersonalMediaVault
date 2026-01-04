@@ -219,7 +219,14 @@ export default defineComponent({
 
         goSearch: function () {
             AppStatus.GoToSearch(this.search);
-            this.$el.querySelector(".top-bar-search-input").blur();
+            this.blurSearchInputElement();
+        },
+
+        blurSearchInputElement: function () {
+            const el = this.$el.querySelector(".top-bar-search-input") as HTMLElement;
+            if (el) {
+                el.blur();
+            }
         },
 
         goFindMedia: function () {
@@ -319,11 +326,11 @@ export default defineComponent({
             if (s.type === "album") {
                 this.search = "";
                 AppStatus.ClickOnAlbum(Number(s.id));
-                this.goSearch();
+                this.blurSearchInputElement();
             } else if (s.type === "media") {
                 this.search = "";
                 AppStatus.ClickOnMedia(Number(s.id), false);
-                this.goSearch();
+                this.blurSearchInputElement();
             } else if (s.type === "tag") {
                 this.search = s.name;
                 this.goSearch();
