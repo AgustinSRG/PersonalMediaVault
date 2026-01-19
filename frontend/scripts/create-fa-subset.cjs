@@ -6,7 +6,7 @@
 const Font = require("fonteditor-core").Font;
 const FS = require("fs");
 const Path = require("path");
-const ttf2woff2 = require("ttf2woff2");
+const ttf2woff2 = require("ttf2woff2").default;
 
 const FA_VERSION = "6.0.0";
 
