@@ -20,12 +20,6 @@ declare module "vue" {
          * @returns The translated text
          */
         $t: (key: string) => string;
-
-        /**
-         * Updates locale
-         * @param locale The new locale
-         */
-        $updateLocale: (locale: string) => void;
     }
 }
 
@@ -219,24 +213,36 @@ export const i18nData: {
 };
 
 /**
+ * Locale reference
+ */
+export const localeRef = ref("");
+
+/**
+ * Translated a message
+ * @param key The translation key
+ * @param locale The locale
+ * @returns The translated message
+ */
+export function translate(key: string, locale: string): string {
+    if (locale !== i18nData.locale) {
+        return key;
+    }
+    if (i18nData.messages.has(key)) {
+        return (i18nData.messages.get(key) || key).trim();
+    } else {
+        return key;
+    }
+}
+
+/**
  * Internationalization plugin
  */
 export const i18n = {
     install: (app: App) => {
-        app.config.globalProperties.$locale = ref("");
-        app.config.globalProperties.$updateLocale = (locale: string) => {
-            app.config.globalProperties.$locale.value = locale;
-        };
+        app.config.globalProperties.$locale = localeRef;
 
         app.config.globalProperties.$t = (key) => {
-            if (app.config.globalProperties.$locale.value !== i18nData.locale) {
-                return key;
-            }
-            if (i18nData.messages.has(key)) {
-                return (i18nData.messages.get(key) || key).trim();
-            } else {
-                return key;
-            }
+            return translate(key, localeRef.value);
         };
     },
 };
@@ -252,6 +258,7 @@ export const EVENT_NAME_LOADED_LOCALE = "loaded-locale";
  */
 function setI18nLanguage(locale: string) {
     i18nData.locale = locale;
+    localeRef.value = locale;
 
     document.querySelector("html").setAttribute("lang", locale);
 
