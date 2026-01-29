@@ -55,6 +55,19 @@ export default defineConfig({
     build: {
         assetsInlineLimit: 0,
         sourcemap: true,
+        rollupOptions: {
+            output: {
+                chunkFileNames: (assetInfo) => {
+                    if (assetInfo.name?.endsWith(".vue_vue_type_style_index_0_lang")) {
+                        return `assets/${assetInfo.name.slice(0, -32)}-[hash:8].js`;
+                    } else if (assetInfo.name?.endsWith(".vue_vue_type_script_setup_true_lang")) {
+                        return `assets/${assetInfo.name.slice(0, -36)}-[hash:8].js`;
+                    } else {
+                        return "assets/[name]-[hash:8].js";
+                    }
+                },
+            },
+        },
     },
     resolve: {
         alias: {
