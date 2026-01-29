@@ -20,73 +20,92 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { useI18n } from "@/composables/use-i18n";
 import type { PasswordStrengthTag } from "@/utils/password-strength";
 import { computePasswordStrength, getPasswordStrengthTag } from "@/utils/password-strength";
-import { defineComponent } from "vue";
+import { computed } from "vue";
 
+const { $t } = useI18n();
+
+/// Min entropy for a password to be considered cryptographically secure
 const CRYPTO_SECURE_ENTROPY = 128;
+
+/// Number of segments for the strength indicator
 const STRENGTH_SEGMENTS = 16;
 
-export default defineComponent({
-    name: "PasswordStrengthIndicator",
-    props: {
-        password: String,
-    },
-    setup: function () {
-        const segments: number[] = [];
-
-        for (let i = 0; i < STRENGTH_SEGMENTS; i++) {
-            segments.push(i);
-        }
-
-        return {
-            segments,
-        };
-    },
-    data: function () {
-        const passwordStrength = computePasswordStrength(this.password || "");
-        return {
-            strength: passwordStrength,
-            strengthTag: getPasswordStrengthTag(passwordStrength),
-        };
-    },
-    watch: {
-        password: function () {
-            this.strength = computePasswordStrength(this.password || "");
-            this.strengthTag = getPasswordStrengthTag(this.strength);
-        },
-    },
-    mounted: function () {},
-    beforeUnmount: function () {},
-    methods: {
-        isSegmentActive: function (s: number, strength: number): boolean {
-            const segmentVal = (CRYPTO_SECURE_ENTROPY / STRENGTH_SEGMENTS) * s;
-            return strength >= segmentVal;
-        },
-
-        renderPasswordStrength: function (s: number) {
-            return (Math.round(s * 10) / 10).toFixed(1);
-        },
-
-        renderPasswordStrengthTag: function (tag: PasswordStrengthTag): string {
-            switch (tag) {
-                case "very-weak":
-                    return this.$t("Very weak");
-                case "weak":
-                    return this.$t("Weak");
-                case "medium":
-                    return this.$t("Medium");
-                case "strong":
-                    return this.$t("Strong");
-                case "very-strong":
-                    return this.$t("Very strong");
-                case "crypto-secure":
-                    return this.$t("Cryptographically secure");
-                default:
-                    return "???";
-            }
-        },
-    },
+const props = defineProps({
+    /**
+     * The password to check
+     */
+    password: String,
 });
+
+/**
+ * Creates an array of segment indexes
+ * @param n The number of segments
+ * @return The array of segment indexes
+ */
+function createSegments(n: number): number[] {
+    const segments: number[] = [];
+
+    for (let i = 0; i < n; i++) {
+        segments.push(i);
+    }
+
+    return segments;
+}
+
+/// Array of segment indexes
+const segments = createSegments(STRENGTH_SEGMENTS);
+
+/**
+ * Checks if a segment is active based on the password strength
+ * @param segmentIndex The segment index
+ * @param strength The password strength
+ * @returns True if the segment is active
+ */
+const isSegmentActive = (segmentIndex: number, strength: number): boolean => {
+    const segmentVal = (CRYPTO_SECURE_ENTROPY / STRENGTH_SEGMENTS) * segmentIndex;
+    return strength >= segmentVal;
+};
+
+/// Password strength
+const strength = computed(() => computePasswordStrength(props.password || ""));
+
+/// Password strength tag
+const strengthTag = computed(() => getPasswordStrengthTag(strength.value));
+
+/**
+ * Renders password strength as a number with 1 decimal place
+ * @param s The password strength
+ * @return The rendered strength
+ */
+const renderPasswordStrength = (s: number): string => {
+    return (Math.round(s * 10) / 10).toFixed(1);
+};
+
+/**
+ * Renders password strength tag
+ * @param tag Th password strength tag
+ * @returns The rendered tag
+ */
+const renderPasswordStrengthTag = (tag: PasswordStrengthTag): string => {
+    switch (tag) {
+        case "very-weak":
+            return $t("Very weak");
+        case "weak":
+            return $t("Weak");
+        case "medium":
+            return $t("Medium");
+        case "strong":
+            return $t("Strong");
+        case "very-strong":
+            return $t("Very strong");
+        case "crypto-secure":
+            return $t("Cryptographically secure");
+        default:
+            return "???";
+    }
+};
 </script>

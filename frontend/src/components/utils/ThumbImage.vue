@@ -1,106 +1,96 @@
 <template>
     <div :class="'thumb' + (className ? ' ' + className : '')">
-        <img v-if="!isError" :src="src" loading="lazy" @load="onLoadingFalse" @error="onError" />
+        <img v-if="!isError" ref="image" :src="src" loading="lazy" @load="onSuccessfulImageLoad" @error="onError" />
         <div v-if="displayLoader" class="thumb-load">
             <i class="fa fa-spinner fa-spin"></i>
         </div>
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { useTimeout } from "@/composables/use-timeout";
+import { onMounted, ref, useTemplateRef } from "vue";
 
-const DEFAULT_DELAY = 333;
+// Delay to show the loader (milliseconds)
+const LOADER_VISIBILITY_DELAY = 333;
+
+// Delay to reload after error (milliseconds)
 const RELOAD_DELAY = 1500;
 
-export default defineComponent({
-    name: "ThumbImage",
-    props: {
-        src: String,
-        className: String,
-        dragPrevent: Boolean,
+defineProps({
+    /**
+     * Source URL of the thumbnail image
+     */
+    src: {
+        type: String,
+        required: true,
     },
-    setup: function () {
-        return {
-            displayTimeout: null as ReturnType<typeof setTimeout> | null,
-            reloadTimeout: null as ReturnType<typeof setTimeout> | null,
-        };
-    },
-    data: function () {
-        return {
-            displayLoader: false,
-            isError: false,
-        };
-    },
-    watch: {
-        src: function () {
-            this.onLoadingTrue();
-        },
-    },
-    mounted: function () {
-        const elem = this.$el as HTMLImageElement;
-        if (!elem || !elem.complete) {
-            this.onLoadingTrue();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.displayTimeout) {
-            clearTimeout(this.displayTimeout);
-            this.displayTimeout = null;
-        }
 
-        if (this.reloadTimeout) {
-            clearTimeout(this.reloadTimeout);
-            this.reloadTimeout = null;
-        }
-    },
-    methods: {
-        onLoadingTrue: function () {
-            this.isError = false;
+    /**
+     * A CSS class name for the image container
+     */
+    className: String,
+});
 
-            if (this.displayTimeout) {
-                clearTimeout(this.displayTimeout);
-                this.displayTimeout = null;
-            }
+// Timeout to display the loader after some time passed while loading
+const displayLoaderTimeout = useTimeout();
 
-            if (this.reloadTimeout) {
-                clearTimeout(this.reloadTimeout);
-                this.reloadTimeout = null;
-            }
+// Timeout for reloading the image
+const reloadTimeout = useTimeout();
 
-            this.displayTimeout = setTimeout(() => {
-                this.displayTimeout = null;
-                this.displayLoader = true;
-            }, DEFAULT_DELAY);
-        },
+// True if the loader is visible, false otherwise
+const displayLoader = ref(false);
 
-        onLoadingFalse: function () {
-            if (this.displayTimeout) {
-                clearTimeout(this.displayTimeout);
-                this.displayTimeout = null;
-            }
+// True if the image loading process ended with an error, false otherwise
+const isError = ref(false);
 
-            if (this.reloadTimeout) {
-                clearTimeout(this.reloadTimeout);
-                this.reloadTimeout = null;
-            }
+/**
+ * Function called when the image starts loading.
+ * This can occur:
+ *  - On component mount
+ *  - When the source URL change
+ */
+const startLoading = () => {
+    isError.value = false;
 
-            this.displayLoader = false;
-        },
+    reloadTimeout.clear();
 
-        onError: function () {
-            this.isError = true;
+    displayLoaderTimeout.set(() => {
+        displayLoader.value = true;
+    }, LOADER_VISIBILITY_DELAY);
+};
 
-            if (this.reloadTimeout) {
-                clearTimeout(this.reloadTimeout);
-                this.reloadTimeout = null;
-            }
+/**
+ * Function called when the image is successfully loaded.
+ */
+const onSuccessfulImageLoad = () => {
+    displayLoaderTimeout.clear();
+    reloadTimeout.clear();
 
-            this.reloadTimeout = setTimeout(() => {
-                this.reloadTimeout = null;
-                this.onLoadingTrue();
-            }, RELOAD_DELAY);
-        },
-    },
+    displayLoader.value = false;
+};
+
+/**
+ * Function called when the image loading results in an error.
+ * It will retry to load the image after certain delay.
+ */
+const onError = () => {
+    isError.value = true;
+
+    reloadTimeout.set(() => {
+        startLoading();
+    }, RELOAD_DELAY);
+};
+
+// Reference to the image element
+const imageElementRef = useTemplateRef("image");
+
+// When counted, if the image is not instantly loaded,
+// call 'startLoading' in order to initiate the loading process
+onMounted(() => {
+    const elem = imageElementRef.value;
+    if (!elem || !elem.complete) {
+        startLoading();
+    }
 });
 </script>
