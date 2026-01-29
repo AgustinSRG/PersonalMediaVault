@@ -28,7 +28,7 @@
                 </button>
                 <button v-else-if="!busy && mustWait > 1" type="button" disabled class="modal-footer-btn">
                     <i class="fas fa-hourglass"></i>
-                    {{ $t("You must wait $TIME seconds to try again").replace("$TIME", mustWait + "") }}
+                    {{ stringMultiReplace($t("You must wait $TIME seconds to try again"), { $TIME: mustWait + "" }) }}
                 </button>
                 <button v-else type="submit" class="modal-footer-btn" :disabled="busy">
                     <LoadingIcon icon="fas fa-trash-alt" :loading="busy"></LoadingIcon> {{ $t("Disable two factor authentication") }}
@@ -49,6 +49,7 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import { apiAccountTfaDisable } from "@/api/api-account";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 export default defineComponent({
     name: "AccountTfaDisableModal",
@@ -184,6 +185,8 @@ export default defineComponent({
                     this.error = err.message;
                 });
         },
+
+        stringMultiReplace,
     },
 });
 </script>

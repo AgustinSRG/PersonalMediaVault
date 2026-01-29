@@ -46,12 +46,12 @@
             </div>
             <div v-if="status === 'confirmation'" class="modal-body">
                 <div class="form-group">
-                    <label>{{ $t("Do you want to update $N elements?").replace("$N", "" + actionCount) }}</label>
+                    <label>{{ stringMultiReplace($t("Do you want to update $N elements?"), { $N: "" + actionCount }) }}</label>
                 </div>
             </div>
             <div v-if="status === 'confirmation-delete'" class="modal-body">
                 <div class="form-group">
-                    <label>{{ $t("Do you want to delete $N elements?").replace("$N", "" + actionCount) }}</label>
+                    <label>{{ stringMultiReplace($t("Do you want to delete $N elements?"), { $N: "" + actionCount }) }}</label>
                 </div>
 
                 <table class="table no-margin no-border">
@@ -107,6 +107,7 @@
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 export default defineComponent({
     name: "BatchOperationProgressModal",
@@ -183,6 +184,8 @@ export default defineComponent({
                     return "-";
             }
         },
+
+        stringMultiReplace,
     },
 });
 </script>

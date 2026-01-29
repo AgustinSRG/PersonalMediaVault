@@ -162,6 +162,7 @@ import { PagesController } from "@/control/pages";
 import { apiMediaRemoveSubtitles, apiMediaRenameSubtitles, apiMediaSetSubtitles } from "@/api/api-media-edit";
 import AuthConfirmationModal from "@/components/modals/AuthConfirmationModal.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 export default defineComponent({
     name: "EditorSubtitles",
@@ -347,7 +348,9 @@ export default defineComponent({
                         },
                         fileTooLarge: () => {
                             PagesController.ShowSnackBarRight(
-                                this.$t("Error") + ": " + this.$t("Subtitles file too big (max is $MAX)").replace("$MAX", "10MB"),
+                                this.$t("Error") +
+                                    ": " +
+                                    stringMultiReplace(this.$t("Subtitles file too big (max is $MAX)"), { $MAX: "10MB" }),
                             );
                         },
                         serverError: () => {

@@ -163,6 +163,7 @@ import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
 import DiskUsage from "../utils/DiskUsage.vue";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
@@ -449,7 +450,7 @@ export default defineComponent({
                         return this.$t("Encrypting") + "...";
                     }
                 case "tag":
-                    return this.$t("Adding tags") + "... (" + this.$t("$N left").replace("$N", "" + p) + ")";
+                    return this.$t("Adding tags") + "... (" + stringMultiReplace(this.$t("$N left"), { $N: "" + p }) + ")";
                 case "album":
                     return this.$t("Inserting into album") + "...";
                 case "error":

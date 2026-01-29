@@ -28,7 +28,7 @@
                 </button>
                 <button v-else-if="mustWait > 1" type="button" disabled class="modal-footer-btn">
                     <i class="fas fa-hourglass"></i>
-                    {{ $t("You must wait $TIME seconds to try again").replace("$TIME", mustWait + "") }}
+                    {{ stringMultiReplace($t("You must wait $TIME seconds to try again"), { $TIME: mustWait + "" }) }}
                 </button>
                 <button v-else type="submit" class="modal-footer-btn" :disabled="tfa ? !code : !password">
                     <i class="fas fa-check"></i> {{ $t("Confirm") }}
@@ -45,6 +45,7 @@ import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
 import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 export default defineComponent({
     name: "AuthConfirmationModal",
@@ -144,6 +145,8 @@ export default defineComponent({
             this.$emit("confirm", providedAuthConfirmation);
             this.displayStatus = false;
         },
+
+        stringMultiReplace,
     },
 });
 </script>

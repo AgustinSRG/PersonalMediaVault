@@ -81,7 +81,7 @@
                 </button>
                 <button v-if="!busy && mustWait > 1" type="button" disabled class="modal-footer-btn">
                     <i class="fas fa-hourglass"></i>
-                    {{ $t("You must wait $TIME seconds to try again").replace("$TIME", mustWait + "") }}
+                    {{ stringMultiReplace($t("You must wait $TIME seconds to try again"), { $TIME: mustWait + "" }) }}
                 </button>
                 <button v-if="busy" type="button" disabled class="modal-footer-btn">
                     <i class="fa fa-spinner fa-spin"></i> {{ $t("Unlocking vault") }}...
@@ -100,6 +100,7 @@ import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
+import { stringMultiReplace } from "@/utils/string-multi-replace";
 
 export default defineComponent({
     name: "LoginModal",
@@ -320,6 +321,8 @@ export default defineComponent({
                 nextElement.focus();
             }
         },
+
+        stringMultiReplace,
     },
 });
 </script>
