@@ -6,6 +6,7 @@ import type { App } from "vue";
 import { AppEvents } from "./control/app-events";
 import type { KeyboardEventHandler } from "./control/keyboard";
 import { KeyboardManager } from "./control/keyboard";
+import { clickOnEnter, stopPropagationEvent } from "./utils/events";
 
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
@@ -120,16 +121,8 @@ export const appEventsPlugin = {
                     this.$keyboardHandlers.push(handler);
                     KeyboardManager.AddHandler(handler, priority);
                 },
-                clickOnEnter: function (event: KeyboardEvent) {
-                    if (event.key === "Enter") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        (event.target as HTMLElement).click();
-                    }
-                },
-                stopPropagationEvent: function (e: Event) {
-                    e.stopPropagation();
-                },
+                clickOnEnter,
+                stopPropagationEvent,
             },
         });
     },
