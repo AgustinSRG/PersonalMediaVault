@@ -1,10 +1,11 @@
 <template>
     <div
+        ref="container"
         class="modal-container modal-container-dialog"
         :class="{ hidden: !display, closing: closing }"
         tabindex="-1"
         role="dialog"
-        @keydown="keyDownHandle"
+        @keydown="onKeyDown"
         @animationend="onAnimationEnd"
         @mousedown="stopPropagationEvent"
         @touchstart="stopPropagationEvent"
@@ -18,133 +19,215 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { stopPropagationEvent } from "@/utils/events";
 import { FocusTrap } from "@/utils/focus-trap";
-import { useVModel } from "@/utils/v-model";
-import { defineComponent } from "vue";
 
-export default defineComponent({
-    name: "ModalDialogContainer",
-    props: {
-        display: Boolean,
-        lockClose: Boolean,
-        static: Boolean,
-        closeSignal: Number,
-        forceCloseSignal: Number,
-        closeCallback: Function,
-    },
-    emits: ["update:display", "key", "close", "mouseup", "touchend", "mouseleave"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            closing: false,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.closing = false;
-                if (this.focusTrap) {
-                    this.focusTrap.activate();
-                }
-            } else {
-                if (this.focusTrap) {
-                    this.focusTrap.deactivate();
-                }
-            }
-        },
-        closeSignal: function () {
-            if (this.closeSignal > 0) {
-                this.close();
-            }
-        },
-        forceCloseSignal: function () {
-            if (this.forceCloseSignal > 0) {
-                this.close(true);
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.focusLost.bind(this));
+import type { PropType } from "vue";
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
-        if (this.display) {
-            this.focusTrap.activate();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.focusTrap) {
-            this.focusTrap.destroy();
-        }
-    },
-    methods: {
-        close: function (forced?: boolean) {
-            if (this.lockClose && forced !== true) {
-                return;
-            }
-            if (this.closeCallback && forced !== true) {
-                this.closeCallback(() => {
-                    this.$emit("close");
-                    this.closing = true;
-                });
-            } else {
-                this.$emit("close");
-                this.closing = true;
-            }
-        },
+const emit = defineEmits<{
+    /**
+     * Event emitted when the modal closes
+     */
+    (e: "close"): void;
 
-        onAnimationEnd: function (e: AnimationEvent) {
-            e.stopPropagation();
-            if (e.animationName === "modal-close-animation") {
-                this.closing = false;
-                this.displayStatus = false;
-            }
-        },
+    /**
+     * Keyboard event (key pressed)
+     */
+    (e: "key", event: KeyboardEvent): void;
 
-        keyDownHandle: function (e: KeyboardEvent) {
-            e.stopPropagation();
-            if (e.key === "Escape" && this.display && !this.closing) {
-                this.close();
-            } else {
-                this.$emit("key", e);
-            }
-        },
+    /**
+     * Forward for 'mouseup' event
+     */
+    (e: "mouseup", event: MouseEvent): void;
 
-        onTouchOutside: function (e: TouchEvent) {
-            e.stopPropagation();
-            if (!this.static) {
-                this.close();
-            }
-        },
+    /**
+     * Forward for 'mouseleave' event
+     */
+    (e: "mouseleave", event: MouseEvent): void;
 
-        onMouseDown: function (e: MouseEvent) {
-            e.stopPropagation();
-            if (e.button === 0 && !this.static) {
-                this.close();
-            }
-        },
+    /**
+     * Forward for 'touchend' event
+     */
+    (e: "touchend", event: TouchEvent): void;
+}>();
 
-        focusLost: function () {
-            if (this.display && !this.closing) {
-                this.$el.focus();
-            }
-        },
+const props = defineProps({
+    /**
+     * True for the modal to not being able to be closed
+     * by clicking outside
+     */
+    static: Boolean,
 
-        onMouseUp: function (e: MouseEvent) {
-            this.$emit("mouseup", e);
-        },
+    /**
+     * True if the modal cannot be closed
+     */
+    lockClose: Boolean,
 
-        onTouchEnd: function (e: TouchEvent) {
-            this.$emit("touchend", e);
-        },
+    /**
+     * Callback to prevent closing the modal.
+     * The callback will be passed the 'close' function as argument
+     * and may call it to confirm closing the modal.
+     */
+    closeCallback: Function as PropType<(close: () => void) => void>,
 
-        onMouseLeave: function () {
-            this.$emit("mouseleave");
-        },
-    },
+    /**
+     * Change this value in order to close the modal
+     */
+    closeSignal: Number,
+
+    /**
+     * Change this value to forcefully close the modal
+     */
+    forceCloseSignal: Number,
 });
+
+// Display model
+const display = defineModel<boolean>("display");
+
+// True if the modal is closing
+const closing = ref(false);
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+// Focus trap
+let focusTrap: null | FocusTrap = null;
+
+// Called when focus on the modal is lost
+const onFocusLost = () => {
+    if (display.value && !closing.value) {
+        container.value?.focus();
+    }
+};
+
+onMounted(() => {
+    focusTrap = new FocusTrap(container.value, onFocusLost);
+
+    if (display.value) {
+        focusTrap.activate();
+    }
+});
+
+watch(display, () => {
+    if (display.value) {
+        closing.value = false;
+        focusTrap?.activate();
+    } else {
+        focusTrap?.deactivate();
+    }
+});
+
+onBeforeUnmount(() => {
+    focusTrap?.destroy();
+});
+
+/**
+ * Closes the modal
+ * @param forced True if forced
+ */
+const close = (forced?: boolean) => {
+    if (props.lockClose && forced !== true) {
+        return;
+    }
+    if (props.closeCallback && forced !== true) {
+        props.closeCallback(() => {
+            emit("close");
+            closing.value = true;
+        });
+    } else {
+        emit("close");
+        closing.value = true;
+    }
+};
+
+// Watchers for close signals
+
+watch(
+    () => props.closeSignal,
+    () => {
+        close();
+    },
+);
+
+watch(
+    () => props.forceCloseSignal,
+    () => {
+        close(true);
+    },
+);
+
+// Listeners for events
+
+/**
+ * Called when the closing animation ends
+ * @param e The animation event
+ */
+const onAnimationEnd = (e: AnimationEvent) => {
+    e.stopPropagation();
+    if (e.animationName === "modal-close-animation") {
+        closing.value = false;
+        display.value = false;
+    }
+};
+
+/**
+ * Called when the modal received the 'keydown' event
+ * @param e The keyboard event
+ */
+const onKeyDown = (e: KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === "Escape" && display.value && !closing.value) {
+        close();
+    } else {
+        emit("key", e);
+    }
+};
+
+/**
+ * Called when a touch event is received outside the modal
+ * @param e The touch event
+ */
+const onTouchOutside = (e: TouchEvent) => {
+    e.stopPropagation();
+    if (!props.static) {
+        close();
+    }
+};
+
+/**
+ * Called when the modal received the 'mousedown' event
+ * @param e The mouse event
+ */
+const onMouseDown = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (e.button === 0 && !props.static) {
+        close();
+    }
+};
+
+/**
+ * Called when the modal received the 'mouseup' event
+ * @param e The mouse event
+ */
+const onMouseUp = (e: MouseEvent) => {
+    emit("mouseup", e);
+};
+
+/**
+ * Called when the modal received the 'touchend' event
+ * @param e The touch event
+ */
+const onTouchEnd = (e: TouchEvent) => {
+    emit("touchend", e);
+};
+
+/**
+ * Called when the modal received the 'mouseleave' event
+ * @param e The mouse event
+ */
+const onMouseLeave = (e: MouseEvent) => {
+    emit("mouseleave", e);
+};
 </script>

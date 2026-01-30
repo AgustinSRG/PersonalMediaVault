@@ -1,8 +1,8 @@
 <template>
-    <div class="password-input-container">
+    <div ref="container" class="password-input-container">
         <div class="password-input">
             <input
-                v-model="valState"
+                v-model="val"
                 :type="hidden ? 'password' : 'text'"
                 class="form-control form-control-full-width"
                 :disabled="disabled"
@@ -27,63 +27,94 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import { useVModel } from "../../utils/v-model";
+<script setup lang="ts">
+import { useI18n } from "@/composables/use-i18n";
 import { FocusTrap } from "@/utils/focus-trap";
+import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 
-export default defineComponent({
-    name: "PasswordInput",
-    props: {
-        val: String,
-        disabled: Boolean,
-        autoFocus: Boolean,
-        name: String,
-        isNewPassword: Boolean,
-    },
-    emits: ["update:val", "tab-skip"],
-    setup(props) {
-        return {
-            valState: useVModel(props, "val"),
-            focusTrap: null as FocusTrap,
-        };
-    },
-    data: function () {
-        return {
-            hidden: true,
-        };
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.onBlur.bind(this));
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        toggleHide: function () {
-            this.hidden = !this.hidden;
+const { $t } = useI18n();
 
-            const inputElement = this.$el.querySelector(".form-control");
+const emit = defineEmits<{
+    /**
+     * Event emitted when the user tabs out of the element
+     */
+    (e: "tab-skip", keyboardEvent: KeyboardEvent): void;
+}>();
 
-            if (inputElement) {
-                inputElement.focus();
-            }
-        },
+defineProps({
+    /**
+     * True if the input is disabled
+     */
+    disabled: Boolean,
 
-        onFocus: function () {
-            this.focusTrap.activate();
-        },
+    /**
+     * True if the input has the class 'auto-focus'
+     */
+    autoFocus: Boolean,
 
-        onBlur: function () {
-            this.hidden = true;
-            this.focusTrap.deactivate();
-        },
+    /**
+     * The 'name' attribute for the input
+     */
+    name: String,
 
-        onKeyDown: function (event: KeyboardEvent) {
-            if (event.key === "Tab" && !event.shiftKey) {
-                this.$emit("tab-skip", event);
-            }
-        },
-    },
+    /**
+     * True if the input is a new password,
+     * in order to indicate to the browser autocomplete
+     */
+    isNewPassword: Boolean,
 });
+
+// Value model
+const val = defineModel<string>("val");
+
+/// True if the password input is hidden, false if visible
+const hidden = ref(true);
+
+// Ref to the container element
+const container = useTemplateRef("container");
+
+/**
+ * Toggles the password visibility
+ */
+const toggleHide = () => {
+    hidden.value = !hidden.value;
+
+    const inputElement = container.value.querySelector(".form-control") as HTMLInputElement;
+
+    if (inputElement) {
+        inputElement.focus();
+    }
+};
+
+// Focus trap
+let focusTrap: null | FocusTrap = null;
+
+// Called on focus
+const onFocus = () => {
+    focusTrap?.activate();
+};
+
+// Called on blur
+const onBlur = () => {
+    hidden.value = true;
+    focusTrap?.deactivate();
+};
+
+onMounted(() => {
+    focusTrap = new FocusTrap(container.value, onBlur);
+});
+
+onBeforeUnmount(() => {
+    focusTrap?.destroy();
+});
+
+/**
+ * Event listener for 'keydown' on the input
+ * @param event The event
+ */
+const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Tab" && !event.shiftKey) {
+        emit("tab-skip", event);
+    }
+};
 </script>

@@ -13,21 +13,31 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "LoadingOverlay",
-    props: {
-        display: {
-            type: Boolean,
-            default: true,
-        },
-        fixed: Boolean,
-        issues: {
-            type: Boolean,
-            default: false,
-        },
+const { $t } = useI18n();
+
+defineProps({
+    /**
+     * True to display the loading overlay
+     */
+    display: {
+        type: Boolean,
+        default: true,
+    },
+
+    /**
+     * True if the position is fixed
+     */
+    fixed: Boolean,
+
+    /**
+     * True to display the connections issues message.
+     */
+    issues: {
+        type: Boolean,
+        default: false,
     },
 });
 </script>

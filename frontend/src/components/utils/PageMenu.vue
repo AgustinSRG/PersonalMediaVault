@@ -95,61 +95,91 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { useI18n } from "@/composables/use-i18n";
 import type { AppStatusPage } from "@/control/app-status";
+
 import { getFrontendUrl } from "@/utils/api";
+import { preventDefaultEvent } from "@/utils/events";
 import type { PageNode } from "@/utils/menu-make";
 import { generateMenuForPages } from "@/utils/menu-make";
 import { packSearchParams } from "@/utils/search-params";
-import type { PropType } from "vue";
-import { defineComponent } from "vue";
 
-export default defineComponent({
-    name: "PageMenu",
-    props: {
-        pageName: String as PropType<AppStatusPage>,
-        order: String,
-        page: Number,
-        pages: Number,
-        min: Boolean,
-    },
-    emits: ["goto"],
-    data: function () {
-        return {
-            menu: [] as PageNode[],
-        };
-    },
-    watch: {
-        page: function () {
-            this.updatePageMenu();
-        },
-        pages: function () {
-            this.updatePageMenu();
-        },
-    },
-    mounted: function () {
-        this.updatePageMenu();
-    },
-    methods: {
-        updatePageMenu: function () {
-            this.menu = generateMenuForPages(this.page, this.pages);
-        },
+import { ref, watch, type PropType } from "vue";
 
-        clickPage: function (p: number, e: Event) {
-            e.preventDefault();
-            this.$emit("goto", p);
-        },
+const { $t } = useI18n();
 
-        preventDefaultEvent: function (e: Event) {
-            e.preventDefault();
-        },
+const emit = defineEmits<{
+    /**
+     * Event emitted when the user click a page
+     */
+    (e: "goto", page: number): void;
+}>();
 
-        getPageUrl: function (page: number, pageName: AppStatusPage, order: string): string {
-            return getFrontendUrl({
-                page: pageName || null,
-                sp: packSearchParams(page, order || "") || null,
-            });
-        },
+const props = defineProps({
+    /**
+     * Name of the page
+     */
+    pageName: {
+        type: String as PropType<AppStatusPage>,
+        required: true,
     },
+
+    /**
+     * The page current order
+     */
+    order: String,
+
+    /**
+     * The current page number
+     */
+    page: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * The max number of pages
+     */
+    pages: {
+        type: Number,
+        required: true,
+    },
+
+    /**
+     * True to use miniature style
+     */
+    min: Boolean,
 });
+
+/// The menu as an array of page nodes
+const menu = ref<PageNode[]>(generateMenuForPages(props.page, props.pages));
+
+watch([() => props.page, () => props.pages], () => {
+    menu.value = generateMenuForPages(props.page, props.pages);
+});
+
+/**
+ * Called when a page button is clicked
+ * @param p The page number
+ * @param e The click event
+ */
+const clickPage = (p: number, e: Event) => {
+    e.preventDefault();
+    emit("goto", p);
+};
+
+/**
+ * Gets full URL to a page
+ * @param page The page number
+ * @param pageName The page name
+ * @param order The page order
+ * @returns The URL
+ */
+const getPageUrl = (page: number, pageName: AppStatusPage, order: string): string => {
+    return getFrontendUrl({
+        page: pageName || null,
+        sp: packSearchParams(page, order || "") || null,
+    });
+};
 </script>
