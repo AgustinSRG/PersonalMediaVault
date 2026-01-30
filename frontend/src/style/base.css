@@ -47,3 +47,7 @@ a:visited {
 .div-pt {
     padding-top: 0.75rem;
 }
+
+.scrollbar-stable {
+    scrollbar-gutter: stable;
+}

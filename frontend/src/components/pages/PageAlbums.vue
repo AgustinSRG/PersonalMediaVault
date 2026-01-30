@@ -1,5 +1,5 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display }">
+    <div :class="{ 'page-inner': !inModal, hidden: !display, 'scrollbar-stable': !inModal, 'page-in-modal': !!inModal }">
         <div class="search-results" tabindex="-1">
             <div class="search-results-options">
                 <div class="search-results-option">
@@ -117,7 +117,14 @@
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
-            <PageMenu v-if="total > 0 && order !== 'rand'" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu
+                v-if="total > 0 && order !== 'rand'"
+                :page-name="'albums'"
+                :page="page"
+                :pages="totalPages"
+                :min="min"
+                @goto="changePage"
+            ></PageMenu>
 
             <div v-if="total > 0 && order !== 'rand'" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
         </div>

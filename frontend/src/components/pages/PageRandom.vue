@@ -1,5 +1,5 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display }">
+    <div class="page-inner scrollbar-stable" :class="{ hidden: !display }">
         <div class="search-results auto-focus" tabindex="-1">
             <div v-if="loading" class="search-results-loading-display">
                 <div v-for="f in loadingFiller" :key="f" class="search-result-item">

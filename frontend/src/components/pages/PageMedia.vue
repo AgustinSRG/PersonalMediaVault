@@ -1,5 +1,5 @@
 <template>
-    <div class="page-inner" :class="{ hidden: !display }">
+    <div class="page-inner scrollbar-stable" :class="{ hidden: !display }">
         <div class="search-results auto-focus" tabindex="-1">
             <PageMenu
                 v-if="total > 0"
@@ -90,7 +90,7 @@
                 <div v-for="i in lastRowPadding" :key="'pad-last-' + i" class="search-result-item"></div>
             </div>
 
-            <PageMenu v-if="total > 0" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
+            <PageMenu v-if="total > 0" :page-name="'media'" :page="page" :pages="totalPages" :min="min" @goto="changePage"></PageMenu>
 
             <div v-if="total > 0" class="search-results-total">{{ $t("Total") }}: {{ total }}</div>
         </div>

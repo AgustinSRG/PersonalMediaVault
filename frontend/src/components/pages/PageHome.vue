@@ -1,6 +1,6 @@
 <template>
     <div
-        class="page-inner"
+        class="page-inner scrollbar-stable"
         :class="{ hidden: !display, 'page-editing': editing, 'is-min': min }"
         :style="{
             '--moving-group-width': movingGroupData.width + 'px',

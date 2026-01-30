@@ -1,5 +1,9 @@
 <template>
-    <div :class="{ 'page-inner': !inModal, 'page-in-modal': !!inModal, hidden: !display }" tabindex="-1" @scroll.passive="onPageScroll">
+    <div
+        :class="{ 'page-inner': !inModal, 'scrollbar-stable': !inModal, 'page-in-modal': !!inModal, hidden: !display }"
+        tabindex="-1"
+        @scroll.passive="onPageScroll"
+    >
         <form class="media-search-form" @submit="onSubmit">
             <div class="form-group search-option-container">
                 <button type="button" class="page-option" :class="{ current: mode === 'basic' }" @click="setMode('basic')">

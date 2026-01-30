@@ -1,5 +1,5 @@
 <template>
-    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display }" @drop="onDrop">
+    <div class="page-inner-padded" :class="{ 'page-inner': !inModal, hidden: !display, 'scrollbar-stable': !inModal }" @drop="onDrop">
         <div class="upload-option-container">
             <div class="upload-option-label">{{ $t("Max number of uploads in parallel") }}:</div>
             <button
