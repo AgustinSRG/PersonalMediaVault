@@ -12,125 +12,139 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { apiDiskUsage } from "@/api/api-about";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useI18n } from "@/composables/use-i18n";
+import { useRequestId } from "@/composables/use-request-id";
+import { useTimeout } from "@/composables/use-timeout";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED, EVENT_NAME_UPLOAD_LIST_ENTRY_READY } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
-import { getUniqueStringId } from "@/utils/unique-id";
-import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
-import { defineComponent } from "vue";
+import { makeNamedApiRequest } from "@asanrom/request-browser";
+import { onMounted, ref } from "vue";
 
+const { $t } = useI18n();
+
+/**
+ * Renders the usage as a percentage
+ * @param usage The dick usage
+ * @returns The usage as a percentage
+ */
+const percentUsage = (usage: number): string => {
+    return Math.min(100, Math.max(0, Math.round(usage))) + "%";
+};
+
+/**
+ * Renders the disk usage in order to display it to the user
+ * @param loaded True if loaded
+ * @param usage The disk usage
+ * @param free The free space
+ * @param total The total space
+ */
+const renderDiskUsage = (loaded: boolean, usage: number, free: number, total: number): string => {
+    if (!loaded) {
+        return $t("Loading disk usage") + "...";
+    }
+
+    return $t("Disk usage") + ": " + percentUsage(usage) + " (" + renderSize(total - free) + " / " + renderSize(total) + ")";
+};
+
+// Disk usage
+const usage = ref(0);
+
+// Free disk space
+const free = ref(0);
+
+// Total disk space
+const total = ref(0);
+
+// Interval (in milliseconds) for automatically reloading the disk usage
 const RELOAD_INTERVAL_MS = 60 * 1000;
 
-export default defineComponent({
-    name: "DiskUsage",
-    setup: function () {
-        return {
-            loadRequestId: getUniqueStringId(),
-            loadingTimeout: null as ReturnType<typeof setTimeout> | null,
-        };
-    },
-    data: function () {
-        return {
-            usage: 0,
-            available: 0,
-            free: 0,
-            total: 0,
+// True of loaded for the first time
+const loaded = ref(false);
 
-            loaded: false,
-            loadingTimedOut: false,
+// True if the loading process took too long, so the loader should be displayed
+const loadingTimedOut = ref(false);
 
-            loading: false,
-        };
-    },
-    mounted: function () {
-        this.loadingTimeout = setTimeout(() => {
-            this.loadingTimedOut = true;
-        }, 333);
+// Timeout for displaying the loading status
+const loadingTimeout = useTimeout();
 
-        this.load();
+// Unique request ID for loading
+const loadRequestId = useRequestId();
 
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
+// True if loading
+const loading = ref(false);
 
-        this.$listenOnAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, this.onUploadDone.bind(this));
-    },
-    beforeUnmount: function () {
-        if (this.loadingTimeout) {
-            clearTimeout(this.loadingTimeout);
-        }
+/**
+ * Loads the disk usage
+ * calling the corresponding API
+ */
+const load = () => {
+    if (AuthController.Locked) {
+        return;
+    }
 
-        clearNamedTimeout(this.loadRequestId);
-        abortNamedApiRequest(this.loadRequestId);
-    },
-    methods: {
-        load: function () {
-            if (AuthController.Locked) {
-                return;
-            }
+    loading.value = true;
 
-            this.loading = true;
+    clearNamedTimeout(loadRequestId);
 
-            clearNamedTimeout(this.loadRequestId);
+    makeNamedApiRequest(loadRequestId, apiDiskUsage())
+        .onSuccess((res) => {
+            loading.value = false;
+            loadingTimeout.clear();
 
-            makeNamedApiRequest(this.loadRequestId, apiDiskUsage())
-                .onSuccess((res) => {
-                    this.loading = false;
+            loaded.value = true;
 
-                    if (this.loadingTimeout) {
-                        clearTimeout(this.loadingTimeout);
-                        this.loadingTimeout = null;
-                    }
+            usage.value = res.usage || 0;
+            free.value = res.free || 0;
+            total.value = res.total || 0;
 
-                    this.loaded = true;
+            setNamedTimeout(loadRequestId, RELOAD_INTERVAL_MS, load);
+        })
+        .onRequestError((err, handleErr) => {
+            loading.value = false;
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                temporalError: () => {
+                    setNamedTimeout(loadRequestId, 1500, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            loading.value = false;
+            console.error(err);
+            setNamedTimeout(loadRequestId, 1500, load);
+        });
+};
 
-                    this.usage = res.usage || 0;
-                    this.available = res.available || 0;
-                    this.free = res.free || 0;
-                    this.total = res.total || 0;
+/// Delay to display the loader (milliseconds)
+const LOADING_DISPLAY_DELAY = 333;
 
-                    setNamedTimeout(this.loadRequestId, RELOAD_INTERVAL_MS, this.load.bind(this));
-                })
-                .onRequestError((err, handleErr) => {
-                    this.loading = false;
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        temporalError: () => {
-                            setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    this.loading = false;
-                    console.error(err);
-                    setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
-                });
-        },
+/// On mounter, load the data for the first time
+/// and set the timeout to show the loader
+onMounted(() => {
+    loadingTimeout.set(() => {
+        loadingTimedOut.value = true;
+    }, LOADING_DISPLAY_DELAY);
 
-        percentUsage: function (usage: number) {
-            return Math.min(100, Math.max(0, Math.round(usage))) + "%";
-        },
+    load();
+});
 
-        renderDiskUsage: function (loaded: boolean, usage: number, free: number, total: number): string {
-            if (!loaded) {
-                return this.$t("Loading disk usage") + "...";
-            }
+// Load the data again when the auth status changes
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
 
-            return (
-                this.$t("Disk usage") + ": " + this.percentUsage(usage) + " (" + renderSize(total - free) + " / " + renderSize(total) + ")"
-            );
-        },
+// If a new file is uploaded, reload the disk usage immediately,
+// unless it is already loading
+onApplicationEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, () => {
+    if (loading.value) {
+        return;
+    }
 
-        onUploadDone: function () {
-            if (this.loading) {
-                return;
-            }
-
-            this.load();
-        },
-    },
+    load();
 });
 </script>

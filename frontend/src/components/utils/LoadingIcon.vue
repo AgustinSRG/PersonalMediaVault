@@ -2,86 +2,96 @@
     <i :class="getClass(displayLoader, icon, extraClass)"><slot></slot></i>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { useTimeout } from "@/composables/use-timeout";
+import { onMounted, ref, watch } from "vue";
 
+// Default delay (milliseconds)
 const DEFAULT_DELAY = 333;
 
-export default defineComponent({
-    name: "LoadingIcon",
-    props: {
-        icon: String,
-        extraClass: String,
-        loading: Boolean,
-        delay: Number,
-    },
-    setup: function () {
-        return {
-            displayTimeout: null as ReturnType<typeof setTimeout> | null,
-        };
-    },
-    data: function () {
-        return {
-            displayLoader: false,
-        };
-    },
-    watch: {
-        loading: function () {
-            if (this.loading) {
-                this.onLoadingTrue();
-            } else {
-                this.onLoadingFalse();
-            }
-        },
-    },
-    mounted: function () {
-        if (this.loading) {
-            this.onLoadingTrue();
-        }
-    },
-    beforeUnmount: function () {
-        if (this.displayTimeout) {
-            clearTimeout(this.displayTimeout);
-            this.displayTimeout = null;
-        }
-    },
-    methods: {
-        getClass: function (displayLoader: boolean, icon: string, extraClass: string): string {
-            const classes = [];
+/**
+ * Generates the icon class list
+ * @param displayLoader True if the loader should display
+ * @param icon The icon when not loading
+ * @param extraClass Extra class
+ */
+const getClass = (displayLoader: boolean, icon: string, extraClass: string): string => {
+    const classes = [];
 
-            if (displayLoader) {
-                classes.push("fa", "fa-spinner", "fa-spin");
-            } else if (icon) {
-                classes.push(icon);
-            }
+    if (displayLoader) {
+        classes.push("fa", "fa-spinner", "fa-spin");
+    } else if (icon) {
+        classes.push(icon);
+    }
 
-            if (extraClass) {
-                classes.push(extraClass);
-            }
+    if (extraClass) {
+        classes.push(extraClass);
+    }
 
-            return classes.join(" ");
-        },
+    return classes.join(" ");
+};
 
-        onLoadingTrue: function () {
-            if (this.displayTimeout) {
-                clearTimeout(this.displayTimeout);
-                this.displayTimeout = null;
-            }
+const props = defineProps({
+    /**
+     * Icon to display when not loading
+     */
+    icon: String,
 
-            this.displayTimeout = setTimeout(() => {
-                this.displayTimeout = null;
-                this.displayLoader = true;
-            }, DEFAULT_DELAY);
-        },
+    /**
+     * Extra class to add to the icon
+     */
+    extraClass: String,
 
-        onLoadingFalse: function () {
-            if (this.displayTimeout) {
-                clearTimeout(this.displayTimeout);
-                this.displayTimeout = null;
-            }
+    /**
+     * True if the icon should display the loading status
+     */
+    loading: Boolean,
 
-            this.displayLoader = false;
-        },
-    },
+    /**
+     * Custom delay for the loading status to display,
+     * in milliseconds
+     */
+    delay: Number,
 });
+
+// Timeout for displaying
+const displayTimeout = useTimeout();
+
+// True to display the loader icon
+const displayLoader = ref(false);
+
+/**
+ * Call when 'loading' changes to true
+ */
+const onLoadingTrue = () => {
+    displayTimeout.set(() => {
+        displayLoader.value = true;
+    }, props.delay || DEFAULT_DELAY);
+};
+
+/**
+ * Call when 'loading' changes to false
+ */
+const onLoadingFalse = () => {
+    displayTimeout.clear();
+
+    displayLoader.value = false;
+};
+
+onMounted(() => {
+    if (props.loading) {
+        onLoadingTrue();
+    }
+});
+
+watch(
+    () => props.loading,
+    () => {
+        if (props.loading) {
+            onLoadingTrue();
+        } else {
+            onLoadingFalse();
+        }
+    },
+);
 </script>
