@@ -14,9 +14,8 @@
 
 <script lang="ts">
 import { apiDiskUsage } from "@/api/api-about";
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_UPLOAD_LIST_ENTRY_READY } from "@/control/upload";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED, EVENT_NAME_UPLOAD_LIST_ENTRY_READY } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { renderSize } from "@/utils/size";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -97,7 +96,7 @@ export default defineComponent({
                     this.loading = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));

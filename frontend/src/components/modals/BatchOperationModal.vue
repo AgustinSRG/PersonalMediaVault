@@ -215,14 +215,14 @@ import { useVModel } from "../../utils/v-model";
 
 import BatchOperationProgressModal from "./BatchOperationProgressModal.vue";
 import type { MatchingTag } from "@/control/tags";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
-import { AppEvents } from "@/control/app-events";
+import { TagsController } from "@/control/tags";
+import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_TAGS_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import type { AlbumListItemMinExt } from "@/control/albums";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { AlbumsController } from "@/control/albums";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { MediaController } from "@/control/media";
 import { normalizeString, filterToWords, matchSearchFilter } from "@/utils/normalize";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import type { MediaListItem } from "@/api/models";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsAddMediaToAlbum, apiAlbumsGetAlbum, apiAlbumsRemoveMediaFromAlbum } from "@/api/api-albums";
@@ -756,7 +756,7 @@ export default defineComponent({
                         unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.status = "error";
@@ -828,7 +828,7 @@ export default defineComponent({
                         unauthorized: () => {
                             this.status = "error";
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         serverError: () => {
                             this.status = "error";
@@ -987,7 +987,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         requiredAuthConfirmationPassword: () => {
                             this.status = "";
@@ -1062,7 +1062,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         maxSizeReached: () => {
                             this.error = this.$t("The album reached the limit of 1024 elements. Please, consider creating another album.");
@@ -1101,7 +1101,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");
@@ -1139,7 +1139,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTagName: () => {
                             this.error = this.$t("Invalid tag name");
@@ -1188,7 +1188,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             this.error = this.$t("Access denied");

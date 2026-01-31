@@ -122,9 +122,9 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
 import { clone } from "@/utils/objects";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -188,7 +188,7 @@ function saveTimeSlices(state: SaveRequestState, $t: (msg: string) => string) {
             state.saving = false;
             handleErr(err, {
                 unauthorized: () => {
-                    AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                 },
                 badRequest: () => {
                     PagesController.ShowSnackBar($t("Error") + ": " + $t("Bad request"));

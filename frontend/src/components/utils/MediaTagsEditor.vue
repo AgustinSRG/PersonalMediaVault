@@ -56,14 +56,22 @@
 
 <script lang="ts">
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
-import { AppEvents } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_TAGS_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
-import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, PagesController } from "@/control/pages";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
+import { PagesController } from "@/control/pages";
 import type { MatchingTag } from "@/control/tags";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { TagsController } from "@/control/tags";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
@@ -197,7 +205,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -258,7 +266,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTagName: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid tag name"));
@@ -319,7 +327,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTagName: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Invalid tag name"));
@@ -488,22 +496,22 @@ export default defineComponent({
             } else if (e.key === "ArrowRight") {
                 if (this.allowNavigation) {
                     if (!this.tagToAdd) {
-                        AppEvents.Emit(EVENT_NAME_GO_NEXT);
+                        emitAppEvent(EVENT_NAME_GO_NEXT);
                     }
                 }
             } else if (e.key === "PageDown") {
                 if (this.allowNavigation) {
-                    AppEvents.Emit(EVENT_NAME_GO_NEXT);
+                    emitAppEvent(EVENT_NAME_GO_NEXT);
                 }
             } else if (e.key === "ArrowLeft") {
                 if (!this.tagToAdd) {
                     if (this.allowNavigation) {
-                        AppEvents.Emit(EVENT_NAME_GO_PREV);
+                        emitAppEvent(EVENT_NAME_GO_PREV);
                     }
                 }
             } else if (e.key === "PageUp") {
                 if (this.allowNavigation) {
-                    AppEvents.Emit(EVENT_NAME_GO_PREV);
+                    emitAppEvent(EVENT_NAME_GO_PREV);
                 }
             } else if (e.key === "ArrowDown") {
                 const suggestionElem = this.$el.querySelector(".btn-add-tag");

@@ -181,17 +181,23 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import {
+    emitAppEvent,
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
+    EVENT_NAME_RANDOM_PAGE_REFRESH,
+} from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 
 import LoadingOverlay from "./LoadingOverlay.vue";
 import LoadingIcon from "../utils/LoadingIcon.vue";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_RANDOM_PAGE_REFRESH } from "@/control/pages";
-import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import { getPagePreferences } from "@/control/app-preferences";
 import { waitForHomePageSilentSaveActions } from "@/utils/home";
 
 const PageHome = defineAsyncComponent({
@@ -450,7 +456,7 @@ export default defineComponent({
         },
 
         triggerRefresh: function () {
-            AppEvents.Emit(EVENT_NAME_RANDOM_PAGE_REFRESH);
+            emitAppEvent(EVENT_NAME_RANDOM_PAGE_REFRESH);
             nextTick(() => {
                 const elementToFocus: any = document.querySelector(".page-content .search-results");
                 if (elementToFocus) {
@@ -505,7 +511,7 @@ export default defineComponent({
         },
 
         goToTop: function () {
-            AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
         },
 
         onKeyPress: function (e: KeyboardEvent) {

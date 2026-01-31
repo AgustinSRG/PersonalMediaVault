@@ -146,10 +146,10 @@
 
 <script lang="ts">
 import type { MediaAudioTrack } from "@/api/models";
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
@@ -322,7 +322,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidAudio: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio file"));
@@ -402,7 +402,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));
@@ -562,7 +562,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidId: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Invalid audio track identifier"));

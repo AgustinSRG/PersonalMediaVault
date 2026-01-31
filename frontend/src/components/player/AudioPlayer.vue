@@ -456,16 +456,17 @@ import PlayerSubtitles from "./PlayerSubtitles.vue";
 import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AUTO_LOOP_MIN_DURATION, MediaController, NEXT_END_WAIT_DURATION } from "@/control/media";
-import { EVENT_NAME_SUBTITLES_UPDATE, SubtitlesController } from "@/control/subtitles";
+import { SubtitlesController } from "@/control/subtitles";
 import { AppStatus } from "@/control/app-status";
 import { AuthController } from "@/control/auth";
 import type { ColorThemeName } from "@/control/app-preferences";
-import { EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
+import { getTheme } from "@/control/app-preferences";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import PlayerTooltip from "./PlayerTooltip.vue";
+import { EVENT_NAME_SUBTITLES_UPDATE, EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
 
 const TimeSlicesEditHelper = defineAsyncComponent({
     loader: () => import("@/components/player/TimeSlicesEditHelper.vue"),

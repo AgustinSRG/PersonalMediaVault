@@ -3,10 +3,11 @@
 "use strict";
 
 import type { App } from "vue";
-import { AppEvents } from "./control/app-events";
 import type { KeyboardEventHandler } from "./control/keyboard";
 import { KeyboardManager } from "./control/keyboard";
 import { clickOnEnter, stopPropagationEvent } from "./utils/events";
+import type { AppEventsMap } from "./control/app-events";
+import { addAppEventListener, removeAppEventListener } from "./control/app-events";
 
 type CallbackFunctionVariadic = (...args: any[]) => void;
 
@@ -37,7 +38,7 @@ declare module "vue" {
          * @param eventName Event name
          * @param handler Event handler function
          */
-        $listenOnAppEvent: (eventName: string, handler: CallbackFunctionVariadic) => void;
+        $listenOnAppEvent: <K extends keyof AppEventsMap>(eventName: K, listener: AppEventsMap[K]) => void;
 
         /**
          * Listens to a document
@@ -76,7 +77,7 @@ export const appEventsPlugin = {
             beforeUnmount() {
                 if (this.$appEventHandlers) {
                     this.$appEventHandlers.forEach((handler, eventName) => {
-                        AppEvents.RemoveEventListener(eventName, handler);
+                        removeAppEventListener(eventName, handler);
                     });
                 }
 
@@ -91,15 +92,15 @@ export const appEventsPlugin = {
                 }
             },
             methods: {
-                $listenOnAppEvent: function (eventName: string, handler: CallbackFunctionVariadic) {
+                $listenOnAppEvent: function <K extends keyof AppEventsMap>(eventName: K, listener: AppEventsMap[K]) {
                     if (!this.$appEventHandlers) {
                         this.$appEventHandlers = new Map();
                     }
                     if (this.$appEventHandlers.has(eventName)) {
                         throw new Error("Already listening for app event '" + eventName + "' on this component");
                     }
-                    this.$appEventHandlers.set(eventName, handler);
-                    AppEvents.AddEventListener(eventName, handler);
+                    this.$appEventHandlers.set(eventName, listener);
+                    addAppEventListener(eventName, listener);
                 },
                 $listenOnDocumentEvent: function <K extends keyof DocumentEventMap>(
                     eventName: K,

@@ -4,16 +4,25 @@
 
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { AlbumsController } from "./albums";
-import { AppEvents } from "./app-events";
 import { MediaController } from "./media";
 import { TagsController } from "./tags";
-import { EVENT_NAME_UNAUTHORIZED } from "./auth";
 import { getMaxParallelUploads, setLastUsedTag, setMaxParallelUploads } from "./app-preferences";
 import { apiUploadMedia } from "@/api/api-media-upload";
 import { apiMediaGetMedia } from "@/api/api-media";
 import { apiTagsTagMedia } from "@/api/api-tags";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
 import { removeFromArray } from "@/utils/objects";
+import {
+    emitAppEvent,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_NEW,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
+    EVENT_NAME_UPLOAD_LIST_CLEAR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
+    EVENT_NAME_UNAUTHORIZED,
+} from "./app-events";
 
 /**
  * Max number of uploads in the completed lists (ready, error)
@@ -35,41 +44,6 @@ const RETRY_DELAY_MS = 1500;
 
 const REQUEST_PREFIX_UPLOAD = "upload-media-";
 const REQUEST_PREFIX_CHECK_ENCRYPTION = "check-media-encryption-";
-
-/**
- * Event triggered when an upload entry is added
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_NEW = "upload-list-entry-new";
-
-/**
- * Event triggered when an upload entry progresses
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS = "upload-list-entry-progress";
-
-/**
- * Event triggered when an upload entry is ready
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_READY = "upload-list-entry-ready";
-
-/**
- * Event triggered when an upload entry results in an error
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR = "upload-list-entry-error";
-
-/**
- * Event triggered when an upload entry is retried after error
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY = "upload-list-entry-retry";
-
-/**
- * Event triggered when an upload entry is removed
- */
-export const EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED = "upload-list-entry-rm";
-
-/**
- * Event triggered when an upload entry list is cleared, meaning it needs full refresh
- */
-export const EVENT_NAME_UPLOAD_LIST_CLEAR = "upload-list-clear";
 
 /**
  * Removes extension if present, in order to get the title
@@ -353,7 +327,7 @@ export class UploadController {
             }
         }
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, minimizeEntry(entry));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_NEW, minimizeEntry(entry));
 
         UploadController.CheckQueue();
 
@@ -382,7 +356,7 @@ export class UploadController {
 
         UploadController.AddToAlbumQueue(entry);
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, minimizeEntry(entry));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY, minimizeEntry(entry));
     }
 
     /**
@@ -430,7 +404,7 @@ export class UploadController {
             UploadController.UploadingCount--;
         }
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(entry));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(entry));
     }
 
     /**
@@ -446,7 +420,7 @@ export class UploadController {
         UploadController.Entries.ready = [];
         UploadController.Entries.error = [];
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_CLEAR);
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_CLEAR);
     }
 
     /**
@@ -469,7 +443,7 @@ export class UploadController {
         UploadController.Entries.ready = [];
         UploadController.Entries.error = [];
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_CLEAR);
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_CLEAR);
     }
 
     /**
@@ -482,7 +456,7 @@ export class UploadController {
 
             UploadController.EntriesMap.delete(toRemove.id);
 
-            AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(toRemove));
+            emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED, minimizeEntry(toRemove));
         }
     }
 
@@ -496,7 +470,7 @@ export class UploadController {
 
         UploadController.RemoveFromAlbumQueue(m);
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, minimizeEntry(m));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_READY, minimizeEntry(m));
 
         UploadController.CheckQueue();
 
@@ -526,7 +500,7 @@ export class UploadController {
 
         UploadController.RemoveFromAlbumQueue(m);
 
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, minimizeEntry(m));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, minimizeEntry(m));
 
         UploadController.CheckQueue();
 
@@ -542,19 +516,19 @@ export class UploadController {
 
         m.status = "uploading";
         m.progress = 0;
-        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
         makeNamedApiRequest(REQUEST_PREFIX_UPLOAD + m.id, apiUploadMedia(getTitleFromFileName(m.name), m.file, -1))
             .onUploadProgress((loaded, total) => {
                 m.progress = Math.round(((loaded * 100) / total) * 100) / 100;
-                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
             })
             .onSuccess((data) => {
                 m.mid = data.media_id;
                 m.status = "encrypting";
                 m.progress = 0;
 
-                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                 m.retryTimer = setTimeout(() => {
                     UploadController.CheckEncryptionStatus(m);
@@ -572,7 +546,7 @@ export class UploadController {
                     unauthorized: () => {
                         m.error = "access-denied";
                         m.status = "error";
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     accessDenied: () => {
                         m.error = "access-denied";
@@ -641,7 +615,7 @@ export class UploadController {
                     if (m.status === "ready") {
                         UploadController.OnUploadEntryReady(m);
                     } else {
-                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
                         UploadController.CheckQueue();
 
                         if (m.status === "tag") {
@@ -650,7 +624,7 @@ export class UploadController {
                     }
                 } else {
                     m.progress = Math.max(m.progress, media.ready_p);
-                    AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                    emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                     m.retryTimer = setTimeout(() => {
                         UploadController.CheckEncryptionStatus(m);
@@ -664,7 +638,7 @@ export class UploadController {
                 m.busy = false;
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     notFound: () => {
                         m.error = "deleted";
@@ -712,7 +686,7 @@ export class UploadController {
             if (m.status === "ready") {
                 UploadController.OnUploadEntryReady(m);
             } else {
-                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
                 UploadController.CheckQueue();
             }
 
@@ -732,7 +706,7 @@ export class UploadController {
                 m.progress = m.tags.length;
                 m.busy = false;
 
-                AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                 TagsController.AddTag(res.id, res.name);
 
@@ -745,7 +719,7 @@ export class UploadController {
                 m.busy = false;
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
 
                         m.error = "access-denied";
                         m.status = "error";
@@ -754,14 +728,14 @@ export class UploadController {
                     invalidTagName: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
-                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                         UploadController.AddNextTag(m);
                     },
                     badRequest: () => {
                         m.tags.shift(); // Invalid tag name
                         m.progress = m.tags.length;
-                        AppEvents.Emit(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
+                        emitAppEvent(EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS, minimizeEntry(m));
 
                         UploadController.AddNextTag(m);
                     },
@@ -821,7 +795,7 @@ export class UploadController {
                 m.busy = false;
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
 
                         m.error = "access-denied";
                         m.status = "error";

@@ -43,8 +43,14 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { getUniqueStringId } from "@/utils/unique-id";
@@ -54,7 +60,7 @@ import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { ExitPreventer } from "@/control/exit-prevent";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
-import { EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 
 export default defineComponent({
@@ -184,7 +190,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     new RequestErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED, false);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.description = "";
@@ -234,7 +240,7 @@ export default defineComponent({
                         MediaController.MediaData.description_url = res.url || "";
                     }
 
-                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "editor");
+                    emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "editor");
 
                     this.$emit("changed");
 
@@ -249,7 +255,7 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));

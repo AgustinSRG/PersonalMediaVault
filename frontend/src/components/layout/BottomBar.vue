@@ -40,10 +40,17 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_PAGE_MEDIA_NAV_UPDATE, PagesController } from "@/control/pages";
+import { AlbumsController } from "@/control/albums";
+import {
+    emitAppEvent,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
+} from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
+import { PagesController } from "@/control/pages";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -90,11 +97,11 @@ export default defineComponent({
         },
 
         goNext: function () {
-            AppEvents.Emit(EVENT_NAME_GO_NEXT);
+            emitAppEvent(EVENT_NAME_GO_NEXT);
         },
 
         goPrev: function () {
-            AppEvents.Emit(EVENT_NAME_GO_PREV);
+            emitAppEvent(EVENT_NAME_GO_PREV);
         },
     },
 });

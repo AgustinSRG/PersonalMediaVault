@@ -91,10 +91,16 @@ import { useVModel } from "../../utils/v-model";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageAlbums from "@/components/pages/PageAlbums.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
-import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import {
+    emitAppEvent,
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
+    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AuthController } from "@/control/auth";
+import { PagesController } from "@/control/pages";
+import { getPagePreferences } from "@/control/app-preferences";
 import type { HomePageElement } from "@/api/api-home";
 import { apiHomeGroupAddElement, HOME_PAGE_ELEMENT_TYPE_ALBUM, HOME_PAGE_ELEMENT_TYPE_MEDIA } from "@/api/api-home";
 import type { MediaListItem } from "@/api/models";
@@ -205,7 +211,7 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         tooManyElements: () => {
                             PagesController.ShowSnackBar(
@@ -265,7 +271,7 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         tooManyElements: () => {
                             PagesController.ShowSnackBar(
@@ -320,13 +326,13 @@ export default defineComponent({
             this.pageScroll = (e.target as HTMLElement).scrollTop;
 
             if (!this.isAlbums) {
-                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
             }
         },
 
         goTop: function () {
             if (!this.isAlbums) {
-                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
 
                 nextTick(() => {
                     this.$el.scrollTop = 0;

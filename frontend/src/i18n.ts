@@ -4,7 +4,7 @@
 
 import type { App, Ref } from "vue";
 import { nextTick, ref } from "vue";
-import { AppEvents } from "./control/app-events";
+import { addAppEventListener, emitAppEvent, EVENT_NAME_LOADED_LOCALE, EVENT_NAME_LOCALE_CHANGED } from "@/control/app-events";
 import { clearLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "./utils/local-storage";
 
 declare module "vue" {
@@ -157,11 +157,6 @@ export function detectNavigatorLanguage(): string {
 const LS_KEY_LANGUAGE = "app-pref-lang";
 
 /**
- * Event triggered when the locale changes
- */
-export const EVENT_NAME_LOCALE_CHANGED = "set-locale";
-
-/**
  * Gets the language
  * @returns Language
  */
@@ -175,7 +170,7 @@ export function getLanguage(): string {
  */
 export function setLanguage(lang: string) {
     saveIntoLocalStorage(LS_KEY_LANGUAGE, lang);
-    AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, lang);
+    emitAppEvent(EVENT_NAME_LOCALE_CHANGED, lang);
 }
 
 /**
@@ -183,7 +178,7 @@ export function setLanguage(lang: string) {
  */
 export function clearLanguageSetting() {
     clearLocalStorage(LS_KEY_LANGUAGE);
-    AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, detectNavigatorLanguage());
+    emitAppEvent(EVENT_NAME_LOCALE_CHANGED, detectNavigatorLanguage());
 }
 
 // Load default language
@@ -248,11 +243,6 @@ export const i18n = {
 };
 
 /**
- * Event triggered when a new locale file is loaded
- */
-export const EVENT_NAME_LOADED_LOCALE = "loaded-locale";
-
-/**
  * Sets page language
  * @param locale
  */
@@ -262,7 +252,7 @@ function setI18nLanguage(locale: string) {
 
     document.querySelector("html").setAttribute("lang", locale);
 
-    AppEvents.Emit(EVENT_NAME_LOADED_LOCALE, locale);
+    emitAppEvent(EVENT_NAME_LOADED_LOCALE, locale);
 }
 
 /**
@@ -337,6 +327,6 @@ function handleLocaleChanged(locale: string) {
         });
 }
 
-AppEvents.AddEventListener(EVENT_NAME_LOCALE_CHANGED, handleLocaleChanged);
+addAppEventListener(EVENT_NAME_LOCALE_CHANGED, handleLocaleChanged);
 
-AppEvents.Emit(EVENT_NAME_LOCALE_CHANGED, defaultLanguage);
+emitAppEvent(EVENT_NAME_LOCALE_CHANGED, defaultLanguage);

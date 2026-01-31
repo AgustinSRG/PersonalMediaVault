@@ -83,7 +83,7 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -91,7 +91,7 @@ import { useVModel } from "../../utils/v-model";
 import AccountModifyModal from "../modals/AccountModifyModal.vue";
 import AccountDeleteModal from "../modals/AccountDeleteModal.vue";
 import AccountCreateModal from "../modals/AccountCreateModal.vue";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { getUniqueStringId } from "@/utils/unique-id";
 import type { VaultAccount } from "@/api/api-admin";
 import { apiAdminListAccounts } from "@/api/api-admin";
@@ -186,7 +186,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             this.displayStatus = false;

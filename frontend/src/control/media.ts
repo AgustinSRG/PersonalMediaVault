@@ -5,9 +5,17 @@
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { AlbumsController } from "./albums";
-import { AppEvents } from "./app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import {
+    addAppEventListener,
+    emitAppEvent,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_LOADING,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "./app-events";
+import { AppStatus } from "./app-status";
+import { AuthController } from "./auth";
 import type { MediaData } from "@/api/models";
 import { apiMediaGetMedia } from "@/api/api-media";
 
@@ -22,21 +30,6 @@ export const AUTO_LOOP_MIN_DURATION = 3;
 export const NEXT_END_WAIT_DURATION = 8;
 
 const REQUEST_ID = "media-current-load";
-
-/**
- * Event triggered when the media loading status changes
- */
-export const EVENT_NAME_MEDIA_LOADING = "current-media-loading";
-
-/**
- * Event triggered when the current media data is updated
- */
-export const EVENT_NAME_MEDIA_UPDATE = "current-media-update";
-
-/**
- * Event triggered when the current media description is updated
- */
-export const EVENT_NAME_MEDIA_DESCRIPTION_UPDATE = "current-media-description-update";
 
 /**
  * Management object to fetch media metadata
@@ -66,8 +59,8 @@ export class MediaController {
      * Initialization logic
      */
     public static Initialize() {
-        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, MediaController.Load);
-        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, MediaController.OnMediaChanged);
+        addAppEventListener(EVENT_NAME_AUTH_CHANGED, MediaController.Load);
+        addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, MediaController.OnMediaChanged);
 
         MediaController.MediaId = AppStatus.CurrentMedia;
 
@@ -93,18 +86,18 @@ export class MediaController {
             abortNamedApiRequest(REQUEST_ID);
 
             MediaController.MediaData = null;
-            AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, null);
+            emitAppEvent(EVENT_NAME_MEDIA_UPDATE, null);
             MediaController.Loading = false;
-            AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
+            emitAppEvent(EVENT_NAME_MEDIA_LOADING, false);
 
             return;
         }
 
         MediaController.MediaData = null;
-        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, null);
+        emitAppEvent(EVENT_NAME_MEDIA_UPDATE, null);
 
         MediaController.Loading = true;
-        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, true);
+        emitAppEvent(EVENT_NAME_MEDIA_LOADING, true);
 
         if (AuthController.Locked) {
             return; // Vault is locked
@@ -120,22 +113,22 @@ export class MediaController {
         makeNamedApiRequest(REQUEST_ID, apiMediaGetMedia(MediaController.MediaId))
             .onSuccess((media) => {
                 MediaController.MediaData = media;
-                AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
+                emitAppEvent(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
                 MediaController.Loading = false;
-                AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
+                emitAppEvent(EVENT_NAME_MEDIA_LOADING, false);
             })
             .onRequestError((err, handleErr) => {
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     notFound: () => {
                         MediaController.MediaData = null;
-                        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
+                        emitAppEvent(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
                         MediaController.Loading = false;
-                        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
+                        emitAppEvent(EVENT_NAME_MEDIA_LOADING, false);
                     },
                     temporalError: () => {
                         // Retry
@@ -156,9 +149,9 @@ export class MediaController {
      */
     public static SetMediaData(media: MediaData) {
         MediaController.MediaData = media;
-        AppEvents.Emit(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
+        emitAppEvent(EVENT_NAME_MEDIA_UPDATE, MediaController.MediaData);
 
         MediaController.Loading = false;
-        AppEvents.Emit(EVENT_NAME_MEDIA_LOADING, false);
+        emitAppEvent(EVENT_NAME_MEDIA_LOADING, false);
     }
 }

@@ -55,11 +55,11 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import { apiAdminUpdateAccount } from "@/api/api-admin";
@@ -168,7 +168,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidUsername: () => {
                             this.error = this.$t("Invalid username provided");

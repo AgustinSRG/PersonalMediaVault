@@ -42,11 +42,6 @@ export function getDefaultGroupName(groupType: number, $t: (key: string) => stri
     }
 }
 
-/**
- * Event triggered when the scroll in the home page changed
- */
-export const EVENT_NAME_HOME_SCROLL_CHANGED = "home-page-scroll-changed";
-
 // Data to pass when start moving a group
 export type HomePageGroupStartMovingData = {
     startX: number; // The start X position

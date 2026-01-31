@@ -39,8 +39,8 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+
 import { abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -152,7 +152,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         tfaNotEnabled: () => {
                             PagesController.ShowSnackBar(this.$t("Two factor authentication is not enabled"));

@@ -44,8 +44,9 @@ import { useVModel } from "../../utils/v-model";
 import SixDigitCodeInput from "../utils/SixDigitCodeInput.vue";
 import PasswordInput from "../utils/PasswordInput.vue";
 import type { ProvidedAuthConfirmation } from "@/api/api-auth";
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
+import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 
 export default defineComponent({
     name: "AuthConfirmationModal",

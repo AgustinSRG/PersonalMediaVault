@@ -86,8 +86,8 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { AppEvents } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaGetMediaSizeStats } from "@/api/api-media";
 
@@ -230,7 +230,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.close();

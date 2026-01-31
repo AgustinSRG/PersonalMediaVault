@@ -92,15 +92,21 @@
 
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeRelatedMedia } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
@@ -254,7 +260,7 @@ export default defineComponent({
                     }
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
-                    AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+                    emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
 
                     if (this.exitOnSave) {
                         this.exitOnSave = false;
@@ -271,7 +277,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorRelated = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             this.errorRelated = this.$t("Error") + ": " + this.$t("Bad request");

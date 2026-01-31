@@ -134,11 +134,12 @@
 
 <script lang="ts">
 import { defineComponent, nextTick } from "vue";
-import { EVENT_NAME_IMAGE_NOTES_CHANGE, EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
+import { ImageNotesController } from "@/control/img-notes";
 import { escapeHTML } from "@/utils/html";
 import type { ImageNote } from "@/utils/notes-format";
 import type { PositionEvent } from "@/utils/position-event";
 import { positionEventFromMouseEvent, positionEventFromTouchEvent } from "@/utils/position-event";
+import { EVENT_NAME_IMAGE_NOTES_UPDATE, EVENT_NAME_IMAGE_NOTES_CHANGE } from "@/control/app-events";
 
 export default defineComponent({
     name: "ImageNotes",

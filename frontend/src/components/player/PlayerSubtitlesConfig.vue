@@ -242,8 +242,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
-import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, getSubtitlesOptions, setSubtitlesOptions } from "@/control/player-preferences";
-import { AppEvents } from "@/control/app-events";
+import { getSubtitlesOptions, setSubtitlesOptions } from "@/control/player-preferences";
+import { emitAppEvent, EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/control/app-events";
 
 export default defineComponent({
     name: "PlayerSubtitlesConfig",
@@ -281,7 +281,7 @@ export default defineComponent({
         },
 
         onOptionsUpdate: function () {
-            AppEvents.Emit(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED);
+            emitAppEvent(EVENT_NAME_SUBTITLES_OPTIONS_CHANGED);
         },
 
         fetchSubtitlesOptions: function () {

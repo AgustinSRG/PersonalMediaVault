@@ -532,11 +532,6 @@ export function setSelectedSubtitles(sub: string) {
 }
 
 /**
- * Event triggered when the subtitles options change
- */
-export const EVENT_NAME_SUBTITLES_OPTIONS_CHANGED = "subtitles-options-changed";
-
-/**
  * Subtitles options
  */
 export interface SubtitlesOptions {

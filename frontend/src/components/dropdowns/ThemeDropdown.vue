@@ -43,10 +43,11 @@
 
 <script lang="ts">
 import type { ColorThemeName } from "@/control/app-preferences";
-import { EVENT_NAME_THEME_CHANGED, getTheme, setTheme } from "@/control/app-preferences";
+import { getTheme, setTheme } from "@/control/app-preferences";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
+import { EVENT_NAME_THEME_CHANGED } from "@/control/app-events";
 
 export default defineComponent({
     name: "ThemeDropdown",

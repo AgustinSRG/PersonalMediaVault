@@ -40,7 +40,8 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { AlbumsController } from "@/control/albums";
+import { EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
 import { getFrontendUrl } from "@/utils/api";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { FocusTrap } from "@/utils/focus-trap";

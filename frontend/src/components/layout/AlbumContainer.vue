@@ -180,17 +180,20 @@
 </template>
 
 <script lang="ts">
+import { AlbumsController } from "@/control/albums";
 import {
-    AlbumsController,
+    emitAppEvent,
     EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
     EVENT_NAME_CURRENT_ALBUM_LOADING,
     EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
     EVENT_NAME_CURRENT_ALBUM_UPDATED,
-} from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_FAVORITE_ALBUMS_UPDATED, albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
+    EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { albumAddFav, albumIsFavorite, albumRemoveFav } from "@/control/app-preferences";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
@@ -641,12 +644,12 @@ export default defineComponent({
                 .onSuccess(() => {
                     PagesController.ShowSnackBar(this.$t("Successfully removed from album"));
                     AlbumsController.OnChangedAlbum(albumId, true);
-                    AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
+                    emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
                 })
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));

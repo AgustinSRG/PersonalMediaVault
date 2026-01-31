@@ -4,45 +4,27 @@
 
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AppEvents } from "./app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { AppStatus } from "./app-status";
+import { AuthController } from "./auth";
 import { MediaController } from "./media";
 import { setCachedAlbumPosition } from "./player-preferences";
 import type { Album, AlbumListItemMin, MediaData, MediaListItem } from "@/api/models";
 import { apiAlbumsGetAlbum, apiAlbumsGetAlbumsMin, apiAlbumsMoveMediaInAlbum } from "@/api/api-albums";
 import { PagesController } from "./pages";
 import { apiMediaGetMedia } from "@/api/api-media";
-
-/**
- * Event triggered when the albums list is updated
- */
-export const EVENT_NAME_ALBUMS_LIST_UPDATE = "albums-update";
-
-/**
- * Event triggered when the user updates an album, so the list must be re-fetched
- */
-export const EVENT_NAME_ALBUMS_CHANGED = "albums-list-change";
-
-/**
- * Event triggered when the loading status for the current album changes
- */
-export const EVENT_NAME_CURRENT_ALBUM_LOADING = "current-album-loading";
-
-/**
- * Event triggered when the current album data is updated
- */
-export const EVENT_NAME_CURRENT_ALBUM_UPDATED = "current-album-update";
-
-/**
- * Event triggered when the current media position in the current album is updated
- */
-export const EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED = "album-pos-update";
-
-/**
- * Event triggered when the next element is pre-fetched
- */
-export const EVENT_NAME_NEXT_PRE_FETCH = "album-next-prefetch";
+import {
+    addAppEventListener,
+    emitAppEvent,
+    EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_ALBUMS_LIST_UPDATE,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_CURRENT_ALBUM_LOADING,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+    EVENT_NAME_NEXT_PRE_FETCH,
+    EVENT_NAME_UNAUTHORIZED,
+} from "./app-events";
 
 const REQUEST_ID_ALBUMS_LOAD = "albums-load";
 
@@ -93,9 +75,9 @@ export class AlbumsController {
      * Initialization logic
      */
     public static Initialize() {
-        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.Load);
-        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.LoadCurrentAlbum);
-        AppEvents.AddEventListener(EVENT_NAME_APP_STATUS_CHANGED, AlbumsController.OnCurrentAlbumChanged);
+        addAppEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.Load);
+        addAppEventListener(EVENT_NAME_AUTH_CHANGED, AlbumsController.LoadCurrentAlbum);
+        addAppEventListener(EVENT_NAME_APP_STATUS_CHANGED, AlbumsController.OnCurrentAlbumChanged);
 
         AlbumsController.CurrentAlbum = AppStatus.CurrentAlbum;
 
@@ -165,14 +147,14 @@ export class AlbumsController {
                     AlbumsController.AlbumsMap.set(album.id, album);
                 }
 
-                AppEvents.Emit(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
+                emitAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
                 AlbumsController.Loading = false;
                 AlbumsController.InitiallyLoaded = true;
             })
             .onRequestError((err, handleErr) => {
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     temporalError: () => {
                         // Retry
@@ -224,9 +206,9 @@ export class AlbumsController {
             abortNamedApiRequest(REQUEST_ID_CURRENT_ALBUM_LOAD);
 
             AlbumsController.CurrentAlbumData = null;
-            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, null);
+            emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, null);
             AlbumsController.CurrentAlbumLoading = false;
-            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
+            emitAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
             AlbumsController.UpdateAlbumCurrentPos();
 
@@ -234,7 +216,7 @@ export class AlbumsController {
         }
 
         AlbumsController.CurrentAlbumLoading = true;
-        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, true);
+        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, true);
 
         if (AuthController.Locked) {
             return; // Vault is locked
@@ -244,10 +226,10 @@ export class AlbumsController {
         makeNamedApiRequest(REQUEST_ID_CURRENT_ALBUM_LOAD, apiAlbumsGetAlbum(AlbumsController.CurrentAlbum))
             .onSuccess((album) => {
                 AlbumsController.CurrentAlbumData = album;
-                AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
+                emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
                 AlbumsController.CurrentAlbumLoading = false;
-                AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
+                emitAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
                 AlbumsController.UpdateAlbumCurrentPos();
                 AppStatus.UpdateURL();
@@ -255,14 +237,14 @@ export class AlbumsController {
             .onRequestError((err, handleErr) => {
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     notFound: () => {
                         AlbumsController.CurrentAlbumData = null;
-                        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
+                        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
                         AlbumsController.CurrentAlbumLoading = false;
-                        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
+                        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_LOADING, false);
 
                         AppStatus.CloseAlbum();
                     },
@@ -288,7 +270,7 @@ export class AlbumsController {
         if (AlbumsController.CurrentAlbum === albumId) {
             AlbumsController.LoadCurrentAlbum();
         }
-        AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
+        emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
         if (!noUpdateList) {
             AlbumsController.Load();
         }
@@ -315,7 +297,7 @@ export class AlbumsController {
 
         AlbumsController.CurrentAlbumData.list.splice(newIndex, 0, AlbumsController.CurrentAlbumData.list.splice(oldIndex, 1)[0]);
 
-        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
+        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_UPDATED, AlbumsController.CurrentAlbumData);
 
         AlbumsController.UpdateAlbumCurrentPos();
 
@@ -323,7 +305,7 @@ export class AlbumsController {
 
         makeApiRequest(apiAlbumsMoveMediaInAlbum(albumId, mediaId, newIndex))
             .onSuccess(() => {
-                AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
+                emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
             })
             .onRequestError((err, handleErr) => {
                 // Revert changes
@@ -331,7 +313,7 @@ export class AlbumsController {
                 // Show error
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     maxSizeReached: () => {
                         PagesController.ShowSnackBar(
@@ -421,7 +403,7 @@ export class AlbumsController {
             AlbumsController.CurrentAlbumPos = -1;
             AlbumsController.CurrentPrev = null;
             AlbumsController.CurrentNext = null;
-            AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
+            emitAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
             AlbumsController.PreFetchAlbumNext();
             return;
         }
@@ -483,7 +465,7 @@ export class AlbumsController {
 
         setCachedAlbumPosition(AlbumsController.CurrentAlbumData.id, AlbumsController.CurrentAlbumPos);
 
-        AppEvents.Emit(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
+        emitAppEvent(EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED);
         AlbumsController.PreFetchAlbumNext();
     }
 
@@ -513,7 +495,7 @@ export class AlbumsController {
             AlbumsController.NextMediaData = null;
             AlbumsController.LoadingNext = false;
             AlbumsController.AvailableNextPrefetch = false;
-            AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
+            emitAppEvent(EVENT_NAME_NEXT_PRE_FETCH);
             return;
         }
 
@@ -533,18 +515,18 @@ export class AlbumsController {
                 AlbumsController.NextMediaData = media;
                 AlbumsController.LoadingNext = false;
                 AlbumsController.AvailableNextPrefetch = true;
-                AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
+                emitAppEvent(EVENT_NAME_NEXT_PRE_FETCH);
             })
             .onRequestError((err, handleErr) => {
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     notFound: () => {
                         AlbumsController.NextMediaData = null;
                         AlbumsController.LoadingNext = false;
                         AlbumsController.AvailableNextPrefetch = true;
-                        AppEvents.Emit(EVENT_NAME_NEXT_PRE_FETCH);
+                        emitAppEvent(EVENT_NAME_NEXT_PRE_FETCH);
                     },
                     temporalError: () => {
                         // Retry

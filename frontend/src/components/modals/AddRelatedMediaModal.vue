@@ -53,9 +53,13 @@ import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 
 import PageSearch from "@/components/pages/PageSearch.vue";
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL } from "@/control/pages";
-import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import {
+    emitAppEvent,
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
+    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
+} from "@/control/app-events";
+import { getPagePreferences } from "@/control/app-preferences";
 import type { MediaListItem } from "@/api/models";
 
 export default defineComponent({
@@ -152,11 +156,11 @@ export default defineComponent({
         onPageScroll: function (e: Event) {
             this.pageScroll = (e.target as HTMLElement).scrollTop;
 
-            AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
         },
 
         goTop: function () {
-            AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+            emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
 
             nextTick(() => {
                 this.$el.scrollTop = 0;

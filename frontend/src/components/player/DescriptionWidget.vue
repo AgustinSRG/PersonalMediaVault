@@ -203,11 +203,17 @@ import { defineComponent } from "vue";
 import type { ActionButton } from "@/components/player/ResizableWidget.vue";
 import ResizableWidget from "@/components/player/ResizableWidget.vue";
 import { nextTick } from "vue";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { AppEvents } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_DESCRIPTION_UPDATE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, RequestErrorHandler, makeApiRequest } from "@asanrom/request-browser";
-import { EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { getAssetURL } from "@/utils/api";
@@ -483,7 +489,7 @@ export default defineComponent({
                 .onRequestError((err) => {
                     new RequestErrorHandler()
                         .add(401, "*", () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED, false);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         })
                         .add(404, "*", () => {
                             this.content = "";
@@ -664,7 +670,7 @@ export default defineComponent({
                         MediaController.MediaData.description_url = res.url || "";
                     }
 
-                    AppEvents.Emit(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
+                    emitAppEvent(EVENT_NAME_MEDIA_DESCRIPTION_UPDATE, "widget");
 
                     this.$emit("update-desc");
 
@@ -677,7 +683,7 @@ export default defineComponent({
                         unauthorized: () => {
                             this.contentStoredId = this.mid;
                             this.contentStored = this.contentToChange;
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Bad request"));

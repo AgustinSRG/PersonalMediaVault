@@ -77,8 +77,8 @@ import { getUniqueStringId } from "@/utils/unique-id";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiAbout } from "@/api/api-about";
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 
 export default defineComponent({
     name: "AboutModal",
@@ -156,7 +156,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             setNamedTimeout(this.requestId, 1500, this.load.bind(this));

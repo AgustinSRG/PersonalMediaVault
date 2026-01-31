@@ -4,15 +4,10 @@
 
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { AppEvents } from "./app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "./auth";
+import { AuthController } from "./auth";
 import type { MediaListItem } from "@/api/models";
 import { apiTagsGetTags } from "@/api/api-tags";
-
-/**
- * Event triggered whenever the tags list is loaded or changed
- */
-export const EVENT_NAME_TAGS_UPDATE = "tags-update";
+import { addAppEventListener, emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_TAGS_UPDATE, EVENT_NAME_UNAUTHORIZED } from "./app-events";
 
 const REQUEST_ID = "tags-load";
 
@@ -50,7 +45,7 @@ export class TagsController {
      * Runs at the app startup
      */
     public static Initialize() {
-        AppEvents.AddEventListener(EVENT_NAME_AUTH_CHANGED, TagsController.Load);
+        addAppEventListener(EVENT_NAME_AUTH_CHANGED, TagsController.Load);
         TagsController.Load();
     }
 
@@ -93,14 +88,14 @@ export class TagsController {
                 }
 
                 TagsController.TagsVersion++;
-                AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
+                emitAppEvent(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
                 TagsController.Loading = false;
                 TagsController.InitiallyLoaded = true;
             })
             .onRequestError((err, handleErr) => {
                 handleErr(err, {
                     unauthorized: () => {
-                        AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                        emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                     },
                     temporalError: () => {
                         // Retry
@@ -147,7 +142,7 @@ export class TagsController {
         TagsController.Tags.set(id, name);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
+        emitAppEvent(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
 
         if (TagsController.LastTagId < id) {
             if (TagsController.LastTagId === id - 1) {
@@ -168,7 +163,7 @@ export class TagsController {
         TagsController.Tags.delete(id);
 
         TagsController.TagsVersion++;
-        AppEvents.Emit(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
+        emitAppEvent(EVENT_NAME_TAGS_UPDATE, TagsController.TagsVersion);
     }
 
     /**

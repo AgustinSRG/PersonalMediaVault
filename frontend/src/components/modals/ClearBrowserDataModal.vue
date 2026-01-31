@@ -130,8 +130,8 @@ import {
 import { PagesController } from "@/control/pages";
 import { clearLanguageSetting } from "@/i18n";
 import { clearLocalStorage } from "@/utils/local-storage";
-import { AppEvents } from "@/control/app-events";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/app-events";
+import { AlbumsController } from "@/control/albums";
 
 export default defineComponent({
     name: "ClearBrowserDataModal",
@@ -203,7 +203,7 @@ export default defineComponent({
 
             if (this.clearRecentlyAccessedAlbums) {
                 clearAlbumsOrderMap();
-                AppEvents.Emit(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
+                emitAppEvent(EVENT_NAME_ALBUMS_LIST_UPDATE, AlbumsController.AlbumsMap);
             }
 
             if (this.clearRecentlyUsedTags) {

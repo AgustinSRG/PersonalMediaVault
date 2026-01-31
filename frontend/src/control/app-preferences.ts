@@ -2,8 +2,17 @@
 
 "use strict";
 
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./albums";
-import { AppEvents } from "./app-events";
+import { AlbumsController } from "./albums";
+import {
+    addAppEventListener,
+    emitAppEvent,
+    EVENT_NAME_ALBUM_SIDEBAR_TOP,
+    EVENT_NAME_ALBUMS_LIST_UPDATE,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+    EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
+    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
+    EVENT_NAME_THEME_CHANGED,
+} from "./app-events";
 import { clearLocalStorage, fetchFromLocalStorage, fetchFromLocalStorageCache, saveIntoLocalStorage } from "../utils/local-storage";
 import type { AlbumListItemMin } from "@/api/models";
 
@@ -12,11 +21,6 @@ export type ColorThemeName = "light" | "dark";
 const DEFAULT_THEME = "dark";
 
 const LS_KEY_THEME = "app-pref-theme";
-
-/**
- * Event triggered when the theme changes
- */
-export const EVENT_NAME_THEME_CHANGED = "theme-changed";
 
 /**
  * Gets color theme
@@ -32,12 +36,10 @@ export function getTheme(): ColorThemeName {
  */
 export function setTheme(theme: ColorThemeName) {
     saveIntoLocalStorage(LS_KEY_THEME, theme);
-    AppEvents.Emit(EVENT_NAME_THEME_CHANGED, theme);
+    emitAppEvent(EVENT_NAME_THEME_CHANGED, theme);
 }
 
 const LS_KEY_FAVORITE_ALBUMS = "app-pref-albums-fav";
-
-export const EVENT_NAME_FAVORITE_ALBUMS_UPDATED = "albums-fav-updated";
 
 /**
  * Checks if album is favorite
@@ -84,7 +86,7 @@ export function albumAddFav(id: number) {
     if (!favorites.includes(idString)) {
         favorites.push(idString);
         saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
-        AppEvents.Emit(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
+        emitAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
     }
 }
 
@@ -104,7 +106,7 @@ export function albumRemoveFav(id: number) {
     if (index >= 0) {
         favorites.splice(index, 1);
         saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
-        AppEvents.Emit(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
+        emitAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
     }
 }
 
@@ -113,10 +115,10 @@ export function albumRemoveFav(id: number) {
  */
 export function clearFavAlbums() {
     clearLocalStorage(LS_KEY_FAVORITE_ALBUMS);
-    AppEvents.Emit(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
+    emitAppEvent(EVENT_NAME_FAVORITE_ALBUMS_UPDATED);
 }
 
-AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, AlbumListItemMin>) => {
+addAppEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, AlbumListItemMin>) => {
     // Remove favorite albums removed from the vault
     let favorites = fetchFromLocalStorage(LS_KEY_FAVORITE_ALBUMS, []);
 
@@ -129,11 +131,6 @@ AppEvents.AddEventListener(EVENT_NAME_ALBUMS_LIST_UPDATE, (albums: Map<number, A
         saveIntoLocalStorage(LS_KEY_FAVORITE_ALBUMS, favorites);
     }
 });
-
-/**
- * Event triggered when an album is loaded to put in at the top of the sidebar list
- */
-export const EVENT_NAME_ALBUM_SIDEBAR_TOP = "album-sidebar-top";
 
 const LS_KEY_ALBUMS_ORDER = "app-pref-albums-order";
 
@@ -161,7 +158,7 @@ export function clearAlbumsOrderMap() {
     clearLocalStorage(LS_KEY_ALBUMS_ORDER);
 }
 
-AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
+addAppEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
     if (!AlbumsController.CurrentAlbumData) {
         return;
     }
@@ -189,7 +186,7 @@ AppEvents.AddEventListener(EVENT_NAME_CURRENT_ALBUM_UPDATED, () => {
 
     saveIntoLocalStorage(LS_KEY_ALBUMS_ORDER, m);
 
-    AppEvents.Emit(EVENT_NAME_ALBUM_SIDEBAR_TOP, AlbumsController.CurrentAlbumData.id);
+    emitAppEvent(EVENT_NAME_ALBUM_SIDEBAR_TOP, AlbumsController.CurrentAlbumData.id);
 });
 
 const LS_KEY_PAGE_SETTINGS = "app-pref-page-settings";
@@ -238,11 +235,6 @@ export interface PagePreferences {
      */
     padding: number;
 }
-
-/**
- * Event triggered when the page preferences are updated
- */
-export const EVENT_NAME_PAGE_PREFERENCES_UPDATED = "page-preferences-updated";
 
 /**
  * Default page preferences
@@ -322,7 +314,7 @@ export function getPagePreferences(page: string): PagePreferences {
  */
 export function setPagePreferences(page: string, preferences: PagePreferences) {
     saveIntoLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page, preferences);
-    AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
+    emitAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
 
 /**
@@ -332,7 +324,7 @@ export function setPagePreferences(page: string, preferences: PagePreferences) {
 export function resetPagePreferences(page: string) {
     clearLocalStorage(LS_KEY_PAGE_SETTINGS + "-" + page);
     clearLocalStorage(LS_KEY_PAGE_SETTINGS);
-    AppEvents.Emit(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
+    emitAppEvent(EVENT_NAME_PAGE_PREFERENCES_UPDATED);
 }
 
 const LS_KEY_LAST_USED_TAGS = "app-last-used-tags";
@@ -388,7 +380,7 @@ export function clearLastUsedTags() {
  */
 export function clearPagePreferences() {
     clearLocalStorage(LS_KEY_THEME);
-    AppEvents.Emit(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
+    emitAppEvent(EVENT_NAME_THEME_CHANGED, DEFAULT_THEME);
 
     ["home", "media", "random", "random", "albums", "upload", "search"].forEach(resetPagePreferences);
 }

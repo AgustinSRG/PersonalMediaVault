@@ -117,8 +117,7 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { abortNamedApiRequest, makeApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
@@ -265,7 +264,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             this.close();
@@ -323,7 +322,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidSettings: () => {
                             this.error = this.$t("Invalid security settings");

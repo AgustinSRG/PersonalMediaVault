@@ -135,20 +135,22 @@
 
 <script lang="ts">
 import type { AlbumListItemMinExt } from "@/control/albums";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import {
-    EVENT_NAME_ALBUM_SIDEBAR_TOP,
-    EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
-    getAlbumFavoriteList,
-    getAlbumsOrderMap,
-} from "@/control/app-preferences";
+import { AlbumsController } from "@/control/albums";
+import { getAlbumFavoriteList, getAlbumsOrderMap } from "@/control/app-preferences";
 import type { AppStatusPage } from "@/control/app-status";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { getFrontendUrl } from "@/utils/api";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
+import {
+    EVENT_NAME_ALBUM_SIDEBAR_TOP,
+    EVENT_NAME_ALBUMS_LIST_UPDATE,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_FAVORITE_ALBUMS_UPDATED,
+} from "@/control/app-events";
 
 const MAX_ALBUMS_LIST_LENGTH_SIDEBAR = 10;
 

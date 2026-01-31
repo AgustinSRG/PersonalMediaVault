@@ -359,7 +359,6 @@ import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import type { HomePageGroupStartMovingData } from "@/utils/home";
 import {
     doHomePageSilentSaveAction,
-    EVENT_NAME_HOME_SCROLL_CHANGED,
     getDefaultGroupName,
     getHomePageBackStateRow,
     HomePageGroupTypes,
@@ -374,9 +373,9 @@ import type { PropType } from "vue";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import DurationIndicator from "@/components/utils/DurationIndicator.vue";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { apiSearch } from "@/api/api-search";
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_HOME_SCROLL_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 
 const HomePageRowAddElementModal = defineAsyncComponent({
@@ -744,7 +743,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.$emit("must-reload");
@@ -792,7 +791,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry
@@ -847,7 +846,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry
@@ -1095,7 +1094,7 @@ export default defineComponent({
                         callback();
                         handleErr(err, {
                             unauthorized: () => {
-                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             },
                             accessDenied: () => {
                                 AuthController.CheckAuthStatus();
@@ -1149,7 +1148,7 @@ export default defineComponent({
                         callback();
                         handleErr(err, {
                             unauthorized: () => {
-                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             },
                             accessDenied: () => {
                                 AuthController.CheckAuthStatus();

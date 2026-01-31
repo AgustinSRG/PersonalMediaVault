@@ -323,13 +323,14 @@ import { getAssetURL } from "@/utils/api";
 import { useVModel } from "../../utils/v-model";
 import { AuthController } from "@/control/auth";
 import { AppStatus } from "@/control/app-status";
-import { AlbumsController, EVENT_NAME_NEXT_PRE_FETCH } from "@/control/albums";
+import { AlbumsController } from "@/control/albums";
 import type { MediaData, MediaListItem } from "@/api/models";
 import { MEDIA_TYPE_IMAGE } from "@/api/models";
 import { MediaController } from "@/control/media";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { addMediaSessionActionHandler, clearMediaSessionActionHandlers } from "@/utils/media-session";
 import PlayerTooltip from "./PlayerTooltip.vue";
+import { EVENT_NAME_NEXT_PRE_FETCH } from "@/control/app-events";
 
 const PlayerEncodingPending = defineAsyncComponent({
     loader: () => import("@/components/player/PlayerEncodingPending.vue"),

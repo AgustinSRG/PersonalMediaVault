@@ -155,16 +155,22 @@
 
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
 import { getAssetURL } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import ToggleSwitch from "@/components/utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { EVENT_NAME_MEDIA_METADATA_CHANGE, PagesController } from "@/control/pages";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiMediaChangeExtraParams, apiMediaChangeMediaThumbnail, apiMediaChangeMediaTitle } from "@/api/api-media-edit";
 import ThumbImage from "@/components/utils/ThumbImage.vue";
@@ -381,7 +387,7 @@ export default defineComponent({
                     }
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
-                    AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+                    emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
                 })
                 .onCancel(() => {
                     this.busyThumbnail = false;
@@ -391,7 +397,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorThumbnail = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidThumbnail: () => {
                             this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");
@@ -558,7 +564,7 @@ export default defineComponent({
                     }
                     this.$emit("changed");
                     AlbumsController.LoadCurrentAlbum();
-                    AppEvents.Emit(EVENT_NAME_MEDIA_METADATA_CHANGE);
+                    emitAppEvent(EVENT_NAME_MEDIA_METADATA_CHANGE);
 
                     if (this.exitOnSave) {
                         this.exitOnSave = false;
@@ -575,7 +581,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorTitle = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidTitle: () => {
                             this.errorTitle = this.$t("Error") + ": " + this.$t("Invalid title provided");
@@ -634,7 +640,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorExtraConfig = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             this.errorExtraConfig = this.$t("Error") + ": " + this.$t("Bad request");

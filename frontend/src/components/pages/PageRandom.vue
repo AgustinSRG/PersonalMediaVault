@@ -85,24 +85,28 @@
 
 <script lang="ts">
 import type { MediaListItem } from "@/api/models";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import {
+    emitAppEvent,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    EVENT_NAME_RANDOM_PAGE_REFRESH,
+    EVENT_NAME_TAGS_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
+import { TagsController } from "@/control/tags";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { MediaController } from "@/control/media";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
-import {
-    EVENT_NAME_MEDIA_DELETE,
-    EVENT_NAME_MEDIA_METADATA_CHANGE,
-    EVENT_NAME_PAGE_NAV_NEXT,
-    EVENT_NAME_PAGE_NAV_PREV,
-    EVENT_NAME_RANDOM_PAGE_REFRESH,
-    PagesController,
-} from "@/control/pages";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiSearchRandom } from "@/api/api-search";
 import ThumbImage from "../utils/ThumbImage.vue";
@@ -300,7 +304,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry

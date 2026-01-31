@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import { EVENT_NAME_SNACK_BAR } from "@/control/pages";
+import { EVENT_NAME_SNACK_BAR } from "@/control/app-events";
 import { defineComponent } from "vue";
 
 export default defineComponent({

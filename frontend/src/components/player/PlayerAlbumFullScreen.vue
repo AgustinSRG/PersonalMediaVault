@@ -67,12 +67,7 @@
 </template>
 
 <script lang="ts">
-import {
-    AlbumsController,
-    EVENT_NAME_CURRENT_ALBUM_LOADING,
-    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
-    EVENT_NAME_CURRENT_ALBUM_UPDATED,
-} from "@/control/albums";
+import { AlbumsController } from "@/control/albums";
 import { AppStatus } from "@/control/app-status";
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { getAssetURL } from "@/utils/api";
@@ -80,6 +75,11 @@ import { renderTimeSeconds } from "@/utils/time";
 import { defineComponent, nextTick } from "vue";
 import ThumbImage from "../utils/ThumbImage.vue";
 import type { MediaListItem, PositionedMediaListItem } from "@/api/models";
+import {
+    EVENT_NAME_CURRENT_ALBUM_LOADING,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+} from "@/control/app-events";
 
 const INITIAL_WINDOW_SIZE = 100;
 

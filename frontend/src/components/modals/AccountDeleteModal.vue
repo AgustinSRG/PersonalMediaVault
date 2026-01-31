@@ -42,8 +42,8 @@
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { apiAdminDeleteAccount } from "@/api/api-admin";
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+
 import { PagesController } from "@/control/pages";
 import { makeApiRequest } from "@asanrom/request-browser";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -136,7 +136,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         requiredAuthConfirmationPassword: () => {
                             this.displayAuthConfirmation = true;

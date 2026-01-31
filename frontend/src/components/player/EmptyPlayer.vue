@@ -171,7 +171,7 @@ export default defineComponent({
     mounted: function () {
         // Load player preferences
         this.$addKeyboardHandler(this.onKeyPress.bind(this), 100);
-        this.$listenOnAppEvent("fullscreenchange", this.onExitFullScreen.bind(this));
+        this.$listenOnDocumentEvent("fullscreenchange", this.onExitFullScreen.bind(this));
     },
     methods: {
         enterTooltip: function (t: string) {

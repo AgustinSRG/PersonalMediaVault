@@ -116,9 +116,10 @@
 </template>
 
 <script lang="ts">
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 import { ExitPreventer } from "@/control/exit-prevent";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { MediaController } from "@/control/media";
 import { defineAsyncComponent, defineComponent } from "vue";
 
 const EditorGeneral = defineAsyncComponent({

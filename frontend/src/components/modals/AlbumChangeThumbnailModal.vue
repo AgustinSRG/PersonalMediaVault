@@ -61,17 +61,17 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
+import { AlbumsController } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import { apiAlbumsChangeAlbumThumbnail } from "@/api/api-albums";
 import { getAssetURL } from "@/utils/api";
 import { getUniqueStringId } from "@/utils/unique-id";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { MediaController } from "@/control/media";
 import ThumbImage from "../utils/ThumbImage.vue";
 import ThumbnailCropModal from "./ThumbnailCropModal.vue";
 
@@ -261,7 +261,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorThumbnail = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidThumbnail: () => {
                             this.errorThumbnail = this.$t("Error") + ": " + this.$t("Invalid thumbnail provided");

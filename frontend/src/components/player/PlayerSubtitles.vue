@@ -45,8 +45,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED, getSubtitlesOptions } from "@/control/player-preferences";
+import { getSubtitlesOptions } from "@/control/player-preferences";
 import { toHtmlMinimal } from "@/utils/html-min";
+import { EVENT_NAME_SUBTITLES_OPTIONS_CHANGED } from "@/control/app-events";
 
 export default defineComponent({
     name: "PlayerSubtitles",

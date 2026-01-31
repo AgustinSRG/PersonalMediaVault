@@ -257,12 +257,24 @@
 <script lang="ts">
 import type { MediaListItem } from "@/api/models";
 import type { AlbumListItemMinExt } from "@/control/albums";
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AlbumsController } from "@/control/albums";
+import {
+    emitAppEvent,
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_ALBUMS_LIST_UPDATE,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_MEDIA_DELETE,
+    EVENT_NAME_MEDIA_METADATA_CHANGE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+    EVENT_NAME_TAGS_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import type { MatchingTag } from "@/control/tags";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { TagsController } from "@/control/tags";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
@@ -271,14 +283,7 @@ import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "@/utils/v-model";
 import { BigListScroller } from "@/utils/big-list-scroller";
-import {
-    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
-    EVENT_NAME_MEDIA_DELETE,
-    EVENT_NAME_MEDIA_METADATA_CHANGE,
-    EVENT_NAME_PAGE_NAV_NEXT,
-    EVENT_NAME_PAGE_NAV_PREV,
-    PagesController,
-} from "@/control/pages";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbum } from "@/api/api-albums";
 import { apiAdvancedSearch } from "@/api/api-search";
@@ -676,7 +681,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry
@@ -714,7 +719,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         emptyText: () => {
                             this.loading = false;
@@ -805,7 +810,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidVectorSize: () => {
                             this.loading = false;
@@ -850,7 +855,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidImage: () => {
                             this.imageError = this.$t("Invalid image file selected.");
@@ -951,7 +956,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidVectorSize: () => {
                             this.loading = false;
@@ -1167,7 +1172,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.cancel();
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.filterElements([]);

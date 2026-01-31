@@ -76,12 +76,18 @@ import { useVModel } from "../../utils/v-model";
 import PageSearch from "@/components/pages/PageSearch.vue";
 import PageUpload from "@/components/pages/PageUpload.vue";
 import { makeApiRequest } from "@asanrom/request-browser";
-import { AppEvents } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_ADVANCED_SEARCH_GO_TOP,
+    EVENT_NAME_ADVANCED_SEARCH_SCROLL,
+    EVENT_NAME_PAGE_PREFERENCES_UPDATED,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { AlbumsController } from "@/control/albums";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_ADVANCED_SEARCH_GO_TOP, EVENT_NAME_ADVANCED_SEARCH_SCROLL, PagesController } from "@/control/pages";
+import { AuthController } from "@/control/auth";
+import { PagesController } from "@/control/pages";
 import { apiAlbumsAddMediaToAlbum } from "@/api/api-albums";
-import { EVENT_NAME_PAGE_PREFERENCES_UPDATED, getPagePreferences } from "@/control/app-preferences";
+import { getPagePreferences } from "@/control/app-preferences";
 import type { MediaListItem } from "@/api/models";
 
 export default defineComponent({
@@ -174,7 +180,7 @@ export default defineComponent({
                     this.busy = false;
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         maxSizeReached: () => {
                             PagesController.ShowSnackBar(
@@ -229,13 +235,13 @@ export default defineComponent({
             this.pageScroll = (e.target as HTMLElement).scrollTop;
 
             if (!this.isUpload) {
-                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
+                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_SCROLL, e);
             }
         },
 
         goTop: function () {
             if (!this.isUpload) {
-                AppEvents.Emit(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
+                emitAppEvent(EVENT_NAME_ADVANCED_SEARCH_GO_TOP);
 
                 nextTick(() => {
                     this.$el.scrollTop = 0;

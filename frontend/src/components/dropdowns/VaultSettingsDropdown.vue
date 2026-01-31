@@ -75,10 +75,11 @@
 </template>
 
 <script lang="ts">
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import { FocusTrap } from "../../utils/focus-trap";
+import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 
 export default defineComponent({
     name: "VaultSettingsDropdown",

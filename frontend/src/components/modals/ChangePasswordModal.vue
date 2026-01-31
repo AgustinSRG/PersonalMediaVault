@@ -68,11 +68,11 @@
 
 <script lang="ts">
 import { apiAccountChangePassword } from "@/api/api-account";
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import { PagesController } from "@/control/pages";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
 import PasswordInput from "@/components/utils/PasswordInput.vue";
@@ -189,7 +189,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidNewPassword: () => {
                             this.error = this.$t("Invalid password provided");

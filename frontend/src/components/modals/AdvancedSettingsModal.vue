@@ -242,14 +242,14 @@
 
 <script lang="ts">
 import type { ImageResolution, VaultUserConfig, VideoResolution } from "@/api/models";
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
 import ToggleSwitch from "../utils/ToggleSwitch.vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AuthController } from "@/control/auth";
 import SaveChangesAskModal from "@/components/modals/SaveChangesAskModal.vue";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
@@ -457,7 +457,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             // Retry
                             setNamedTimeout(this.loadRequestId, 1500, this.load.bind(this));
                         },
@@ -522,7 +522,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             this.error = this.$t("Invalid configuration provided");

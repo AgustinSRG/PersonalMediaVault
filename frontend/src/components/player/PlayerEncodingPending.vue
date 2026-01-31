@@ -87,8 +87,8 @@
 
 <script lang="ts">
 import type { MediaData, TaskStatus } from "@/api/models";
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+
 import { MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { renderTimeSeconds } from "@/utils/time";
@@ -248,7 +248,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.status = "loading";
@@ -301,7 +301,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             if (this.canAutoReload) {

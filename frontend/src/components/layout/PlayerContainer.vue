@@ -105,10 +105,28 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { EVENT_NAME_MEDIA_LOADING, EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import {
+    emitAppEvent,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_CURRENT_ALBUM_LOADING,
+    EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED,
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_MEDIA_LOADING,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
+    EVENT_NAME_PAGE_NAV_NEXT,
+    EVENT_NAME_PAGE_NAV_PREV,
+} from "@/control/app-events";
+import { MediaController } from "@/control/media";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
-
+import { AlbumsController } from "@/control/albums";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
+import { FocusTrap } from "../../utils/focus-trap";
+import { closeFullscreen } from "@/utils/full-screen";
+import { PagesController } from "@/control/pages";
+import { isTouchDevice } from "@/utils/touch";
 import LoadingOverlay from "./LoadingOverlay.vue";
 
 const EmptyPlayer = defineAsyncComponent({
@@ -134,21 +152,6 @@ const ImagePlayer = defineAsyncComponent({
     loadingComponent: LoadingOverlay,
     delay: 1000,
 });
-
-import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_LOADING, EVENT_NAME_CURRENT_ALBUM_MEDIA_POSITION_UPDATED } from "@/control/albums";
-import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
-import { FocusTrap } from "../../utils/focus-trap";
-import { closeFullscreen } from "@/utils/full-screen";
-import {
-    EVENT_NAME_GO_NEXT,
-    EVENT_NAME_GO_PREV,
-    EVENT_NAME_PAGE_MEDIA_NAV_UPDATE,
-    EVENT_NAME_PAGE_NAV_NEXT,
-    EVENT_NAME_PAGE_NAV_PREV,
-    PagesController,
-} from "@/control/pages";
-import { isTouchDevice } from "@/utils/touch";
 
 const AlbumListModal = defineAsyncComponent({
     loader: () => import("@/components/modals/AlbumListModal.vue"),
@@ -305,7 +308,7 @@ export default defineComponent({
             if (this.next) {
                 AppStatus.ClickOnMedia(this.next.id, false);
             } else if (this.hasPageNext) {
-                AppEvents.Emit(EVENT_NAME_PAGE_NAV_NEXT);
+                emitAppEvent(EVENT_NAME_PAGE_NAV_NEXT);
             }
         },
 
@@ -313,7 +316,7 @@ export default defineComponent({
             if (this.prev) {
                 AppStatus.ClickOnMedia(this.prev.id, false);
             } else if (this.hasPagePrev) {
-                AppEvents.Emit(EVENT_NAME_PAGE_NAV_PREV);
+                emitAppEvent(EVENT_NAME_PAGE_NAV_PREV);
             }
         },
 

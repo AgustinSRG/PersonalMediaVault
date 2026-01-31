@@ -81,10 +81,10 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { AuthController } from "@/control/auth";
+import { MediaController } from "@/control/media";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent } from "vue";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -188,7 +188,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         accessDenied: () => {
                             this.errorReEncode = this.$t("Error") + ": " + this.$t("Access denied");
@@ -310,7 +310,7 @@ export default defineComponent({
                         unauthorized: () => {
                             this.fileRef = null;
                             this.errorReplace = this.$t("Error") + ": " + this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidMedia: () => {
                             this.fileRef = null;

@@ -107,17 +107,19 @@ import PlayerContainerLoader from "./PlayerContainerLoader.vue";
 import AlbumContainerLoader from "./AlbumContainerLoader.vue";
 import PageContentLoader from "./PageContentLoader.vue";
 
-import {
-    AuthController,
-    EVENT_NAME_APP_NEW_VERSION,
-    EVENT_NAME_AUTH_CHANGED,
-    EVENT_NAME_AUTH_ERROR,
-    EVENT_NAME_AUTH_LOADING,
-} from "../../control/auth";
+import { AuthController } from "../../control/auth";
 import type { ColorThemeName } from "@/control/app-preferences";
-import { EVENT_NAME_THEME_CHANGED, getTheme } from "@/control/app-preferences";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import { getTheme } from "@/control/app-preferences";
+import { AppStatus } from "@/control/app-status";
 import { isTouchDevice } from "@/utils/touch";
+import {
+    EVENT_NAME_THEME_CHANGED,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_AUTH_LOADING,
+    EVENT_NAME_AUTH_ERROR,
+    EVENT_NAME_APP_NEW_VERSION,
+} from "@/control/app-events";
 
 const PlayerContainer = defineAsyncComponent({
     loader: () => import("@/components/layout/PlayerContainer.vue"),

@@ -39,12 +39,12 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
+import { AlbumsController } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_ALBUMS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { PagesController } from "@/control/pages";
 import { apiAlbumsCreateAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -133,7 +133,7 @@ export default defineComponent({
                     this.busy = false;
                     this.name = "";
                     this.forceCloseSignal++;
-                    AppEvents.Emit(EVENT_NAME_ALBUMS_CHANGED);
+                    emitAppEvent(EVENT_NAME_ALBUMS_CHANGED);
                     AlbumsController.Load();
                     this.$emit("new-album", response.album_id, albumName);
                 })
@@ -145,7 +145,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         invalidName: () => {
                             this.error = this.$t("Invalid album name provided");

@@ -56,12 +56,12 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_IMAGE_NOTES_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { NOTES_TEXT_SEPARATOR, imageNotesToText, textToImageNotes } from "@/utils/notes-format";
-import { EVENT_NAME_IMAGE_NOTES_UPDATE, ImageNotesController } from "@/control/img-notes";
+import { ImageNotesController } from "@/control/img-notes";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { PagesController } from "@/control/pages";
 import { apiMediaSetNotes } from "@/api/api-media-edit";
@@ -155,7 +155,7 @@ export default defineComponent({
                     this.dirty = false;
 
                     ImageNotesController.Notes = notes;
-                    AppEvents.Emit(EVENT_NAME_IMAGE_NOTES_UPDATE);
+                    emitAppEvent(EVENT_NAME_IMAGE_NOTES_UPDATE);
 
                     this.$emit("changed");
 
@@ -174,7 +174,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Access denied"));
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         badRequest: () => {
                             PagesController.ShowSnackBarRight(this.$t("Error") + ": " + this.$t("Bad request"));

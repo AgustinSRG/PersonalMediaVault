@@ -129,10 +129,10 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_ALBUMS_LIST_UPDATE } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+import { AlbumsController } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_ALBUMS_LIST_UPDATE, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
@@ -286,7 +286,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         notFound: () => {
                             this.forceCloseSignal++;
@@ -365,7 +365,7 @@ export default defineComponent({
                         this.busy = false;
                         handleErr(err, {
                             unauthorized: () => {
-                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             },
                             accessDenied: () => {
                                 PagesController.ShowSnackBar(this.$t("Error") + ": " + this.$t("Access denied"));
@@ -407,7 +407,7 @@ export default defineComponent({
                         this.busy = false;
                         handleErr(err, {
                             unauthorized: () => {
-                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             },
                             maxSizeReached: () => {
                                 PagesController.ShowSnackBar(

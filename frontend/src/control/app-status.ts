@@ -6,16 +6,10 @@
 
 import { getParameterByName } from "@/utils/cookie";
 import { AlbumsController } from "./albums";
-import { AppEvents } from "./app-events";
+import { emitAppEvent, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_DELETE } from "./app-events";
 import { getCachedAlbumPosition } from "./player-preferences";
-import { EVENT_NAME_MEDIA_DELETE } from "./pages";
 import { generateURIQuery } from "@/utils/api";
 import { ExitPreventer } from "./exit-prevent";
-
-/**
- * Event triggered when the app status changes
- */
-export const EVENT_NAME_APP_STATUS_CHANGED = "app-status-update";
 
 /**
  * Layout mode
@@ -309,7 +303,7 @@ export class AppStatus {
     private static OnStatusUpdate(replaceState?: boolean) {
         AppStatus.UpdateLayout();
 
-        AppEvents.Emit(EVENT_NAME_APP_STATUS_CHANGED);
+        emitAppEvent(EVENT_NAME_APP_STATUS_CHANGED);
 
         AppStatus.UpdateURL(replaceState);
     }
@@ -408,7 +402,7 @@ export class AppStatus {
 
         AppStatus.CurrentFocus = "right";
 
-        AppEvents.Emit(EVENT_NAME_MEDIA_DELETE);
+        emitAppEvent(EVENT_NAME_MEDIA_DELETE);
 
         AppStatus.OnStatusUpdate();
     }

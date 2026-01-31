@@ -134,21 +134,27 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
+import {
+    emitAppEvent,
+    EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_RANDOM_PAGE_REFRESH,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
 import { getAssetURL, getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import type { PropType } from "vue";
 import { defineComponent, nextTick } from "vue";
 import PageMenu from "@/components/utils/PageMenu.vue";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
+import { AuthController } from "@/control/auth";
 import AlbumCreateModal from "../modals/AlbumCreateModal.vue";
 import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/normalize";
 import { packSearchParams, unPackSearchParams } from "@/utils/search-params";
 import type { AlbumListItem } from "@/api/models";
-import { EVENT_NAME_RANDOM_PAGE_REFRESH, PagesController } from "@/control/pages";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiAlbumsGetAlbums } from "@/api/api-albums";
 import { isTouchDevice } from "@/utils/touch";
@@ -336,7 +342,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry

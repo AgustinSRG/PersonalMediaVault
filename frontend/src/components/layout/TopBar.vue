@@ -93,8 +93,8 @@
 
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { AuthController, EVENT_NAME_AUTH_CHANGED } from "@/control/auth";
+import { AppStatus } from "@/control/app-status";
+import { AuthController } from "@/control/auth";
 import { TagsController } from "@/control/tags";
 import { defineComponent } from "vue";
 import { FocusTrap } from "../../utils/focus-trap";
@@ -102,6 +102,7 @@ import { filterToWords, matchSearchFilter, normalizeString } from "@/utils/norma
 import { BigListScroller } from "@/utils/big-list-scroller";
 import { nextTick } from "vue";
 import { getFrontendUrl } from "@/utils/api";
+import { EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
 
 interface SearchBarSuggestion {
     key: string;

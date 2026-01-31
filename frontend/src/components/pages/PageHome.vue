@@ -128,33 +128,32 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
-import { AuthController, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
-import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
-import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
-import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import {
+    emitAppEvent,
+    EVENT_NAME_ALBUMS_CHANGED,
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_AUTH_CHANGED,
+    EVENT_NAME_HOME_SCROLL_CHANGED,
     EVENT_NAME_MEDIA_DELETE,
     EVENT_NAME_MEDIA_METADATA_CHANGE,
     EVENT_NAME_PAGE_NAV_NEXT,
     EVENT_NAME_PAGE_NAV_PREV,
-    PagesController,
-} from "@/control/pages";
+    EVENT_NAME_TAGS_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
+import { AuthController } from "@/control/auth";
+import { makeNamedApiRequest, abortNamedApiRequest, makeApiRequest } from "@asanrom/request-browser";
+import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
+import { defineAsyncComponent, defineComponent, nextTick } from "vue";
+import { PagesController } from "@/control/pages";
 import { getUniqueStringId } from "@/utils/unique-id";
 import LoadingOverlay from "../layout/LoadingOverlay.vue";
-import { EVENT_NAME_ALBUMS_CHANGED } from "@/control/albums";
 import type { HomePageElement, HomePageGroup } from "@/api/api-home";
 import { apiHomeGetGroups, apiHomeGroupMove } from "@/api/api-home";
 import HomePageRow from "../layout/HomePageRow.vue";
-import {
-    doHomePageSilentSaveAction,
-    EVENT_NAME_HOME_SCROLL_CHANGED,
-    getHomePageBackStatePage,
-    HomePageGroupTypes,
-    type HomePageGroupStartMovingData,
-} from "@/utils/home";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { EVENT_NAME_TAGS_UPDATE, TagsController } from "@/control/tags";
+import { doHomePageSilentSaveAction, getHomePageBackStatePage, HomePageGroupTypes, type HomePageGroupStartMovingData } from "@/utils/home";
+import { AppStatus } from "@/control/app-status";
+import { TagsController } from "@/control/tags";
 
 const HomePageCreateRowModal = defineAsyncComponent({
     loader: () => import("@/components/modals/HomePageCreateRowModal.vue"),
@@ -427,7 +426,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry
@@ -702,7 +701,7 @@ export default defineComponent({
                         callback();
                         handleErr(err, {
                             unauthorized: () => {
-                                AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                                emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                             },
                             accessDenied: () => {
                                 AuthController.CheckAuthStatus();
@@ -773,7 +772,7 @@ export default defineComponent({
         },
 
         onScroll: function () {
-            AppEvents.Emit(EVENT_NAME_HOME_SCROLL_CHANGED);
+            emitAppEvent(EVENT_NAME_HOME_SCROLL_CHANGED);
         },
 
         onPrevNextUpdated: function (

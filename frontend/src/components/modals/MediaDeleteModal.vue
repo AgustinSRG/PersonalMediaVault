@@ -51,13 +51,13 @@
 
 <script lang="ts">
 import { AlbumsController } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "@/control/app-status";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "@/control/media";
+import { emitAppEvent, EVENT_NAME_APP_STATUS_CHANGED, EVENT_NAME_MEDIA_UPDATE, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import { AppStatus } from "@/control/app-status";
+import { MediaController } from "@/control/media";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { PagesController } from "@/control/pages";
 import { apiMediaDeleteMedia } from "@/api/api-media-edit";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -178,7 +178,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         requiredAuthConfirmationPassword: () => {
                             this.displayAuthConfirmation = true;

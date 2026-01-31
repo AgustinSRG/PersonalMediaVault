@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts">
-import { AppEvents } from "@/control/app-events";
+import { emitAppEvent, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AppStatus } from "@/control/app-status";
 import { getFrontendUrl } from "@/utils/api";
 import { makeNamedApiRequest, abortNamedApiRequest } from "@asanrom/request-browser";
@@ -76,7 +76,7 @@ import { renderTimeSeconds } from "@/utils/time";
 import { setNamedTimeout, clearNamedTimeout } from "@/utils/named-timeouts";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { getUniqueStringId } from "@/utils/unique-id";
 import { apiTasksGetTasks } from "@/api/api-tasks";
 import type { TaskStatus } from "@/api/models";
@@ -168,7 +168,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry
@@ -199,7 +199,7 @@ export default defineComponent({
                 .onRequestError((err, handleErr) => {
                     handleErr(err, {
                         unauthorized: () => {
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         temporalError: () => {
                             // Retry

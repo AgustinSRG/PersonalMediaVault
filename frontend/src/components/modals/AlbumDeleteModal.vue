@@ -50,12 +50,12 @@
 </template>
 
 <script lang="ts">
-import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "@/control/albums";
-import { AppEvents } from "@/control/app-events";
+import { AlbumsController } from "@/control/albums";
+import { emitAppEvent, EVENT_NAME_CURRENT_ALBUM_UPDATED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { makeApiRequest } from "@asanrom/request-browser";
 import { defineComponent, nextTick } from "vue";
 import { useVModel } from "../../utils/v-model";
-import { EVENT_NAME_UNAUTHORIZED } from "@/control/auth";
+
 import { PagesController } from "@/control/pages";
 import { apiAlbumsDeleteAlbum } from "@/api/api-albums";
 import LoadingIcon from "@/components/utils/LoadingIcon.vue";
@@ -173,7 +173,7 @@ export default defineComponent({
                     handleErr(err, {
                         unauthorized: () => {
                             this.error = this.$t("Access denied");
-                            AppEvents.Emit(EVENT_NAME_UNAUTHORIZED);
+                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
                         },
                         requiredAuthConfirmationPassword: () => {
                             this.displayAuthConfirmation = true;

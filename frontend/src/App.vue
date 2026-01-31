@@ -4,14 +4,21 @@
 
 <script lang="ts">
 import MainLayout from "./components/layout/MainLayout.vue";
-import { AlbumsController, EVENT_NAME_CURRENT_ALBUM_UPDATED } from "./control/albums";
-import { AppStatus, EVENT_NAME_APP_STATUS_CHANGED } from "./control/app-status";
-import { EVENT_NAME_MEDIA_UPDATE, MediaController } from "./control/media";
-import { EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR, EVENT_NAME_UPLOAD_LIST_ENTRY_READY, type UploadEntryMin } from "./control/upload";
+import { AlbumsController } from "./control/albums";
+import { AppStatus } from "./control/app-status";
+import { MediaController } from "./control/media";
+import { type UploadEntryMin } from "./control/upload";
 import { getAssetURL } from "@/utils/api";
 import { AuthController } from "./control/auth";
 import { defineComponent } from "vue";
 import { PagesController } from "./control/pages";
+import {
+    EVENT_NAME_APP_STATUS_CHANGED,
+    EVENT_NAME_CURRENT_ALBUM_UPDATED,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
+} from "./control/app-events";
 
 export default defineComponent({
     name: "App",

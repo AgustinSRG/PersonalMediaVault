@@ -148,22 +148,22 @@
 <script lang="ts">
 import { AppStatus } from "@/control/app-status";
 import type { UploadEntryMin } from "@/control/upload";
-import {
-    EVENT_NAME_UPLOAD_LIST_CLEAR,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_NEW,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
-    EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
-    UploadController,
-} from "@/control/upload";
+import { UploadController } from "@/control/upload";
 import { getFrontendUrl } from "@/utils/api";
 import { defineAsyncComponent, defineComponent, nextTick } from "vue";
 import LoadingOverlay from "@/components/layout/LoadingOverlay.vue";
 import { renderSize } from "@/utils/size";
 import DiskUsage from "../utils/DiskUsage.vue";
 import { stringMultiReplace } from "@/utils/string-multi-replace";
+import {
+    EVENT_NAME_UPLOAD_LIST_CLEAR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_NEW,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_PROGRESS,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_READY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_ERROR,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_RETRY,
+    EVENT_NAME_UPLOAD_LIST_ENTRY_REMOVED,
+} from "@/control/app-events";
 
 const UploadModal = defineAsyncComponent({
     loader: () => import("@/components/modals/UploadModal.vue"),
