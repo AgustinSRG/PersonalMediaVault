@@ -8,7 +8,7 @@
         "dev": "vite",
         "start": "vite",
         "build": "vite build",
-        "lint": "prettier --write . && eslint --fix",
+        "lint": "eslint --fix && prettier --write .",
         "prettier": "prettier --write .",
         "test": "eslint && prettier --check . && vue-tsc --noEmit",
         "update-locales": "npm run update-translations",
