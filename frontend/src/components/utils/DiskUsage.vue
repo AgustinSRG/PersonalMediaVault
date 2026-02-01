@@ -25,6 +25,7 @@ import { renderSize } from "@/utils/size";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
 import { onMounted, ref } from "vue";
 
+// Translation function
 const { $t } = useI18n();
 
 /**

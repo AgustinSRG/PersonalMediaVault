@@ -107,6 +107,7 @@ import { packSearchParams } from "@/utils/search-params";
 
 import { ref, watch, type PropType } from "vue";
 
+// Translation function
 const { $t } = useI18n();
 
 const emit = defineEmits<{

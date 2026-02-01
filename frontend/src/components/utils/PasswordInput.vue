@@ -32,6 +32,7 @@ import { useI18n } from "@/composables/use-i18n";
 import { FocusTrap } from "@/utils/focus-trap";
 import { onBeforeUnmount, onMounted, ref, useTemplateRef } from "vue";
 
+// Translation function
 const { $t } = useI18n();
 
 const emit = defineEmits<{

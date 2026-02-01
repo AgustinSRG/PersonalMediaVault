@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import { useI18n } from "@/composables/use-i18n";
 
+// Translation function
 const { $t } = useI18n();
 
 defineProps({

@@ -1,154 +1,90 @@
 <template>
-    <div
-        class="modal-container modal-container-corner no-transition"
-        :class="{ hidden: !display }"
-        tabindex="-1"
-        role="dialog"
-        @mousedown="close"
-        @touchstart="close"
-        @keydown="keyDownHandle"
-    >
-        <div
-            v-if="display"
-            class="modal-dialog modal-sm"
-            role="document"
-            @click="stopPropagationEvent"
-            @mousedown="stopPropagationEvent"
-            @touchstart="stopPropagationEvent"
-        >
-            <div class="modal-header-corner">
-                <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
-            </div>
-            <div class="modal-body with-menu">
-                <table class="modal-menu">
-                    <tbody>
-                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('theme')">
-                            <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Change theme (Dark / Light)") }}
-                            </td>
-                        </tr>
-
-                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('lang')">
-                            <td class="modal-menu-item-icon">
-                                <i class="fas fa-language"></i>
-                            </td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Change language") }}
-                            </td>
-                        </tr>
-
-                        <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
-                            <td class="modal-menu-item-icon">
-                                <i class="fas fa-bars-progress"></i>
-                            </td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Tasks") }}
-                            </td>
-                        </tr>
-
-                        <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('advanced')">
-                            <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Advanced settings") }}
-                            </td>
-                        </tr>
-
-                        <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('batch')">
-                            <td class="modal-menu-item-icon"><i class="fas fa-list"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Batch operation") }}
-                            </td>
-                        </tr>
-
-                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('clear-browser-data')">
-                            <td class="modal-menu-item-icon"><i class="fas fa-broom"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Clear browser data") }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <DropdownContainer v-model:display="display" :focus-trap-exception-class="'top-bar-button-dropdown'">
+        <div class="modal-header-corner">
+            <div class="modal-header-corner-title">{{ $t("Vault settings") }}</div>
         </div>
-    </div>
+        <div class="modal-body with-menu">
+            <table class="modal-menu">
+                <tbody>
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('theme')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-moon"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change theme (Dark / Light)") }}
+                        </td>
+                    </tr>
+
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('lang')">
+                        <td class="modal-menu-item-icon">
+                            <i class="fas fa-language"></i>
+                        </td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Change language") }}
+                        </td>
+                    </tr>
+
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('tasks')">
+                        <td class="modal-menu-item-icon">
+                            <i class="fas fa-bars-progress"></i>
+                        </td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Tasks") }}
+                        </td>
+                    </tr>
+
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('advanced')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-cog"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Advanced settings") }}
+                        </td>
+                    </tr>
+
+                    <tr v-if="isRoot" class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('batch')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-list"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Batch operation") }}
+                        </td>
+                    </tr>
+
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('clear-browser-data')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-broom"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Clear browser data") }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </DropdownContainer>
 </template>
 
-<script lang="ts">
-import { AuthController } from "@/control/auth";
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
-import { EVENT_NAME_AUTH_CHANGED } from "@/control/app-events";
+<script setup lang="ts">
+import { clickOnEnter } from "@/utils/events";
+import DropdownContainer from "./common/DropdownContainer.vue";
+import { useI18n } from "@/composables/use-i18n";
+import { useUserPermissions } from "@/composables/use-user-permissions";
 
-export default defineComponent({
-    name: "VaultSettingsDropdown",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "goto"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            isRoot: AuthController.IsRoot,
-            canWrite: AuthController.CanWrite,
-            username: AuthController.Username,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.updateAuthInfo.bind(this));
+// Translation function
+const { $t } = useI18n();
 
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
+// Display
+const display = defineModel<boolean>("display");
 
-        if (this.display) {
-            this.focusTrap.activate();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        close: function () {
-            this.displayStatus = false;
-        },
+const emit = defineEmits<{
+    /**
+     * Event to go to an option of the dropdown menu
+     */
+    (e: "goto", option: string): void;
+}>();
 
-        clickOnOption: function (o: string) {
-            this.$emit("goto", o);
-            this.close();
-        },
+/**
+ * Call when the user click on an option
+ * @param o The option
+ */
+const clickOnOption = (o: string) => {
+    emit("goto", o);
+    display.value = false;
+};
 
-        updateAuthInfo: function () {
-            this.isRoot = AuthController.IsRoot;
-            this.canWrite = AuthController.CanWrite;
-            this.username = AuthController.Username;
-        },
-
-        keyDownHandle: function (e: KeyboardEvent) {
-            e.stopPropagation();
-            if (e.key === "Escape") {
-                this.close();
-            }
-        },
-    },
-});
+// User permissions
+const { isRoot } = useUserPermissions();
 </script>

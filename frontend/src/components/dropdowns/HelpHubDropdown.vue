@@ -1,123 +1,80 @@
 <template>
-    <div
-        class="modal-container modal-container-corner modal-container-help no-transition"
-        :class="{ hidden: !display }"
-        tabindex="-1"
-        role="dialog"
-        @mousedown="close"
-        @touchstart="close"
-        @keydown="keyDownHandle"
+    <DropdownContainer
+        v-model:display="display"
+        :position-class="'modal-container-help'"
+        :focus-trap-exception-class="'top-bar-button-dropdown'"
     >
-        <div
-            v-if="display"
-            class="modal-dialog modal-sm"
-            role="document"
-            @click="stopPropagationEvent"
-            @mousedown="stopPropagationEvent"
-            @touchstart="stopPropagationEvent"
-        >
-            <div class="modal-header-corner">
-                <div class="modal-header-corner-title">{{ $t("Help") }}</div>
-            </div>
-            <div class="modal-body with-menu">
-                <table class="modal-menu">
-                    <tbody>
-                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
-                            <td class="modal-menu-item-icon"><i class="fas fa-question"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("About PMV") }}
-                            </td>
-                        </tr>
-
-                        <tr class="tr-link modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="openDocs">
-                            <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Documentation") }}
-                            </td>
-                        </tr>
-
-                        <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
-                            <td class="modal-menu-item-icon">
-                                <i class="fas fa-keyboard"></i>
-                            </td>
-                            <td class="modal-menu-item-title">
-                                {{ $t("Keyboard shortcuts") }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="modal-header-corner">
+            <div class="modal-header-corner-title">{{ $t("Help") }}</div>
         </div>
-    </div>
+        <div class="modal-body with-menu">
+            <table class="modal-menu">
+                <tbody>
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('about')">
+                        <td class="modal-menu-item-icon"><i class="fas fa-question"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("About PMV") }}
+                        </td>
+                    </tr>
+
+                    <tr class="tr-link modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="openDocs">
+                        <td class="modal-menu-item-icon"><i class="fas fa-book"></i></td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Documentation") }}
+                        </td>
+                    </tr>
+
+                    <tr class="modal-menu-item" tabindex="0" @keydown="clickOnEnter" @click="clickOnOption('keyboard')">
+                        <td class="modal-menu-item-icon">
+                            <i class="fas fa-keyboard"></i>
+                        </td>
+                        <td class="modal-menu-item-title">
+                            {{ $t("Keyboard shortcuts") }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </DropdownContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { FocusTrap } from "../../utils/focus-trap";
+<script setup lang="ts">
+import { clickOnEnter } from "@/utils/events";
+import DropdownContainer from "./common/DropdownContainer.vue";
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "HelpHubDropdown",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display", "goto"],
-    setup(props) {
-        return {
-            focusTrap: null as FocusTrap,
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            docsURL: import.meta.env.VITE__DOCS_URL || "#",
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.focusTrap.activate();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            } else {
-                this.focusTrap.deactivate();
-            }
-        },
-    },
-    mounted: function () {
-        this.focusTrap = new FocusTrap(this.$el, this.close.bind(this), "top-bar-button-dropdown");
-        if (this.display) {
-            this.focusTrap.activate();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        this.focusTrap.destroy();
-    },
-    methods: {
-        close: function () {
-            this.displayStatus = false;
-        },
+// Translation function
+const { $t } = useI18n();
 
-        clickOnOption: function (o: string) {
-            this.$emit("goto", o);
-            this.close();
-        },
+// Display
+const display = defineModel<boolean>("display");
 
-        keyDownHandle: function (e: KeyboardEvent) {
-            e.stopPropagation();
-            if (e.key === "Escape") {
-                this.close();
-            }
-        },
+const emit = defineEmits<{
+    /**
+     * Event to go to an option of the dropdown menu
+     */
+    (e: "goto", option: string): void;
+}>();
 
-        openDocs: function () {
-            window.open(this.docsURL);
-            this.close();
-        },
-    },
-});
+/**
+ * Call when the user click on an option
+ * @param o The option
+ */
+const clickOnOption = (o: string) => {
+    emit("goto", o);
+    display.value = false;
+};
+
+/**
+ * Documentation URL
+ */
+const DOCS_URL = import.meta.env.VITE__DOCS_URL || "#";
+
+/**
+ * Opens the documentation in a new browser window
+ */
+const openDocs = () => {
+    window.open(DOCS_URL);
+    display.value = false;
+};
 </script>

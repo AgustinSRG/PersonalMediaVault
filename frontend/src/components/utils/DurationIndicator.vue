@@ -10,6 +10,7 @@ import { MEDIA_TYPE_AUDIO } from "@/api/models";
 import { useI18n } from "@/composables/use-i18n";
 import { renderTimeSeconds } from "@/utils/time";
 
+// Translation function
 const { $t } = useI18n();
 
 defineProps({

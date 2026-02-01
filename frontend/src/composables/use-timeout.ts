@@ -9,6 +9,12 @@ import { onBeforeUnmount } from "vue";
  */
 export type ComposableTimeout = {
     /**
+     * Checks if the timeout is set
+     * @returns True if the timeout is set
+     */
+    isSet: () => boolean;
+
+    /**
      * Sets the timeout.
      * If the timeout was already set, it clears the previous one.
      * @param callback  The timeout callback
@@ -29,6 +35,14 @@ export type ComposableTimeout = {
  */
 export function useTimeout(): ComposableTimeout {
     let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    /**
+     * Checks if the timeout is set
+     * @returns True if the timeout is set
+     */
+    const isSet = () => {
+        return timeout !== null;
+    };
 
     /**
      * Function to set the timeout
@@ -60,5 +74,5 @@ export function useTimeout(): ComposableTimeout {
     // Ensure the timeout is cleared when the component is unmounted
     onBeforeUnmount(clear);
 
-    return { set, clear };
+    return { isSet, set, clear };
 }

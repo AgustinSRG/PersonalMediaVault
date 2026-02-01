@@ -26,6 +26,7 @@ import type { PasswordStrengthTag } from "@/utils/password-strength";
 import { computePasswordStrength, getPasswordStrengthTag } from "@/utils/password-strength";
 import { computed } from "vue";
 
+// Translation function
 const { $t } = useI18n();
 
 /// Min entropy for a password to be considered cryptographically secure
