@@ -130,15 +130,7 @@ export default defineComponent({
             if (loading) {
                 return this.$t("Loading") + "...";
             } else {
-                return (
-                    "# " +
-                    this.$t("You can add titles using the hashtag character.") +
-                    "\n\n" +
-                    this.$t("Example paragraph") +
-                    "\n\n" +
-                    this.$t("Example paragraph") +
-                    "\n"
-                );
+                return this.$t("Example paragraph") + "\n" + this.$t("Example paragraph") + "\n";
             }
         },
 
