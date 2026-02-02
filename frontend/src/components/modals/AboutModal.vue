@@ -1,6 +1,6 @@
 <template>
-    <ModalDialogContainer v-model:display="displayStatus" :close-signal="closeSignal">
-        <div v-if="display" class="modal-dialog modal-lg" role="document">
+    <ModalDialogContainer ref="container" v-model:display="display">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-header">
                 <div class="modal-title about-modal-title">
                     <img class="about-modal-logo" src="/img/icons/favicon.png" alt="PMV" />
@@ -36,7 +36,7 @@
                             <td v-else>
                                 <span v-if="serverVersion === lastRelease"> {{ $t("You are using the latest version") }}</span>
                                 <span v-if="serverVersion !== lastRelease"
-                                    ><a :href="getReleaseLink(lastRelease, gitRepo)" target="_blank" rel="noopener noreferrer"
+                                    ><a :href="lastReleaseUrl" target="_blank" rel="noopener noreferrer"
                                         >{{ $t("Download the latest release") }}: {{ lastRelease }}</a
                                     ></span
                                 >
@@ -70,108 +70,110 @@
     </ModalDialogContainer>
 </template>
 
-<script lang="ts">
-import { defineComponent, nextTick } from "vue";
-import { useVModel } from "../../utils/v-model";
-import { getUniqueStringId } from "@/utils/unique-id";
+<script setup lang="ts">
+import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
 import { abortNamedApiRequest, makeNamedApiRequest } from "@asanrom/request-browser";
 import { clearNamedTimeout, setNamedTimeout } from "@/utils/named-timeouts";
 import { apiAbout } from "@/api/api-about";
 import { emitAppEvent, EVENT_NAME_AUTH_CHANGED, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
 import { AuthController } from "@/control/auth";
+import { useModal } from "@/composables/use-modal";
+import { useRequestId } from "@/composables/use-request-id";
+import { onApplicationEvent } from "@/composables/on-app-event";
+import { useI18n } from "@/composables/use-i18n";
 
-export default defineComponent({
-    name: "AboutModal",
-    props: {
-        display: Boolean,
-    },
-    emits: ["update:display"],
-    setup(props) {
-        return {
-            requestId: getUniqueStringId(),
-            displayStatus: useVModel(props, "display"),
-        };
-    },
-    data: function () {
-        return {
-            version: import.meta.env.VITE__VERSION || "-",
-            homePage: import.meta.env.VITE__HOME_URL || "#",
-            gitRepo: import.meta.env.VITE__GIT_URL || "#",
-            license: import.meta.env.VITE__LICENSE_URL || "#",
+// Translation function
+const { $t } = useI18n();
 
-            loading: true,
+// Display model
+const display = defineModel<boolean>("display");
 
-            serverVersion: "",
-            lastRelease: "",
-            ffmpegVersion: "",
+// Modal container
+const container = useTemplateRef("container");
 
-            closeSignal: 0,
-        };
-    },
-    watch: {
-        display: function () {
-            if (this.display) {
-                this.load();
-                nextTick(() => {
-                    this.$el.focus();
-                });
-            }
-        },
-    },
-    mounted: function () {
-        this.$listenOnAppEvent(EVENT_NAME_AUTH_CHANGED, this.load.bind(this));
-        if (this.display) {
-            this.load();
-            nextTick(() => {
-                this.$el.focus();
-            });
-        }
-    },
-    beforeUnmount: function () {
-        abortNamedApiRequest(this.requestId);
-        clearNamedTimeout(this.requestId);
-    },
-    methods: {
-        close: function () {
-            this.closeSignal++;
-        },
+// Modal composable
+const { close } = useModal(display, container);
 
-        load: function () {
-            abortNamedApiRequest(this.requestId);
-            clearNamedTimeout(this.requestId);
+// Client version
+const version = import.meta.env.VITE__VERSION || "-";
 
-            if (!this.display || AuthController.Locked) {
-                return;
-            }
+// Home page URL
+const homePage = import.meta.env.VITE__HOME_URL || "#";
 
-            this.loading = true;
+// Git repository URL
+const gitRepo = import.meta.env.VITE__GIT_URL || "#";
 
-            makeNamedApiRequest(this.requestId, apiAbout())
-                .onSuccess((res) => {
-                    this.loading = false;
-                    this.serverVersion = res.version;
-                    this.lastRelease = res.last_release;
-                    this.ffmpegVersion = res.ffmpeg_version;
-                })
-                .onRequestError((err, handleErr) => {
-                    handleErr(err, {
-                        unauthorized: () => {
-                            emitAppEvent(EVENT_NAME_UNAUTHORIZED);
-                        },
-                        temporalError: () => {
-                            setNamedTimeout(this.requestId, 1500, this.load.bind(this));
-                        },
-                    });
-                })
-                .onUnexpectedError((err) => {
-                    console.error(err);
-                    setNamedTimeout(this.requestId, 1500, this.load.bind(this));
-                });
-        },
+// License URL
+const license = import.meta.env.VITE__LICENSE_URL || "#";
 
-        getReleaseLink: function (version: string, gitRepository: string) {
-            return gitRepository + "/releases/tag/v" + version;
-        },
-    },
+// Server version
+const serverVersion = ref("");
+
+// Last release version
+const lastRelease = ref("");
+
+// FFmpeg version
+const ffmpegVersion = ref("");
+
+// Last release URL
+const lastReleaseUrl = computed(() => {
+    return gitRepo.value + "/releases/tag/v" + lastRelease.value;
 });
+
+// Request ID
+const requestId = useRequestId();
+
+// Loading status
+const loading = ref(true);
+
+/**
+ * Loads the data
+ */
+const load = () => {
+    abortNamedApiRequest(requestId);
+    clearNamedTimeout(requestId);
+
+    if (!display.value || AuthController.Locked) {
+        return;
+    }
+
+    loading.value = true;
+
+    makeNamedApiRequest(requestId, apiAbout())
+        .onSuccess((res) => {
+            loading.value = false;
+
+            serverVersion.value = res.version;
+            lastRelease.value = res.last_release;
+            ffmpegVersion.value = res.ffmpeg_version;
+        })
+        .onRequestError((err, handleErr) => {
+            handleErr(err, {
+                unauthorized: () => {
+                    emitAppEvent(EVENT_NAME_UNAUTHORIZED);
+                },
+                temporalError: () => {
+                    setNamedTimeout(requestId, 1500, load);
+                },
+            });
+        })
+        .onUnexpectedError((err) => {
+            console.error(err);
+            setNamedTimeout(requestId, 1500, load);
+        });
+};
+
+onMounted(() => {
+    if (display.value) {
+        load();
+    }
+});
+
+watch(display, () => {
+    if (display.value) {
+        load();
+    }
+});
+
+onApplicationEvent(EVENT_NAME_AUTH_CHANGED, load);
 </script>

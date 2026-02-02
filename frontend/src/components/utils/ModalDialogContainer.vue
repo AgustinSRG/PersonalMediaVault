@@ -230,4 +230,25 @@ const onTouchEnd = (e: TouchEvent) => {
 const onMouseLeave = (e: MouseEvent) => {
     emit("mouseleave", e);
 };
+
+// Name of the class to auto focus
+const AUTO_FOCUS_CLASS_NAME = "auto-focus";
+
+/**
+ * Focuses the container element
+ */
+const focus = () => {
+    const focusElement = container.value?.querySelector(`.${AUTO_FOCUS_CLASS_NAME}`) as HTMLElement;
+    if (focusElement) {
+        focusElement.focus();
+    } else {
+        container.value?.focus();
+    }
+};
+
+// Expose methods
+defineExpose({
+    close,
+    focus,
+});
 </script>
