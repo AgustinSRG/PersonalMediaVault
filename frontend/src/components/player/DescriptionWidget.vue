@@ -467,7 +467,7 @@ export default defineComponent({
                 .onSuccess((descriptionText) => {
                     this.content = descriptionText;
                     this.contentLines = this.content
-                        .split("\n\n")
+                        .split("\n")
                         .map((l) => l.trim())
                         .filter((l) => l.length > 0);
                     this.readingLine = -1;
@@ -659,7 +659,7 @@ export default defineComponent({
                     PagesController.ShowSnackBar(this.$t("Successfully saved description"));
                     this.content = this.contentToChange;
                     this.contentLines = this.content
-                        .split("\n\n")
+                        .split("\n")
                         .map((l) => l.trim())
                         .filter((l) => l.length > 0);
                     this.readingLine = -1;
