@@ -57,22 +57,27 @@
 
 <script setup lang="ts">
 import { apiTagsTagMedia, apiTagsUntagMedia } from "@/api/api-tags";
-import { useCurrentMedia } from "@/composables/use-current-media";
+import { onApplicationEvent } from "@/composables/on-app-event";
 import { useI18n } from "@/composables/use-i18n";
 import { useRequestId } from "@/composables/use-request-id";
 import { useTags } from "@/composables/use-tags";
 import { useTimeout } from "@/composables/use-timeout";
 import { useUserPermissions } from "@/composables/use-user-permissions";
-import { emitAppEvent, EVENT_NAME_GO_NEXT, EVENT_NAME_GO_PREV, EVENT_NAME_UNAUTHORIZED } from "@/control/app-events";
+import {
+    emitAppEvent,
+    EVENT_NAME_GO_NEXT,
+    EVENT_NAME_GO_PREV,
+    EVENT_NAME_MEDIA_UPDATE,
+    EVENT_NAME_UNAUTHORIZED,
+} from "@/control/app-events";
 import { getLastUsedTags, setLastUsedTag } from "@/control/app-preferences";
-import { AppStatus } from "@/control/app-status";
 import { MediaController } from "@/control/media";
 import { PagesController } from "@/control/pages";
 import type { MatchingTag } from "@/control/tags";
 import { TagsController } from "@/control/tags";
 import { parseTagName } from "@/utils/tags";
 import { makeNamedApiRequest } from "@asanrom/request-browser";
-import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 
 // Translation function
 const { $t } = useI18n();
@@ -99,9 +104,6 @@ const findTagTimeout = useTimeout();
 
 // User permissions
 const { canWrite } = useUserPermissions();
-
-// Current media
-const { currentMediaId, currentMediaData } = useCurrentMedia();
 
 // Tags
 const { getTags, getTagName, onTagsUpdated } = useTags();
@@ -212,7 +214,7 @@ onTagsUpdated(findTags);
  * Loads the tag list for the current media
  */
 const load = () => {
-    if (!currentMediaData.value) {
+    if (!MediaController.MediaData) {
         return;
     }
     mediaTags.value = (MediaController.MediaData.tags || []).slice();
@@ -227,7 +229,7 @@ onMounted(() => {
     TagsController.Load();
 });
 
-watch(currentMediaData, load);
+onApplicationEvent(EVENT_NAME_MEDIA_UPDATE, load);
 
 // Input where the tag name is typed
 const tagToAddInput = useTemplateRef("tagToAddInput");
@@ -277,9 +279,13 @@ const addTag = (tag: string, resetTagInput: boolean) => {
         return;
     }
 
+    if (!MediaController.MediaData) {
+        return;
+    }
+
     busy.value = true;
 
-    const mediaId = currentMediaId.value;
+    const mediaId = MediaController.MediaData.id;
 
     makeNamedApiRequest(requestId, apiTagsTagMedia(mediaId, tag))
         .onSuccess((res) => {
@@ -356,9 +362,13 @@ const removeTag = (tag: number) => {
         return;
     }
 
+    if (!MediaController.MediaData) {
+        return;
+    }
+
     busy.value = true;
 
-    const mediaId = AppStatus.CurrentMedia;
+    const mediaId = MediaController.MediaData.id;
     const tagName = getTagName(tag);
 
     makeNamedApiRequest(requestId, apiTagsUntagMedia(mediaId, tag))
